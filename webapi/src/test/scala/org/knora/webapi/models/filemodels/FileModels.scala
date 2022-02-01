@@ -1,23 +1,16 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.models.filemodels
 
-import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{
-  ArchiveFileValueContentV2,
-  AudioFileValueContentV2,
-  DocumentFileValueContentV2,
-  FileValueV2,
-  MovingImageFileValueContentV2,
-  StillImageFileValueContentV2,
-  TextFileValueContentV2
-}
+import org.knora.webapi.messages.v2.responder.valuemessages.{UpdateValueContentV2, UpdateValueRequestV2}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
@@ -27,38 +20,34 @@ import java.util.UUID
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String,
-  className: String,
-  ontologyName: String,
-  shortcode: String,
-  resourceIri: String,
-  dimX: Option[Int],
-  dimY: Option[Int],
-  pageCount: Option[Int],
-  comment: Option[String],
-  internalMimeType: Option[String],
-  originalFilename: Option[String],
-  originalMimeType: Option[String],
-  customValueIri: Option[SmartIri],
-  customValueUUID: Option[UUID],
-  customValueCreationDate: Option[Instant],
-  valuePermissions: Option[String],
-  label: String,
-  resourcePermissions: Option[String],
-  project: ProjectADM
+  label: String
 ) {
 
   /**
    * Create a JSON-LD serialization of the request. This can be used for e2e and integration tests.
    *
+   * @param className    the class name of the resource. Optional.
+   * @param ontologyName the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
+   * @param shortcode    the shortcode of the project to which the resource should be added. Defaults to `"0001"`
+   * @param ontologyIRI  IRI of the ontology, to which the prefix should resolve. Optional.
    * @return JSON-LD serialization of the request.
    */
-  def toJsonLd: String = {
+  def toJsonLd(
+    shortcode: String = "0001",
+    ontologyName: String = "knora-api",
+    className: Option[String] = None,
+    ontologyIRI: Option[String] = None
+  ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
     val fileValueType = FileModelUtil.getFileValueType(fileType)
-    val context = FileModelUtil.getJsonLdContext(ontologyName)
+    val context = FileModelUtil.getJsonLdContext(ontologyName, ontologyIRI)
+    val classNameWithDefaults = className match {
+      case Some(v) => v
+      case None    => FileModelUtil.getDefaultClassName(fileType)
+    }
 
     s"""{
-       |  "@type" : "$ontologyName:$className",
+       |  "@type" : "$ontologyName:$classNameWithDefaults",
        |  "$fileValuePropertyName" : {
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
@@ -66,93 +55,78 @@ sealed abstract case class UploadFileRequest private (
        |  "knora-api:attachedToProject" : {
        |    "@id" : "http://rdfh.ch/projects/$shortcode"
        |  },
-       |  "rdfs:label" : "test label",
+       |  "rdfs:label" : "$label",
        |  $context}""".stripMargin
   }
 
-  def toMessage: CreateResourceV2 = {
+  /**
+   * Represents the present [[UploadFileRequest]] as a [[CreateResourceV2]].
+   *
+   * Various custom values can be supplied. If not, reasonable default values for testing purposes will be used.
+   *
+   * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
+   * @param comment                 comment. Optional.
+   * @param internalMimeType        internal mime type as determined by SIPI. Optional.
+   * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
+   * @param originalFilename        original filename previous to uploading to SIPI. Optional.
+   * @param customValueIri          custom IRI for the value. Optional. Defaults to None.
+   *                                If None, an IRI will be generated.
+   * @param customValueUUID         custom UUID for the value. Optional. Defaults to None.
+   *                                If None, a UUID will be generated.
+   * @param customValueCreationDate custom creation date for the value. Optional. Defaults to None.
+   *                                If None, the current instant will be used.
+   * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
+   *                                If `None`, the default permissions will be used.
+   * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
+   * @param resourceCreationDate    custom creation date of the resource. Optional.
+   * @param valuePropertyIRI        property IRI of the value. Optional.
+   * @param resourceClassIRI        resource class IRI. Optional.
+   * @param project                 the project to which the resource belongs. Optional. Defaults to None.
+   *                                If None, [[SharedTestDataADM.anythingProject]] is used.
+   * @return a [[CreateResourceV2]] representation of the [[UploadFileRequest]]
+   */
+  def toMessage(
+    resourceIri: Option[String] = None,
+    internalMimeType: Option[String] = None,
+    originalFilename: Option[String] = None,
+    originalMimeType: Option[String] = None,
+    comment: Option[String] = None,
+    customValueIri: Option[SmartIri] = None,
+    customValueUUID: Option[UUID] = None,
+    customValueCreationDate: Option[Instant] = None,
+    valuePermissions: Option[String] = None,
+    resourcePermissions: Option[String] = None,
+    resourceCreationDate: Option[Instant] = None,
+    resourceClassIRI: Option[SmartIri] = None,
+    valuePropertyIRI: Option[SmartIri] = None,
+    project: Option[ProjectADM] = None
+  ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val resourceClassIri: SmartIri = FileModelUtil.getFileRepresentationClassIri(fileType)
-    val fileValuePropertyIri: SmartIri = FileModelUtil.getFileRepresentationPropertyIri(fileType)
-    val valueContent = fileType match {
-      case FileType.DocumentFile =>
-        DocumentFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType match {
-              case Some(v) => v
-              case None    => "application/pdf"
-            },
-            originalFilename = originalFilename,
-            originalMimeType = Some("application/pdf")
-          ),
-          pageCount = pageCount,
-          dimX = dimX,
-          dimY = dimY,
-          comment = comment
-        )
-      case FileType.StillImageFile =>
-        StillImageFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = "image/jp2",
-            originalFilename = originalFilename,
-            originalMimeType = originalMimeType
-          ),
-          dimX = dimX.get,
-          dimY = dimY.get,
-          comment = comment
-        )
-      case FileType.MovingImageFile =>
-        MovingImageFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType.get,
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          ),
-          dimX = dimX.get,
-          dimY = dimY.get
-        )
-      case FileType.TextFile =>
-        TextFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType.get,
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
-        )
-      case FileType.AudioFile =>
-        AudioFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType.get,
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
-        )
-      case FileType.ArchiveFile =>
-        ArchiveFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType match {
-              case Some(v) => v
-              case None    => "application/zip"
-            },
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          ),
-          comment = comment
-        )
+    val projectOrDefault = project match {
+      case Some(p) => p
+      case None    => SharedTestDataADM.anythingProject
     }
+    val resourceIRIOrDefault = resourceIri match {
+      case Some(value) => value
+      case None        => stringFormatter.makeRandomResourceIri(projectOrDefault.shortcode)
+    }
+    val resourceClassIRIOrDefault: SmartIri = resourceClassIRI match {
+      case Some(iri) => iri
+      case None      => FileModelUtil.getFileRepresentationClassIri(fileType)
+    }
+    val fileValuePropertyIRIOrDefault: SmartIri = valuePropertyIRI match {
+      case Some(iri) => iri
+      case None      => FileModelUtil.getFileRepresentationPropertyIri(fileType)
+    }
+    val valueContent = FileModelUtil.getFileValueContent(
+      fileType = fileType,
+      internalFilename = internalFilename,
+      internalMimeType = internalMimeType,
+      originalFilename = originalFilename,
+      originalMimeType = originalMimeType,
+      comment = comment
+    )
 
     val values = List(
       CreateValueInNewResourceV2(
@@ -163,15 +137,16 @@ sealed abstract case class UploadFileRequest private (
         permissions = valuePermissions
       )
     )
-    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIri -> values)
+    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIRIOrDefault -> values)
 
     CreateResourceV2(
-      resourceIri = Some(resourceIri.toSmartIri),
-      resourceClassIri = resourceClassIri,
+      resourceIri = Some(resourceIRIOrDefault.toSmartIri),
+      resourceClassIri = resourceClassIRIOrDefault,
       label = label,
       values = inputValues,
-      projectADM = project,
-      permissions = resourcePermissions
+      projectADM = projectOrDefault,
+      permissions = resourcePermissions,
+      creationDate = resourceCreationDate
     )
   }
 }
@@ -191,110 +166,22 @@ object UploadFileRequest {
   /**
    * Smart constructor for instantiating a [[UploadFileRequest]].
    *
-   * @param fileType                the [[FileType]] of the resource.
-   * @param internalFilename        the internal file name assigned by SIPI.
-   * @param className               the class name of the resource. Optional.
-   * @param ontologyName            the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
-   * @param shortcode               the shortcode of the project to which the resource should be added. Defaults to `"0001"`
-   * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
-   * @param dimX                    the width of the file, if applicable. Optional. Defaults to None.
-   *                                If None, the file type specific default is used.
-   * @param dimY                    the height of the file, if applicable. Optional. Defaults to None.
-   *                                If None, the file type specific default is used.
-   * @param pageCount               the page count of the file, if applicable. Optional. Defaults to None.
-   *                                If None, the file type specific default is used.
-   * @param comment                 comment. Optional.
-   * @param internalMimeType        internal mime type as determined by SIPI. Optional.
-   * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
-   * @param originalFilename        original filename previous to uploading to SIPI. Optional.
-   * @param customValueIri          custom IRI for the value. Optional. Defaults to None.
-   *                                If None, an IRI will be generated.
-   * @param customValueUUID         custom UUID for the value. Optional. Defaults to None.
-   *                                If None, a UUID will be generated.
-   * @param customValueCreationDate custom creation date for the value. Optional. Defaults to None.
-   *                                If None, the current instant will be used.
-   * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
-   *                                If `None`, the default permissions will be used.
-   * @param label                   the resource label
-   * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
-   * @param project                 the project to which the resource belongs. Optional. Defaults to None.
-   *                                If None, [[SharedTestDataADM.anythingProject]] is used.
+   * @param fileType         the [[FileType]] of the resource.
+   * @param internalFilename the internal file name assigned by SIPI.
+   * @param label            the rdf:label
    * @return returns a [[UploadFileRequest]] object storing all information needed to generate a Message
    *         or JSON-LD serialization that can be used to generate the respective resource in the API.
    */
-
   def make(
     fileType: FileType,
     internalFilename: String,
-    className: Option[String] = None,
-    ontologyName: String = "knora-api",
-    shortcode: String = "0001",
-    resourceIri: Option[String] = None,
-    dimX: Option[Int] = None,
-    dimY: Option[Int] = None,
-    pageCount: Option[Int] = None,
-    comment: Option[String] = None,
-    internalMimeType: Option[String] = None,
-    originalFilename: Option[String] = None,
-    originalMimeType: Option[String] = None,
-    customValueIri: Option[SmartIri] = None,
-    customValueUUID: Option[UUID] = None,
-    customValueCreationDate: Option[Instant] = None,
-    valuePermissions: Option[String] = None,
-    label: String = "test label",
-    resourcePermissions: Option[String] = None,
-    project: Option[ProjectADM] = None
-  ): UploadFileRequest = {
-    val classNameWithDefaults = className match {
-      case Some(v) => v
-      case None    => FileModelUtil.getDefaultClassName(fileType)
-    }
-    val iri = resourceIri match {
-      case Some(value) => value
-      case None        => stringFormatter.makeRandomResourceIri(shortcode)
-    }
-    val (dimXWithDefaults, dimYWithDefaults) = fileType match {
-      case FileType.DocumentFile | FileType.StillImageFile | FileType.MovingImageFile =>
-        (dimX, dimY) match {
-          case (Some(x), Some(y)) => (Some(x), Some(y))
-          case _                  => (Some(100), Some(100))
-        }
-      case FileType.TextFile | FileType.AudioFile | FileType.ArchiveFile => (None, None)
-    }
-    val pageCountWithDefaults = fileType match {
-      case FileType.DocumentFile =>
-        pageCount match {
-          case Some(value) => Some(value)
-          case None        => Some(1)
-        }
-      case _ => None
-    }
+    label: String = "test label"
+  ): UploadFileRequest =
     new UploadFileRequest(
       fileType = fileType,
       internalFilename = internalFilename,
-      className = classNameWithDefaults,
-      ontologyName = ontologyName,
-      shortcode = shortcode,
-      resourceIri = iri,
-      dimX = dimXWithDefaults,
-      dimY = dimYWithDefaults,
-      pageCount = pageCountWithDefaults,
-      comment = comment,
-      internalMimeType = internalMimeType,
-      originalFilename = originalFilename,
-      originalMimeType = originalMimeType,
-      customValueIri = customValueIri,
-      customValueUUID = customValueUUID,
-      customValueCreationDate = customValueCreationDate,
-      valuePermissions = valuePermissions,
-      label = label,
-      resourcePermissions = resourcePermissions,
-      project = project match {
-        case Some(p) => p
-        case None    => SharedTestDataADM.anythingProject
-      }
+      label = label
     ) {}
-  }
 }
 
 sealed abstract case class ChangeFileRequest private (
@@ -326,6 +213,61 @@ sealed abstract case class ChangeFileRequest private (
        |  },
        |  $context
        |}""".stripMargin
+  }
+
+  /**
+   * @param featureFactoryConfig the featureFactoryConfig
+   * @param internalMimeType     internal mimetype, as provided by SIPI. Optional.
+   * @param originalFilename     original filename before the upload. Optional.
+   * @param originalMimeType     file mimetype before the upload. Optional.
+   * @param comment              rdfs:comment to the change. Optional.
+   * @param requestingUser       the user issuing the request. Optional.
+   * @param permissions          permissions of the updated file value. Optional.
+   * @param valueCreationDate    custom creation date of the updated value. Optional.
+   * @param newValueVersionIri   custom IRI of the new version of the value. Optional.
+   * @param resourceClassIRI     the resource class IRI. Optional.
+   * @return
+   */
+  def toMessage(
+    featureFactoryConfig: FeatureFactoryConfig,
+    internalMimeType: Option[String] = None,
+    originalFilename: Option[String] = None,
+    originalMimeType: Option[String] = None,
+    comment: Option[String] = None,
+    requestingUser: UserADM = SharedTestDataADM.rootUser,
+    permissions: Option[String] = None,
+    valueCreationDate: Option[Instant] = None,
+    newValueVersionIri: Option[SmartIri] = None,
+    resourceClassIRI: Option[SmartIri] = None
+  ): UpdateValueRequestV2 = {
+    val propertyIRI = FileModelUtil.getFileRepresentationPropertyIri(fileType)
+    val resourceClassIRIWithDefault = resourceClassIRI match {
+      case Some(value) => value
+      case None        => FileModelUtil.getFileValueTypeIRI(fileType)
+    }
+    val valueContent = FileModelUtil.getFileValueContent(
+      fileType = fileType,
+      internalFilename = internalFilename,
+      internalMimeType = internalMimeType,
+      originalFilename = originalFilename,
+      originalMimeType = originalMimeType,
+      comment = comment
+    )
+    UpdateValueRequestV2(
+      updateValue = UpdateValueContentV2(
+        resourceIri = resourceIRI,
+        resourceClassIri = resourceClassIRIWithDefault,
+        propertyIri = propertyIRI,
+        valueIri = valueIRI,
+        valueContent = valueContent,
+        permissions = permissions,
+        valueCreationDate = valueCreationDate,
+        newValueVersionIri = newValueVersionIri
+      ),
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser,
+      apiRequestID = UUID.randomUUID
+    )
   }
 }
 

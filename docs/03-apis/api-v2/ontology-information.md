@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -38,7 +38,7 @@ ontologies for that project will be returned.
 
 The response is in the complex API v2 schema. Sample response:
 
-```jsonld
+```json
 {
   "@graph" : [ {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
@@ -104,7 +104,7 @@ The project IRIs must be URL-encoded.
 Example response for the `anything` test project
 (project IRI `http://rdfh.ch/projects/0001`):
 
-```jsonld
+```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
   "@type" : "owl:Ontology",
@@ -180,7 +180,7 @@ but not update data in Knora. For example, here is the response for the
 `http://0.0.0.0:3333/ontology/00FF/images/simple/v2` (simplified for
 clarity):
 
-```jsonld
+```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2",
   "@type" : "owl:Ontology",
@@ -417,7 +417,7 @@ obtain these values in all available languages, add the URL parameter
 `?allLanguages=true`. For example, with this parameter, the definition
 of `images:description` becomes:
 
-```jsonld
+```json
 {
   "@id" : "images:description",
   "@type" : "owl:DatatypeProperty",
@@ -456,7 +456,7 @@ the client can request the `knora-api` ontology in the simple schema:
 Knora-specific, human-readable format. In the `knora-api` simple
 ontology, there is a definition of this type:
 
-```jsonld
+```json
 {
   "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
   "@type" : "owl:Ontology",
@@ -493,7 +493,7 @@ update data in Knora. For example, here is the response for the `images`
 sample ontology in the complex schema, `http://0.0.0.0:3333/ontology/00FF/images/v2`
 (simplified for clarity):
 
-```jsonld
+```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
   "@type" : "owl:Ontology",
@@ -920,11 +920,11 @@ An ontology is always created within a particular project.
 HTTP POST to http://host/v2/ontologies
 ```
 
-```jsonld
+```json
 {
   "knora-api:ontologyName" : "ONTOLOGY_NAME",
   "knora-api:attachedToProject" : {
-    "@id" : "PROJECT_IRI",
+    "@id" : "PROJECT_IRI"
   },
   "rdfs:label" : "ONTOLOGY_NAME",
   "@context" : {
@@ -972,7 +972,7 @@ or both. The example below shows the request for changing the label of an ontolo
 HTTP PUT to http://host/v2/ontologies/metadata
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "rdfs:label" : "NEW_ONTOLOGY_LABEL",
@@ -991,7 +991,7 @@ HTTP PUT to http://host/v2/ontologies/metadata
 Similarly, a user can change an ontology's existing comment or add one by specifying 
 the new comment in the request body:
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "rdfs:comment" : "NEW_ONTOLOGY_COMMENT",
@@ -1045,7 +1045,7 @@ HTTP GET to http://host/v2/ontologies/candeleteontology/ONTOLOGY_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1060,7 +1060,7 @@ The response will look like this:
 HTTP POST to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1068,7 +1068,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1084,7 +1084,7 @@ HTTP POST to http://host/v2/ontologies/classes
         "@id" : "BASE_CLASS_IRI"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1113,7 +1113,7 @@ subclass of their `knora-api:subjectType`.
 HTTP POST to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1121,7 +1121,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1143,7 +1143,7 @@ HTTP POST to http://host/v2/ontologies/classes
         }
       } ]
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1179,7 +1179,7 @@ This operation is permitted even if the class is used in data.
 HTTP PUT to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1187,7 +1187,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1196,7 +1196,7 @@ HTTP PUT to http://host/v2/ontologies/classes
         "@value" : "LABEL"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1218,7 +1218,7 @@ This operation is permitted even if the class is used in data.
 HTTP PUT to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1226,7 +1226,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1235,7 +1235,7 @@ HTTP PUT to http://host/v2/ontologies/classes
         "@value" : "COMMENT"
       }
     }
-  } ],
+  ],
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -1256,7 +1256,7 @@ will replace the existing ones.
 HTTP POST to http://host/v2/ontologies/properties
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1264,7 +1264,7 @@ HTTP POST to http://host/v2/ontologies/properties
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
@@ -1287,10 +1287,10 @@ HTTP POST to http://host/v2/ontologies/properties
       },
       "salsah-gui:guiElement" : {
         "@id" : "GUI_ELEMENT_IRI"
-      }
+      },
       "salsah-gui:guiAttribute" : [ "GUI_ATTRIBUTE" ]
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
@@ -1345,7 +1345,7 @@ This operation is permitted even if the property is used in data.
 HTTP PUT to http://host/v2/ontologies/properties
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1353,7 +1353,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
@@ -1362,7 +1362,7 @@ HTTP PUT to http://host/v2/ontologies/properties
         "@value" : "LABEL"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1383,7 +1383,7 @@ This operation is permitted even if the property is used in data.
 HTTP PUT to http://host/v2/ontologies/properties
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1391,7 +1391,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
@@ -1400,7 +1400,7 @@ HTTP PUT to http://host/v2/ontologies/properties
         "@value" : "COMMENT"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1421,30 +1421,36 @@ This operation is permitted even if the property is used in data.
 HTTP PUT to http://host/v2/ontologies/properties/guielement
 ```
 
-```jsonld
+```json
 {
-  "@id" : "ONTOLOGY_IRI",
-  "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  "@id": "ONTOLOGY_IRI",
+  "@type": "owl:Ontology",
+  "knora-api:lastModificationDate": {
+    "@type": "xsd:dateTimeStamp",
+    "@value": "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
-    "@id" : "PROPERTY_IRI",
-    "@type" : "owl:ObjectProperty",
-    "salsah-gui:guiElement" : {
-      "@id" : "salsah-gui:Textarea"
-    },
-    "salsah-gui:guiAttribute" : [ "cols=80", "rows=24" ]
-  } ],
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-    "owl" : "http://www.w3.org/2002/07/owl#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  "@graph": [
+    {
+      "@id": "PROPERTY_IRI",
+      "@type": "owl:ObjectProperty",
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Textarea"
+      },
+      "salsah-gui:guiAttribute": [
+        "cols=80",
+        "rows=24"
+      ]
+    }
+  ],
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   }
+}
 ```
 
 To remove the values of `salsah-gui:guiElement` and `salsah-gui:guiAttribute` from
@@ -1452,14 +1458,13 @@ the property definition, submit the request without those predicates.
 
 ### Adding Cardinalities to a Class
 
-If the class is used in data or if it
-has a subclass, it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
+If the class (or any of its sub-classes) is used in data, it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
 
 ```
 HTTP POST to http://host/v2/ontologies/cardinalities
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1518,7 +1523,7 @@ has a subclass.
 HTTP PUT to http://host/v2/ontologies/cardinalities
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1567,7 +1572,7 @@ HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1587,7 +1592,7 @@ isn't allowed to be used inside the data in any subclasses of this class.
 HTTP PATCH to http://host/v2/ontologies/cardinalities
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1636,7 +1641,7 @@ HTTP POST to http://host/v2/ontologies/candeletecardinalities
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1658,7 +1663,7 @@ This can be done even if the class is used in data.
 The request body includes the cardinalities whose GUI order should be changed,
 using the predicate `salsah-gui:guiOrder`, whose object is an integer:
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1684,7 +1689,7 @@ using the predicate `salsah-gui:guiOrder`, whose object is an integer:
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }
 ```
@@ -1720,7 +1725,7 @@ HTTP GET to http://host/v2/ontologies/candeleteproperty/PROPERTY_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1752,7 +1757,7 @@ HTTP GET to http://host/v2/ontologies/candeleteclass/CLASS_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {

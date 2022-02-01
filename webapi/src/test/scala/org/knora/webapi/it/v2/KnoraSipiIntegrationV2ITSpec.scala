@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -100,6 +100,9 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val testZipOriginalFilename = "test.zip"
   private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
+
+  private val test7zOriginalFilename = "test.7z"
+  private val pathToTest7z = s"test_data/test_route/files/$test7zOriginalFilename"
 
   private val minimalWavOriginalFilename = "minimal.wav"
   private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
@@ -439,12 +442,13 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = UploadFileRequest
         .make(
-          fileType = FileType.StillImageFile,
-          internalFilename = uploadedFile.internalFilename,
+          fileType = FileType.StillImageFile(),
+          internalFilename = uploadedFile.internalFilename
+        )
+        .toJsonLd(
           className = Some("ThingPicture"),
           ontologyName = "anything"
         )
-        .toJsonLd
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -508,10 +512,10 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(trp88OriginalFilename)
 
-      // JSON describing the new image to Knora.
+      // JSON describing the new image to the API.
       val jsonLdEntity = ChangeFileRequest
         .make(
-          fileType = FileType.StillImageFile,
+          fileType = FileType.StillImageFile(),
           internalFilename = uploadedFile.internalFilename,
           resourceIri = stillImageResourceIri.get,
           valueIri = stillImageFileValueIri.get,
@@ -564,7 +568,7 @@ class KnoraSipiIntegrationV2ITSpec
       // JSON describing the new image to Knora.
       val jsonLdEntity = ChangeFileRequest
         .make(
-          fileType = FileType.StillImageFile,
+          fileType = FileType.StillImageFile(),
           internalFilename = internalFilename,
           resourceIri = stillImageResourceIri.get,
           valueIri = stillImageFileValueIri.get,
@@ -602,12 +606,13 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity =
         UploadFileRequest
           .make(
-            fileType = FileType.DocumentFile,
+            fileType = FileType.DocumentFile(),
+            internalFilename = uploadedFile.internalFilename
+          )
+          .toJsonLd(
             className = Some("ThingDocument"),
-            internalFilename = uploadedFile.internalFilename,
             ontologyName = "anything"
           )
-          .toJsonLd
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -665,7 +670,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Update the value.
       val jsonLdEntity = ChangeFileRequest
         .make(
-          fileType = FileType.DocumentFile,
+          fileType = FileType.DocumentFile(),
           internalFilename = uploadedFile.internalFilename,
           resourceIri = pdfResourceIri.get,
           valueIri = pdfValueIri.get,
@@ -718,12 +723,13 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = UploadFileRequest
         .make(
-          fileType = FileType.DocumentFile,
+          fileType = FileType.DocumentFile(),
+          internalFilename = uploadedFile.internalFilename
+        )
+        .toJsonLd(
           className = Some("ThingDocument"),
-          internalFilename = uploadedFile.internalFilename,
           ontologyName = "anything"
         )
-        .toJsonLd
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -751,7 +757,7 @@ class KnoraSipiIntegrationV2ITSpec
           fileType = FileType.TextFile,
           internalFilename = uploadedFile.internalFilename
         )
-        .toJsonLd
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -855,8 +861,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Create the resource in the API.
 
       val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.StillImageFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .make(fileType = FileType.StillImageFile(), internalFilename = uploadedFile.internalFilename)
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -881,7 +887,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -986,7 +992,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.TextFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1010,7 +1016,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1104,6 +1110,66 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
+    "create a resource of type ArchiveRepresentation with a 7z file" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTest7z, mimeType = MediaTypes.`application/x-7z-compressed`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(test7zOriginalFilename)
+
+      // Create the resource in the API.
+
+      val jsonLdEntity = UploadFileRequest
+        .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
+        .toJsonLd()
+
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      zipResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
+      val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
+
+      resource.requireTypeAsKnoraTypeIri.toString should equal(
+        OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
+      )
+
+      // Get the new file value from the resource.
+
+      val savedValues: JsonLDArray = getValuesFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri
+      )
+
+      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
+        savedValues.value.head
+      } else {
+        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
+      }
+
+      val savedValueObj: JsonLDObject = savedValue match {
+        case jsonLDObject: JsonLDObject => jsonLDObject
+        case other                      => throw AssertionException(s"Invalid value object: $other")
+      }
+
+      zipValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
+
+      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValueObj)
+      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+      assert(savedDocument.pageCount.isEmpty)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
+
     "create a resource with a WAV file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
@@ -1117,7 +1183,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.AudioFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1221,8 +1287,8 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Create the resource in the API.
       val jsonLdEntity = UploadFileRequest
-        .make(fileType = FileType.MovingImageFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .make(fileType = FileType.MovingImageFile(), internalFilename = uploadedFile.internalFilename)
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1280,7 +1346,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = ChangeFileRequest
         .make(
-          fileType = FileType.MovingImageFile,
+          fileType = FileType.MovingImageFile(),
           resourceIri = videoResourceIri.get,
           internalFilename = uploadedFile.internalFilename,
           valueIri = videoValueIri.get

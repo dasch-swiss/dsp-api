@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -23,115 +23,9 @@ object ProjectsMessagesADMSpec {
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
  */
 class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
-
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  "The CreateProjectApiRequestADM case class" should {
-
-    "return a 'BadRequest' when project description is not supplied" in {
-      val caught = intercept[BadRequestException](
-        CreateProjectApiRequestADM(
-          shortname = "newproject5",
-          shortcode = "1114",
-          longname = Some("project longname"),
-          description = Seq.empty[StringLiteralV2],
-          keywords = Seq("keywords"),
-          logo = Some("/fu/bar/baz.jpg"),
-          status = true,
-          selfjoin = false
-        )
-      )
-      assert(caught.getMessage === "Project description needs to be supplied.")
-    }
-
-    "return 'BadRequest' if the supplied project IRI is not a valid IRI" in {
-      val caught = intercept[BadRequestException](
-        CreateProjectApiRequestADM(
-          id = Some("invalid-project-IRI"),
-          shortname = "newprojectWithInvalidIri",
-          shortcode = "2222",
-          longname = Some("new project with a custom invalid IRI"),
-          description = Seq(StringLiteralV2("a project created with an invalid custom IRI", Some("en"))),
-          keywords = Seq("projectInvalidIRI"),
-          logo = Some("/fu/bar/baz.jpg"),
-          status = true,
-          selfjoin = false
-        ).validateAndEscape
-      )
-      assert(caught.getMessage === "Invalid project IRI")
-    }
-
-    "return 'BadRequestException' if project 'shortname' during creation is missing" in {
-
-      val caught = intercept[BadRequestException](
-        CreateProjectApiRequestADM(
-          shortname = "",
-          shortcode = "1114",
-          longname = Some("project longname"),
-          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-          keywords = Seq("keywords"),
-          logo = Some("/fu/bar/baz.jpg"),
-          status = true,
-          selfjoin = false
-        ).validateAndEscape
-      )
-      assert(caught.getMessage === s"Project shortname must be supplied.")
-    }
-
-    "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
-
-      val caught = intercept[BadRequestException](
-        CreateProjectApiRequestADM(
-          shortname = "newproject4",
-          shortcode = "",
-          longname = Some("project longname"),
-          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-          keywords = Seq("keywords"),
-          logo = Some("/fu/bar/baz.jpg"),
-          status = true,
-          selfjoin = false
-        ).validateAndEscape
-      )
-      assert(caught.getMessage === "Project shortcode must be supplied.")
-    }
-
-    "return 'BadRequestException' if project 'shortname' is not NCName valid" in {
-      val invalidShortName = "abd%2"
-      val caught = intercept[BadRequestException](
-        CreateProjectApiRequestADM(
-          shortname = invalidShortName,
-          shortcode = "1114",
-          longname = Some("project longname"),
-          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-          keywords = Seq("keywords"),
-          logo = Some("/fu/bar/baz.jpg"),
-          status = true,
-          selfjoin = false
-        ).validateAndEscape
-      )
-      assert(caught.getMessage === s"The supplied short name: '$invalidShortName' is not valid.")
-    }
-
-    "return 'BadRequestException' if project 'shortname' is not URL safe" in {
-      val invalidShortName = "äbd2"
-      val caught = intercept[BadRequestException](
-        CreateProjectApiRequestADM(
-          shortname = invalidShortName,
-          shortcode = "1114",
-          longname = Some("project longname"),
-          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-          keywords = Seq("keywords"),
-          logo = Some("/fu/bar/baz.jpg"),
-          status = true,
-          selfjoin = false
-        ).validateAndEscape
-      )
-      assert(caught.getMessage === s"The supplied short name: '$invalidShortName' is not valid.")
-    }
-  }
-
   "The ChangeProjectApiRequestADM case class" should {
-
     "return a 'BadRequest' when everything is 'None" in {
       assertThrows[BadRequestException](
         ChangeProjectApiRequestADM(
@@ -148,7 +42,6 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
   }
 
   "The ProjectADM case class" should {
-
     "return a 'OntologyConstraintException' when project description is not supplied" in {
       assertThrows[OntologyConstraintException](
         ProjectADM(

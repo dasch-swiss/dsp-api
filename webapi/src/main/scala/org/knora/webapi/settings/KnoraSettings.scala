@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -382,7 +382,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
 object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProvider {
 
-  override def lookup(): KnoraSettings.type = KnoraSettings
+  override def lookup: KnoraSettings.type = KnoraSettings
 
   override def createExtension(system: ExtendedActorSystem) =
     new KnoraSettingsImpl(system.settings.config, akka.event.Logging(system, this.getClass))

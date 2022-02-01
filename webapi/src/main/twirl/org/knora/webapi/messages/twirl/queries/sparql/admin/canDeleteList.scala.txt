@@ -1,0 +1,29 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Checks if a list can be deleted (none of its nodes is used in data).
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param listIri the IRI of the list to be checked.
+ *@
+@(triplestore: String,
+  listIri: IRI)
+
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT ?isUsed
+
+WHERE {
+  BIND(IRI("@listIri") AS ?listToBeChecked)
+  BIND(true AS ?isUsed)
+
+  {
+    ?listToBeChecked knora-base:hasSubListNode* ?childNode .
+    ?valueUsingNode knora-base:valueHasListNode ?childNode .
+  }
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,17 +20,7 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Description,
-  Keywords,
-  Logo,
-  Longname,
-  Selfjoin,
-  Shortcode,
-  Shortname,
-  Status
-}
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import zio.prelude.Validation
 
@@ -139,19 +129,15 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
-        val id = Validation(
-          stringFormatter
-            .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI"))
-        )
-//        TODO-mpro: why id, longname and logo are not options below?
-        val shortname = Shortname.make(apiRequest.shortname)
-        val shortcode = Shortcode.make(apiRequest.shortcode)
-        val longname = Longname.make(apiRequest.longname)
-        val description = Description.make(apiRequest.description)
-        val keywords = Keywords.make(apiRequest.keywords)
-        val logo = Logo.make(apiRequest.logo)
-        val status = Status.make(apiRequest.status)
-        val selfjoin = Selfjoin.make(apiRequest.selfjoin)
+        val id: Validation[Throwable, Option[ProjectIRI]] = ProjectIRI.make(apiRequest.id)
+        val shortname: Validation[Throwable, Shortname] = Shortname.make(apiRequest.shortname)
+        val shortcode: Validation[Throwable, Shortcode] = Shortcode.make(apiRequest.shortcode)
+        val longname: Validation[Throwable, Option[Longname]] = Longname.make(apiRequest.longname)
+        val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
+        val keywords: Validation[Throwable, Keywords] = Keywords.make(apiRequest.keywords)
+        val logo: Validation[Throwable, Option[Logo]] = Logo.make(apiRequest.logo)
+        val status: Validation[Throwable, ProjectStatus] = ProjectStatus.make(apiRequest.status)
+        val selfjoin: Validation[Throwable, ProjectSelfJoin] = ProjectSelfJoin.make(apiRequest.selfjoin)
 
         val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
           Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(

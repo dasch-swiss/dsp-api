@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -52,7 +52,6 @@ object Cardinalities {
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[CanDoResponseV2] = {
     for {
       cacheData: Cache.OntologyCacheData <- Cache.getCacheData
-      ontology = cacheData.ontologies(internalOntologyIri)
 
       submittedClassDefinition: ClassInfoContentV2 =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -106,9 +105,20 @@ object Cardinalities {
       cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
-      _ = cardinalitiesToDelete.foreach(p =>
-        isCardinalityDefinedOnClass(cacheData, p._1, p._2, internalClassIri, internalOntologyIri)
-      )
+      isDefinedOnClassList: List[Boolean] <- Future
+        .sequence(cardinalitiesToDelete.map { p =>
+          for {
+            isDefined: Boolean <- isCardinalityDefinedOnClass(
+              cacheData,
+              p._1,
+              p._2,
+              internalClassIri,
+              internalOntologyIri
+            )
+          } yield isDefined
+        }.toList)
+
+      atLeastOneCardinalityNotDefinedOnClass: Boolean = isDefinedOnClassList.contains(false)
 
       // Check if property is used in resources of this class
 
@@ -176,7 +186,9 @@ object Cardinalities {
           throw BadRequestException(msg)
         }
       )
-    } yield CanDoResponseV2(!propertyIsUsed)
+
+      // response is true only when property is not used in data and cardinality is defined directly on that class
+    } yield CanDoResponseV2(!propertyIsUsed && !atLeastOneCardinalityNotDefinedOnClass)
   }
 
   /**
@@ -250,9 +262,24 @@ object Cardinalities {
       cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
-      _ = cardinalitiesToDelete.foreach(p =>
-        isCardinalityDefinedOnClass(cacheData, p._1, p._2, internalClassIri, internalOntologyIri)
-      )
+      isDefinedOnClassList: List[Boolean] <- Future
+        .sequence(cardinalitiesToDelete.map { p =>
+          for {
+            isDefined: Boolean <- isCardinalityDefinedOnClass(
+              cacheData,
+              p._1,
+              p._2,
+              internalClassIri,
+              internalOntologyIri
+            )
+          } yield isDefined
+        }.toList)
+
+      _ = if (isDefinedOnClassList.contains(false)) {
+        throw BadRequestException(
+          "The cardinality is not defined directly on the class and cannot be deleted."
+        )
+      }
 
       // Check if property is used in resources of this class
 
@@ -485,6 +512,59 @@ object Cardinalities {
   } yield currentClassDefinition
 
   /**
+   * Check if the cardinality for a property is defined on a class.
+   *
+   * @param cacheData the cached ontology data.
+   * @param propertyIri the property IRI for which we want to check if the cardinality is defined on the class.
+   * @param cardinalityInfo the cardinality that should be defined for the property.
+   * @param internalClassIri the class we are checking against.
+   * @param internalOntologyIri the ontology containing the class.
+   * @return `true` if the cardinality is defined on the class, `false` otherwise
+   */
+  def isCardinalityDefinedOnClass(
+    cacheData: Cache.OntologyCacheData,
+    propertyIri: SmartIri,
+    cardinalityInfo: KnoraCardinalityInfo,
+    internalClassIri: SmartIri,
+    internalOntologyIri: SmartIri
+  )(implicit ec: ExecutionContext): Future[Boolean] = {
+    val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
+
+    val readClassInfo: ReadClassInfoV2 = currentOntologyState.classes
+      .getOrElse(
+        internalClassIri,
+        throw BadRequestException(
+          s"Class $internalClassIri does not exist"
+        )
+      )
+
+    // if cardinality is inherited, it's not directly defined on that class
+    if (readClassInfo.inheritedCardinalities.keySet.contains(propertyIri)) {
+      return FastFuture.successful(false)
+    }
+
+    val currentClassState: ClassInfoContentV2 = readClassInfo.entityInfoContent
+    val existingCardinality = currentClassState.directCardinalities.get(propertyIri)
+    existingCardinality match {
+      case Some(cardinality) =>
+        if (cardinality.cardinality.equals(cardinalityInfo.cardinality)) {
+          FastFuture.successful(true)
+        } else {
+          FastFuture.failed(
+            throw BadRequestException(
+              s"Submitted cardinality for property $propertyIri does not match existing cardinality."
+            )
+          )
+        }
+      case None =>
+        throw BadRequestException(
+          s"Submitted cardinality for property $propertyIri is not defined for class $internalClassIri."
+        )
+    }
+
+  }
+
+  /**
    * Checks if the class is a subclass of `knora-base:Resource`.
    *
    * @param submittedClassInfoContentV2 the class to check
@@ -502,49 +582,5 @@ object Cardinalities {
         )
       )
     }
-
-  /**
-   * Check if the cardinality for a property is defined on a class.
-   *
-   * @param cacheData the cached ontology data.
-   * @param propertyIri the property IRI for which we want to check if the cardinality is defined on the class.
-   * @param cardinalityInfo the cardinality that should be defined for the property.
-   * @param internalClassIri the class we are checking against.
-   * @param internalOntologyIri the ontology containing the class.
-   * @return `true` if the cardinality is defined on the class, otherwise throws an exception.
-   */
-  def isCardinalityDefinedOnClass(
-    cacheData: Cache.OntologyCacheData,
-    propertyIri: SmartIri,
-    cardinalityInfo: KnoraCardinalityInfo,
-    internalClassIri: SmartIri,
-    internalOntologyIri: SmartIri
-  )(implicit ec: ExecutionContext): Future[Boolean] = {
-    val currentOntologyState: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
-    val currentClassState: ClassInfoContentV2 = currentOntologyState.classes
-      .getOrElse(
-        internalClassIri,
-        throw BadRequestException(
-          s"Class ${internalClassIri} does not exist"
-        )
-      )
-      .entityInfoContent
-    val existingCardinality = currentClassState.directCardinalities
-      .getOrElse(
-        propertyIri,
-        throw BadRequestException(
-          s"Cardinality for property ${propertyIri} is not defined."
-        )
-      )
-    if (existingCardinality.cardinality.equals(cardinalityInfo.cardinality)) {
-      FastFuture.successful(true)
-    } else {
-      FastFuture.failed(
-        throw BadRequestException(
-          s"Submitted cardinality for property ${propertyIri} does not match existing cardinality."
-        )
-      )
-    }
-  }
 
 }

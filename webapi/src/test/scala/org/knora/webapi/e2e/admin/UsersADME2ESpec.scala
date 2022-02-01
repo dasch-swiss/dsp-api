@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -134,9 +134,7 @@ class UsersADME2ESpec
   }
 
   "The Users Route ('admin/users')" when {
-
     "used to query user information [FUNCTIONALITY]" should {
-
       "return all users" in {
         val request =
           Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
@@ -198,7 +196,6 @@ class UsersADME2ESpec
     }
 
     "used to query user information [PERMISSIONS]" should {
-
       "return single user for SystemAdmin" in {
         val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc") ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password)
@@ -327,7 +324,6 @@ class UsersADME2ESpec
     }
 
     "given a custom Iri" should {
-
       "create a user with the provided custom IRI " in {
         val createUserWithCustomIriRequest: String =
           s"""{
@@ -404,7 +400,6 @@ class UsersADME2ESpec
     }
 
     "dealing with special characters" should {
-
       "escape special characters when creating the user" in {
         val createUserWithApostropheRequest: String =
           s"""{
@@ -475,9 +470,7 @@ class UsersADME2ESpec
     }
 
     "used to create a user" should {
-
       "create the user if the supplied email and username are unique " in {
-
         val createUserRequest: String =
           s"""{
              |    "username": "donald.duck",
@@ -528,7 +521,6 @@ class UsersADME2ESpec
       }
 
       "return a 'BadRequest' if the supplied username is not unique " in {
-
         val createUserRequest: String =
           s"""{
              |    "username": "donald.duck",
@@ -569,7 +561,6 @@ class UsersADME2ESpec
       }
 
       "return a 'BadRequest' if the supplied email is not unique " in {
-
         val createUserRequest: String =
           s"""{
              |    "username": "new.donald.duck",
@@ -610,7 +601,6 @@ class UsersADME2ESpec
       }
 
       "authenticate the newly created user using HttpBasicAuth" in {
-
         val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
           BasicHttpCredentials("donald.duck@example.org", "test")
         )
@@ -620,7 +610,6 @@ class UsersADME2ESpec
       }
 
       "authenticate the newly created user during login" in {
-
         val params =
           s"""
                     {
@@ -638,9 +627,7 @@ class UsersADME2ESpec
     }
 
     "used to modify user information" should {
-
       "update the user's basic information" in {
-
         val updateUserRequest: String =
           s"""{
              |    "username": "donald.big.duck",
@@ -689,7 +676,6 @@ class UsersADME2ESpec
       }
 
       "return 'BadRequest' if user IRI is None and 'NotFound' if user IRI is '' in update user request" in {
-
         val updateUserRequest: String =
           s"""{
              |    "username": "donald.without.iri.duck"
@@ -749,7 +735,6 @@ class UsersADME2ESpec
       }
 
       "update the user's password (by himself)" in {
-
         val changeUserPasswordRequest: String =
           s"""{
              |    "requesterPassword": "test",
@@ -796,7 +781,6 @@ class UsersADME2ESpec
       }
 
       "update the user's password (by a system admin)" in {
-
         val params01 =
           s"""
                     {
@@ -822,7 +806,6 @@ class UsersADME2ESpec
       }
 
       "return 'BadRequest' if new password in change password request is missing" in {
-
         val changeUserPasswordRequest: String =
           s"""{
              |    "requesterPassword": "test"
@@ -867,7 +850,6 @@ class UsersADME2ESpec
       }
 
       "return 'BadRequest' if requester's password in change password request is missing" in {
-
         val changeUserPasswordRequest: String =
           s"""{
              |    "newPassword": "testABC"
@@ -950,7 +932,6 @@ class UsersADME2ESpec
       }
 
       "return 'BadRequest' if more than 1 parameter is provided in update status request" in {
-
         val updateUserRequest: String =
           s"""{
              |    "status": false,
@@ -1047,9 +1028,7 @@ class UsersADME2ESpec
       }
 
       "not allow changing the anonymous user's status" in {
-
         val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
-
         val params =
           s"""
                     {
@@ -1106,7 +1085,6 @@ class UsersADME2ESpec
     }
 
     "used to query project memberships" should {
-
       "return all projects the user is a member of" in {
         val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password)
@@ -1139,7 +1117,6 @@ class UsersADME2ESpec
     }
 
     "used to modify project membership" should {
-
       "add user to project" in {
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq())
@@ -1193,7 +1170,6 @@ class UsersADME2ESpec
       }
 
       "remove user from project" in {
-
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
 
@@ -1222,7 +1198,6 @@ class UsersADME2ESpec
     }
 
     "used to query project admin group memberships" should {
-
       "return all projects the user is a member of the project admin group" in {
         val request = Get(
           baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-admin-memberships"
@@ -1255,7 +1230,6 @@ class UsersADME2ESpec
     }
 
     "used to modify project admin group membership" should {
-
       "add user to project admin group" in {
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq())
@@ -1284,7 +1258,6 @@ class UsersADME2ESpec
       }
 
       "remove user from project admin group" in {
-
         val membershipsBeforeUpdate = getUserProjectAdminMemberships(normalUserCreds.userIri, rootCreds)
 
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
@@ -1315,7 +1288,6 @@ class UsersADME2ESpec
     }
 
     "used to query group memberships" should {
-
       "return all groups the user is a member of" in {
         val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/group-memberships") ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password)
@@ -1346,9 +1318,7 @@ class UsersADME2ESpec
     }
 
     "used to modify group membership" should {
-
       "add user to group" in {
-
         val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq.empty[GroupADM])
 
@@ -1375,7 +1345,6 @@ class UsersADME2ESpec
       }
 
       "remove user from group" in {
-
         val membershipsBeforeUpdate = getUserGroupMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesReviewerGroup))
 
@@ -1400,8 +1369,6 @@ class UsersADME2ESpec
           )
         )
       }
-
     }
-
   }
 }

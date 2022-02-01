@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,7 +12,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{
@@ -22,6 +21,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{
   ReadResourcesSequenceV2
 }
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
+import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -37,48 +37,66 @@ import scala.language.postfixOps
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
+  override lazy val rdfDataObjects: Seq[RdfDataObject] =
+    List(exampleSharedOntology, anythingData, freeTestOntology, freeTestData)
   private val imagesUser = SharedTestDataADM.imagesUser01
   private val imagesProjectIri = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
-
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
   private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
   private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
-
   private val exampleSharedOntology = RdfDataObject(
     path = "test_data/ontologies/example-box.ttl",
     name = "http://www.knora.org/ontology/shared/example-box"
   )
   private val anythingData =
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-
   private val freeTestOntology =
     RdfDataObject(path = "test_data/ontologies/freetest-onto.ttl", name = "http://www.knora.org/ontology/0001/freetest")
-
   private val freeTestData =
     RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
-
   // The default timeout for receiving reply messages from actors.
   private val timeout = 10.seconds
-
   private val fooIri = new MutableTestIri
-  private var fooLastModDate: Instant = Instant.now
   private val barIri = new MutableTestIri
-  private var barLastModDate: Instant = Instant.now
-
   private val chairIri = new MutableTestIri
-  private var chairLastModDate: Instant = Instant.now
-
   private val ExampleSharedOntologyIri = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
   private val IncunabulaOntologyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
   private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
-  private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-  private var freetestLastModData: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-
+  private val FreeTestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
   private val printErrorMessages = false
+  private var fooLastModDate: Instant = Instant.now
+  private var barLastModDate: Instant = Instant.now
+  private var chairLastModDate: Instant = Instant.now
+  private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+  private var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
 
-  override lazy val rdfDataObjects: Seq[RdfDataObject] =
-    List(exampleSharedOntology, anythingData, freeTestOntology, freeTestData)
+  val anythingOntology = "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  val anythingThing: IRI = anythingOntology + "Thing"
+  val anythingHasBoolean: IRI = anythingOntology + "hasBoolean"
+  val anythingHasColor: IRI = anythingOntology + "hasColor"
+  val anythingHasDate: IRI = anythingOntology + "hasDate"
+  val anythingHasDecimal: IRI = anythingOntology + "hasDecimal"
+  val anythingHasGeometry: IRI = anythingOntology + "hasGeometry"
+  val anythingHasGeoname: IRI = anythingOntology + "hasGeoname"
+  val anythingHasInteger: IRI = anythingOntology + "hasInteger"
+  val anythingHasInterval: IRI = anythingOntology + "hasInterval"
+  val anythingHasListItem: IRI = anythingOntology + "hasListItem"
+  val anythingHasName: IRI = anythingOntology + "hasName"
+  val anythingHasOtherListItem: IRI = anythingOntology + "hasOtherListItem"
+  val anythingHasOtherThing: IRI = anythingOntology + "hasOtherThing"
+  val anythingHasOtherThingValue: IRI = anythingOntology + "hasOtherThingValue"
+  val anythingHasRichtext: IRI = anythingOntology + "hasRichtext"
+  val anythingHasText: IRI = anythingOntology + "hasText"
+  val anythingHasThingDocument: IRI = anythingOntology + "hasThingDocument"
+  val anythingHasThingDocumentValue: IRI = anythingOntology + "hasThingDocumentValue"
+  val anythingHasThingPicture: IRI = anythingOntology + "hasThingPicture"
+  val anythingHasThingPictureValue: IRI = anythingOntology + "hasThingPictureValue"
+  val anythingHasTimeStamp: IRI = anythingOntology + "hasTimeStamp"
+  val anythingHasUri: IRI = anythingOntology + "hasUri"
+  val anythingIsPartOfOtherThing: IRI = anythingOntology + "isPartOfOtherThing"
+  val anythingIsPartOfOtherThingValue: IRI = anythingOntology + "isPartOfOtherThingValue"
+  val anythingHasStandoffLinkTo: IRI = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+  val anythingHasStandoffLinkToValue: IRI = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
 
   private def loadInvalidTestData(rdfDataObjs: List[RdfDataObject]): Unit = {
     storeManager ! ResetRepositoryContent(rdfDataObjs)
@@ -924,6 +942,226 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
         assert(!readPropertyInfo.isLinkProp)
         assert(readPropertyInfo.isLinkValueProp)
+      }
+
+    }
+
+    "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class" in {
+
+      responderManager ! OntologyMetadataGetByProjectRequestV2(
+        projectIris = Set(anythingProjectIri),
+        requestingUser = anythingAdminUser
+      )
+
+      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      assert(metadataResponse.ontologies.size == 3)
+      freetestLastModDate = metadataResponse
+        .toOntologySchema(ApiV2Complex)
+        .ontologies
+        .find(_.ontologyIri == FreeTestOntologyIri)
+        .get
+        .lastModificationDate
+        .get
+
+      // Create class freetest:ComicBook which is a subclass of freetest:Book
+
+      val comicBookClassIri = FreeTestOntologyIri.makeEntityIri("ComicBook")
+
+      val comicBookClassInfoContent = ClassInfoContentV2(
+        classIri = comicBookClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Comic Book", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A comic book", Some("en")))
+          )
+        ),
+        directCardinalities = Map(),
+        subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Book")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = comicBookClassInfoContent,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
+      }
+
+      // Create class freetest:ComicAuthor which is a subclass of feetest:Author
+
+      val comicAuthorClassIri = FreeTestOntologyIri.makeEntityIri("ComicAuthor")
+
+      val comicAuthorClassInfoContent = ClassInfoContentV2(
+        classIri = comicAuthorClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Comic Author", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A comic author", Some("en")))
+          )
+        ),
+        directCardinalities = Map(),
+        subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Author")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = comicAuthorClassInfoContent,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
+      }
+
+      // Create property freetest:hasComicBookAuthor which is a subproperty of freetest:hasAuthor and links freetest:ComicBook and freetest:ComicAuthor
+
+      val comicAuthorPropertyIri = FreeTestOntologyIri.makeEntityIri("hasComicAuthor")
+
+      val comicAuthorPropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = comicAuthorPropertyIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+          ),
+          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicBook")))
+          ),
+          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicAuthor")))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("Comic author", Some("en"))
+            )
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("A comic author of a comic book", Some("en"))
+            )
+          )
+        ),
+        subPropertyOf = Set(FreeTestOntologyIri.makeEntityIri("hasAuthor")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = comicAuthorPropertyInfoContent,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val property = externalOntology.properties(comicAuthorPropertyIri)
+        assert(property.isLinkProp)
+        assert(!property.isLinkValueProp)
+        externalOntology.properties(comicAuthorPropertyIri).entityInfoContent should ===(
+          comicAuthorPropertyInfoContent
+        )
+        val metadata = externalOntology.ontologyMetadata
+        val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
+      }
+
+      // Add new subproperty freetest:hasComicBookAuthor to class freetest:ComicBook
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = ClassInfoContentV2(
+          predicates = Map(
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
+            )
+          ),
+          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#ComicBook".toSmartIri,
+          ontologySchema = ApiV2Complex,
+          directCardinalities = Map(
+            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            )
+          )
+        ),
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val comicBookClass =
+          msg.classes("http://www.knora.org/ontology/0001/freetest#ComicBook".toSmartIri)
+        val linkProperties = comicBookClass.linkProperties
+        val linkValueProperties = comicBookClass.linkValueProperties
+        assert(
+          linkProperties.contains(
+            "http://www.knora.org/ontology/0001/freetest#hasComicAuthor".toSmartIri
+          )
+        )
+        assert(
+          linkValueProperties.contains(
+            "http://www.knora.org/ontology/0001/freetest#hasComicAuthorValue".toSmartIri
+          )
+        )
+        assert(
+          !linkProperties.contains(
+            "http://www.knora.org/ontology/0001/freetest#hasAuthor".toSmartIri
+          )
+        )
+        assert(
+          !linkValueProperties.contains(
+            "http://www.knora.org/ontology/0001/freetest#hasAuthorValue".toSmartIri
+          )
+        )
+        val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
+          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
     }
@@ -2349,6 +2587,183 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "create classes anything:wholeThing and anything:partThing with a isPartOf relation and its corresponding value property" in {
+
+      // Create class partThing
+
+      val partThingClassIri = AnythingOntologyIri.makeEntityIri("partThing")
+
+      val partThingClassInfoContent = ClassInfoContentV2(
+        classIri = partThingClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Thing as part", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("Thing that is part of something else", Some("en")))
+          )
+        ),
+        subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = partThingClassInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create class wholeThing
+
+      val wholeThingClassIri = AnythingOntologyIri.makeEntityIri("wholeThing")
+
+      val wholeThingClassInfoContent = ClassInfoContentV2(
+        classIri = wholeThingClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Thing as a whole", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A thing that has multiple parts", Some("en")))
+          )
+        ),
+        subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = wholeThingClassInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create property partOf with subject partThing and object wholeThing
+
+      val partOfPropertyIri = AnythingOntologyIri.makeEntityIri("partOf")
+
+      val partOfPropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = partOfPropertyIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+          ),
+          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("partThing")))
+          ),
+          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("wholeThing")))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("is part of", Some("en")),
+              StringLiteralV2("ist Teil von", Some("de"))
+            )
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("Represents a part of a whole relation", Some("en")),
+              StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de"))
+            )
+          ),
+          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
+          )
+        ),
+        subPropertyOf = Set(OntologyConstants.KnoraBase.IsPartOf.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = partOfPropertyInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val property = externalOntology.properties(partOfPropertyIri)
+        // check that partOf is a subproperty of knora-api:isPartOf
+        property.entityInfoContent.subPropertyOf.contains(
+          OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri
+        ) should ===(true)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Check that the corresponding partOfValue was created
+      val partOfValuePropertyIri = AnythingOntologyIri.makeEntityIri("partOfValue")
+
+      val partOfValuePropGetRequest = PropertiesGetRequestV2(
+        propertyIris = Set(partOfValuePropertyIri),
+        allLanguages = true,
+        requestingUser = anythingAdminUser
+      )
+
+      responderManager ! partOfValuePropGetRequest
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val property = externalOntology.properties(partOfValuePropertyIri)
+        // check that partOfValue is a subproperty of knora-api:isPartOfValue
+        property.entityInfoContent.subPropertyOf.contains(
+          OntologyConstants.KnoraApiV2Complex.IsPartOfValue.toSmartIri
+        ) should ===(true)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "change the metadata of the 'anything' ontology" in {
       val newLabel = "The modified anything ontology"
 
@@ -2434,36 +2849,36 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedProperties: Set[SmartIri] = Set(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        anythingHasBoolean,
+        anythingHasColor,
+        anythingHasDate,
+        anythingHasDecimal,
+        anythingHasGeometry,
+        anythingHasGeoname,
+        anythingHasInteger,
+        anythingHasInterval,
+        anythingHasListItem,
+        anythingHasName,
+        anythingHasOtherListItem,
+        anythingHasOtherThing,
+        anythingHasOtherThingValue,
+        anythingHasRichtext,
+        anythingHasText,
+        anythingHasThingDocument,
+        anythingHasThingDocumentValue,
+        anythingHasThingPicture,
+        anythingHasThingPictureValue,
+        anythingHasTimeStamp,
+        anythingHasUri,
+        anythingIsPartOfOtherThing,
+        anythingIsPartOfOtherThingValue,
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        (anythingOntology + "WildThing").toSmartIri,
+        anythingThing.toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -2474,7 +2889,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.inheritedCardinalities.keySet
-          .contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri) should ===(false)
+          .contains(anythingHasInteger.toSmartIri) should ===(false)
         readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
         val metadata = externalOntology.ontologyMetadata
@@ -2483,6 +2898,248 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "not allow inherited property to be deleted on subclass" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("SubThing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("sub thing", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en")))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+        ),
+        subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      val expectedProperties: Set[SmartIri] = Set(
+        anythingHasBoolean,
+        anythingHasColor,
+        anythingHasDate,
+        anythingHasDecimal,
+        anythingHasGeometry,
+        anythingHasGeoname,
+        anythingHasInteger,
+        anythingHasInterval,
+        anythingHasListItem,
+        anythingHasName,
+        anythingHasOtherListItem,
+        anythingHasOtherThing,
+        anythingHasOtherThingValue,
+        anythingHasRichtext,
+        anythingHasText,
+        anythingHasThingDocument,
+        anythingHasThingDocumentValue,
+        anythingHasThingPicture,
+        anythingHasThingPictureValue,
+        anythingHasTimeStamp,
+        anythingHasUri,
+        anythingIsPartOfOtherThing,
+        anythingIsPartOfOtherThingValue,
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
+      ).map(_.toSmartIri)
+
+      val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+        (anythingOntology + "SubThing").toSmartIri,
+        anythingThing.toSmartIri,
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val readClassInfo = externalOntology.classes(classIri)
+        readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
+        readClassInfo.entityInfoContent should ===(classInfoContent)
+        readClassInfo.inheritedCardinalities.keySet
+          .contains(anythingHasInteger.toSmartIri) should ===(true)
+        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      val classInfoContentWithCardinalityToDeleteDontAllow = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("sub thing", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A subclass thing of thing", Some("en")))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+        ),
+        subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CanDeleteCardinalitiesFromClassRequestV2(
+        classInfoContent = classInfoContentWithCardinalityToDeleteDontAllow,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
+        assert(!msg.canDo)
+      }
+    }
+
+    "allow direct property to be deleted on subclass" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("OtherSubThing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("other sub thing", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en")))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+        ),
+        subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      val expectedProperties: Set[SmartIri] = Set(
+        anythingHasBoolean,
+        anythingHasColor,
+        anythingHasDate,
+        anythingHasDecimal,
+        anythingHasGeometry,
+        anythingHasGeoname,
+        anythingHasInteger,
+        anythingHasInterval,
+        anythingHasListItem,
+        anythingHasName,
+        anythingHasOtherListItem,
+        anythingHasOtherThing,
+        anythingHasOtherThingValue,
+        anythingHasRichtext,
+        anythingHasText,
+        anythingHasThingDocument,
+        anythingHasThingDocumentValue,
+        anythingHasThingPicture,
+        anythingHasThingPictureValue,
+        anythingHasTimeStamp,
+        anythingHasUri,
+        anythingIsPartOfOtherThing,
+        anythingIsPartOfOtherThingValue,
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
+      ).map(_.toSmartIri)
+
+      val expectedAllBaseClasses: Seq[SmartIri] = Seq(
+        (anythingOntology + "OtherSubThing").toSmartIri,
+        anythingThing.toSmartIri,
+        "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val readClassInfo = externalOntology.classes(classIri)
+        readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
+        readClassInfo.entityInfoContent should ===(classInfoContent)
+        readClassInfo.inheritedCardinalities.keySet
+          .contains(anythingHasName.toSmartIri) should ===(false)
+        readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
+
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      val classInfoContentWithCardinalityToDeleteAllow = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("other sub thing", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("Another subclass thing of thing", Some("en")))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+        ),
+        subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CanDeleteCardinalitiesFromClassRequestV2(
+        classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
+        assert(msg.canDo)
       }
     }
 
@@ -2524,8 +3181,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedProperties = Set(
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
       ).map(_.toSmartIri)
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3480,7 +4137,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality=1 to the class anything:Nothing, because it has a subclass" in {
+    "add a cardinality=1 to the class anything:Nothing which has a subclass" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3505,9 +4162,34 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.classes.size == 1)
+
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      responderManager ! DeleteCardinalitiesFromClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
       }
     }
 
@@ -3676,7 +4358,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+        (anythingOntology + "Nothing").toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -4138,7 +4820,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+        (anythingOntology + "Nothing").toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -4990,7 +5672,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
         ),
@@ -5011,7 +5693,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri,
+          propertyIri = (anythingOntology + "testTextProp").toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5024,8 +5706,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -5066,7 +5747,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri,
+          propertyIri = (anythingOntology + "testIntProp").toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5079,8 +5760,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -5121,7 +5801,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri,
+          propertyIri = (anythingOntology + "testLinkProp").toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5134,8 +5814,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -5148,8 +5827,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
@@ -5182,16 +5860,16 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
@@ -5219,13 +5897,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
@@ -5301,7 +5979,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
         ),
-        lastModificationDate = freetestLastModData,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -5310,8 +5988,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModData))
-        freetestLastModData = newFreetestLastModDate
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
       // Create a text property.
@@ -5357,7 +6035,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
           ontologySchema = ApiV2Complex
         ),
-        lastModificationDate = freetestLastModData,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -5366,8 +6044,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModData))
-        freetestLastModData = newFreetestLastModDate
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
       // Create an integer property.
@@ -5413,7 +6091,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
           ontologySchema = ApiV2Complex
         ),
-        lastModificationDate = freetestLastModData,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -5422,8 +6100,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModData))
-        freetestLastModData = newFreetestLastModDate
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
       // Add cardinalities to the class.
@@ -5447,7 +6125,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
           )
         ),
-        lastModificationDate = freetestLastModData,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -5456,8 +6134,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModData))
-        freetestLastModData = newFreetestLastModDate
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
       // Create a resource of #BlueTestClass using only #hasBlueTestIntProp.
@@ -5512,7 +6190,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
           )
         ),
-        lastModificationDate = freetestLastModData,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -5540,7 +6218,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
           )
         ),
-        lastModificationDate = freetestLastModData,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -5549,8 +6227,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val newFreetestLastModDate = msg.ontologyMetadata.lastModificationDate
           .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newFreetestLastModDate.isAfter(freetestLastModData))
-        freetestLastModData = newFreetestLastModDate
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
       // Check that the correct blank nodes were stored for the cardinalities.
@@ -6062,5 +6740,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       loadInvalidTestData(invalidOnto)
     }
+
   }
 }

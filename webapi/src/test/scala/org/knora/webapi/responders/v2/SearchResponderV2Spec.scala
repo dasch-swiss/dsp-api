@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -260,7 +260,30 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.fulltextSearchForListNodeLabel,
+          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
+          received = response
+        )
+      }
+    }
+
+    "search for list label and find sub-nodes" in {
+
+      responderManager ! FulltextSearchRequestV2(
+        searchValue = "novel",
+        offset = 0,
+        limitToProject = None,
+        limitToResourceClass = None,
+        limitToStandoffClass = None,
+        returnFiles = false,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
           received = response
         )
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -64,7 +64,7 @@ case class ResourcesGetRequestV2(
   propertyIri: Option[SmartIri] = None,
   valueUuid: Option[UUID] = None,
   versionDate: Option[Instant] = None,
-  withDeleted: Boolean = false,
+  withDeleted: Boolean = true,
   targetSchema: ApiV2Schema,
   schemaOptions: Set[SchemaOption] = Set.empty,
   featureFactoryConfig: FeatureFactoryConfig,
@@ -82,7 +82,7 @@ case class ResourcesGetRequestV2(
  */
 case class ResourcesPreviewGetRequestV2(
   resourceIris: Seq[IRI],
-  withDeletedResource: Boolean = false,
+  withDeletedResource: Boolean = true,
   targetSchema: ApiV2Schema,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
@@ -533,6 +533,69 @@ case class ReadResourceV2(
       ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema + arkUrlAsJsonLD + versionArkUrlAsJsonLD
     )
   }
+
+  /**
+   * Transform this Resource into a generic representation for a deleted resource.
+   *
+   * The resulting Resource is of type `knora-base:DeletedResource`, has `"Deleted Resource"` as its label,
+   * and no values at all.
+   * Otherwise it is similar to the initial resource (including the IRI).
+   *
+   * Note that the `deletionInfo` holds the deletion date and optionally the deletion comment.
+   *
+   * @return A generic DeletedResource
+   */
+  def asDeletedResource(): ReadResourceV2 = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    ReadResourceV2(
+      resourceIri = this.resourceIri,
+      label = "Deleted Resource",
+      resourceClassIri = OntologyConstants.KnoraBase.DeletedResource.toSmartIri,
+      attachedToUser = this.attachedToUser,
+      projectADM = this.projectADM,
+      permissions = this.permissions,
+      userPermission = this.userPermission,
+      values = Map.empty,
+      creationDate = this.creationDate,
+      lastModificationDate = this.lastModificationDate,
+      versionDate = None,
+      deletionInfo = this.deletionInfo
+    )
+  }
+
+  /**
+   * Return a copy of the present resource, where all values that are marked as deleted,
+   * are replaced with a generic DeletedValue
+   *
+   * @return
+   */
+  def withDeletedValues(): ReadResourceV2 = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val delIri: SmartIri = OntologyConstants.KnoraBase.DeletedValue.toSmartIri
+    val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] =
+      this.values.toList
+        .foldLeft(Seq.empty[(SmartIri, ReadValueV2)])((aggregator, valueMap) =>
+          valueMap match {
+            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) => {
+              val withDeletedSeq = valueSequence
+                .map(value =>
+                  value.deletionInfo match {
+                    case Some(_) =>
+                      println()
+                      (delIri, value.asDeletedValue())
+                    case None => (iri, value)
+                  }
+                )
+              aggregator ++ withDeletedSeq
+            }
+          }
+        )
+        .groupMap(_._1)(_._2)
+    this.copy(
+      values = valuesWithDeletedValues
+    )
+  }
+
 }
 
 /**

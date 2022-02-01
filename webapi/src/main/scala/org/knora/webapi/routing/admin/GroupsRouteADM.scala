@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -137,12 +137,12 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   private def createGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath) {
     post {
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val id = GroupIRI.make(apiRequest.id)
-        val name = GroupName.make(apiRequest.name)
-        val descriptions = GroupDescriptions.make(apiRequest.descriptions)
-        val project = ProjectIRI.make(apiRequest.project)
-        val status = GroupStatus.make(apiRequest.status)
-        val selfjoin = GroupSelfJoin.make(apiRequest.selfjoin)
+        val id: Validation[Throwable, Option[GroupIRI]] = GroupIRI.make(apiRequest.id)
+        val name: Validation[Throwable, GroupName] = GroupName.make(apiRequest.name)
+        val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
+        val project: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.project)
+        val status: Validation[Throwable, GroupStatus] = GroupStatus.make(apiRequest.status)
+        val selfjoin: Validation[Throwable, GroupSelfJoin] = GroupSelfJoin.make(apiRequest.selfjoin)
 
         val validatedGroupCreatePayload: Validation[Throwable, GroupCreatePayloadADM] =
           Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
@@ -188,10 +188,11 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           )
         }
 
-        val name = GroupName.make(apiRequest.name)
-        val descriptions = GroupDescriptions.make(apiRequest.descriptions)
-        val status = GroupStatus.make(apiRequest.status)
-        val selfjoin = GroupSelfJoin.make(apiRequest.selfjoin)
+        val name: Validation[Throwable, Option[GroupName]] = GroupName.make(apiRequest.name)
+        val descriptions: Validation[Throwable, Option[GroupDescriptions]] =
+          GroupDescriptions.make(apiRequest.descriptions)
+        val status: Validation[Throwable, Option[GroupStatus]] = GroupStatus.make(apiRequest.status)
+        val selfjoin: Validation[Throwable, Option[GroupSelfJoin]] = GroupSelfJoin.make(apiRequest.selfjoin)
 
         val validatedGroupUpdatePayload: Validation[Throwable, GroupUpdatePayloadADM] =
           Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)

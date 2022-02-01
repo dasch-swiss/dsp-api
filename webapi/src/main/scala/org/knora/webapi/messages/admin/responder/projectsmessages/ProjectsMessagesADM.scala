@@ -1,12 +1,10 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import java.nio.file.Path
-import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.IRI
@@ -19,6 +17,9 @@ import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponse
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
+
+import java.nio.file.Path
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -47,67 +48,8 @@ case class CreateProjectApiRequestADM(
   status: Boolean,
   selfjoin: Boolean
 ) extends ProjectsADMJsonProtocol {
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  // Check that collection parameters are not empty.
-  if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
-  if (keywords.isEmpty) throw BadRequestException("At least one keyword must be supplied for a new project.")
-  if (shortcode.isEmpty) throw BadRequestException("Project shortcode must be supplied.")
-  if (shortname.isEmpty) throw BadRequestException("Project shortname must be supplied.")
-
   /* Convert to Json */
   def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
-
-  /* validates and escapes the given values.*/
-  def validateAndEscape: CreateProjectApiRequestADM = {
-    val maybeProjectIri =
-      stringFormatter.validateAndEscapeOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
-    val validatedShortcode = stringFormatter.validateAndEscapeProjectShortcode(
-      shortcode,
-      errorFun = throw BadRequestException(s"The supplied short code: '$shortcode' is not valid.")
-    )
-
-    val validatedShortname = stringFormatter.validateAndEscapeProjectShortname(
-      shortname,
-      errorFun = throw BadRequestException(s"The supplied short name: '$shortname' is not valid.")
-    )
-
-    val validatedLongName = stringFormatter.escapeOptionalString(
-      longname,
-      errorFun = throw BadRequestException(s"The supplied longname: '$longname' is not valid.")
-    )
-
-    val validatedLogo = stringFormatter.escapeOptionalString(
-      logo,
-      errorFun = throw BadRequestException(s"The supplied logo: '$logo' is not valid.")
-    )
-
-    val validatedDescriptions: Seq[StringLiteralV2] = description.map { des =>
-      val escapedValue =
-        stringFormatter.toSparqlEncodedString(
-          des.value,
-          errorFun = throw BadRequestException(s"The supplied description: '${des.value}' is not valid.")
-        )
-      StringLiteralV2(value = escapedValue, language = des.language)
-    }
-
-    val validatedKeywords = keywords.map(keyword =>
-      stringFormatter.toSparqlEncodedString(
-        keyword,
-        errorFun = throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")
-      )
-    )
-    copy(
-      id = maybeProjectIri,
-      shortcode = validatedShortcode,
-      shortname = validatedShortname,
-      longname = validatedLongName,
-      description = validatedDescriptions,
-      keywords = validatedKeywords,
-      logo = validatedLogo
-    )
-  }
-
 }
 
 /**
@@ -350,7 +292,7 @@ case class ProjectDataGetRequestADM(
 /**
  * Requests the creation of a new project.
  *
- * @param createRequest        the [[ProjectCreatePayloadADM]] information for creation a new project.
+ * @param createRequest        the [[ProjectCreatePayloadADM]] information for the creation of a new project.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the ID of the API request.

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,9 +10,6 @@ object ListsErrorMessagesADM {
   val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
   val LIST_NODE_IRI_MISSING_ERROR = "List node IRI cannot be empty."
   val LIST_NODE_IRI_INVALID_ERROR = "List node IRI is invalid."
-//  TODO-mpro: move project messages
-  val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
-  val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
   val LIST_NAME_MISSING_ERROR = "List name cannot be empty."
   val LIST_NAME_INVALID_ERROR = "List name is invalid."
   val LABEL_MISSING_ERROR = "At least one label needs to be supplied."

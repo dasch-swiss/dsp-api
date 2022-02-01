@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1950,10 +1950,24 @@ object OntologyHelpers {
           objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.LinkValue.toSmartIri))
         ))
 
+    val subPropertyOf: SmartIri = internalPropertyDef.subPropertyOf match {
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsPartOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri) =>
+        OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
+      case subProps
+          if subProps.size == 1 => // if subPropertyOf is neither isPartOf nor HasLinkTo it inherits from a custom link property
+        internalPropertyDef.subPropertyOf.head.fromLinkPropToLinkValueProp
+      case _ =>
+        throw BadRequestException(
+          s"Can't create link value property $linkValuePropIri. Probably because it has several super properties."
+        )
+    }
+
     internalPropertyDef.copy(
       propertyIri = linkValuePropIri,
       predicates = newPredicates,
-      subPropertyOf = Set(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
+      subPropertyOf = Set(subPropertyOf)
     )
   }
 

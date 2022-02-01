@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
@@ -30,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.MockSipiConnector
@@ -48,11 +48,15 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val aThingIri = "http://rdfh.ch/0001/a-thing"
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+  private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
 
   private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
   private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
   private val anythingUser1 = SharedTestDataADM.anythingUser1
   private val anythingUser2 = SharedTestDataADM.anythingUser2
+
+  private val mimeTypeTIFF = "image/tiff"
+  private val mimeTypeJP2 = "image/jp2"
 
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
@@ -220,56 +224,66 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private def checkValueIsDeleted(
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
-    propertyIriForGravsearch: SmartIri,
-    propertyIriInResult: SmartIri,
     valueIri: IRI,
     customDeleteDate: Option[Instant] = None,
-    requestingUser: UserADM
+    deleteComment: Option[String] = None,
+    requestingUser: UserADM,
+    isLinkValue: Boolean = false
   ): Unit = {
-    val resource = getResourceWithValues(
-      resourceIri = resourceIri,
-      propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+    responderManager ! ResourcesGetRequestV2(
+      resourceIris = Seq(resourceIri),
+      targetSchema = ApiV2Complex,
+      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = requestingUser
     )
 
-    checkLastModDate(
-      resourceIri = resourceIri,
-      maybePreviousLastModDate = maybePreviousLastModDate,
-      maybeUpdatedLastModDate = resource.lastModificationDate
+    val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
+      getResponse.toResource(resourceIri)
+    }
+    //  ensure the resource was not deleted
+    resource.deletionInfo should be(None)
+
+    val deletedValues = resource.values.getOrElse(
+      OntologyConstants.KnoraBase.DeletedValue.toSmartIri,
+      throw AssertionException(
+        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
+      )
     )
 
-    val propertyValues: Seq[ReadValueV2] =
-      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+    if (!isLinkValue) {
+      // not a LinkValue, so the value should be a DeletedValue of the resource
+      val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
+        .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
 
-    propertyValues.find(_.valueIri == valueIri) match {
-      case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
-      case None    => ()
-    }
+      checkLastModDate(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybePreviousLastModDate,
+        maybeUpdatedLastModDate = resource.lastModificationDate
+      )
 
-    // If a custom delete date was used, check that it was saved correctly.
-    customDeleteDate match {
-      case Some(deleteDate) =>
-        val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getDeleteDate(
-            triplestore = settings.triplestoreType,
-            entityIri = valueIri
-          )
-          .toString()
+      val deletionInfo = deletedValue.deletionInfo.getOrElse(
+        throw AssertionException(s"Value <$valueIri> does not have deletion information")
+      )
 
-        storeManager ! SparqlSelectRequest(sparqlQuery)
+      customDeleteDate match {
+        case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
+        case None             => ()
+      }
 
-        expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
-          val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
-
-          val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
-            savedDeleteDateStr,
-            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
-          )
-
-          assert(savedDeleteDate == deleteDate)
-        }
-
-      case None => ()
+      deleteComment match {
+        case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
+        case None          => ()
+      }
+    } else {
+      // The value is a LinkValue, so there should be a DeletedValue having a PreviousValue with the IRI of the value.
+      if (
+        !deletedValues.exists(v =>
+          v.previousValueIri match {
+            case Some(previousValueIRI) => previousValueIRI == valueIri
+            case None                   => false
+          }
+        )
+      ) throw AssertionException(s"ListValue <$valueIri> was not deleted correctly.")
     }
   }
 
@@ -4119,31 +4133,26 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "not update a still image file value without changing it" in {
       val resourceIri: IRI = aThingPictureIri
       stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
+      val fileType = FileType.StillImageFile(dimX = 512, dimY = 256)
+      val internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
+      val valueIri = stillImageFileValueIri.get
 
-      val valueContent = StillImageFileValueContentV2(
-        ontologySchema = ApiV2Complex,
-        fileValue = FileValueV2(
-          internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2",
-          internalMimeType = "image/jp2",
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
-        ),
-        dimX = 512,
-        dimY = 256
-      )
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
+      val updateValueRequest = ChangeFileRequest
+        .make(
+          fileType = fileType,
+          internalFilename = internalFilename,
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-          valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
-        ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
-      )
+          valueIri = valueIri,
+          ontologyName = "anything"
+        )
+        .toMessage(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          internalMimeType = Some(mimeTypeJP2),
+          originalFilename = Some("test.tiff"),
+          originalMimeType = Some(mimeTypeTIFF),
+          resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
+          requestingUser = anythingUser1
+        )
 
       responderManager ! updateValueRequest
 
@@ -4169,31 +4178,32 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // Update the value.
+      val dimX = 512
+      val dimY = 256
+      val internalFilename = "updated-filename.jp2"
+      val internalMimeType = mimeTypeJP2
+      val originalFilename = Some("test.tiff")
+      val originalMimeType = Some(mimeTypeTIFF)
 
-      val valueContent = StillImageFileValueContentV2(
-        ontologySchema = ApiV2Complex,
-        fileValue = FileValueV2(
-          internalFilename = "updated-filename.jp2",
-          internalMimeType = "image/jp2",
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
-        ),
-        dimX = 512,
-        dimY = 256
-      )
-
-      responderManager ! UpdateValueRequestV2(
-        UpdateValueContentV2(
+      val changeFileRequest = ChangeFileRequest
+        .make(
+          fileType = FileType.StillImageFile(dimX = dimX, dimY = dimY),
+          internalFilename = internalFilename,
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-          propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
-        ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
-      )
+          ontologyName = "anything"
+        )
+      val changeFileMessage = changeFileRequest
+        .toMessage(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
+          internalMimeType = Some(internalMimeType),
+          originalMimeType = originalMimeType,
+          originalFilename = originalFilename
+        )
+      responderManager ! changeFileMessage
+
+      println(changeFileMessage)
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
         stillImageFileValueIri.set(updateValueResponse.valueIri)
@@ -4210,13 +4220,20 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUser1
       )
 
+      updatedValueFromTriplestore.valueIri should equal(stillImageFileValueIri.get)
       updatedValueFromTriplestore.valueContent match {
         case savedValue: StillImageFileValueContentV2 =>
-          savedValue should ===(valueContent)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+          savedValue.comment should be(None)
+          savedValue.dimX should equal(dimX)
+          savedValue.dimY should equal(dimY)
+          savedValue.fileValue.internalFilename should equal(internalFilename)
+          savedValue.fileValue.internalMimeType should equal(internalMimeType)
+          savedValue.fileValue.originalMimeType should equal(originalMimeType)
+          savedValue.fileValue.originalFilename should equal(originalFilename)
 
         case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
       }
+      updatedValueFromTriplestore.permissions should equal(previousValueFromTriplestore.permissions)
 
     }
 
@@ -4228,9 +4245,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
           internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-          internalMimeType = "image/jp2",
+          internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
+          originalMimeType = Some(mimeTypeTIFF)
         ),
         dimX = 512,
         dimY = 256
@@ -4240,7 +4257,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       responderManager ! UpdateValueRequestV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+          resourceClassIri = thingPictureClassIri.toSmartIri,
           propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
           valueContent = valueContent
@@ -4263,9 +4280,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
           internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-          internalMimeType = "image/jp2",
+          internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
+          originalMimeType = Some(mimeTypeTIFF)
         ),
         dimX = 512,
         dimY = 256
@@ -4275,7 +4292,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       responderManager ! UpdateValueRequestV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+          resourceClassIri = thingPictureClassIri.toSmartIri,
           propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
           valueContent = valueContent
@@ -4316,11 +4333,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
+      val valueIri = intValueIri.get
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = intValueIri.get,
+        valueIri = valueIri,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -4333,8 +4351,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = intValueIri.get,
         requestingUser = anythingUser1
       )
@@ -4345,6 +4361,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val deleteDate: Instant = Instant.now
+      val deleteComment = Some("this value was incorrect")
 
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
@@ -4352,7 +4369,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         valueIri = intValueForRsyncIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
+        deleteComment = deleteComment,
         deleteDate = Some(deleteDate),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
@@ -4364,10 +4381,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = intValueForRsyncIri.get,
         customDeleteDate = Some(deleteDate),
+        deleteComment = deleteComment,
         requestingUser = anythingUser1
       )
     }
@@ -4410,8 +4426,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = zeitglöckleinIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = zeitglöckleinCommentWithStandoffIri.get,
         requestingUser = incunabulaUser
       )
@@ -4424,7 +4438,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUser
       )
 
-      assert(resource.values.get(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri).isEmpty)
+      assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
     }
 
     "delete a link between two resources" in {
@@ -4432,12 +4446,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
       val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+      val linkValueIRI = linkValueIri.get
 
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
         propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
+        valueIri = linkValueIRI,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
@@ -4449,10 +4464,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
-        requestingUser = anythingUser1
+        valueIri = linkValueIRI,
+        requestingUser = anythingUser1,
+        isLinkValue = true
       )
     }
 

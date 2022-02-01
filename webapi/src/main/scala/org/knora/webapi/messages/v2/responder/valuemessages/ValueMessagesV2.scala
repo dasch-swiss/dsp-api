@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -755,6 +755,26 @@ sealed trait ReadValueV2 extends IOValueV2 {
       case ApiV2Simple => valueContentAsJsonLD
     }
   }
+
+  /**
+   * Return a `knora-base:DeletedValue` representation of the present value.
+   *
+   * @return A ReadValueV2 object identical to the current one (including the IRI),
+   *         but with valueContent of type [[DeletedValueContentV2]].
+   */
+  def asDeletedValue(): ReadValueV2 =
+    ReadOtherValueV2(
+      valueIri = this.valueIri,
+      attachedToUser = this.attachedToUser,
+      permissions = this.permissions,
+      userPermission = this.userPermission,
+      valueCreationDate = this.valueCreationDate,
+      valueHasUUID = this.valueHasUUID,
+      valueContent = DeletedValueContentV2(InternalSchema),
+      previousValueIri = this.previousValueIri,
+      deletionInfo = this.deletionInfo
+    )
+
 }
 
 /**
@@ -3983,4 +4003,37 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
       comment = getComment(jsonLDObject)
     )
   }
+}
+
+/**
+ * Generic representation of a deleted value.
+ *
+ * @param ontologySchema the ontology schema
+ * @param comment        optional comment
+ */
+case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option[String] = None)
+    extends ValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.DeletedValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def toOntologySchema(targetSchema: OntologySchema): DeletedValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    settings: KnoraSettingsImpl,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = false
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = false
+
+  override def valueHasString: String = "Deleted Value"
 }

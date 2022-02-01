@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -49,6 +49,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
   private val password = SharedTestDataADM.testPass
   private var aThingLastModificationDate = Instant.now
   private val hamletResourceIri = new MutableTestIri
+  private val aThingIri = "http://rdfh.ch/0001/a-thing"
+  private val aThingIriEncoded = URLEncoder.encode(aThingIri, "UTF-8")
+  private val aThingWithHistoryIri = "http://rdfh.ch/0001/thing-with-history"
+  private val aThingWithHistoryIriEncoded = URLEncoder.encode(aThingWithHistoryIri, "UTF-8")
+  private val reiseInsHeiligeLandIriEncoded = URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")
 
   // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
   private val writeTestDataFiles = false
@@ -100,7 +105,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
   "The resources v2 endpoint" should {
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -129,7 +134,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         MediaRange.One(RdfMediaTypes.`application/rdf+xml`, 0.2f)
       )
 
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
         .addHeader(acceptHeader)
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
@@ -143,7 +148,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML" in {
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
@@ -157,8 +162,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the complex schema" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resourcespreview/$reiseInsHeiligeLandIriEncoded")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -172,7 +176,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource preview request for a Thing resource using the complex schema" in {
-      val request = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -193,7 +197,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
         .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
@@ -215,7 +219,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle" in {
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
         .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
         .addHeader(Accept(RdfMediaTypes.`text/turtle`))
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -231,7 +235,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded")
         .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`))
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -247,9 +251,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource preview request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}")
-          .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+      val request = Get(s"$baseApiUrl/v2/resourcespreview/$reiseInsHeiligeLandIriEncoded")
+        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -264,7 +267,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by a URL parameter)" in {
       val request = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/2a6221216701", "UTF-8")}?${RouteUtilV2.SCHEMA_PARAM}=${RouteUtilV2.SIMPLE_SCHEMA_NAME}"
+        s"$baseApiUrl/v2/resources/$reiseInsHeiligeLandIriEncoded?${RouteUtilV2.SCHEMA_PARAM}=${RouteUtilV2.SIMPLE_SCHEMA_NAME}"
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
@@ -279,7 +282,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a resource request for the first page of the book '[Das] Narrenschiff (lat.)' using the complex schema" in {
-      val request = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -292,8 +296,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a BCE date property" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -313,8 +317,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a date property that represents a period going from BCE to CE" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date2", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date2", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -334,8 +338,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a list value" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -355,9 +359,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a list value (in the simple schema)" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")}")
-          .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
+        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -378,8 +382,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a link (in the complex schema)" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -399,9 +403,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a link (in the simple schema)" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")}")
-          .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
+        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -421,9 +425,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a Text language (in the complex schema)" in {
-      val request = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")}"
-      )
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -444,9 +447,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with a Text language (in the simple schema)" in {
-      val request = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")}"
-      )
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
         .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
@@ -468,8 +470,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a resource with values of different types" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -497,8 +499,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a Thing resource with a link to a ThingPicture resource" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-picture", "UTF-8")}")
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-picture", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -529,9 +531,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request with a link to a resource that the user doesn't have permission to see" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw", "UTF-8")}")
-
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -552,9 +553,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request with a link to a resource that is marked as deleted" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A", "UTF-8")}")
-
+      val iri = URLEncoder.encode("http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$iri")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -575,10 +575,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a past version of a resource, using a URL-encoded xsd:dateTimeStamp" in {
-      val request = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")}?version=${URLEncoder
-          .encode("2019-02-12T08:05:10.351Z", "UTF-8")}"
-      )
+      val timestamp = URLEncoder.encode("2019-02-12T08:05:10.351Z", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$aThingWithHistoryIriEncoded?version=$timestamp")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -592,10 +590,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "perform a full resource request for a past version of a resource, using a Knora ARK timestamp" in {
-      val request = Get(
-        s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")}?version=${URLEncoder
-          .encode("20190212T080510351Z", "UTF-8")}"
-      )
+      val timestamp = URLEncoder.encode("20190212T080510351Z", "UTF-8")
+      val request = Get(s"$baseApiUrl/v2/resources/$aThingWithHistoryIriEncoded?version=$timestamp")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -609,8 +605,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "return the complete version history of a resource" in {
-      val request =
-        Get(s"$baseApiUrl/v2/resources/history/${URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")}")
+      val request = Get(s"$baseApiUrl/v2/resources/history/$aThingWithHistoryIriEncoded")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -624,10 +619,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "return the version history of a resource within a date range" in {
-      val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
       val startDate = URLEncoder.encode(Instant.parse("2019-02-08T15:05:11Z").toString, "UTF-8")
       val endDate = URLEncoder.encode(Instant.parse("2019-02-13T09:05:10Z").toString, "UTF-8")
-      val request = Get(s"$baseApiUrl/v2/resources/history/$resourceIri?startDate=$startDate&endDate=$endDate")
+      val request =
+        Get(s"$baseApiUrl/v2/resources/history/$aThingWithHistoryIriEncoded?startDate=$startDate&endDate=$endDate")
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
@@ -640,8 +635,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "return each of the versions of a resource listed in its version history" in {
-      val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
-      val historyRequest = Get(s"$baseApiUrl/v2/resources/history/$resourceIri")
+      val historyRequest = Get(s"$baseApiUrl/v2/resources/history/$aThingWithHistoryIriEncoded")
       val historyResponse: HttpResponse = singleAwaitingRequest(historyRequest)
       val historyResponseAsString = responseToString(historyResponse)
       assert(historyResponse.status == StatusCodes.OK, historyResponseAsString)
@@ -658,7 +652,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             )
 
             val arkTimestamp = stringFormatter.formatArkTimestamp(versionDate)
-            val versionRequest = Get(s"$baseApiUrl/v2/resources/$resourceIri?version=$arkTimestamp")
+            val versionRequest = Get(s"$baseApiUrl/v2/resources/$aThingWithHistoryIriEncoded?version=$arkTimestamp")
             val versionResponse: HttpResponse = singleAwaitingRequest(versionRequest)
             val versionResponseAsString = responseToString(versionResponse)
             assert(versionResponse.status == StatusCodes.OK, versionResponseAsString)
@@ -1164,7 +1158,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       // duplicate resource IRI
       val params =
         s"""{
-           |  "@id" : "http://rdfh.ch/0001/a-thing",
+           |  "@id" : "$aThingIri",
            |  "@type" : "anything:Thing",
            |  "knora-api:attachedToProject" : {
            |    "@id" : "http://rdfh.ch/projects/0001"
@@ -1586,14 +1580,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "update the metadata of a resource" in {
-      val resourceIri = "http://rdfh.ch/0001/a-thing"
       val newLabel = "test thing with modified label"
       val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
       val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
       val jsonLDEntity =
         s"""|{
-            |  "@id" : "$resourceIri",
+            |  "@id" : "$aThingIri",
             |  "@type" : "anything:Thing",
             |  "rdfs:label" : "$newLabel",
             |  "knora-api:hasPermissions" : "$newPermissions",
@@ -1631,7 +1624,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(
         JsonParser(updateResponseAsString) == JsonParser(
           updateResourceMetadataResponse(
-            resourceIri = resourceIri,
+            resourceIri = aThingIri,
             maybeNewLabel = newLabel,
             newLastModificationDate = newModificationDate,
             maybeNewPermissions = newPermissions
@@ -1651,7 +1644,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
@@ -1676,14 +1669,13 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "update the metadata of a resource that has a last modification date" in {
-      val resourceIri = "http://rdfh.ch/0001/a-thing"
       val newLabel = "test thing with modified label again"
       val newPermissions = "CR knora-admin:ProjectMember|V knora-admin:ProjectMember"
       val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
       val jsonLDEntity =
         s"""|{
-            |  "@id" : "$resourceIri",
+            |  "@id" : "$aThingIri",
             |  "@type" : "anything:Thing",
             |  "rdfs:label" : "$newLabel",
             |  "knora-api:hasPermissions" : "$newPermissions",
@@ -1725,7 +1717,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(
         JsonParser(updateResponseAsString) == JsonParser(
           updateResourceMetadataResponse(
-            resourceIri = resourceIri,
+            resourceIri = aThingIri,
             maybeNewLabel = newLabel,
             newLastModificationDate = newModificationDate,
             maybeNewPermissions = newPermissions
@@ -1745,7 +1737,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
@@ -1770,11 +1762,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "mark a resource as deleted" in {
-      val resourceIri = "http://rdfh.ch/0001/a-thing"
-
       val jsonLDEntity =
         s"""|{
-            |  "@id" : "$resourceIri",
+            |  "@id" : "$aThingIri",
             |  "@type" : "anything:Thing",
             |  "knora-api:lastModificationDate" : {
             |    "@type" : "xsd:dateTimeStamp",
@@ -1822,11 +1812,28 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
+      previewResponse.status should equal(StatusCodes.OK)
+
       val previewResponseAsString = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val responseIsDeleted = previewJsonLD.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      responseIsDeleted should equal(true)
+      val responseType = previewJsonLD.requireString("@type")
+      responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
+
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "deleted-resource-preview-response",
+            fileExtension = "json"
+          ),
+          text = previewResponseAsString
+        )
+      )
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1876,7 +1883,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+      previewResponse.status should equal(StatusCodes.OK)
+
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val responseIsDeleted = previewJsonLD.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      responseIsDeleted should equal(true)
+      val responseType = previewJsonLD.requireString("@type")
+      responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
+      val responseDeleteDate = previewJsonLD
+        .requireObject(OntologyConstants.KnoraApiV2Complex.DeleteDate)
+        .requireString("@value")
+      responseDeleteDate should equal(deleteDate.toString)
     }
 
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
@@ -2030,12 +2047,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "erase a resource" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
       val resourceLastModificationDate = Instant.parse("2019-02-13T09:05:10Z")
 
       val jsonLDEntity =
         s"""|{
-            |  "@id" : "$resourceIri",
+            |  "@id" : "$aThingWithHistoryIri",
             |  "@type" : "anything:Thing",
             |  "knora-api:lastModificationDate" : {
             |    "@type" : "xsd:dateTimeStamp",
@@ -2070,7 +2086,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
 
       val previewRequest = Get(
-        s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+        s"$baseApiUrl/v2/resourcespreview/$aThingWithHistoryIriEncoded"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)

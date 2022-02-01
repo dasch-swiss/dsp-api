@@ -5,8 +5,10 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 # builds the docker image
 container_image(
     name = "image",
-    base = "@jenafuseki//image",
-    # env = {},
+    base = select({
+        "@platforms//cpu:arm64": "@jenafuseki_arm64//image",
+        "//conditions:default": "@jenafuseki_amd64//image",
+    }),
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
     },

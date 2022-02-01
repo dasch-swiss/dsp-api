@@ -1,0 +1,33 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.messages.SmartIri
+
+@*
+ * Checks if an instance of a class exists (if yes, that means the class is used in data)
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param classIri the IRI of the class.
+ *@
+@(triplestore: String,
+  classIri: SmartIri)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?isUsed
+
+WHERE {
+    BIND(IRI("@classIri") AS ?class)
+    BIND(true AS ?isUsed)
+
+    {
+      ?resourceInstance rdf:type ?class
+    }
+    UNION{
+      ?subClass rdfs:subClassOf* ?class .
+      ?resourceInstance rdf:type ?subClass
+    }
+}

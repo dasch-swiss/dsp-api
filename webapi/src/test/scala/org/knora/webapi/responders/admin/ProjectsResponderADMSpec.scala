@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,39 +9,21 @@
  */
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
-
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  AdministrativePermissionADM,
-  AdministrativePermissionsForProjectGetRequestADM,
-  AdministrativePermissionsForProjectGetResponseADM,
-  DefaultObjectAccessPermissionADM,
-  DefaultObjectAccessPermissionsForProjectGetRequestADM,
-  DefaultObjectAccessPermissionsForProjectGetResponseADM,
-  PermissionADM
-}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Description,
-  Keywords,
-  Logo,
-  Longname,
-  Selfjoin,
-  Shortcode,
-  Shortname,
-  Status
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 object ProjectsResponderADMSpec {
@@ -63,11 +45,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
   private val rootUser = SharedTestDataADM.rootUser
 
   "The ProjectsResponderADM" when {
-
     "used to query for project information" should {
-
       "return information for every project" in {
-
         responderManager ! ProjectsGetRequestADM(
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
@@ -79,7 +58,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return information about a project identified by IRI" in {
-
         /* Incunabula project */
         responderManager ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)),
@@ -116,7 +94,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-
         responderManager ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -146,7 +123,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
     }
 
     "used to query project's restricted view settings" should {
-
       val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image"))
 
       "return restricted view settings using project IRI" in {
@@ -206,7 +182,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
     }
 
     "used to modify project information" should {
-
       val newProjectIri = new MutableTestIri
 
       "CREATE a project and return the project info if the supplied shortname is unique" in {
@@ -216,13 +191,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortCode).fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -314,13 +289,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
             longname = Some(Longname.make("project longname").fold(error => throw error.head, value => value)),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -348,13 +323,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
             longname =
               Longname.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -381,13 +356,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -402,13 +377,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -724,5 +699,4 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
     }
   }
-
 }

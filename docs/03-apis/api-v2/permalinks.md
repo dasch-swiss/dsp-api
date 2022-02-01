@@ -1,5 +1,5 @@
 <!---
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
 -->
 
@@ -18,7 +18,7 @@ to the latest version of the resource or value (`knora-api:arkUrl`), and one tha
 specifically to the version being returned (`knora-api:versionArkUrl`).
 For example:
 
-```jsonld
+```json
 {
   "@id" : "http://rdfh.ch/0803/2a6221216701",
   "@type" : "incunabula:book",

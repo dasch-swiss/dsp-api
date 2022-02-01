@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1348,15 +1348,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           }
 
         _ <- hasCardinality match {
-          // If there is, check that the class isn't used in data, and that it has no subclasses.
+          // If there is, check that the class isn't used in data.
           case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
-            throwIfEntityIsUsed(
-              entityIri = internalClassIri,
+            throwIfClassIsUsedInData(
+              classIri = internalClassIri,
               errorFun = throw BadRequestException(
-                s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"
-              ),
-              ignoreKnoraConstraints =
-                true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+                s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data"
+              )
             )
           case None => Future.successful(())
         }
@@ -2646,11 +2644,26 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
           )
 
+        // if a link value property was created, add its subproperty relation to the ontology's subPropertyOfRelations map
+        // note: this is only needed for the special case of link properties that are subproperties of custom link properties
+
+        maybeSubPropertyOfRelationsForLinkValueProperty: Option[(SmartIri, Set[SmartIri])] =
+          maybeLinkValuePropertyCacheEntry.map { case (smartIri: SmartIri, readPropertyInfoV2: ReadPropertyInfoV2) =>
+            smartIri -> readPropertyInfoV2.entityInfoContent.subPropertyOf
+          }
+
+        newSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] =
+          maybeSubPropertyOfRelationsForLinkValueProperty match {
+            case Some(smartIriSetOfSmartIris: (SmartIri, Set[SmartIri])) =>
+              Map(internalPropertyIri -> allKnoraSuperPropertyIris, smartIriSetOfSmartIris)
+            case None =>
+              Map(internalPropertyIri -> allKnoraSuperPropertyIris)
+          }
+
         _ = Cache.storeCacheData(
           cacheData.copy(
             ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology),
-            subPropertyOfRelations =
-              cacheData.subPropertyOfRelations + (internalPropertyIri -> allKnoraSuperPropertyIris)
+            subPropertyOfRelations = cacheData.subPropertyOfRelations ++ newSubPropertyOfRelations
           )
         )
 

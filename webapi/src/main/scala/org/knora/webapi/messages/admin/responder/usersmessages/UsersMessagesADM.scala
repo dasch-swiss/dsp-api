@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,19 +12,10 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Username,
-  Email,
-  GivenName,
-  FamilyName,
-  Password,
-  Status,
-  LanguageCode,
-  SystemAdmin
-}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 
@@ -244,7 +235,7 @@ case class UserChangePasswordRequestADM(
  */
 case class UserChangeStatusRequestADM(
   userIri: IRI,
-  status: Status,
+  status: UserStatus,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -839,7 +830,7 @@ case class UserChangeRequestADM(
   email: Option[Email] = None,
   givenName: Option[GivenName] = None,
   familyName: Option[FamilyName] = None,
-  status: Option[Status] = None,
+  status: Option[UserStatus] = None,
   lang: Option[LanguageCode] = None,
   projects: Option[Seq[IRI]] = None,
   projectsAdmin: Option[Seq[IRI]] = None,

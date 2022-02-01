@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1644,9 +1644,10 @@ object ConstructResponseUtilV2 {
 
     // iterate over visibleResourceIris and construct the response in the correct order
     val readResourceFutures: Vector[Future[ReadResourceV2]] = visibleResourceIris.map { resourceIri: IRI =>
+      val data = mainResourcesAndValueRdfData.resources(resourceIri)
       constructReadResourceV2(
         resourceIri = resourceIri,
-        resourceWithValueRdfData = mainResourcesAndValueRdfData.resources(resourceIri),
+        resourceWithValueRdfData = data,
         mappings = mappings,
         queryStandoff = queryStandoff,
         versionDate = versionDate,
@@ -1656,7 +1657,6 @@ object ConstructResponseUtilV2 {
         settings = settings,
         requestingUser = requestingUser
       )
-
     }.toVector
 
     for {
