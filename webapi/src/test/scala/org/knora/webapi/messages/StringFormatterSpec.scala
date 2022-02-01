@@ -1370,6 +1370,16 @@ class StringFormatterSpec extends CoreSpec() {
       testIRIFromVersion3UUID should be(false)
       testIRIFromVersion4UUID should be(true)
       testIRIFromVersion5UUID should be(true)
+
+      val iri = "http://rdfh.ch/projects/wahxssy1TDqPuSk6ee8EdQ"
+
+      println(
+        777,
+        stringFormatter.makeRandomBase64EncodedUuid,
+        stringFormatter.makeRandomBase64EncodedUuid,
+        stringFormatter.getUUIDVersion(iri),
+        stringFormatter.couldBeUuid(iri.split("/").last)
+      )
     }
   }
 }

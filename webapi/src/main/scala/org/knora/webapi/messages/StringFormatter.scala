@@ -2978,6 +2978,11 @@ class StringFormatter private (
     }
   }
 
+  def getUUIDVersion(s: IRI): Int = {
+    val encodedUUID = s.split("/").last
+    decodeUuid(encodedUUID).version()
+  }
+
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
    *

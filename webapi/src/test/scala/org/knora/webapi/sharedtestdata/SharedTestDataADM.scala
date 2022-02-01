@@ -486,7 +486,7 @@ object SharedTestDataADM {
   val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
   val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
 
-  val customListIRI: IRI = "http://rdfh.ch/lists/0001/WYHQu7y6BGrTBcnRtg76Tg"
+  val customListIRI: IRI = "http://rdfh.ch/lists/0001/qq54wdGKR0S5zsbR5-9wtg"
 
   def anythingAdminUser: UserADM =
     UserADM(
