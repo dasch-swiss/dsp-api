@@ -119,17 +119,17 @@ class StringFormatterSpec extends CoreSpec() {
       }
     }
 
-//    "recognize the url of the dhlab site as a valid IRI" in {
-//      val testUrl: String = "http://dhlab.unibas.ch/"
-//      val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
-//      validIri should be(testUrl)
-//    }
-//
-//    "recognize the url of the DaSCH site as a valid IRI" in {
-//      val testUrl = "http://dasch.swiss"
-//      val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
-//      validIri should be(testUrl)
-//    }
+    "recognize the url of the dhlab site as a valid IRI" in {
+      val testUrl: String = "http://dhlab.unibas.ch/"
+      val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
+      validIri should be(testUrl)
+    }
+
+    "recognize the url of the DaSCH site as a valid IRI" in {
+      val testUrl = "http://dasch.swiss"
+      val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
+      validIri should be(testUrl)
+    }
 
     /////////////////////////////////////
     // Built-in ontologies
