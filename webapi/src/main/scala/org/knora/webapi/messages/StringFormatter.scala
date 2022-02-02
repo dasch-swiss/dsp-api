@@ -47,7 +47,7 @@ import scala.util.{Failure, Success, Try}
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
-  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 or 5 are supported."
+  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
 
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
