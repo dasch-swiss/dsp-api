@@ -15,6 +15,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.{
   ProjectADM,
   ProjectGetRequestADM,
@@ -34,6 +35,14 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
 
 import scala.concurrent.{ExecutionContext, Future}
+
+private case class validateUUIDOfResourceIRI(iri: IRI) {
+  implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+  if (sf.couldBeUuid(iri.split("/").last) && !sf.isUUIDVersion4Or5(iri)) {
+    throw BadRequestException(UUID_INVALID_ERROR)
+  }
+}
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -724,12 +733,14 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         requestingUser = requestingUser
       )).mapTo[ProjectGetResponseADM]
 
-      _ = maybeCustomResourceIri.foreach { definedResourceIri =>
-        if (!definedResourceIri.isKnoraResourceIri) {
-          throw BadRequestException(s"<$definedResourceIri> is not a Knora resource IRI")
+      _ = maybeCustomResourceIri.foreach { iri =>
+        if (!iri.isKnoraResourceIri) {
+          throw BadRequestException(s"<$iri> is not a Knora resource IRI")
         }
 
-        if (!definedResourceIri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
+        validateUUIDOfResourceIRI(iri.toString)
+
+        if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
           throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
         }
       }
@@ -929,6 +940,8 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     if (!resourceIri.isKnoraResourceIri) {
       throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
     }
+
+    validateUUIDOfResourceIRI(resourceIri.toString)
 
     val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 

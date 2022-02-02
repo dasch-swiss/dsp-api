@@ -477,8 +477,8 @@ object SharedTestDataADM {
    */
   val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
-  val customResourceIRI: IRI = "http://rdfh.ch/0001/aUrDPcJRmFNzBHW_AlR1hw"
-  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw"
+  val customResourceIRI: IRI = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
+  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
     "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/fdqCOaqT6dP19pWI84X1XQ"
   val customValueUUID = "fdqCOaqT6dP19pWI84X1XQ"
