@@ -1372,7 +1372,7 @@ class StringFormatterSpec extends CoreSpec() {
       testIRIFromVersion5UUID should be(true)
 
       val iri = "http://rdfh.ch/0001/a-thing"
-//4PnSvolsTEa86KJ2EG76SQ,0pd-VUDeShWNJ2Nq3fGGGQ
+//24RD7QcoTKqEJKrDBE885Q,8_5JgGXHStmbzAtusZkTdg
       println(
         777,
         stringFormatter.makeRandomBase64EncodedUuid,
