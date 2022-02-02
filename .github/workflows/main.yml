@@ -202,10 +202,11 @@ jobs:
           sudo apt-get install ca-certificates-java expect
       - name: test repository upgrade
         run: make test-repository-upgrade
-      - name: print out container logs
-        run: |
-          make stack-logs-api-no-follow
-          make stack-logs-db-no-follow
+      - name: dump docker logs on failure using different shell
+        if: failure()
+        uses: jwalton/gh-docker-logs@v1
+        with:
+          shell: '/bin/sh'
 
   docs-build-test:
     name: Build Docs Testrun
