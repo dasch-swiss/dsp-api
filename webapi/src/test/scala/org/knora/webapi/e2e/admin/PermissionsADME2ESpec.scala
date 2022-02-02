@@ -37,9 +37,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
-  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/eIAywlYBJA3a_5yI77UsMQ"
+  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
   "The Permissions Route ('admin/permissions')" when {
-
     "getting permissions" should {
       "return a group's administrative permission" in {
 
@@ -72,7 +71,6 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "return a project's administrative permissions" in {
-
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
@@ -98,7 +96,6 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "return a project's default object access permissions" in {
-
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
@@ -124,7 +121,6 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "return a project's all permissions" in {
-
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(

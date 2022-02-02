@@ -869,7 +869,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "return a DuplicateValueException during value creation when the supplied value IRI is not unique" in {
-
       // duplicate value IRI
       val params =
         s"""{
@@ -3597,7 +3596,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int = 7
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/DrXts3Up3DijGriI403nhg"
+      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/W8COP_RXRpqVsjW9NL2JYg"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
@@ -3635,7 +3634,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with a custom new value version IRI that is the same as the current IRI" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 8
-      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/DrXts3Up3DijGriI403nhg"
+      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/W8COP_RXRpqVsjW9NL2JYg"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
