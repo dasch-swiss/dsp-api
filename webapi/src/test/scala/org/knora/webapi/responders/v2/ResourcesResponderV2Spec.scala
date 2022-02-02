@@ -1164,15 +1164,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val inputResource = UploadFileRequest
         .make(
-          fileType = FileType.StillImageFile,
-          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-          className = Some("ThingPicture"),
-          ontologyName = "anything",
-          resourceIri = Some(resourceIri),
-          dimX = Some(512),
-          dimY = Some(256)
+          fileType = FileType.StillImageFile(
+            dimX = 512,
+            dimY = 256
+          ),
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2"
         )
-        .toMessage
+        .toMessage(resourceIri = Some(resourceIri))
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
@@ -1204,11 +1202,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val inputResource = UploadFileRequest
         .make(
-          fileType = FileType.DocumentFile,
-          resourceIri = Some(resourceIri),
+          fileType = FileType.DocumentFile(),
           internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf"
         )
-        .toMessage
+        .toMessage(resourceIri = Some(resourceIri))
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
@@ -1241,11 +1238,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val inputResource = UploadFileRequest
         .make(
           fileType = FileType.ArchiveFile,
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip"
+        )
+        .toMessage(
           resourceIri = Some(resourceIri),
-          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
           internalMimeType = Some("application/zip")
         )
-        .toMessage
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
