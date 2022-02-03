@@ -1818,7 +1818,13 @@ case class TextValueContentV2(
               )
 
               // the xml was converted to HTML
-              Map(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> JsonLDString(xmlTransformed))
+              Map(
+                OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> JsonLDString(xmlTransformed),
+                OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> JsonLDString(xmlFromStandoff),
+                OntologyConstants.KnoraApiV2Complex.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
+                  definedMappingIri
+                )
+              )
 
             case None =>
               Map(
@@ -1831,6 +1837,7 @@ case class TextValueContentV2(
         } else {
           // We're not rendering standoff as XML. Return the text without markup.
           Map(OntologyConstants.KnoraApiV2Complex.ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
+          // TODO: should this be the case?
         }
 
         // In the complex schema, if this text value specifies a language, return it using the predicate
@@ -1889,13 +1896,11 @@ case class TextValueContentV2(
         standoffTag: CreateStandoffTagV2InTriplestore =>
           // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
           val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] =
-            standoffTag.standoffNode.attributes.map { attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
-              attributeWithOriginalXMLID match {
-                case refAttr: StandoffTagInternalReferenceAttributeV2 =>
-                  // resolve the XML id to the corresponding standoff node IRI
-                  refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
-                case attr => attr
-              }
+            standoffTag.standoffNode.attributes.map {
+              case refAttr: StandoffTagInternalReferenceAttributeV2 =>
+                // resolve the XML id to the corresponding standoff node IRI
+                refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
+              case attr => attr
             }
 
           val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
