@@ -2981,7 +2981,7 @@ class StringFormatter private (
     if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
       true
     } else {
-      false``
+      false
     }
 
   /**
