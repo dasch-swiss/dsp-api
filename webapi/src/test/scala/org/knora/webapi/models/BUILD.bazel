@@ -6,5 +6,6 @@ filegroup(
     srcs = [
         "OntologyModels.scala",
         "//webapi/src/test/scala/org/knora/webapi/models/filemodels:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/models/standoffmodels:srcs",
     ],
 )
