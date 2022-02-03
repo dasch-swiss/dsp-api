@@ -6,7 +6,6 @@ filegroup(
     name = "srcs",
     srcs = [
         "StandoffModels.scala",
-        "StandoffModelsUtil.scala"
     ],
 )
 
