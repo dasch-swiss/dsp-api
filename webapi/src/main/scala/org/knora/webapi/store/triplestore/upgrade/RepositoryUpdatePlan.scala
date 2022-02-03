@@ -47,7 +47,8 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(
         versionNumber = 13,
         plugin = new UpgradePluginPR1921(featureFactoryConfig, log)
-      ) // PR 1921
+      ), // PR 1921
+      PluginForKnoraBaseVersion(versionNumber = 14, plugin = new NoopPlugin) // PR 1992
     )
 
   /**
