@@ -238,6 +238,7 @@ class SipiConnector extends Actor with ActorLogging {
    */
   private def iiifGetStatus(): Try[IIIFServiceStatusResponse] = {
     val request = new HttpGet(settings.internalSipiBaseUrl + "/server/test.html")
+    println(request)
 
     val result: Try[String] = doSipiRequest(request)
     if (result.isSuccess) {
