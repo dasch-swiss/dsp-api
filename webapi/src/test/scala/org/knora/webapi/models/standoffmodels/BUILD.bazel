@@ -1,0 +1,26 @@
+package(default_visibility = ["//visibility:public"])
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+
+filegroup(
+    name = "srcs",
+    srcs = [
+        "StandoffModels.scala",
+        "StandoffModelUtil.scala"
+    ],
+)
+
+scala_test(
+    name = "StandoffModelsSpec",
+    size = "small",
+    srcs = [
+       "StandoffModelsSpec.scala",
+    ],
+    data = [],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+       "//webapi:test_library",
+       "//webapi:main_library",
+    ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
+)
