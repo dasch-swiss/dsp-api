@@ -233,5 +233,6 @@ class StandoffRouteV2R2RSpec extends E2ESpec {
     // TODO: check with XSLT
     // TODO: move stuff to models
     // TODO: revert all ontologies to what they were, to that no upgrade script will be needed
+    // TODO: also test the TEI route
   }
 }
