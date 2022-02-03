@@ -23,7 +23,7 @@ object GroupIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
     } else {
-      val isUUID: Boolean = sf.couldBeUuid(value.split("/").last)
+      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
       if (!sf.isKnoraGroupIriStr(value)) {
         Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))

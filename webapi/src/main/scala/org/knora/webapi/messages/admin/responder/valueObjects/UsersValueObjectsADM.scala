@@ -26,7 +26,7 @@ object UserIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
     } else {
-      val isUUID: Boolean = sf.couldBeUuid(value.split("/").last)
+      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
       if (!sf.isKnoraUserIriStr(value)) {
         Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))

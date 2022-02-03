@@ -501,7 +501,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         }
 
         if (
-          stringFormatter.couldBeUuid(valueIri.toString.split("/").last)
+          stringFormatter.hasUUIDLength(valueIri.toString.split("/").last)
           && !stringFormatter.isUUIDVersion4Or5(valueIri.toString)
         ) {
           throw BadRequestException(UUID_INVALID_ERROR)

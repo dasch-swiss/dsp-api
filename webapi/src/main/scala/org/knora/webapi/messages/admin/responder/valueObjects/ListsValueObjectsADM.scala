@@ -24,7 +24,7 @@ object ListIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
-      val isUUID: Boolean = sf.couldBeUuid(value.split("/").last)
+      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
       if (!sf.isKnoraListIriStr(value)) {
         Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))

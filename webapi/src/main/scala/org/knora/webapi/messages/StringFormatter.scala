@@ -2981,24 +2981,24 @@ class StringFormatter private (
     if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
       true
     } else {
-      false
+      false``
     }
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
    *
-   * @param idStr the string to check.
-   * @return `true` if the string is the right length to be a canonical or Base64-encoded UUID.
+   * @param s the string to check.
+   * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
    */
-  def couldBeUuid(idStr: String): Boolean =
-    idStr.length == CanonicalUuidLength || idStr.length == Base64UuidLength
+  def hasUUIDLength(s: String): Boolean =
+    s.length == CanonicalUuidLength || s.length == Base64UuidLength
 
   /**
    * Validates resource IRI
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: IRI) {
-    if (couldBeUuid(iri.split("/").last) && isUUIDVersion4Or5(iri)) {
+    if (hasUUIDLength(iri.split("/").last) && isUUIDVersion4Or5(iri)) {
       throw BadRequestException(UUID_INVALID_ERROR)
     }
   }
