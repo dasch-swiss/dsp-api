@@ -24,23 +24,6 @@ import java.util.UUID
 // API requests
 
 /**
- * Validates permission IRI
- * @param iri to be validated.
- */
-private case class validatePermissionIRI(iri: IRI) {
-  implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  if (sf.isKnoraPermissionIriStr(iri) && !sf.isUUIDVersion4Or5(iri)) {
-    throw BadRequestException(UUID_INVALID_ERROR)
-  } else {
-    sf.validatePermissionIri(
-      iri,
-      throw BadRequestException(s"Invalid permission IRI ${iri} is given.")
-    )
-  }
-}
-
-/**
  * Represents a payload that asks the Knora API server to create a new
  * administrative permission
  *
@@ -57,7 +40,7 @@ case class CreateAdministrativePermissionAPIRequestADM(
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   id match {
-    case Some(iri) => validatePermissionIRI(iri)
+    case Some(iri) => sf.validatePermissionIRI(iri)
     case None      => None
   }
 
@@ -98,7 +81,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   id match {
-    case Some(iri) => validatePermissionIRI(iri)
+    case Some(iri) => sf.validatePermissionIRI(iri)
     case None      => None
   }
 

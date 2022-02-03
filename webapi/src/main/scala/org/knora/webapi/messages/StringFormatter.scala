@@ -2963,25 +2963,26 @@ class StringFormatter private (
     }
 
   /**
-   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * Gets the last segment of IRI, decodes UUID and gets the version.
    * @param s the string (IRI) to be checked.
-   * @return TRUE for correct versions, FALSE for incorrect.
+   * @return UUID version.
    */
-  def isUUIDVersion4Or5(s: String): Boolean = {
-    val encodedUUID = s.split("/").last
-    val decodedUUIDVersion = decodeUuid(encodedUUID).version()
-
-    if (decodedUUIDVersion == 4 || decodedUUIDVersion == 5) {
-      true
-    } else {
-      false
-    }
-  }
-
   def getUUIDVersion(s: IRI): Int = {
     val encodedUUID = s.split("/").last
     decodeUuid(encodedUUID).version()
   }
+
+  /**
+   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * @param s the string (IRI) to be checked.
+   * @return TRUE for correct versions, FALSE for incorrect.
+   */
+  def isUUIDVersion4Or5(s: IRI): Boolean =
+    if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
+      true
+    } else {
+      false
+    }
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
@@ -2991,6 +2992,28 @@ class StringFormatter private (
    */
   def couldBeUuid(idStr: String): Boolean =
     idStr.length == CanonicalUuidLength || idStr.length == Base64UuidLength
+
+  /**
+   * Validates resource IRI
+   * @param iri to be validated
+   */
+  def validateUUIDOfResourceIRI(iri: IRI) {
+    if (couldBeUuid(iri.split("/").last) && isUUIDVersion4Or5(iri)) {
+      throw BadRequestException(UUID_INVALID_ERROR)
+    }
+  }
+
+  /**
+   * Validates permission IRI
+   * @param iri to be validated.
+   */
+  def validatePermissionIRI(iri: IRI) {
+    if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
+      throw BadRequestException(UUID_INVALID_ERROR)
+    } else {
+      validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
+    }
+  }
 
   /**
    * Creates a new resource IRI based on a UUID.
