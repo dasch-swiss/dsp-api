@@ -259,6 +259,7 @@ class SipiConnector extends Actor with ActorLogging {
 
     val sipiResponseTry = Try {
       maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
+      println(maybeResponse)
 
       val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
         case Some(responseEntity) => EntityUtils.toString(responseEntity)
