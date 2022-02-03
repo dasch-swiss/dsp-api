@@ -2997,23 +2997,21 @@ class StringFormatter private (
    * Validates resource IRI
    * @param iri to be validated
    */
-  def validateUUIDOfResourceIRI(iri: IRI) {
-    if (hasUUIDLength(iri.split("/").last) && isUUIDVersion4Or5(iri)) {
+  def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
+    if (iri.isKnoraResourceIri && hasUUIDLength(iri.toString.split("/").last) && !isUUIDVersion4Or5(iri.toString)) {
       throw BadRequestException(UUID_INVALID_ERROR)
     }
-  }
 
   /**
    * Validates permission IRI
    * @param iri to be validated.
    */
-  def validatePermissionIRI(iri: IRI) {
+  def validatePermissionIRI(iri: IRI): Unit =
     if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
       throw BadRequestException(UUID_INVALID_ERROR)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
     }
-  }
 
   /**
    * Creates a new resource IRI based on a UUID.

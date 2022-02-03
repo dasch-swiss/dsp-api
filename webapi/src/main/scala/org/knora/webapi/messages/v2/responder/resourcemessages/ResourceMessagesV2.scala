@@ -730,7 +730,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
           throw BadRequestException(s"<$iri> is not a Knora resource IRI")
         }
 
-        stringFormatter.validateUUIDOfResourceIRI(iri.toString)
+        stringFormatter.validateUUIDOfResourceIRI(iri)
 
         if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
           throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
@@ -933,7 +933,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
       throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
     }
 
-    stringFormatter.validateUUIDOfResourceIRI(resourceIri.toString)
+    stringFormatter.validateUUIDOfResourceIRI(resourceIri)
 
     val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
