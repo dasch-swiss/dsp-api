@@ -7,6 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
@@ -17,6 +18,7 @@ import zio.prelude.Validation
 class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "ProjectIRI value object" when {
     val validProjectIri = "http://rdfh.ch/projects/0001"
+    val projectIRIWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -28,6 +30,9 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         ProjectIRI.make("not a project IRI") should equal(
           Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
         )
+        ProjectIRI.make(projectIRIWithUUIDVersion3) should equal(
+          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+        )
       }
     }
     "created using valid value" should {
@@ -38,9 +43,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       }
       "return value passed to value object" in {
         ProjectIRI.make(validProjectIri).toOption.get.value should equal(validProjectIri)
-        ProjectIRI.make(validProjectIri) should not equal Validation.fail(
-          BadRequestException(PROJECT_IRI_INVALID_ERROR)
-        )
       }
     }
   }

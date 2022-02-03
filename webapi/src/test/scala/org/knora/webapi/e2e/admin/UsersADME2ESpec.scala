@@ -76,8 +76,8 @@ class UsersADME2ESpec
   private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
   private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
-  private val customUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKwhSUtQ"
-  private val otherCustomUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKohSUtQ"
+  private val customUserIri = "http://rdfh.ch/users/14pxW-LAQIaGcCRiNCPJcQ"
+  private val otherCustomUserIri = "http://rdfh.ch/users/v8_12VcJRlGNFCjYzqJ5cA"
 
   private val donaldIri = new MutableTestIri
   private val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")

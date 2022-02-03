@@ -74,7 +74,7 @@ class OldListsRouteADMFeatureE2ESpec
 
   private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-  private val customChildNodeIRI = "http://rdfh.ch/lists/0001/JbKZ-L_i5rTwHlv4dSNp4A"
+  private val customChildNodeIRI = "http://rdfh.ch/lists/0001/vQgijJZKSqawFooJPyhYkw"
   def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String =
     s"""{
        |    "parentNodeIri": "$parentNodeIri",
@@ -1140,9 +1140,7 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "add flat nodes" ignore {}
-
       "add hierarchical nodes" ignore {}
-
       "change node order" ignore {}
     }
   }

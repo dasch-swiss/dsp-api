@@ -1154,8 +1154,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "return a DuplicateValueException during resource creation when the supplied resource IRI is not unique" in {
-
       // duplicate resource IRI
+
       val params =
         s"""{
            |  "@id" : "$aThingIri",
