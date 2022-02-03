@@ -14,6 +14,8 @@ class StandoffModelsSpec extends CoreSpec {
   "StandoffModelsUtil," when {
     "XXX" should {
       "YYY" in {
+        StandoffModelsUtil.do_stuff()
+        XXX.make().toJsonLd()
         // TODO: write tests
       }
     }

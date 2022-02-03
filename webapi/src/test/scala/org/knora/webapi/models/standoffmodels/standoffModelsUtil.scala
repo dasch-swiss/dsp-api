@@ -5,4 +5,11 @@
 
 package org.knora.webapi.models.standoffmodels
 
+import org.knora.webapi.messages.StringFormatter
+
+object StandoffModelsUtil {
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+  def do_stuff(): Unit = {}
+}
 // TODO: implement stuff here, idf needed
