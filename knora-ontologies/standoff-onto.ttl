@@ -137,6 +137,14 @@
                 rdfs:comment "Represents a paragraph in a TextValue"@en .
 
 
+###  http://www.knora.org/ontology/standoff#StandoffWordTag
+
+:StandoffWordTag
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :StandoffStructuralTag ;
+    rdfs:comment    "Represents a Word in a TextValue"@en .
+
+
 ###  http://www.knora.org/ontology/standoff#StandoffHeader1Tag
 
 :StandoffHeader1Tag rdf:type owl:Class ;
