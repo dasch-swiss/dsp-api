@@ -15,6 +15,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.{
   ProjectADM,
   ProjectGetRequestADM,
@@ -724,12 +725,14 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         requestingUser = requestingUser
       )).mapTo[ProjectGetResponseADM]
 
-      _ = maybeCustomResourceIri.foreach { definedResourceIri =>
-        if (!definedResourceIri.isKnoraResourceIri) {
-          throw BadRequestException(s"<$definedResourceIri> is not a Knora resource IRI")
+      _ = maybeCustomResourceIri.foreach { iri =>
+        if (!iri.isKnoraResourceIri) {
+          throw BadRequestException(s"<$iri> is not a Knora resource IRI")
         }
 
-        if (!definedResourceIri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
+        stringFormatter.validateUUIDOfResourceIRI(iri)
+
+        if (!iri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
           throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
         }
       }
@@ -929,6 +932,8 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     if (!resourceIri.isKnoraResourceIri) {
       throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
     }
+
+    stringFormatter.validateUUIDOfResourceIRI(resourceIri)
 
     val resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 

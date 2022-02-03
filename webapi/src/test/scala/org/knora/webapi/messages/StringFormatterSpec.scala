@@ -7,7 +7,6 @@ package org.knora.webapi.messages
 
 import java.time.Instant
 import java.util.UUID
-
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.IriConversions._
@@ -795,13 +794,13 @@ class StringFormatterSpec extends CoreSpec() {
       assert(internalEntityIri.toString == externalEntityIri.toString && !externalEntityIri.isKnoraIri)
     }
 
-    "parse http://rdfh.ch/0000/0123456789abcdef" in {
-      val dataIri = "http://rdfh.ch/0000/0123456789abcdef".toSmartIri
+    "parse http://rdfh.ch/0000/Ef9heHjPWDS7dMR_gGax2Q" in {
+      val dataIri = "http://rdfh.ch/0000/Ef9heHjPWDS7dMR_gGax2Q".toSmartIri
       assert(dataIri.isKnoraDataIri)
     }
 
-    "parse http://rdfh.ch/0123456789abcdef" in {
-      val dataIri = "http://rdfh.ch/0123456789abcdef".toSmartIri
+    "parse http://rdfh.ch/Ef9heHjPWDS7dMR_gGax2Q" in {
+      val dataIri = "http://rdfh.ch/Ef9heHjPWDS7dMR_gGax2Q".toSmartIri
       assert(dataIri.isKnoraDataIri)
     }
 
@@ -1216,7 +1215,6 @@ class StringFormatterSpec extends CoreSpec() {
   }
 
   "The StringFormatter class for User and Project" should {
-
     "validate project IRI" in {
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.incunabulaProject.id,
@@ -1296,7 +1294,6 @@ class StringFormatterSpec extends CoreSpec() {
     }
 
     "validate username" in {
-
       // 4 - 50 characters long
       an[AssertionException] should be thrownBy {
         stringFormatter.validateAndEscapeUsername("abc", throw AssertionException("not valid"))
@@ -1345,7 +1342,6 @@ class StringFormatterSpec extends CoreSpec() {
     }
 
     "validate email" in {
-
       stringFormatter.validateEmailAndThrow("donald.duck@example.com", throw AssertionException("not valid")) should be(
         "donald.duck@example.com"
       )
@@ -1360,6 +1356,31 @@ class StringFormatterSpec extends CoreSpec() {
       val base64EncodedUuid = stringFormatter.base64EncodeUuid(uuid)
       val base4DecodedUuid = stringFormatter.base64DecodeUuid(base64EncodedUuid)
       uuid should be(base4DecodedUuid)
+    }
+
+    "return TRUE if IRI contains UUID version 4 or 5, otherwise return FALSE" in {
+      val iri3 = "http://rdfh.ch/0000/rKAU0FNjPUKWqOT8MEW_UQ"
+      val iri4 = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+      val iri5 = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
+
+      val testIRIFromVersion3UUID = stringFormatter.isUUIDVersion4Or5(iri3)
+      val testIRIFromVersion4UUID = stringFormatter.isUUIDVersion4Or5(iri4)
+      val testIRIFromVersion5UUID = stringFormatter.isUUIDVersion4Or5(iri5)
+
+      val iri = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
+
+      println(
+        777,
+        stringFormatter.makeRandomBase64EncodedUuid,
+        stringFormatter.makeRandomBase64EncodedUuid,
+        stringFormatter.getUUIDVersion(iri),
+        stringFormatter.hasUUIDLength(iri.split("/").last),
+        stringFormatter.isUUIDVersion4Or5(iri)
+      )
+
+      testIRIFromVersion3UUID should be(false)
+      testIRIFromVersion4UUID should be(true)
+      testIRIFromVersion5UUID should be(true)
     }
   }
 }

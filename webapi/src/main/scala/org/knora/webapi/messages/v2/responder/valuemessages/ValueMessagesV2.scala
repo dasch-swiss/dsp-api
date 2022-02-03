@@ -7,7 +7,6 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
@@ -17,6 +16,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, NotImplementedException, SipiException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
@@ -498,6 +498,13 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
 
         if (!valueIri.isKnoraValueIri) {
           throw BadRequestException(s"Invalid value IRI: <$valueIri>")
+        }
+
+        if (
+          stringFormatter.hasUUIDLength(valueIri.toString.split("/").last)
+          && !stringFormatter.isUUIDVersion4Or5(valueIri.toString)
+        ) {
+          throw BadRequestException(UUID_INVALID_ERROR)
         }
 
         val valueTypeIri: SmartIri = jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri

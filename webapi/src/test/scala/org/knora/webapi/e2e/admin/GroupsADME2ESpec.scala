@@ -88,7 +88,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     }
 
     "given a custom Iri" should {
-      val customGroupIri = "http://rdfh.ch/groups/00FF/3eFYejZEduOCowwXQq5Iqg"
+      val customGroupIri = "http://rdfh.ch/groups/00FF/gNdJSNYrTDu2lGpPUs94nQ"
       "create a group with the provided custom IRI " in {
         val createGroupWithCustomIriRequest: String =
           s"""{   "id": "$customGroupIri",

@@ -47,6 +47,7 @@ import scala.util.{Failure, Success, Try}
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
+  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
 
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
@@ -898,7 +899,7 @@ class StringFormatter private (
    *                      about the IRI being constructed.
    * @param errorFun      a function that throws an exception. It will be called if the IRI is invalid.
    */
-  private class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: => Nothing) extends SmartIri {
+  class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: => Nothing) extends SmartIri {
     def this(iriStr: IRI) = this(iriStr, None, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
     def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) =
@@ -2962,13 +2963,55 @@ class StringFormatter private (
     }
 
   /**
+   * Gets the last segment of IRI, decodes UUID and gets the version.
+   * @param s the string (IRI) to be checked.
+   * @return UUID version.
+   */
+  def getUUIDVersion(s: IRI): Int = {
+    val encodedUUID = s.split("/").last
+    decodeUuid(encodedUUID).version()
+  }
+
+  /**
+   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * @param s the string (IRI) to be checked.
+   * @return TRUE for correct versions, FALSE for incorrect.
+   */
+  def isUUIDVersion4Or5(s: IRI): Boolean =
+    if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
+      true
+    } else {
+      false
+    }
+
+  /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
    *
-   * @param idStr the string to check.
-   * @return `true` if the string is the right length to be a canonical or Base64-encoded UUID.
+   * @param s the string to check.
+   * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
    */
-  def couldBeUuid(idStr: String): Boolean =
-    idStr.length == CanonicalUuidLength || idStr.length == Base64UuidLength
+  def hasUUIDLength(s: String): Boolean =
+    s.length == CanonicalUuidLength || s.length == Base64UuidLength
+
+  /**
+   * Validates resource IRI
+   * @param iri to be validated
+   */
+  def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
+    if (iri.isKnoraResourceIri && hasUUIDLength(iri.toString.split("/").last) && !isUUIDVersion4Or5(iri.toString)) {
+      throw BadRequestException(UUID_INVALID_ERROR)
+    }
+
+  /**
+   * Validates permission IRI
+   * @param iri to be validated.
+   */
+  def validatePermissionIRI(iri: IRI): Unit =
+    if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
+      throw BadRequestException(UUID_INVALID_ERROR)
+    } else {
+      validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
+    }
 
   /**
    * Creates a new resource IRI based on a UUID.
