@@ -11,7 +11,9 @@ import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.protocol.HttpContext
 import org.apache.http.util.EntityUtils
@@ -47,25 +49,40 @@ class SipiConnector extends Actor with ActorLogging {
 
   private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
 
-  private val sipiRequestConfig = RequestConfig
+  // Create a connection manager with custom configuration.
+  private val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
+
+  // Create socket configuration
+  private val socketConfig: SocketConfig = SocketConfig
+    .custom()
+    .setTcpNoDelay(true)
+    .build();
+
+  // Configure the connection manager to use socket configuration by default.
+  connManager.setDefaultSocketConfig(socketConfig)
+
+  // Validate connections after 1 sec of inactivity
+  connManager.setValidateAfterInactivity(1000);
+
+  // Configure total max or per route limits for persistent connections
+  // that can be kept in the pool or leased by the connection manager.
+  connManager.setMaxTotal(100)
+  connManager.setDefaultMaxPerRoute(10)
+
+  // Sipi custom default request config
+  private val defaultRequestConfig = RequestConfig
     .custom()
     .setConnectTimeout(sipiTimeoutMillis)
     .setConnectionRequestTimeout(sipiTimeoutMillis)
     .setSocketTimeout(sipiTimeoutMillis)
     .build()
 
-  private val httpClient: CloseableHttpClient = HttpClients.custom.setRetryHandler {
-    (exception: IOException, executionCount: Int, context: HttpContext) =>
-      if (executionCount > 3) {
-        log.warning("Maximum tries reached for client http pool ")
-        false
-      } else if (exception.isInstanceOf[NoHttpResponseException]) {
-        log.warning("No response from server on " + executionCount + " call")
-        true
-      } else {
-        false
-      }
-  }.setDefaultRequestConfig(sipiRequestConfig).build
+  // Create an HttpClient with the given custom dependencies and configuration.
+  private val httpClient: CloseableHttpClient = HttpClients
+    .custom()
+    .setConnectionManager(connManager)
+    .setDefaultRequestConfig(defaultRequestConfig)
+    .build()
 
   override def receive: Receive = {
     case getFileMetadataRequest: GetFileMetadataRequest =>
@@ -267,7 +284,7 @@ class SipiConnector extends Actor with ActorLogging {
    * @return Sipi's response.
    */
   private def doSipiRequest(request: HttpRequest): Try[String] = {
-    val httpContext: HttpClientContext = HttpClientContext.create
+    val httpContext: HttpClientContext = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
     val sipiResponseTry = Try {
