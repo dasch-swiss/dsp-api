@@ -32,7 +32,6 @@ scala_library(
         "@maven//:dev_zio_zio_2_13",
         "@maven//:dev_zio_zio_prelude_2_13",
         "@maven//:io_spray_spray_json_2_13",
-        "@maven//:javax_json_javax_json_api",
         "@maven//:org_glassfish_jakarta_json",
         "@maven//:net_sf_saxon_Saxon_HE",
         "@maven//:org_apache_commons_commons_lang3",

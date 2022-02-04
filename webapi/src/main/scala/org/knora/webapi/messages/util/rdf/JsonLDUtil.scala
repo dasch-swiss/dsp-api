@@ -5,14 +5,8 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import java.io.{StringReader, StringWriter}
-import java.util
-import java.util.UUID
-
 import com.apicatalog.jsonld._
 import com.apicatalog.jsonld.document._
-//import javax.json._
-//import javax.json.stream.JsonGenerator
 import jakarta.json._
 import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
@@ -22,6 +16,9 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
+import java.io.{StringReader, StringWriter}
+import java.util
+import java.util.UUID
 import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
 
@@ -31,7 +28,7 @@ The classes in this file provide a Scala API for formatting and parsing JSON-LD,
 between JSON-LD documents and RDF models. These classes also provide Knora-specific JSON-LD functionality
 to facilitate reading data from Knora API requests and constructing Knora API responses.
 
-The implementation uses the javax.json API and a Java implementation of the JSON-LD API
+The implementation uses the jakarta.json API and a Java implementation of the JSON-LD API
 <https://www.w3.org/TR/json-ld11-api/> (currently <https://github.com/filip26/titanium-json-ld>).
 
  */
@@ -64,7 +61,7 @@ object JsonLDKeywords {
 sealed trait JsonLDValue extends Ordered[JsonLDValue] {
 
   /**
-   * Converts this JSON-LD value to a `javax.json` [[JsonValue]].
+   * Converts this JSON-LD value to a `jakarta.json` [[JsonValue]].
    */
   def toJavaxJsonValue: JsonValue
 }
@@ -1340,7 +1337,7 @@ object JsonLDUtil {
    * @return a [[JsonLDDocument]].
    */
   def parseJsonLD(jsonLDString: String, flatten: Boolean = false): JsonLDDocument = {
-    // Parse the string into a javax.json.JsonStructure.
+    // Parse the string into a jakarta.json.JsonStructure.
     val stringReader = new StringReader(jsonLDString)
     val jsonReader: JsonReader = Json.createReader(stringReader)
     val jsonStructure: JsonStructure = jsonReader.read()
@@ -1352,7 +1349,7 @@ object JsonLDUtil {
     val emptyContext = JsonDocument.of(Json.createObjectBuilder().build())
     val compactedJsonObject: JsonObject = JsonLd.compact(titaniumDocument, emptyContext).get
 
-    // Convert the resulting javax.json.JsonObject to a JsonLDDocument.
+    // Convert the resulting jakarta.json.JsonObject to a JsonLDDocument.
     val jsonLDDocument: JsonLDDocument = javaxJsonObjectToJsonLDDocument(compactedJsonObject)
 
     // Was flat JSON-LD requested?
