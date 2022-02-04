@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.iiif
 
-import java.util
-
 import akka.actor.{Actor, ActorLogging, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.http.client.config.RequestConfig
@@ -15,8 +13,9 @@ import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGe
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
+import org.apache.http.protocol.HttpContext
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
+import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair, NoHttpResponseException}
 import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, SipiException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
@@ -27,6 +26,8 @@ import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import org.knora.webapi.util.SipiUtil
 import spray.json._
 
+import java.io.IOException
+import java.util
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
@@ -53,7 +54,18 @@ class SipiConnector extends Actor with ActorLogging {
     .setSocketTimeout(sipiTimeoutMillis)
     .build()
 
-  private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
+  private val httpClient: CloseableHttpClient = HttpClients.custom.setRetryHandler {
+    (exception: IOException, executionCount: Int, context: HttpContext) =>
+      if (executionCount > 3) {
+        log.warning("Maximum tries reached for client http pool ")
+        false
+      } else if (exception.isInstanceOf[NoHttpResponseException]) {
+        log.warning("No response from server on " + executionCount + " call")
+        true
+      } else {
+        false
+      }
+  }.setDefaultRequestConfig(sipiRequestConfig).build
 
   override def receive: Receive = {
     case getFileMetadataRequest: GetFileMetadataRequest =>
