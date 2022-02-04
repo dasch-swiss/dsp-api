@@ -3,7 +3,7 @@
 SCALA_VERSION = "2.13.7"
 AKKA_VERSION = "2.6.17"
 AKKA_HTTP_VERSION = "10.2.4"
-JENA_VERSION = "3.14.0"
+JENA_VERSION = "4.3.2"
 METRICS_VERSION = "4.0.1"
 
 # SIPI - digest takes precedence!
