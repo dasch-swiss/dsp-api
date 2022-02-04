@@ -7,6 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
@@ -17,6 +18,7 @@ import zio.prelude.Validation
 class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "GroupIRI value object" when {
     val validGroupIri = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+    val groupIRIWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -26,6 +28,9 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using invalid value" should {
       "throw BadRequestException" in {
         GroupIRI.make("not a group IRI") should equal(Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR)))
+        GroupIRI.make(groupIRIWithUUIDVersion3) should equal(
+          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+        )
       }
     }
     "created using valid value" should {

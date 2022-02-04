@@ -7,6 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
 import zio.prelude.Validation
 
@@ -16,6 +17,7 @@ import zio.prelude.Validation
 class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "UserIRI value object" when {
     val validUserIRI = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
+    val userIRIWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -25,6 +27,7 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using invalid value" should {
       "throw BadRequestException" in {
         UserIRI.make("not a user IRI") should equal(Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR)))
+        UserIRI.make(userIRIWithUUIDVersion3) should equal(Validation.fail(BadRequestException(UUID_INVALID_ERROR)))
       }
     }
     "created using valid value" should {

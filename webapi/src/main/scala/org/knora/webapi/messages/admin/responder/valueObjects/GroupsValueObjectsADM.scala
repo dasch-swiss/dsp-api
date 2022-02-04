@@ -7,6 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
@@ -22,8 +23,12 @@ object GroupIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
     } else {
+      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
+
       if (!sf.isKnoraGroupIriStr(value)) {
         Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
+      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
+        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
           sf.validateAndEscapeIri(value, throw BadRequestException(GROUP_IRI_INVALID_ERROR))

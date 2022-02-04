@@ -248,7 +248,7 @@ class PermissionsResponderADMSpec
       }
 
       "create and return an administrative permission with a custom IRI" in {
-        val customIri = "http://rdfh.ch/permissions/0001/YCHszszUkzmZp5YURnmBDA"
+        val customIri = "http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q"
         responderManager ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(customIri),
@@ -268,7 +268,7 @@ class PermissionsResponderADMSpec
       }
 
       "create and return an administrative permission even if irrelevant values were given for name and code of its permission" in {
-        val customIri = "http://rdfh.ch/permissions/0001/cEVBtj2JpzsdJQBJN1J-vg"
+        val customIri = "http://rdfh.ch/permissions/0001/0pd-VUDeShWNJ2Nq3fGGGQ"
         val hasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
@@ -479,7 +479,7 @@ class PermissionsResponderADMSpec
       }
 
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
-        val customIri = "http://rdfh.ch/permissions/0001/mnL_QA0D06zkE7p9LMqBCA"
+        val customIri = "http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ"
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(customIri),

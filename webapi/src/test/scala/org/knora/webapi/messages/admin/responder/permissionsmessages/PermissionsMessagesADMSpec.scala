@@ -11,6 +11,7 @@ import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
@@ -143,6 +144,24 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+    }
+
+    "throw 'BadRequest' for AdministrativePermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
+      val permissionIRIWithUUIDVersion3 = "http://rdfh.ch/permissions/0001/Ul3IYhDMOQ2fyoVY0ePz0w"
+      val caught = intercept[BadRequestException](
+        AdministrativePermissionCreateRequestADM(
+          createRequest = CreateAdministrativePermissionAPIRequestADM(
+            id = Some(permissionIRIWithUUIDVersion3),
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === UUID_INVALID_ERROR)
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
@@ -522,6 +541,24 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+    }
+
+    "throw 'BadRequest' for DefaultObjectAccessPermissionCreateRequestADM if the supplied permission IRI contains bad UUID version" in {
+      val permissionIRIWithUUIDVersion3 = "http://rdfh.ch/permissions/0001/Ul3IYhDMOQ2fyoVY0ePz0w"
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            id = Some(permissionIRIWithUUIDVersion3),
+            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === UUID_INVALID_ERROR)
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {

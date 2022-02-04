@@ -7,6 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
@@ -17,6 +18,7 @@ import zio.prelude.Validation
 class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "ListIRI value object" when {
     val validListIri = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+    val listIRIWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -26,6 +28,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using invalid value" should {
       "throw BadRequestException" in {
         ListIRI.make("not a list IRI") should equal(Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR)))
+        ListIRI.make(listIRIWithUUIDVersion3) should equal(Validation.fail(BadRequestException(UUID_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
