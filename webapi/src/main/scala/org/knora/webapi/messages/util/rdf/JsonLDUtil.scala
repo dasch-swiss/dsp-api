@@ -11,8 +11,10 @@ import java.util.UUID
 
 import com.apicatalog.jsonld._
 import com.apicatalog.jsonld.document._
-import javax.json._
-import javax.json.stream.JsonGenerator
+//import javax.json._
+//import javax.json.stream.JsonGenerator
+import jakarta.json._
+import jakarta.json.stream.JsonGenerator
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
