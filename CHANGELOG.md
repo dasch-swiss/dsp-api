@@ -1,5 +1,24 @@
 # Changelog
 
+## [17.4.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.1...v17.4.0) (2022-02-04)
+
+
+### Bug Fixes
+
+* **version-upgrade:** add upgrade plugin for ArchiveRepresentation and DeletedResource (DEV-467) ([#1992](https://www.github.com/dasch-swiss/dsp-api/issues/1992)) ([e1566e9](https://www.github.com/dasch-swiss/dsp-api/commit/e1566e999d67fab57218e9ec2a5f209b44d82af9))
+
+
+### Maintenance
+
+* add support for building native API and Fuseki Docker images on Apple M1 (DEV-435) ([#1987](https://www.github.com/dasch-swiss/dsp-api/issues/1987)) ([ab80e72](https://www.github.com/dasch-swiss/dsp-api/commit/ab80e72047dd0ce7fc18e874a2712074908c2d7b))
+* refactor test models (DEV-264) ([#1975](https://www.github.com/dasch-swiss/dsp-api/issues/1975)) ([65952f9](https://www.github.com/dasch-swiss/dsp-api/commit/65952f963417d0a7f546d04b172ff768382feae9))
+
+
+### Enhancements
+
+* **resource:** add ArchiveRepresentation to API V1 (DEV-393) (DEV-394) ([#1984](https://www.github.com/dasch-swiss/dsp-api/issues/1984)) ([65b88a2](https://www.github.com/dasch-swiss/dsp-api/commit/65b88a207dd5a68413f4fd365a3ee7bd566cb1a2))
+* **UUID:** add IRI validation that allows only to create IRIs using UUID version 4 and 5 (DEV-402) ([#1990](https://www.github.com/dasch-swiss/dsp-api/issues/1990)) ([74d4344](https://www.github.com/dasch-swiss/dsp-api/commit/74d43441e6960acd6e86ea2a67ebdf3f6fdf4125))
+
 ### [17.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.0...v17.3.1) (2022-01-28)
 
 
