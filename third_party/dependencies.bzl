@@ -104,10 +104,8 @@ def dependencies():
             # provides akka jackson (json) support
             "de.heikoseeberger:akka-http-circe_2.13:1.36.0",
             "com.fasterxml.jackson.module:jackson-module-scala_2.13:2.12.3",
-            # TODO: DEV-335 upgrade titanium to 1.1.0 and jakarta-json to 2.0.1
-            "com.apicatalog:titanium-json-ld:1.0.0",
-            "org.glassfish:jakarta.json:2.0.0",
-#            "org.glassfish:jakarta.json-api:2.0.1",
+            "com.apicatalog:titanium-json-ld:1.2.0",
+            "org.glassfish:jakarta.json:2.0.1",
 
             # swagger (api documentation)
             "com.github.swagger-akka-http:swagger-akka-http_2.13:1.2.0",
