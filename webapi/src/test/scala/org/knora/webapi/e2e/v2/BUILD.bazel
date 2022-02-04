@@ -107,7 +107,6 @@ scala_test(
         "//webapi:test_library",
         "@maven//:org_eclipse_rdf4j_rdf4j_client",
         "@maven//:org_xmlunit_xmlunit_core",
-        "@maven//:javax_json_javax_json_api",
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
