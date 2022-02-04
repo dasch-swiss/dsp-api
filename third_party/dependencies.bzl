@@ -55,7 +55,7 @@ def dependencies():
             "org.slf4j:log4j-over-slf4j:1.7.32",
             "org.slf4j:jcl-over-slf4j:1.7.32",
             "org.slf4j:slf4j-api:1.7.32",
-            "org.apache.logging.log4j:log4j:2.17.0", # needed by apache-jena-libs. explicitly setting latest version (log4shell) to override the one used by jena.
+            "org.apache.logging.log4j:log4j:2.17.0",  # needed by apache-jena-libs. explicitly setting latest version (log4shell) to override the one used by jena.
 
             # metrics
             "io.kamon:kamon-core_2.13:2.1.5",
@@ -115,7 +115,7 @@ def dependencies():
             # Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
             "javax.xml.bind:jaxb-api:2.2.12",
             "com.ibm.icu:icu4j:62.1",
-            "org.apache.httpcomponents:httpclient:4.5.6",
+            "org.apache.httpcomponents:httpclient:4.5.13",
 
             # Twirl templates
             "com.typesafe.play:twirl-api_2.13:1.5.1",
