@@ -233,7 +233,7 @@ jobs:
       - name: test repository upgrade
         run: make test-repository-upgrade
       - name: dump docker logs on failure using different shell
-        if: failure()
+        # if: failure()
         uses: jwalton/gh-docker-logs@v1
         with:
           shell: '/bin/sh'

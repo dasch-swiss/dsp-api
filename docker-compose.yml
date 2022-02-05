@@ -26,7 +26,6 @@ services:
       - ${LOCAL_HOME}/sipi/server:/sipi/server:delegated
     networks:
       - knora-net
-    restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http
       - SIPI_EXTERNAL_HOSTNAME=localhost
@@ -51,9 +50,6 @@ services:
       - /tmp:/tmp
     networks:
       - knora-net
-    depends_on:
-      - "db"
-      - "sipi"
     environment:
       - KNORA_AKKA_LOGLEVEL=DEBUG
       - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
