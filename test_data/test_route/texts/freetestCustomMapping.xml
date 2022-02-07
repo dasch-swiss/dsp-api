@@ -35,7 +35,7 @@
 
     <mappingElement>
         <tag>
-            <name>word</name>
+            <name>italic</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
             <separatesWords>false</separatesWords>

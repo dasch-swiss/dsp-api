@@ -1844,7 +1844,6 @@ case class TextValueContentV2(
         } else {
           // We're not rendering standoff as XML. Return the text without markup.
           Map(OntologyConstants.KnoraApiV2Complex.ValueAsString -> JsonLDString(valueHasStringWithoutStandoff))
-          // TODO: should this be the case?
         }
 
         // In the complex schema, if this text value specifies a language, return it using the predicate
