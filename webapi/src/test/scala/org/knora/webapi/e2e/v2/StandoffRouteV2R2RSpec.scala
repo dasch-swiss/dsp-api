@@ -294,10 +294,10 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       val uploadFileJson = UploadFileRequest
         .make(
           fileType = FileType.TextFile,
-          internalFilename = uploadedFile.internalFilename
+          internalFilename = uploadedFile.internalFilename,
+          resourceIRI = Some(freetestXSLTIRI)
         )
         .toJsonLd(
-          resourceIRI = Some(freetestXSLTIRI),
           className = Some("XSLTransformation")
         )
       val fileRepresentationRequest = Post(
@@ -382,7 +382,6 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
 
-    // TODO: make FileModel slimmer with resourceIRI
     // TODO: move stuff to models
     // TODO: revert all ontologies to what they were, to that no upgrade script will be needed
     // TODO: also test the TEI route

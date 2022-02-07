@@ -20,7 +20,8 @@ import java.util.UUID
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String,
-  label: String
+  label: String,
+  resourceIRI: Option[String] = None
 ) {
 
   /**
@@ -36,8 +37,7 @@ sealed abstract case class UploadFileRequest private (
     shortcode: String = "0001",
     ontologyName: String = "knora-api",
     className: Option[String] = None,
-    ontologyIRI: Option[String] = None,
-    resourceIRI: Option[String] = None
+    ontologyIRI: Option[String] = None
   ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
     val fileValueType = FileModelUtil.getFileValueType(fileType)
@@ -180,12 +180,14 @@ object UploadFileRequest {
   def make(
     fileType: FileType,
     internalFilename: String,
-    label: String = "test label"
+    label: String = "test label",
+    resourceIRI: Option[String] = None
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType = fileType,
       internalFilename = internalFilename,
-      label = label
+      label = label,
+      resourceIRI = resourceIRI
     ) {}
 }
 
