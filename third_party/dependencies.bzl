@@ -39,14 +39,7 @@ def dependencies():
 
             # Jena
             "org.apache.jena:apache-jena-libs:%s" % (JENA_VERSION),
-            maven.artifact(
-                group = "org.apache.jena",
-                artifact = "jena-text",
-                version = JENA_VERSION,
-                exclusions = [
-                    "org.slf4j:slf4j-log4j12",
-                ],
-            ),
+            "org.apache.jena:jena-text:%s" % (JENA_VERSION),
 
             # Logging
             "com.typesafe.scala-logging:scala-logging_2.13:3.9.4",
@@ -55,7 +48,6 @@ def dependencies():
             "org.slf4j:log4j-over-slf4j:1.7.32",
             "org.slf4j:jcl-over-slf4j:1.7.32",
             "org.slf4j:slf4j-api:1.7.32",
-            "org.apache.logging.log4j:log4j:2.17.0", # needed by apache-jena-libs. explicitly setting latest version (log4shell) to override the one used by jena.
 
             # metrics
             "io.kamon:kamon-core_2.13:2.1.5",
