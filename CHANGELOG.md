@@ -1,5 +1,13 @@
 # Changelog
 
+### [17.4.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.4.0...v17.4.1) (2022-02-07)
+
+
+### Maintenance
+
+* **deps:** upgrade Jena to v4.3.2 (DEV-473) ([#1995](https://www.github.com/dasch-swiss/dsp-api/issues/1995)) ([216dcb4](https://www.github.com/dasch-swiss/dsp-api/commit/216dcb432b79812551d50f4a05375cee8f379852))
+* **deps:** upgrade titanium-json-ld to v1.2.0 & jakarta-json to v2.0.1 (DEV-335) ([#1993](https://www.github.com/dasch-swiss/dsp-api/issues/1993)) ([ad01bf9](https://www.github.com/dasch-swiss/dsp-api/commit/ad01bf996de77d72934671de2479a206ca80e365))
+
 ## [17.4.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.1...v17.4.0) (2022-02-04)
 
 
