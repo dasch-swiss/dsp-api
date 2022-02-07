@@ -64,7 +64,6 @@ scala_library(
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_github_andrewoma_dexx_collection",
         "@maven//:com_apicatalog_titanium_json_ld",
-        "@maven//:javax_json_javax_json_api",
         "@maven//:org_glassfish_jakarta_json",
         "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_13",
         "@maven//:com_google_gwt_gwt_servlet",
