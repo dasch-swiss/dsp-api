@@ -36,7 +36,8 @@ sealed abstract case class UploadFileRequest private (
     shortcode: String = "0001",
     ontologyName: String = "knora-api",
     className: Option[String] = None,
-    ontologyIRI: Option[String] = None
+    ontologyIRI: Option[String] = None,
+    resourceIRI: Option[String] = None
   ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
     val fileValueType = FileModelUtil.getFileValueType(fileType)
@@ -45,9 +46,13 @@ sealed abstract case class UploadFileRequest private (
       case Some(v) => v
       case None    => FileModelUtil.getDefaultClassName(fileType)
     }
+    val resorceIRIOrNothing = resourceIRI match {
+      case Some(v) => s""" "@id": "$v",\n  """
+      case None    => ""
+    }
 
     s"""{
-       |  "@type" : "$ontologyName:$classNameWithDefaults",
+       |  $resorceIRIOrNothing"@type" : "$ontologyName:$classNameWithDefaults",
        |  "$fileValuePropertyName" : {
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
