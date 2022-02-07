@@ -41,7 +41,7 @@
             <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffWordTag</classIri>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
         </standoffClass>
     </mappingElement>
 

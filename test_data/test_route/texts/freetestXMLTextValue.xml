@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <text>
-    <section>
-        <word>This</word>
-        <word>is</word>
-        <word>a</word>
-        <word>sample</word>
-        <word>of</word>
-        <word>standoff</word>
-        <word>text</word>
-    </section>
+    <section> This is a <italic>sample</italic> of standoff text. </section>
 </text>
