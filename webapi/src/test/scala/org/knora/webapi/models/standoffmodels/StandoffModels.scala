@@ -5,53 +5,50 @@
 
 package org.knora.webapi.models.standoffmodels
 
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
+import spray.json._
+import spray.json.DefaultJsonProtocol._
 
-import java.time.Instant
-import java.util.UUID
-
-sealed abstract case class XXX private (
-//  internalFilename: String,
-//  label: String
+sealed abstract case class DefineStandoffMapping private (
+  mappingName: String,
+  projectIRI: String,
+  label: String
 ) {
-  def toJsonLd(
-    shortcode: String = "0001",
-    ontologyName: String = "knora-api",
-    className: Option[String] = None,
-    ontologyIRI: Option[String] = None
-  ): String =
-    // TODO: implement
-    ""
+  def toJSONLD(): String =
+    Map(
+      "knora-api:mappingHasName" -> mappingName.toJson,
+      "knora-api:attachedToProject" -> Map(
+        JsonLDKeywords.ID -> projectIRI
+      ).toJson,
+      "rdfs:label" -> label.toJson,
+      JsonLDKeywords.CONTEXT -> Map(
+        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "knora-api" -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+      ).toJson
+    ).toJson.prettyPrint
 
-  def toMessage(
-    resourceIri: Option[String] = None,
-    internalMimeType: Option[String] = None,
-    originalFilename: Option[String] = None,
-    originalMimeType: Option[String] = None,
-    comment: Option[String] = None,
-    customValueIri: Option[SmartIri] = None,
-    customValueUUID: Option[UUID] = None,
-    customValueCreationDate: Option[Instant] = None,
-    valuePermissions: Option[String] = None,
-    resourcePermissions: Option[String] = None,
-    resourceCreationDate: Option[Instant] = None,
-    resourceClassIRI: Option[SmartIri] = None,
-    valuePropertyIRI: Option[SmartIri] = None,
-    project: Option[ProjectADM] = None
-  ): CreateResourceV2 =
+  def toMessage(): Unit =
     // TODO: implement
-    CreateResourceV2(
-      ???,
-      ???,
-      ???,
-      ???,
-      ???
-    )
+    ()
 }
 
-object XXX {
-  def make(): XXX =
-    new XXX() {}
+object DefineStandoffMapping {
+  def make(
+    mappingName: String,
+    projectIRI: Option[String] = None,
+    label: Option[String] = None
+  ): DefineStandoffMapping =
+    new DefineStandoffMapping(
+      mappingName = mappingName,
+      projectIRI = projectIRI match {
+        case Some(iri) => iri
+        case None      => ANYTHING_PROJECT_IRI
+      },
+      label = label match {
+        case Some(v) => v
+        case None    => "custom mapping"
+      }
+    ) {}
 }

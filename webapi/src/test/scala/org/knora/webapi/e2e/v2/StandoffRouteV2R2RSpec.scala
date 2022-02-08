@@ -16,17 +16,16 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
-import org.knora.webapi.sharedtestdata.SharedTestDataADM.rootUser
+import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import spray.json._
-import spray.json.DefaultJsonProtocol._
 
 import java.net.URLEncoder
 import scala.concurrent.Await
@@ -109,20 +108,7 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
     val mappingFile = Paths.get(mappingPath)
-    val mappingParams =
-      s"""
-         |{
-         |    "knora-api:mappingHasName": "$mappingName",
-         |    "knora-api:attachedToProject": {
-         |      "@id": "$ANYTHING_PROJECT_IRI"
-         |    },
-         |    "rdfs:label": "custom mapping",
-         |    "@context": {
-         |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-         |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-         |    }
-         |}
-                """.stripMargin
+    val mappingParams = DefineStandoffMapping.make(mappingName = mappingName).toJSONLD()
 
     val formDataMapping = Multipart.FormData(
       Multipart.FormData.BodyPart(
@@ -138,6 +124,36 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       BasicHttpCredentials(anythingUserEmail, password)
     )
     singleAwaitingRequest(mappingRequest)
+  }
+
+  def createResourceWithTextValue(xmlContent: String, mappingIRI: String): HttpResponse = {
+    val jsonLDEntity = Map(
+      "@type" -> "freetest:FreeTest".toJson,
+      "knora-api:attachedToProject" -> Map(
+        "@id" -> "http://rdfh.ch/projects/0001".toJson
+      ).toJson,
+      "rdfs:label" -> "obj_inst1".toJson,
+      "freetest:hasText" -> Map(
+        "@type" -> "knora-api:TextValue".toJson,
+        "knora-api:textValueAsXml" -> xmlContent.toJson,
+        "knora-api:textValueHasMapping" -> Map(
+          "@id" -> mappingIRI.toJson
+        ).toJson
+      ).toJson,
+      "@context" -> Map(
+        "anything" -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
+        "freetest" -> freetestOntologyIRI.toJson,
+        "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
+        "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
+        "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson
+      ).toJson
+    ).toJson.prettyPrint
+
+    val resourceRequest = Post(
+      s"$baseApiUrl/v2/resources",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+    singleAwaitingRequest(resourceRequest)
   }
 
   "The Standoff v2 Endpoint" should {
@@ -206,34 +222,10 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     "create a text value with the freetext custom mapping" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-
-      val jsonLDEntity = Map(
-        "@type" -> "freetest:FreeTest".toJson,
-        "knora-api:attachedToProject" -> Map(
-          "@id" -> "http://rdfh.ch/projects/0001".toJson
-        ).toJson,
-        "rdfs:label" -> "obj_inst1".toJson,
-        "freetest:hasText" -> Map(
-          "@type" -> "knora-api:TextValue".toJson,
-          "knora-api:textValueAsXml" -> xmlContent.toJson,
-          "knora-api:textValueHasMapping" -> Map(
-            "@id" -> freetestCustomMappingIRI.toJson
-          ).toJson
-        ).toJson,
-        "@context" -> Map(
-          "anything" -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
-          "freetest" -> freetestOntologyIRI.toJson,
-          "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
-          "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
-          "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson
-        ).toJson
-      ).toJson.prettyPrint
-
-      val resourceRequest = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(resourceRequest)
+      val response = createResourceWithTextValue(
+        xmlContent = xmlContent,
+        mappingIRI = freetestCustomMappingIRI
+      )
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
       freetestTextValueIRI.set(
@@ -323,34 +315,10 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     "create a text value with the freetext custom mapping and transformation" in {
       // create a resource with a TextValue with custom mapping
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-
-      val jsonLDEntity = Map(
-        "@type" -> "freetest:FreeTest".toJson,
-        "knora-api:attachedToProject" -> Map(
-          "@id" -> "http://rdfh.ch/projects/0001".toJson
-        ).toJson,
-        "rdfs:label" -> "obj_inst1".toJson,
-        "freetest:hasText" -> Map(
-          "@type" -> "knora-api:TextValue".toJson,
-          "knora-api:textValueAsXml" -> xmlContent.toJson,
-          "knora-api:textValueHasMapping" -> Map(
-            "@id" -> freetestCustomMappingWithTranformationIRI.toJson
-          ).toJson
-        ).toJson,
-        "@context" -> Map(
-          "anything" -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
-          "freetest" -> freetestOntologyIRI.toJson,
-          "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
-          "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
-          "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson
-        ).toJson
-      ).toJson.prettyPrint
-
-      val resourceRequest = Post(
-        s"$baseApiUrl/v2/resources",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val response: HttpResponse = singleAwaitingRequest(resourceRequest)
+      val response = createResourceWithTextValue(
+        xmlContent = xmlContent,
+        mappingIRI = freetestCustomMappingWithTranformationIRI
+      )
       assert(response.status == StatusCodes.OK, responseToString(response))
       val resourceResponseDocument: JsonLDDocument = responseToJsonLDDocument(response)
       freetestTextValueIRI.set(
@@ -383,8 +351,6 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     // TODO: move stuff to models
-    // TODO: revert all ontologies to what they were, to that no upgrade script will be needed
-    // TODO: also test the TEI route
     // TODO: update documentation
   }
 }
