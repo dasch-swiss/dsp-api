@@ -52,10 +52,6 @@ import SipiUploadResponseJsonProtocol._
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
  */
 class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
-  private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(
-    settings.defaultTimeout
-  )
-
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val anythingUser = SharedTestDataADM.anythingUser1
@@ -350,7 +346,6 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
 
-    // TODO: move stuff to models
     // TODO: update documentation
   }
 }
