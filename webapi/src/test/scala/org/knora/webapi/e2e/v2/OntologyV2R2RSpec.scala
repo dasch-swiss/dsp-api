@@ -2499,7 +2499,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "BlueFreeTestClass",
         label = LangString("en", "A Blue Free Test class"),
-        comment = LangString("en", "A Blue Free Test class used for testing cardinalities")
+        comment = Some(LangString("en", "A Blue Free Test class used for testing cardinalities"))
       )
       .value
 
@@ -2527,7 +2527,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           subjectClassName = Some("BlueFreeTestClass"),
           propertyType = PropertyValueType.TextValue,
           label = LangString("en", "blue test text property"),
-          comment = LangString("en", "A blue test text property")
+          comment = Some(LangString("en", "A blue test text property"))
         )
         .value
 
@@ -2555,7 +2555,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = Some("BlueFreeTestClass"),
         propertyType = PropertyValueType.IntValue,
         label = LangString("en", "blue test integer property"),
-        comment = LangString("en", "A blue test integer property")
+        comment = Some(LangString("en", "A blue test integer property"))
       )
       .value
 
@@ -2746,7 +2746,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "TestClassOne",
         label = LangString("en", "Test class number one"),
-        comment = LangString("en", "A test class used for testing cardinalities")
+        comment = Some(LangString("en", "A test class used for testing cardinalities"))
       )
       .value
 
@@ -2770,7 +2770,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "TestClassTwo",
         label = LangString("en", "Test class number two"),
-        comment = LangString("en", "A test class used for testing cardinalities")
+        comment = Some(LangString("en", "A test class used for testing cardinalities"))
       )
       .value
 
@@ -2796,7 +2796,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = None,
         propertyType = PropertyValueType.IntValue,
         label = LangString("en", "Test int property"),
-        comment = LangString("en", "A test int property")
+        comment = Some(LangString("en", "A test int property"))
       )
       .value
 
