@@ -413,7 +413,7 @@ The explicitly defined default permissions for a new project are as follows:
 - `knora-admin:ProjectAdmin` group:
   - **Administrative Permissions:**
     - *ProjectResourceCreateAllPermission*.
-    - receives explicitly *ProjectAdminAllPermission*.
+    - *ProjectAdminAllPermission*.
   - **Default Object Access Permissions:**
     - *CR* for the *knora-admin:ProjectAdmin* group
     - *D* for the *knora-admin:ProjectAdmin* group
