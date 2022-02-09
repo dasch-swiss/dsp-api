@@ -24,9 +24,8 @@ During the initial deployment of a Knora server, the main administration
 user (*root*) is created. This *root* user has the right to do anything.
 
 DSP’s concept of access control is that permissions can only be
-granted to groups (or the whole project, i.e. all members of a project)
-and not to individual users. There are two distinct ways of granting
-permission. Firstly, an object (a resource or value) can grant
+granted to groups and not to individual users. There are two distinct ways
+of granting permission. Firstly, an object (a resource or value) can grant
 permissions to groups of users, and secondly, permissions can be granted
 directly to a group of users (not bound to a specific object). There are
 six built-in groups: *UnknownUser*, *KnownUser*, *Creator*,
@@ -361,20 +360,12 @@ level** are applied. If a user is a member of more than one group on the
 same level (only possible for custom groups) then the defined
 permissions are summed up and the most permissive are applied.
 
-In the case of users belonging to the **SystemAdmin** group, but which
-are not members of a project and thus no group belonging to the project,
-the *default object access permissions* from the **highest defined
-level** will apply.
-
-In the case of users belonging to the **SystemAdmin group**, but which
-are not members of a project and thus not members of any group belonging
+In the case of the user belonging to the **SystemAdmin** group, but which
+is not member of a project and thus not member of any group belonging
 to the project, the *default object access permissions* from the
 **ProjectAdmin**, **ProjectMember**, or **KnownUser** group will be
 applied in the order of precedence. If no permissions are defined on
 either of these groups, then the resulting permission will be `CR knora-admin:Creator`.
-
-Also, in the case that no *default object access permissions* are
-defined for the project, the resulting permission will be `CR knora-admin:Creator`.
 
 ## Implicit Permissions
 
