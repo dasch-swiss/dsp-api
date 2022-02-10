@@ -3048,4 +3048,57 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
+
+  "create a class and property w/o comment" in {
+    val request = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "testClass",
+        label = LangString("en", "Test label"),
+        comment = None
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, request)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+  }
+
+  "create a property w/o comment" in {
+    val request = CreatePropertyRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        propertyName = "testProperty",
+        subjectClassName = None,
+        propertyType = PropertyValueType.IntValue,
+        label = LangString("en", "Test label"),
+        comment = None
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/properties",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, request)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+
+      val response = responseAs[String]
+      assert(status == StatusCodes.OK, response)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+  }
 }
