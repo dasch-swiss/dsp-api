@@ -6,7 +6,7 @@
 package org.knora.webapi.e2e.v2
 
 import java.nio.file.{Files, Path, Paths}
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
@@ -14,6 +14,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi._
+import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -25,6 +26,7 @@ import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
+import org.knora.webapi.settings.{APPLICATION_MANAGER_ACTOR_NAME, KnoraDispatchers}
 import spray.json._
 
 import java.net.URLEncoder
@@ -100,6 +102,10 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
     RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+  )
+  override lazy val appActor: ActorRef = system.actorOf(
+    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = APPLICATION_MANAGER_ACTOR_NAME
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
@@ -252,6 +258,7 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
 
+    // FIXME: SIPI not available here in CI
     "create a custom mapping with an XSL transformation" in {
       // get authentication token
       val params = Map(
