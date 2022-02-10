@@ -8,6 +8,20 @@ package org.knora.webapi.models
 import java.time.Instant
 import scala.annotation.tailrec
 
+object Comments {
+  def handleOptionalComment(comment: Option[LangString]): String =
+    comment match {
+      case Some(value) =>
+        s"""
+           |    "rdfs:comment" : {
+           |      "@language" : "${value.language}",
+           |      "@value" : "${value.value}"
+           |    },
+           |""".stripMargin
+      case None => ""
+    }
+}
+
 final case class LangString(language: String, value: String)
 
 sealed abstract case class CreateClassRequest private (value: String)
@@ -20,17 +34,7 @@ object CreateClassRequest {
     comment: Option[LangString]
   ): CreateClassRequest = {
     val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
-
-    val maybeComment = comment match {
-      case Some(value) =>
-        s"""
-           |    "rdfs:comment" : {
-           |      "@language" : "${value.language}",
-           |      "@value" : "${value.value}"
-           |    },
-           |""".stripMargin
-      case None => None
-    }
+    val maybeComment: String = Comments.handleOptionalComment(comment)
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -92,17 +96,7 @@ object CreatePropertyRequest {
   ): CreatePropertyRequest = {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
     val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
-
-    val maybeComment = comment match {
-      case Some(value) =>
-        s"""
-           |    "rdfs:comment" : {
-           |      "@language" : "${value.language}",
-           |      "@value" : "${value.value}"
-           |    },
-           |""".stripMargin
-      case None => None
-    }
+    val maybeComment: String = Comments.handleOptionalComment(comment)
 
     val optionalSubjectClass = subjectClassName match {
       case Some(subjectName) => s"""
