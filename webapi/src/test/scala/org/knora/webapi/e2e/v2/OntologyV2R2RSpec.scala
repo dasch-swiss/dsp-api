@@ -3049,7 +3049,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
   }
 
-  "create a class and property w/o comment" in {
+  "create a property w/o comment" in {
     val request = CreateClassRequest
       .make(
         ontologyName = "freetest",
