@@ -2499,7 +2499,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "BlueFreeTestClass",
         label = LangString("en", "A Blue Free Test class"),
-        comment = LangString("en", "A Blue Free Test class used for testing cardinalities")
+        comment = Some(LangString("en", "A Blue Free Test class used for testing cardinalities"))
       )
       .value
 
@@ -2527,7 +2527,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           subjectClassName = Some("BlueFreeTestClass"),
           propertyType = PropertyValueType.TextValue,
           label = LangString("en", "blue test text property"),
-          comment = LangString("en", "A blue test text property")
+          comment = Some(LangString("en", "A blue test text property"))
         )
         .value
 
@@ -2555,7 +2555,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = Some("BlueFreeTestClass"),
         propertyType = PropertyValueType.IntValue,
         label = LangString("en", "blue test integer property"),
-        comment = LangString("en", "A blue test integer property")
+        comment = Some(LangString("en", "A blue test integer property"))
       )
       .value
 
@@ -2746,7 +2746,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "TestClassOne",
         label = LangString("en", "Test class number one"),
-        comment = LangString("en", "A test class used for testing cardinalities")
+        comment = Some(LangString("en", "A test class used for testing cardinalities"))
       )
       .value
 
@@ -2770,7 +2770,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         lastModificationDate = freetestLastModDate,
         className = "TestClassTwo",
         label = LangString("en", "Test class number two"),
-        comment = LangString("en", "A test class used for testing cardinalities")
+        comment = Some(LangString("en", "A test class used for testing cardinalities"))
       )
       .value
 
@@ -2796,7 +2796,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         subjectClassName = None,
         propertyType = PropertyValueType.IntValue,
         label = LangString("en", "Test int property"),
-        comment = LangString("en", "A test int property")
+        comment = Some(LangString("en", "A test int property"))
       )
       .value
 
@@ -3046,6 +3046,59 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(status == StatusCodes.OK, responseStr)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
+  }
+
+  "create a class w/o comment" in {
+    val request = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "testClass",
+        label = LangString("en", "Test label"),
+        comment = None
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, request)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+  }
+
+  "create a property w/o comment" in {
+    val request = CreatePropertyRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        propertyName = "testProperty",
+        subjectClassName = None,
+        propertyType = PropertyValueType.IntValue,
+        label = LangString("en", "Test label"),
+        comment = None
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/properties",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, request)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+
+      val response = responseAs[String]
+      assert(status == StatusCodes.OK, response)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
   }
 }
