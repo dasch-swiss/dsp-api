@@ -5,10 +5,22 @@
 
 package org.knora.webapi.models
 
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-
 import java.time.Instant
 import scala.annotation.tailrec
+
+object Comments {
+  def handleOptionalComment(comment: Option[LangString]): String =
+    comment match {
+      case Some(value) =>
+        s"""
+           |    "rdfs:comment" : {
+           |      "@language" : "${value.language}",
+           |      "@value" : "${value.value}"
+           |    },
+           |""".stripMargin
+      case None => ""
+    }
+}
 
 final case class LangString(language: String, value: String)
 
@@ -19,9 +31,10 @@ object CreateClassRequest {
     lastModificationDate: Instant,
     className: String,
     label: LangString,
-    comment: LangString
+    comment: Option[LangString]
   ): CreateClassRequest = {
     val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
+    val maybeComment: String = Comments.handleOptionalComment(comment)
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -37,10 +50,7 @@ object CreateClassRequest {
                    |      "@language" : "${label.language}",
                    |      "@value" : "${label.value}"
                    |    },
-                   |    "rdfs:comment" : {
-                   |      "@language" : "${comment.language}",
-                   |      "@value" : "${comment.value}"
-                   |    },
+                   |    $maybeComment
                    |    "rdfs:subClassOf" : [
                    |      {
                    |        "@id": "knora-api:Resource"
@@ -82,10 +92,11 @@ object CreatePropertyRequest {
     subjectClassName: Option[String],
     propertyType: PropertyValueType,
     label: LangString,
-    comment: LangString
+    comment: Option[LangString]
   ): CreatePropertyRequest = {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
     val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val maybeComment: String = Comments.handleOptionalComment(comment)
 
     val optionalSubjectClass = subjectClassName match {
       case Some(subjectName) => s"""
@@ -110,10 +121,7 @@ object CreatePropertyRequest {
                    |      "knora-api:objectType" : {
                    |        "@id" : "${propertyType.value}"
                    |      },
-                   |      "rdfs:comment" : {
-                   |        "@language" : "${comment.language}",
-                   |        "@value" : "${comment.value}"
-                   |      },
+                   |      $maybeComment
                    |      "rdfs:label" : {
                    |        "@language" : "${label.language}",
                    |        "@value" : "${label.value}"
