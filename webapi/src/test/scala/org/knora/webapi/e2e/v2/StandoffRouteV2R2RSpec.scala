@@ -103,10 +103,10 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     ),
     RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
   )
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+//  override lazy val appActor: ActorRef = system.actorOf(
+//    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+//    name = APPLICATION_MANAGER_ACTOR_NAME
+//  )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
     val mappingFile = Paths.get(mappingPath)
@@ -159,6 +159,12 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
   }
 
   "The Standoff v2 Endpoint" should {
+    "check if SIPI is available" in {
+      val request = Get(s"${settings.internalSipiBaseUrl}/server/test.html")
+      val res = singleAwaitingRequest(request)
+      assert(res.status == StatusCodes.OK)
+    }
+
     "create a mapping from a XML" in {
 
       val xmlFileToSend = Paths.get(RequestParams.pathToLetterMapping)
