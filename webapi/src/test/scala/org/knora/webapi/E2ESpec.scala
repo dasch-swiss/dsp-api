@@ -98,7 +98,7 @@ class E2ESpec(_system: ActorSystem)
     appActor ! SetAllowReloadOverHTTPState(true)
 
     // start the knora service, loading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
 
     // waits until knora is up and running
     applicationStateRunning()
