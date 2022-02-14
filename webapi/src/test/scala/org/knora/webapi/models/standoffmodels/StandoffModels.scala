@@ -5,17 +5,29 @@
 
 package org.knora.webapi.models.standoffmodels
 
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.v2.responder.standoffmessages.{
+  CreateMappingRequestMetadataV2,
+  CreateMappingRequestV2,
+  CreateMappingRequestXMLV2
+}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import spray.json._
 import spray.json.DefaultJsonProtocol._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+
+import java.util.UUID
 
 sealed abstract case class DefineStandoffMapping private (
   mappingName: String,
   projectIRI: String,
   label: String
 ) {
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
   def toJSONLD(): String =
     Map(
       "knora-api:mappingHasName" -> mappingName.toJson,
@@ -29,9 +41,25 @@ sealed abstract case class DefineStandoffMapping private (
       ).toJson
     ).toJson.prettyPrint
 
-  def toMessage(): Unit =
-    // TODO: implement
-    ()
+  def toMessage(
+    xml: String,
+    featureFactoryConfig: FeatureFactoryConfig,
+    user: UserADM
+  ): CreateMappingRequestV2 = {
+    val mappingMetadata = CreateMappingRequestMetadataV2(
+      label = label,
+      projectIri = projectIRI.toSmartIri,
+      mappingName = mappingName
+    )
+    CreateMappingRequestV2(
+      metadata = mappingMetadata,
+      xml = CreateMappingRequestXMLV2(xml),
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = user,
+      apiRequestID = UUID.randomUUID()
+    )
+  }
+
 }
 
 object DefineStandoffMapping {
@@ -52,3 +80,5 @@ object DefineStandoffMapping {
       }
     ) {}
 }
+
+sealed abstract case class XXX private () {}
