@@ -5,16 +5,13 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.nio.file.{Files, Path, Paths}
-import akka.actor.{ActorRef, ActorSystem, Props}
+import java.nio.file.Paths
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, _}
-import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -26,13 +23,13 @@ import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
-import org.knora.webapi.settings.{APPLICATION_MANAGER_ACTOR_NAME, KnoraDispatchers}
 import spray.json._
 
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+// TODO: move this to E2Espec, if we have SIPI running in E2E tests
 case class SipiUploadResponseEntry(
   originalFilename: String,
   internalFilename: String,
@@ -58,27 +55,9 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
   private val anythingUser = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email
-
   private val password = SharedTestDataADM.testPass
 
-  object RequestParams {
-
-    val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
-
-    val pathToLetterXML = "test_data/test_route/texts/letter.xml"
-
-    val pathToLetter2XML = "test_data/test_route/texts/letter2.xml"
-
-    val pathToLetter3XML = "test_data/test_route/texts/letter3.xml"
-
-    // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
-    val pathToStandardHTML = "test_data/test_route/texts/StandardHTML.xml"
-
-    val pathToHTMLMapping = "test_data/test_route/texts/mappingForHTML.xml"
-
-    val pathToHTML = "test_data/test_route/texts/HTML.xml"
-
-  }
+  private val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
 
   private val pathToFreetestCustomMapping = "test_data/test_route/texts/freetestCustomMapping.xml"
   private val pathToFreetestCustomMappingWithTransformation =
@@ -103,10 +82,6 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
     ),
     RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
   )
-//  override lazy val appActor: ActorRef = system.actorOf(
-//    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-//    name = APPLICATION_MANAGER_ACTOR_NAME
-//  )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
     val mappingFile = Paths.get(mappingPath)
@@ -167,7 +142,7 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
     "create a mapping from a XML" in {
 
-      val xmlFileToSend = Paths.get(RequestParams.pathToLetterMapping)
+      val xmlFileToSend = Paths.get(pathToLetterMapping)
 
       val mappingParams =
         s"""
