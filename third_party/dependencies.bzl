@@ -90,7 +90,7 @@ def dependencies():
             "org.rogach:scallop_2.13:3.5.1",
             "com.google.gwt:gwt-servlet:2.8.0",
             "net.sf.saxon:Saxon-HE:9.9.0-2",
-            "org.scala-lang.modules:scala-xml_2.13:1.1.1",
+            # "org.scala-lang.modules:scala-xml_2.13:1.1.1",
             "org.scala-lang.modules:scala-java8-compat_2.13:0.9.1",
 
             # provides akka jackson (json) support

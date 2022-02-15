@@ -46,8 +46,8 @@ lazy val root: Project = Project(id = "knora", file("."))
 
       publish / skip := true,
 
-      Dependencies.sysProps := sys.props.toString(),
-      Dependencies.sysEnvs := sys.env.toString(),
+    //   Dependencies.sysProps := sys.props.toString(),
+    //   Dependencies.sysEnvs := sys.env.toString(),
 
       dockerImageCreationTask := Seq(
         //   (salsah1 / Docker / publishLocal).value,
