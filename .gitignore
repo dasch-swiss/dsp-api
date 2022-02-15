@@ -1,6 +1,8 @@
 /.project
 .ijwb
 .vscode
+.bloop
+.bsp
 **/.idea
 **/*.iml
 **/*.ipr
@@ -65,3 +67,23 @@ dependencies.txt
 /sipi/images/082E/*
 /sipi/images/originals/082E/*
 /dependencies.bzl
+
+# TODO: clean it up
+.ammonite/
+.bloop/
+.bsp/
+.dotty-ide*
+.idea/
+.metals/
+.vscode/
+*.worksheet.sc
+metals.sbt
+target/
+null
+project/project
+project/target
+project/.bloop/
+boot/
+lib_managed/
+src_managed/
+project/plugins/project/
