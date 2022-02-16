@@ -43,6 +43,7 @@ In addition, in the body of the request, it is possible to specify a custom IRI 
 the `@id` attribute which will then be assigned to the permission; otherwise the permission will get a unique random IRI.
 A custom permission IRI must be `http://rdfh.ch/permissions/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
 is the shortcode of the project that the permission belongs to), plus a custom ID string. For example:
+
 ```
 "id": "http://rdfh.ch/permissions/0001/jKIYuaEUETBcyxpenUwRzQ",
 ```
@@ -65,9 +66,11 @@ As a response, the created administrative permission and its IRI are returned as
     }
 }
 ```
+
 `hasPermissions` contains permission types that must be granted. See [the complete description of administrative
 permission types](../../05-internals/design/api-admin/administration.md#administrative-permissions).
 In summary, each permission should contain followings:
+
 - `name` : indicates the type of the permission that can be one of the followings:
    - `ProjectAdminAllPermission`: gives the user the permission to do anything
      on project level, i.e. create new groups, modify all
@@ -116,9 +119,11 @@ default object access permission for a group of a project the request body would
     "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
 }
 ```
+
 `hasPermissions` contains permission types that must be granted. See [a complete description of object access 
 permission types](../../05-internals/design/api-admin/administration.md#default-object-access-permissions). 
 In summary, each permission should contain followings:
+
 - `additionalInformation`: To whom the permission should be granted: project members, known users, unknown users, etc.
 - `name` : indicates the type of the permission that can be one of the followings.
    - `RV`: restricted view permission (least privileged)
@@ -171,12 +176,14 @@ The response contains the newly created permission and its IRI, as:
     }
 }
 ```
+
 Note that during the creation of a new project, a set of default object access permissions are created for its 
 ProjectAdmin and ProjectMember groups (See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
 Therefore, it is not possible to create new default object access permissions for the ProjectAdmin and ProjectMember 
 groups of a project. However, the default permissions set for these groups can be modified; see below for more information.
 
 ### Updating a Permission's Group:
+
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
 access permission, identified by it IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
 group as below:
@@ -193,15 +200,17 @@ the combination of both, the permission will be defined for the newly specified 
 `forResourceClass` and `forProperty` values will be deleted.
 
 ### Updating a Permission's Scope:
+
 - `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
- or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
- of permission types as below:
+  or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
+  of permission types as below:
 
 ```json
 {
    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
 }
 ```
+
 Each permission item given in `hasPermissions`, must contain the necessary parameters with respect to the type of the 
 permission. For example, if you wish to change the scope of an administrative permission, follow the 
 [guidelines](#creating-new-administrative-permissions) for the
@@ -209,23 +218,28 @@ content of its `hasPermissions` property. Similarly, if you wish to change the s
 follow the [guidelines](#creating-new-default-object-access-permissions) given about the content of its `hasPermissions` property.
 
 ### Updating a Default Object Access Permission's Resource Class:
+
 - `PUT: /admin/permissions/<doap_permissionIri>/resourceClass` to change the resource class for which a default object 
 access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
 updating a default object acceess permission. The IRI of the new resource class must be given in the request body as:
- ```json
+
+```json
 {
     "forResourceClass": "http://www.knora.org/ontology/0803/incunabula#book"
 }
 ```
+
 Note that if the default object access permission was originally defined for a group, with this operation, the permission 
 will be defined for the given resource class instead of the group. That means the value of the `forGroup` will 
 be deleted.
 
 ### Updating a Default Object Access Permission's Property:
+
 - `PUT: /admin/permissions/<doap_permissionIri>/property` to change the property for which a default object 
 access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
-updating a default object acceess permission. The IRI of the new property must be given in the request body as:
- ```json
+updating a default object access permission. The IRI of the new property must be given in the request body as:
+
+```json
 {
    "forProperty":"http://www.knora.org/ontology/00FF/images#titel"
 }
@@ -235,6 +249,7 @@ will be defined for the given property instead of the group. That means the valu
 be deleted.
 
 ### Deleting a permission:
+
 - `DELETE: /admin/permissions/<permissionIri>` to delete an administrative, or a default object access permission. The 
 IRI of the permission must be given in encoded form. 
 
