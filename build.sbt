@@ -19,7 +19,7 @@ lazy val buildSettings = Dependencies.Versions ++ Seq(
     version := (ThisBuild / version).value
 )
 
-lazy val rootBaseDir = baseDirectory.in(ThisBuild)
+lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "knora", file("."))
   .aggregate(aggregatedProjects: _*)
@@ -65,7 +65,7 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import sbt._
 import sbt.librarymanagement.Resolver
 
-connectInput in run := true
+run / connectInput := true
 
 lazy val webApiCommonSettings = Seq(
     name := "webapi"
@@ -121,10 +121,10 @@ lazy val webapi = knoraModule("webapi")
 
   .settings(
       exportJars := true,
-      unmanagedResourceDirectories in Compile += (rootBaseDir.value / "knora-ontologies"),
+      Compile / unmanagedResourceDirectories += (rootBaseDir.value / "knora-ontologies"),
 
       // add needed files to jar
-      mappings in(Compile, packageBin) ++= Seq(
+      Compile / packageBin / mappings ++= Seq(
           (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
           (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
           (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
@@ -137,12 +137,12 @@ lazy val webapi = knoraModule("webapi")
       // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
 
       // put additional files into the jar when running tests which are needed by testcontainers
-      mappings in(Test, packageBin) ++= Seq(
+      Test / packageBin / mappings ++= Seq(
           (rootBaseDir.value / "sipi" / "config" / "sipi.init-knora.lua") -> "sipi/config/sipi.init-knora.lua",
           (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
           (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
       ),
-      mappings in(IntegrationTest, packageBin) ++= Seq(
+      IntegrationTest / packageBin/ mappings ++= Seq(
           (rootBaseDir.value / "sipi" / "config" / "sipi.init-knora.lua") -> "sipi/config/sipi.init-knora.lua",
           (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
       ),
