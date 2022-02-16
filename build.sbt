@@ -71,15 +71,6 @@ lazy val webApiCommonSettings = Seq(
     name := "webapi"
 )
 
-// custom test and it settings
-lazy val GDBSE = config("gdbse") extend Test
-lazy val GDBSEIt = config("gdbse-it") extend IntegrationTest
-lazy val GDBFree = config("gdbfree") extend Test
-lazy val GDBFreeIt = config("gdbfree-it") extend IntegrationTest
-lazy val FusekiTest = config("fuseki") extend Test
-lazy val FusekiIt = config("fuseki-it") extend IntegrationTest
-lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
-
 // GatlingPlugin - load testing
 // JavaAgent - adds AspectJ Weaver configuration
 // BuildInfoPlugin - allows generation of scala code with version information
@@ -87,18 +78,6 @@ lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
-  .configs(
-      IntegrationTest,
-      Gatling,
-      GatlingIt,
-      GDBSE,
-      GDBSEIt,
-      GDBFree,
-      GDBFreeIt,
-      FusekiTest,
-      FusekiIt,
-      EmbeddedJenaTDBTest
-  )
   .settings(
       webApiCommonSettings,
       resolvers ++= Seq(
@@ -107,19 +86,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       Dependencies.webapiLibraryDependencies
   )
   .settings(
-      inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings),
-      inConfig(IntegrationTest)(Defaults.testSettings),
-      inConfig(Gatling)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(GatlingIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(GDBSE)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(GDBSEIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(GDBFree)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(GDBFreeIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(FusekiTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(FusekiIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
-      inConfig(EmbeddedJenaTDBTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value))
+      inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
   )
-
   .settings(
       exportJars := true,
       Compile / unmanagedResourceDirectories += (rootBaseDir.value / "knora-ontologies"),
@@ -171,26 +139,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
       // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
       // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-      Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
-
-      IntegrationTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-      IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
-
-      Gatling / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-      Gatling / testOptions := Seq(),
-      GatlingIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-      GatlingIt / testOptions := Seq(),
-
-      GDBSE / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
-      GDBSEIt / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ webapiJavaTestOptions,
-
-      GDBFree / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ webapiJavaTestOptions,
-      GDBFreeIt / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ webapiJavaTestOptions,
-
-      FusekiTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-      FusekiIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
-
-      EmbeddedJenaTDBTest / javaOptions := Seq("-Dconfig.resource=jenatdb.conf") ++ webapiJavaTestOptions
+      Test / testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
 
       // enable publishing the jars for test and it
       // Test / packageBin / publishArtifact := true,
@@ -210,9 +159,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
             // add knora-ontologies
             directory("knora-ontologies") ++
             // add test-data directory
-            directory("webapi/_test_data") ++
-            // copy the configuration files to config directory
-            contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
+            directory("_test_data") ++
             // copy configuration files to config directory
             contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
       },

@@ -639,7 +639,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a mapping resource for standoff conversion for letters" in {
 
-      val mappingFileToSend = Paths.get(RequestParams.pathToLetterMapping)
+      val mappingFileToSend = Paths.get("..", RequestParams.pathToLetterMapping)
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -674,7 +674,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a TextValue from an XML representing a letter" in {
 
-      val xmlFileToSend = FileUtil.readTextFile(Paths.get(RequestParams.pathToLetterXML))
+      val xmlFileToSend = FileUtil.readTextFile(Paths.get("..", RequestParams.pathToLetterXML))
 
       val newValueParams =
         s"""
@@ -707,7 +707,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "read the XML TextValue back to XML and compare it to the XML that was originally sent" in {
 
-      val xmlFile = Paths.get(RequestParams.pathToLetterXML)
+      val xmlFile = Paths.get("..", RequestParams.pathToLetterXML)
       val xmlStr = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(
@@ -736,7 +736,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "change a text value from XML representing a letter" in {
 
-      val xmlFileToSend = Paths.get(RequestParams.pathToLetter2XML)
+      val xmlFileToSend = Paths.get("..", RequestParams.pathToLetter2XML)
       val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
@@ -769,7 +769,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "read the changed TextValue back to XML and compare it to the XML that was originally sent" in {
 
-      val xmlFile = Paths.get(RequestParams.pathToLetter2XML)
+      val xmlFile = Paths.get("..", RequestParams.pathToLetter2XML)
       val xmlStr = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(
@@ -798,7 +798,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a TextValue from complex XML representing a letter" in {
 
-      val xmlFileToSend = Paths.get(RequestParams.pathToLetter3XML)
+      val xmlFileToSend = Paths.get("..", RequestParams.pathToLetter3XML)
       val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
@@ -832,7 +832,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "read the complex TextValue back to XML and compare it to the XML that was originally sent" in {
 
-      val xmlFile = Paths.get(RequestParams.pathToLetter3XML)
+      val xmlFile = Paths.get("..", RequestParams.pathToLetter3XML)
       val xmlStr = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(
@@ -861,7 +861,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a mapping resource for standoff conversion for HTML" in {
 
-      val mappingFileToSend = Paths.get(RequestParams.pathToHTMLMapping)
+      val mappingFileToSend = Paths.get("..", RequestParams.pathToHTMLMapping)
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -896,7 +896,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a TextValue from StandardXML representing HTML (in strict XML notation)" in {
 
-      val xmlFileToSend = Paths.get(RequestParams.pathToStandardHTML)
+      val xmlFileToSend = Paths.get("..", RequestParams.pathToStandardHTML)
       val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
@@ -930,7 +930,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "read the TextValue back to XML and compare it to the (Standard) HTML that was originally sent" in {
 
-      val htmlFile = Paths.get(RequestParams.pathToStandardHTML)
+      val htmlFile = Paths.get("..", RequestParams.pathToStandardHTML)
       val htmlStr = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(
@@ -959,7 +959,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a TextValue from StandardXML representing HTML with internal anchor link" in {
 
-      val xmlFileToSend = Paths.get(RequestParams.pathToStandardHTMLInternalLink)
+      val xmlFileToSend = Paths.get("..", RequestParams.pathToStandardHTMLInternalLink)
       val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
@@ -993,7 +993,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "read the TextValue back to XML and compare it to the (Standard) HTML with internal anchor link that was originally sent" in {
 
-      val htmlFile = Paths.get(RequestParams.pathToStandardHTMLInternalLink)
+      val htmlFile = Paths.get("..", RequestParams.pathToStandardHTMLInternalLink)
       val htmlStr = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(fourthTextValueIri.get, "UTF-8")) ~> addCredentials(
@@ -1022,7 +1022,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
-      val xmlFileToSend = Paths.get(RequestParams.pathToHTML)
+      val xmlFileToSend = Paths.get("..", RequestParams.pathToHTML)
       val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
@@ -1056,7 +1056,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     "read the TextValue back to XML and compare it to the HTML that was originally sent" in {
 
-      val htmlFile = Paths.get(RequestParams.pathToHTML)
+      val htmlFile = Paths.get("..", RequestParams.pathToHTML)
       val htmlStr = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(
