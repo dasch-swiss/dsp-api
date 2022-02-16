@@ -134,6 +134,26 @@ object Dependencies {
 
         // Graph for Scala            "org.scala-graph:graph-core_2.13:1.13.1",
         val scalaGraph = "org.scala-graph" %% "graph-core" % "1.13.1"
+
+        // missing from current BAZEL setup
+            // "ch.qos.logback:logback-core:1.2.9",
+        val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.9"
+            // "org.slf4j:log4j-over-slf4j:1.7.32",
+        val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.32"
+            // "org.slf4j:jcl-over-slf4j:1.7.32",
+        val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % "1.7.32"
+            // "org.slf4j:slf4j-api:1.7.32",
+        val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.32"
+            // "com.apicatalog:titanium-json-ld:1.2.0",
+        val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.2.0"
+            // "org.glassfish:jakarta.json:2.0.1",
+        val jakartaJSON = "org.glassfish" % "jakarta.json" % "2.0.1"
+            // "com.typesafe.play:twirl-api_2.13:1.5.1",
+        val twirlApi = "com.typesafe.play" %% "twirl-api" % "1.5.1"
+            // "junit:junit:4.13.2",
+        val junit = "junit" % "junit" % "4.13.2"
+            // "org.seleniumhq.selenium:selenium-support:3.141.59",
+        val seleniumSupport = "org.seleniumhq.selenium" % "selenium-support" % "3.141.59"
     }
 
     object WebapiTest {
@@ -196,7 +216,7 @@ object Dependencies {
         logbackClassic,
         rdf4jRuntime,
         saxonHE,
-        scalaGraph
+        scalaGraph,
         scalaJava8Compat,
         scalaLogging,
         scalaXml,
@@ -217,6 +237,16 @@ object Dependencies {
         zioPrelude,
         zioTest,
         zioTestJunit,
+        // missing from current BAZEL setup
+        logbackCore,
+        log4jOverSlf4j,
+        jclOverSlf4j,
+        slf4jApi,
+        titaniumJSONLD,
+        jakartaJSON,
+        twirlApi,
+        junit,
+        seleniumSupport
     )
 
     val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
