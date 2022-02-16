@@ -180,7 +180,8 @@ groups of a project. However, the default permissions set for these groups can b
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
 access permission, identified by it IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
 group as below:
- ```json
+
+```json
 {
     "forGroup": "http://www.knora.org/ontology/knora-admin#ProjectMember"
 }
@@ -195,7 +196,8 @@ the combination of both, the permission will be defined for the newly specified 
 - `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
  or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
  of permission types as below:
- ```json
+
+```json
 {
    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
 }
