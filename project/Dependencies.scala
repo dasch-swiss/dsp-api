@@ -1,20 +1,6 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
- *
- *  This file is part of Knora.
- *
- *  Knora is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published
- *  by the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  Knora is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
- *
- *  You should have received a copy of the GNU Affero General Public
- *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora
@@ -44,7 +30,7 @@ object Dependencies {
     lazy val knoraSalsah1Image = SettingKey[String]("the Knora Salsah1 Image")
 
     val Versions = Seq(
-        scalaVersion := "2.13.8",
+        scalaVersion := "2.13.7",
         akkaVersion := "2.6.17",
         akkaHttpVersion := "10.2.4",
         jenaVersion := "4.4.0",
@@ -59,6 +45,13 @@ object Dependencies {
     lazy val gdbTypeString: String = sys.env.getOrElse("KNORA_GDB_TYPE", "graphdb-se")
 
     object Compile {
+        // ZIO
+        val zio = "dev.zio" %% "zio" % "2.0.0-M3"
+        val zioJson = "dev.zio" %% "zio-json" % "0.1.5"
+        val zioTest = "dev.zio" %% "zio-test" % "2.0.0-M3"
+        val zioTestJunit = "dev.zio" %% "zio-test-junit" % "2.0.0-M3"
+        val zioPrelude = "dev.zio" %% "zio-prelude" % "1.0.0-RC6"
+
         // akka
         val akkaActor              = Def.setting {"com.typesafe.akka"          %% "akka-actor"               % akkaVersion.value}
         val akkaStream             = Def.setting {"com.typesafe.akka"          %% "akka-stream"              % akkaVersion.value}
@@ -80,7 +73,6 @@ object Dependencies {
         val jenaText               = Def.setting {"org.apache.jena"             % "jena-text"                % jenaVersion.value exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")}
 
         // logging
-        // val commonsLogging         = "commons-logging"                          % "commons-logging"          % "1.2"
         val scalaLogging           = "com.typesafe.scala-logging"              %% "scala-logging"            % "3.9.4"
         val logbackClassic         = "ch.qos.logback"                           % "logback-classic"          % "1.2.9"
 
@@ -101,7 +93,7 @@ object Dependencies {
         val jwtSprayJson           = "com.pauldijou"                           %% "jwt-spray-json"           % "5.0.0"
 
         // caching
-        val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
+        val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.9.2"
         val jedis                  = "redis.clients"                            % "jedis"                    % "3.1.0-m4"
         // serialization
         val chill                  = "com.twitter"                             %% "chill"                    % "0.9.5"
@@ -124,17 +116,14 @@ object Dependencies {
         val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.9.0-2"
 
         val scalaXml               = "org.scala-lang.modules"                  %% "scala-xml"                % "1.2.0"
-        // val scalaArm               = "com.jsuereth"                            %% "scala-arm"                % "2.0"
         val scalaJava8Compat       = "org.scala-lang.modules"                  %% "scala-java8-compat"       % "1.0.2"
 
         // provides akka jackson (json) support
         val akkaHttpCirce          = "de.heikoseeberger"                       %% "akka-http-circe"          % "1.36.0"
         val jacksonScala           = "com.fasterxml.jackson.module"            %% "jackson-module-scala"     % "2.12.3"
 
-        // val jsonldJava             = "com.github.jsonld-java"                   % "jsonld-java"              % "0.12.0"
-
         // swagger (api documentation)
-        val swaggerAkkaHttp        = "com.github.swagger-akka-http"            %% "swagger-akka-http"        % "2.6.0"
+        val swaggerAkkaHttp        = "com.github.swagger-akka-http"            %% "swagger-akka-http"        % "1.6.0"
 
         // Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
         val jaxbApi                = "javax.xml.bind"                           % "jaxb-api"                 % "2.2.12"
@@ -142,24 +131,17 @@ object Dependencies {
         val icu4j                  = "com.ibm.icu"                              % "icu4j"                    % "62.1"
 
         val apacheHttpClient       = "org.apache.httpcomponents"                % "httpclient"               % "4.5.6" exclude("commons-logging", "commons-logging")
+
+        // Graph for Scala            "org.scala-graph:graph-core_2.13:1.13.1",
+        val scalaGraph = "org.scala-graph" %% "graph-core" % "1.13.1"
     }
-
-    // object SalsahTest {
-    //     val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value        % "test"}
-    //     val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value        % "test"}
-    //     val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value    % "test"}
-    //     val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.2.2"                  % "test"
-
-    //     // browser tests
-    //     // val selenium               = "org.seleniumhq.selenium"                    % "selenium-java"            % "3.4.0"                  % "test"
-    // }
 
     object WebapiTest {
         val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value        % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
         val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value        % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
         val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value    % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
         val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.2.2"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
-        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "3.2.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "3.7.5"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "3.2.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
         val testcontainers         = "org.testcontainers"                         % "testcontainers"           % "1.16.0"                 % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
     }
@@ -169,7 +151,7 @@ object Dependencies {
         val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value}
         val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value}
         val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.2.2"
-        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "3.2.1"
+        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "3.7.5"
         val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "3.2.1"
     }
 
@@ -177,33 +159,16 @@ object Dependencies {
 
     val l = libraryDependencies
 
-    // val salsahLibraryDependencies = l ++= Seq[sbt.ModuleID](
-    //     akkaActor.value,
-    //     akkaStream.value,
-    //     akkaSlf4j.value,
-    //     akkaHttp.value,
-    //     akkaHttpXml.value,
-    //     akkaHttpSprayJson.value,
-    //     SalsahTest.akkaTestkit.value,
-    //     SalsahTest.akkaHttpTestkit.value,
-    //     SalsahTest.akkaStreamTestkit.value,
-    //     SalsahTest.scalaTest,
-    //     SalsahTest.selenium
-    // )
-
     val webapiLibraryDependencies = l ++= Seq[sbt.ModuleID](
         akkaActor.value,
         akkaHttp.value,
         akkaHttpCirce,
         akkaHttpCors,
-        akkaHttpSprayJson.value,
         akkaHttpJacksonJava.value,
-        WebapiTest.akkaHttpTestkit.value,
+        akkaHttpSprayJson.value,
         akkaHttpXml.value,
         akkaSlf4j.value,
         akkaStream.value,
-        WebapiTest.akkaStreamTestkit.value,
-        WebapiTest.akkaTestkit.value,
         apacheHttpClient,
         bcprov,
         chill,
@@ -213,19 +178,16 @@ object Dependencies {
         commonsValidator,
         diff,
         ehcache,
-        WebapiTest.gatlingHighcharts,
-        WebapiTest.gatlingTestFramework,
         gwtServlet,
         icu4j,
         jacksonScala,
         jaxbApi,
-        // jsonldJava,
-        jodd,
-        jodaTime,
-        jodaConvert,
         jedis,
         jenaLibs.value,
         jenaText.value,
+        jodaConvert,
+        jodaTime,
+        jodd,
         jwtSprayJson,
         kamonCore,
         kamonLogback,
@@ -234,33 +196,37 @@ object Dependencies {
         logbackClassic,
         rdf4jRuntime,
         saxonHE,
-        // scalaArm,
+        scalaGraph
         scalaJava8Compat,
         scalaLogging,
-        WebapiTest.scalaTest,
         scalaXml,
         scallop,
         springSecurityCore,
         swaggerAkkaHttp,
-        WebapiTest.testcontainers,
         typesafeConfig,
-        xmlunitCore
+        WebapiTest.akkaHttpTestkit.value,
+        WebapiTest.akkaStreamTestkit.value,
+        WebapiTest.akkaTestkit.value,
+        WebapiTest.gatlingHighcharts,
+        WebapiTest.gatlingTestFramework,
+        WebapiTest.scalaTest,
+        WebapiTest.testcontainers,
+        xmlunitCore,
+        zio,
+        zioJson,
+        zioPrelude,
+        zioTest,
+        zioTestJunit,
     )
 
     val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
         rdf4jRuntime,
-        // SalsahTest.scalaTest,
         scallop
     )
 
     val webapiTestAndITLibraryDependencies = l ++= Seq[sbt.ModuleID](
-        //TestBinaries.akkaTestkit,
-        //TestBinaries.akkaStreamTestkit,
-        //TestBinaries.akkaHttpTestkit,
         TestBinaries.gatlingHighcharts,
         TestBinaries.gatlingTestFramework,
         TestBinaries.scalaTest
     )
-
-
 }
