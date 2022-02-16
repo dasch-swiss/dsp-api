@@ -14,6 +14,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 15
+      - name: Setup JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 11
       - name: get current time
         uses: josStorer/get-current-time@v2
         id: current-time
@@ -34,6 +39,18 @@ jobs:
         run: sudo apt-get install ca-certificates-java expect
       - name: run build everything
         run: bazel build //...
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
+      - name: Build and Test
+        run: sbt -v +test
+      - name: Cleanup before cache
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
 
 # ------------------------------------------
 # ------------------------------------------
