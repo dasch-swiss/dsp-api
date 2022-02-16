@@ -31,8 +31,8 @@ object Dependencies {
 
     val Versions = Seq(
         scalaVersion := "2.13.7",
-        akkaVersion := "2.6.17",
-        akkaHttpVersion := "10.2.4",
+        akkaVersion := "2.6.18",
+        akkaHttpVersion := "10.2.8",
         jenaVersion := "4.4.0",
         metricsVersion := "4.0.1",
         sipiImage := "daschswiss/sipi:v3.3.1",
@@ -56,6 +56,7 @@ object Dependencies {
         val akkaActor              = Def.setting {"com.typesafe.akka"          %% "akka-actor"               % akkaVersion.value}
         val akkaStream             = Def.setting {"com.typesafe.akka"          %% "akka-stream"              % akkaVersion.value}
         val akkaSlf4j              = Def.setting {"com.typesafe.akka"          %% "akka-slf4j"               % akkaVersion.value}
+        val akkaProtobufV3         = Def.setting {"com.typesafe.akka"          %% "akka-protobuf-v3"         % akkaVersion.value}
 
         // akka http
         val akkaHttp               = Def.setting {"com.typesafe.akka"          %% "akka-http"                % akkaHttpVersion.value}
@@ -69,8 +70,8 @@ object Dependencies {
         val akkaHttpCors           = "ch.megard"                               %% "akka-http-cors"           % "1.0.0"
 
         // jena
-        val jenaLibs               = Def.setting {"org.apache.jena"             % "apache-jena-libs"         % jenaVersion.value exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")}
-        val jenaText               = Def.setting {"org.apache.jena"             % "jena-text"                % jenaVersion.value exclude("org.slf4j", "slf4j-log4j12") exclude("commons-codec", "commons-codec")}
+        val jenaLibs               = Def.setting {"org.apache.jena"             % "apache-jena-libs"         % jenaVersion.value }
+        val jenaText               = Def.setting {"org.apache.jena"             % "jena-text"                % jenaVersion.value }
 
         // logging
         val scalaLogging           = "com.typesafe.scala-logging"              %% "scala-logging"            % "3.9.4"
@@ -110,7 +111,9 @@ object Dependencies {
         val xmlunitCore            = "org.xmlunit"                              % "xmlunit-core"             % "2.1.1"
 
         // other
+        val rdf4jClient            = "org.eclipse.rdf4j"                        % "rdf4j-client"             % "3.4.4"
         val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "3.4.4"
+        val rdf4jStorage           = "org.eclipse.rdf4j"                        % "rdf4j-storage"            % "3.4.4"
         val scallop                = "org.rogach"                              %% "scallop"                  % "3.5.1"
         val gwtServlet             = "com.google.gwt"                           % "gwt-servlet"              % "2.8.0"
         val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.9.0-2"
@@ -187,6 +190,7 @@ object Dependencies {
         akkaHttpJacksonJava.value,
         akkaHttpSprayJson.value,
         akkaHttpXml.value,
+        akkaProtobufV3.value,
         akkaSlf4j.value,
         akkaStream.value,
         apacheHttpClient,
@@ -214,7 +218,9 @@ object Dependencies {
         kamonPrometheus,
         kamonScalaFuture,
         logbackClassic,
+        rdf4jClient,
         rdf4jRuntime,
+        rdf4jStorage,
         saxonHE,
         scalaGraph,
         scalaJava8Compat,

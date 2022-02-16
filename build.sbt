@@ -21,7 +21,7 @@ lazy val buildSettings = Dependencies.Versions ++ Seq(
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
-lazy val root: Project = Project(id = "knora", file("."))
+lazy val root: Project = Project(id = "root", file("."))
   .aggregate(aggregatedProjects: _*)
   .enablePlugins(DockerComposePlugin, GitVersioning, GitBranchPrompt)
   .settings(Dependencies.Versions)
@@ -84,7 +84,8 @@ lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 // JavaAgent - adds AspectJ Weaver configuration
 // BuildInfoPlugin - allows generation of scala code with version information
 
-lazy val webapi = knoraModule("webapi")
+lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
+  .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
   .configs(
       IntegrationTest,
@@ -132,6 +133,7 @@ lazy val webapi = knoraModule("webapi")
           (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
           (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-repository-config.ttl",
           (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-unit-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-unit-repository-config.ttl",
+          (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template",
       ),
       // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
       // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
@@ -280,7 +282,3 @@ lazy val webapiJavaTestOptions = Seq(
     //"-XX:MaxGCPauseMillis=500",
     //"-XX:MaxMetaspaceSize=4096m"
 )
-
-def knoraModule(name: String): Project =
-    Project(id = name, base = file(name))
-      .settings(buildSettings)

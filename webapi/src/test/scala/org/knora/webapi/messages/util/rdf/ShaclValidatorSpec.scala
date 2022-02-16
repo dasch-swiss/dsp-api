@@ -15,14 +15,19 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 object ShaclValidatorSpec {
+
+  // we need to get the root dsp-api repo directory as the base
+  // directory instead of the "wbapi" subfolder
+  val baseDirAbsolutPath = Paths.get("..").toAbsolutePath()
   val config: String =
-    """
+    s"""
       |app {
       |    shacl {
-      |        shapes-dir = "test_data/shacl"
+      |        shapes-dir = "/Users/subotic/_github.com/dasch-swiss/dsp-api/webapi/test_data/shacl/"
       |    }
       |}
       |""".stripMargin
+  println(config)
 }
 
 /**
@@ -68,9 +73,11 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
         rdfFormat = Turtle
       )
 
+      val shaclPath = Paths.get("test/person.ttl")
+      println(shaclPath)
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = validRdfModel,
-        shaclPath = Paths.get("test/person.ttl")
+        shaclPath = shaclPath
       )
 
       validationResult match {
@@ -95,9 +102,11 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
         rdfFormat = Turtle
       )
 
+      val shaclPath = Paths.get("test/person.ttl")
+      println(shaclPath)
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = invalidRdfModel,
-        shaclPath = Paths.get("test/person.ttl")
+        shaclPath = shaclPath
       )
 
       validationResult match {
