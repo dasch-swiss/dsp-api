@@ -43,24 +43,24 @@ class KnoraSipiIntegrationV1ITSpec
     with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "../test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+    RdfDataObject(path = "../test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   private val userEmail = SharedTestDataADM.rootUser.email
   private val password = SharedTestDataADM.testPass
-  private val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
-  private val pathToMarbles = "test_data/test_route/images/marbles.tif"
-  private val pathToXSLTransformation = "test_data/test_route/texts/letterToHtml.xsl"
-  private val pathToMappingWithXSLT = "test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
+  private val pathToChlaus = "../test_data/test_route/images/Chlaus.jpg"
+  private val pathToMarbles = "../test_data/test_route/images/marbles.tif"
+  private val pathToXSLTransformation = "../test_data/test_route/texts/letterToHtml.xsl"
+  private val pathToMappingWithXSLT = "../test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
   private val secondPageIri = new MutableTestIri
 
-  private val pathToBEOLBodyXSLTransformation = "test_data/test_route/texts/beol/standoffToTEI.xsl"
-  private val pathToBEOLStandoffTEIMapping = "test_data/test_route/texts/beol/BEOLTEIMapping.xml"
-  private val pathToBEOLHeaderXSLTransformation = "test_data/test_route/texts/beol/header.xsl"
-  private val pathToBEOLGravsearchTemplate = "test_data/test_route/texts/beol/gravsearch.txt"
-  private val pathToBEOLLetterMapping = "test_data/test_route/texts/beol/testLetter/beolMapping.xml"
-  private val pathToBEOLBulkXML = "test_data/test_route/texts/beol/testLetter/bulk.xml"
+  private val pathToBEOLBodyXSLTransformation = "../test_data/test_route/texts/beol/standoffToTEI.xsl"
+  private val pathToBEOLStandoffTEIMapping = "../test_data/test_route/texts/beol/BEOLTEIMapping.xml"
+  private val pathToBEOLHeaderXSLTransformation = "../test_data/test_route/texts/beol/header.xsl"
+  private val pathToBEOLGravsearchTemplate = "../test_data/test_route/texts/beol/gravsearch.txt"
+  private val pathToBEOLLetterMapping = "../test_data/test_route/texts/beol/testLetter/beolMapping.xml"
+  private val pathToBEOLBulkXML = "../test_data/test_route/texts/beol/testLetter/bulk.xml"
   private val letterIri = new MutableTestIri
   private val gravsearchTemplateIri = new MutableTestIri
 
@@ -70,32 +70,32 @@ class KnoraSipiIntegrationV1ITSpec
   private val videoResourceIri = new MutableTestIri
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
-  private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
+  private val pathToMinimalPdf = s"../test_data/test_route/files/$minimalPdfOriginalFilename"
   private val minimalPdfWidth = 1250
   private val minimalPdfHeight = 600
 
   private val testPdfOriginalFilename = "test.pdf"
-  private val pathToTestPdf = s"test_data/test_route/files/$testPdfOriginalFilename"
+  private val pathToTestPdf = s"../test_data/test_route/files/$testPdfOriginalFilename"
   private val testPdfWidth = 2480
   private val testPdfHeight = 3508
 
   private val minimalZipOriginalFilename = "minimal.zip"
-  private val pathToMinimalZip = s"test_data/test_route/files/$minimalZipOriginalFilename"
+  private val pathToMinimalZip = s"../test_data/test_route/files/$minimalZipOriginalFilename"
 
   private val testZipOriginalFilename = "test.zip"
-  private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
+  private val pathToTestZip = s"../test_data/test_route/files/$testZipOriginalFilename"
 
   private val minimalWavOriginalFilename = "minimal.wav"
-  private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
+  private val pathToMinimalWav = s"../test_data/test_route/files/$minimalWavOriginalFilename"
 
   private val testWavOriginalFilename = "test.wav"
-  private val pathToTestWav = s"test_data/test_route/files/$testWavOriginalFilename"
+  private val pathToTestWav = s"../test_data/test_route/files/$testWavOriginalFilename"
 
   private val testVideoOriginalFilename = "testVideo.mp4"
-  private val pathToTestVideo = s"test_data/test_route/files/$testVideoOriginalFilename"
+  private val pathToTestVideo = s"../test_data/test_route/files/$testVideoOriginalFilename"
 
   private val testVideo2OriginalFilename = "testVideo2.mp4"
-  private val pathToTestVideo2 = s"test_data/test_route/files/$testVideoOriginalFilename"
+  private val pathToTestVideo2 = s"../test_data/test_route/files/$testVideoOriginalFilename"
 
   /**
    * Adds the IRI of a XSL transformation to the given mapping.
@@ -316,7 +316,7 @@ class KnoraSipiIntegrationV1ITSpec
     }
 
     "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
-      val fileToUpload = Paths.get(pathToChlaus)
+      val fileToUpload = Paths.get("..", pathToChlaus)
 
       // To be able to run packaged tests inside Docker, we need to copy
       // the file first to a place which is shared with sipi
@@ -431,7 +431,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       // add a mapping referring to the XSLT as the default XSL transformation
 
-      val mapping = FileUtil.readTextFile(Paths.get(pathToMappingWithXSLT))
+      val mapping = FileUtil.readTextFile(Paths.get("..", pathToMappingWithXSLT))
 
       val updatedMapping = addXSLTIriToMapping(mapping, resId)
 
@@ -466,7 +466,7 @@ class KnoraSipiIntegrationV1ITSpec
     }
 
     "create a sample BEOL letter" in {
-      val mapping = FileUtil.readTextFile(Paths.get(pathToBEOLLetterMapping))
+      val mapping = FileUtil.readTextFile(Paths.get("..", pathToBEOLLetterMapping))
 
       val paramsForMapping =
         s"""
@@ -498,7 +498,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       // create a letter via bulk import
 
-      val bulkXML = FileUtil.readTextFile(Paths.get(pathToBEOLBulkXML))
+      val bulkXML = FileUtil.readTextFile(Paths.get("..", pathToBEOLBulkXML))
 
       val bulkRequest = Post(
         baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder
@@ -552,7 +552,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       // add a mapping referring to the XSLT as the default XSL transformation
 
-      val mapping = FileUtil.readTextFile(Paths.get(pathToBEOLStandoffTEIMapping))
+      val mapping = FileUtil.readTextFile(Paths.get("..", pathToBEOLStandoffTEIMapping))
 
       val updatedMapping = addXSLTIriToMapping(mapping, resId)
 
