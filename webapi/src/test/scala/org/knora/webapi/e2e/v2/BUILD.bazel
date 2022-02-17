@@ -155,7 +155,7 @@ scala_test(
     size = "medium",  # 300s
     srcs = [
         "ResponseCheckerV2.scala",
-        "StandoffRouteV2R2RSpec.scala",
+        "StandoffRouteV2E2ESpec.scala",
     ],
     data = [
         "//knora-ontologies",
