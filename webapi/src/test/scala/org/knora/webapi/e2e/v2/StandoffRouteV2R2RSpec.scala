@@ -7,10 +7,10 @@ package org.knora.webapi.e2e.v2
 
 import java.nio.file.Paths
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import org.knora.webapi.SipiUploadResponseJsonProtocol.sipiUploadResponseFormat
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
@@ -28,23 +28,6 @@ import spray.json._
 import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-// TODO: move this to E2Espec, if we have SIPI running in E2E tests
-case class SipiUploadResponseEntry(
-  originalFilename: String,
-  internalFilename: String,
-  temporaryUrl: String,
-  fileType: String
-)
-case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
-object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
-    SipiUploadResponseEntry
-  )
-  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
-}
-
-import SipiUploadResponseJsonProtocol._
 
 /**
  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
@@ -239,7 +222,6 @@ class StandoffRouteV2R2RSpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
 
-    // FIXME: SIPI not available here in CI
     "create a custom mapping with an XSL transformation" in {
       // get authentication token
       val params = Map(

@@ -14,11 +14,11 @@ import messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtoco
 import messages.util.rdf._
 import settings._
 import util.{FileUtil, StartupUtils}
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
@@ -194,4 +194,18 @@ class E2ESpec(_system: ActorSystem)
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
+}
+
+protected case class SipiUploadResponseEntry(
+  originalFilename: String,
+  internalFilename: String,
+  temporaryUrl: String,
+  fileType: String
+)
+protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
+object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
+    SipiUploadResponseEntry
+  )
+  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
 }
