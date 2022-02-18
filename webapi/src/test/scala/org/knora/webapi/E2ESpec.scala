@@ -21,6 +21,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.concurrent.ScalaFutures
@@ -44,7 +45,8 @@ object E2ESpec {
  * and provides access to settings and logging.
  */
 class E2ESpec(_system: ActorSystem)
-    extends Core
+    extends TestKit(_system)
+    with Core
     with StartupUtils
     with TriplestoreJsonProtocol
     with Suite
@@ -67,8 +69,6 @@ class E2ESpec(_system: ActorSystem)
   def this() = this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
   /* needed by the core trait */
-
-  implicit lazy val system: ActorSystem = _system
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -110,7 +110,8 @@ class E2ESpec(_system: ActorSystem)
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
-    appActor ! AppStop()
+    // appActor ! AppStop()
+    TestKit.shutdownActorSystem(system)
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")

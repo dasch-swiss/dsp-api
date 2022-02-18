@@ -14,6 +14,7 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.app.{ApplicationActor, LiveManagers}
@@ -43,7 +44,8 @@ object ITKnoraLiveSpec {
  * provides access to settings and logging.
  */
 class ITKnoraLiveSpec(_system: ActorSystem)
-    extends Core
+    extends TestKit(_system)
+    with Core
     with StartupUtils
     with Suite
     with AnyWordSpecLike
@@ -71,7 +73,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
   /* needed by the core trait (represents the KnoraTestCore trait)*/
-  implicit lazy val system: ActorSystem = _system
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -112,7 +113,8 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
-    appActor ! AppStop()
+    // appActor ! AppStop()
+    TestKit.shutdownActorSystem(system)
 
   protected def checkIfSipiIsRunning(): Unit = {
     // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
