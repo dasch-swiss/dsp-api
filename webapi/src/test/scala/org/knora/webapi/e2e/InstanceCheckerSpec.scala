@@ -32,7 +32,7 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 
   "The InstanceChecker" should {
     "accept a JSON-LD instance of anything:Thing" in {
-      val testDing = FileUtil.readTextFile(Paths.get("test_data/resourcesR2RV2/Testding.jsonld"))
+      val testDing = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/Testding.jsonld"))
 
       jsonLDInstanceChecker.check(
         instanceResponse = testDing,
