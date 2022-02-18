@@ -386,7 +386,7 @@ class KnoraSipiIntegrationV2ITSpec
         "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NDM1MTEyMiwiaWF0IjoxNTQxNzU5MTIyLCJqdGkiOiJ4bnlYeklFb1QxNmM2dkpDbHhSQllnIn0.P2Aq37G6XMLLBVMdnpDVVhWjenbVw0HTb1BpEuTWGRo"
 
       // The image to be uploaded.
-      val fileToSend = Paths.get(pathToMarbles)
+      val fileToSend = Paths.get("..", pathToMarbles)
       assert(Files.exists(fileToSend), s"File $pathToMarbles does not exist")
 
       // A multipart/form-data request containing the image.
