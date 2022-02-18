@@ -35,7 +35,13 @@ included in the request body, for example:
 {
     "forGroup":"http://rdfh.ch/groups/0001/thing-searcher", 
     "forProject":"http://rdfh.ch/projects/0001", 
-    "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+    "hasPermissions":[
+      {
+        "additionalInformation":null,
+        "name":"ProjectAdminGroupAllPermission",
+        "permissionCode":null
+      }
+    ]
 }
 ``` 
 
@@ -71,27 +77,26 @@ As a response, the created administrative permission and its IRI are returned as
 permission types](../../05-internals/design/api-admin/administration.md#administrative-permissions).
 In summary, each permission should contain followings:
 
-- `name` : indicates the type of the permission that can be one of the followings:
-   - `ProjectAdminAllPermission`: gives the user the permission to do anything
+  - `additionalInformation`: should be left empty, otherwise will be ignored.
+  - `name` : indicates the type of the permission that can be one of the followings:
+    - `ProjectAdminAllPermission`: gives the user the permission to do anything
      on project level, i.e. create new groups, modify all
      existing groups
-   - `ProjectAdminGroupAllPermission`: gives the user the permission to modify
+    - `ProjectAdminGroupAllPermission`: gives the user the permission to modify
      *group info* and *group membership* on *all* groups
      belonging to the project.
-   - `ProjectAdminGroupRestrictedPermission`: gives the user the permission to modify
+    - `ProjectAdminGroupRestrictedPermission`: gives the user the permission to modify
      *group info* and *group membership* on *certain* groups
      belonging to the project.
-   - `ProjectAdminRightsAllPermission`: gives the user the permission to change the
+    - `ProjectAdminRightsAllPermission`: gives the user the permission to change the
      *permissions* on all objects belonging to the project
      (e.g., default permissions attached to groups and
      permissions on objects).
-   - `ProjectResourceCreateAllPermission`: gives the permission to create resources
+    - `ProjectResourceCreateAllPermission`: gives the permission to create resources
      inside the project.
-   - `ProjectResourceCreateRestrictedPermission`: gives restricted resource creation permission
+    - `ProjectResourceCreateRestrictedPermission`: gives restricted resource creation permission
      inside the project.
-     
-- `additionalInformation`: should be left empty, otherwise will be ignored.
-- `permissionCode`: should be left empty, otherwise will be ignored.
+  - `permissionCode`: should be left empty, otherwise will be ignored.
 
 
 Note that during the creation of a new project, a default set of administrative permissions are added to its ProjectAdmin and 
@@ -116,7 +121,13 @@ default object access permission for a group of a project the request body would
     "forProject":"http://rdfh.ch/projects/0001",
     "forProperty":null,
     "forResourceClass":null,
-    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+    "hasPermissions":[
+      {
+        "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
+        "name":"D",
+        "permissionCode":7
+      }
+    ]
 }
 ```
 
@@ -124,19 +135,19 @@ default object access permission for a group of a project the request body would
 permission types](../../05-internals/design/api-admin/administration.md#default-object-access-permissions). 
 In summary, each permission should contain followings:
 
-- `additionalInformation`: To whom the permission should be granted: project members, known users, unknown users, etc.
-- `name` : indicates the type of the permission that can be one of the followings.
-   - `RV`: restricted view permission (least privileged)
-   - `V`: view permission
-   - `M` modify permission
-   - `D`: delete permission
-   - `CR`: change rights permission (most privileged)
-- `permissionCode`: The code assigned to a permission indicating its hierarchical level. These codes are as below:
-  - `1`: for restricted view permission (least privileged)
-  - `2`: for view permission
-  - `6`: for modify permission
-  - `7`: for delete permission
-  - `8`: for change rights permission (most privileged)
+  - `additionalInformation`: To whom the permission should be granted: project members, known users, unknown users, etc.
+  - `name` : indicates the type of the permission that can be one of the followings.
+    - `RV`: restricted view permission (least privileged)
+    - `V`: view permission
+    - `M` modify permission
+    - `D`: delete permission
+    - `CR`: change rights permission (most privileged)
+  - `permissionCode`: The code assigned to a permission indicating its hierarchical level. These codes are as below:
+    - `1`: for restricted view permission (least privileged)
+    - `2`: for view permission
+    - `6`: for modify permission
+    - `7`: for delete permission
+    - `8`: for change rights permission (most privileged)
     
 Note that, at least either `name` or `permissionCode` must be provided. If one is missing, it will be extrapolated from the other.
 For example, if `permissionCode= 1` is given but `name` was left empty, its value will be set to `name = RV`.    
@@ -152,7 +163,13 @@ a resource class of a specific project:
     "forProject":"http://rdfh.ch/projects/00FF",
     "forProperty":null,
     "forResourceClass":"http://www.knora.org/ontology/00FF/images#bild",
-    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+    "hasPermissions":[
+      {
+        "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
+        "name":"D",
+        "permissionCode":7
+      }
+    ]
 }
 ```
 
@@ -207,7 +224,13 @@ the combination of both, the permission will be defined for the newly specified 
 
 ```json
 {
-   "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+   "hasPermissions":[
+     {
+       "additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember",
+       "name":"D",
+       "permissionCode":7
+     }
+   ]
 }
 ```
 

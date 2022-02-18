@@ -95,12 +95,13 @@ specified by the `id` in the request body as below:
 
 #### Default set of permissions for a new project:
 When a new project is created, following default permissions are added to its admins and members:
+
 - ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
 within the new project. This administrative permission is retrievable through its IRI:
 `http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
 
-ProjectAdmin group also gets a default object access permission to change rights, delete, modify, view, 
-and restricted view of any entity that belongs to the project. This default object access permission is retrievable 
+- ProjectAdmin group also gets a default object access permission to change rights (which includes delete, modify, view, 
+and restricted view permissions) of any entity that belongs to the project. This default object access permission is retrievable 
 through its IRI: 
 `http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
 
@@ -108,8 +109,8 @@ through its IRI:
 administrative permission is retrievable through its IRI:
 `http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
 
-ProjectMember group also gets a default object access permission to modify, view, and restricted view of any entity that 
-belongs to the project. This default object access permission is retrievable through its IRI: 
+- ProjectMember group also gets a default object access permission to modify (which includes view and restricted view 
+permissions) of any entity that belongs to the project. This default object access permission is retrievable through its IRI: 
 `http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 
 ### Update project information:
