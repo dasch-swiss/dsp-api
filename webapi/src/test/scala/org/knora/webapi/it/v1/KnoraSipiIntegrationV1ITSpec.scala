@@ -315,7 +315,7 @@ class KnoraSipiIntegrationV1ITSpec
       checkResponseOK(knoraPostRequest)
     }
 
-    "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
+    "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" ignore {
       val fileToUpload = Paths.get("..", pathToChlaus)
 
       // To be able to run packaged tests inside Docker, we need to copy
