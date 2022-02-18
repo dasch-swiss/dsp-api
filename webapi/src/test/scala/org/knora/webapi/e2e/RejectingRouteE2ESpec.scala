@@ -49,7 +49,7 @@ class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
       response.status should be(StatusCodes.NotFound)
     }
 
-    "reject the 'v1/users' path" ignore {
+    "reject the 'v1/users' path" in {
       val request = Get(baseApiUrl + s"/v1/users")
       val response: HttpResponse = singleAwaitingRequest(request)
 

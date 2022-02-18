@@ -169,7 +169,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
    * @param path     the path of the file.
    * @param mimeType the MIME type of the file.
    */
-  protected case class FileToUpload(path: String, mimeType: ContentType)
+  protected case class FileToUpload(path: Path, mimeType: ContentType)
 
   /**
    * Represents an image file to be uploaded to Sipi.
@@ -222,13 +222,12 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     // Make a multipart/form-data request containing the files.
 
     val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map { fileToUpload =>
-      val fileToSend: Path = Paths.get("..", fileToUpload.path)
-      assert(Files.exists(fileToSend), s"File ${fileToSend} does not exist")
+      assert(Files.exists(fileToUpload.path), s"File ${fileToUpload} does not exist")
 
       Multipart.FormData.BodyPart(
         "file",
-        HttpEntity.fromPath(fileToUpload.mimeType, fileToSend),
-        Map("filename" -> fileToSend.getFileName.toString)
+        HttpEntity.fromPath(fileToUpload.mimeType, fileToUpload.path),
+        Map("filename" -> fileToUpload.path.getFileName.toString)
       )
     }
 
