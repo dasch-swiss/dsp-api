@@ -477,11 +477,6 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         // Transition to ready state
         self ! AppReady()
 
-        if (knoraSettings.prometheusEndpoint) {
-          // Load Kamon monitoring
-          Kamon.loadModules()
-        }
-
         // Kick of startup procedure.
         self ! InitStartUp(ignoreRepository, requiresIIIFService)
 
@@ -521,14 +516,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
   override def postStop(): Unit = {
     super.postStop()
-    logger.info("ApplicationActor - shutdown in progress, initiating post stop cleanup. Bye!")
-
-    if (knoraSettings.prometheusEndpoint) {
-      // Stop Kamon monitoring
-      Kamon.stopModules()
-    }
+    logger.info("ApplicationActor - ... shutdown in progress, initiating post stop cleanup...")
 
     CacheUtil.removeAllCaches()
+
+    logger.info("ApplicationActor - ... Bye!")
 
     Http().shutdownAllConnectionPools() andThen { case _ => system.terminate() }
   }

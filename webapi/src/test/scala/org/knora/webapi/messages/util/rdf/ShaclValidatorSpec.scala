@@ -17,13 +17,12 @@ import org.knora.webapi.messages.util.rdf._
 object ShaclValidatorSpec {
   val config: String =
     s"""
-      |app {
-      |    shacl {
-      |        shapes-dir = "../test_data/shacl"
-      |    }
-      |}
-      |""".stripMargin
-  println(config)
+       |app {
+       |    shacl {
+       |        shapes-dir = "../test_data/shacl"
+       |    }
+       |}
+       |""".stripMargin
 }
 
 /**
