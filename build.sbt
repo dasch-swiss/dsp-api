@@ -176,11 +176,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
 
       dockerRepository := Some("dhlabbasel"),
 
-      maintainer := "400790+subotic@users.noreply.github.com",
+      maintainer := "support@dasch.swiss",
 
       Docker / dockerExposedPorts ++= Seq(3333, 10001),
       Docker / dockerCommands := Seq(
-          Cmd("FROM", "adoptopenjdk/openjdk11:alpine-jre"),
+          Cmd("FROM", "eclipse-temurin:11-jre-focal"),
           Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
 
           Cmd("RUN apk update && apk upgrade && apk add bash"),
