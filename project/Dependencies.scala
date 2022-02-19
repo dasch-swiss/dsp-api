@@ -160,13 +160,13 @@ object Dependencies {
     }
 
     object WebapiTest {
-        val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value        % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
-        val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value        % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
-        val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value    % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"}
-        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.2.2"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
-        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "3.7.5"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
-        val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "3.2.1"                  % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
-        val testcontainers         = "org.testcontainers"                         % "testcontainers"           % "1.16.0"                 % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
+        val akkaTestkit            = Def.setting {"com.typesafe.akka"            %% "akka-testkit"             % akkaVersion.value        % "test"}
+        val akkaStreamTestkit      = Def.setting {"com.typesafe.akka"            %% "akka-stream-testkit"      % akkaVersion.value        % "test"}
+        val akkaHttpTestkit        = Def.setting {"com.typesafe.akka"            %% "akka-http-testkit"        % akkaHttpVersion.value    % "test"}
+        val scalaTest              = "org.scalatest"                             %% "scalatest"                % "3.2.2"                  % "test"
+        val gatlingHighcharts      = "io.gatling.highcharts"                      % "gatling-charts-highcharts"% "3.7.5"                  % "test"
+        val gatlingTestFramework   = "io.gatling"                                 % "gatling-test-framework"   % "3.2.1"                  % "test"
+        val testcontainers         = "org.testcontainers"                         % "testcontainers"           % "1.16.0"                 % "test"
     }
 
     object TestBinaries {
