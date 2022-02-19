@@ -45,8 +45,10 @@ class CacheUtilSpec
   override protected def beforeAll(): Unit =
     CacheUtil.createCaches(settings.caches)
 
-  override def afterAll(): Unit =
+  override def afterAll(): Unit = {
+    CacheUtil.removeAllCaches()
     TestKit.shutdownActorSystem(system)
+  }
 
   "Caching" should {
 
