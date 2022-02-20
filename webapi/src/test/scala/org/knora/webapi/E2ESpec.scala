@@ -35,6 +35,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 import scala.util.{Failure, Success, Try}
+import org.knora.webapi.exceptions.FileWriteException
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -93,6 +94,9 @@ class E2ESpec(_system: ActorSystem)
   )
 
   override def beforeAll(): Unit = {
+
+    // create temp data dir if not present
+    createTmpFileDir()
 
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
@@ -194,5 +198,19 @@ class E2ESpec(_system: ActorSystem)
       responseAsString
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
+    }
+  
+  private def createTmpFileDir(): Unit = {
+      // check if tmp datadir exists and create it if not
+      val tmpFileDir = Path.of(settings.tmpDataDir)
+
+      if (!Files.exists(tmpFileDir)) {
+        try {
+          Files.createDirectories(tmpFileDir)
+        } catch {
+          case e: Throwable =>
+            throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+        }
+      }
     }
 }

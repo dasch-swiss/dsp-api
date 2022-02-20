@@ -968,17 +968,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-int-value-with-custom-UUID-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
-
       val request = Post(
         baseApiUrl + "/v2/values",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)

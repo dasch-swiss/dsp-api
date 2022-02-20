@@ -14,6 +14,8 @@ import java.io.FileWriter
 import java.nio.file.Paths
 import java.nio.file.Path
 import com.typesafe.scalalogging.LazyLogging
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 /**
  * Collects E2E test requests and responses for use as client test data.
@@ -23,11 +25,11 @@ import com.typesafe.scalalogging.LazyLogging
 class ClientTestDataCollector(settings: KnoraSettingsImpl) extends LazyLogging {
 
   // write the client test data into this folder
-  private val folderName: String = "client-test-data"
+  private val tempClientTestDataFolder: Path = Path.of("/tmp/client_test_data", "test-data")
 
   // Are we configured to collect client test data?
   private val collectClientTestData = settings.collectClientTestData
-  println(s"==============> $collectClientTestData")
+  logger.debug(s"collectClientTestData: $collectClientTestData")
 
   /**
    * Stores a client test data file.
@@ -40,18 +42,17 @@ class ClientTestDataCollector(settings: KnoraSettingsImpl) extends LazyLogging {
       writeFile(fileContent.filePath.toString, fileContent.text)
     }
 
-
   /**
    * write a `String` to the `filename`.
    */
   private def writeFile(filename: String, s: String): Unit = {
-    println("ClientTestDataCollector - writeFile: filename: " + filename)
-    val file = new File(Path.of(folderName, filename).toString())
-    println("ClientTestDataCollector - writeFile: file: " + file.toString())
-    val bw = new BufferedWriter(new FileWriter(file))
-    bw.write(s)
-    bw.close()
-}
+    logger.debug(s"writeFile: filename: $filename")
+    val fullPath = tempClientTestDataFolder.resolve(filename)
+    logger.debug(s"writeFile: fullPath: $fullPath")
+    Files.createDirectories(fullPath.getParent())
+    Files.createFile(fullPath)
+    Files.write(fullPath, s.getBytes(StandardCharsets.UTF_8))
+  }
 }
 
 /**
