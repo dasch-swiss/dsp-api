@@ -165,7 +165,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "gdbSE" -> Dependencies.gdbSEImage.value,
       "gdbFree" -> Dependencies.gdbFreeImage.value
     ),
-    buildInfoPackage := "org.knora.webapi.http.version.versioninfo"
+    buildInfoPackage := "org.knora.webapi.http.version"
   )
 
 lazy val webapiJavaRunOptions = Seq(

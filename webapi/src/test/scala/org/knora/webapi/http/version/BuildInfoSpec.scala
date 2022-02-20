@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.http.version.versioninfo
+package org.knora.webapi.http.version
 
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -11,12 +11,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class VersionInfoSpec extends AnyWordSpecLike with Matchers {
+class BuildInfoSpec extends AnyWordSpecLike with Matchers {
   "The version info" should {
-    "contain all the necessary information" ignore {
-      // println(777, BuildInfo.toString)
-      // BuildInfo.name should be("webapi")
-      // BuildInfo.version should be nonEmpty
+    "contain all the necessary information" in {
+      BuildInfo.name should be("webapi")
+      BuildInfo.version should not ne empty
     }
   }
 }

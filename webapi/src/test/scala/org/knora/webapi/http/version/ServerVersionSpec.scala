@@ -16,7 +16,7 @@ class ServerVersionSpec extends AnyWordSpecLike with Matchers {
 
   "The server version header" should {
 
-    "contain the necessary information" ignore {
+    "contain the necessary information" in {
       val header: Server = ServerVersion.serverVersionHeader
       header.toString() should include("webapi/")
       header.toString() should include("akka-http/")
