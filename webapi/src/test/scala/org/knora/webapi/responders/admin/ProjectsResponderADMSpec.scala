@@ -257,10 +257,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             doap.hasPermissions.equals(
               Set(
                 PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
               )
             )
         }
@@ -274,9 +271,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             ) &&
             doap.hasPermissions.equals(
               Set(
-                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-                PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
               )
             )
         }

@@ -1037,10 +1037,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = Set(
               PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
           ).prepareHasPermissions,
           featureFactoryConfig = featureFactoryConfig,
@@ -1055,9 +1052,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-              PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-              PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
           ).prepareHasPermissions,
           featureFactoryConfig = featureFactoryConfig,
