@@ -4,9 +4,6 @@ filegroup(
     name = "resources",
     srcs = [
         "fuseki.conf",
-        "graphdb-free.conf",
-        "graphdb-se.conf",
-        "jenatdb.conf",
         "logback-test.xml",
         "test.conf",
     ],
