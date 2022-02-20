@@ -1,13 +1,10 @@
-
-
 resolvers ++= Seq(
-    Resolver.typesafeRepo("releases")
+  Resolver.typesafeRepo("releases")
 )
 
 // Knora
-addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.0")
-addSbtPlugin("com.tapad" % "sbt-docker-compose" % "1.0.35")
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.7.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.2")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.4")
 addSbtPlugin("io.kamon" % "sbt-aspectj-runner" % "1.1.1")
 
 // webapi

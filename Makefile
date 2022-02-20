@@ -39,7 +39,6 @@ docs-clean: ## cleans the project directory
 
 .PHONY: build
 build: docker-build ## build all targets (excluding docs)
-	@bazel build //...
 
 .PHOBY: check-for-outdated-deps
 check-for-outdated-deps: ## check for outdated maven dependencies
@@ -55,7 +54,7 @@ buildifier: ## format Bazel WORKSPACE and BUILD.bazel files
 
 .PHONY: docker-build-knora-api-image
 docker-build-knora-api-image: # build and publish knora-api docker image locally
-	@bazel run //docker/knora-api:image
+	@sbt "webapi / Docker / publishLocal"
 
 .PHONY: docker-publish-knora-api-image
 docker-publish-knora-api-image: # publish knora-api image to Dockerhub
