@@ -221,11 +221,12 @@ test-e2e: docker-build ## runs the dsp-api e2e tests.
 	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
 
 .PHONY: client-test-data
+client-test-data: KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
 client-test-data: docker-build ## runs the dsp-api e2e tests and generates client test data.
-	docker-compose -f docker-compose.yml up -d redis
-	$(CURRENT_DIR)/webapi/scripts/clear-client-test-data.sh
-	bazel test --cache_test_results=no //webapi/src/test/scala/org/knora/webapi/e2e/... --action_env=KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA=true
-	$(CURRENT_DIR)/webapi/scripts/dump-client-test-data.sh
+	# docker-compose -f docker-compose.yml up -d redis
+	# $(CURRENT_DIR)/webapi/scripts/clear-client-test-data.sh
+	sbt -v "webapi/testOnly *PermissionsADME2ESpec"
+	# $(CURRENT_DIR)/webapi/scripts/dump-client-test-data.sh
 
 .PHONY: test-it
 test-it: docker-build ## runs the dsp-api integration tests.
