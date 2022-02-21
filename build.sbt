@@ -162,8 +162,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       version,
       "akkaHttp" -> Dependencies.akkaHttpVersion.value,
       "sipi" -> Dependencies.sipiImage.value,
-      "gdbSE" -> Dependencies.gdbSEImage.value,
-      "gdbFree" -> Dependencies.gdbFreeImage.value
+      "fuseki" -> Dependencies.fusekiImage.value
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )

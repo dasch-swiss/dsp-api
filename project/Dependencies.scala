@@ -13,21 +13,15 @@ object Dependencies {
     lazy val sysProps = settingKey[String]("all system properties")
     lazy val sysEnvs = settingKey[String]("all system environment variables")
 
-    lazy val gdbHomePath = settingKey[String]("path to the GraphDB home directory")
-    lazy val gdbLicensePath = settingKey[String]("path to the GraphDB license")
-    lazy val gdbSEImage = settingKey[String]("the GraphDB-SE docker image")
-    lazy val gdbFreeImage = settingKey[String]("the GraphDB-Free docker image")
-
     lazy val sipiImage = settingKey[String]("the SIPI docker image")
     lazy val akkaVersion = settingKey[String]("the Akka version")
     lazy val akkaHttpVersion = settingKey[String]("the AkkaHttp version")
     lazy val jenaVersion = settingKey[String]("the Jena library version")
     lazy val metricsVersion = settingKey[String]("the metrics library version")
 
-    lazy val knoraJenaFusekiImage = SettingKey[String]("the Knora specific Jena Fuseki Image")
-    lazy val knoraSipiImage = SettingKey[String]("the Knora specific Sipi Image")
-    lazy val knoraWebapiImage = SettingKey[String]("the Knora webapi Image")
-    lazy val knoraSalsah1Image = SettingKey[String]("the Knora Salsah1 Image")
+    lazy val fusekiImage = SettingKey[String]("the DSP specific Apache Jena Fuseki Image")
+    lazy val knoraSipiImage = SettingKey[String]("the DSP specific Sipi Image")
+    lazy val knoraWebapiImage = SettingKey[String]("the DSP-API Image")
 
     val Versions = Seq(
         scalaVersion := "2.13.7",
@@ -36,8 +30,7 @@ object Dependencies {
         jenaVersion := "4.4.0",
         metricsVersion := "4.0.1",
         sipiImage := "daschswiss/sipi:v3.3.1",
-        gdbSEImage := "daschswiss/graphdb:9.0.0-se",
-        gdbFreeImage := "daschswiss/graphdb:9.0.0-free"
+        fusekiImage := "daschswiss/apache-jena-fuseki:2.0.8"
     )
 
     // the user can change the default 'graphdb-se' value by creating an environment variable containing 'graphdb-free'

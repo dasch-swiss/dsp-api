@@ -32,9 +32,6 @@ trait VersionCheck {
 
   override implicit val timeout: Timeout = 1.second
 
-  protected def versionCheck: HttpResponse =
-    createResponse(getVersion)
-
   protected def createResponse(result: VersionCheckResult): HttpResponse =
     HttpResponse(
       status = StatusCodes.OK,
@@ -51,12 +48,12 @@ trait VersionCheck {
       )
     )
 
-  private def getVersion: VersionCheckResult = {
+  protected def getVersion: VersionCheckResult = {
     var sipiVersion = BuildInfo.sipi
     val sipiIndex = sipiVersion.indexOf(':')
     sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
 
-    var fusekiVersion = BuildInfo.gdbSE
+    var fusekiVersion = BuildInfo.fuseki
     val fusekiIndex = fusekiVersion.indexOf(':')
     fusekiVersion = if (fusekiIndex > 0) fusekiVersion.substring(fusekiIndex + 1) else fusekiVersion
 
@@ -82,7 +79,7 @@ class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("version") {
       get { requestContext =>
-        requestContext.complete(versionCheck)
+        requestContext.complete(createResponse(getVersion))
       }
     }
 }
