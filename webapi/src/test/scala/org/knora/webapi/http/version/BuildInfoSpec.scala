@@ -15,7 +15,7 @@ class BuildInfoSpec extends AnyWordSpecLike with Matchers {
   "The version info" should {
     "contain all the necessary information" in {
       BuildInfo.name should be("webapi")
-      BuildInfo.version should not ne empty
+      BuildInfo.version should not be empty
     }
   }
 }
