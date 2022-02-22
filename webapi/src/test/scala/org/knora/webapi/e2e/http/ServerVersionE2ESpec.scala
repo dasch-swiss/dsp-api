@@ -24,7 +24,7 @@ object ServerVersionE2ESpec {
  */
 class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
-  
+
   "The Server" should {
     "return the custom 'Server' header with every response" in {
       val request = Get(baseApiUrl + s"/admin/projects")

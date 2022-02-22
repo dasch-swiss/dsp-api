@@ -142,7 +142,6 @@ abstract class CoreSpec(_system: ActorSystem)
   }
 
   final override def afterAll(): Unit =
-    // appActor ! AppStop()
     TestKit.shutdownActorSystem(system)
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {

@@ -78,7 +78,7 @@ jobs:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
+        run: sudo apt-get install ca-certificates-java expect unzip
       - name: Coursier cache
         uses: coursier/cache-action@v6
       - name: generate api-client-test-data
@@ -195,7 +195,7 @@ jobs:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
+        run: sudo apt-get install ca-certificates-java expect unzip
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

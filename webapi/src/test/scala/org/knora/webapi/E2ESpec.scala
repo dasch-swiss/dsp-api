@@ -114,7 +114,6 @@ class E2ESpec(_system: ActorSystem)
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
-    // appActor ! AppStop()
     TestKit.shutdownActorSystem(system)
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {

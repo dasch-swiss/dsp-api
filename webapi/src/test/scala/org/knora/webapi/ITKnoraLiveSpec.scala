@@ -113,7 +113,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
-    // appActor ! AppStop()
     TestKit.shutdownActorSystem(system)
 
   protected def checkIfSipiIsRunning(): Unit = {
