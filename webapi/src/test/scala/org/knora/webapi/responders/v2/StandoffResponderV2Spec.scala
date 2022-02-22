@@ -11,7 +11,6 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
@@ -28,21 +27,6 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 30.seconds
-
-  private def getResource(iri: String): ReadResourceV2 = {
-    val msg = ResourcesGetRequestV2(
-      resourceIris = List(iri),
-      targetSchema = ApiV2Complex,
-      featureFactoryConfig = defaultFeatureFactoryConfig,
-      requestingUser = SharedTestDataADM.rootUser
-    )
-    responderManager ! msg
-    val response = expectMsgPF(timeout) {
-      case res: ReadResourcesSequenceV2 => res
-      case r                            => throw AssertionException(f"Failed to get resource: $iri ($r)")
-    }
-    response.resources.head
-  }
 
   private def getMapping(iri: String): SparqlConstructResponse = {
 
@@ -130,10 +114,9 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
       response.mappingIri should equal(expectedMappingIRI)
       val mappingFromDB: SparqlConstructResponse = getMapping(response.mappingIri)
       println(mappingFromDB)
-      mappingFromDB.statements should not be (Map.empty)
-      mappingFromDB.statements.get(expectedMappingIRI) should not be (Map.empty)
+      mappingFromDB.statements should not be Map.empty
+      mappingFromDB.statements.get(expectedMappingIRI) should not be Map.empty
     }
 
   }
-  // TODO: create and get text resources here
 }
