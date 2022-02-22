@@ -39,10 +39,7 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
     responderManager ! msg
     val response = expectMsgPF(timeout) {
       case res: ReadResourcesSequenceV2 => res
-      case r => {
-        println(r)
-        throw AssertionException("Something went wrong")
-      }
+      case r                            => throw AssertionException(f"Failed to get resource: $iri ($r)")
     }
     response.resources.head
   }
@@ -138,4 +135,5 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
   }
+  // TODO: create and get text resources here
 }

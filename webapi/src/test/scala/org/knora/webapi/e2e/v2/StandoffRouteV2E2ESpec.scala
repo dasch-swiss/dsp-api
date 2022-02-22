@@ -116,6 +116,16 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     singleAwaitingRequest(resourceRequest)
   }
 
+  def getTextValueAsDocument(iri: String): JsonLDDocument = {
+    val request = Get(
+      s"$baseApiUrl/v2/resources/$iri"
+    ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+    val response: HttpResponse = singleAwaitingRequest(request)
+
+    println(responseToString(response))
+    responseToJsonLDDocument(response)
+  }
+
   "The Standoff v2 Endpoint" should {
     "check if SIPI is available" in {
       val request = Get(s"${settings.internalSipiBaseUrl}/server/test.html")
@@ -206,12 +216,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       val valueIRI = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
 
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/$valueIRI"
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
-
-      val responseDocument = responseToJsonLDDocument(resourceComplexGetResponse)
+      val responseDocument = getTextValueAsDocument(valueIRI)
       val textValueObject = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
       textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
       textValueObject
@@ -298,14 +303,9 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     "return XML and HTML rendering of the standoff" in {
       val valueIRI = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
-
-      val resourceComplexGetRequest = Get(
-        s"$baseApiUrl/v2/resources/$valueIRI"
-      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
-
       val expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
-      val responseDocument = responseToJsonLDDocument(resourceComplexGetResponse)
+
+      val responseDocument = getTextValueAsDocument(valueIRI)
       val textValueObject = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
       textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
       textValueObject
@@ -316,6 +316,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
 
+    // TODO: create test for standard mapping here
     // TODO: update documentation
   }
 }
