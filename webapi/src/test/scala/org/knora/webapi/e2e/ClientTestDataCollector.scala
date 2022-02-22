@@ -7,7 +7,6 @@ package org.knora.webapi.e2e
 
 import org.knora.webapi.exceptions.TestConfigurationException
 import org.knora.webapi.settings.KnoraSettingsImpl
-import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 import java.io.File
 import java.io.BufferedWriter
 import java.io.FileWriter

@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
- * This spec is used to test 'ListAdminMessages'.
+ * This spec is used to test 'BuildInfo'.
  */
 class BuildInfoSpec extends AnyWordSpecLike with Matchers {
   "The version info" should {

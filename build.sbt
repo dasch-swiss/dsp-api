@@ -28,10 +28,10 @@ lazy val root: Project = Project(id = "root", file("."))
     // values set for all sub-projects
     // These are normal sbt settings to configure for release, skip if already defined
     Global / onChangedBuildSource := ReloadOnSourceChanges,
-    ThisBuild / licenses := Seq("AGPL-3.0" -> url("https://opensource.org/licenses/AGPL-3.0")),
-    ThisBuild / homepage := Some(url("https://github.com/dhlab-basel/Knora")),
+    ThisBuild / licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    ThisBuild / homepage := Some(url("https://github.com/dasch-swiss/dsp-api")),
     ThisBuild / scmInfo := Some(
-      ScmInfo(url("https://github.com/dhlab-basel/Knora"), "scm:git:git@github.com:dhlab-basel/Knora.git")
+      ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
     ),
     // use 'git describe' for deriving the version
     git.useGitDescribe := true,
@@ -154,7 +154,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     dockerBaseImage := "eclipse-temurin:11-jre-focal",
     Docker / maintainer := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333),
-    Docker / defaultLinuxInstallLocation := "/opt/docker",
+    Docker / defaultLinuxInstallLocation := "/opt/docker"
   )
   .settings(
     buildInfoKeys ++= Seq[BuildInfoKey](
