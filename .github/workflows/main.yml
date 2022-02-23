@@ -10,13 +10,18 @@ on:
 
 jobs:
   compile:
-    name: Build Everything
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - name: checkout source
         uses: actions/checkout@v1
         with:
           fetch-depth: 15
+      - name: Setup JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 11
       - name: get current time
         uses: josStorer/get-current-time@v2
         id: current-time
@@ -40,15 +45,24 @@ jobs:
           chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: run build everything
-        run: bazel build //...
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
+      - name: Build and Test
+        run: make test
+      - name: Cleanup before cache
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
 
 # ------------------------------------------
 # ------------------------------------------
 # Test client-test-data 
   client-test-data-tests:
-    name: Test client-test-data 
-    needs: compile
+    name: Test client-test-data
     runs-on: ubuntu-latest
     steps:
       - name: checkout source
@@ -77,129 +91,24 @@ jobs:
           curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
           chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
+        run: sudo apt-get install ca-certificates-java expect unzip
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
       - name: generate api-client-test-data
         run: make client-test-data
+      - name: Cleanup before cache
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
 
 # ------------------------------------------
 # ------------------------------------------
-
-  api-unit-tests:
-    name: API Unit Tests
-    needs: compile
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout source
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 15
-      - name: get current time
-        uses: josStorer/get-current-time@v2
-        id: current-time
-        with:
-          format: YYYY-MM-DD
-          utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
-        with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.date.outputs.date }} }}
-      - name: run API unit tests
-        run: make test-unit
-
-  api-e2e-tests:
-    name: API E2E Tests
-    needs: compile
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout source
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 15
-      - name: get current time
-        uses: josStorer/get-current-time@v2
-        id: current-time
-        with:
-          format: YYYY-MM-DD
-          utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
-        with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
-      - name: run API E2E tests
-        run: make test-e2e
-
-  api-integration-tests:
-    name: API Integration Tests
-    needs: compile
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout source
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 15
-      - name: get current time
-        uses: josStorer/get-current-time@v2
-        id: current-time
-        with:
-          format: YYYY-MM-DD
-          utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
-        with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: Install dependencies
-        run: |
-          sudo apt-get install ca-certificates-java expect
-      - name: run API integration tests
-        run: |
-          make test-docker
-          make test-it
-
   upgrade-integration-tests:
     name: Upgrade Integration Tests
-    needs: compile
     runs-on: ubuntu-latest
     steps:
       - name: checkout source
@@ -240,7 +149,6 @@ jobs:
 
   docs-build-test:
     name: Build Docs Testrun
-    needs: compile
     runs-on: ubuntu-latest
     steps:
       - name: checkout source
@@ -285,9 +193,7 @@ jobs:
   publish:
     name: Publish (on release only)
     needs: [
-      api-unit-tests,
-      api-e2e-tests,
-      api-integration-tests,
+      compile,
       client-test-data-tests,
       upgrade-integration-tests,
       docs-build-test
@@ -321,7 +227,7 @@ jobs:
           curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
           chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
+        run: sudo apt-get install ca-certificates-java expect unzip
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

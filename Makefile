@@ -39,7 +39,6 @@ docs-clean: ## cleans the project directory
 
 .PHONY: build
 build: docker-build ## build all targets (excluding docs)
-	@bazel build //...
 
 .PHOBY: check-for-outdated-deps
 check-for-outdated-deps: ## check for outdated maven dependencies
@@ -55,7 +54,7 @@ buildifier: ## format Bazel WORKSPACE and BUILD.bazel files
 
 .PHONY: docker-build-knora-api-image
 docker-build-knora-api-image: # build and publish knora-api docker image locally
-	@bazel run //docker/knora-api:image
+	@sbt "webapi / Docker / publishLocal"
 
 .PHONY: docker-publish-knora-api-image
 docker-publish-knora-api-image: # publish knora-api image to Dockerhub
@@ -201,38 +200,15 @@ stack-db-only: env-file docker-build-knora-jena-fuseki-image  ## starts only fus
 test-docker: docker-build ## runs Docker image tests
 	bazel test //docker/...
 
-.PHONY: test-webapi
-test-webapi: docker-build ## runs all dsp-api tests.
-	bazel test //webapi/...
-
-.PHONY: test-unit
-test-unit: docker-build ## runs the dsp-api unit tests.
-	bazel test \
-	//webapi/src/test/scala/org/knora/webapi/http/... \
-	//webapi/src/test/scala/org/knora/webapi/messages/... \
-	//webapi/src/test/scala/org/knora/webapi/other/... \
-	//webapi/src/test/scala/org/knora/webapi/responders/... \
-	//webapi/src/test/scala/org/knora/webapi/routing/... \
-	//webapi/src/test/scala/org/knora/webapi/store/... \
-	//webapi/src/test/scala/org/knora/webapi/util/... \
-
-.PHONY: test-e2e
-test-e2e: docker-build ## runs the dsp-api e2e tests.
-	bazel test //webapi/src/test/scala/org/knora/webapi/e2e/...
-
 .PHONY: client-test-data
-client-test-data: docker-build ## runs the dsp-api e2e tests and generates client test data.
-	docker-compose -f docker-compose.yml up -d redis
-	$(CURRENT_DIR)/webapi/scripts/clear-client-test-data.sh
-	bazel test --cache_test_results=no //webapi/src/test/scala/org/knora/webapi/e2e/... --action_env=KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA=true
-	$(CURRENT_DIR)/webapi/scripts/dump-client-test-data.sh
-
-.PHONY: test-it
-test-it: docker-build ## runs the dsp-api integration tests.
-	bazel test //webapi/src/test/scala/org/knora/webapi/it/...
+client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
+client-test-data: build ## runs the dsp-api e2e tests and generates client test data.
+	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
+	sbt -v "webapi/testOnly *E2ESpec *R2RSpec"
+	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
 
 .PHONY: test-repository-upgrade
-test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration test
+test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integration test
 	@rm -rf $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
 	@mkdir -p $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
 	@unzip $(CURRENT_DIR)/test_data/v7.0.0/v7.0.0-knora-test.trig.zip -d $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/
@@ -245,8 +221,8 @@ test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration tes
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
 .PHONY: test
-test: docker-build ## runs all test targets.
-	bazel test //webapi/...
+test: build ## runs all tests
+	sbt -v +test
 
 #################################
 ## Database Management

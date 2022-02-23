@@ -102,6 +102,7 @@
 
     <!-- E2E -->
     <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.ClientTestDataCollector" level="INFO"/>
 
     <!-- http -->
     <logger name="org.knora.webapi.e2e.CORSSupportE2ESpec" level="DEBUG"/>

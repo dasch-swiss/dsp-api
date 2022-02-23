@@ -28,7 +28,6 @@ import scala.concurrent.ExecutionContextExecutor
  * here: http://spray.io/documentation/1.2.2/spray-testkit/
  */
 class StandoffRouteV2R2RSpec extends R2RSpec {
-
   override def testConfigSource: String =
     """
       |# akka.loglevel = "DEBUG"
@@ -47,7 +46,6 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
   private val password = SharedTestDataADM.testPass
 
   object RequestParams {
-
     val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
 
     val pathToLetterXML = "test_data/test_route/texts/letter.xml"
@@ -72,10 +70,8 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
   )
 
   "The Standoff v2 Endpoint" should {
-
     "create a mapping from a XML" in {
-
-      val xmlFileToSend = Paths.get(RequestParams.pathToLetterMapping)
+      val xmlFileToSend = Paths.get("..", RequestParams.pathToLetterMapping)
 
       val mappingParams =
         s"""
@@ -115,7 +111,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
         )
 
         val expectedAnswerJSONLD =
-          FileUtil.readTextFile(Paths.get("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+          FileUtil.readTextFile(Paths.get("..", "test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
         compareJSONLDForMappingCreationResponse(
           expectedJSONLD = expectedAnswerJSONLD,

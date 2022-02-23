@@ -19,6 +19,7 @@ import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import java.nio.file.Paths
 
 object DrawingsGodsV1ITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -58,7 +59,7 @@ class DrawingsGodsV1ITSpec
 
     val drawingsOfGodsUserEmail = "ddd1@unil.ch"
     val testPass = "test"
-    val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
+    val pathToChlaus = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
     var loginToken: String = ""
 
     "log in as a Knora user" in {

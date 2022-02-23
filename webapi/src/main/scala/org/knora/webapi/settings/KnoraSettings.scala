@@ -273,18 +273,6 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
     false
   }
 
-  val clientTestDataRedisHost: Option[String] = if (config.hasPath("app.client-test-data-service.redis.host")) {
-    Some(config.getString("app.client-test-data-service.redis.host"))
-  } else {
-    None
-  }
-
-  val clientTestDataRedisPort: Option[Int] = if (config.hasPath("app.client-test-data-service.redis.port")) {
-    Some(config.getInt("app.client-test-data-service.redis.port"))
-  } else {
-    None
-  }
-
   private def getFiniteDuration(path: String, underlying: Config): FiniteDuration =
     Duration(underlying.getString(path)) match {
       case x: FiniteDuration => x

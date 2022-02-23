@@ -14,6 +14,7 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.app.{ApplicationActor, LiveManagers}
@@ -43,7 +44,8 @@ object ITKnoraLiveSpec {
  * provides access to settings and logging.
  */
 class ITKnoraLiveSpec(_system: ActorSystem)
-    extends Core
+    extends TestKit(_system)
+    with Core
     with StartupUtils
     with Suite
     with AnyWordSpecLike
@@ -71,7 +73,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
   /* needed by the core trait (represents the KnoraTestCore trait)*/
-  implicit lazy val system: ActorSystem = _system
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -112,7 +113,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
-    appActor ! AppStop()
+    TestKit.shutdownActorSystem(system)
 
   protected def checkIfSipiIsRunning(): Unit = {
     // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
@@ -169,7 +170,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
    * @param path     the path of the file.
    * @param mimeType the MIME type of the file.
    */
-  protected case class FileToUpload(path: String, mimeType: ContentType)
+  protected case class FileToUpload(path: Path, mimeType: ContentType)
 
   /**
    * Represents an image file to be uploaded to Sipi.
@@ -222,13 +223,12 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     // Make a multipart/form-data request containing the files.
 
     val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map { fileToUpload =>
-      val fileToSend: Path = Paths.get(fileToUpload.path)
-      assert(Files.exists(fileToSend), s"File ${fileToUpload.path} does not exist")
+      assert(Files.exists(fileToUpload.path), s"File ${fileToUpload} does not exist")
 
       Multipart.FormData.BodyPart(
         "file",
-        HttpEntity.fromPath(fileToUpload.mimeType, fileToSend),
-        Map("filename" -> fileToSend.getFileName.toString)
+        HttpEntity.fromPath(fileToUpload.mimeType, fileToUpload.path),
+        Map("filename" -> fileToUpload.path.getFileName.toString)
       )
     }
 
