@@ -14,6 +14,8 @@ test-data/admin/groups/get-groups-response.json
 test-data/admin/groups/update-group-request.json
 test-data/admin/groups/update-group-response.json
 test-data/admin/lists/
+test-data/admin/lists/add-child-to-second-child-request.json
+test-data/admin/lists/add-child-to-second-child-response.json
 test-data/admin/lists/add-second-child-to-root-request.json
 test-data/admin/lists/add-second-child-to-root-response.json
 test-data/admin/lists/create-child-node-request.json

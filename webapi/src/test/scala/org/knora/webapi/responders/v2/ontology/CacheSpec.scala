@@ -58,6 +58,9 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     loadTestData(fusekiActor, additionalTestData)
   }
 
+  override protected def afterAll(): Unit =
+    CacheUtil.removeAllCaches()
+
   "The basic functionality of the ontology cache" should {
 
     "successfully load all ontologies" in {

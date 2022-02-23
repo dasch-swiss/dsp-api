@@ -47,6 +47,10 @@ object IntegrationSpec {
   }
 }
 
+/**
+  * Defines a base class used in tests where only a running Fuseki Container is needed.
+  * Does not start the DSP-API server.
+  */
 abstract class IntegrationSpec(_config: Config)
     extends AsyncWordSpecLike
     with Matchers
@@ -58,7 +62,7 @@ abstract class IntegrationSpec(_config: Config)
 
   implicit val system: ActorSystem =
     ActorSystem(
-      CoreSpec.getCallerName(classOf[IntegrationSpec]),
+      IntegrationSpec.getCallerName(classOf[IntegrationSpec]),
       TestContainerFuseki.PortConfig.withFallback(IntegrationSpec.defaultConfig)
     )
 

@@ -34,7 +34,7 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
   "Upgrade plugin PR1746" should {
     "replace empty string with FIXME" in {
       // Parse the input file.
-      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1746.trig")
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr1746.trig")
 
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR1746(defaultFeatureFactoryConfig, logger)

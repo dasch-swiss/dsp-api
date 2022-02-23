@@ -35,15 +35,8 @@ services:
       - SIPI_WEBAPI_PORT=3333
     command: --config=/sipi/config/sipi.knora-docker-config.lua
 
-  redis:
-    image: redis:5
-    ports:
-      - "6379:6379"
-    networks:
-      - knora-net
-
   api:
-    image: bazel/docker/knora-api:image
+    image: dasch-swiss/knora-api:latest
     ports:
       - "3333:3333"
     volumes:
