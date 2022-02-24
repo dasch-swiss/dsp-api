@@ -7,9 +7,18 @@ package org.knora.webapi.util.cache
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.UnitSpec
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import akka.testkit.TestKit
+import org.scalatest.wordspec.AnyWordSpecLike
+import akka.actor.ActorSystem
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.BeforeAndAfterAll
+import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.messages.StringFormatter
 
 object CacheUtilSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -19,10 +28,27 @@ object CacheUtilSpec {
         """.stripMargin)
 }
 
-class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender with Authenticator {
+class CacheUtilSpec
+    extends TestKit(ActorSystem("CacheUtilSpec"))
+    with AnyWordSpecLike
+    with Matchers
+    with BeforeAndAfterAll
+    with LazyLogging
+    with Authenticator {
+
+  StringFormatter.initForTest()
+  val settings: KnoraSettingsImpl = KnoraSettings(system)
 
   private val cacheName = Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
   private val sessionId = System.currentTimeMillis().toString
+
+  override protected def beforeAll(): Unit =
+    CacheUtil.createCaches(settings.caches)
+
+  override def afterAll(): Unit = {
+    CacheUtil.removeAllCaches()
+    TestKit.shutdownActorSystem(system)
+  }
 
   "Caching" should {
 

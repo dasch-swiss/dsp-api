@@ -16,13 +16,13 @@ import org.knora.webapi.messages.util.rdf._
 
 object ShaclValidatorSpec {
   val config: String =
-    """
-      |app {
-      |    shacl {
-      |        shapes-dir = "test_data/shacl"
-      |    }
-      |}
-      |""".stripMargin
+    s"""
+       |app {
+       |    shacl {
+       |        shapes-dir = "../test_data/shacl"
+       |    }
+       |}
+       |""".stripMargin
 }
 
 /**
@@ -68,9 +68,11 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
         rdfFormat = Turtle
       )
 
+      val shaclPath = Paths.get("test/person.ttl")
+      println(shaclPath)
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = validRdfModel,
-        shaclPath = Paths.get("test/person.ttl")
+        shaclPath = shaclPath
       )
 
       validationResult match {
@@ -95,9 +97,11 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
         rdfFormat = Turtle
       )
 
+      val shaclPath = Paths.get("test/person.ttl")
+      println(shaclPath)
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = invalidRdfModel,
-        shaclPath = Paths.get("test/person.ttl")
+        shaclPath = shaclPath
       )
 
       validationResult match {

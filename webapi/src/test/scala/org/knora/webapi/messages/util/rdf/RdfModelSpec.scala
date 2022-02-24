@@ -302,7 +302,7 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
     }
 
     "do a SPARQL SELECT query" in {
-      val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/anything-data.ttl"))
+      val fileInputStream = new BufferedInputStream(new FileInputStream("../test_data/all_data/anything-data.ttl"))
       val anythingModel: RdfModel =
         rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
       fileInputStream.close()

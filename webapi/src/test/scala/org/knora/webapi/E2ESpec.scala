@@ -21,6 +21,7 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.concurrent.ScalaFutures
@@ -34,6 +35,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 import scala.util.{Failure, Success, Try}
+import org.knora.webapi.exceptions.FileWriteException
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -44,7 +46,8 @@ object E2ESpec {
  * and provides access to settings and logging.
  */
 class E2ESpec(_system: ActorSystem)
-    extends Core
+    extends TestKit(_system)
+    with Core
     with StartupUtils
     with TriplestoreJsonProtocol
     with Suite
@@ -67,8 +70,6 @@ class E2ESpec(_system: ActorSystem)
   def this() = this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
   /* needed by the core trait */
-
-  implicit lazy val system: ActorSystem = _system
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -94,6 +95,9 @@ class E2ESpec(_system: ActorSystem)
 
   override def beforeAll(): Unit = {
 
+    // create temp data dir if not present
+    createTmpFileDir()
+
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
 
@@ -110,7 +114,7 @@ class E2ESpec(_system: ActorSystem)
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
-    appActor ! AppStop()
+    TestKit.shutdownActorSystem(system)
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
@@ -193,6 +197,20 @@ class E2ESpec(_system: ActorSystem)
       responseAsString
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
+    }
+  
+  private def createTmpFileDir(): Unit = {
+      // check if tmp datadir exists and create it if not
+      val tmpFileDir = Path.of(settings.tmpDataDir)
+
+      if (!Files.exists(tmpFileDir)) {
+        try {
+          Files.createDirectories(tmpFileDir)
+        } catch {
+          case e: Throwable =>
+            throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
+        }
+      }
     }
 }
 

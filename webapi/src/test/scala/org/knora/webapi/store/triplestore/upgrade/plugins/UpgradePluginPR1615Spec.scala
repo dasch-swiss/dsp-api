@@ -11,7 +11,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
   "Upgrade plugin PR1615" should {
     "remove the instance of ForbiddenResource" in {
       // Parse the input file.
-      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1615.trig")
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr1615.trig")
 
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR1615(defaultFeatureFactoryConfig)

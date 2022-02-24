@@ -53,6 +53,7 @@ Each developer machine should have the following prerequisites installed:
 * Docker Desktop: https://www.docker.com/products/docker-desktop
 * Homebrew (on macOS): https://brew.sh
 * [OpenJDK](https://adoptopenjdk.net) 11
+* [sbt](https://www.scala-sbt.org/)
 * [Bazel](https://bazel.build)
 
 #### Java Adoptopenjdk 11

@@ -28,7 +28,7 @@ object ResourcesResponderV1SpecContextData {
    */
   private val expectedBookResourceContextResponseStr = FileUtil
     .readTextFile(
-      Paths.get("test_data/v1/expectedBookContextResponse.json")
+      Paths.get("..", "test_data/v1/expectedBookContextResponse.json")
     )
     .replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
 

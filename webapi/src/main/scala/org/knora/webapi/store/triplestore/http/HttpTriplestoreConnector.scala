@@ -550,10 +550,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
         // Add the input file to the body of the request.
-        val inputFile = Paths.get(elem.path)
-
+        // here we need to tweak the base directory path from "webapi"
+        // to the parent folder where the files can be found
+        val inputFile = Paths.get("..", elem.path)
         if (!Files.exists(inputFile)) {
-          throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
+          throw BadRequestException(s"File ${inputFile} does not exist")
         }
 
         val fileEntity = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))

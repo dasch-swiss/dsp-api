@@ -126,7 +126,7 @@ abstract class CoreSpec(_system: ActorSystem)
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  final override def beforeAll(): () = {
+  final override def beforeAll(): Unit = {
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
 
@@ -141,8 +141,8 @@ abstract class CoreSpec(_system: ActorSystem)
     // memusage()
   }
 
-  final override def afterAll(): () =
-    appActor ! AppStop()
+  final override def afterAll(): Unit =
+    TestKit.shutdownActorSystem(system)
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")

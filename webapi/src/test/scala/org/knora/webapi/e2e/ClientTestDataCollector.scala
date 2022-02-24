@@ -7,30 +7,28 @@ package org.knora.webapi.e2e
 
 import org.knora.webapi.exceptions.TestConfigurationException
 import org.knora.webapi.settings.KnoraSettingsImpl
-import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
+import java.io.File
+import java.io.BufferedWriter
+import java.io.FileWriter
+import java.nio.file.Paths
+import java.nio.file.Path
+import com.typesafe.scalalogging.LazyLogging
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 /**
  * Collects E2E test requests and responses for use as client test data.
  *
  * @param settings the application settings.
  */
-class ClientTestDataCollector(settings: KnoraSettingsImpl) {
-  private val redisHashName: String = "client-test-data"
+class ClientTestDataCollector(settings: KnoraSettingsImpl) extends LazyLogging {
+
+  // write the client test data into this folder
+  private val tempClientTestDataFolder: Path = Path.of("/tmp/client_test_data", "test-data")
 
   // Are we configured to collect client test data?
-  private val maybeJedisPool: Option[JedisPool] = if (settings.collectClientTestData) {
-    // Yes. Make a connection pool for connecting to Redis.
-
-    val redisHost: String = settings.clientTestDataRedisHost.getOrElse(
-      throw TestConfigurationException(s"No Redis host configured for client test data")
-    )
-    val redisPort: Int = settings.clientTestDataRedisPort.getOrElse(
-      throw TestConfigurationException(s"No Redis port configured for client test data")
-    )
-    Some(new JedisPool(new JedisPoolConfig(), redisHost, redisPort, 30999))
-  } else {
-    None
-  }
+  private val collectClientTestData = settings.collectClientTestData
+  logger.debug(s"collectClientTestData: $collectClientTestData")
 
   /**
    * Stores a client test data file.
@@ -38,23 +36,22 @@ class ClientTestDataCollector(settings: KnoraSettingsImpl) {
    * @param fileContent the content of the file to be stored.
    */
   def addFile(fileContent: TestDataFileContent): Unit =
-    // Are we configured to collect client test data?
-    maybeJedisPool match {
-      case Some(jedisPool) =>
-        // Yes. Store the file.
-
-        val jedis: Jedis = jedisPool.getResource
-
-        try {
-          jedis.hset(redisHashName, fileContent.filePath.toString, fileContent.text)
-        } finally {
-          jedis.close()
-        }
-
-      case None =>
-        // No. Do nothing.
-        ()
+    if (collectClientTestData) {
+      // If configured to write client test data, then write to folder
+      writeFile(fileContent.filePath.toString, fileContent.text)
     }
+
+  /**
+   * write a `String` to the `filename`.
+   */
+  private def writeFile(filename: String, s: String): Unit = {
+    logger.debug(s"writeFile: filename: $filename")
+    val fullPath = tempClientTestDataFolder.resolve(filename)
+    logger.debug(s"writeFile: fullPath: $fullPath")
+    Files.createDirectories(fullPath.getParent())
+    Files.createFile(fullPath)
+    Files.write(fullPath, s.getBytes(StandardCharsets.UTF_8))
+  }
 }
 
 /**
