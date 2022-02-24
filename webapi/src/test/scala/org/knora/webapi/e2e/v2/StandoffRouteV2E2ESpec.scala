@@ -126,7 +126,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
 
-    // TODO: remove println() as soon as docs are written
+    // TODO-bl: remove println() as soon as docs are written
     println(responseToString(response))
     responseToJsonLDDocument(response)
   }
@@ -355,6 +355,6 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
 
-    // TODO: update documentation
+    // TODO-bl: update documentation
   }
 }
