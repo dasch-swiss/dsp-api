@@ -42,16 +42,16 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   private val anythingUserEmail = anythingUser.email
   private val password = SharedTestDataADM.testPass
 
-  private val pathToXMLWithStandardMapping = "test_data/test_route/texts/StandardHTML.xml"
+  private val pathToXMLWithStandardMapping = "../test_data/test_route/texts/StandardHTML.xml"
 
-  private val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
+  private val pathToLetterMapping = "../test_data/test_route/texts/mappingForLetter.xml"
 
-  private val pathToFreetestCustomMapping = "test_data/test_route/texts/freetestCustomMapping.xml"
+  private val pathToFreetestCustomMapping = "../test_data/test_route/texts/freetestCustomMapping.xml"
   private val pathToFreetestCustomMappingWithTransformation =
-    "test_data/test_route/texts/freetestCustomMappingWithTransformation.xml"
-  private val pathToFreetestXMLTextValue = "test_data/test_route/texts/freetestXMLTextValue.xml"
+    "../test_data/test_route/texts/freetestCustomMappingWithTransformation.xml"
+  private val pathToFreetestXMLTextValue = "../test_data/test_route/texts/freetestXMLTextValue.xml"
   private val freetestXSLTFile = "freetestCustomMappingTransformation.xsl"
-  private val pathToFreetestXSLTFile = s"test_data/test_route/texts/$freetestXSLTFile"
+  private val pathToFreetestXSLTFile = s"../test_data/test_route/texts/$freetestXSLTFile"
   private val freetestCustomMappingIRI = "http://rdfh.ch/projects/0001/mappings/FreetestCustomMapping"
   private val freetestCustomMappingWithTranformationIRI =
     "http://rdfh.ch/projects/0001/mappings/FreetestCustomMappingWithTransformation"
@@ -219,7 +219,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       )
 
       val expectedAnswerJSONLD =
-        FileUtil.readTextFile(Paths.get("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+        FileUtil.readTextFile(Paths.get("../test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
       compareJSONLDForMappingCreationResponse(
         expectedJSONLD = expectedAnswerJSONLD,
