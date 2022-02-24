@@ -148,7 +148,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Compile / mainClass := Some("org.knora.webapi.app.Main"),
     // add dockerCommands used to create the image
     // docker:stage, docker:publishLocal, docker:publish, docker:clean
-    Docker / dockerRepository := Some("dasch-swiss"),
+    Docker / dockerRepository := Some("daschswiss"),
     Docker / packageName := "knora-api",
     dockerUpdateLatest := true,
     dockerBaseImage := "eclipse-temurin:11-jre-focal",
