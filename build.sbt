@@ -11,9 +11,7 @@ import scala.sys.process.Process
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi)
-
-lazy val buildSettings = Dependencies.Versions ++ Seq(
+lazy val buildSettings = Seq(
   organization := "org.knora",
   version := (ThisBuild / version).value
 )
@@ -21,9 +19,8 @@ lazy val buildSettings = Dependencies.Versions ++ Seq(
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "root", file("."))
-  .aggregate(aggregatedProjects: _*)
+  .aggregate(webapi, apiMain)
   .enablePlugins(GitVersioning, GitBranchPrompt)
-  .settings(Dependencies.Versions)
   .settings(
     // values set for all sub-projects
     // These are normal sbt settings to configure for release, skip if already defined
@@ -160,9 +157,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoKeys ++= Seq[BuildInfoKey](
       name,
       version,
-      "akkaHttp" -> Dependencies.akkaHttpVersion.value,
-      "sipi" -> Dependencies.sipiImage.value,
-      "fuseki" -> Dependencies.fusekiImage.value
+      "akkaHttp" -> Dependencies.akkaHttpVersion,
+      "sipi" -> Dependencies.sipiImage,
+      "fuseki" -> Dependencies.fusekiImage
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
@@ -190,3 +187,58 @@ lazy val webapiJavaTestOptions = Seq(
   //"-XX:MaxGCPauseMillis=500",
   //"-XX:MaxMetaspaceSize=4096m"
 )
+
+
+lazy val apiMain = project
+  .in(file("dsp-api-main"))
+  .settings(
+    name := "dsp-api-main",
+    Dependencies.webapiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(SchemaDomain, schemaRepo, schemaApi)
+
+
+lazy val schemaApi = project
+  .in(file("dsp-schema-api"))
+  .settings(
+    name := "dsp-schema-api",
+    Dependencies.webapiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(SchemaDomain)
+
+lazy val SchemaDomain = project
+  .in(file("dsp-schema-domain"))
+  .settings(
+    name := "dsp-schema-domain",
+    Dependencies.webapiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+
+lazy val schemaRepo = project
+  .in(file("dsp-schema-repo"))
+  .settings(
+    name := "dsp-schema-repo",
+    Dependencies.webapiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(SchemaDomain)
+
+lazy val schemaRepoEventStoreService = project
+  .in(file("dsp-schema-repo-eventstore-service"))
+  .settings(
+    name := "dsp-schema-repo-eventstore-service",
+    Dependencies.webapiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(schemaRepo)
+
+lazy val schemaRepoSearchService = project
+  .in(file("dsp-schema-repo-search-service"))
+  .settings(
+    name := "dsp-schema-repo-search-service",
+    Dependencies.webapiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(schemaRepo)
