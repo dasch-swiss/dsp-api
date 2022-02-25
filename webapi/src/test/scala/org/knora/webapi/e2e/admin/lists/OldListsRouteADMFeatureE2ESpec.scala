@@ -1038,7 +1038,7 @@ class OldListsRouteADMFeatureE2ESpec
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "add-second-child-to-root-request",
+              filename = "add-child-to-second-child-request",
               fileExtension = "json"
             ),
             text = addChildToSecondChild
@@ -1085,7 +1085,7 @@ class OldListsRouteADMFeatureE2ESpec
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "add-second-child-to-root-response",
+              filename = "add-child-to-second-child-response",
               fileExtension = "json"
             ),
             text = responseToString(response)

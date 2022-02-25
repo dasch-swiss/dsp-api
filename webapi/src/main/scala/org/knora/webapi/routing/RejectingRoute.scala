@@ -61,16 +61,14 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
         case Success(appState) =>
           appState match {
+            case AppStates.Running if rejectSeq.flatten.isEmpty =>
+              // route is allowed. by rejecting, I'm letting it through so that some other route can match
+              reject()
             case AppStates.Running if rejectSeq.flatten.nonEmpty =>
               // route not allowed. will complete request.
               val msg = s"Request to $wholePath not allowed as per configuration for routes to reject."
               log.info(msg)
               complete(StatusCodes.NotFound, "The requested path is deactivated.")
-
-            case AppStates.Running if rejectSeq.flatten.isEmpty =>
-              // route is allowed. by rejecting, I'm letting it through so that some other route can match
-              reject()
-
             case other =>
               // if any state other then 'Running', then return ServiceUnavailable
               val msg =

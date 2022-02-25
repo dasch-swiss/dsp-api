@@ -24,7 +24,6 @@ import scala.concurrent.ExecutionContextExecutor
  * End-to-end specification for the handling of JSONLD documents.
  */
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
-
   override def testConfigSource: String =
     """
       |# akka.loglevel = "DEBUG"
@@ -44,12 +43,14 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
   )
 
   "The JSON-LD processor" should {
-
     "expand prefixes (on the client side)" in {
-
       // JSON-LD with prefixes and context object
       val jsonldWithPrefixes =
-        readOrWriteTextFile("", Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
+        readOrWriteTextFile(
+          "",
+          Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+          writeFile = false
+        )
 
       // expand JSON-LD with JSON-LD processor
       val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
@@ -58,7 +59,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
       val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(
         readOrWriteTextFile(
           "",
-          Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
+          Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
           writeFile = false
         )
       )
@@ -71,7 +72,6 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
     }
 
     "produce the expected JSON-LD context object (on the server side)" in {
-
       Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
@@ -82,17 +82,13 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
           JsonParser(
             readOrWriteTextFile(
               "",
-              Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+              Paths.get("..", "test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
               writeFile = false
             )
           ).asJsObject
 
         assert(receivedJson.fields("@context") == expectedJson.fields("@context"), "@context incorrect")
-
       }
-
     }
-
   }
-
 }
