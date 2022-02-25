@@ -15,7 +15,7 @@ object Dependencies {
     val akkaHttpVersion = "10.2.8"
     val jenaVersion = "4.4.0"
     val metricsVersion = "4.0.1"
-    val sipiImage = "daschswiss/sipi:v3.3.1"
+    val sipiImage = "daschswiss/sipi:v3.3.4"
     val fusekiImage = "daschswiss/apache-jena-fuseki:2.0.8"
 
     val ZioVersion        = "2.0.0-RC2"
