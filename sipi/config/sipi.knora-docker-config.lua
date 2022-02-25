@@ -1,5 +1,5 @@
--- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
--- * SPDX-License-Identifier: Apache-2.0
+-- Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+-- SPDX-License-Identifier: Apache-2.0
 
 --
 -- ATTENTION: This configuration file should only be used for integration testing. It has additional routes defined!!!
@@ -21,6 +21,34 @@ sipi = {
     -- port number the server is listening to
     --
     port = 1024,
+
+    --
+    -- Number of threads to use
+    --
+    nthreads = 8,
+
+    --
+    -- SIPI is using libjpeg to generate the JPEG images. libjpeg requires a quality value which
+    -- corresponds to the compression rate. 100 is (almost) no compression and best quality, 0
+    -- would be full compression and no quality. Reasonable values are between 30 and 95...
+    --
+    jpeg_quality = 60,
+
+    --
+    -- For scaling images, SIPI offers two methods. The value "high" offers best quality using expensive
+    -- algorithms: bilinear interpolation, if downscaling the image is first scaled up to an integer
+    -- multiple of the requires size, and then downscaled using averaging. This results in the best
+    -- image quality. "medium" uses bilinear interpolation but does not do upscaling before
+    -- downscaling. If scaling quality is set to "low", then just a lookup table and nearest integer
+    -- interpolation is being used to scale the images.
+    -- Recognized values are: "high", "medium", "low".
+    --
+    scaling_quality = {
+        jpeg = "medium",
+        tiff = "high",
+        png = "high",
+        j2k = "high"
+    },
 
     --
     -- Number of seconds a connection (socket) remains open
@@ -83,7 +111,7 @@ sipi = {
     --
     -- if the cache becomes full, the given percentage of file space is marked for reuase
     --
-    cache_hysteresis = 0.1,
+    cache_hysteresis = 0.15,
 
     --
     -- Path to the directory where the scripts for the routes defined below are to be found
@@ -91,9 +119,9 @@ sipi = {
     scriptdir = '/sipi/scripts',
 
     ---
-    --- Size of the thumbnails
+    --- Size of the thumbnails (to be used within Lua)
     ---
-    thumb_size = 'pct:4',
+    thumb_size = '!128,128',
 
     --
     -- Path to the temporary directory

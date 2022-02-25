@@ -29,7 +29,7 @@ object Dependencies {
         akkaHttpVersion := "10.2.8",
         jenaVersion := "4.4.0",
         metricsVersion := "4.0.1",
-        sipiImage := "daschswiss/sipi:v3.3.1",
+        sipiImage := "daschswiss/sipi:3.3.4",
         fusekiImage := "daschswiss/apache-jena-fuseki:2.0.8"
     )
 
