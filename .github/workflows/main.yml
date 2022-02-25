@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  schedule:
+    # run every midnight (on main) so that the first compile of the day from main is cached
+    - cron: '0 0 * * *'
   push:
   release:
     types: [published]
@@ -35,6 +38,11 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: add docker compose v2
+        run: |
+          mkdir -p ~/.docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
       - name: Coursier cache
@@ -77,6 +85,11 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: add docker compose v2
+        run: |
+          mkdir -p ~/.docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect unzip
       - name: Coursier cache
@@ -94,7 +107,6 @@ jobs:
 
 # ------------------------------------------
 # ------------------------------------------
-
   upgrade-integration-tests:
     name: Upgrade Integration Tests
     runs-on: ubuntu-latest
@@ -119,11 +131,31 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: add docker compose v2
+        run: |
+          mkdir -p ~/.docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          chmod +x ~/.docker/cli-plugins/docker-compose
       - name: Install dependencies
         run: |
           sudo apt-get install ca-certificates-java expect
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
       - name: test repository upgrade
         run: make test-repository-upgrade
+      - name: dump docker logs on failure using different shell
+        # if: failure()
+        uses: jwalton/gh-docker-logs@v1
+        with:
+          shell: '/bin/sh'
+      - name: Cleanup before cache
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
 
   docs-build-test:
     name: Build Docs Testrun
@@ -133,6 +165,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: add docker compose v2
+        run: |
+          mkdir -p ~/.docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          chmod +x ~/.docker/cli-plugins/docker-compose
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -194,6 +231,11 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
+      - name: add docker compose v2
+        run: |
+          mkdir -p ~/.docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect unzip
       - name: Install dependencies
@@ -241,6 +283,11 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
+      - name: add docker compose v2
+        run: |
+          mkdir -p ~/.docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+          chmod +x ~/.docker/cli-plugins/docker-compose
       - name: install dependencies
         run: |
           python -m pip install --upgrade pip

@@ -56,9 +56,9 @@ http_archive(
 # Docker                            #
 #####################################
 
-rules_docker_version = "0.20.0"  # 12.10.2021
+rules_docker_version = "0.22.0"  # 06.12.2021
 
-rules_docker_version_sha256 = "92779d3445e7bdc79b961030b996cb0c91820ade7ffa7edca69273f404b085d5"
+rules_docker_version_sha256 = "59536e6ae64359b716ba9c46c39183403b01eabfbd57578e84398b4829ca499a"
 
 http_archive(
     name = "io_bazel_rules_docker",
