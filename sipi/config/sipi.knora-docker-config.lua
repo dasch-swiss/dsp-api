@@ -39,7 +39,7 @@ sipi = {
     -- algorithms: bilinear interpolation, if downscaling the image is first scaled up to an integer
     -- multiple of the requires size, and then downscaled using averaging. This results in the best
     -- image quality. "medium" uses bilinear interpolation but does not do upscaling before
-    -- downscaling. Scaling quality is set to "low", then just a lookup table and nearest integer
+    -- downscaling. If scaling quality is set to "low", then just a lookup table and nearest integer
     -- interpolation is being used to scale the images.
     -- Recognized values are: "high", "medium", "low".
     --
