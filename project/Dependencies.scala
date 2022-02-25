@@ -10,7 +10,6 @@ import sbt.{Def, _}
 
 object Dependencies {
 
-
     val scalaVersion = "2.13.7"
     val akkaVersion = "2.6.18"
     val akkaHttpVersion = "10.2.8"
@@ -20,8 +19,8 @@ object Dependencies {
     val fusekiImage = "daschswiss/apache-jena-fuseki:2.0.8"
 
     val ZioVersion        = "2.0.0-RC2"
-    val ZioJsonVersion    = "0.3.0-RC3"
     val ZioHttpVersion    = "2.0.0-RC3"
+    val ZioJsonVersion    = "0.3.0-RC3"
     val ZioConfigVersion  = "3.0.0-RC2"
     val ZioSchemaVersion  = "0.2.0-RC1-1"
     val ZioLoggingVersion = "2.0.0-RC5"
@@ -31,11 +30,12 @@ object Dependencies {
     object Compile {
 
         // ZIO
-        val zio = "dev.zio" %% "zio" % ZioVersion
-        val zioJson = "dev.zio" %% "zio-json" % ZioJsonVersion
-        val zioPrelude = "dev.zio" %% "zio-prelude" % ZioPreludeVersion
-        val zioTest = "dev.zio" %% "zio-test" % ZioVersion % Test
-        val zioTestSbt = "dev.zio" %% "zio-test-sbt" % Dependencies.ZioVersion % Test
+        val zio                    = "dev.zio"                      %% "zio"                      % ZioVersion
+        val zioHttp                = "io.d11"                       %% "zhttp"                    % ZioHttpVersion
+        val zioJson                = "dev.zio"                      %% "zio-json"                 % ZioJsonVersion
+        val zioPrelude             = "dev.zio"                      %% "zio-prelude"              % ZioPreludeVersion
+        val zioTest                = "dev.zio"                      %% "zio-test"                 % ZioVersion              % Test
+        val zioTestSbt             = "dev.zio"                      %% "zio-test-sbt"             % ZioVersion              % Test
 
         // akka
         val akkaActor              = "com.typesafe.akka"            %% "akka-actor"               % akkaVersion
@@ -224,6 +224,7 @@ object Dependencies {
         WebapiTest.testcontainers,
         xmlunitCore,
         zio,
+        zioHttp,
         zioJson,
         zioPrelude,
         zioTest,

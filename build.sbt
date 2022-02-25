@@ -30,6 +30,7 @@ lazy val root: Project = Project(id = "root", file("."))
     ThisBuild / scmInfo := Some(
       ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
     ),
+    Global / scalaVersion := Dependencies.scalaVersion,
     // use 'git describe' for deriving the version
     git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags

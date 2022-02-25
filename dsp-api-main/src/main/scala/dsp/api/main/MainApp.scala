@@ -1,12 +1,17 @@
 package dsp.api.main
 
-import zio.ZIPApp
+import dsp.schema.repo.{SchemaRepo, SchemaRepoLive}
+import zio.Console.printLine
+import zio._
 
-object MainApp extends ZIOApp {
-  val lookedupProfile: RIO[SchemaRepo, UserProfile] =
+object MainApp extends ZIOAppDefault {
+  val effect: ZIO[Console with SchemaRepo, Nothing, Unit] =
     for {
-      profile <- SchemaRepo.lookup("user1")
-    } yield profile
+      profile <- SchemaRepo.lookup("user1").orDie
+      _ <- printLine(profile).orDie
+      _ <- printLine(42).orDie
+    } yield ()
 
-  printLine(lookedupProfile)
+  val mainApp: ZIO[Any, Nothing, Unit] = effect.provide(Console.live ++ SchemaRepoLive.layer)
+  def run: ZIO[Any, Nothing, Unit] = mainApp
 }

@@ -11,11 +11,11 @@ import zio.prelude.Validation
 object SchemaDomain extends App {
   // implicitly["".type =:= "".type]
 
-  type IRI         = String
-  type UserID      = String
+  type IRI = String
+  type UserID = String
   type UserProfile = String
-  type SchemaID    = String
-  type Schema      = String
+  type SchemaID = String
+  type Schema = String
 
   final case class OntologyInfo(name: String, projectIri: IRI, label: String, comment: String)
   final case class OntologyClass[A <: Singleton with String](name: A, label: String, comment: String) { self =>
@@ -62,19 +62,19 @@ object SchemaDomain extends App {
       ct: CardinalityType
     ): WithTags[oc.Tag, op.Tag] =
       new Cardinality {
-        type ClassTag    = oc.Tag
+        type ClassTag = oc.Tag
         type PropertyTag = op.Tag
 
-        val ontologyClass    = oc
+        val ontologyClass = oc
         val ontologyProperty = op
-        val cardinalityType  = ct
+        val cardinalityType = ct
       }
   }
 
   sealed trait CardinalityType
   object CardinalityType {
-    case object MaxCardinalityOne  extends CardinalityType
-    case object MinCardinalityOne  extends CardinalityType
+    case object MaxCardinalityOne extends CardinalityType
+    case object MinCardinalityOne extends CardinalityType
     case object MinCardinalityZero extends CardinalityType
   }
 
@@ -214,16 +214,16 @@ object SchemaDomain extends App {
   //trying it out
   val ontoInfo = OntologyInfo("test", "http://example.org/test", "Test", "Test")
 
-  val classOne    = OntologyClass("ClassOne", "Class One", "Class One")
+  val classOne = OntologyClass("ClassOne", "Class One", "Class One")
   val propertyOne = OntologyProperty("PropertyOne", "Property One", "Property One", "http://example.org/test")
 
-  val classTwo    = OntologyClass("ClassTwo", "Class Two", "Class Two")
+  val classTwo = OntologyClass("ClassTwo", "Class Two", "Class Two")
   val propertyTwo = OntologyProperty("PropertyTwo", "Property Two", "Property Two", "http://example.org/test")
 
-  val cardOne   = Cardinality(classOne, propertyOne, CardinalityType.MinCardinalityOne)
-  val cardTwo   = Cardinality(classTwo, propertyTwo, CardinalityType.MinCardinalityOne)
+  val cardOne = Cardinality(classOne, propertyOne, CardinalityType.MinCardinalityOne)
+  val cardTwo = Cardinality(classTwo, propertyTwo, CardinalityType.MinCardinalityOne)
   val cardThree = Cardinality(classOne, propertyTwo, CardinalityType.MinCardinalityOne)
-  val cardFour  = Cardinality(classTwo, propertyOne, CardinalityType.MinCardinalityOne)
+  val cardFour = Cardinality(classTwo, propertyOne, CardinalityType.MinCardinalityOne)
 
   val exampleOnto: Ontology[Any with "ClassOne" with "ClassTwo", Any with "PropertyOne"] =
     Ontology
@@ -276,17 +276,4 @@ object SchemaDomain extends App {
 //  // path dependent types
   implicitly[classOne.Tag =:= classOne.Tag]
   // implicitly[classOne.Tag =:= classTwo.Tag]
-}
-
-import zio.RIO
-import dsp.schema.domain.SchemaDomain.UserProfile
-import dsp.schema.repo.SchemaRepo
-
-object TestApp extends App {
-  val lookedupProfile: RIO[SchemaRepo, UserProfile] =
-    for {
-      profile <- SchemaRepo.lookup("user1")
-    } yield profile
-
-  println(lookedupProfile)
 }
