@@ -32,8 +32,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
- * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
- * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ * End-to-end test specification for the standoff endpoint.
  */
 class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

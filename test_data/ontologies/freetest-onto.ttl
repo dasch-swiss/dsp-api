@@ -87,15 +87,6 @@
     knora-base:objectClassConstraint  knora-base:BooleanValue ;
     salsah-gui:guiElement             salsah-gui:Checkbox .
 
-#:hasXSLTFile
-#    rdf:type                          owl:ObjectProperty ;
-#    rdfs:subPropertyOf                knora-base:XSLTransformation ;
-#    rdfs:label "XSLT File for standoff transformation";
-#    knora-base:subjectClassConstraint :FreeTest ;
-#    knora-base:objectClassConstraint
-
-
-
 
 
 :FreeTest

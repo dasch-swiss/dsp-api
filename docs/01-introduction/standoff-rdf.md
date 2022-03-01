@@ -21,7 +21,7 @@ markup. It is possible to do this in a non-standard way by using an XML database
 such as [eXist](http://exist-db.org), but this still does not allow for queries that include
 text as well as non-textual data not stored in XML.
 
-By storing markup as RDF, DSP-API can search for markup structures in the same way that it
+By storing markup as RDF, DSP-API can search for markup structures in the same way as it
 searches for any RDF data structure. This makes it possible to do searches that combine
 text-related criteria with other sorts of criteria. For example, if persons and events are
 represented as resources, and texts are represented in Standoff/RDF, a text can contain
@@ -55,5 +55,5 @@ original XML.
 To represent overlapping or non-hierarchical markup in exported and imported XML, DSP-API supports
 [CLIX](https://web.archive.org/web/20171222112655/http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html) tags.
 
-As XML-to-Standoff has proved to be overly complicated and not very well performing, the use of standoff with custom mappings is discouraged. 
+As XML-to-Standoff has proved to be complicated and not very well performing, the use of standoff with custom mappings is discouraged. 
 Improved integration of text with XML mark up, particularly TEI-XML, is in planning.

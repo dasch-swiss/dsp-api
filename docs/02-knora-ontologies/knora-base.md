@@ -597,7 +597,8 @@ because it does not allow to perform searches across multiple documents.
 
 The recommended way to store text with markup in DSP API is to use the built-in support for "standoff" markup, which
 is stored separately from the text. This has some advantages over embedded markup such as XML. While XML requires markup
-to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations (see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
+to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations
+(see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
 A standoff tag can be attached to any substring in the text by giving its start and end positions. Unlike in corpus
 linguistics, we do not use any tokenisation resulting in a form of predefined segmentation, which would limit the user's
 ability to freely annotate any ranges in the text.
@@ -686,7 +687,7 @@ discussed in [Links Between Resources](#links-between-resources). In this case, 
 always `kb:hasStandoffLinkTo`, and the link value property (which points to the `LinkValue`) is always
 `kb:hasStandoffLinkToValue`.
 
-Knora automatically updates direct links and reifications for standoff resource references when text values are updated.
+DSP-API automatically updates direct links and reifications for standoff resource references when text values are updated.
 To do this, it keeps track of the number of text values in each resource that contain at least one standoff reference to
 a given target resource. It stores this number as the reference count of the `LinkValue` (see
 [LinkValue](#linkvalue)) describing the direct link. Each time this number changes, it makes a new version of
@@ -766,7 +767,7 @@ DSP-API includes a standard mapping used by the DSP APP. It has the IRI `http://
 
 DSP-API's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this
 feature is an editing workflow in which an editor works in an XML editor, and the resulting XML documents are converted
-to standoff and stored in Knora, where they can be searched and annotated.
+to standoff and stored in the DSP, where they can be searched and annotated.
 
 If an editor wants to correct text that has been imported from XML into standoff, the text can be exported as XML,
 edited, and imported again. To preserve annotations on standoff tags across edits, each tag can automatically be given a
@@ -794,7 +795,7 @@ To support these features, a standoff tag can have these additional properties:
 #### Querying Standoff in SPARQL
 
 A future version of DSP-API may provide an API for querying standoff markup. In the meantime, it is possible to query it
-directly in SPARQL. For example, here is a SPARQL query (using RDFS inference) that finds all the text values texts that
+directly in SPARQL. For example, here is a SPARQL query (using RDFS inference) that finds all the text values that
 have a standoff date tag referring to Christmas Eve 2016, contained in a `StandoffItalicTag`:
 
 ```sparql
@@ -888,8 +889,7 @@ administrator of the project that the object belongs to.
 A user-created ontology can define additional groups, which must belong to the OWL class `knora-admin:UserGroup`.
 
 There is one built-in `knora-admin:SystemUser`, which is the creator of link values created automatically for resource
-references in standoff markup (see
-[StandoffLinkTag](#standofflinktag)).
+references in standoff markup (see [StandoffLinkTag](#standofflinktag)).
 
 ### Permissions
 

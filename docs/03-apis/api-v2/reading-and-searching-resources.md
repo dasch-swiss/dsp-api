@@ -82,7 +82,7 @@ the text value will only be available as `kb:textValueAsXml`, which will be of t
 where the content of `<text>` is a limited set of HTML tags that can be handled by CKEditor in DSP-APP.
 This allows for both displaying and editing the text value.
 
-In the second and the tird case, `kb:textValueHasMapping` will point to the custom mapping that may or may not specify an XSL transformation.
+In the second and third case, `kb:textValueHasMapping` will point to the custom mapping that may or may not specify an XSL transformation.
 
 If no transformation is specified (second case), the text value will be returned only as `kb:textValueAsXml`.
 This property will be a string containing the contents of the initially uploaded XML.
