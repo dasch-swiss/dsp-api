@@ -589,13 +589,13 @@ pages of a book like in [this](https://docs.dasch.swiss/DSP-API/01-introduction/
 
 ### Text with Standoff Markup
 
-DSP API is designed to be able to store text with markup, which can indicate formatting and structure, as well as the
+DSP-API is designed to be able to store text with markup, which can indicate formatting and structure, as well as the
 complex observations involved in transcribing handwritten manuscripts. One popular way of representing text in the
 humanities is to encode it in XML using the Text Encoding Initiative ([TEI](http://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html))
-guidelines. In DSP API, a TEI/XML document can be stored as a file with attached metadata, but this is not recommended,
+guidelines. In DSP-API, a TEI/XML document can be stored as a file with attached metadata, but this is not recommended,
 because it does not allow to perform searches across multiple documents.
 
-The recommended way to store text with markup in DSP API is to use the built-in support for "standoff" markup, which
+The recommended way to store text with markup in DSP-API is to use the built-in support for "standoff" markup, which
 is stored separately from the text. This has some advantages over embedded markup such as XML. While XML requires markup
 to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations
 (see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
@@ -614,9 +614,9 @@ Moreover, standoff makes it possible to mark up the same text in different, poss
 different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can
 have standoff tags.
 
-By representing standoff as RDF triples, DSP API makes markup searchable across multiple text documents in a repository.
+By representing standoff as RDF triples, DSP-API makes markup searchable across multiple text documents in a repository.
 For example, if a repository contains documents in which references to persons are indicated in standoff, it is
-straightforward to find all the documents mentioning a particular person. DSP API's standoff support is intended to make
+straightforward to find all the documents mentioning a particular person. DSP-API's standoff support is intended to make
 it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again,
 with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents.
 

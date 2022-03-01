@@ -62,7 +62,7 @@ When requesting a text value with standoff mark up, there are three possibilitie
 2. The text value uses a custom mapping which *does not* specify an XSL transformation.
 3. The text value uses a custom mapping which specifies an XSL transformation.
 
-In the first case, the mapping will be defined as
+In the first case, the mapping will be defined as:
 
 ```json
 "kb:textValueHasMapping": {
@@ -87,8 +87,8 @@ In the second and third case, `kb:textValueHasMapping` will point to the custom 
 If no transformation is specified (second case), the text value will be returned only as `kb:textValueAsXml`.
 This property will be a string containing the contents of the initially uploaded XML.
 
-Note: The returned XML document is equivalent to the uploaded document but it is not necessarily identical:
-The order of the attributes in one element may vary from the original.
+Note: The returned XML document is equivalent to the uploaded document but it is not necessarily identical -
+the order of the attributes in one element may vary from the original.
 
 In the third case, when a transformation is specified, both `kb:textValueAsXml` and `kb:textValueAsHtml` will be returned.
 `kb:textValueAsHtml` is the result of the XSL transformation applied to `kb:textValueAsXml`.
