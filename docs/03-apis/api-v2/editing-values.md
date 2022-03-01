@@ -207,6 +207,14 @@ This document can then be embedded in a JSON-LD request, using the predicate `kn
 
 Note that quotation marks and line breaks in the XML must be escaped, and that the IRI of the mapping must be provided.
 
+To create a text value with custom mapping, the following steps are required:
+1. If the text value should be displayable as HTML, 
+   1. an XSL transformation first needs to be uploaded to SIPI
+   2. and a resource of type `kb:XSLTransformation` with `kb:hasTextFileValue` pointing to the `kb:TextFileValue` of the XSLT needs to be created.
+2. A `kb:XMLToStandoffMapping` resource needs to be created, with the mapping XML as payload.
+   1. If a transformation has been created, the IRI of the transformation needs to be referenced in the mapping XML.
+3. The text value can be created with `kb:textValueHasMapping` being an object with `@id` pointing to the IRI of the defined mapping.
+
 ## Creating File Values
 
 Knora supports the storage of certain types of data as files, using [Sipi](https://github.com/dhlab-basel/Sipi)
