@@ -56,7 +56,7 @@ Text markup can be returned in one of two ways:
 
 Embedded XML is the default.
 
-Implementation of support for standoff/RDF in API v2 is in its early stages. The basic
+Implementation of support for standoff/RDF in API v2 is in its early stages; its use is currently discouraged. The basic
 procedure works like this:
 
 First, request a resource in the [complex schema](introduction.md#api-schema), using any relevant

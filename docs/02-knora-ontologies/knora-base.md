@@ -589,24 +589,23 @@ pages of a book like in [this](https://docs.dasch.swiss/DSP-API/01-introduction/
 
 ### Text with Standoff Markup
 
-Knora is designed to be able to store text with markup, which can indicate formatting and structure, as well as the
+DSP API is designed to be able to store text with markup, which can indicate formatting and structure, as well as the
 complex observations involved in transcribing handwritten manuscripts. One popular way of representing text in the
-humanities is to encode it in XML using the Text Encoding Initiative
-([TEI](http://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html))
-guidelines. In Knora, a TEI/XML document can be stored as a file with attached metadata, but this is not recommended,
-because it does not allow Knora to perform searches across multiple documents.
+humanities is to encode it in XML using the Text Encoding Initiative ([TEI](http://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html))
+guidelines. In DSP API, a TEI/XML document can be stored as a file with attached metadata, but this is not recommended,
+because it does not allow to perform searches across multiple documents.
 
-The recommended way to store text with markup in Knora is to use Knora's built-in support for "standoff" markup, which
+The recommended way to store text with markup in DSP API is to use the built-in support for "standoff" markup, which
 is stored separately from the text. This has some advantages over embedded markup such as XML. While XML requires markup
-to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations (
-see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](http://ecdosis.net/papers/schmidt.d.2016.pdf))
-. A standoff tag can be attached to any substring in the text by giving its start and end positions. Unlike in corpus
+to have a hierarchical structure, and does not allow overlapping tags, standoff nodes do not have these limitations (see [Using Standoff Properties for Marking-up Historical Documents in the Humanities](https://doi.org/10.1515/itit-2015-0030)).
+A standoff tag can be attached to any substring in the text by giving its start and end positions. Unlike in corpus
 linguistics, we do not use any tokenisation resulting in a form of predefined segmentation, which would limit the user's
 ability to freely annotate any ranges in the text.
 
 For example, suppose we have the following text:
 
 <blockquote>This <i>sentence <strong>has overlapping</strong></i> <strong>visual</strong> attributes.</blockquote>
+
 This would require just two standoff tags: `(italic, start=5, end=29)`
 and `(bold, start=14, end=36)`.
 
@@ -614,9 +613,9 @@ Moreover, standoff makes it possible to mark up the same text in different, poss
 different interpretations without making redundant copies of the text. In the Knora base ontology, any text value can
 have standoff tags.
 
-By representing standoff as RDF triples, Knora makes markup searchable across multiple text documents in a repository.
+By representing standoff as RDF triples, DSP API makes markup searchable across multiple text documents in a repository.
 For example, if a repository contains documents in which references to persons are indicated in standoff, it is
-straightforward to find all the documents mentioning a particular person. Knora's standoff support is intended to make
+straightforward to find all the documents mentioning a particular person. DSP API's standoff support is intended to make
 it possible to convert documents with embedded, hierarchical markup, such as TEI/XML, into RDF standoff and back again,
 with no data loss, thus bringing the benefits of RDF to existing TEI-encoded documents.
 
@@ -624,95 +623,62 @@ In the Knora base ontology, a `TextValue` can have one or more standoff tags. Ea
 end positions of a substring in the text that has a particular attribute. The OWL class
 `kb:StandoffTag`, which is the base class of all standoff node classes, has these properties:
 
-`standoffTagHasStart` (1)
-
-:   The index of the first character in the text that has the attribute.
-
-`standoffTagHasEnd` (1)
-
-:   The index of the last character in the text that has the attribute, plus 1.
-
-`standoffTagHasUUID` (1)
-
-:   A UUID identifying this instance and those corresponding to it in later versions of the `TextValue` it belongs to.
-The UUID is a means to maintain a reference to a particular range of a text also when new versions are made and standoff
+- `standoffTagHasStart` (1): The index of the first character in the text that has the attribute.
+- `standoffTagHasEnd` (1): The index of the last character in the text that has the attribute, plus 1.
+- `standoffTagHasUUID` (1): A UUID identifying this instance and those corresponding to it in later versions of the `TextValue` it belongs to.
+  The UUID is a means to maintain a reference to a particular range of a text also when new versions are made and standoff
 tag IRIs change.
-
-`standoffTagHasOriginalXMLID` (0-1)
-
-:   The original id of the XML element that the standoff tag represents, if any.
-
-`standoffTagHasStartIndex` (1)
-
-:   The start index of the standoff tag. Start indexes are numbered from 0 within the context of a particular text. When
-several standoff tags share the same start position, they can be nested correctly with this information when
+- `standoffTagHasOriginalXMLID` (0-1): The original ID of the XML element that the standoff tag represents, if any.
+- `standoffTagHasStartIndex` (1): The start index of the standoff tag. Start indexes are numbered from 0 within the context of a particular text.
+  When several standoff tags share the same start position, they can be nested correctly with this information when
 transforming them to XML.
-
-`standoffTagHasEndIndex` (1)
-
-:   The end index of the standoff tag. Start indexes are numbered from 0 within the context of a particular text. When
-several standoff tags share the same end position, they can be nested correctly with this information when transforming
+- `standoffTagHasEndIndex` (1): The end index of the standoff tag. Start indexes are numbered from 0 within the context of a particular text. 
+  When several standoff tags share the same end position, they can be nested correctly with this information when transforming
 them to XML.
-
-`standoffTagHasStartParent` (0-1)
-
-:   Points to the parent standoff tag. This corresponds to the original nesting of tags in XML. If a standoff tag has no
-parent, it represents the XML root element. If the original XML element is a CLIX tag, it represents the start of a
-virtual (non syntactical)
-hierarchy.
-
-`standoffTagHasEndParent` (0-1)
-
-:   Points to the parent standoff tag if the original XML element is a CLIX tag and represents the end of a virtual (non
-syntactical)
-hierarchy.
+- `standoffTagHasStartParent` (0-1): Points to the parent standoff tag. This corresponds to the original nesting of tags in XML. If a standoff tag has no parent, it represents the XML root element.
+  If the original XML element is a CLIX tag, it represents the start of a virtual (non syntactical) hierarchy.
+- `standoffTagHasEndParent` (0-1): Points to the parent standoff tag if the original XML element is a CLIX tag and represents the end of a virtual (non syntactical) hierarchy.
 
 The `StandoffTag` class is not used directly in RDF data; instead, its subclasses are used. A few subclasses are
-currently provided in
-`standoff-onto.ttl`, and more will be added to support TEI semantics. Projects are able to define their own custom
-standoff tag classes
-(direct subclasses of `StandoffTag` or one of the standoff data type classes or subclasses of one of the standoff
-classes defined in
-`standoff-onto.ttl`).
+currently provided in `standoff-onto.ttl`, and more will be added to support TEI semantics. 
+Projects are able to define their own custom standoff tag classes (direct subclasses of `StandoffTag`
+or one of the standoff data type classes or subclasses of one of the standoff classes defined in `standoff-onto.ttl`).
 
 #### Subclasses of StandoffTag
 
 ##### Standoff Data Type Tags
 
-Associates data in some Knora value type with a substring in a text. Standoff data type tags are subclasses
-of `ValueBase` classes.
+Associates data in some Knora value type with a substring in a text. Standoff data type tags are subclasses of `ValueBase` classes.
 
-* `StandoffLinkTag` Indicates that a substring refers to another `kb:Resource`. See [StandoffLinkTag](#standofflinktag).
-* `StandoffInternalReferenceTag` Indicates that a substring refers to another standoff tag in the same text value.
+- `StandoffLinkTag` Indicates that a substring refers to another `kb:Resource`. See [StandoffLinkTag](#standofflinktag).
+- `StandoffInternalReferenceTag` Indicates that a substring refers to another standoff tag in the same text value.
   See [Internal Links in a TextValue](#internal-links-in-a-textvalue).
-* `StandoffUriTag` Indicates that a substring is associated with a URI, which is stored in the same form that is used
+- `StandoffUriTag` Indicates that a substring is associated with a URI, which is stored in the same form that is used
   for `kb:UriValue`. See [UriValue](#urivalue).
-* `StandoffDateTag` Indicates that a substring represents a date, which is stored in the same form that is used
+- `StandoffDateTag` Indicates that a substring represents a date, which is stored in the same form that is used
   for `kb:DateValue`. See [DateValue](#datevalue).
-* `StandoffColorTag` Indicates that a substring represents a color, which is stored in the same form that is used
+- `StandoffColorTag` Indicates that a substring represents a color, which is stored in the same form that is used
   for `kb:ColorValue`. See [ColorValue](#colorvalue).
-* `StandoffIntegerTag` Indicates that a substring represents an integer, which is stored in the same form that is used
+- `StandoffIntegerTag` Indicates that a substring represents an integer, which is stored in the same form that is used
   for `kb:IntegerValue`. See [IntValue](#intvalue).
-* `StandoffDecimalTag` Indicates that a substring represents a number with fractions, which is stored in the same form
+- `StandoffDecimalTag` Indicates that a substring represents a number with fractions, which is stored in the same form
   that is used for `kb:DecimalValue`. See [DecimalValue](#decimalvalue).
-* `StandoffIntervalTag` Indicates that a substring represents an interval, which is stored in the same form that is used
+- `StandoffIntervalTag` Indicates that a substring represents an interval, which is stored in the same form that is used
   for `kb:IntervalValue`. See [IntervalValue](#intervalvalue).
-* `StandoffBooleanTag` Indicates that a substring represents a Boolean, which is stored in the same form that is used
+- `StandoffBooleanTag` Indicates that a substring represents a Boolean, which is stored in the same form that is used
   for `kb:BooleanValue`. See [BooleanValue](#booleanvalue).
-* `StandoffTimeTag` Indicates that a substring represents a timestamp, which is stored in the same form that is used
+- `StandoffTimeTag` Indicates that a substring represents a timestamp, which is stored in the same form that is used
   for `kb:TimeValue`. See [TimeValue](#timevalue).
 
 ##### StandoffLinkTag
 
 A `StandoffLinkTag` Indicates that a substring is associated with a Knora resource. For example, if a repository
 contains resources representing persons, a text could be marked up so that each time a person's name is mentioned,
-a `StandoffLinkTag` connects the name to the Knora resource describing that person. Property:
+a `StandoffLinkTag` connects the name to the Knora resource describing that person. It has the following property:
 
-`standoffTagHasLink` (1)
+`standoffTagHasLink` (1): The IRI of the resource that is referred to.
 
-:   The IRI of the resource that is referred to.
-
-One of the design goals of the Knora ontology is to make it easy and efficient to find out which resources contain
+One of the design goals of the Knora base ontology is to make it easy and efficient to find out which resources contain
 references to a given resource. Direct links are easier and more efficient to query than indirect links. Therefore, when
 a text value contains a resource reference in its standoff nodes, Knora automatically creates a direct link between the
 containing resource and the target resource, along with an RDF reification (a `kb:LinkValue`) describing the link, as
@@ -730,7 +696,7 @@ makes a new version of the `LinkValue`, marked with `kb:isDeleted`.
 For example, if `data:R1` is a resource with a text value in which the resource `data:R2` is referenced, the repository
 could contain the following triples:
 
-```
+```turtle
 data:R1 ex:hasComment data:V1 .
 
 data:V1 rdf:type kb:TextValue ;
@@ -766,83 +732,45 @@ the user has permission to see the source and target resources.
 Internal links in a `TextValue` can be represented using the data type standoff class `StandoffInternalReferenceTag` or
 a subclass of it. It has the following property:
 
-`standoffTagHasInternalReference` (1)
-
-:   Points to a `StandoffTag` that belongs to the same `TextValue`. It has an `objectClassConstraint` of `StandoffTag`.
+`standoffTagHasInternalReference` (1): Points to a `StandoffTag` that belongs to the same `TextValue`. It has an `objectClassConstraint` of `StandoffTag`.
 
 For links to a `kb:Resource`, see [StandoffLinkTag](#standofflinktag).
 
 #### Mapping to Create Standoff From XML
 
 A mapping allows for the conversion of an XML document to RDF-standoff and back. A mapping defines one-to-one relations
-between XML elements
-(with or without a class) and attributes and standoff classes and properties (
-see [XML to Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md)).
+between XML elements (with or without a class) and attributes and standoff classes and properties (see 
+[XML to Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains one or more `kb:MappingElement`.
 A `kb:MappingElement` maps an XML element (including attributes) to a standoff class and standoff properties. It has the
 following properties:
 
-`mappingHasXMLTagname` (1)
-
-:   The name of the XML element that is mapped to a standoff class.
-
-`mappingHasXMLNamespace` (1)
-
-:   The XML namespace of the XML element that is mapped to a standoff class. If no namespace is given, `noNamespace` is
-used.
-
-`mappingHasXMLClass` (1)
-
-:   The name of the class of the XML element. If it has no class,
-`noClass` is used.
-
-`mappingHasStandoffClass` (1)
-
-:   The standoff class the XML element is mapped to.
-
-`mappingHasXMLAttribute` (0-n)
-
-:   Maps XML attributes to standoff properties using
-`MappingXMLAttribute`. See below.
-
-`mappingHasStandoffDataTypeClass` (0-1)
-
-:   Indicates the standoff data type class of the standoff class the XML element is mapped to.
-
-`mappingElementRequiresSeparator` (1)
-
-:   Indicates if there should be an invisible word separator inserted after the XML element in the RDF-standoff
-representation. Once the markup is stripped, text segments that belonged to different elements may be concatenated.
+- `mappingHasXMLTagname` (1): The name of the XML element that is mapped to a standoff class.
+- `mappingHasXMLNamespace` (1): The XML namespace of the XML element that is mapped to a standoff class. If no namespace is given, `noNamespace` is used.
+- `mappingHasXMLClass` (1): The name of the class of the XML element. If it has no class, `noClass` is used.
+- `mappingHasStandoffClass` (1): The standoff class the XML element is mapped to.
+- `mappingHasXMLAttribute` (0-n): Maps XML attributes to standoff properties using `MappingXMLAttribute`. See below.
+- `mappingHasStandoffDataTypeClass` (0-1): Indicates the standoff data type class of the standoff class the XML element is mapped to.
+- `mappingElementRequiresSeparator` (1): Indicates if there should be an invisible word separator inserted after the XML element in the RDF-standoff representation.
+  Once the markup is stripped, text segments that belonged to different elements may be concatenated.
 
 A `MappingXMLAttribute` has the following properties:
+- `mappingHasXMLAttributename`: The name of the XML attribute that is mapped to a standoff property.
+- `mappingHasXMLNamespace`: The namespace of the XML attribute that is mapped to a standoff property. If no namespace is given, `noNamespace` is used.
+- `mappingHasStandoffProperty`: The standoff property the XML attribute is mapped to.
 
-`mappingHasXMLAttributename`
-
-:   The name of the XML attribute that is mapped to a standoff property.
-
-`mappingHasXMLNamespace`
-
-:   The namespace of the XML attribute that is mapped to a standoff property. If no namespace is given, `noNamespace` is
-used.
-
-`mappingHasStandoffProperty`
-
-:   The standoff property the XML attribute is mapped to.
-
-Knora includes a standard mapping used by the SALSAH GUI. It has the IRI
-`http://rdfh.ch/standoff/mappings/StandardMapping` and defines mappings for a few elements used to write texts with
-simple markup.
+DSP-API includes a standard mapping used by the DSP APP. It has the IRI `http://rdfh.ch/standoff/mappings/StandardMapping` and defines mappings for a few elements used to write texts with simple markup.
 
 #### Standoff in Digital Editions
 
-Knora's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this
+DSP-API's standoff is designed to make it possible to convert XML documents to standoff and back. One application for this
 feature is an editing workflow in which an editor works in an XML editor, and the resulting XML documents are converted
 to standoff and stored in Knora, where they can be searched and annotated.
 
 If an editor wants to correct text that has been imported from XML into standoff, the text can be exported as XML,
 edited, and imported again. To preserve annotations on standoff tags across edits, each tag can automatically be given a
-UUID. In a future version of the Knora base ontology, it will be possible to create annotations that point to UUIDs
+UUID. In a future version of the Knora base ontology, it may be possible to create annotations that point to UUIDs
 rather than to IRIs. When a text is exported to XML, the UUIDs can be included in the XML. When the edited XML is
 imported again, it can be converted to new standoff tags with the same UUIDs. Annotations that applied to standoff tags
 in the previous version of the text will therefore also apply to equivalent tags in the new version.
@@ -856,34 +784,18 @@ markup to be represented in XML. When non-hierarchical markup is converted to st
 end position of the standoff tag have indexes and parent indexes.
 
 To support these features, a standoff tag can have these additional properties:
-
-`standoffTagHasStartIndex` (0-1)
-
-:   The index of the start position.
-
-`standoffTagHasEndIndex` (0-1)
-
-:   The index of the end position, if this is a non-hierarchical tag.
-
-`standoffTagHasStartParent` (0-1)
-
-:   The IRI of the tag, if any, that contains the start position.
-
-`standoffTagHasEndParent` (0-1)
-
-:   The IRI of the tag, if any, that contains the end position, if this is a non-hierarchical tag.
-
-`standoffTagHasUUID` (0-1)
-
-:   A UUID that can be used to annotate a standoff tag that may be present in different versions of a text, or in
-different layers of a text (such as a diplomatic transcription and an edited critical text).
+- `standoffTagHasStartIndex` (0-1): The index of the start position.
+- `standoffTagHasEndIndex` (0-1): The index of the end position, if this is a non-hierarchical tag.
+- `standoffTagHasStartParent` (0-1): The IRI of the tag, if any, that contains the start position.
+- `standoffTagHasEndParent` (0-1): The IRI of the tag, if any, that contains the end position, if this is a non-hierarchical tag.
+- `standoffTagHasUUID` (0-1): A UUID that can be used to annotate a standoff tag that may be present in different versions of a text,
+  or in different layers of a text (such as a diplomatic transcription and an edited critical text).
 
 #### Querying Standoff in SPARQL
 
-A future version of Knora will provide an API for querying standoff markup. In the meantime, it is possible to query it
+A future version of DSP-API may provide an API for querying standoff markup. In the meantime, it is possible to query it
 directly in SPARQL. For example, here is a SPARQL query (using RDFS inference) that finds all the text values texts that
-have a standoff date tag referring to Christmas Eve 2016, contained in a
-`StandoffItalicTag`:
+have a standoff date tag referring to Christmas Eve 2016, contained in a `StandoffItalicTag`:
 
 ```sparql
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
