@@ -197,7 +197,7 @@ lazy val apiMain = project
     Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(SchemaDomain, schemaRepo, schemaApi)
+  .dependsOn(schemaCore, schemaRepo, schemaApi)
 
 
 lazy val schemaApi = project
@@ -207,7 +207,7 @@ lazy val schemaApi = project
     Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(SchemaDomain)
+  .dependsOn(schemaCore)
 
 lazy val schemaCore = project
   .in(file("dsp-schema-core"))
@@ -224,7 +224,7 @@ lazy val schemaRepo = project
     Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(SchemaDomain)
+  .dependsOn(schemaCore)
 
 lazy val schemaRepoEventStoreService = project
   .in(file("dsp-schema-repo-eventstore-service"))
