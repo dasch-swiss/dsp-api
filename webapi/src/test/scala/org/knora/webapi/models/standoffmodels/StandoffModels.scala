@@ -28,6 +28,11 @@ sealed abstract case class DefineStandoffMapping private (
 ) {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  /**
+   * Create a JSON-LD serialization of the request. This can be used for e2e tests.
+   *
+   * @return JSON-LD serialization of the request that can be processed by the API V2.
+   */
   def toJSONLD(): String =
     Map(
       "knora-api:mappingHasName" -> mappingName.toJson,
@@ -41,6 +46,14 @@ sealed abstract case class DefineStandoffMapping private (
       ).toJson
     ).toJson.prettyPrint
 
+  /**
+   * Create a [[CreateMappingRequestV2]] message representation of the request. This can be used in unit tests.
+   *
+   * @param xml                  the mapping XML.
+   * @param featureFactoryConfig the [[FeatureFactoryConfig]].
+   * @param user                 the user issuing the request.
+   * @return a [[CreateMappingRequestV2]] message representation of the request that can be processed by an Akka actor.
+   */
   def toMessage(
     xml: String,
     featureFactoryConfig: FeatureFactoryConfig,
@@ -62,7 +75,26 @@ sealed abstract case class DefineStandoffMapping private (
 
 }
 
+/**
+ * Helper object for creating a custom standoff mapping.
+ *
+ * Can be instantiated by calling `DefineStandoffMapping.make()`.
+ *
+ * To generate a JSON-LD request, call `.toJsonLd`.
+ *
+ * To generate a [[CreateMappingRequestV2]] message, call `.toMessage`
+ */
 object DefineStandoffMapping {
+
+  /**
+   * Smart constructor for instantiating a [[DefineStandoffMapping]] request.
+   *
+   * @param mappingName the name of the mapping.
+   * @param projectIRI  the IRI of the project to which the mapping gets attached. Optional.
+   *                    If not provided, the "anything" project will be used.
+   * @param label       the rdfs:label of the mapping. Optional.
+   * @return a [[DefineStandoffMapping]] object.
+   */
   def make(
     mappingName: String,
     projectIRI: Option[String] = None,
@@ -80,3 +112,5 @@ object DefineStandoffMapping {
       }
     ) {}
 }
+
+object XXX {}
