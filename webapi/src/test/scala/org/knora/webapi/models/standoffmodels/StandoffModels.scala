@@ -80,5 +80,3 @@ object DefineStandoffMapping {
       }
     ) {}
 }
-
-sealed abstract case class XXX private () {}

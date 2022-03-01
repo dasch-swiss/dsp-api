@@ -125,9 +125,6 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       s"$baseApiUrl/v2/resources/$iri"
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
-
-    // TODO-bl: remove println() as soon as docs are written
-    println(responseToString(response))
     responseToJsonLDDocument(response)
   }
 
@@ -354,7 +351,5 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsHtml) should equal(expectedHTML)
       textValueObject.maybeString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should equal(None)
     }
-
-    // TODO-bl: update documentation
   }
 }
