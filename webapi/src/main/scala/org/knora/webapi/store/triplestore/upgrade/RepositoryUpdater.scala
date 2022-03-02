@@ -77,8 +77,7 @@ class RepositoryUpdater(
   private val tempDirNamePrefix: String = "knora"
 
   /**
-    * Deletes previously created temp directories if these were not deleted after update.
-    * It could happen if update crashed before ends.
+    * Deletes directories inside temp directory starting with `tempDirNamePrefix`.
     */  
   def deleteTempDirectories(): Unit = {
     val rootDir = new File("/tmp/")
@@ -191,7 +190,6 @@ class RepositoryUpdater(
     val downloadDir: Path = settings.upgradeDownloadDir match {
       case Some(configuredDir) =>
         // Yes. Use that directory.
-        // TODO-mpro never used - see application.conf line 341
         log.info(s"Repository update using configured download directory $configuredDir")
         val dirFile = Paths.get(configuredDir)
         Files.createDirectories(dirFile)
