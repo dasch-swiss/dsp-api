@@ -21,7 +21,7 @@ sipi/test
 bazel-*
 
 **/project/target/
-/target/
+**/target/
 *.aux
 *.bbl
 *.bcf
