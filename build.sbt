@@ -2,7 +2,10 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
+
+import sbt._
 import sbt.Keys.version
+import sbt.librarymanagement.Resolver
 
 import scala.language.postfixOps
 import scala.sys.process.Process
@@ -11,7 +14,7 @@ import scala.sys.process.Process
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, knoraJenaFuseki)
 
 lazy val buildSettings = Dependencies.Versions ++ Seq(
   organization := "org.knora",
@@ -51,12 +54,40 @@ lazy val root: Project = Project(id = "root", file("."))
   )
 
 //////////////////////////////////////
-// WEBAPI (./webapi)
+// Knora's custom Jena Fuseki
 //////////////////////////////////////
 
-import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
-import sbt._
-import sbt.librarymanagement.Resolver
+lazy val jenaFusekiCommonSettings = Seq(
+  name := "knora-jena-fuseki"
+)
+
+lazy val knoraJenaFuseki: Project = Project(id = "knora-jena-fuseki", base = file("knora-jena-fuseki"))
+  .enablePlugins(DockerPlugin, JavaAppPackaging)
+  .settings(
+    jenaFusekiCommonSettings
+  )
+  .settings(
+    Compile / packageDoc / mappings := Seq(),
+    Compile / packageSrc / mappings := Seq(),
+    Universal / mappings ++= {
+      // copy the jena-fuseki folder
+      directory("jena-fuseki")
+    },
+    // add 'config' file to the classpath of the start script,
+    Universal / scriptClasspath := Seq("webapi/src/test/resources/fuseki.conf") ++ scriptClasspath.value,
+    Docker / dockerRepository := Some("daschswiss"),
+    Docker / packageName := "knora-jena-fuseki",
+    dockerUpdateLatest := true,
+    dockerBaseImage := fusekiImage,
+    //dockerBaseImage := "eclipse-temurin:11-jre-focal",
+    Docker / maintainer := "support@dasch.swiss",
+    Docker / dockerExposedPorts ++= Seq(3030),
+    Docker / defaultLinuxInstallLocation := "/opt/docker"
+  )
+
+//////////////////////////////////////
+// WEBAPI (./webapi)
+//////////////////////////////////////
 
 run / connectInput := true
 
@@ -82,7 +113,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
   )
   .settings(
-    exportJars := true,
+    exportJars := true, // everything is put into the jar --> good for testing what's inside the jar
     Compile / unmanagedResourceDirectories += (rootBaseDir.value / "knora-ontologies"),
     // add needed files to jar
     Compile / packageBin / mappings ++= Seq(
@@ -91,17 +122,12 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
       (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
       (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-repository-config.ttl",
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-unit-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-unit-repository-config.ttl",
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template"
+      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
-    // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
-    // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
-
     // put additional files into the jar when running tests which are needed by testcontainers
+    // this is NOT needed here --> move it to the sipi project (see Universal...)
     Test / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "sipi" / "config" / "sipi.init-knora.lua") -> "sipi/config/sipi.init-knora.lua",
-      (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
+      (rootBaseDir.value / "sipi" / "scripts" / "sipi.init-knora.lua") -> "sipi/scripts/sipi.init-knora.lua",
       (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua"
     )
   )
@@ -134,6 +160,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // Skip packageDoc and packageSrc task on stage
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
+    // define folders inside container
     Universal / mappings ++= {
       // copy the scripts folder
       directory("webapi/scripts") ++

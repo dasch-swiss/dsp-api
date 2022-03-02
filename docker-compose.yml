@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   db:
-    image: bazel/docker/knora-jena-fuseki:image
+    image: daschswiss/knora-jena-fuseki:latest
     ports:
       - "3030:3030"
     volumes:

@@ -58,15 +58,15 @@ docker-build-knora-api-image: # build and publish knora-api docker image locally
 
 .PHONY: docker-publish-knora-api-image
 docker-publish-knora-api-image: # publish knora-api image to Dockerhub
-	@bazel run //docker/knora-api:push
+	@sbt "webapi / Docker / publish"
 
 .PHONY: docker-build-knora-jena-fuseki-image
 docker-build-knora-jena-fuseki-image: # build and publish knora-jena-fuseki docker image locally
-	@bazel run //docker/knora-jena-fuseki:image
+	@sbt "knora-jena-fuseki / Docker / publishLocal"
 
 .PHONY: docker-publish-knora-jena-fuseki-image
 docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Dockerhub
-	@bazel run //docker/knora-jena-fuseki:push
+	@sbt "knora-jena-fuseki / Docker / publish"
 
 .PHONY: docker-build-knora-sipi-image
 docker-build-knora-sipi-image: # build and publish knora-sipi docker image locally
