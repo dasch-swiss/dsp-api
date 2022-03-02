@@ -48,9 +48,9 @@ object IntegrationSpec {
 }
 
 /**
-  * Defines a base class used in tests where only a running Fuseki Container is needed.
-  * Does not start the DSP-API server.
-  */
+ * Defines a base class used in tests where only a running Fuseki Container is needed.
+ * Does not start the DSP-API server.
+ */
 abstract class IntegrationSpec(_config: Config)
     extends AsyncWordSpecLike
     with Matchers
@@ -98,7 +98,7 @@ abstract class IntegrationSpec(_config: Config)
         }
     } yield value
 
-    implicit val rt: Runtime[Has[Clock] with Has[Console]] = Runtime.default
+    implicit val rt: Runtime[Clock with Console] = Runtime.default
     rt.unsafeRun(
       checkTriplestore
         .retry(ScheduleUtil.schedule)
@@ -124,7 +124,7 @@ object ScheduleUtil {
   /**
    * Retry every second for 60 times, i.e., 60 seconds in total.
    */
-  def schedule[A]: WithState[(Long, Long), Has[Console], Any, (Long, Long)] = Schedule.spaced(1.second) && Schedule
+  def schedule[A]: WithState[(Long, Long), Console, Any, (Long, Long)] = Schedule.spaced(1.second) && Schedule
     .recurs(60)
     .onDecision({
       case (_, _, Decision.Done)              => printLine(s"done trying").orDie
@@ -135,7 +135,7 @@ object ScheduleUtil {
 //// ZIO helpers ////
 object LegacyRuntime {
 
-  val runtime: Runtime[Has[Clock] with Has[Console]] = Runtime.default
+  val runtime: Runtime[Clock with Console] = Runtime.default
 
   /**
    * Transforms a [[Task]] into a [[Future]].
