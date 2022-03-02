@@ -1,6 +1,8 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import java.nio.file.{Files, Path, Paths}
+import java.io.File
+import scala.reflect.io.Directory
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
@@ -72,6 +74,25 @@ class RepositoryUpdater(
     log = log
   )
 
+  private val tempDirNamePrefix: String = "knora"
+
+  /**
+    * Deletes previously created temp directories if these were not deleted after update.
+    * It could happen if update crashed before ends.
+    */  
+  def deleteTempDirectories(): Unit = {
+    val rootDir = new File("/tmp/")
+    val getTempToDelete = rootDir.listFiles.filter(_.getName.startsWith(tempDirNamePrefix))
+
+    if (getTempToDelete.length != 0) {
+      getTempToDelete.foreach(dir => {
+        val dirToDelete = new Directory(dir)
+        dirToDelete.deleteRecursively()
+      })
+      log.info(s"Deleted temp directories: ${getTempToDelete.map(_.getName()).mkString(", ")}")
+    }
+  }
+
   /**
    * Updates the repository, if necessary, to work with the current version of Knora.
    *
@@ -83,17 +104,19 @@ class RepositoryUpdater(
       requiredRepositoryVersion = org.knora.webapi.KnoraBaseVersion
 
       // Is the repository up to date?
-      repositoryUpToData = foundRepositoryVersion.contains(requiredRepositoryVersion)
+      repositoryUpToDate: Boolean = foundRepositoryVersion.contains(requiredRepositoryVersion)
+
       repositoryUpdatedResponse: RepositoryUpdatedResponse <-
-        if (repositoryUpToData) {
+        if (repositoryUpToDate) {
           // Yes. Nothing more to do.
           FastFuture.successful(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
         } else {
           // No. Construct the list of updates that it needs.
-
           log.info(
             s"Repository not up-to-date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
           )
+
+          deleteTempDirectories()
 
           val selectedPlugins: Seq[PluginForKnoraBaseVersion] = selectPluginsForNeededUpdates(foundRepositoryVersion)
           log.info(s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}")
@@ -168,6 +191,7 @@ class RepositoryUpdater(
     val downloadDir: Path = settings.upgradeDownloadDir match {
       case Some(configuredDir) =>
         // Yes. Use that directory.
+        // TODO-mpro never used - see application.conf line 341
         log.info(s"Repository update using configured download directory $configuredDir")
         val dirFile = Paths.get(configuredDir)
         Files.createDirectories(dirFile)
@@ -175,7 +199,7 @@ class RepositoryUpdater(
 
       case None =>
         // No. Create a temporary directory.
-        val dirFile = Files.createTempDirectory("knora")
+        val dirFile = Files.createTempDirectory(tempDirNamePrefix)
         log.info(s"Repository update using download directory $dirFile")
         dirFile
     }
