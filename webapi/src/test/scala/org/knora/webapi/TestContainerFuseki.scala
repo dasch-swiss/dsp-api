@@ -10,13 +10,14 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
 import scala.jdk.CollectionConverters._
+import org.knora.webapi.http.version.BuildInfo
 
 /**
  * Provides the Fuseki container necessary for running tests.
  */
 object TestContainerFuseki {
 
-  val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
+  val FusekiImageName: DockerImageName = DockerImageName.parse(BuildInfo.fuseki)
   val FusekiContainer = new GenericContainer(FusekiImageName)
 
   FusekiContainer.withExposedPorts(3030)

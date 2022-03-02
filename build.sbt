@@ -1,3 +1,4 @@
+import rapture.core.booleanRepresentations.trueFalse
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
@@ -55,7 +56,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
     Docker / dockerRepository := Some("daschswiss"),
-    Docker / packageName := "sipi",
+    Docker / packageName := "knora-sipi",
     dockerUpdateLatest := true,
     dockerBaseImage := Dependencies.sipiImage,
     Docker / maintainer := "support@dasch.swiss",
@@ -64,6 +65,19 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Universal / mappings ++= {
       // copy the sipi/scripts folder
       directory("sipi/scripts")
+    },
+    // use filterNot to return all items that do NOT meet the criteria
+    dockerCommands := dockerCommands.value.filterNot {
+
+      // ExecCmd is a case class, and args is a varargs variable, so you need to bind it with @
+      // remove ENTRYPOINT
+      case ExecCmd("ENTRYPOINT", args @ _*) => true
+
+      // remove CMD
+      case ExecCmd("CMD", args @ _*) => true
+
+      // don't filter the rest; don't filter out anything that doesn't match a pattern
+      case cmd => false
     }
   )
 
