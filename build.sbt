@@ -14,9 +14,9 @@ import scala.sys.process.Process
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, knoraJenaFuseki)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
-lazy val buildSettings = Dependencies.Versions ++ Seq(
+lazy val buildSettings = Seq(
   organization := "org.knora",
   version := (ThisBuild / version).value
 )
@@ -43,46 +43,28 @@ lazy val root: Project = Project(id = "root", file("."))
     // use Ctrl-c to stop current task but not quit SBT
     Global / cancelable := true,
     publish / skip := true
-    //   Dependencies.sysProps := sys.props.toString(),
-    //   Dependencies.sysEnvs := sys.env.toString(),
-    // dockerImageCreationTask := Seq(
-    //   (salsah1 / Docker / publishLocal).value,
-    //   (webapi / Docker / publishLocal).value
-    //   (knoraJenaFuseki / Docker / publishLocal).value,
-    //   (knoraSipi / Docker / publishLocal).value
-    //)
   )
 
 //////////////////////////////////////
-// Knora's custom Jena Fuseki
+// DSP's custom SIPI
 //////////////////////////////////////
 
-lazy val jenaFusekiCommonSettings = Seq(
-  name := "knora-jena-fuseki"
-)
-
-lazy val knoraJenaFuseki: Project = Project(id = "knora-jena-fuseki", base = file("knora-jena-fuseki"))
-  .enablePlugins(DockerPlugin, JavaAppPackaging)
-  .settings(
-    jenaFusekiCommonSettings
-  )
+lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
+  .enablePlugins(DockerPlugin)
   .settings(
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
-    Universal / mappings ++= {
-      // copy the jena-fuseki folder
-      directory("jena-fuseki")
-    },
-    // add 'config' file to the classpath of the start script,
-    Universal / scriptClasspath := Seq("webapi/src/test/resources/fuseki.conf") ++ scriptClasspath.value,
     Docker / dockerRepository := Some("daschswiss"),
-    Docker / packageName := "knora-jena-fuseki",
+    Docker / packageName := "sipi",
     dockerUpdateLatest := true,
-    dockerBaseImage := fusekiImage,
-    //dockerBaseImage := "eclipse-temurin:11-jre-focal",
+    dockerBaseImage := Dependencies.sipiImage,
     Docker / maintainer := "support@dasch.swiss",
-    Docker / dockerExposedPorts ++= Seq(3030),
-    Docker / defaultLinuxInstallLocation := "/opt/docker"
+    Docker / dockerExposedPorts ++= Seq(1024),
+    Docker / defaultLinuxInstallLocation := "/sipi",
+    Universal / mappings ++= {
+      // copy the sipi/scripts folder
+      directory("sipi/scripts")
+    }
   )
 
 //////////////////////////////////////
