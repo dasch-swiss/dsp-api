@@ -23,11 +23,9 @@ object ServerVersionE2ESpec {
  * End-to-End (E2E) test specification for testing the server response.
  */
 class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
-
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   "The Server" should {
-
     "return the custom 'Server' header with every response" in {
       val request = Get(baseApiUrl + s"/admin/projects")
       val response: HttpResponse = singleAwaitingRequest(request)

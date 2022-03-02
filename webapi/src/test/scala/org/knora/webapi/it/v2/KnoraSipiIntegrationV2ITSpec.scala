@@ -62,60 +62,60 @@ class KnoraSipiIntegrationV2ITSpec
   private val videoValueIri = new MutableTestIri
 
   private val marblesOriginalFilename = "marbles.tif"
-  private val pathToMarbles = s"test_data/test_route/images/$marblesOriginalFilename"
+  private val pathToMarbles = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
   private val marblesWidth = 1419
   private val marblesHeight = 1001
 
-  private val pathToMarblesWithWrongExtension = "test_data/test_route/images/marbles_with_wrong_extension.jpg"
+  private val pathToMarblesWithWrongExtension = Paths.get("..", "test_data/test_route/images/marbles_with_wrong_extension.jpg")
 
   private val trp88OriginalFilename = "Trp88.tiff"
-  private val pathToTrp88 = s"test_data/test_route/images/$trp88OriginalFilename"
+  private val pathToTrp88 = Paths.get("..", s"test_data/test_route/images/$trp88OriginalFilename")
   private val trp88Width = 499
   private val trp88Height = 630
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
-  private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
+  private val pathToMinimalPdf = Paths.get("..", s"test_data/test_route/files/$minimalPdfOriginalFilename")
   private val minimalPdfWidth = 1250
   private val minimalPdfHeight = 600
 
   private val testPdfOriginalFilename = "test.pdf"
-  private val pathToTestPdf = s"test_data/test_route/files/$testPdfOriginalFilename"
+  private val pathToTestPdf = Paths.get("..", s"test_data/test_route/files/$testPdfOriginalFilename")
   private val testPdfWidth = 2480
   private val testPdfHeight = 3508
 
   private val csv1OriginalFilename = "eggs.csv"
-  private val pathToCsv1 = s"test_data/test_route/files/$csv1OriginalFilename"
+  private val pathToCsv1 = Paths.get("..", s"test_data/test_route/files/$csv1OriginalFilename")
 
   private val csv2OriginalFilename = "spam.csv"
-  private val pathToCsv2 = s"test_data/test_route/files/$csv2OriginalFilename"
+  private val pathToCsv2 = Paths.get("..", s"test_data/test_route/files/$csv2OriginalFilename")
 
   private val xml1OriginalFilename = "test1.xml"
-  private val pathToXml1 = s"test_data/test_route/files/$xml1OriginalFilename"
+  private val pathToXml1 = Paths.get("..", s"test_data/test_route/files/$xml1OriginalFilename")
 
   private val xml2OriginalFilename = "test2.xml"
-  private val pathToXml2 = s"test_data/test_route/files/$xml2OriginalFilename"
+  private val pathToXml2 = Paths.get("..", s"test_data/test_route/files/$xml2OriginalFilename")
 
   private val minimalZipOriginalFilename = "minimal.zip"
-  private val pathToMinimalZip = s"test_data/test_route/files/$minimalZipOriginalFilename"
+  private val pathToMinimalZip = Paths.get("..", s"test_data/test_route/files/$minimalZipOriginalFilename")
 
   private val testZipOriginalFilename = "test.zip"
-  private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
+  private val pathToTestZip = Paths.get("..", s"test_data/test_route/files/$testZipOriginalFilename")
 
   private val test7zOriginalFilename = "test.7z"
-  private val pathToTest7z = s"test_data/test_route/files/$test7zOriginalFilename"
+  private val pathToTest7z = Paths.get("..", s"test_data/test_route/files/$test7zOriginalFilename")
 
   private val minimalWavOriginalFilename = "minimal.wav"
-  private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
+  private val pathToMinimalWav = Paths.get("..", s"test_data/test_route/files/$minimalWavOriginalFilename")
   private val minimalWavDuration = BigDecimal("0.0")
 
   private val testWavOriginalFilename = "test.wav"
-  private val pathToTestWav = s"test_data/test_route/files/$testWavOriginalFilename"
+  private val pathToTestWav = Paths.get("..", s"test_data/test_route/files/$testWavOriginalFilename")
 
   private val testVideoOriginalFilename = "testVideo.mp4"
-  private val pathToTestVideo = s"test_data/test_route/files/$testVideoOriginalFilename"
+  private val pathToTestVideo = Paths.get("..", s"test_data/test_route/files/$testVideoOriginalFilename")
 
   private val testVideo2OriginalFilename = "test.wav"
-  private val pathToTestVideo2 = s"test_data/test_route/files/$testVideo2OriginalFilename"
+  private val pathToTestVideo2 = Paths.get("..", s"test_data/test_route/files/$testVideo2OriginalFilename")
 
   private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
 
@@ -386,15 +386,14 @@ class KnoraSipiIntegrationV2ITSpec
         "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NDM1MTEyMiwiaWF0IjoxNTQxNzU5MTIyLCJqdGkiOiJ4bnlYeklFb1QxNmM2dkpDbHhSQllnIn0.P2Aq37G6XMLLBVMdnpDVVhWjenbVw0HTb1BpEuTWGRo"
 
       // The image to be uploaded.
-      val fileToSend = Paths.get(pathToMarbles)
-      assert(Files.exists(fileToSend), s"File $pathToMarbles does not exist")
+      assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")
 
       // A multipart/form-data request containing the image.
       val sipiFormData = Multipart.FormData(
         Multipart.FormData.BodyPart(
           "file",
-          HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend),
-          Map("filename" -> fileToSend.getFileName.toString)
+          HttpEntity.fromPath(MediaTypes.`image/tiff`, pathToMarbles),
+          Map("filename" -> pathToMarbles.getFileName.toString)
         )
       )
 

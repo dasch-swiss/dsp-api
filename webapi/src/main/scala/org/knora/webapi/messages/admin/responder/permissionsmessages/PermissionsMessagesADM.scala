@@ -9,7 +9,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Restricted
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -37,19 +37,21 @@ case class CreateAdministrativePermissionAPIRequestADM(
   forGroup: IRI,
   hasPermissions: Set[PermissionADM]
 ) extends PermissionsADMJsonProtocol {
+  implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+  id match {
+    case Some(iri) => sf.validatePermissionIRI(iri)
+    case None      => None
+  }
 
   def toJsValue: JsValue = createAdministrativePermissionAPIRequestADMFormat.write(this)
 
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
-  stringFormatter.validateOptionalPermissionIri(
-    id,
-    throw BadRequestException(s"Invalid permission IRI ${id.get} is given.")
-  )
+  sf.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
+
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
   if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
-    stringFormatter.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI $forGroup"))
+    sf.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI $forGroup"))
   }
 
   def prepareHasPermissions: CreateAdministrativePermissionAPIRequestADM =
@@ -76,14 +78,16 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
   forProperty: Option[IRI] = None,
   hasPermissions: Set[PermissionADM]
 ) extends PermissionsADMJsonProtocol {
+  implicit protected val sf: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+  id match {
+    case Some(iri) => sf.validatePermissionIRI(iri)
+    case None      => None
+  }
+
   def toJsValue: JsValue = createDefaultObjectAccessPermissionAPIRequestADMFormat.write(this)
 
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
-  stringFormatter.validateOptionalPermissionIri(
-    id,
-    throw BadRequestException(s"Invalid permission IRI ${id.get} is given.")
-  )
+  sf.validateAndEscapeProjectIri(forProject, throw BadRequestException(s"Invalid project IRI $forProject"))
 
   forGroup match {
     case Some(iri: IRI) =>
@@ -93,7 +97,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
         throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
       else {
         if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
-          stringFormatter.validateOptionalGroupIri(
+          sf.validateOptionalGroupIri(
             forGroup,
             throw BadRequestException(s"Invalid group IRI ${forGroup.get}")
           )
@@ -109,7 +113,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
 
   forResourceClass match {
     case Some(iri) =>
-      if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
+      if (!sf.toSmartIri(iri).isKnoraEntityIri) {
         throw BadRequestException(s"Invalid resource class IRI: $iri")
       }
     case None => None
@@ -117,7 +121,7 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(
 
   forProperty match {
     case Some(iri) =>
-      if (!stringFormatter.toSmartIri(iri).isKnoraEntityIri) {
+      if (!sf.toSmartIri(iri).isKnoraEntityIri) {
         throw BadRequestException(s"Invalid property IRI: $iri")
       }
     case None => None

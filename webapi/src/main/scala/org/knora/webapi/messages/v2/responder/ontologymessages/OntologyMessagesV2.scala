@@ -465,14 +465,10 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
       throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
     }
 
-    // The request must provide an rdfs:label and an rdfs:comment.
+    // The request must provide an rdfs:label
 
     if (!propertyInfoContent.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
       throw BadRequestException("Missing rdfs:label")
-    }
-
-    if (!propertyInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)) {
-      throw BadRequestException("Missing rdfs:comment")
     }
 
     CreatePropertyRequestV2(
@@ -553,14 +549,10 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     val classInfoContent = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
-    // The request must provide an rdfs:label and an rdfs:comment.
+    // The request must provide an rdfs:label
 
     if (!classInfoContent.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
       throw BadRequestException("Missing rdfs:label")
-    }
-
-    if (!classInfoContent.predicates.contains(OntologyConstants.Rdfs.Comment.toSmartIri)) {
-      throw BadRequestException("Missing rdfs:comment")
     }
 
     CreateClassRequestV2(

@@ -1,5 +1,65 @@
 # Changelog
 
+### [17.5.2](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.1...v17.5.2) (2022-02-23)
+
+
+### Bug Fixes
+
+* **permissions:** Update default object access permissions (DEV-514) ([#2004](https://www.github.com/dasch-swiss/dsp-api/issues/2004)) ([04a8d3d](https://www.github.com/dasch-swiss/dsp-api/commit/04a8d3d544fab8e4bc883831d20eaa638f8ac9aa))
+* **timeout:** Increase timeouts (DEV-536) ([#2005](https://www.github.com/dasch-swiss/dsp-api/issues/2005)) ([f1f8005](https://www.github.com/dasch-swiss/dsp-api/commit/f1f8005244a346f64761cad8d7cb5a5144d407f4))
+
+
+### Maintenance
+
+* BAZEL to SBT migration (DEV-508) ([#2002](https://www.github.com/dasch-swiss/dsp-api/issues/2002)) ([38faa9e](https://www.github.com/dasch-swiss/dsp-api/commit/38faa9eb38b77d082d2f17a7cf220408ca409b3b))
+
+### [17.5.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.0...v17.5.1) (2022-02-16)
+
+
+### Maintenance
+
+* **deps:** upgrade Jena Fuseki docker image to v2.0.8 ([#2001](https://www.github.com/dasch-swiss/dsp-api/issues/2001)) ([3e2eccc](https://www.github.com/dasch-swiss/dsp-api/commit/3e2eccc6a7a38b0e03796a2db987cb97b886c662))
+* **deps:** upgrate Jena API to v4.4.0 ([#1999](https://www.github.com/dasch-swiss/dsp-api/issues/1999)) ([3eecc69](https://www.github.com/dasch-swiss/dsp-api/commit/3eecc69f0394afde32eb0698005c4d9840ab9a3d))
+
+
+### Documentation
+
+* fix markdown issues in documentation (DEV-504) ([#2003](https://www.github.com/dasch-swiss/dsp-api/issues/2003)) ([ff6b4cf](https://www.github.com/dasch-swiss/dsp-api/commit/ff6b4cf4ae610399bc01c04304f8f9fa94e3e0b7))
+
+## [17.5.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.4.1...v17.5.0) (2022-02-11)
+
+
+### Enhancements
+
+* **ontologies:** make comments optional for property and class creation (DEV-342) ([#1996](https://www.github.com/dasch-swiss/dsp-api/issues/1996)) ([a3c286c](https://www.github.com/dasch-swiss/dsp-api/commit/a3c286c3ab90e713c5a7929d69517d1dbb848d40))
+
+### [17.4.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.4.0...v17.4.1) (2022-02-07)
+
+
+### Maintenance
+
+* **deps:** upgrade Jena to v4.3.2 (DEV-473) ([#1995](https://www.github.com/dasch-swiss/dsp-api/issues/1995)) ([216dcb4](https://www.github.com/dasch-swiss/dsp-api/commit/216dcb432b79812551d50f4a05375cee8f379852))
+* **deps:** upgrade titanium-json-ld to v1.2.0 & jakarta-json to v2.0.1 (DEV-335) ([#1993](https://www.github.com/dasch-swiss/dsp-api/issues/1993)) ([ad01bf9](https://www.github.com/dasch-swiss/dsp-api/commit/ad01bf996de77d72934671de2479a206ca80e365))
+
+## [17.4.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.1...v17.4.0) (2022-02-04)
+
+
+### Bug Fixes
+
+* **version-upgrade:** add upgrade plugin for ArchiveRepresentation and DeletedResource (DEV-467) ([#1992](https://www.github.com/dasch-swiss/dsp-api/issues/1992)) ([e1566e9](https://www.github.com/dasch-swiss/dsp-api/commit/e1566e999d67fab57218e9ec2a5f209b44d82af9))
+
+
+### Maintenance
+
+* add support for building native API and Fuseki Docker images on Apple M1 (DEV-435) ([#1987](https://www.github.com/dasch-swiss/dsp-api/issues/1987)) ([ab80e72](https://www.github.com/dasch-swiss/dsp-api/commit/ab80e72047dd0ce7fc18e874a2712074908c2d7b))
+* refactor test models (DEV-264) ([#1975](https://www.github.com/dasch-swiss/dsp-api/issues/1975)) ([65952f9](https://www.github.com/dasch-swiss/dsp-api/commit/65952f963417d0a7f546d04b172ff768382feae9))
+
+
+### Enhancements
+
+* **resource:** add ArchiveRepresentation to API V1 (DEV-393) (DEV-394) ([#1984](https://www.github.com/dasch-swiss/dsp-api/issues/1984)) ([65b88a2](https://www.github.com/dasch-swiss/dsp-api/commit/65b88a207dd5a68413f4fd365a3ee7bd566cb1a2))
+* **UUID:** add IRI validation that allows only to create IRIs using UUID version 4 and 5 (DEV-402) ([#1990](https://www.github.com/dasch-swiss/dsp-api/issues/1990)) ([74d4344](https://www.github.com/dasch-swiss/dsp-api/commit/74d43441e6960acd6e86ea2a67ebdf3f6fdf4125))
+
 ### [17.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.0...v17.3.1) (2022-01-28)
 
 

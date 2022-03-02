@@ -15,7 +15,7 @@ object RejectingRouteE2ESpec {
   val config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
-          app.routes-to-reject = ["v1/test", "v2/test", "v1/groups", "v1/users"]
+          app.routes-to-reject = ["v1/testRouteToReject", "v2/testRouteToReject"]
         """.stripMargin)
 }
 
@@ -24,40 +24,31 @@ object RejectingRouteE2ESpec {
  */
 class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
 
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
-
   "The Rejecting Route" should {
 
     "reject the 'v1/test' path" in {
-      val request = Get(baseApiUrl + s"/v1/test")
+      val request = Get(baseApiUrl + s"/v1/testRouteToReject")
       val response: HttpResponse = singleAwaitingRequest(request)
 
       response.status should be(StatusCodes.NotFound)
     }
 
     "reject the 'v2/test' path" in {
-      val request = Get(baseApiUrl + s"/v2/test")
+      val request = Get(baseApiUrl + s"/v2/testRouteToReject")
       val response: HttpResponse = singleAwaitingRequest(request)
 
       response.status should be(StatusCodes.NotFound)
     }
 
-    "reject the 'v1/groups' path" in {
-      val request = Get(baseApiUrl + s"/v1/groups")
+    "not reject the 'admin/groups' path" in {
+      val request = Get(baseApiUrl + s"/admin/groups")
       val response: HttpResponse = singleAwaitingRequest(request)
 
-      response.status should be(StatusCodes.NotFound)
+      response.status should be(StatusCodes.OK)
     }
 
-    "reject the 'v1/users' path" in {
-      val request = Get(baseApiUrl + s"/v1/users")
-      val response: HttpResponse = singleAwaitingRequest(request)
-
-      response.status should be(StatusCodes.NotFound)
-    }
-
-    "not reject the 'v1/projects' path, as it is not listed" in {
-      val request = Get(baseApiUrl + s"/v1/projects")
+    "not reject the 'admin/projects' path, as it is not listed" in {
+      val request = Get(baseApiUrl + s"/admin/projects")
       val response: HttpResponse = singleAwaitingRequest(request)
 
       response.status should be(StatusCodes.OK)

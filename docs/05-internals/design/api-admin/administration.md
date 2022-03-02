@@ -14,18 +14,18 @@ This Section includes management (creation, updating, deletion) of
 
 All administration functions will be implemented as part of the Knora
 API in the `webapi` codebase. There is also a separate web-application
-as part of the `salsah` codebase using this API, allowing basic
-management operations.
+as part of [DSP-APP](https://github.com/dasch-swiss/dsp-app) and
+[DSP-TOOLS]{https://github.com/dasch-swiss/dsp-tools} using this API,
+allowing basic management operations.
 
 ## Overview
 
 During the initial deployment of a Knora server, the main administration
 user (*root*) is created. This *root* user has the right to do anything.
 
-Knora’s concept of access control is that permissions can only be
-granted to groups (or the whole project, i.e. all members of a project)
-and not to individual users. There are two distinct ways of granting
-permission. Firstly, an object (a resource or value) can grant
+DSP’s concept of access control is that permissions can only be
+granted to groups and not to individual users. There are two distinct ways
+of granting permission. Firstly, an object (a resource or value) can grant
 permissions to groups of users, and secondly, permissions can be granted
 directly to a group of users (not bound to a specific object). There are
 six built-in groups: *UnknownUser*, *KnownUser*, *Creator*,
@@ -360,78 +360,23 @@ level** are applied. If a user is a member of more than one group on the
 same level (only possible for custom groups) then the defined
 permissions are summed up and the most permissive are applied.
 
-In the case of users belonging to the **SystemAdmin** group, but which
-are not members of a project and thus no group belonging to the project,
-the *default object access permissions* from the **highest defined
-level** will apply.
-
-In the case of users belonging to the **SystemAdmin group**, but which
-are not members of a project and thus not members of any group belonging
+In the case of the user belonging to the **SystemAdmin** group, but which
+is not member of a project and thus not member of any group belonging
 to the project, the *default object access permissions* from the
 **ProjectAdmin**, **ProjectMember**, or **KnownUser** group will be
 applied in the order of precedence. If no permissions are defined on
-either of these groups, then the resulting permission will be `CR
-knora-admin:Creator`.
-
-Also, in the case that no *default object access permissions* are
-defined for the project, the resulting permission will be `CR
-knora-admin:Creator`.
+either of these groups, then the resulting permission will be `CR knora-admin:Creator`.
 
 ## Implicit Permissions
 
 The `knora-admin:SystemAdmin` group receives implicitly the following
 permissions:
 
-  - receives implicitly *ProjectAllAdminPermission* for all projects.
-  - receives implicitly *ProjectResourceCreateAllPermission* for all
-    projects.
+  - receives implicitly *ProjectAdminAllPermission* for all projects.
+  - receives implicitly *ProjectResourceCreateAllPermission* for all projects.
   - receives implicitly *CR* on all objects from all projects.
 
 Theses permissions are baked into the system, and cannot be changed.
-
-## Permission Templates
-
-The permission capabilities of Knora are very large, as it needs to be
-able to satisfy a broad set of requirements. To simplify permission
-management for the users, we provide permission templates, which can be
-used during creation of new projects, or applied to existing projects. A
-permission template defines a set of administrative and default object
-access permission. Currently, two different templates will be defined
-*OPEN*, *CLOSED*.
-
-### Template: OPEN
-
-The *OPEN* template defines the following permissions:
-
-- The `knora-admin:ProjectAdmin` group:
-
-      - receives explicitly *ProjectResourceCreateAllPermission*.
-      - receives explicitly *ProjectAllAdminPermission*.
-
-- The `knora-admin:ProjectMember` group:
-
-      - receives explicitly *ProjectResourceCreateAllPermission*.
-      - receives explicitly *CR* for the *knora-admin:Creator* and
-        *knora-admin:ProjectAdmin* group.
-      - receives explicitly *M* for the *ProjectMember* group.
-      - receives explicitly *V* for the *knora-admin:KnownUser*
-        group.
-
-### Template: CLOSED
-
-The *CLOSED* template, defined the following permissions:
-
-- The `knora-admin:ProjectAdmin` group:
-
-      - receives explicitly *ProjectResourceCreateAllPermission*.
-      - receives explicitly *ProjectAllAdminPermission*.
-
-- The `knora-admin:ProjectMember` group:
-
-      - receives explicitly *ProjectResourceCreateAllPermission*.
-      - receives explicitly *CR* for the *knora-admin:ProjectAdmin*
-        group.
-      - receives explicitly *M* for the *ProjectMember* group.
 
 ## Default Permissions Matrix for new Projects
 
@@ -457,11 +402,32 @@ as follows:
 | ----------------- | ------- | ------- | ------------------- | ---------------------- | -------------------- |
 | **SystemAdmin**   | `CRUD`  | `CRUDP` | `CRUDP` all         | `CRUDP` all            | `CRUDP` all          |
 | **ProjectAdmin**  | `-RUD`  | `CRUDP` | `CRUDP` +/- project | `CRUDP` (in project)   | `CRUDP` (in project) |
-| **ProjectMember** | `----`  | `-----` | `-----`             | `CRUD-` (in project)   | `-----` (in project) |
-| **Creator**       | `----`  | `-----` | `-----`             | `-RUDP` (his resource) | `-----` (his value)  |
-| **KnownUser**     | `C---`  | `C----` | `CRUD-` himself     | `R----` (in project)   | `R----` (in project) |
+| **ProjectMember** | `----`  | `-----` | `-----`             | `CRU--` (in project)   | `-----` (in project) |
+| **Creator**       | `----`  | `-----` | `-----`             | `-----` (his resource) | `-----` (his value)  |
+| **KnownUser**     | `C---`  | `C----` | `CRUD-` himself     | `-----` (in project)   | `-----` (in project) |
 
 Default Permissions Matrix for new Projects
+
+The explicitly defined default permissions for a new project are as follows:
+
+- `knora-admin:ProjectAdmin` group:
+  - **Administrative Permissions:**
+    - *ProjectResourceCreateAllPermission*.
+    - *ProjectAdminAllPermission*.
+  - **Default Object Access Permissions:**
+    - *CR* for the *knora-admin:ProjectAdmin* group
+    - *D* for the *knora-admin:ProjectAdmin* group
+    - *M* for the *knora-admin:ProjectAdmin* group
+    - *V* for the *knora-admin:ProjectAdmin* group
+    - *RV* for the *knora-admin:ProjectAdmin* group
+
+- The `knora-admin:ProjectMember` group:
+  - **Administrative Permissions:**
+    - *ProjectResourceCreateAllPermission*.
+  - **Default Object Access Permissions:**
+    - *M* for the *knora-admin:ProjectMember* group
+    - *V* for the *knora-admin:ProjectMember* group
+    - *RV* for the *knora-admin:ProjectMember* group
 
 ## Basic Workflows involving Permissions
 
@@ -653,173 +619,3 @@ information is then stored as an easy accessible object inside the
 `UserProfile`, being readily available wherever needed. As this is a
 somewhat expensive operation, built-in caching mechanism at different
 levels (e.g., UsersResponder, PermissionsResponder), will be applied.
-
-## Use Cases
-
-### UC01: Teaching a Class
-
-  - **Description**:  
-    I'm teaching a class and I have the names and email addresses of all
-    the students. I want to create a project, divide the students into
-    groups (which will only be relevant to this project, e.g. one group
-    for each section of the class), and put some students in each group.
-    I don't want people to be able to join the project or the group by
-    themselves.
-
-  - **Solution**:  
-    The teacher creates different groups and adds users to those groups.
-    Additionally, the teacher can give TA's *GroupAdmin* privileges, and
-    let the TA's add students to the different groups.
-
-### UC02: Unibas Librarian
-
-  - **Description**:  
-    I'm a Unibas librarian managing several archiving projects. I need
-    to give everyone at the university permission to view all these
-    projects. I want to create a group called *UnibasUser* that everyone
-    with a Unibas email address will automatically belong to. Most of
-    the resources in those projects can then grant view permission to
-    *UnibasUser*. Or perhaps the group will be *SwitchUser*, for anyone
-    at a Swiss university. Or something even broader.
-
-  - **Solution**:  
-    These can be solved by creating *Smart Groups*, where the user can
-    define what properties need to be set, so that an user is
-    automatically part of this group. This will be implemented at a
-    later time, as it is not trivial and should also include all special
-    groups (e.g., KnownUser, ProjectMember, ProjectAdmin, etc.) that are
-    currently hard-coded inside the system.
-
-### UC03: Crowdsourcing Project
-
-  - **Description**:  
-    I'm doing a crowdsourcing project, which involves several different
-    groups that work on different tasks. I'm hoping for thousands of
-    users, and I'd like anyone to be able to join the project and add
-    themselves to any group they want (as long as Knora verifies their
-    email address), without needing approval from me.
-
-  - **Solution**:  
-    This can be solved by allowing self-assignment to a group.
-
-### UC04: User "left" Knora
-
-  - **Description**:  
-    An user who was an active collaborator, decides to "quit", and wants
-    to delete his user.
-
-  - **Solution**:  
-    The user's IRI is saved on each value change as part of the
-    versioning mechanism. Exchanging the user's IRI in those places
-    would count as 'rewriting history'. So deleting a user will not be
-    possible, instead the user will be set as `not active`.
-
-## Redesign / Questions June 2016
-
-  - **Permissions constrained to groups**
-
-      - Why this constraint?
-      - This is just the way we are doing it. Makes it a bit
-        simpler.
-
-**Resource owner permission to disruptive**
-
-  - knora-base:attachedToUser gives owner status to the person who
-    created the resource.
-  - **Proposed change:** remove this altogether or make
-    institution/project owner of the resource.
-  - Should hiwis be "owners" of resources they create on behalf of
-    their professor?
-  - If the creator should have max permission, then give it
-    explicitly.
-  - Owner will be renamed to creator. We need this for
-    provenance. Does not give any permissions automatically. The
-    permissions depend on what is defined for the project and the
-    *creator* smart group.
-
-**Resource creation permission to course**
-
-  - being part of a projects gives resource creation permission. What
-    if some project members are not allowed to create new resources
-    (or only certain types; Lumiere Lausanne requirement), but are
-    only allowed to change existing resources?
-  - These kind of permissions can be set on groups. A project can
-    have different groups, giving different kind of permissions.
-
-**Support Default Permissions**
-
-  - Allow for a project to define permissions that a newly created
-    resource inside a project should receive (current Salsah behavior)
-  - Lumiere Lausanne requirement
-  - Will be allowed.
-
-**Groups**
-
-  - Do groups belong to projects, i.e. are they seen as extensions to
-    projects?
-  - Does someone need to be part of a project to belong to a group of
-    that project?
-  - Every group needs to belong to a project. No GroupAdmins.
-    ProjectAdmins with additional GroupAdmin permissions.
-
-**root**
-
-  - Should the 'root' / SystemAdmin user have 'implicitly' or
-    'explicitly' all permissions?
-  - Has implicitly all permissions.
-  - Does the has all permissions also extend to projects? Is the root
-    user going to be part of every project? If yes, then again
-    implicitly or explicitly?
-  - Since 'root' / SystemAdmin already has all permissions,
-    doesn't really matter if part of a project or group
-
-**Ivan's Use Case**
-
-  - The system administrator creates the project and sets Ivan as the
-    project administrator. As the project administrator, I have all
-    permissions on all objects (Resources/Values; Project Groups)
-    belonging to the project (knora-base:attachedToProject). Nobody
-    outside of the project should be allowed to see anything that is
-    created as part of Ivan's project. He wants to be able to create
-    two groups: *Reviewer*, *Creator*. The *Reviewer* group should
-    only give *read-access* to someone inside the group to resources
-    pointing to this group, but allow the creation of annotations.
-    Further, annotations should only be readable by users inside the
-    *Reviewer* group. The *Creator* group should give a user create
-    permission and modify permission on the objects the user has
-    created. Any resources created belong to the project. The
-    *Creator* group is meant for contributors helping out with the
-    project, e.g., Hiwis.
-  - Covered
-
-**Lausanne Projects**
-
-  - A project wants to restrict the permissions of newly created
-    resources to a fixed set
-  - Covered. Will be able do define 'default permissions' and
-    restrict the creation of new resources to these permissions
-  - This means for the current implementation, that any permissions
-    supplied during the resource creation request need to be checked
-    and if needed overriden.
-  - Covered. Also in the new design, the backend will need to
-    always check the suplied permissions for newly created resources
-    as we cannot ve sure that the GUI will behave correctly (e.g.,
-    many different "Salsah" implementations)
-  - Restrict creation/access of certain classes of resources to
-    certain groups, e.g., group A is able to create/access resources
-    of class A but not of class B.
-  - Covered. Will be able to give a certain group only create
-    permission for specific classes
-
-**Results**
-
-  - *Owner* renamed to *Creator*
-  - Some permissions are attached to groups (e.g., Add Resource
-    (Class), Modify Ontology, etc.), and some are attached to
-    resources (e.g., this group has read/modify permission, etc.)
-  - Ontologien Benutzung einschränken (nur auf bestimmte Gruppen, oder
-    frei zur Verfügung)
-  - System Admin Rechte implizit
-  - Gruppen immer an Projekt gebunden
-  - Keine Gruppen-Admins. Soll über Rollen vom Projekt-Admin geregelt
-    werden können.

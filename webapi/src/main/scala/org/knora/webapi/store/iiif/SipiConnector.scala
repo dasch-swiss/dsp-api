@@ -5,18 +5,19 @@
 
 package org.knora.webapi.store.iiif
 
-import java.util
-
 import akka.actor.{Actor, ActorLogging, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.config.SocketConfig
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
+import org.apache.http.protocol.HttpContext
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
+import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair, NoHttpResponseException}
 import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, SipiException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
@@ -27,6 +28,8 @@ import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import org.knora.webapi.util.SipiUtil
 import spray.json._
 
+import java.io.IOException
+import java.util
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
@@ -46,14 +49,40 @@ class SipiConnector extends Actor with ActorLogging {
 
   private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
 
-  private val sipiRequestConfig = RequestConfig
+  // Create a connection manager with custom configuration.
+  private val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
+
+  // Create socket configuration
+  private val socketConfig: SocketConfig = SocketConfig
+    .custom()
+    .setTcpNoDelay(true)
+    .build();
+
+  // Configure the connection manager to use socket configuration by default.
+  connManager.setDefaultSocketConfig(socketConfig)
+
+  // Validate connections after 1 sec of inactivity
+  connManager.setValidateAfterInactivity(1000);
+
+  // Configure total max or per route limits for persistent connections
+  // that can be kept in the pool or leased by the connection manager.
+  connManager.setMaxTotal(100)
+  connManager.setDefaultMaxPerRoute(10)
+
+  // Sipi custom default request config
+  private val defaultRequestConfig = RequestConfig
     .custom()
     .setConnectTimeout(sipiTimeoutMillis)
     .setConnectionRequestTimeout(sipiTimeoutMillis)
     .setSocketTimeout(sipiTimeoutMillis)
     .build()
 
-  private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
+  // Create an HttpClient with the given custom dependencies and configuration.
+  private val httpClient: CloseableHttpClient = HttpClients
+    .custom()
+    .setConnectionManager(connManager)
+    .setDefaultRequestConfig(defaultRequestConfig)
+    .build()
 
   override def receive: Receive = {
     case getFileMetadataRequest: GetFileMetadataRequest =>
@@ -255,7 +284,7 @@ class SipiConnector extends Actor with ActorLogging {
    * @return Sipi's response.
    */
   private def doSipiRequest(request: HttpRequest): Try[String] = {
-    val httpContext: HttpClientContext = HttpClientContext.create
+    val httpContext: HttpClientContext = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
     val sipiResponseTry = Try {

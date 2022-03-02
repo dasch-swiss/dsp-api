@@ -38,7 +38,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
 
     "convert a resource Turtle response into a resource" in {
       val resourceIri: IRI = "http://rdfh.ch/0803/c5058f3a"
-      val turtleStr: String = FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/Zeitglocklein.ttl"))
+      val turtleStr: String = FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/Zeitglocklein.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -73,7 +73,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     "convert a resource Turtle response with hidden values into a resource with the anything admin user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
+        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -109,7 +109,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     "convert a resource Turtle response with hidden values into a resource with the incunabula user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
+        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/visibleThingWithHiddenIntValues.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -145,7 +145,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     "convert a resource Turtle response with a hidden thing into a resource with the anything admin user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"))
+        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -181,7 +181,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     "convert a resource Turtle response with a hidden thing into a resource with an unknown user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"))
+        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/thingWithOneHiddenThing.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -217,7 +217,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
     "convert a resource Turtle response with standoff into a resource with anything admin user" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/a-thing-with-text-values"
       val turtleStr: String =
-        FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/thingWithStandoff.ttl"))
+        FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/thingWithStandoff.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -283,7 +283,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
        */
 
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/76570a749901", "http://rdfh.ch/0803/773f258402")
-      val turtleStr: String = FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/mainQuery1.ttl"))
+      val turtleStr: String = FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/mainQuery1.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -350,7 +350,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
        */
 
       val resourceIris: Seq[IRI] = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/ff17e5ef9601")
-      val turtleStr: String = FileUtil.readTextFile(Paths.get("test_data/constructResponseUtilV2/mainQuery2.ttl"))
+      val turtleStr: String = FileUtil.readTextFile(Paths.get("..", "test_data/constructResponseUtilV2/mainQuery2.ttl"))
       val resourceRequestResponse: SparqlExtendedConstructResponse =
         SparqlExtendedConstructResponse.parseTurtleResponse(turtleStr, rdfFormatUtil, log).get
       val mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =

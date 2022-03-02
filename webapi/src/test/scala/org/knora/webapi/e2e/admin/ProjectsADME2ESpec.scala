@@ -64,9 +64,7 @@ class ProjectsADME2ESpec
   )
 
   "The Projects Route ('admin/projects')" when {
-
     "used to query for project information" should {
-
       "return all projects" in {
         val request = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -182,7 +180,7 @@ class ProjectsADME2ESpec
     }
 
     "given a custom Iri" should {
-      val customProjectIri: IRI = "http://rdfh.ch/projects/XGze0w7g6P3p3z6tj_SXPQ"
+      val customProjectIri: IRI = "http://rdfh.ch/projects/wahxssy1TDqPuSk6ee8EdQ"
       "CREATE a new project with the provided custom Iri" in {
 
         val createProjectWithCustomIRIRequest: String =
@@ -272,7 +270,6 @@ class ProjectsADME2ESpec
     }
 
     "used to modify project information" should {
-
       val newProjectIri = new MutableTestIri
 
       "CREATE a new project and return the project info if the supplied shortname is unique" in {
@@ -519,7 +516,6 @@ class ProjectsADME2ESpec
       }
 
       "DELETE a project" in {
-
         val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded) ~> addCredentials(
           BasicHttpCredentials(rootEmail, testPass)
@@ -546,7 +542,6 @@ class ProjectsADME2ESpec
     }
 
     "used to query members [FUNCTIONALITY]" should {
-
       "return all members of a project identified by iri" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
           BasicHttpCredentials(rootEmail, testPass)
@@ -642,7 +637,6 @@ class ProjectsADME2ESpec
     }
 
     "used to query members [PERMISSIONS]" should {
-
       "return members of a project to a SystemAdmin" in {
         val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
           BasicHttpCredentials(rootEmail, testPass)
@@ -693,7 +687,6 @@ class ProjectsADME2ESpec
     }
 
     "used to query keywords" should {
-
       "return all unique keywords for all projects" in {
         val request =
           Get(baseApiUrl + s"/admin/projects/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
