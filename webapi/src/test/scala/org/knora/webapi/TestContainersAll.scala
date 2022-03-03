@@ -33,7 +33,7 @@ object TestContainersAll {
   FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
   FusekiContainer.start()
 
-  val SipiImageName: DockerImageName = DockerImageName.parse(BuildInfo.sipi)
+  val SipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
   val SipiContainer = new GenericContainer(SipiImageName)
   SipiContainer.withExposedPorts(1024)
   SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
