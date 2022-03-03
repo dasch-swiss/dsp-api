@@ -109,7 +109,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
   )
   .settings(
-    exportJars := true, // everything is put into the jar --> good for testing what's inside the jar
+    exportJars := true,
     Compile / unmanagedResourceDirectories += (rootBaseDir.value / "knora-ontologies"),
     // add needed files to jar
     Compile / packageBin / mappings ++= Seq(
