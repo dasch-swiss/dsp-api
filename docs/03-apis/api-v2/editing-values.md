@@ -226,7 +226,7 @@ If an XSL transformation has been defined, the IRI the transformation can be pla
 
 If a mapping has been defined, then requesting the text value will return both the `kb:textValueAsXml` and the `kb:textValueAsHtml` properties,
 where the XML can be used for editing the value, while the HTML can be used to display it.
-If no maping has been defined, only `kb:textValueAsXml` can be returned.
+If no mapping has been defined, only `kb:textValueAsXml` can be returned.
 
 ## Creating File Values
 
