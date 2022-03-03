@@ -111,28 +111,11 @@ To run all test targets, use the following in the command line:
 $ make test
 ```
 
-To run only the dsp-api integration tests, use
-
-```
-$ make test-it
-```
-To run only the dsp-api unit tests, use
-
-```
-$ make test-unit
-```
-
-Lastly, to run all dsp-api test, use
-
-```
-$ make test-webapi 
-```
-
-As explained in the [bazel document](bazel.md), to run a single test from the command line, for example `SearchV1R2RSpec`, 
+To run a single test from the command line, for example `SearchV1R2RSpec`, 
 run the following:
 
  ```bash
-    $ bazel test //webapi/src/test/scala/org/knora/webapi/e2e/v1:SearchV1R2RSpec
+    $ sbt " webapi / testOnly *SearchV1R2RSpec* "
  ```
 
 _**Note:** to run tests, the api container must be stopped first!_
