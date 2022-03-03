@@ -293,7 +293,6 @@ clean-local-tmp:
 
 clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 	@rm -rf .env
-	@bazel clean
 
 .PHONY: clean-sipi-tmp
 clean-sipi-tmp: ## deletes all files in Sipi's tmp folder

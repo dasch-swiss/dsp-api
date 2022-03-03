@@ -55,7 +55,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
     Docker / dockerRepository := Some("daschswiss"),
-    Docker / packageName := "sipi",
+    Docker / packageName := "knora-sipi",
     dockerUpdateLatest := true,
     dockerBaseImage := Dependencies.sipiImage,
     Docker / maintainer := "support@dasch.swiss",
@@ -64,6 +64,19 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Universal / mappings ++= {
       // copy the sipi/scripts folder
       directory("sipi/scripts")
+    },
+    // use filterNot to return all items that do NOT meet the criteria
+    dockerCommands := dockerCommands.value.filterNot {
+
+      // ExecCmd is a case class, and args is a varargs variable, so you need to bind it with @
+      // remove ENTRYPOINT
+      case ExecCmd("ENTRYPOINT", args @ _*) => true
+
+      // remove CMD
+      case ExecCmd("CMD", args @ _*) => true
+
+      // don't filter the rest; don't filter out anything that doesn't match a pattern
+      case cmd => false
     }
   )
 
@@ -107,9 +120,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
     // put additional files into the jar when running tests which are needed by testcontainers
-    // this is NOT needed here --> move it to the sipi project (see Universal...)
     Test / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "sipi" / "scripts" / "sipi.init-knora.lua") -> "sipi/scripts/sipi.init-knora.lua",
       (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua"
     )
   )
