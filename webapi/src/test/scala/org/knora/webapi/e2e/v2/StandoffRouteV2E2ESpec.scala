@@ -10,7 +10,8 @@ import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi.SipiUploadResponseJsonProtocol.sipiUploadResponseFormat
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants

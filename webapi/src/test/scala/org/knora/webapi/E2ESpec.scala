@@ -198,32 +198,18 @@ class E2ESpec(_system: ActorSystem)
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
-  
-  private def createTmpFileDir(): Unit = {
-      // check if tmp datadir exists and create it if not
-      val tmpFileDir = Path.of(settings.tmpDataDir)
 
-      if (!Files.exists(tmpFileDir)) {
-        try {
-          Files.createDirectories(tmpFileDir)
-        } catch {
-          case e: Throwable =>
-            throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-        }
+  private def createTmpFileDir(): Unit = {
+    // check if tmp datadir exists and create it if not
+    val tmpFileDir = Path.of(settings.tmpDataDir)
+
+    if (!Files.exists(tmpFileDir)) {
+      try {
+        Files.createDirectories(tmpFileDir)
+      } catch {
+        case e: Throwable =>
+          throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
       }
     }
-}
-
-protected case class SipiUploadResponseEntry(
-  originalFilename: String,
-  internalFilename: String,
-  temporaryUrl: String,
-  fileType: String
-)
-protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
-object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
-    SipiUploadResponseEntry
-  )
-  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+  }
 }
