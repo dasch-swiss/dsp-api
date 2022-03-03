@@ -46,13 +46,13 @@ sealed abstract case class UploadFileRequest private (
       case Some(v) => v
       case None    => FileModelUtil.getDefaultClassName(fileType)
     }
-    val resorceIRIOrNothing = resourceIRI match {
+    val resorceIRIOrEmptyString = resourceIRI match {
       case Some(v) => s""" "@id": "$v",\n  """
       case None    => ""
     }
 
     s"""{
-       |  $resorceIRIOrNothing"@type" : "$ontologyName:$classNameWithDefaults",
+       |  $resorceIRIOrEmptyString"@type" : "$ontologyName:$classNameWithDefaults",
        |  "$fileValuePropertyName" : {
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
