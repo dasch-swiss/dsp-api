@@ -3,7 +3,7 @@ version: '3'
 services:
   # sipi using default (production-like) configuration with additional routes for testing
   sipi:
-    image: daschswiss/sipi:latest
+    image: daschswiss/knora-sipi:latest
     container_name: sipi
     ports:
       - "1024:1024"
@@ -25,7 +25,7 @@ services:
 
   # sipi using configuration which disables authentication
   sipi-no-auth:
-    image: daschswiss/sipi:latest
+    image: daschswiss/knora-sipi:latest
     container_name: sipi-no-auth
     ports:
       - "1024:1024"
