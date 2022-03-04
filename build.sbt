@@ -232,7 +232,7 @@ lazy val apiMain = project
   .dependsOn(schemaCore, schemaRepo, schemaApi)
 
 lazy val schemaApi = project
-  .in(file("dsp-schema-api"))
+  .in(file("dsp-schema/api"))
   .settings(
     name := "schemaApi",
     Dependencies.webapiLibraryDependencies,
@@ -241,7 +241,7 @@ lazy val schemaApi = project
   .dependsOn(schemaCore)
 
 lazy val schemaCore = project
-  .in(file("dsp-schema-core"))
+  .in(file("dsp-schema/core"))
   .settings(
     name := "schemaCore",
     Dependencies.webapiLibraryDependencies,
@@ -249,7 +249,7 @@ lazy val schemaCore = project
   )
 
 lazy val schemaRepo = project
-  .in(file("dsp-schema-repo"))
+  .in(file("dsp-schema/repo"))
   .settings(
     name := "schemaRepo",
     Dependencies.webapiLibraryDependencies,
@@ -258,7 +258,7 @@ lazy val schemaRepo = project
   .dependsOn(schemaCore)
 
 lazy val schemaRepoEventStoreService = project
-  .in(file("dsp-schema-repo-eventstore-service"))
+  .in(file("dsp-schema/repo-eventstore-service"))
   .settings(
     name := "schemaRepoEventstoreService",
     Dependencies.webapiLibraryDependencies,
@@ -267,7 +267,7 @@ lazy val schemaRepoEventStoreService = project
   .dependsOn(schemaRepo)
 
 lazy val schemaRepoSearchService = project
-  .in(file("dsp-schema-repo-search-service"))
+  .in(file("dsp-schema/repo-search-service"))
   .settings(
     name := "dsp-schema-repo-search-service",
     Dependencies.webapiLibraryDependencies,
