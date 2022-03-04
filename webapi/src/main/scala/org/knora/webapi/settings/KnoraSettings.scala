@@ -281,12 +281,6 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   val prometheusEndpoint: Boolean = config.getBoolean("app.monitoring.prometheus-endpoint")
 
-  val upgradeDownloadDir: Option[String] = if (config.hasPath("app.upgrade.download-dir")) {
-    Some(config.getString("app.upgrade.download-dir"))
-  } else {
-    None
-  }
-
   val shaclShapesDir: Path = Paths.get(config.getString("app.shacl.shapes-dir"))
 
   val featureToggles: Set[FeatureToggleBaseConfig] = if (config.hasPath(featureTogglesPath)) {
