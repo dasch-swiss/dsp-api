@@ -76,6 +76,8 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
       // remove CMD
       case ExecCmd("CMD", args @ _*) => true
 
+      case Cmd("USER", args @ _*) => true
+
       // don't filter the rest; don't filter out anything that doesn't match a pattern
       case cmd => false
     }
@@ -175,7 +177,15 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     dockerBaseImage := "eclipse-temurin:11-jre-focal",
     Docker / maintainer := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333),
-    Docker / defaultLinuxInstallLocation := "/opt/docker"
+    Docker / defaultLinuxInstallLocation := "/opt/docker",
+    // use filterNot to return all items that do NOT meet the criteria
+    dockerCommands := dockerCommands.value.filterNot {
+      // Remove USER command
+      case Cmd("USER", args @ _*) => true
+
+      // don't filter the rest; don't filter out anything that doesn't match a pattern
+      case cmd => false
+    }
   )
   .settings(
     buildInfoKeys ++= Seq[BuildInfoKey](
