@@ -34,53 +34,33 @@ docs-clean: ## cleans the project directory
 	@rm -rf site/
 
 #################################
-# Bazel targets
+# Docker targets
 #################################
 
 .PHONY: build
 build: docker-build ## build all targets (excluding docs)
 
-.PHOBY: check-for-outdated-deps
-check-for-outdated-deps: ## check for outdated maven dependencies
-	@bazel run @maven//:outdated
-
-.PHONY: buildifier
-buildifier: ## format Bazel WORKSPACE and BUILD.bazel files
-	@bazel run :buildifier
-
-#################################
-# Docker targets
-#################################
-
-.PHONY: docker-build-knora-api-image
-docker-build-knora-api-image: # build and publish knora-api docker image locally
+.PHONY: docker-build-dsp-api-image
+docker-build-dsp-api-image: # build and publish dsp-api docker image locally
 	@sbt "webapi / Docker / publishLocal"
 
-.PHONY: docker-publish-knora-api-image
-docker-publish-knora-api-image: # publish knora-api image to Dockerhub
-	@bazel run //docker/knora-api:push
+.PHONY: docker-publish-dsp-api-image
+docker-publish-dsp-api-image: # publish dsp-api image to Dockerhub
+	@sbt "webapi / Docker / publish"
 
-.PHONY: docker-build-knora-jena-fuseki-image
-docker-build-knora-jena-fuseki-image: # build and publish knora-jena-fuseki docker image locally
-	@bazel run //docker/knora-jena-fuseki:image
+.PHONY: docker-build-sipi-image
+docker-build-sipi-image: # build and publish sipi docker image locally
+	@sbt "sipi / Docker / publishLocal"
 
-.PHONY: docker-publish-knora-jena-fuseki-image
-docker-publish-knora-jena-fuseki-image: # publish knora-jena-fuseki image to Dockerhub
-	@bazel run //docker/knora-jena-fuseki:push
-
-.PHONY: docker-build-knora-sipi-image
-docker-build-knora-sipi-image: # build and publish knora-sipi docker image locally
-	@bazel run --action_env=PULLER_TIMEOUT=2400 //docker/knora-sipi:image
-
-.PHONY: docker-publish-knora-sipi-image
-docker-publish-knora-sipi-image: # publish knora-sipi image to Dockerhub
-	@bazel run //docker/knora-sipi:push
+.PHONY: docker-publish-sipi-image
+docker-publish-sipi-image: # publish sipi image to Dockerhub
+	@sbt "sipi / Docker / publish"
 
 .PHONY: docker-build
-docker-build: docker-build-knora-api-image docker-build-knora-jena-fuseki-image docker-build-knora-sipi-image ## build and publish all Docker images locally
+docker-build: docker-build-dsp-api-image docker-build-sipi-image ## build and publish all Docker images locally
 
 .PHONY: docker-publish
-docker-publish: docker-publish-knora-api-image docker-publish-knora-jena-fuseki-image docker-publish-knora-sipi-image ## publish all Docker images to Dockerhub
+docker-publish: docker-publish-dsp-api-image docker-publish-sipi-image ## publish all Docker images to Dockerhub
 
 #################################
 ## Docker-Compose targets
@@ -188,17 +168,13 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 	@docker compose -f docker-compose.yml stop sipi
 
 .PHONY: stack-db-only
-stack-db-only: env-file docker-build-knora-jena-fuseki-image  ## starts only fuseki.
+stack-db-only: env-file  ## starts only fuseki.
 	@docker compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 
 #################################
 ## Test Targets
 #################################
-
-.PHONY: test-docker
-test-docker: docker-build ## runs Docker image tests
-	bazel test //docker/...
 
 .PHONY: client-test-data
 client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
@@ -301,7 +277,6 @@ clean-local-tmp:
 
 clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 	@rm -rf .env
-	@bazel clean
 
 .PHONY: clean-sipi-tmp
 clean-sipi-tmp: ## deletes all files in Sipi's tmp folder

@@ -108,7 +108,6 @@ nav:
           - Overview: 05-internals/development/overview.md
           - Build and Running: 05-internals/development/building-and-running.md
           - Setup IntelliJ for development of DSP-API: 05-internals/development/intellij-config.md
-          - Bazel Notes: 05-internals/development/bazel.md
           - Testing: 05-internals/development/testing.md
           - Docker Cheat Sheet: 05-internals/development/docker-cheat-sheet.md
           - Monitoring DSP-API: 05-internals/development/monitoring.md
