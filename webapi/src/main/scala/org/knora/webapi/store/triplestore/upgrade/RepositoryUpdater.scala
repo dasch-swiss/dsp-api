@@ -186,21 +186,8 @@ class RepositoryUpdater(
   private def updateRepositoryWithSelectedPlugins(
     pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]
   ): Future[RepositoryUpdatedResponse] = {
-    // Was a download directory specified in the application settings?
-    val downloadDir: Path = settings.upgradeDownloadDir match {
-      case Some(configuredDir) =>
-        // Yes. Use that directory.
-        log.info(s"Repository update using configured download directory $configuredDir")
-        val dirFile = Paths.get(configuredDir)
-        Files.createDirectories(dirFile)
-        dirFile
-
-      case None =>
-        // No. Create a temporary directory.
-        val dirFile = Files.createTempDirectory(tempDirNamePrefix)
-        log.info(s"Repository update using download directory $dirFile")
-        dirFile
-    }
+    val downloadDir: Path = Files.createTempDirectory(tempDirNamePrefix)
+    log.info(s"Repository update using download directory $downloadDir")
 
     // The file to save the repository in.
     val downloadedRepositoryFile = downloadDir.resolve("downloaded-repository.nq")
