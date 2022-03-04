@@ -1,7 +1,0 @@
-build --disk_cache=~/.bazel_disk_cache
-build --strategy=Scalac=worker
-build --worker_sandboxing
-build --workspace_status_command=tools/buildstamp/get_workspace_status --stamp=yes
-startup --host_jvm_args=-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts \
-        --host_jvm_args=-Djavax.net.ssl.trustStorePassword=changeit
-test --test_output=errors --local_test_jobs=1 --runs_per_test 1

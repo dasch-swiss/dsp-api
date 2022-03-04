@@ -60,7 +60,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = false
+  private val writeTestDataFiles = true
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -118,7 +118,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   ) {
     def makeFile(mediaType: MediaType.NonBinary): Path = {
       val fileSuffix = mediaType.fileExtensions.head
-      Paths.get("..", s"test_data/ontologyR2RV2/$fileBasename.$fileSuffix")
+      Paths.get("..", "..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
     }
 
     /**
@@ -129,9 +129,7 @@ class OntologyV2R2RSpec extends R2RSpec {
      */
     def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit =
       if (!disableWrite) {
-        // Per default only read access is allowed in the bazel sandbox.
-        // This workaround allows to save test output.
-        val testOutputDir = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
+        val testOutputDir = Paths.get("..", "test_data", "ontologyR2RV2")
         val file = makeFile(mediaType)
         val newOutputFile = testOutputDir.resolve(file)
         Files.createDirectories(newOutputFile.getParent)

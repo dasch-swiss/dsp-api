@@ -145,8 +145,6 @@ class R2RSpec
 
   /**
    * Reads or writes a test data file.
-   * The written test data files can be found under:
-   * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
    *
    * @param responseAsString the API response received from Knora.
    * @param file             the file in which the expected API response is stored.
@@ -155,9 +153,7 @@ class R2RSpec
    */
   protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String =
     if (writeFile) {
-      // Per default only read access is allowed in the bazel sandbox.
-      // This workaround allows to save test output.
-      val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
+      val testOutputDir = Paths.get("..", "test_data", "ontologyR2RV2")
       val newOutputFile = testOutputDir.resolve(file)
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(

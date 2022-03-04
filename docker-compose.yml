@@ -3,7 +3,7 @@ version: '3.7'
 services:
 
   db:
-    image: bazel/docker/knora-jena-fuseki:image
+    image: daschswiss/apache-jena-fuseki:2.0.8 # should be the same version as in Dependencies.scala
     ports:
       - "3030:3030"
     volumes:
@@ -16,7 +16,8 @@ services:
       - JVM_ARGS=-Xmx3G
 
   sipi:
-    image: bazel/docker/knora-sipi:image
+    image: daschswiss/knora-sipi:latest
+
     ports:
       - "1024:1024"
     volumes:
