@@ -14,11 +14,11 @@ import messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtoco
 import messages.util.rdf._
 import settings._
 import util.{FileUtil, StartupUtils}
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
 import akka.testkit.{ImplicitSender, TestKit}
@@ -102,7 +102,7 @@ class E2ESpec(_system: ActorSystem)
     appActor ! SetAllowReloadOverHTTPState(true)
 
     // start the knora service, loading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
 
     // waits until knora is up and running
     applicationStateRunning()
