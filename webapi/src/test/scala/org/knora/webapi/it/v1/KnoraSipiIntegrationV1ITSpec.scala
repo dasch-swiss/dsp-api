@@ -16,6 +16,8 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, InvalidApiJsonException}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}

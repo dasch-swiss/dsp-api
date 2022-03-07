@@ -175,8 +175,11 @@ Use the predicate `knora-api:valueAsString` of `knora-api:TextValue`:
 ### Creating a Text Value with Standoff Markup
 
 Currently, the only way to create a text value with standoff markup is to submit it in XML format using an
-[XML-to-standoff mapping](xml-to-standoff-mapping.md). For example, suppose we use the standard mapping,
-`http://rdfh.ch/standoff/mappings/StandardMapping`. We can then make an XML document like this:
+[XML-to-standoff mapping](xml-to-standoff-mapping.md).
+
+#### Creating a Text Value with Standard Mapping
+
+To create a value with the standard mapping (`http://rdfh.ch/standoff/mappings/StandardMapping`), we can make an XML document like this:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -206,6 +209,24 @@ This document can then be embedded in a JSON-LD request, using the predicate `kn
 ```
 
 Note that quotation marks and line breaks in the XML must be escaped, and that the IRI of the mapping must be provided.
+
+#### Creating a Text Value with a Custom Mapping
+
+To create a text value with custom mapping, the following steps are required:
+
+1. Optionally, an XSL transformation resource (`kb:XSLTransformation`) can be created that may be defined as the default transformation of the mapping.
+2. The mapping resource (`kb:XMLToStandoffMapping`) must be created, if it does not already exist.
+3. The text value can be created as in the example above, using the mapping resource IRI in `kb:textValueHasMapping`.
+
+The `kb:XSLTransformation` resource is a subclass of `kb:TextRepresentation`, so it has a `kb:hasTextFileValue` pointing to a `kb:TextFileValue`
+which represents the XSLT file stored in SIPI. For more Details, see [Creating File Values](#creating-file-values).
+
+The `kb:XMLToStandoffMapping` resource requires the mapping XML as specified [here](../api-v1/xml-to-standoff-mapping.md#creating-a-custom-mapping).
+If an XSL transformation has been defined, the IRI the transformation can be placed in the `<defaultXSLTransformation>` tag of the mapping XML.
+
+If a mapping has been defined, then requesting the text value will return both the `kb:textValueAsXml` and the `kb:textValueAsHtml` properties,
+where the XML can be used for editing the value, while the HTML can be used to display it.
+If no mapping has been defined, only `kb:textValueAsXml` can be returned.
 
 ## Creating File Values
 

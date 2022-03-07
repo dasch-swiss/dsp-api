@@ -8,6 +8,8 @@ package org.knora.webapi.messages.store.sipimessages
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json._
 
 /**
  * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.IIIFManager]]
@@ -110,3 +112,32 @@ case object IIIFServiceStatusOK extends IIIFServiceStatusResponse
  * Represents a negative response for [[IIIFServiceGetStatus]].
  */
 case object IIIFServiceStatusNOK extends IIIFServiceStatusResponse
+
+/**
+ * Represents the information that Sipi returns about each file that has been uploaded.
+ *
+ * @param originalFilename the original filename that was submitted to Sipi.
+ * @param internalFilename Sipi's internal filename for the stored temporary file.
+ * @param temporaryUrl     the URL at which the temporary file can be accessed.
+ * @param fileType         `image`, `text`, or `document`.
+ */
+case class SipiUploadResponseEntry(
+  originalFilename: String,
+  internalFilename: String,
+  temporaryUrl: String,
+  fileType: String
+)
+
+/**
+ * Represents Sipi's response to a file upload request.
+ *
+ * @param uploadedFiles the information about each file that was uploaded.
+ */
+case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
+
+object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
+    SipiUploadResponseEntry
+  )
+  implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
+}

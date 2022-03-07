@@ -15,6 +15,8 @@ import org.knora.webapi.ITKnoraLiveSpec
 import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import spray.json._
 
 import scala.concurrent.Await
