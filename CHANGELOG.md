@@ -1,5 +1,12 @@
 # Changelog
 
+### [17.5.4](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.3...v17.5.4) (2022-03-07)
+
+
+### Maintenance
+
+* improve code structure (DEV-612) ([#2012](https://www.github.com/dasch-swiss/dsp-api/issues/2012)) ([eac0049](https://www.github.com/dasch-swiss/dsp-api/commit/eac0049773c288d0b2f05c626662585a913cbaef))
+
 ### [17.5.3](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.2...v17.5.3) (2022-03-04)
 
 
