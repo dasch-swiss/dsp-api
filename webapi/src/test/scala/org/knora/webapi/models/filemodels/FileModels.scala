@@ -20,7 +20,8 @@ import java.util.UUID
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String,
-  label: String
+  label: String,
+  resourceIRI: Option[String] = None
 ) {
 
   /**
@@ -45,9 +46,13 @@ sealed abstract case class UploadFileRequest private (
       case Some(v) => v
       case None    => FileModelUtil.getDefaultClassName(fileType)
     }
+    val resorceIRIOrEmptyString = resourceIRI match {
+      case Some(v) => s""" "@id": "$v",\n  """
+      case None    => ""
+    }
 
     s"""{
-       |  "@type" : "$ontologyName:$classNameWithDefaults",
+       |  $resorceIRIOrEmptyString"@type" : "$ontologyName:$classNameWithDefaults",
        |  "$fileValuePropertyName" : {
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
@@ -175,12 +180,14 @@ object UploadFileRequest {
   def make(
     fileType: FileType,
     internalFilename: String,
-    label: String = "test label"
+    label: String = "test label",
+    resourceIRI: Option[String] = None
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType = fileType,
       internalFilename = internalFilename,
-      label = label
+      label = label,
+      resourceIRI = resourceIRI
     ) {}
 }
 

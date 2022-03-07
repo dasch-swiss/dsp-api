@@ -50,13 +50,53 @@ See the interfaces `Resource` and `ResourcesSequence` in module
 Text markup can be returned in one of two ways:
 
 - As XML embedded in the response, using an [XML to Standoff Mapping](xml-to-standoff-mapping.md).
-
-- As [standoff/RDF](../../02-knora-ontologies/knora-base.md#text-with-standoff-markup),
-  which is Knora's internal markup representation.
+- As [standoff/RDF](../../02-knora-ontologies/knora-base.md#text-with-standoff-markup), which is DSP-API's internal markup representation.
 
 Embedded XML is the default.
 
-Implementation of support for standoff/RDF in API v2 is in its early stages. The basic
+#### Requesting Text Markup as XML
+
+When requesting a text value with standoff mark up, there are three possibilities:
+
+1. The text value uses standard mapping.
+2. The text value uses a custom mapping which *does not* specify an XSL transformation.
+3. The text value uses a custom mapping which specifies an XSL transformation.
+
+In the first case, the mapping will be defined as:
+
+```json
+"kb:textValueHasMapping": {
+        "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+    }
+```
+
+the text value will only be available as `kb:textValueAsXml`, which will be of the following structure:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<text documentType="html">
+   ...
+</text>
+```
+
+where the content of `<text>` is a limited set of HTML tags that can be handled by CKEditor in DSP-APP.
+This allows for both displaying and editing the text value.
+
+In the second and third case, `kb:textValueHasMapping` will point to the custom mapping that may or may not specify an XSL transformation.
+
+If no transformation is specified (second case), the text value will be returned only as `kb:textValueAsXml`.
+This property will be a string containing the contents of the initially uploaded XML.
+
+Note: The returned XML document is equivalent to the uploaded document but it is not necessarily identical -
+the order of the attributes in one element may vary from the original.
+
+In the third case, when a transformation is specified, both `kb:textValueAsXml` and `kb:textValueAsHtml` will be returned.
+`kb:textValueAsHtml` is the result of the XSL transformation applied to `kb:textValueAsXml`.
+The HTML representation is intended to display the text value in a human readable and properly styled way, while the XML representation can be used to update the text value.
+
+#### Requesting Text Markup as Standoff
+
+Implementation of support for standoff/RDF in API v2 is in its early stages; its use is currently discouraged. The basic
 procedure works like this:
 
 First, request a resource in the [complex schema](introduction.md#api-schema), using any relevant
