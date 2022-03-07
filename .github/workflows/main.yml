@@ -90,6 +90,7 @@ jobs:
         with:
           name: client-test-data-zip
           path: client-test-data.zip
+          retention-days: 1
       - name: cleanup before cache
         shell: bash
         run: |
