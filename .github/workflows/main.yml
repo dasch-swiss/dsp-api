@@ -233,6 +233,13 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: client-test-data-zip
+      - name: add api-client-test-data to release assets
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GH_TOKEN }}
+          file: client-test-data.zip
+          tag: ${{ github.ref }}
+          overwrite: true
       - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
