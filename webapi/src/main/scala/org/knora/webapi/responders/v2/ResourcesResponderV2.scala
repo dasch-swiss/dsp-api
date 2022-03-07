@@ -1752,7 +1752,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               }
           }
 
-        case None =>
+        case _ =>
           throw InconsistentRepositoryDataException(
             s"Resource $gravsearchTemplateIri has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
           )
@@ -1828,7 +1828,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               )
           }
 
-        case None => throw BadRequestException(s"$textProperty is expected to occur once on $resourceIri")
+        case _ => throw BadRequestException(s"$textProperty is expected to occur once on $resourceIri")
       }
 
     /**

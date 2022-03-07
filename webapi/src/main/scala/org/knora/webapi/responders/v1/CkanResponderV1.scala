@@ -216,7 +216,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
       result = limit match {
         case Some(n) if n > 0 => bilder.take(n)
-        case None             => bilder
+        case _                => bilder
       }
 
     } yield result
