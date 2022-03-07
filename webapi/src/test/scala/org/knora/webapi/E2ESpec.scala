@@ -175,8 +175,6 @@ class E2ESpec(_system: ActorSystem)
 
   /**
    * Reads or writes a test data file.
-   * The written test data files can be found under:
-   * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
    *
    * @param responseAsString the API response received from Knora.
    * @param file             the file in which the expected API response is stored.
@@ -185,9 +183,7 @@ class E2ESpec(_system: ActorSystem)
    */
   protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String =
     if (writeFile) {
-      // Per default only read access is allowed in the bazel sandbox.
-      // This workaround allows to save test output.
-      val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
+      val testOutputDir = Paths.get("..", "test_data", "ontologyR2RV2")
       val newOutputFile = testOutputDir.resolve(file)
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(
@@ -198,18 +194,18 @@ class E2ESpec(_system: ActorSystem)
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
-  
-  private def createTmpFileDir(): Unit = {
-      // check if tmp datadir exists and create it if not
-      val tmpFileDir = Path.of(settings.tmpDataDir)
 
-      if (!Files.exists(tmpFileDir)) {
-        try {
-          Files.createDirectories(tmpFileDir)
-        } catch {
-          case e: Throwable =>
-            throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
-        }
+  private def createTmpFileDir(): Unit = {
+    // check if tmp datadir exists and create it if not
+    val tmpFileDir = Path.of(settings.tmpDataDir)
+
+    if (!Files.exists(tmpFileDir)) {
+      try {
+        Files.createDirectories(tmpFileDir)
+      } catch {
+        case e: Throwable =>
+          throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
       }
     }
+  }
 }

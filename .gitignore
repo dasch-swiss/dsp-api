@@ -18,9 +18,7 @@ webapi-it
 webapi-test
 upgrade/project
 sipi/test
-bazel-*
 
-**/project/target/
 **/target/
 *.aux
 *.bbl
