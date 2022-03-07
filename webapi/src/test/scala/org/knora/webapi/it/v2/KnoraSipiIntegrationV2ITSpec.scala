@@ -18,6 +18,8 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -66,7 +68,8 @@ class KnoraSipiIntegrationV2ITSpec
   private val marblesWidth = 1419
   private val marblesHeight = 1001
 
-  private val pathToMarblesWithWrongExtension = Paths.get("..", "test_data/test_route/images/marbles_with_wrong_extension.jpg")
+  private val pathToMarblesWithWrongExtension =
+    Paths.get("..", "test_data/test_route/images/marbles_with_wrong_extension.jpg")
 
   private val trp88OriginalFilename = "Trp88.tiff"
   private val pathToTrp88 = Paths.get("..", s"test_data/test_route/images/$trp88OriginalFilename")

@@ -23,6 +23,8 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil, RdfFeatureFactory}
 import org.knora.webapi.settings._
 import org.knora.webapi.util.StartupUtils
@@ -183,37 +185,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
    * @param height       the image's height in pixels.
    */
   protected case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
-
-  /**
-   * Represents the information that Sipi returns about each file that has been uploaded.
-   *
-   * @param originalFilename the original filename that was submitted to Sipi.
-   * @param internalFilename Sipi's internal filename for the stored temporary file.
-   * @param temporaryUrl     the URL at which the temporary file can be accessed.
-   * @param fileType         `image`, `text`, or `document`.
-   */
-  protected case class SipiUploadResponseEntry(
-    originalFilename: String,
-    internalFilename: String,
-    temporaryUrl: String,
-    fileType: String
-  )
-
-  /**
-   * Represents Sipi's response to a file upload request.
-   *
-   * @param uploadedFiles the information about each file that was uploaded.
-   */
-  protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
-
-  object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
-      SipiUploadResponseEntry
-    )
-    implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
-  }
-
-  import SipiUploadResponseJsonProtocol._
 
   /**
    * Uploads a file to Sipi and returns the information in Sipi's response.
