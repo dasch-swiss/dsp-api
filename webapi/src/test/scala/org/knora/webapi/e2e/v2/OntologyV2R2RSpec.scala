@@ -60,7 +60,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = true
+  private val writeTestDataFiles = false
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
