@@ -28,11 +28,6 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
       - name: setup java version
         uses: joschi/setup-jdk@v2
         with:
@@ -75,11 +70,6 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
       - name: setup java version
         uses: joschi/setup-jdk@v2
         with:
@@ -121,11 +111,6 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
       - name: setup java version
         uses: joschi/setup-jdk@v2
         with:
@@ -221,11 +206,6 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: use daily bazel disk cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
       - name: setup java version
         uses: joschi/setup-jdk@v2
         with:

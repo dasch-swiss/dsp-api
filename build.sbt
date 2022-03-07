@@ -1,8 +1,12 @@
+import rapture.core.booleanRepresentations.trueFalse
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
+
+import sbt._
 import sbt.Keys.version
+import sbt.librarymanagement.Resolver
 
 import scala.language.postfixOps
 import scala.sys.process.Process
@@ -10,6 +14,8 @@ import scala.sys.process.Process
 //////////////////////////////////////
 // GLOBAL SETTINGS
 //////////////////////////////////////
+
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
@@ -38,23 +44,48 @@ lazy val root: Project = Project(id = "root", file("."))
     // use Ctrl-c to stop current task but not quit SBT
     Global / cancelable := true,
     publish / skip := true
-    //   Dependencies.sysProps := sys.props.toString(),
-    //   Dependencies.sysEnvs := sys.env.toString(),
-    // dockerImageCreationTask := Seq(
-    //   (salsah1 / Docker / publishLocal).value,
-    //   (webapi / Docker / publishLocal).value
-    //   (knoraJenaFuseki / Docker / publishLocal).value,
-    //   (knoraSipi / Docker / publishLocal).value
-    //)
+  )
+
+//////////////////////////////////////
+// DSP's custom SIPI
+//////////////////////////////////////
+
+lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
+  .enablePlugins(DockerPlugin)
+  .settings(
+    Compile / packageDoc / mappings := Seq(),
+    Compile / packageSrc / mappings := Seq(),
+    Docker / dockerRepository := Some("daschswiss"),
+    Docker / packageName := "knora-sipi",
+    dockerUpdateLatest := true,
+    dockerBaseImage := Dependencies.sipiImage,
+    Docker / maintainer := "support@dasch.swiss",
+    Docker / dockerExposedPorts ++= Seq(1024),
+    Docker / defaultLinuxInstallLocation := "/sipi",
+    Universal / mappings ++= {
+      // copy the sipi/scripts folder
+      directory("sipi/scripts")
+    },
+    // use filterNot to return all items that do NOT meet the criteria
+    dockerCommands := dockerCommands.value.filterNot {
+
+      // ExecCmd is a case class, and args is a varargs variable, so you need to bind it with @
+      // remove ENTRYPOINT
+      case ExecCmd("ENTRYPOINT", args @ _*) => true
+
+      // remove CMD
+      case ExecCmd("CMD", args @ _*) => true
+
+      case Cmd("USER", args @ _*) => true
+
+      // don't filter the rest; don't filter out anything that doesn't match a pattern
+      case cmd => false
+    }
   )
 
 //////////////////////////////////////
 // WEBAPI (./webapi)
 //////////////////////////////////////
-
-import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
-import sbt._
-import sbt.librarymanagement.Resolver
 
 run / connectInput := true
 
@@ -89,17 +120,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
       (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
       (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-repository-config.ttl",
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-knora-test-unit-repository-config.ttl") -> "webapi/scripts/fuseki-knora-test-unit-repository-config.ttl",
-      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template"
+      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
-    // contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
-    // (rootBaseDir.value / "knora-ontologies") -> "knora-ontologies",
-
     // put additional files into the jar when running tests which are needed by testcontainers
     Test / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "sipi" / "config" / "sipi.init-knora.lua") -> "sipi/config/sipi.init-knora.lua",
-      (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua",
       (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua"
     )
   )
@@ -132,6 +156,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // Skip packageDoc and packageSrc task on stage
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
+    // define folders inside container
     Universal / mappings ++= {
       // copy the scripts folder
       directory("webapi/scripts") ++
@@ -152,7 +177,15 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     dockerBaseImage := "eclipse-temurin:11-jre-focal",
     Docker / maintainer := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333),
-    Docker / defaultLinuxInstallLocation := "/opt/docker"
+    Docker / defaultLinuxInstallLocation := "/opt/docker",
+    // use filterNot to return all items that do NOT meet the criteria
+    dockerCommands := dockerCommands.value.filterNot {
+      // Remove USER command
+      case Cmd("USER", args @ _*) => true
+
+      // don't filter the rest; don't filter out anything that doesn't match a pattern
+      case cmd => false
+    }
   )
   .settings(
     buildInfoKeys ++= Seq[BuildInfoKey](
@@ -189,7 +222,6 @@ lazy val webapiJavaTestOptions = Seq(
   //"-XX:MaxMetaspaceSize=4096m"
 )
 
-
 lazy val apiMain = project
   .in(file("dsp-api-main"))
   .settings(
@@ -199,9 +231,8 @@ lazy val apiMain = project
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
 
-
 lazy val schemaApi = project
-  .in(file("dsp-schema-api"))
+  .in(file("dsp-schema/api"))
   .settings(
     name := "schemaApi",
     Dependencies.webapiLibraryDependencies,
@@ -210,7 +241,7 @@ lazy val schemaApi = project
   .dependsOn(schemaCore)
 
 lazy val schemaCore = project
-  .in(file("dsp-schema-core"))
+  .in(file("dsp-schema/core"))
   .settings(
     name := "schemaCore",
     Dependencies.webapiLibraryDependencies,
@@ -218,7 +249,7 @@ lazy val schemaCore = project
   )
 
 lazy val schemaRepo = project
-  .in(file("dsp-schema-repo"))
+  .in(file("dsp-schema/repo"))
   .settings(
     name := "schemaRepo",
     Dependencies.webapiLibraryDependencies,
@@ -227,7 +258,7 @@ lazy val schemaRepo = project
   .dependsOn(schemaCore)
 
 lazy val schemaRepoEventStoreService = project
-  .in(file("dsp-schema-repo-eventstore-service"))
+  .in(file("dsp-schema/repo-eventstore-service"))
   .settings(
     name := "schemaRepoEventstoreService",
     Dependencies.webapiLibraryDependencies,
@@ -236,7 +267,7 @@ lazy val schemaRepoEventStoreService = project
   .dependsOn(schemaRepo)
 
 lazy val schemaRepoSearchService = project
-  .in(file("dsp-schema-repo-search-service"))
+  .in(file("dsp-schema/repo-search-service"))
   .settings(
     name := "dsp-schema-repo-search-service",
     Dependencies.webapiLibraryDependencies,

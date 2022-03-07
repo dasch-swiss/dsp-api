@@ -12,6 +12,7 @@ import org.testcontainers.containers.{BindMode, GenericContainer}
 import org.testcontainers.utility.DockerImageName
 
 import scala.jdk.CollectionConverters._
+import org.knora.webapi.http.version.BuildInfo
 
 /**
  * Provides all containers necessary for running tests.
@@ -25,14 +26,14 @@ object TestContainersAll {
     .headOption
     .getOrElse(throw new UnknownHostException("No suitable network interface found"))
 
-  val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
+  val FusekiImageName: DockerImageName = DockerImageName.parse(BuildInfo.fuseki)
   val FusekiContainer = new GenericContainer(FusekiImageName)
   FusekiContainer.withExposedPorts(3030)
   FusekiContainer.withEnv("ADMIN_PASSWORD", "test")
   FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
   FusekiContainer.start()
 
-  val SipiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-sipi:image")
+  val SipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
   val SipiContainer = new GenericContainer(SipiImageName)
   SipiContainer.withExposedPorts(1024)
   SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")

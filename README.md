@@ -54,7 +54,6 @@ Each developer machine should have the following prerequisites installed:
 * Homebrew (on macOS): https://brew.sh
 * [OpenJDK](https://adoptopenjdk.net) 11
 * [sbt](https://www.scala-sbt.org/)
-* [Bazel](https://bazel.build)
 
 #### Java Adoptopenjdk 11
 
@@ -71,19 +70,6 @@ To pin the version of Java, please add this environment variable to you startup 
 export JAVA_HOME=`/usr/libexec/java_home -v 11`
 ```
 
-#### Bazel build tools
-
-To install, follow these steps:
-
-```shell
-npm install -g @bazel/bazelisk
-```
-
-This will install [bazelisk](https://github.com/bazelbuild/bazelisk) which is
-a wrapper to the `bazel` binary. It will, when `bazel` is run on the command line,
-automatically install the supported Bazel version, defined in the `.bazelversion`
-file in the root of the `knora-api` repository.
-
 ### For building the documentation
 
 See [docs/Readme.md](docs/Readme.md).
@@ -92,9 +78,7 @@ See [docs/Readme.md](docs/Readme.md).
 
 ### Run the Knora API server
 
-With [Bazel](https://docs.bazel.build/versions/3.3.0/install-os-x.html) and
-[Docker](https://www.docker.com) installed, run the following to create a test
-repository and load some test data into the triplestore:
+Run the following to create a test repository and load some test data into the triplestore:
 
 ```shell
 make init-db-test

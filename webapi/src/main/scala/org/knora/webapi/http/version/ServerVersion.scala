@@ -15,7 +15,6 @@ import akka.http.scaladsl.server.Route
  */
 object ServerVersion {
 
-  // FIXME: Revert as soon as we remove Bazel (not before)
   private val ApiNameAndVersion = s"${BuildInfo.name}/${BuildInfo.version}"
   private val AkkaNameAndVersion = s"akka-http/${BuildInfo.akkaHttp}"
   private val AllProducts = ApiNameAndVersion + " " + AkkaNameAndVersion
