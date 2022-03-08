@@ -23,47 +23,65 @@
 :hasText
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasValue ;
-    rdfs:label                        "Text"@de, "Texte"@fr, "Testo"@it, "Text"@en ;
+    rdfs:label                        "Text"@de,
+                                      "Texte"@fr,
+                                      "Testo"@it,
+                                      "Text"@en ;
     knora-base:subjectClassConstraint :FreeTest ;
     knora-base:objectClassConstraint  knora-base:TextValue ;
     salsah-gui:guiElement             salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute           "size=80", "maxlength=255" .
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
 
 
 :hasInteger
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasValue ;
-    rdfs:label                        "Ganzzahl"@de, "Nombre entier"@fr, "Intero"@it, "Integer"@en ;
+    rdfs:label                        "Ganzzahl"@de,
+                                      "Nombre entier"@fr,
+                                      "Intero"@it,
+                                      "Integer"@en ;
     knora-base:subjectClassConstraint :FreeTest ;
     knora-base:objectClassConstraint  knora-base:IntValue ;
     salsah-gui:guiElement             salsah-gui:Spinbox ;
-    salsah-gui:guiAttribute           "min=0", "max=-1" .
+    salsah-gui:guiAttribute           "min=0",
+                                      "max=-1" .
 
 
 :hasIntegerProperty
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
-    rdfs:label                       "Ganzzahl"@de, "Nombre entier"@fr, "Intero"@it, "Integer"@en ;
+    rdfs:label                       "Ganzzahl"@de,
+                                     "Nombre entier"@fr,
+                                     "Intero"@it,
+                                     "Integer"@en ;
     knora-base:objectClassConstraint knora-base:IntValue ;
     salsah-gui:guiElement            salsah-gui:Spinbox ;
-    salsah-gui:guiAttribute          "min=0", "max=-1" .
+    salsah-gui:guiAttribute          "min=0",
+                                     "max=-1" .
 
 
 :hasDecimal
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasValue ;
-    rdfs:label                        "Dezimalzahl"@de, "Nombre décimal"@fr, "Numero decimale"@it, "Decimal number"@en ;
+    rdfs:label                        "Dezimalzahl"@de,
+                                      "Nombre décimal"@fr,
+                                      "Numero decimale"@it,
+                                      "Decimal number"@en ;
     knora-base:subjectClassConstraint :FreeTest ;
     knora-base:objectClassConstraint  knora-base:DecimalValue ;
     salsah-gui:guiElement             salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute           "size=80", "maxlength=255" .
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
 
 
 
 :hasBoolean
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasValue ;
-    rdfs:label                        "Boolescher Wert"@de, "Valeur booléenne"@fr, "Valore booleano"@it,
+    rdfs:label                        "Boolescher Wert"@de,
+                                      "Valeur booléenne"@fr,
+                                      "Valore booleano"@it,
                                       "Boolean value"@en ;
     knora-base:subjectClassConstraint :FreeTest ;
     knora-base:objectClassConstraint  knora-base:BooleanValue ;
@@ -72,100 +90,104 @@
 
 
 :FreeTest
-    rdf:type                                                                                  owl:Class ;
-    rdfs:subClassOf                                                                           knora-base:Resource,
-                                                                                              [ rdf:type
-                                                                                                               owl:Restriction ;
-                                                                                                owl:onProperty :hasText ;
-                                                                                                owl:minCardinality
-                                                                                                               "1"^^xsd:nonNegativeInteger ;
-                                                                                                salsah-gui:guiOrder
-                                                                                                               "1"^^xsd:nonNegativeInteger ],
-                                                                                              [ rdf:type
-                                                                                                        owl:Restriction ;
-                                                                                                owl:onProperty
-                                                                                                        :hasBoolean ;
-                                                                                                owl:maxCardinality
-                                                                                                        "1"^^xsd:nonNegativeInteger ;
-                                                                                                salsah-gui:guiOrder
-                                                                                                        "2"^^xsd:nonNegativeInteger ],
-                                                                                              [ rdf:type
-                                                                                                        owl:Restriction ;
-                                                                                                owl:onProperty
-                                                                                                        :hasDecimal ;
-                                                                                                owl:minCardinality
-                                                                                                        "0"^^xsd:nonNegativeInteger ;
-                                                                                                salsah-gui:guiOrder
-                                                                                                        "3"^^xsd:nonNegativeInteger ],
-                                                                                              [ rdf:type
-                                                                                                        owl:Restriction ;
-                                                                                                owl:onProperty
-                                                                                                        :hasInteger ;
-                                                                                                owl:minCardinality
-                                                                                                        "0"^^xsd:nonNegativeInteger ;
-                                                                                                salsah-gui:guiOrder
-                                                                                                        "4"^^xsd:nonNegativeInteger ],
-                                                                                              [ rdf:type
-                                                                                                        owl:Restriction ;
-                                                                                                owl:onProperty
-                                                                                                        :hasIntegerProperty ;
-                                                                                                owl:minCardinality
-                                                                                                        "0"^^xsd:nonNegativeInteger ;
-                                                                                                salsah-gui:guiOrder
-                                                                                                        "5"^^xsd:nonNegativeInteger ] ;
-    knora-base:resourceIcon                                                                   "thing.png" ;
-    rdfs:label                                                                                "FT de"@de, "FT fr"@fr,
-                                                                                              "FT it"@it, "FT en"@en ;
-    rdfs:comment                                                                              """A comment for FT."""@de .
+    rdf:type                owl:Class ;
+    rdfs:subClassOf         knora-base:Resource,
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasText ;
+                              owl:minCardinality  "1"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasBoolean ;
+                              owl:maxCardinality  "1"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasDecimal ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasInteger ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasIntegerProperty ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger ] ,
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasTextWithStandoff  ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger ] ;
+    knora-base:resourceIcon "thing.png" ;
+    rdfs:label              "FT de"@de,
+                            "FT fr"@fr,
+                            "FT it"@it,
+                            "FT en"@en ;
+    rdfs:comment            """A comment for FT."""@de .
 
 
 :ShortFreeTest
     rdf:type        owl:Class ;
     rdfs:subClassOf :FreeTest ;
-    rdfs:label      "SFT de"@de, "SFT fr"@fr, "SFT it"@it, "SFT en"@en ;
+    rdfs:label      "SFT de"@de,
+                    "SFT fr"@fr,
+                    "SFT it"@it,
+                    "SFT en"@en ;
     rdfs:comment    """A comment for SFT."""@de .
 
 
 :FreeTestResourceClass
     rdf:type        owl:Class ;
-    rdfs:subClassOf knora-base:Resource, [ rdf:type            owl:Restriction ;
-                                           owl:onProperty      :hasIntegerProperty ;
-                                           owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label      "FTRC de"@de, "FTRC fr"@fr, "FTRC it"@it, "FTRC en"@en ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasIntegerProperty ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "FTRC de"@de,
+                    "FTRC fr"@fr,
+                    "FTRC it"@it,
+                    "FTRC en"@en ;
     rdfs:comment    """A comment for FTRC."""@de .
 
 
 :Author
     rdf:type        owl:Class ;
-    rdfs:subClassOf knora-base:Resource, [ rdf:type            owl:Restriction ;
-                                           owl:onProperty      :hasName ;
-                                           owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
-    rdfs:label      "Autor"@de, "Author"@en ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Autor"@de,
+                    "Author"@en ;
     rdfs:comment    """An author"""@en .
 
 
 :ScientificAuthor
     rdf:type        owl:Class ;
     rdfs:subClassOf :Author ;
-    rdfs:label      "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
+    rdfs:label      "Wissenschaftlicher Autor"@de,
+                    "Scientific author"@en ;
     rdfs:comment    """A scientific author"""@en .
 
 
 :hasName
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
-    rdfs:label                       "Name"@de, "Nom"@fr, "Nome"@it, "Name"@en ;
+    rdfs:label                       "Name"@de,
+                                     "Nom"@fr,
+                                     "Nome"@it,
+                                     "Name"@en ;
     knora-base:objectClassConstraint knora-base:TextValue ;
     salsah-gui:guiElement            salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute          "size=80", "maxlength=255" .
+    salsah-gui:guiAttribute          "size=80",
+                                     "maxlength=255" .
 
 
 :hasAuthor
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
-    rdfs:label                        "Autor"@de, "Auteur"@fr, "Autore"@it, "Author"@en ;
+    rdfs:label                        "Autor"@de,
+                                      "Auteur"@fr,
+                                      "Autore"@it,
+                                      "Author"@en ;
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  :Author ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
@@ -173,7 +195,10 @@
 :hasAuthorValue
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkToValue ;
-    rdfs:label                        "Autor"@de, "Auteur"@fr, "Autore"@it, "Author"@en ;
+    rdfs:label                        "Autor"@de,
+                                      "Auteur"@fr,
+                                      "Autore"@it,
+                                      "Author"@en ;
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
@@ -181,7 +206,8 @@
 :hasScientificAuthor
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                :hasAuthor ;
-    rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
+    rdfs:label                        "Wissenschaftlicher Autor"@de,
+                                      "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
     knora-base:objectClassConstraint  :ScientificAuthor ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
@@ -189,52 +215,48 @@
 :hasScientificAuthorValue
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                :hasAuthorValue ;
-    rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
+    rdfs:label                        "Wissenschaftlicher Autor"@de,
+                                      "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
 
 :Book
-    rdf:type                                                             owl:Class ;
-    rdfs:subClassOf                                                      knora-base:Resource ;
-    rdfs:subClassOf                                                      [ rdf:type       owl:Restriction ;
-                                                                           owl:onProperty :hasAuthor ;
-                                                                           owl:minCardinality
-                                                                                          "0"^^xsd:nonNegativeInteger ;
-                                                                           salsah-gui:guiOrder
-                                                                                          "1"^^xsd:nonNegativeInteger ],
-                                                                         [ rdf:type       owl:Restriction ;
-                                                                           owl:onProperty :hasAuthorValue ;
-                                                                           owl:minCardinality
-                                                                                          "0"^^xsd:nonNegativeInteger ;
-                                                                           salsah-gui:guiOrder
-                                                                                          "2"^^xsd:nonNegativeInteger ] ;
-    rdfs:label                                                           "Buch"@de, "Book"@en ;
-    rdfs:comment                                                         """A comment for book"""@en .
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource ;
+    rdfs:subClassOf [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasAuthor ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasAuthorValue ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch"@de,
+                    "Book"@en ;
+    rdfs:comment    """A comment for book"""@en .
 
 :ScientificBook
-    rdf:type                                                             owl:Class ;
-    rdfs:subClassOf                                                      :Book ;
-    rdfs:subClassOf                                                      [ rdf:type       owl:Restriction ;
-                                                                           owl:onProperty :hasScientificAuthor ;
-                                                                           owl:minCardinality
-                                                                                          "0"^^xsd:nonNegativeInteger ;
-                                                                           salsah-gui:guiOrder
-                                                                                          "1"^^xsd:nonNegativeInteger ],
-                                                                         [ rdf:type       owl:Restriction ;
-                                                                           owl:onProperty :hasScientificAuthorValue ;
-                                                                           owl:minCardinality
-                                                                                          "0"^^xsd:nonNegativeInteger ;
-                                                                           salsah-gui:guiOrder
-                                                                                          "2"^^xsd:nonNegativeInteger ] ;
-    rdfs:label                                                           "Wissenschaftliches Buch"@de,
-                                                                         "Scientific book"@en ;
-    rdfs:comment                                                         """A comment for a scientific book"""@en .
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :Book ;
+    rdfs:subClassOf [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasScientificAuthor ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ],
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasScientificAuthorValue ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Wissenschaftliches Buch"@de,
+                    "Scientific book"@en ;
+    rdfs:comment    """A comment for a scientific book"""@en .
 
 :hasOtherCULP
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
-    rdfs:label                        "Ein anderes CULP"@de, "Une autre CULP"@fr, "Un'altra CULP"@it,
+    rdfs:label                        "Ein anderes CULP"@de,
+                                      "Une autre CULP"@fr,
+                                      "Un'altra CULP"@it,
                                       "Another CULP"@en ;
     knora-base:subjectClassConstraint :ClassUsingLinkProperties ;
     knora-base:objectClassConstraint  :ClassUsingLinkProperties ;
@@ -244,27 +266,36 @@
 :hasOtherCULPValue
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkToValue ;
-    rdfs:label                        "Ein anderes Ding"@de, "Une autre chose"@fr, "Un'altra cosa"@it,
+    rdfs:label                        "Ein anderes Ding"@de,
+                                      "Une autre chose"@fr,
+                                      "Un'altra cosa"@it,
                                       "Another thing"@en ;
     knora-base:subjectClassConstraint :ClassUsingLinkProperties ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
 
 :ClassUsingLinkProperties
-    rdf:type                                                             owl:Class ;
-    rdfs:subClassOf                                                      knora-base:Resource ;
-    rdfs:subClassOf                                                      [ rdf:type       owl:Restriction ;
-                                                                           owl:onProperty :hasOtherCULP ;
-                                                                           owl:minCardinality
-                                                                                          "0"^^xsd:nonNegativeInteger ;
-                                                                           salsah-gui:guiOrder
-                                                                                          "3"^^xsd:nonNegativeInteger ],
-                                                                         [ rdf:type       owl:Restriction ;
-                                                                           owl:onProperty :hasOtherCULPValue ;
-                                                                           owl:minCardinality
-                                                                                          "0"^^xsd:nonNegativeInteger ;
-                                                                           salsah-gui:guiOrder
-                                                                                          "4"^^xsd:nonNegativeInteger ] ;
-    rdfs:label                                                           "CULP de"@de, "CULP fr"@fr, "CULP it"@it,
-                                                                         "CULP en"@en ;
-    rdfs:comment                                                         """A comment for CULP."""@de .
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource ;
+    rdfs:subClassOf [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasOtherCULP ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger ],
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasOtherCULPValue ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "CULP de"@de,
+                    "CULP fr"@fr,
+                    "CULP it"@it,
+                    "CULP en"@en ;
+    rdfs:comment    """A comment for CULP."""@de .
+
+:hasTextWithStandoff
+    rdf:type               owl:ObjectProperty ;
+    rdfs:comment           "the text with standoff markup"@en ;
+    rdfs:label             "the text with standoff markup"@en ;
+    rdfs:subPropertyOf     knora-base:hasValue ;
+    knora-base:objectClassConstraint
+                           knora-base:TextValue ;
+    salsah-gui:guiElement  salsah-gui:Richtext .

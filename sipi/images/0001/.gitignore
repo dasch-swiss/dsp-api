@@ -1,2 +1,5 @@
 *
 !.gitignore
+# XSL transformation for standoff with custom mapping in freetest test data (<http://rdfh.ch/0001/xsl-text-representation/values/xsl-file-value>)
+!Cpl5d73kOLz-FclZg2VVf6r.xsl
+!Cpl5d73kOLz-FclZg2VVf6r.info

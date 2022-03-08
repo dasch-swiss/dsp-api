@@ -1,5 +1,45 @@
 # Changelog
 
+## [18.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.3...v18.0.0) (2022-03-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **standoff:** return XML alongside HTML for textValue with custom standoff mapping and default XSL transformation (DEV-201) (#1991)
+
+### Bug Fixes
+
+* Use correct docker image tag after publishing (DEV-614) ([#2016](https://www.github.com/dasch-swiss/dsp-api/issues/2016)) ([7649515](https://www.github.com/dasch-swiss/dsp-api/commit/7649515230fa0048b12a1e6cb113e8cce7e73c54))
+
+
+### Maintenance
+
+* improve code structure (DEV-612) ([#2012](https://www.github.com/dasch-swiss/dsp-api/issues/2012)) ([eac0049](https://www.github.com/dasch-swiss/dsp-api/commit/eac0049773c288d0b2f05c626662585a913cbaef))
+
+
+### Enhancements
+
+* **standoff:** return XML alongside HTML for textValue with custom standoff mapping and default XSL transformation (DEV-201) ([#1991](https://www.github.com/dasch-swiss/dsp-api/issues/1991)) ([2548b8f](https://www.github.com/dasch-swiss/dsp-api/commit/2548b8f2cc75e8350091aefd70f62d66d8605428))
+
+### [17.5.3](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.2...v17.5.3) (2022-03-04)
+
+
+### Bug Fixes
+
+* **RepositoryUpdater:** make sure temp directories are deleted ([#2010](https://www.github.com/dasch-swiss/dsp-api/issues/2010)) ([9c9a1bd](https://www.github.com/dasch-swiss/dsp-api/commit/9c9a1bddf32c80ffd1eea30806a311bd3b71831b))
+
+
+### Documentation
+
+* fix permissions design documentation (DEV-495) ([#1997](https://www.github.com/dasch-swiss/dsp-api/issues/1997)) ([5154adc](https://www.github.com/dasch-swiss/dsp-api/commit/5154adc8620f5b966419bea187030dbd92b236fb))
+
+
+### Maintenance
+
+* fix docker image name (DEV-574) ([#2007](https://www.github.com/dasch-swiss/dsp-api/issues/2007)) ([7a186ba](https://www.github.com/dasch-swiss/dsp-api/commit/7a186bafa579b57d838db2bfcb31098aac115a02))
+* remove fuseki image creation and change sipi image creation to sbt (DEV-544) ([#2011](https://www.github.com/dasch-swiss/dsp-api/issues/2011)) ([eed2767](https://www.github.com/dasch-swiss/dsp-api/commit/eed2767103b552a0f895aeb18252deecb7cc4497))
+* start on a functional domain design implementation for ontologies (DEV-227) ([#2009](https://www.github.com/dasch-swiss/dsp-api/issues/2009)) ([54cee7a](https://www.github.com/dasch-swiss/dsp-api/commit/54cee7a6711d38d7d11a2c95d95c16e71e200d64))
+
 ### [17.5.2](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.1...v17.5.2) (2022-02-23)
 
 
