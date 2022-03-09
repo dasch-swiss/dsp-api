@@ -48,7 +48,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
       post {
         /* ResetTriplestoreContent */
         entity(as[Seq[RdfDataObject]]) { apiRequest =>
-          parameter('prependdefaults.as[Boolean] ? true) { prependDefaults => requestContext =>
+          parameter(Symbol("prependdefaults").as[Boolean] ? true) { prependDefaults => requestContext =>
             val msg = ResetTriplestoreContentRequestADM(
               rdfDataObjects = apiRequest,
               prependDefaults = prependDefaults,

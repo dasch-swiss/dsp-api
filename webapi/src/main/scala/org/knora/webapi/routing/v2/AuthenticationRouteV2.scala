@@ -83,7 +83,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
             }
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
-            formFields('username, 'password) { (username, password) => requestContext =>
+            formFields(Symbol("username"), Symbol("password")) { (username, password) => requestContext =>
               {
                 requestContext.complete {
                   doLoginV2(

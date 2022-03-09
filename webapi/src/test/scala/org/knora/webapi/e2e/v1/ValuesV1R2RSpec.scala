@@ -268,6 +268,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
         val (mostRecentVersion, originalVersion) = versionHistory match {
           case JsArray(Vector(mostRecent, original)) => (mostRecent.asJsObject.fields, original.asJsObject.fields)
+          case _                                     => fail("expected an array, but got something else.")
         }
 
         assert(

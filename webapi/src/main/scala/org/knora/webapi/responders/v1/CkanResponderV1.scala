@@ -216,7 +216,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
       result = limit match {
         case Some(n) if n > 0 => bilder.take(n)
-        case None             => bilder
+        case _                => bilder
       }
 
     } yield result
@@ -344,7 +344,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
       result = limit match {
         case Some(n) if n > 0 => booksWithPages.take(n)
-        case None             => booksWithPages
+        case _                => booksWithPages
       }
 
     } yield result
@@ -412,7 +412,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
       resIri = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
       result = limit match {
         case Some(n) if n > 0 => resIri.take(n)
-        case None             => resIri
+        case _                => resIri
       }
     } yield result
 

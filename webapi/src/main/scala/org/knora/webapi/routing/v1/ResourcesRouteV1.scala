@@ -1135,7 +1135,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                     timeVal,
                     throw BadRequestException(s"Invalid decimal value in element '${node.label}: '$timeVal'")
                   )
-                }
+                }.toSeq
 
                 CreateResourceValueV1(interval_value = Some(tVals))
 
