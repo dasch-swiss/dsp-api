@@ -224,9 +224,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
               }
           }
 
-        case None =>
+        case _ =>
           throw InconsistentRepositoryDataException(
-            s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
+            s"${OntologyConstants.KnoraBase.XSLTransformation} has no or more than one property ${OntologyConstants.KnoraBase.HasTextFileValue}"
           )
       }
 
