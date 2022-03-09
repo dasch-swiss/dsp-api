@@ -2320,7 +2320,7 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :lastModificationDate ;
-                            owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteDate ;
