@@ -1,4 +1,3 @@
-
 {
     "@id": "http://api.knora.org/ontology/knora-api/simple/v2",
     "@type": "owl:Ontology",

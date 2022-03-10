@@ -1,127 +1,127 @@
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix knora-api:  <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
 <http://api.knora.org/ontology/knora-api/v2>
-        a                            owl:Ontology ;
+        rdf:type                     owl:Ontology ;
         rdfs:label                   "The knora-api ontology in the complex schema" ;
         knora-api:attachedToProject  <http://www.knora.org/ontology/knora-admin#SystemProject> ;
         knora-api:isBuiltIn          true .
 
-knora-api:DateValue  a          owl:Class ;
+knora-api:DateValue  rdf:type   owl:Class ;
         rdfs:comment            "Represents a Knora date value" ;
         rdfs:subClassOf         knora-api:DateBase , knora-api:Value ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:valueAsString
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:hasPermissions
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:dateValueHasEndDay
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:arkUrl
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:dateValueHasStartEra
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:maxCardinality     1 ;
                                   owl:onProperty         knora-api:deleteComment
                                 ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:dateValueHasStartMonth
+                                  owl:onProperty         knora-api:valueAsString
                                 ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:dateValueHasStartDay
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:valueHasUUID
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:dateValueHasCalendar
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:valueCreationDate
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:cardinality        1 ;
                                   owl:onProperty         knora-api:userHasPermission
                                 ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:valueHasComment
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:isDeleted
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:deletedBy
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:maxCardinality     1 ;
-                                  owl:onProperty         knora-api:deleteDate
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:dateValueHasStartYear
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
-                                  knora-api:isInherited  true ;
-                                  owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:attachedToUser
-                                ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:cardinality        1 ;
                                   owl:onProperty         knora-api:dateValueHasEndEra
                                 ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:cardinality        1 ;
-                                  owl:onProperty         knora-api:dateValueHasEndYear
+                                  owl:onProperty         knora-api:dateValueHasStartEra
                                 ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:valueHasComment
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:attachedToUser
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:hasPermissions
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:dateValueHasCalendar
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:deleteDate
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:isDeleted
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:valueCreationDate
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:cardinality        1 ;
                                   owl:onProperty         knora-api:versionArkUrl
                                 ] ;
-        rdfs:subClassOf         [ a                      owl:Restriction ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:valueHasUUID
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:dateValueHasEndYear
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:dateValueHasStartDay
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:cardinality        1 ;
+                                  owl:onProperty         knora-api:dateValueHasStartYear
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
                                   knora-api:isInherited  true ;
                                   owl:maxCardinality     1 ;
                                   owl:onProperty         knora-api:dateValueHasEndMonth
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:dateValueHasEndDay
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:deletedBy
+                                ] ;
+        rdfs:subClassOf         [ rdf:type               owl:Restriction ;
+                                  knora-api:isInherited  true ;
+                                  owl:maxCardinality     1 ;
+                                  owl:onProperty         knora-api:dateValueHasStartMonth
                                 ] ;
         knora-api:isValueClass  true .

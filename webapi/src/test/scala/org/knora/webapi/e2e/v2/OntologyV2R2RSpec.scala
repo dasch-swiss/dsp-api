@@ -129,9 +129,8 @@ class OntologyV2R2RSpec extends R2RSpec {
      */
     def writeFile(responseStr: String, mediaType: MediaType.NonBinary): Unit =
       if (!disableWrite) {
-        val testOutputDir = Paths.get("..", "test_data", "ontologyR2RV2")
-        val file = makeFile(mediaType)
-        val newOutputFile = testOutputDir.resolve(file)
+        val fileSuffix = mediaType.fileExtensions.head
+        val newOutputFile = Paths.get("..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
         Files.createDirectories(newOutputFile.getParent)
         FileUtil.writeTextFile(newOutputFile, responseStr)
       }

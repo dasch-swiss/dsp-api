@@ -1,4 +1,3 @@
-
 {
     "rdfs:label": "The knora-api ontology in the complex schema",
     "@graph": [
@@ -3498,34 +3497,6 @@
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:movingImageFileValueHasDimX"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:movingImageFileValueHasDimY"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:movingImageFileValueHasDuration"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
-                        "@id": "knora-api:movingImageFileValueHasFps"
-                    },
-                    "owl:cardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -7889,66 +7860,6 @@
                 "@id": "xsd:boolean"
             },
             "@id": "knora-api:mayHaveMoreResults"
-        },
-        {
-            "rdfs:label": "Moving image file value has X dimension",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:movingImageFileValueHasDimX",
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The horizontal dimension of a moving image file value."
-        },
-        {
-            "rdfs:label": "Moving image file value has Y dimension",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:movingImageFileValueHasDimY",
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The vertical dimension of a moving image file value."
-        },
-        {
-            "rdfs:label": "Moving image file value has duration",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:decimal"
-            },
-            "@id": "knora-api:movingImageFileValueHasDuration",
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The duration of a moving image file value."
-        },
-        {
-            "rdfs:label": "Moving image file value has frames per second",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:integer"
-            },
-            "@id": "knora-api:movingImageFileValueHasFps",
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The number of frames per second in a moving image file value."
         },
         {
             "rdfs:label": "new modification date",
