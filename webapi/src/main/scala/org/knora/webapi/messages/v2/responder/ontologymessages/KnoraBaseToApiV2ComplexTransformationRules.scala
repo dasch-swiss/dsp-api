@@ -1433,94 +1433,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
   )
 
-  private val MovingImageFileValueHasDimX: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.MovingImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Moving image file value has X dimension"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The horizontal dimension of a moving image file value."
-        )
-      )
-    )
-  )
-
-  private val MovingImageFileValueHasDimY: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.MovingImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Moving image file value has Y dimension"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The vertical dimension of a moving image file value."
-        )
-      )
-    )
-  )
-
-  private val MovingImageFileValueHasFps: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasFps,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.MovingImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Integer),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Moving image file value has frames per second"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The number of frames per second in a moving image file value."
-        )
-      )
-    )
-  )
-
-  private val MovingImageFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDuration,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.MovingImageFileValue),
-    objectType = Some(OntologyConstants.Xsd.Decimal),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Moving image file value has duration"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The duration of a moving image file value."
-        )
-      )
-    )
-  )
-
   private val AudioFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1650,13 +1562,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> Cardinality.MayHaveOne
   )
 
-  private val MovingImageFileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasFps -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDuration -> Cardinality.MustHaveOne
-  )
-
   private val AudioFileValueCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration -> Cardinality.MustHaveOne
   )
@@ -1767,7 +1672,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.FileValue -> FileValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.DocumentFileValue -> DocumentFileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.MovingImageFileValue -> MovingImageFileValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.AudioFileValue -> AudioFileValueCardinalities
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
@@ -1852,10 +1756,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     DocumentFileValueHasDimX,
     DocumentFileValueHasDimY,
     DocumentFileValueHasPageCount,
-    MovingImageFileValueHasDimX,
-    MovingImageFileValueHasDimY,
-    MovingImageFileValueHasFps,
-    MovingImageFileValueHasDuration,
     AudioFileValueHasDuration
   ).map { propertyInfo =>
     propertyInfo.entityInfoContent.propertyIri -> propertyInfo

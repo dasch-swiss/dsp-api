@@ -1775,11 +1775,7 @@ case class MovingImageFileValueV1(
         internalMimeType = internalMimeType,
         originalFilename = originalFilename,
         originalMimeType = Some(internalMimeType)
-      ),
-      dimX = dimX,
-      dimY = dimY,
-      fps = fps,
-      duration = duration
+      )
     )
 }
 

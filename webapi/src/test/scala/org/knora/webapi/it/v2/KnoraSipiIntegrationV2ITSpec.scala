@@ -117,7 +117,7 @@ class KnoraSipiIntegrationV2ITSpec
   private val testVideoOriginalFilename = "testVideo.mp4"
   private val pathToTestVideo = Paths.get("..", s"test_data/test_route/files/$testVideoOriginalFilename")
 
-  private val testVideo2OriginalFilename = "test.wav"
+  private val testVideo2OriginalFilename = "testVideo2.mp4"
   private val pathToTestVideo2 = Paths.get("..", s"test_data/test_route/files/$testVideo2OriginalFilename")
 
   private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
@@ -178,11 +178,7 @@ class KnoraSipiIntegrationV2ITSpec
    */
   case class SavedVideoFile(
     internalFilename: String,
-    url: String,
-    dimX: Int,
-    dimY: Int,
-    duration: Option[BigDecimal],
-    fps: Option[BigDecimal]
+    url: String
   )
 
   /**
@@ -356,28 +352,15 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun = stringFormatter.toSparqlEncodedString
     )
 
-    val dimY = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY)
-    val dimX = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX)
-
     val duration: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
       validationFun = stringFormatter.validateBigDecimal
     )
 
-    val fps: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasFps,
-      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
-    )
-
     SavedVideoFile(
       internalFilename = internalFilename,
-      url = url,
-      dimX = dimX,
-      dimY = dimY,
-      duration = duration,
-      fps = fps
+      url = url
     )
   }
 
