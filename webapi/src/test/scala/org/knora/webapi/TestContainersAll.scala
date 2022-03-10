@@ -41,12 +41,7 @@ object TestContainersAll {
   SipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
   SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
   SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
-  SipiContainer.withCommand("--config=/sipi/config/sipi.knora-docker-config.lua")
-  SipiContainer.withClasspathResourceMapping(
-    "/sipi/config/sipi.knora-docker-config.lua",
-    "/sipi/config/sipi.knora-docker-config.lua",
-    BindMode.READ_ONLY
-  )
+  SipiContainer.withCommand("--config=/sipi/config/sipi.development-config.lua")
   SipiContainer.start()
 
   // Container needs to be started to get the random IP
