@@ -1485,6 +1485,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 rightEntity = rightIriRef,
                 usageIndex = usageIndex
               )
+
+            case _ => throw GravsearchException(s"An invalid `rightEntity` with value: $rightEntity was used.")
           }
 
         case _ =>
