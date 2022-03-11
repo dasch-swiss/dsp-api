@@ -34,7 +34,7 @@ services:
       - SIPI_WEBAPI_HOSTNAME=api
       - SIPI_WEBAPI_PORT=3333
     # entrypoint: [ "valgrind", "--leak-check=yes", "/sipi/sipi" ] ## uncomment to run SIPI under valgrind
-    command: --config=/sipi/config/sipi.development-config.lua
+    command: --config=/sipi/config/sipi.knora-docker-config.lua
 
   api:
     image: daschswiss/knora-api:latest

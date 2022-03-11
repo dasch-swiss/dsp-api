@@ -64,8 +64,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Docker / defaultLinuxInstallLocation := "/sipi",
     Universal / mappings ++= {
       // copy the sipi/scripts folder
-      directory("sipi/scripts") ++
-        directory("sipi/config")
+      directory("sipi/scripts")
     },
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
@@ -122,9 +121,12 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
       (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
-    )
+    ),
     // put additional files into the jar when running tests which are needed by testcontainers
-    //Test / unmanagedClasspath += rootBaseDir.value / "sipi" / "config"
+    //Test / packageBin / mappings ++= Seq(
+    //  (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua"
+    //)
+    Test / unmanagedClasspath += rootBaseDir.value / "sipi" / "config"
   )
   .settings(
     scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -143,6 +145,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     Test / testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+
+    // enable publishing the jars for test and it
+    // Test / packageBin / publishArtifact := true,
+    // IntegrationTest / packageBin / publishArtifact := true,
+    // addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest)
   )
   .settings(
     // prepare for publishing
