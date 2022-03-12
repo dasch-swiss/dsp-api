@@ -47,8 +47,8 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.StoreManager
-import org.knora.webapi.store.cacheservice.inmem.CacheServiceInMemImpl
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.impl.CacheInMemImpl
+import org.knora.webapi.store.cache.settings.CacheSettings
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
 
@@ -69,7 +69,7 @@ trait LiveManagers extends Managers {
    * The actor that forwards messages to actors that deal with persistent storage.
    */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, cs = CacheServiceInMemImpl) with LiveActorMaker)
+    Props(new StoreManager(appActor = self, cs = CacheInMemImpl) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )
@@ -85,7 +85,7 @@ trait LiveManagers extends Managers {
           system = context.system,
           appActor = self,
           knoraSettings = KnoraSettings(system),
-          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+          cacheServiceSettings = new CacheSettings(system.settings.config)
         )
       ) with LiveActorMaker
     )
@@ -117,7 +117,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   /**
    * The Cache Service's configuration.
    */
-  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
+  implicit val cacheServiceSettings: CacheSettings = new CacheSettings(system.settings.config)
 
   /**
    * The default feature factory configuration, which is used during startup.

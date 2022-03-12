@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.redis
+package org.knora.webapi.store.cache.impl
 
 import akka.http.scaladsl.util.FastFuture
 import com.typesafe.scalalogging.{LazyLogging, Logger}
@@ -20,14 +20,14 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceStatusOK,
   CacheServiceStatusResponse
 }
-import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
-import org.knora.webapi.store.cacheservice.{CacheService, EmptyKey, EmptyValue}
+import org.knora.webapi.store.cache.serialization.CacheSerialization
+import org.knora.webapi.store.cache.settings.CacheSettings
+import org.knora.webapi.store.cache.api.{Cache, EmptyKey, EmptyValue}
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with LazyLogging {
+class CacheRedisImpl(s: CacheSettings) extends Cache with LazyLogging {
 
   /**
    * The Redis Client Pool

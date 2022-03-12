@@ -23,7 +23,7 @@ import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.settings.CacheSettings
 import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
@@ -96,7 +96,7 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
     system = system,
     appActor = appActor,
     knoraSettings = settings,
-    cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+    cacheServiceSettings = new CacheSettings(system.settings.config)
   )
 
   protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(

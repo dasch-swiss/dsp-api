@@ -16,7 +16,7 @@ import messages.util.rdf.RdfFeatureFactory
 import messages.util.{KnoraSystemInstances, ResponderData}
 import messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import store.cacheservice.settings.CacheServiceSettings
+import store.cache.settings.CacheSettings
 import util.StartupUtils
 
 import akka.actor.{ActorRef, ActorSystem, Props}
@@ -118,7 +118,7 @@ abstract class CoreSpec(_system: ActorSystem)
     system = system,
     appActor = appActor,
     knoraSettings = settings,
-    cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+    cacheServiceSettings = new CacheSettings(system.settings.config)
   )
 
   protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(

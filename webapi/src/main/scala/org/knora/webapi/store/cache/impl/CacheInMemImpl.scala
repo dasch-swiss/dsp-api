@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.inmem
+package org.knora.webapi.store.cache.impl
 
 import akka.http.scaladsl.util.FastFuture
 import com.typesafe.scalalogging.LazyLogging
@@ -18,11 +18,11 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceStatusOK,
   CacheServiceStatusResponse
 }
-import org.knora.webapi.store.cacheservice.{CacheService, EmptyKey, EmptyValue}
+import org.knora.webapi.store.cache.api.{Cache, EmptyKey, EmptyValue}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object CacheServiceInMemImpl extends CacheService with LazyLogging {
+object CacheInMemImpl extends Cache with LazyLogging {
 
   private var cache: scala.collection.mutable.Map[Any, Any] =
     scala.collection.mutable.Map[Any, Any]()

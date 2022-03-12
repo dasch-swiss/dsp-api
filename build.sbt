@@ -89,10 +89,6 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
 
 run / connectInput := true
 
-lazy val webApiCommonSettings = Seq(
-  name := "webapi"
-)
-
 // GatlingPlugin - load testing
 // JavaAgent - adds AspectJ Weaver configuration
 // BuildInfoPlugin - allows generation of scala code with version information
@@ -101,7 +97,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
   .settings(
-    webApiCommonSettings,
+    name := "webapi",
     resolvers ++= Seq(
       Resolver.bintrayRepo("hseeberger", "maven")
     ),
@@ -221,6 +217,10 @@ lazy val webapiJavaTestOptions = Seq(
   //"-XX:MaxGCPauseMillis=500",
   //"-XX:MaxMetaspaceSize=4096m"
 )
+
+//////////////////////////////////////
+// DSP's new codebase
+//////////////////////////////////////
 
 lazy val apiMain = project
   .in(file("dsp-api-main"))

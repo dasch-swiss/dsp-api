@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice
+package org.knora.webapi.store.cache
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import com.typesafe.scalalogging.LazyLogging
@@ -14,14 +14,11 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIde
 import org.knora.webapi.messages.store.cacheservicemessages._
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.util.ActorUtil.future2Message
+import org.knora.webapi.store.cache.api.Cache
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CacheServiceManager(cs: CacheService)
-    extends Actor
-    with ActorLogging
-    with LazyLogging
-    with InstrumentationSupport {
+class CacheManager(cs: Cache) extends Actor with ActorLogging with LazyLogging with InstrumentationSupport {
 
   /**
    * The Knora Akka actor system.

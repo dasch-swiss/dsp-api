@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice
+package org.knora.webapi.store.cache.api
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
  * Cache Service Interface
  */
-trait CacheService {
+trait Cache {
   def putUserADM(value: UserADM)(implicit ec: ExecutionContext): Future[Boolean]
   def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]]
   def putProjectADM(value: ProjectADM)(implicit ec: ExecutionContext): Future[Boolean]

@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.serialization
+package org.knora.webapi.store.cache.serialization
 
 import com.twitter.chill.MeatLocker
-import org.knora.webapi.exceptions.CacheServiceException
+import org.knora.webapi.exceptions.CacheException
 import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import scala.concurrent.{ExecutionContext, Future}
 
-case class EmptyByteArray(message: String) extends CacheServiceException(message)
+case class EmptyByteArray(message: String) extends CacheException(message)
 
 object CacheSerialization extends InstrumentationSupport {
 

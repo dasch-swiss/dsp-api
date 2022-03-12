@@ -14,7 +14,8 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import org.knora.webapi.store.cacheservice.{CacheService, CacheServiceManager}
+import org.knora.webapi.store.cache.CacheManager
+import org.knora.webapi.store.cache.api.Cache
 import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
@@ -28,7 +29,7 @@ import scala.concurrent.ExecutionContext
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with ActorLogging {
+class StoreManager(appActor: ActorRef, cs: Cache) extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
@@ -78,7 +79,7 @@ class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with Acto
    * Instantiates the Redis Manager
    */
   protected lazy val cacheServiceManager: ActorRef = makeActor(
-    Props(new CacheServiceManager(cs)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    Props(new CacheManager(cs)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     RedisManagerActorName
   )
 

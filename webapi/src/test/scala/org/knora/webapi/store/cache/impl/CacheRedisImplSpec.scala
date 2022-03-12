@@ -3,66 +3,73 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.inmem
+package org.knora.webapi.store.cache.impl
 
-import org.knora.webapi.UnitSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.cache.settings.CacheSettings
+import org.knora.webapi.{TestContainerRedis, UnitSpec}
+
+import scala.concurrent.ExecutionContext
 
 /**
- * This spec is used to test [[org.knora.webapi.store.cacheservice.inmem.CacheServiceInMemImpl]].
+ * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheRedisImpl]].
+ * Adding the [[TestContainerRedis.PortConfig]] config will start the Redis container and make it
+ * available to the test.
  */
-class CacheServiceInMemImplSpec extends UnitSpec() {
+class CacheRedisImplSpec extends UnitSpec(TestContainerRedis.PortConfig) {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
   private val user: UserADM = SharedTestDataADM.imagesUser01
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
-  private val inMemCache: CacheServiceInMemImpl.type = CacheServiceInMemImpl
+  private val redisCache: CacheRedisImpl = new CacheRedisImpl(
+    new CacheSettings(TestContainerRedis.PortConfig)
+  )
 
-  "The CacheServiceInMemImpl" should {
+  "The CacheServiceRedisImpl" should {
 
     "successfully store a user" in {
-      val resFuture = inMemCache.putUserADM(user)
+      val resFuture = redisCache.putUserADM(user)
       resFuture map { res => res should equal(true) }
     }
 
     "successfully retrieve a user by IRI" in {
-      val resFuture = inMemCache.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
       resFuture map { res => res should equal(Some(user)) }
     }
 
     "successfully retrieve a user by USERNAME" in {
-      val resFuture = inMemCache.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
       resFuture map { res => res should equal(Some(user)) }
     }
 
     "successfully retrieve a user by EMAIL" in {
-      val resFuture = inMemCache.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
       resFuture map { res => res should equal(Some(user)) }
     }
 
     "successfully store a project" in {
-      val resFuture = inMemCache.putProjectADM(project)
+      val resFuture = redisCache.putProjectADM(project)
       resFuture map { res => res should equal(true) }
     }
 
     "successfully retrieve a project by IRI" in {
-      val resFuture = inMemCache.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
       resFuture map { res => res should equal(Some(project)) }
     }
 
     "successfully retrieve a project by SHORTNAME" in {
-      val resFuture = inMemCache.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
+      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
       resFuture map { res => res should equal(Some(project)) }
     }
 
     "successfully retrieve a project by SHORTCODE" in {
-      val resFuture = inMemCache.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
+      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
       resFuture map { res => res should equal(Some(project)) }
     }
   }
