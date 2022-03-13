@@ -195,8 +195,9 @@ object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] = {
     ZLayer {
       for {
-        state <- Ref.make(Map.empty[Any, Any])
-      } yield CacheServiceInMemImpl(state)
+        users <- TRef.make(Map.empty[IRI, UserADM]).commit
+        lut <- TRef.make(Map.empty[String, IRI]).commit
+      } yield CacheServiceInMemImpl(users, lut)
     }
   }
 }
