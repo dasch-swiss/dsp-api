@@ -12,8 +12,8 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.MockableResponderManager
 import org.knora.webapi.settings._
 import org.knora.webapi.store.MockableStoreManager
-import org.knora.webapi.store.cache.impl.CacheInMemImpl
-import org.knora.webapi.store.cache.settings.CacheSettings
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.MockSipiConnector
 
 /**
@@ -29,7 +29,7 @@ trait ManagersWithMockedSipi extends Managers {
 
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
-      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheInMemImpl)
+      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheServiceInMemImpl)
         with LiveActorMaker
     ),
     name = StoreManagerActorName
@@ -44,7 +44,7 @@ trait ManagersWithMockedSipi extends Managers {
           system,
           self,
           knoraSettings = KnoraSettings(system),
-          cacheServiceSettings = new CacheSettings(system.settings.config)
+          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
         )
       )
     ),

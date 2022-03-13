@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cache.impl
+package org.knora.webapi.store.cacheservice.impl
 
 import akka.http.scaladsl.util.FastFuture
-import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.projectsmessages.{
   ProjectADM,
   ProjectIdentifierADM,
@@ -18,31 +18,45 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceStatusOK,
   CacheServiceStatusResponse
 }
-import org.knora.webapi.store.cache.api.{Cache, EmptyKey, EmptyValue}
+import org.knora.webapi.store.cacheservice.api.{CacheService, EmptyKey, EmptyValue}
+import zio._
+import zio.stm._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object CacheInMemImpl extends Cache with LazyLogging {
+/**
+ * In-Memory Cache implementation
+ *
+ * The state is divided into Refs used to store different types of objects.
+ * A ref in itself is fiber (thread) safe, but to keep the cumulative state
+ * consistent, all Refs need to be updated in a single transaction. This
+ * requires STM (Software Transactional Memory) to be used.
+ *
+ * @param users a map of users
+ * @param lut   a lookup table of username/email to IRI
+ */
+case class CacheServiceInMemImpl(users: TRef[Map[IRI, UserADM]], lut: TRef[Map[String, IRI]]) extends CacheService {
 
   private var cache: scala.collection.mutable.Map[Any, Any] =
     scala.collection.mutable.Map[Any, Any]()
 
   /**
-   * Stores the user under the IRI and additionally the IRI under the keys of
-   * USERNAME and EMAIL:
+   * Stores the user under the IRI (inside 'users') and additionally the IRI
+   * under the keys of USERNAME and EMAIL (inside the 'lut'):
    *
    * IRI -> byte array
    * username -> IRI
    * email -> IRI
    *
-   * @param value the stored value
+   * @param value the value to be stored
    */
-  def putUserADM(value: UserADM)(implicit ec: ExecutionContext): Future[Boolean] = {
-    cache(value.id) = value
-    cache(value.username) = value.id
-    cache(value.email) = value.id
-    FastFuture.successful(true)
-  }
+  def putUserADM(value: UserADM): Task[Unit] =
+    (for {
+      _ <- users.update(_ + (value.id -> value))
+      _ <- lut.update(_ + (value.username -> value.id))
+      _ <- lut.update(_ + (value.email -> value.id))
+      _ = ZIO.debug(s"Storing user to Cache: $value")
+    } yield ()).commit
 
   /**
    * Retrieves the user stored under the identifier (either iri, username,
@@ -50,7 +64,7 @@ object CacheInMemImpl extends Cache with LazyLogging {
    *
    * @param identifier the user identifier.
    */
-  def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]] = {
+  def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] = {
     // The data is stored under the IRI key.
     // Additionally, the USERNAME and EMAIL keys point to the IRI key
     val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
@@ -172,4 +186,17 @@ object CacheInMemImpl extends Cache with LazyLogging {
   def ping()(implicit ec: ExecutionContext): Future[CacheServiceStatusResponse] =
     FastFuture.successful(CacheServiceStatusOK)
 
+}
+
+/**
+ * Companion object providing the layer with an initialized implementation
+ */
+object CacheServiceInMemImpl {
+  val layer: ZLayer[Any, Nothing, CacheService] = {
+    ZLayer {
+      for {
+        state <- Ref.make(Map.empty[Any, Any])
+      } yield CacheServiceInMemImpl(state)
+    }
+  }
 }

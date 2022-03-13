@@ -369,11 +369,11 @@ object InvalidApiJsonException {
 }
 
 /**
- * Indicates that during caching with [[org.knora.webapi.store.cache.api.Cache]] something went wrong.
+ * Indicates that during caching with [[org.knora.webapi.store.cacheservice.api.CacheService]] something went wrong.
  *
  * @param message a description of the error.
  */
-abstract class CacheException(message: String) extends InternalServerException(message)
+abstract class CacheServiceException(message: String) extends InternalServerException(message)
 
 /**
  * Indicates that an application lock could not be acquired.

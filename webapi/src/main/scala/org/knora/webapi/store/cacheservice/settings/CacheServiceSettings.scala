@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cache.settings
+package org.knora.webapi.store.cacheservice.settings
 
 import com.typesafe.config.Config
 
 /**
  * Holds the Cache Service specific settings.
  */
-class CacheSettings(config: Config) {
+class CacheServiceSettings(config: Config) {
   val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
   val cacheServiceRedisHost: String = config.getString("app.cache-service.redis.host")
   val cacheServiceRedisPort: Int = config.getInt("app.cache-service.redis.port")

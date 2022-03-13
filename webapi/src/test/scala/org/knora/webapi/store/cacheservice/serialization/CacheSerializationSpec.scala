@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cache.serialization
+package org.knora.webapi.store.cacheservice.serialization
 
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.UnitSpec
