@@ -131,7 +131,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
           )
       }
 
-      _ = println(s"SipiResponderADM returning permission code $permissionCode")
+      _ = log.info(s"filename ${request.filename}, permission code: $permissionCode")
     } yield response
   }
 }
