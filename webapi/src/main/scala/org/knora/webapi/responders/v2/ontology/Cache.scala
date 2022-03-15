@@ -45,6 +45,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
+import java.time.Instant
 
 object Cache extends LazyLogging {
 
@@ -138,6 +139,25 @@ object Cache extends LazyLogging {
 
       // Get the contents of each named graph containing an ontology.
       ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] = allOntologyMetadata.keys.map { ontologyIri =>
+        val ontology: OntologyMetadataV2 = allOntologyMetadata.get(ontologyIri).get
+        val lastModificationDate: Option[Instant] = ontology.lastModificationDate
+        val attachedToProject: Option[SmartIri] = ontology.projectIri
+
+        // throw an expception if ontology doesn't have lastModificationDate property
+        lastModificationDate match {
+          case None =>
+            attachedToProject match {
+              case Some(iri: SmartIri) =>
+                if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
+                  throw InconsistentRepositoryDataException(
+                    s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
+                  )
+                }
+              case _ => ()
+            }
+          case _ => ()
+        }
+
         val ontologyGraphConstructQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getOntologyGraph(
             triplestore = settings.triplestoreType,
