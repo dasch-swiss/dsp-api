@@ -111,9 +111,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
   )
   .settings(
-    exportJars := true,
-    Compile / unmanagedResourceDirectories += (rootBaseDir.value / "knora-ontologies"),
-    // add needed files to jar
+    // add needed files to production jar
     Compile / packageBin / mappings ++= Seq(
       (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
       (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
@@ -122,10 +120,15 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
-    // put additional files into the jar when running tests which are needed by testcontainers
+    // use packaged jars (through packageBin) on classpaths instead of class directories for production
+    Compile / exportJars := true,
+    // add needed files to test jar
     Test / packageBin / mappings ++= Seq(
+      (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
       (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua"
-    )
+    ),
+    // use packaged jars (through packageBin) on classpaths instead of class directories for test
+    Test / exportJars := true
   )
   .settings(
     scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -144,11 +147,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     Test / testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
-
-    // enable publishing the jars for test and it
-    // Test / packageBin / publishArtifact := true,
-    // IntegrationTest / packageBin / publishArtifact := true,
-    // addArtifact(artifact in (IntegrationTest, packageBin), packageBin in IntegrationTest)
   )
   .settings(
     // prepare for publishing
