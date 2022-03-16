@@ -112,7 +112,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ): Future[Seq[ProjectADM]] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjects(
             triplestore = settings.triplestoreType,
             maybeIri = None,
@@ -317,7 +317,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjectMembers(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
@@ -393,7 +393,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjectAdminMembers(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
@@ -632,7 +632,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       adminDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = ADMIN_DATA_GRAPH, tempDir = tempDir)
 
-      adminDataSparql: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+      adminDataSparql: String = queries.sparql.admin.txt
         .getProjectAdminData(
           triplestore = settings.triplestoreType,
           projectIri = project.id
@@ -651,7 +651,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       permissionDataNamedGraphTrigFile = NamedGraphTrigFile(graphIri = PERMISSIONS_DATA_GRAPH, tempDir = tempDir)
 
-      permissionDataSparql: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+      permissionDataSparql: String = queries.sparql.admin.txt
         .getProjectPermissions(
           triplestore = settings.triplestoreType,
           projectIri = project.id
@@ -692,7 +692,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjects(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
@@ -882,7 +882,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       /* Update project */
       updateProjectSparqlString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .updateProject(
             adminNamedGraphIri = "http://www.knora.org/data/admin",
             triplestore = settings.triplestoreType,
@@ -1107,7 +1107,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           case None        => None
         }
 
-        createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        createNewProjectSparqlString = queries.sparql.admin.txt
           .createNewProject(
             adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
             triplestore = settings.triplestoreType,
@@ -1214,7 +1214,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     for {
 
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjects(
             triplestore = settings.triplestoreType,
             maybeIri = identifier.toIriOption,
@@ -1353,7 +1353,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   private def projectByIriExists(projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .checkProjectExistsByIri(projectIri = projectIri)
           .toString
       )
@@ -1373,7 +1373,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   private def projectByShortnameExists(shortname: String): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .checkProjectExistsByShortname(shortname = shortname)
           .toString
       )
@@ -1393,7 +1393,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   private def projectByShortcodeExists(shortcode: String): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .checkProjectExistsByShortcode(shortcode = shortcode)
           .toString
       )

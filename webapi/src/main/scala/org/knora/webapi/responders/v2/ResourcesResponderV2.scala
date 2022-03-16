@@ -270,7 +270,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
 
         // Generate SPARQL for creating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = queries.sparql.v2.txt
           .createNewResources(
             dataNamedGraph = dataNamedGraph,
             triplestore = settings.triplestoreType,
@@ -444,7 +444,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         }
 
         // Generate SPARQL for updating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = queries.sparql.v2.txt
           .changeResourceMetadata(
             triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
@@ -600,7 +600,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
 
         // Generate SPARQL for marking the resource as deleted.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = queries.sparql.v2.txt
           .deleteResource(
             triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
@@ -616,7 +616,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Verify that the resource was deleted correctly.
 
-        sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlQuery = queries.sparql.v2.txt
           .checkResourceDeletion(
             triplestore = settings.triplestoreType,
             resourceIri = deleteResourceV2.resourceIri
@@ -715,7 +715,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
 
         // Generate SPARQL for erasing the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = queries.sparql.v2.txt
           .eraseResource(
             triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
@@ -1490,7 +1490,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
       resourceRequestSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .getResourcePropertiesAndValues(
             triplestore = settings.triplestoreType,
             resourceIris = resourceIrisDistinct,
@@ -2129,7 +2129,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       for {
         // Get the direct links from/to the start node.
         sparql <- Future(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          queries.sparql.v2.txt
             .getGraphData(
               triplestore = settings.triplestoreType,
               startNodeIri = startNode.nodeIri,
@@ -2271,7 +2271,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     for {
       // Get the start node.
       sparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .getGraphData(
             triplestore = settings.triplestoreType,
             startNodeIri = graphDataGetRequest.resourceIri,
@@ -2396,7 +2396,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       // Get the version history of the resource's values.
 
-      historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      historyRequestSparql = queries.sparql.v2.txt
         .getResourceValueVersionHistory(
           triplestore = settings.triplestoreType,
           withDeletedResource = resourceHistoryRequest.withDeletedResource,
@@ -2458,7 +2458,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     for {
       // Make a Gravsearch query from a template.
       gravsearchQueryForIncomingLinks: String <- Future(
-        org.knora.webapi.messages.twirl.queries.gravsearch.txt
+        queries.gravsearch.txt
           .getIncomingImageLinks(
             resourceIri = request.resourceIri
           )
@@ -2636,7 +2636,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       )).mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
-      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      prequery = queries.sparql.v2.txt
         .getAllResourcesInProjectPrequery(
           triplestore = settings.triplestoreType,
           projectIri = projectInfoResponse.project.id

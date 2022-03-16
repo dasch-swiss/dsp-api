@@ -68,8 +68,9 @@ object GenerateContributorsFile extends App {
   val contributorsSorted = contributorsWithNames.sortBy(_.contributions).reverse
 
   // Generate Markdown.
-  val contributorsText: String =
-    org.knora.webapi.messages.twirl.queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
+  val contributorsText: String = {
+    queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
+  }
 
   // Write Contributors.md.
   FileUtil.writeTextFile(file = outputFile, content = contributorsText)

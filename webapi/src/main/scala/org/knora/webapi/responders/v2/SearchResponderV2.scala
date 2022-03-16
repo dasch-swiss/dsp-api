@@ -178,7 +178,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       countSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .searchFulltext(
             triplestore = settings.triplestoreType,
             searchTerms = searchTerms,
@@ -244,7 +244,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       searchSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .searchFulltext(
             triplestore = settings.triplestoreType,
             searchTerms = searchTerms,
@@ -804,7 +804,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       }
 
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
-      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      prequery = queries.sparql.v2.txt
         .getResourcesByClassInProjectPrequery(
           triplestore = settings.triplestoreType,
           projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
@@ -841,7 +841,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
             // at most one page of standoff per text value.
             resourceRequestSparql <- Future(
-              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              queries.sparql.v2.txt
                 .getResourcePropertiesAndValues(
                   triplestore = settings.triplestoreType,
                   resourceIris = mainResourceIris,
@@ -926,7 +926,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       countSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .searchResourceByLabel(
             triplestore = settings.triplestoreType,
             searchTerm = searchPhrase,
@@ -984,7 +984,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       searchResourceByLabelSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .searchResourceByLabel(
             triplestore = settings.triplestoreType,
             searchTerm = searchPhrase,

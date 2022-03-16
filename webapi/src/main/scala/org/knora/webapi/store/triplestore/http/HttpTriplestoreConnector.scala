@@ -646,6 +646,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       } else {
         // none of the available datasets meet our requirements
         log.info(s"None of the active datasets meet our requirement of name: $nameShouldBe")
+        log.debug(s"Debug Log")
+        println(s"settings.triplestoreAutoInit: ${settings.triplestoreAutoInit}")
         if (settings.triplestoreAutoInit) {
           // try to auto-init if we didn't tried it already
           if (afterAutoInit) {

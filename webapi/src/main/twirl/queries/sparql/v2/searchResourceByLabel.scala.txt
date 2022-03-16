@@ -1,0 +1,55 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.exceptions.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
+
+@*
+ * Performs a search for resources by their label.
+ *
+ * If the triplestore type is GraphDB, this template delegates to searchResourceByLabelGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to searchResourceByLabelStandard.sparql.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param searchTerms search terms.
+ * @param limitToProject limit search to the given project.
+ * @param limitToResourceClass limit search to given resource class.
+ * @param limit maximum amount of resources to be returned.
+ * @param offset offset to be used for paging.
+ * @param countQuery indicates whether it is a count query or the actual resources should be returned.
+ *@
+@(triplestore: String,
+  searchTerm: MatchStringWhileTyping,
+  limitToProject: Option[IRI],
+  limitToResourceClass: Option[IRI],
+  limit: Int,
+  offset: Int,
+  countQuery: Boolean)
+
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v2.txt.searchResourceByLabelGraphDB(
+            searchTerm = searchTerm,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery
+        )
+    }
+} else {
+    @{
+        queries.sparql.v2.txt.searchResourceByLabelStandard(
+            triplestore = triplestore,
+            searchTerm = searchTerm,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery
+        )
+    }
+}

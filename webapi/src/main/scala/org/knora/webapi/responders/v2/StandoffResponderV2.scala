@@ -90,7 +90,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
     for {
       resourceRequestSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .getResourcePropertiesAndValues(
             triplestore = settings.triplestoreType,
             resourceIris = Seq(getStandoffRequestV2.resourceIri),
@@ -480,7 +480,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         _ <- getStandoffEntitiesFromMappingV2(mappingXMLToStandoff, requestingUser)
 
         // check if the mapping IRI already exists
-        getExistingMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        getExistingMappingSparql = queries.sparql.v2.txt
           .getMapping(
             triplestore = settings.triplestoreType,
             mappingIri = mappingIri
@@ -496,7 +496,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
           throw BadRequestException(s"mapping IRI $mappingIri already exists")
         }
 
-        createNewMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        createNewMappingSparql = queries.sparql.v2.txt
           .createNewMapping(
             triplestore = settings.triplestoreType,
             dataNamedGraph = namedGraph,
@@ -818,7 +818,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     requestingUser: UserADM
   ): Future[MappingXMLtoStandoff] = {
 
-    val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+    val getMappingSparql = queries.sparql.v2.txt
       .getMapping(
         triplestore = settings.triplestoreType,
         mappingIri = mappingIri

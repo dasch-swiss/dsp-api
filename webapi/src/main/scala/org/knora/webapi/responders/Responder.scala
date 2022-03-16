@@ -116,7 +116,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   ): Future[Boolean] =
     for {
       isEntityUsedSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .isEntityUsed(
             triplestore = settings.triplestoreType,
             entityIri = entityIri,
@@ -143,7 +143,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   ): Future[Boolean] =
     for {
       isClassUsedInDataSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .isClassUsedInData(
             triplestore = settings.triplestoreType,
             classIri = classIri

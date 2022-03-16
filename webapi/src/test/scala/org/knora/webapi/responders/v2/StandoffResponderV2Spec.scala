@@ -30,7 +30,7 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private def getMapping(iri: String): SparqlConstructResponse = {
 
-    val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+    val getMappingSparql = queries.sparql.v2.txt
       .getMapping(
         triplestore = settings.triplestoreType,
         mappingIri = iri

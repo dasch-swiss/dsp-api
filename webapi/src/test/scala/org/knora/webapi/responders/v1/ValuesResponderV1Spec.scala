@@ -254,7 +254,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
   }
 
   private def getLastModificationDate(resourceIri: IRI): Option[String] = {
-    val lastModSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+    val lastModSparqlQuery = queries.sparql.v1.txt
       .getLastModificationDate(
         triplestore = settings.triplestoreType,
         resourceIri = resourceIri
@@ -920,7 +920,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.rights should ===(2)
       }
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
@@ -1020,7 +1020,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.rights should ===(2)
       }
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
@@ -1104,7 +1104,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.rights should ===(2)
       }
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
@@ -1165,7 +1165,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.rights should ===(2)
       }
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
@@ -1230,7 +1230,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
@@ -1319,7 +1319,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.rights should ===(2)
       }
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
@@ -1483,7 +1483,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-      val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val sparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = resourceIri,
@@ -1567,7 +1567,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The old LinkValue should be deleted now, and the old direct link should have been removed.
 
-      val oldLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val oldLinkValueSparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = linkSourceIri,
@@ -1592,7 +1592,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-      val newLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val newLinkValueSparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = linkSourceIri,
@@ -1635,7 +1635,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         linkObjLinkValueIri.set(msg.id)
       }
 
-      val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val deletedLinkValueSparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = linkSourceIri,
@@ -1985,7 +1985,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         msg.rights should ===(2)
       }
 
-      val initialLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val initialLinkValueSparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = thingWithTextValues,
@@ -2057,7 +2057,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // It should have a previousValue, and the direct link should still exist.
 
-      val decrementedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val decrementedLinkValueSparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = thingWithTextValues,
@@ -2118,7 +2118,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The LinkValue should point to its previous version. There should be no direct link.
 
-      val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      val deletedLinkValueSparqlQuery = queries.sparql.v1.txt
         .findLinkValueByObject(
           triplestore = settings.triplestoreType,
           subjectIri = thingWithTextValues,

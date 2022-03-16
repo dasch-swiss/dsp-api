@@ -66,7 +66,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getFileValue(
             triplestore = settings.triplestoreType,
             filename = request.filename

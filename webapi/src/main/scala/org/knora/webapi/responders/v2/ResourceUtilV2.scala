@@ -137,7 +137,7 @@ object ResourceUtilV2 {
   ): Future[Unit] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .checkListNodeExistsByIri(listNodeIri = listNodeIri)
           .toString
       )

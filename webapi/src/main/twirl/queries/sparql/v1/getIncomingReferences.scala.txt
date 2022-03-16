@@ -1,0 +1,29 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Gets information about the incoming references to a resource, as well as about the referring resources.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getIncomingReferencesGraphDB.sparql.txt, which is
+ * optimised for GraphDB. Otherwise, it delegates to getIncomingReferencesStandard.sparql.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the IRI of the resource.
+ *@
+@(triplestore: String,
+  resourceIri: IRI)
+
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v1.txt.getIncomingReferencesGraphDB(resourceIri = resourceIri)
+    }
+} else {
+    @{
+        queries.sparql.v1.txt.getIncomingReferencesStandard(triplestore = triplestore,
+                                                            resourceIri = resourceIri)
+    }
+}

@@ -129,7 +129,7 @@ object OntologyHelpers {
         }
       }
 
-      getOntologyInfoSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      getOntologyInfoSparql = queries.sparql.v2.txt
         .getOntologyInfo(
           triplestore = settings.triplestoreType,
           ontologyIri = internalOntologyIri
@@ -1067,7 +1067,7 @@ object OntologyHelpers {
   ): Future[Set[IRI]] =
     for {
       isOntologyUsedSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .isOntologyUsed(
             triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
@@ -1122,7 +1122,7 @@ object OntologyHelpers {
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[PropertyInfoContentV2] =
     for {
       sparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .getPropertyDefinition(
             triplestore = settings.triplestoreType,
             propertyIri = propertyIri
@@ -1566,7 +1566,7 @@ object OntologyHelpers {
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ClassInfoContentV2] =
     for {
       sparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .getClassDefinition(
             triplestore = settings.triplestoreType,
             classIri = classIri

@@ -1,0 +1,90 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import java.time.Instant
+@import java.util.UUID
+@import org.knora.webapi._
+@import org.knora.webapi.messages.{StringFormatter, SmartIri}
+@import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.messages.v2.responder.valuemessages._
+
+@**
+ * Generates statements to be added to the INSERT clause of a SPARQL update when creating a new value of a resource
+ * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
+ * single value in an existing resource, and when creating a new resource with its initial values.
+ *
+ * @param resourceIri the IRI of the resource.
+ * @param propertyIri the IRI of the property for which the value is being created.
+ * @param value the value to insert.
+ * @param newValueIri the IRI of the new value.
+ * @param newValueUUID the UUID to be attached to the value.
+ * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
+ *        updated for resource references in Standoff text values. This list will be empty if the links and LinkValues
+ *        are being created separately.
+ * @param valueCreator the IRI of the user who created the value.
+ * @param valuePermissions the permissions that should be attached to the value.
+ * @param creationDate an xsd:dateTimeStamp that will be attached to the value.
+ * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
+ * @param stringFormatter a [[StringFormatter]].
+ *@
+@(resourceIri: IRI,
+  propertyIri: SmartIri,
+  value: ValueContentV2,
+  newValueIri: IRI,
+  newValueUUID: UUID,
+  linkUpdates: Seq[SparqlTemplateLinkUpdate],
+  valueCreator: IRI,
+  valuePermissions: String,
+  creationDate: Instant,
+  maybeValueHasOrder: Option[Int],
+  stringFormatter: StringFormatter)
+
+        # Value: @newValueIri
+        # Property: @propertyIri
+
+        @* Construct the value. *@
+        <@newValueIri> rdf:type <@value.valueType> ;
+            knora-base:isDeleted false  ;
+            knora-base:valueHasString """@value.valueHasString""" ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" .
+
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
+                                                                          newValueIri = newValueIri,
+                                                                          stringFormatter = stringFormatter)
+        }
+
+        @* Insert the value's comment, if given. *@
+        @value.comment match {
+            case Some(commentStr) => {
+                <@newValueIri> knora-base:valueHasComment """@commentStr""" .
+            }
+
+            case None => {}
+        }
+
+        <@newValueIri> knora-base:attachedToUser <@valueCreator> ;
+            knora-base:hasPermissions "@valuePermissions"^^xsd:string ;
+            @maybeValueHasOrder match {
+                case Some(order) => {
+                    knora-base:valueHasOrder @order ;
+                }
+
+                case None => {
+                    knora-base:valueHasOrder ?nextOrder ;
+                }
+            }
+            knora-base:valueCreationDate "@creationDate"^^xsd:dateTime .
+
+        @* Insert direct links and LinkValues for resource references. *@
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
+                                                                           linkUpdates = linkUpdates,
+                                                                           creationDate = creationDate,
+                                                                           stringFormatter = stringFormatter)
+        }
+
+        @* Attach the value to the resource. *@
+        <@resourceIri> <@propertyIri> <@newValueIri> .

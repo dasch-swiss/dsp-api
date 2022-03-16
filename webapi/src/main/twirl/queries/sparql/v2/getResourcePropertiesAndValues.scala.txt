@@ -1,0 +1,83 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import java.time.Instant
+@import java.util.UUID
+@import org.knora.webapi.IRI
+@import org.knora.webapi.exceptions.SparqlGenerationException
+@import org.knora.webapi.messages.{SmartIri, StringFormatter}
+
+@**
+ * Gets the values of all the Knora properties of one or more resources.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt,
+ * which is optimised for GraphDB. Otherwise, it delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
+ *
+ * @param triplestore                the name of the triplestore being used.
+ * @param resourceIris               the IRIs of the requested resources.
+ * @param preview                    indicates if the request should only return preview information.
+ * @param withDeleted                indicates if the deleted resources and values should be returned or not.
+ * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
+ *                                   Cannot be used in conjunction with preview.
+ * @param maybeValueUuid             if defined, requests only the value with the specified UUID.
+ * @param maybeVersionDate           if defined, requests the state of the resources at the specified
+ *                                   time in the past. Cannot be used in conjunction with preview.
+ * @param maybeValueIri              if defined, the specified value will be the only value returned.
+ * @param queryAllNonStandoff        if true, knora-base:valueHasString and other non-standoff content will be returned.
+ * @param maybeStandoffMinStartIndex if defined, the minimum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeStandoffMaxStartIndex. If undefined, standoff will
+ *                                   not be returned.
+ * @param maybeStandoffMaxStartIndex if defined, the maximum knora-base:standoffTagHasStartIndex to be returned.
+ *                                   Requires maybeStandoffMinStartIndex. If undefined, standoff will
+ *                                   not be returned.
+ * @param stringFormatter            a StringFormatter.
+ *@
+@(triplestore: String,
+  resourceIris: Seq[IRI],
+  preview: Boolean,
+  withDeleted: Boolean,
+  queryAllNonStandoff: Boolean,
+  maybePropertyIri: Option[SmartIri] = None,
+  maybeValueUuid: Option[UUID] = None,
+  maybeVersionDate: Option[Instant] = None,
+  maybeValueIri: Option[IRI] = None,
+  maybeStandoffMinStartIndex: Option[Int] = None,
+  maybeStandoffMaxStartIndex: Option[Int] = None,
+  stringFormatter: StringFormatter)
+
+@if(preview && (maybeVersionDate.isDefined || maybePropertyIri.isDefined)) {
+    @{throw SparqlGenerationException(s"A preview cannot be requested with a property or a version date"); ()}
+}
+
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIris = resourceIris,
+                                                                    preview = preview,
+                                                                    withDeleted= withDeleted,
+                                                                    maybePropertyIri = maybePropertyIri,
+                                                                    maybeValueUuid = maybeValueUuid,
+                                                                    maybeVersionDate = maybeVersionDate,
+                                                                    maybeValueIri = maybeValueIri,
+                                                                    queryAllNonStandoff = queryAllNonStandoff,
+                                                                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                                                                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                                                                    stringFormatter = stringFormatter)
+    }
+} else {
+    @{
+        queries.sparql.v2.txt.getResourcePropertiesAndValuesStandard(triplestore = triplestore,
+                                                                    resourceIris = resourceIris,
+                                                                    preview = preview,
+                                                                    withDeleted= withDeleted,
+                                                                    maybePropertyIri = maybePropertyIri,
+                                                                    maybeValueUuid = maybeValueUuid,
+                                                                    maybeVersionDate = maybeVersionDate,
+                                                                    maybeValueIri = maybeValueIri,
+                                                                    queryAllNonStandoff = queryAllNonStandoff,
+                                                                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                                                                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                                                                    stringFormatter = stringFormatter)
+    }
+}

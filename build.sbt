@@ -99,16 +99,13 @@ lazy val webApiCommonSettings = Seq(
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, BuildInfoPlugin)
   .settings(
     webApiCommonSettings,
     resolvers ++= Seq(
       Resolver.bintrayRepo("hseeberger", "maven")
     ),
     Dependencies.webapiLibraryDependencies
-  )
-  .settings(
-    inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
   )
   .settings(
     // add needed files to production jar
@@ -134,16 +131,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
-    reStart / javaOptions ++= resolvedJavaAgents.value map { resolved =>
-      "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
-    }, // allows sbt-javaagent to work with sbt-revolver
-    reStart / javaOptions ++= webapiJavaRunOptions,
-    javaAgents += Dependencies.Compile.aspectJWeaver,
     fork := true, // run tests in a forked JVM
     Test / testForkedParallel := false, // run forked tests in parallel
     Test / parallelExecution := false, // run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
-    Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
+    Test / javaOptions ++= Seq("-Dconfig.resource=test.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     Test / testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations

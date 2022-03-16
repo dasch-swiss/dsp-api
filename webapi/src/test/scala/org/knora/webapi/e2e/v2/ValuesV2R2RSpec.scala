@@ -73,7 +73,7 @@ class ValuesV2R2RSpec extends R2RSpec {
     userEmail: String
   ): JsonLDDocument = {
     // Make a Gravsearch query from a template.
-    val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
+    val gravsearchQuery: String = queries.gravsearch.txt
       .getResourceWithSpecifiedProperties(
         resourceIri = resourceIri,
         propertyIris = propertyIrisForGravsearch

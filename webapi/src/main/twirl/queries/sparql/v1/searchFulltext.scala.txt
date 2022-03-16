@@ -1,0 +1,48 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+@import org.knora.webapi.exceptions.SparqlGenerationException
+@import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
+
+@*
+ * Performs a simple full-text search. The number of rows returned per matching resource is equal to the
+ * number of values that matched in the resource, plus one if the resource's label matched.
+ *
+ * If the triplestore type is GraphDB, this template delegates to searchFulltextGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to searchFulltextStandard.sparql.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param searchTerms search terms to be combined with AND in Lucene full-text search syntax.
+ * @param preferredLanguage the language code of the user's preferred language.
+ * @param fallbackLanguage the language code of the application's default language.
+ * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
+ * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
+ *@
+@(triplestore: String,
+  searchTerms: LuceneQueryString,
+  preferredLanguage: String,
+  fallbackLanguage: String,
+  projectIriOption: Option[IRI],
+  restypeIriOption: Option[IRI])
+
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v1.txt.searchFulltextGraphDB(searchTerms = searchTerms,
+                                                    preferredLanguage = preferredLanguage,
+                                                    fallbackLanguage = fallbackLanguage,
+                                                    projectIriOption = projectIriOption,
+                                                    restypeIriOption = restypeIriOption)
+    }
+} else {
+    @{
+        queries.sparql.v1.txt.searchFulltextStandard(triplestore = triplestore,
+                                                     searchTerms = searchTerms,
+                                                     preferredLanguage = preferredLanguage,
+                                                     fallbackLanguage = fallbackLanguage,
+                                                     projectIriOption = projectIriOption,
+                                                     restypeIriOption = restypeIriOption)
+    }
+}

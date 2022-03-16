@@ -205,7 +205,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .ckanDokubib(settings.triplestoreType, projectIri, limit)
           .toString()
       )
@@ -325,7 +325,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
   private def getIncunabulaBooksWithPagesIRIs(projectIri: IRI, limit: Option[Int]): Future[Map[IRI, Seq[IRI]]] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .ckanIncunabula(settings.triplestoreType, projectIri, limit)
           .toString()
       )
@@ -399,7 +399,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
   ): Future[Seq[IRI]] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getResourcesByProjectAndType(
             triplestore = settings.triplestoreType,
             projectIri = projectIri,

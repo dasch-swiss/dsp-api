@@ -518,7 +518,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   }
 
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
-    val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+    val sparqlQuery = queries.sparql.v2.txt
       .getStandoffTagByUUID(
         triplestore = settings.triplestoreType,
         uuid = uuid,
@@ -536,7 +536,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   }
 
   private def getDeleteDate(resourceIri: IRI): Instant = {
-    val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+    val sparqlQuery: String = queries.sparql.v2.txt
       .getDeleteDate(
         triplestore = settings.triplestoreType,
         entityIri = resourceIri
@@ -2395,7 +2395,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       ).map(_.toSmartIri)
 
       for (erasedIriToCheck <- erasedIrisToCheck) {
-        val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        val sparqlQuery = queries.sparql.admin.txt
           .checkIriExists(
             iri = erasedIriToCheck.toString
           )
@@ -2410,7 +2410,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // Check that the deleted link value that pointed to the resource has also been erased.
 
-      val isEntityUsedSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      val isEntityUsedSparql: String = queries.sparql.v2.txt
         .isEntityUsed(
           triplestore = settings.triplestoreType,
           entityIri = resourceIriToErase.get.toSmartIri,

@@ -75,7 +75,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       )
 
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getUsers(
             triplestore = settings.triplestoreType
           )
@@ -132,7 +132,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     //log.debug("userDataByIriGetV1 - userIri: {}", userIri)
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getUserByIri(
             triplestore = settings.triplestoreType,
             userIri = userIri
@@ -174,7 +174,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       case None =>
         for {
           sparqlQueryString <- Future(
-            org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+            queries.sparql.v1.txt
               .getUserByIri(
                 triplestore = settings.triplestoreType,
                 userIri = userIri
@@ -258,7 +258,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       case None =>
         for {
           sparqlQueryString <- Future(
-            org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+            queries.sparql.v1.txt
               .getUserByEmail(
                 triplestore = settings.triplestoreType,
                 email = email
@@ -330,7 +330,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserProjectMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getUserByIri(
             triplestore = settings.triplestoreType,
             userIri = userIri
@@ -371,7 +371,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserProjectAdminMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getUserByIri(
             triplestore = settings.triplestoreType,
             userIri = userIri
@@ -411,7 +411,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserGroupMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getUserByIri(
             triplestore = settings.triplestoreType,
             userIri = userIri
@@ -592,7 +592,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   def userExists(userIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString
+        queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString
       )
       // _ = log.debug("userExists - query: {}", askString)
 
@@ -610,7 +610,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   def projectExists(projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .checkProjectExistsByIri(projectIri = projectIri)
           .toString
       )
@@ -630,7 +630,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   def groupExists(groupIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
+        queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
       )
       // _ = log.debug("groupExists - query: {}", askString)
 

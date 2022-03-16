@@ -2822,7 +2822,7 @@ class StringFormatter private (
     executionContext: ExecutionContext
   ): Future[Boolean] =
     for {
-      askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
+      askString <- Future(queries.sparql.admin.txt.checkIriExists(iri).toString)
       response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
     } yield response.result
 

@@ -476,7 +476,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getAdministrativePermissionsForProject(
             triplestore = settings.triplestoreType,
             projectIri = projectIRI
@@ -568,7 +568,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[Option[AdministrativePermissionADM]] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getAdministrativePermissionForProjectAndGroup(
             triplestore = settings.triplestoreType,
             projectIri = projectIri,
@@ -728,7 +728,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         )
 
         // Create the administrative permission.
-        createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        createAdministrativePermissionSparqlString = queries.sparql.admin.txt
           .createNewAdministrativePermission(
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
             triplestore = settings.triplestoreType,
@@ -791,7 +791,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
       }
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getObjectAccessPermission(
             triplestore = settings.triplestoreType,
             resourceIri = Some(resourceIri),
@@ -850,7 +850,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
       }
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getObjectAccessPermission(
             triplestore = settings.triplestoreType,
             resourceIri = None,
@@ -905,7 +905,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getDefaultObjectAccessPermissionsForProject(
             triplestore = settings.triplestoreType,
             projectIri = projectIri
@@ -1019,7 +1019,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           for {
 
             sparqlQueryString <- Future(
-              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+              queries.sparql.v1.txt
                 .getDefaultObjectAccessPermission(
                   triplestore = settings.triplestoreType,
                   projectIri = projectIri,
@@ -1639,7 +1639,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           }
 
         // Create the default object access permission.
-        createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        createNewDefaultObjectAccessPermissionSparqlString = queries.sparql.admin.txt
           .createNewDefaultObjectAccessPermission(
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
             triplestore = settings.triplestoreType,
@@ -1701,7 +1701,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[PermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjectPermissions(
             triplestore = settings.triplestoreType,
             projectIri = projectIRI
@@ -2163,7 +2163,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       // SPARQL query statement to get permission by IRI.
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getPermissionByIRI(
             triplestore = settings.triplestoreType,
             permissionIri = permissionIri
@@ -2262,7 +2262,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       // Generate SPARQL for changing the permission.
       sparqlChangePermission: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .updatePermission(
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
             triplestore = settings.triplestoreType,
@@ -2287,7 +2287,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       // Generate SPARQL for erasing a permission.
       sparqlDeletePermission: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .deletePermission(
             triplestore = settings.triplestoreType,
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
@@ -2301,7 +2301,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       // Verify that the permission was deleted correctly.
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
+        queries.sparql.admin.txt.checkIriExists(permissionIri).toString
       )
       askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       permissionStillExists: Boolean = askResponse.result
@@ -2323,7 +2323,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Future[Unit] =
     for {
       isPermissionUsedSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .isEntityUsed(
             triplestore = settings.triplestoreType,
             entityIri = permissionIri
@@ -2342,7 +2342,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   def getProjectOfEntity(entityIri: IRI): Future[IRI] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+        queries.sparql.admin.txt
           .getProjectOfEntity(
             triplestore = settings.triplestoreType,
             entityIri = entityIri

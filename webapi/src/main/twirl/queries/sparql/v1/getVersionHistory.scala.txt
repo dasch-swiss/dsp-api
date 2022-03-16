@@ -1,0 +1,39 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Returns all versions of a value.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getVersionHistoryGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getVersionHistoryStandard.sparql.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param resourceIri the resource to search.
+ * @param propertyIri the property to search.
+ * @param currentValueIri the most recent version of the value.
+ *
+ * Returns nothing if currentValueIri is not the most recent version.
+ *@
+ @(triplestore: String,
+   resourceIri: IRI,
+   propertyIri: IRI,
+   currentValueIri: IRI)
+
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v1.txt.getVersionHistoryGraphDB(resourceIri = resourceIri,
+                                                       propertyIri = propertyIri,
+                                                       currentValueIri = currentValueIri)
+    }
+} else {
+    @{
+        queries.sparql.v1.txt.getVersionHistoryStandard(triplestore = triplestore,
+                                                        resourceIri = resourceIri,
+                                                        propertyIri = propertyIri,
+                                                        currentValueIri = currentValueIri)
+    }
+}

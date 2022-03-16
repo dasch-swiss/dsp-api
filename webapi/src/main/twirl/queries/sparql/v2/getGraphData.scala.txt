@@ -1,0 +1,47 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.messages.SmartIri
+
+@**
+ * Gets the outbound or inbound links from/to a resource. This query is used recursively to get a graph of
+ * resources reachable from a given resource.
+ *
+ * If the triplestore type is GraphDB, this template delegates to getGraphDataGraphDB.sparql.txt, which is optimised
+ * for GraphDB. Otherwise, it delegates to getGraphDataStandard.sparql.txt.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param startNodeIri the IRI of the resource to use as the starting point of the query.
+ * @param startNodeOnly if true, returns information only about the start node.
+ * @param maybeExcludeLinkProperty if provided, a link property that should be excluded from the results.
+ * @param outbound true to get outbound links, false to get inbound links.
+ * @param limit the maximum number of edges to return.
+ *@
+@(triplestore: String,
+  startNodeIri: IRI,
+  startNodeOnly: Boolean,
+  maybeExcludeLinkProperty: Option[SmartIri],
+  outbound: Boolean,
+  limit: Int)
+
+@if(triplestore.startsWith("graphdb")) {
+    @{
+        queries.sparql.v2.txt.getGraphDataGraphDB(startNodeIri = startNodeIri,
+                                                  startNodeOnly = startNodeOnly,
+                                                  maybeExcludeLinkProperty = maybeExcludeLinkProperty,
+                                                  outbound = outbound,
+                                                  limit = limit)
+    }
+} else {
+    @{
+        queries.sparql.v2.txt.getGraphDataStandard(triplestore = triplestore,
+                                                   startNodeIri = startNodeIri,
+                                                   startNodeOnly = startNodeOnly,
+                                                   maybeExcludeLinkProperty = maybeExcludeLinkProperty,
+                                                   outbound = outbound,
+                                                   limit = limit)
+    }
+}

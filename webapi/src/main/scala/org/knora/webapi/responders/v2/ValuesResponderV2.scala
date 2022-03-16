@@ -487,7 +487,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       }
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      sparqlUpdate = queries.sparql.v2.txt
         .createValue(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -566,7 +566,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       }
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      sparqlUpdate = queries.sparql.v2.txt
         .createLink(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -717,7 +717,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           )
 
           // Generate SPARQL for the link.
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          queries.sparql.v2.txt
             .generateInsertStatementsForCreateLink(
               resourceIri = resourceIri,
               linkUpdate = sparqlTemplateLinkUpdate,
@@ -731,7 +731,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         case otherValueContentV2 =>
           // We're creating an ordinary value. Generate SPARQL for it.
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          queries.sparql.v2.txt
             .generateInsertStatementsForCreateValue(
               resourceIri = resourceIri,
               propertyIri = propertyIri,
@@ -827,7 +827,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       for {
         standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- Future.sequence(standoffLinkUpdatesFutures)
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
-        sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlInsert = queries.sparql.v2.txt
           .generateInsertStatementsForStandoffLinks(
             resourceIri = createMultipleValuesRequest.resourceIri,
             linkUpdates = standoffLinkUpdates,
@@ -1035,7 +1035,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         currentTime: Instant = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = queries.sparql.v2.txt
           .changeValuePermissions(
             dataNamedGraph = dataNamedGraph,
             triplestore = settings.triplestoreType,
@@ -1381,7 +1381,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
       // Generate a SPARQL update.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      sparqlUpdate = queries.sparql.v2.txt
         .addValueVersion(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -1478,7 +1478,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Generate a SPARQL update string.
         sparqlUpdate <- Future(
-          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          queries.sparql.v2.txt
             .changeLinkTarget(
               dataNamedGraph = dataNamedGraph,
               triplestore = settings.triplestoreType,
@@ -1524,7 +1524,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Make a timestamp to indicate when the link value was updated.
         currentTime: Instant = Instant.now
 
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlUpdate = queries.sparql.v2.txt
           .changeLinkMetadata(
             dataNamedGraph = dataNamedGraph,
             triplestore = settings.triplestoreType,
@@ -1704,7 +1704,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         )
 
         // Check whether the update succeeded.
-        sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        sparqlQuery = queries.sparql.v2.txt
           .checkValueDeletion(
             triplestore = settings.triplestoreType,
             valueIri = deletedValueIri
@@ -1838,7 +1838,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         requestingUser = requestingUser
       )
 
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      sparqlUpdate = queries.sparql.v2.txt
         .deleteLink(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -1904,7 +1904,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     for {
       linkUpdates: Seq[SparqlTemplateLinkUpdate] <- linkUpdateFuture
 
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      sparqlUpdate = queries.sparql.v2.txt
         .deleteValue(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -2053,7 +2053,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         .map(_.toOntologySchema(ApiV2Complex))
 
       // Make a Gravsearch query from a template.
-      gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
+      gravsearchQuery: String = queries.gravsearch.txt
         .getResourceWithSpecifiedProperties(
           resourceIri = resourceIri,
           propertyIris = propertyIrisForGravsearchQuery

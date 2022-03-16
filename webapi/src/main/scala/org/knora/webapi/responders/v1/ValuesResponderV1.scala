@@ -451,7 +451,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         }
 
         // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
-        standoffLinkInsertSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        standoffLinkInsertSparql: String = queries.sparql.v1.txt
           .generateInsertStatementsForStandoffLinks(
             resourceIri = createMultipleValuesRequest.resourceIri,
             linkUpdates = standoffLinkUpdates,
@@ -531,7 +531,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         )
 
                         // Generate INSERT DATA clause statements for the link.
-                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                        queries.sparql.v1.txt
                           .generateInsertStatementsForCreateLink(
                             resourceIri = createMultipleValuesRequest.resourceIri,
                             linkUpdate = sparqlTemplateLinkUpdate,
@@ -577,7 +577,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         }
 
                         // Generate INSERT DATA clause statements for the value.
-                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                        queries.sparql.v1.txt
                           .generateInsertStatementsForCreateValue(
                             resourceIri = createMultipleValuesRequest.resourceIri,
                             propertyIri = propertyIri,
@@ -725,7 +725,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         resourceIri <- Future(changeFileValueRequest.resourceIri)
 
-        getFileValuesSparql = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        getFileValuesSparql = queries.sparql.v1.txt
           .getFileValuesForResource(
             triplestore = settings.triplestoreType,
             resourceIri = resourceIri
@@ -1148,7 +1148,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         currentTime: String = Instant.now.toString
 
         // Generate a SPARQL update.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        sparqlUpdate = queries.sparql.v1.txt
           .changeComment(
             dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
             triplestore = settings.triplestoreType,
@@ -1294,7 +1294,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 userProfile = deleteValueRequest.userProfile
               )
 
-              sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+              sparqlUpdate = queries.sparql.v1.txt
                 .deleteLink(
                   dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                   triplestore = settings.triplestoreType,
@@ -1348,7 +1348,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 case None     => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
               }
 
-              sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+              sparqlUpdate = queries.sparql.v1.txt
                 .deleteValue(
                   dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
                   triplestore = settings.triplestoreType,
@@ -1369,7 +1369,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
-        sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        sparqlQuery = queries.sparql.v1.txt
           .checkValueDeletion(
             triplestore = settings.triplestoreType,
             valueIri = deletedValueIri
@@ -1452,7 +1452,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Do a SPARQL query to get the versions of the value.
       sparqlQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getVersionHistory(
             triplestore = settings.triplestoreType,
             resourceIri = versionHistoryRequest.resourceIri,
@@ -1690,7 +1690,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Option[ValueQueryResult]] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getValue(
             triplestore = settings.triplestoreType,
             valueIri = valueIri
@@ -1732,7 +1732,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .getLinkSourceAndTargetPermissions(
             triplestore = settings.triplestoreType,
             linkValueIri = linkValueIri
@@ -1793,7 +1793,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Option[LinkValueQueryResult]] =
     for {
       sparqlQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .findLinkValueByIri(
             triplestore = settings.triplestoreType,
             subjectIri = subjectIri,
@@ -1840,7 +1840,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Option[LinkValueQueryResult]] =
     for {
       sparqlQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .findLinkValueByObject(
             triplestore = settings.triplestoreType,
             subjectIri = subjectIri,
@@ -2166,7 +2166,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       // Do a SPARQL query to look for the value in the resource's version history.
       sparqlQuery <- Future {
         // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .findValueInVersions(
             triplestore = settings.triplestoreType,
             resourceIri = resourceIri,
@@ -2268,7 +2268,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   private def findResourceWithValue(valueIri: IRI): Future[FindResourceWithValueResult] =
     for {
       findResourceSparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+        queries.sparql.v1.txt
           .findResourceWithValue(
             triplestore = settings.triplestoreType,
             searchValueIri = valueIri
@@ -2385,7 +2385,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       currentTime: Instant = Instant.now
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      sparqlUpdate = queries.sparql.v1.txt
         .createLink(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -2464,7 +2464,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       }
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      sparqlUpdate = queries.sparql.v1.txt
         .createValue(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
@@ -2566,7 +2566,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       currentTime: String = Instant.now.toString
 
       // Generate a SPARQL update string.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      sparqlUpdate = queries.sparql.v1.txt
         .changeLink(
           dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
           triplestore = settings.triplestoreType,
@@ -2720,7 +2720,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       currentTime: String = Instant.now.toString
 
       // Generate a SPARQL update.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+      sparqlUpdate = queries.sparql.v1.txt
         .addValueVersion(
           dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
           triplestore = settings.triplestoreType,

@@ -1,0 +1,64 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@*
+ * Gets a mapping for XML to standoff conversion from the triplestore.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param mappingIri the Iri of the new mapping
+ *@
+@(triplestore: String,
+  mappingIri: IRI)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+CONSTRUCT {
+    ?mapping rdfs:label ?label .
+    ?mapping rdf:type ?mappingType .
+
+    ?mapping knora-base:mappingHasDefaultXSLTransformation ?defaultXSLTransformation .
+
+    ?mappingElement rdf:type ?mappingElementType .
+    ?mappingElement knora-base:mappingHasXMLTagname ?tagName .
+    ?mappingElement knora-base:mappingHasXMLNamespace ?tagNamespace .
+    ?mappingElement knora-base:mappingHasXMLClass ?tagClass .
+    ?mappingElement knora-base:mappingHasStandoffClass ?standoffClass .
+    ?mappingElement knora-base:mappingElementRequiresSeparator ?separatorRequired .
+
+    ?mappingElement knora-base:mappingHasXMLAttribute ?attribute .
+    ?attribute rdf:type ?attributeType .
+    ?attribute knora-base:mappingHasXMLAttributename ?attributeName .
+    ?attribute knora-base:mappingHasXMLNamespace ?attributeNamespace .
+    ?attribute knora-base:mappingHasStandoffProperty ?standoffProperty .
+
+    ?mappingElement knora-base:mappingHasStandoffDataTypeClass ?datatypeClass .
+    ?datatypeClass rdf:type ?datatypeType .
+    ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
+    ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
+
+
+
+} WHERE {
+    BIND(IRI("@mappingIri") as ?mapping)
+
+@if(triplestore.startsWith("graphdb")) {
+    GRAPH <http://www.ontotext.com/explicit> {
+        @{
+            queries.sparql.v1.txt.generateWhereStatementsForGetMapping()
+
+        }
+    }
+} else {
+    @{
+        queries.sparql.v1.txt.generateWhereStatementsForGetMapping()
+    }
+}
+
+}
+

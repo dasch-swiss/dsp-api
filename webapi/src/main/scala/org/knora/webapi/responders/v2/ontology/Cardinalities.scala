@@ -385,7 +385,7 @@ object Cardinalities {
 
       currentTime: Instant = Instant.now
 
-      updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+      updateSparql = queries.sparql.v2.txt
         .replaceClassCardinalities(
           triplestore = settings.triplestoreType,
           ontologyNamedGraphIri = internalOntologyIri,
@@ -471,7 +471,7 @@ object Cardinalities {
   )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
     for {
       request <- Future(
-        org.knora.webapi.queries.sparql.v2.txt
+        queries.sparql.v2.txt
           .isPropertyUsed(
             triplestore = settings.triplestoreType,
             internalPropertyIri = internalPropertyIri.toString,

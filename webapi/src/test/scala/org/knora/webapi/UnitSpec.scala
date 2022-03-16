@@ -19,8 +19,8 @@ object UnitSpec {
 
   /*
         Loads the following (first-listed are higher priority):
-            - system properties (e.g., -Dconfig.resource=fuseki.conf)
-            - test/resources/application.conf
+            - system properties (e.g., -Dconfig.resource=test.conf)
+            - test/resources/test.conf
             - main/resources/application.conf
    */
   val defaultConfig: Config = ConfigFactory.load()
