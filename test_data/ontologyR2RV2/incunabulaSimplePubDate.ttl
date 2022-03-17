@@ -1,11 +1,11 @@
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#> .
 @prefix incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#> .
+@prefix knora-api:  <http://api.knora.org/ontology/knora-api/simple/v2#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
-incunabula:pubdate  a          owl:DatatypeProperty ;
+incunabula:pubdate  rdf:type   owl:DatatypeProperty ;
         rdfs:comment           "Datum der Herausgabe" ;
         rdfs:label             "Datum der Herausgabe" ;
         rdfs:subPropertyOf     <http://purl.org/dc/terms/date> , knora-api:hasValue ;
@@ -13,5 +13,5 @@ incunabula:pubdate  a          owl:DatatypeProperty ;
         knora-api:subjectType  incunabula:book .
 
 <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2>
-        a           owl:Ontology ;
+        rdf:type    owl:Ontology ;
         rdfs:label  "The incunabula ontology" .

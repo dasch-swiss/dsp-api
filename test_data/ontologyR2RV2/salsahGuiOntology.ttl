@@ -1,86 +1,86 @@
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix knora-api:  <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
-salsah-gui:Geometry  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:Geometry  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
-salsah-gui:Searchbox  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:Searchbox  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "numprops:integer" .
 
 salsah-gui:guiAttribute
-        a                     owl:DatatypeProperty ;
+        rdf:type              owl:DatatypeProperty ;
         knora-api:objectType  xsd:string .
 
-salsah-gui:Spinbox  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:Spinbox  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "min:decimal" , "max:decimal" .
 
-salsah-gui:List  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:List  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "hlist(required):iri" .
 
-salsah-gui:Textarea  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:Textarea  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "wrap:string(soft|hard)" , "width:percent" , "rows:integer" , "cols:integer" .
 
-salsah-gui:Date  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:Date  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
-salsah-gui:Interval  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:Interval  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
-salsah-gui:guiOrder  a         owl:DatatypeProperty ;
+salsah-gui:guiOrder  rdf:type  owl:DatatypeProperty ;
         knora-api:objectType   xsd:nonNegativeInteger ;
         knora-api:subjectType  owl:Restriction .
 
 salsah-gui:guiElement
-        a       owl:ObjectProperty .
+        rdf:type  owl:ObjectProperty .
 
-salsah-gui:Pulldown  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:Pulldown  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "hlist(required):iri" .
 
 <http://api.knora.org/ontology/salsah-gui/v2>
-        a                            owl:Ontology ;
+        rdf:type                     owl:Ontology ;
         rdfs:label                   "The salsah-gui ontology" ;
         knora-api:attachedToProject  <http://www.knora.org/ontology/knora-admin#SystemProject> ;
         knora-api:isBuiltIn          true .
 
 salsah-gui:SimpleText
-        a       owl:NamedIndividual , salsah-gui:Guielement ;
+        rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "size:integer" , "maxlength:integer" .
 
-salsah-gui:Checkbox  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:Checkbox  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
-salsah-gui:Slider  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:Slider  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "min(required):decimal" , "max(required):decimal" .
 
 salsah-gui:Fileupload
-        a       owl:NamedIndividual , salsah-gui:Guielement .
+        rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
-salsah-gui:Geonames  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:Geonames  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
 salsah-gui:Guielement
-        a       owl:Class .
+        rdf:type  owl:Class .
 
 salsah-gui:Colorpicker
-        a       owl:NamedIndividual , salsah-gui:Guielement ;
+        rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "ncolors:integer" .
 
-salsah-gui:Radio  a  owl:NamedIndividual , salsah-gui:Guielement ;
+salsah-gui:Radio  rdf:type  owl:NamedIndividual , salsah-gui:Guielement ;
         salsah-gui:guiAttributeDefinition
                 "hlist(required):iri" .
 
-salsah-gui:Richtext  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:Richtext  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
 
 salsah-gui:guiAttributeDefinition
-        a                      owl:DatatypeProperty ;
+        rdf:type               owl:DatatypeProperty ;
         knora-api:objectType   xsd:string ;
         knora-api:subjectType  salsah-gui:Guielement .
 
-salsah-gui:TimeStamp  a  owl:NamedIndividual , salsah-gui:Guielement .
+salsah-gui:TimeStamp  rdf:type  owl:NamedIndividual , salsah-gui:Guielement .
