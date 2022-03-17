@@ -59,30 +59,39 @@ case class CacheServiceInMemImpl(users: TRef[Map[IRI, UserADM]], lut: TRef[Map[S
     } yield ()).commit
 
   /**
-   * Retrieves the user stored under the identifier (either iri, username,
-   * or email).
+   * Retrieves the user stored under the identifier (either iri, username, or email).
+   *
+   * The data is stored under the IRI key.
+   * Additionally, the USERNAME and EMAIL keys point to the IRI key
    *
    * @param identifier the user identifier.
    */
-  def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] = {
-    // The data is stored under the IRI key.
-    // Additionally, the USERNAME and EMAIL keys point to the IRI key
-    val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
-      case UserIdentifierType.Iri => FastFuture.successful(cache.get(identifier.toIri).map(_.asInstanceOf[UserADM]))
-      case UserIdentifierType.Username => {
-        cache.get(identifier.toUsername) match {
-          case Some(iriKey) => FastFuture.successful(cache.get(iriKey).map(_.asInstanceOf[UserADM]))
-          case None         => FastFuture.successful(None)
-        }
-      }
-      case UserIdentifierType.Email =>
-        cache.get(identifier.toEmail) match {
-          case Some(iriKey) => FastFuture.successful(cache.get(iriKey).map(_.asInstanceOf[UserADM]))
-          case None         => FastFuture.successful(None)
-        }
+  def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] =
+    identifier.hasType match {
+      case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
+      case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toUsername)
+      case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toEmail)
     }
-    resultFuture
-  }
+
+  /**
+   * Retrieves the user stored under the IRI.
+   *
+   * @param id the user's IRI.
+   * @return an optional user.
+   */
+  def getUserByIri(id: IRI): ZIO[Any, Nothing, Option[UserADM]] =
+    users.get.map(_.get(id)).commit
+
+  /**
+   * Retrieves the user stored under the username or email.
+   * @param usernameOrEmail of the user.
+   * @return an optional user.
+   */
+  def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
+    for {
+      maybeIri <- lut.get.map(_.get(usernameOrEmail)).commit
+      maybeUser <- getUserByIri(maybeIri.getOrElse(Task.none))
+    } yield maybeUser
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
