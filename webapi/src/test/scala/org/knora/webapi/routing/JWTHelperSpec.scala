@@ -34,32 +34,37 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
         userIri = SharedTestDataADM.anythingUser1.id,
         secret = settings.jwtSecretKey,
         longevity = settings.jwtLongevity,
+        issuer = settings.externalKnoraApiHostPort,
         content = Map("foo" -> JsString("bar"))
       )
 
       JWTHelper.extractUserIriFromToken(
         token = token,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some(SharedTestDataADM.anythingUser1.id))
 
       JWTHelper.extractContentFromToken(
         token = token,
         secret = settings.jwtSecretKey,
-        contentName = "foo"
+        contentName = "foo",
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some("bar"))
     }
 
     "validate a token" in {
       JWTHelper.validateToken(
         token = validToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(true)
     }
 
     "extract the user's IRI" in {
       JWTHelper.extractUserIriFromToken(
         token = validToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some(SharedTestDataADM.anythingUser1.id))
     }
 
@@ -67,7 +72,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
       JWTHelper.extractContentFromToken(
         token = validToken,
         secret = settings.jwtSecretKey,
-        contentName = "foo"
+        contentName = "foo",
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some("bar"))
     }
 
@@ -77,7 +83,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = invalidToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -87,7 +94,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = tokenWithInvalidSubject,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -97,7 +105,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = tokenWithMissingExp,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -107,7 +116,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = expiredToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
   }

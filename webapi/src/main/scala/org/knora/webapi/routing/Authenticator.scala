@@ -37,6 +37,7 @@ import spray.json._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -84,7 +85,8 @@ trait Authenticator extends InstrumentationSupport {
       sessionToken = JWTHelper.createToken(
         userProfile.userData.user_id.get,
         settings.jwtSecretKey,
-        settings.jwtLongevity
+        settings.jwtLongevity,
+        settings.externalKnoraApiHostPort
       )
 
       httpResponse = HttpResponse(
@@ -145,7 +147,12 @@ trait Authenticator extends InstrumentationSupport {
       )
 
       cookieDomain = Some(settings.cookieDomain)
-      token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
+      token = JWTHelper.createToken(
+        userADM.id,
+        settings.jwtSecretKey,
+        settings.jwtLongevity,
+        settings.externalKnoraApiHostPort
+      )
 
       httpResponse = HttpResponse(
         headers = List(
@@ -538,13 +545,13 @@ object Authenticator extends InstrumentationSupport {
             }
           } yield true
         case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-          if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey)) {
+          if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
             log.debug("authenticateCredentialsV2 - token was not valid")
             throw BadCredentialsException(BAD_CRED_NOT_VALID)
           }
           FastFuture.successful(true)
         case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-          if (!JWTHelper.validateToken(sessionToken, settings.jwtSecretKey)) {
+          if (!JWTHelper.validateToken(sessionToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
             log.debug("authenticateCredentialsV2 - session token was not valid")
             throw BadCredentialsException(BAD_CRED_NOT_VALID)
           }
@@ -756,7 +763,11 @@ object Authenticator extends InstrumentationSupport {
             featureFactoryConfig = featureFactoryConfig
           )
         case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-          val userIri: IRI = JWTHelper.extractUserIriFromToken(jwtToken, settings.jwtSecretKey) match {
+          val userIri: IRI = JWTHelper.extractUserIriFromToken(
+            jwtToken,
+            settings.jwtSecretKey,
+            settings.externalKnoraApiHostPort
+          ) match {
             case Some(iri) => iri
             case None      =>
               // should not happen, as the token is already validated
@@ -768,7 +779,11 @@ object Authenticator extends InstrumentationSupport {
             featureFactoryConfig = featureFactoryConfig
           )
         case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-          val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionToken, settings.jwtSecretKey) match {
+          val userIri: IRI = JWTHelper.extractUserIriFromToken(
+            sessionToken,
+            settings.jwtSecretKey,
+            settings.externalKnoraApiHostPort
+          ) match {
             case Some(iri) => iri
             case None      =>
               // should not happen, as the token is already validated
@@ -853,6 +868,7 @@ object JWTHelper {
     userIri: IRI,
     secret: String,
     longevity: FiniteDuration,
+    issuer: String,
     content: Map[String, JsValue] = Map.empty
   ): String = {
     val stringFormatter = StringFormatter.getGeneralInstance
@@ -867,7 +883,7 @@ object JWTHelper {
 
     val claim: String = JwtClaim(
       content = JsObject(content).compactPrint,
-      issuer = Some("Knora"),
+      issuer = Some(issuer),
       subject = Some(userIri),
       audience = Some(Set("Knora", "Sipi")),
       issuedAt = Some(now),
@@ -892,13 +908,13 @@ object JWTHelper {
    * @param secret the secret used to encode the token.
    * @return a [[Boolean]].
    */
-  def validateToken(token: String, secret: String): Boolean =
+  def validateToken(token: String, secret: String, issuer: String): Boolean =
     if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
       // token invalidated so no need to decode
       log.debug("validateToken - token found in invalidation cache, so not valid")
       false
     } else {
-      decodeToken(token, secret).isDefined
+      decodeToken(token, secret, issuer).isDefined
     }
 
   /**
@@ -908,8 +924,8 @@ object JWTHelper {
    * @param secret the secret used to encode the token.
    * @return an optional [[IRI]].
    */
-  def extractUserIriFromToken(token: String, secret: String): Option[IRI] =
-    decodeToken(token, secret) match {
+  def extractUserIriFromToken(token: String, secret: String, issuer: String): Option[IRI] =
+    decodeToken(token, secret, issuer) match {
       case Some((_: JwtHeader, claim: JwtClaim)) => claim.subject
       case None                                  => None
     }
@@ -923,8 +939,8 @@ object JWTHelper {
    * @param contentName the name of the content field to be extracted.
    * @return the string value of the specified content field.
    */
-  def extractContentFromToken(token: String, secret: String, contentName: String): Option[String] =
-    decodeToken(token, secret) match {
+  def extractContentFromToken(token: String, secret: String, contentName: String, issuer: String): Option[String] =
+    decodeToken(token, secret, issuer) match {
       case Some((_: JwtHeader, claim: JwtClaim)) =>
         claim.content.parseJson.asJsObject.fields.get(contentName) match {
           case Some(jsString: JsString) => Some(jsString.value)
@@ -941,14 +957,14 @@ object JWTHelper {
    * @param secret the secret used to encode the token.
    * @return the token's header and claim, or `None` if the token is invalid.
    */
-  private def decodeToken(token: String, secret: String): Option[(JwtHeader, JwtClaim)] = {
+  private def decodeToken(token: String, secret: String, issuer: String): Option[(JwtHeader, JwtClaim)] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
       case Success((header: JwtHeader, claim: JwtClaim, _)) =>
         val missingRequiredContent: Boolean = Set(
           header.typ.isDefined,
-          claim.issuer.isDefined,
+          claim.issuer.isDefined && claim.issuer.contains(issuer),
           claim.subject.isDefined,
           claim.jwtId.isDefined,
           claim.issuedAt.isDefined,
