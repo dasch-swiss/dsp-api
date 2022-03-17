@@ -861,6 +861,7 @@ object JWTHelper {
    * @param userIri   the user IRI that will be encoded into the token.
    * @param secret    the secret key used for encoding.
    * @param longevity the token's longevity.
+   * @param issuer    the principal that issued the JWT.
    * @param content   any other content to be included in the token.
    * @return a [[String]] containing the JWT.
    */
@@ -906,6 +907,7 @@ object JWTHelper {
    *
    * @param token  the JWT.
    * @param secret the secret used to encode the token.
+   * @param issuer the principal that issued the JWT.
    * @return a [[Boolean]].
    */
   def validateToken(token: String, secret: String, issuer: String): Boolean =
@@ -922,6 +924,7 @@ object JWTHelper {
    *
    * @param token  the JWT.
    * @param secret the secret used to encode the token.
+   * @param issuer the principal that issued the JWT.
    * @return an optional [[IRI]].
    */
   def extractUserIriFromToken(token: String, secret: String, issuer: String): Option[IRI] =
@@ -937,6 +940,7 @@ object JWTHelper {
    * @param token       the JWT.
    * @param secret      the secret used to encode the token.
    * @param contentName the name of the content field to be extracted.
+   * @param issuer      the principal that issued the JWT.
    * @return the string value of the specified content field.
    */
   def extractContentFromToken(token: String, secret: String, contentName: String, issuer: String): Option[String] =
