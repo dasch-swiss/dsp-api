@@ -52,11 +52,6 @@ case class CacheServiceRemoveValues(keys: Set[String]) extends CacheServiceReque
 case class CacheServiceFlushDB(requestingUser: UserADM) extends CacheServiceRequest
 
 /**
- * Message acknowledging the flush.
- */
-case class CacheServiceFlushDBACK()
-
-/**
  * Queries Cache Service status.
  */
 case object CacheServiceGetStatus extends CacheServiceRequest
