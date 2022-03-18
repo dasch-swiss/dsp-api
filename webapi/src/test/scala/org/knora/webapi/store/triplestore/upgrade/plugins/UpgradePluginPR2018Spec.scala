@@ -10,19 +10,19 @@ import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
   "Upgrade plugin PR2018" should {
-    "add last modification date to ontologies" in {
-      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2018.trig")
+    "add lastModificationDate to ontology not attached to SystemProject" in {
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2018_1.trig")
       val plugin = new UpgradePluginPR2018(defaultFeatureFactoryConfig)
       plugin.transform(model)
 
       val repository: RdfRepository = model.asRepository
 
-      // query that finds all ontologies with knora-base:lastModificationDate
+      // query that finds all ontologies with lastModificationDate
       val query: String =
         """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |
           |SELECT ?ontology
           |WHERE {
@@ -38,6 +38,38 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
         Seq(
           Map("ontology" -> "http://www.knora.org/ontology/7777/test")
         )
+      )
+
+      assert(queryResult.results == expectedResultBody)
+      repository.shutDown()
+    }
+
+    "not add lastModificationDate to ontology attached to SystemProject" in {
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2018_2.trig")
+      val plugin = new UpgradePluginPR2018(defaultFeatureFactoryConfig)
+      plugin.transform(model)
+
+      val repository: RdfRepository = model.asRepository
+
+      // query that finds all ontologies with lastModificationDate
+      val query: String =
+        """
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |
+          |SELECT ?ontology
+          |WHERE {
+          |  ?ontology rdf:type owl:Ontology .
+          |  ?ontology knora-base:lastModificationDate ?date
+          |}
+          |""".stripMargin
+
+      val queryResult: SparqlSelectResult = repository.doSelect(query)
+
+      // expect plugin to don't add lastModificationDate thus result should be empty list
+      val expectedResultBody: SparqlSelectResultBody = expectedResult(
+        Seq.empty
       )
 
       assert(queryResult.results == expectedResultBody)

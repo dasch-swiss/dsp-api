@@ -1,0 +1,15 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+# A test ontology that doesn't contain knora-base:lastModificationDate
+# but it's attached to knora-admin:SystemProject
+
+<http://www.knora.org/ontology/0000/test> rdf:type owl:Ontology ;
+    rdfs:label "PluginPR2018 test ontology #2" ;
+    knora-base:attachedToProject knora-admin:SystemProject .
+    # knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+    # knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
