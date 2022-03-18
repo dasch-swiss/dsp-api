@@ -46,7 +46,7 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends Up
       )
       .map(_.subj)
       .filter { _: RdfResource =>
-        // that have no knora-base:lastModificationDate
+        // that have no knora-base:lastModificationDate property
         model
           .find(
             subj = None,
@@ -69,5 +69,4 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends Up
         case iriNode: IriNode => iriNode
         case other => throw InconsistentRepositoryDataException(s"Unexpected subject for $ontologyType: $other")
       }
-
 }
