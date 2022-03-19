@@ -55,6 +55,10 @@ import redis.clients.jedis.exceptions.JedisConnectionException
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
+import zio.stm.TRef
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import zio.ZIO
 
 trait Managers {
   implicit val system: ActorSystem
@@ -69,7 +73,7 @@ trait LiveManagers extends Managers {
    * The actor that forwards messages to actors that deal with persistent storage.
    */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, cs = CacheServiceInMemImpl) with LiveActorMaker)
+    Props(new StoreManager(appActor = self, cs = CacheServiceInMemImpl.layer) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )
@@ -168,12 +172,12 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
       case _: Exception => Escalate
     }
 
-  private var appState: AppState = AppStates.Stopped
+  private var appState: AppState       = AppStates.Stopped
   private var allowReloadOverHTTPState = false
-  private var printConfigState = false
-  private var ignoreRepository = true
-  private var withIIIFService = true
-  private val withCacheService = cacheServiceSettings.cacheServiceEnabled
+  private var printConfigState         = false
+  private var ignoreRepository         = true
+  private var withIIIFService          = true
+  private val withCacheService         = cacheServiceSettings.cacheServiceEnabled
 
   /**
    * Startup of the ApplicationActor is a two step process:

@@ -39,7 +39,7 @@ case class CacheServicePutString(key: String, value: String) extends CacheServic
 /**
  * Message requesting to retrieve simple string stored under the key.
  */
-case class CacheServiceGetString(key: Option[String]) extends CacheServiceRequest
+case class CacheServiceGetString(key: String) extends CacheServiceRequest
 
 /**
  * Message requesting to remove anything stored under the keys.

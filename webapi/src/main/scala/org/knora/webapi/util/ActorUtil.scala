@@ -20,7 +20,16 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
+import zio._
+
 object ActorUtil {
+
+  /**
+    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
+    * phase, to be able to return ZIO inside an Actor.
+    */
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter)(implicit ec: ExecutionContext): Unit =
+    future2Message(sender, LegacyRuntime.fromTask(zioTask), log)
 
   /**
    * A convenience function that simplifies and centralises error-handling in the `receive` method of supervised Akka
@@ -210,9 +219,10 @@ object ActorUtil {
       taskResult: TaskResult[T] <- nextTask.runTask(previousResult)
 
       recResult: TaskResult[T] <- taskResult.nextTask match {
-        case Some(definedNextTask) => runTasksRec(previousResult = Some(taskResult), nextTask = definedNextTask)
-        case None                  => FastFuture.successful(taskResult)
-      }
+                                    case Some(definedNextTask) =>
+                                      runTasksRec(previousResult = Some(taskResult), nextTask = definedNextTask)
+                                    case None => FastFuture.successful(taskResult)
+                                  }
     } yield recResult
 }
 
@@ -250,4 +260,19 @@ trait Task[T] {
   def runTask(
     previousResult: Option[TaskResult[T]]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[T]]
+}
+
+/**
+ * Provides compatibility methods to transform a ZIO into a future that gets executed
+ * imediatelly.
+ */
+object LegacyRuntime {
+
+  val runtime = Runtime.default
+
+  /**
+   * Transforms a [[zio.Task]] into a [[Future]].
+   */
+  def fromTask[A](body: => zio.Task[A]): Future[A] =
+    runtime.unsafeRunToFuture(body)
 }

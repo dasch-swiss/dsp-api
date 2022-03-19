@@ -103,7 +103,7 @@ case class CacheServiceInMemImpl(
    * @param value the stored value
    * @return [[Unit]]
    */
-  def putProjectADM(value: ProjectADM)(implicit ec: ExecutionContext): Task[Unit] =
+  def putProjectADM(value: ProjectADM): Task[Unit] =
     (for {
       _ <- projects.update(_ + (value.id -> value))
       _ <- lut.update(_ + (value.shortname -> value.id))
@@ -173,12 +173,8 @@ case class CacheServiceInMemImpl(
    * @param maybeKey the key.
    * @return an optional [[String]].
    */
-  def getStringValue(maybeKey: Option[String]): Task[Option[String]] = {
-    val noKeyError = EmptyKey("No key provided.")
-    maybeKey match {
-      case Some(key) => lut.get.map(_.get(key)).commit
-      case None      => Task.fail(noKeyError)
-    }
+  def getStringValue(key: String): Task[Option[String]] = {
+    lut.get.map(_.get(key)).commit
   }
 
   /**
@@ -205,7 +201,7 @@ case class CacheServiceInMemImpl(
   /**
    * Pings the in-memory cache to see if it is available.
    */
-  def ping()(implicit ec: ExecutionContext): Task[CacheServiceStatusResponse] =
+  def ping(): Task[CacheServiceStatusResponse] =
     Task.succeed(CacheServiceStatusOK)
 }
 
@@ -220,6 +216,6 @@ object CacheServiceInMemImpl {
         projects <- TRef.make(Map.empty[String, ProjectADM]).commit
         lut      <- TRef.make(Map.empty[String, String]).commit
       } yield CacheServiceInMemImpl(users, projects, lut)
-    }
+    }.tap(_ => ZIO.debug("Initializing In-Memory Cache Service"))
   }
 }

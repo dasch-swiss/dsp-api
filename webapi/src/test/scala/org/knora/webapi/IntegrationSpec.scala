@@ -140,6 +140,6 @@ object LegacyRuntime {
   /**
    * Transforms a [[Task]] into a [[Future]].
    */
-  def fromTask[Res](body: => Task[Res]): Future[Res] =
+  def fromTask[A](body: => Task[A]): Future[A] =
     runtime.unsafeRunToFuture(body)
 }

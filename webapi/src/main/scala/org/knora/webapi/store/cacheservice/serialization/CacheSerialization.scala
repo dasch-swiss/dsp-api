@@ -12,9 +12,11 @@ import org.knora.webapi.instrumentation.InstrumentationSupport
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import scala.concurrent.{ExecutionContext, Future}
 
+import zio._
+
 case class EmptyByteArray(message: String) extends CacheServiceException(message)
 
-object CacheSerialization extends InstrumentationSupport {
+object CacheSerialization {
 
   /**
    * Serialize objects by using plain java serialization. Java serialization is not
@@ -23,19 +25,17 @@ object CacheSerialization extends InstrumentationSupport {
    * serializable.
    *
    * @param value the value we want to serialize as a array of bytes.
-   * @tparam T the type parameter of our value.
+   * @tparam A the type parameter of our value.
    */
-  def serialize[T](value: T)(implicit ec: ExecutionContext): Future[Array[Byte]] = tracedFuture("redis-serialize") {
-
-    Future {
-      val boxedItem: MeatLocker[T] = MeatLocker[T](value)
+  def serialize[A](value: A): Task[Array[Byte]] =
+    ZIO.attempt {
+      val boxedItem: MeatLocker[A]      = MeatLocker[A](value)
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-      val oos = new ObjectOutputStream(stream)
+      val oos                           = new ObjectOutputStream(stream)
       oos.writeObject(boxedItem)
       oos.close()
       stream.toByteArray
     }
-  }
 
   /**
    * Deserialize objects by using plain java serialization. Java serialization is not
@@ -43,21 +43,17 @@ object CacheSerialization extends InstrumentationSupport {
    * [[MeatLocker]], which does some magic and allows our case classes to be
    * serializable.
    *
-   * @tparam T the type parameter of our value.
+   * @tparam A the type parameter of our value.
    */
-  def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[Option[T]] =
-    tracedFuture("redis-deserialize") {
-
-      Future {
-        if (bytes.isEmpty) {
-          None
-        } else {
-          val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
-          val box = ois.readObject
-          ois.close()
-          Some(box.asInstanceOf[MeatLocker[T]].get)
-        }
+  def deserialize[A](bytes: Array[Byte]): Task[Option[A]] =
+    ZIO.attempt {
+      if (bytes.isEmpty) {
+        None
+      } else {
+        val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
+        val box = ois.readObject
+        ois.close()
+        Some(box.asInstanceOf[MeatLocker[A]].get)
       }
-
     }
 }

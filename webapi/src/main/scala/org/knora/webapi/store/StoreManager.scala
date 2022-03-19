@@ -20,6 +20,7 @@ import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
 import scala.concurrent.ExecutionContext
+import zio._
 
 /**
  * This actor receives messages for different stores, and forwards them to the corresponding store manager.
@@ -29,7 +30,7 @@ import scala.concurrent.ExecutionContext
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with ActorLogging {
+class StoreManager(appActor: ActorRef, cs: ZLayer[Any, Nothing, CacheService]) extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
