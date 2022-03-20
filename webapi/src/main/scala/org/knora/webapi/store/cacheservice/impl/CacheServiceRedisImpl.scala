@@ -24,13 +24,8 @@ import org.knora.webapi.store.cacheservice.api.{CacheService, EmptyKey, EmptyVal
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import zio._
-import javassist.bytecode.ByteArray
 
-class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService with LazyLogging {
-
-  // this is needed for time measurements using 'org.knora.webapi.Timing'
-
-  implicit val l: Logger = logger
+class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
 
   /**
    * Stores the user under the IRI and additionally the IRI under the keys of
@@ -56,49 +51,51 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService with Laz
    * Retrieves the user stored under the identifier (either iri, username,
    * or email).
    *
+   * The data is stored under the IRI key.
+   * Additionally, the USERNAME and EMAIL keys point to the IRI key
+   *
    * @param identifier the user identifier.
    */
-  def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] = {
-    // The data is stored under the IRI key.
-    // Additionally, the USERNAME and EMAIL keys point to the IRI key
-    val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
+  def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] =
+    identifier.hasType match {
       case UserIdentifierType.Iri =>
         for {
-          maybeBytes: Option[Array[Byte]] <- getBytesValue(identifier.toIriOption)
+          maybeBytes: Option[Array[Byte]] <-
+            getBytesValue(
+              identifier.toIri
+            ) // .catchAll(ex: Exception => logWarning(s"Aborting reading 'UserADM' from Redis - ${ex.getMessage}"))
           maybeUser: Option[UserADM] <- maybeBytes match {
                                           case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                                          case None        => FastFuture.successful(None)
+                                          case None        => ZIO.succeed(None)
                                         }
         } yield maybeUser
 
       case UserIdentifierType.Username =>
         for {
-          maybeIriKey: Option[String]     <- getStringValue(identifier.toUsernameOption)
+          maybeIriKey: Option[String] <-
+            getStringValue(
+              identifier.toUsername
+            ) // .catchAll(ex: Exception => ZIO.logWarning(s"Aborting reading 'UserADM' from Redis - ${ex.getMessage}"))
           maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
           maybeUser: Option[UserADM] <- maybeBytes match {
                                           case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                                          case None        => FastFuture.successful(None)
+                                          case None        => ZIO.succeed(None)
                                         }
         } yield maybeUser
 
       case UserIdentifierType.Email =>
         for {
-          maybeIriKey: Option[String]     <- getStringValue(identifier.toEmailOption)
+          maybeIriKey: Option[String] <-
+            getStringValue(
+              identifier.toEmail
+            ) // .catchAll(ex: Exception => ZIO.logWarning(s"Aborting reading 'UserADM' from Redis - ${ex.getMessage}"))
           maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
           maybeUser: Option[UserADM] <- maybeBytes match {
                                           case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                                          case None        => FastFuture.successful(None)
+                                          case None        => ZIO.succeed(None)
                                         }
         } yield maybeUser
     }
-
-    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
-      logger.warn("Aborting reading 'UserADM' from Redis - {}", e.getMessage)
-      None
-    }
-
-    recoverableResultFuture
-  }
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
@@ -212,20 +209,20 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService with Laz
    *
    * @param maybeKey the key.
    */
-  def getStringValue(maybeKey: Option[String]): Task[Option[String]] = {
+  def getStringValue(key: String): Task[Option[String]] = {
 
-    val operationFuture: Future[Option[String]] = maybeKey match {
-      case Some(key) =>
-        Future {
-          val conn: Jedis = pool.getResource
-          try {
-            Option(conn.get(key))
-          } finally {
-            conn.close()
-          }
-        }
-      case None =>
-        FastFuture.successful(None)
+    for {
+      conn  <- pool.map(_.getResource)
+      maybeValue <- ZIO.fromOption(Option(conn.get(key))).asSome
+    } yield maybeValue
+
+    ZIO.attempt {
+      val conn: Jedis = pool.getResource
+      try {
+        Option(conn.get(key))
+      } finally {
+        conn.close()
+      }
     }
 
     val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
@@ -358,7 +355,7 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService with Laz
    */
   private def getBytesValue(key: String): Task[Option[Array[Byte]]] =
     for {
-      conn  <- pool.map(_.getResource)
+      conn              <- pool.map(_.getResource)
       value: Array[Byte] = conn.get(key.getBytes)
       res <- if (value == "nil".getBytes) Task.succeed(None)
              else Task.succeed(Some(value))
