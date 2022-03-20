@@ -36,7 +36,8 @@ object Dependencies {
     val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
     val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
     val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
-    val zioTypesafeConfig = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
+    val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
+    val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
     val zioTest           = "dev.zio" %% "zio-test"            % ZioVersion % Test
     val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % ZioVersion % Test
 
@@ -233,6 +234,9 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioPrelude,
+    zioConfig,
+    zioConfigMagnolia,
+    zioConfigTypesafe,
     zioTest,
     zioTestSbt,
     log4jOverSlf4j,

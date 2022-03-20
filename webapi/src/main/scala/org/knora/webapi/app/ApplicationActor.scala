@@ -59,6 +59,9 @@ import zio.stm.TRef
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import zio.ZIO
+import com.typesafe.config.ConfigFactory
+import zio.config.typesafe.TypesafeConfig
+import org.knora.webapi.config.AppConfig
 
 trait Managers {
   implicit val system: ActorSystem
@@ -68,6 +71,12 @@ trait Managers {
 
 trait LiveManagers extends Managers {
   this: Actor =>
+
+  /**
+   * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable to load
+   * the Typesafe-Config format.
+   */
+  lazy val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.descriptor)
 
   /**
    * The actor that forwards messages to actors that deal with persistent storage.
