@@ -171,7 +171,7 @@ class SipiConnector extends Actor with ActorLogging {
       userIri = moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
       secret = settings.jwtSecretKey,
       longevity = settings.jwtLongevity,
-      settings.externalKnoraApiHostPort,
+      issuer = settings.externalKnoraApiHostPort,
       content = Map(
         "knora-data" -> JsObject(
           Map(

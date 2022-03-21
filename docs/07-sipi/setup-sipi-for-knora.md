@@ -70,7 +70,7 @@ Additionally, these environment variables can be used to further configure Sipi:
 - `SIPI_WEBAPI_HOSTNAME=localhost`: overrides `knora_path` in Sipi's config
 - `SIPI_WEBAPI_PORT=3333`: overrides `knora_port` in Sipi's config
 
-These variables need to be explicitly used like in `sipi.ini-knora.lua`:
+These variables need to be explicitly used like in `sipi.init-knora.lua`:
 
 ```lua
     --

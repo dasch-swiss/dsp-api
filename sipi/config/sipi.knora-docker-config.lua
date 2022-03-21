@@ -137,7 +137,7 @@ sipi = {
     --
     -- Path to Knora Application
     --
-    knora_path = 'api',
+    knora_path = '0.0.0.0',
 
     --
     -- Port of Knora Application
@@ -195,24 +195,6 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
-    },
-    --
-    -- additional routes used for testing. should not be defined in production.
-    --
-    {
-        method = 'GET',
-        route = '/test_functions',
-        script = 'test_functions.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_file_info',
-        script = 'test_file_info.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
     }
 
 }

@@ -14,8 +14,8 @@ function get_knora_token()
         return nil
     end
 
-    if token["iss"] ~= "Knora" then
-        send_error(401, "Not a Knora token")
+    if token["iss"] ~= config.knora_path .. ':' .. config.knora_port then
+        send_error(401, "Invalid token. The request came from a different server than the one issued the token.")
         return nil
     end
 
