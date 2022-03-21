@@ -14,7 +14,21 @@ function get_knora_token()
         return nil
     end
 
-    if token["iss"] ~= config.knora_path .. ':' .. config.knora_port then
+    local webapi_hostname = os.getenv("KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST")
+    local webapi_port = os.getenv("KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT")
+    if webapi_hostname == nil then
+        send_error(500, "KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST not set")
+        return nil
+    end
+    if webapi_port == nil then
+        send_error(500, "KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT not set")
+        return nil
+    end
+    
+    token_issuer = webapi_hostname .. ':' .. webapi_port
+    server.log("token_issuer:" .. token_issuer, server.loglevel.LOG_DEBUG)
+    if token["iss"] ~= token_issuer then
+        server.log(token_issuer, server.loglevel.LOG_DEBUG)
         send_error(401, "Invalid token. The request came from a different server than the one issued the token.")
         return nil
     end

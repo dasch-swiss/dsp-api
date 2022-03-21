@@ -137,7 +137,7 @@ sipi = {
     --
     -- Path to Knora Application
     --
-    knora_path = '0.0.0.0',
+    knora_path = 'api',
 
     --
     -- Port of Knora Application

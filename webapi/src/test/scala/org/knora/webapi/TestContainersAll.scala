@@ -36,11 +36,14 @@ object TestContainersAll {
   val SipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
   val SipiContainer = new GenericContainer(SipiImageName)
   SipiContainer.withExposedPorts(1024)
+  SipiContainer.withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST", "0.0.0.0")
+  SipiContainer.withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT", "3333")
   SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
   SipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "0.0.0.0")
   SipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
   SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
   SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
+
   SipiContainer.withCommand("--config=/sipi/config/sipi.docker-config.lua")
 
   // TODO: Needs https://github.com/scalameta/metals/issues/3623 to be resolved
