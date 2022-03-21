@@ -99,6 +99,17 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
       ) should be(None)
     }
 
+    "not decode a token with a different issuer than the one who created the token" in {
+      val tokenWithDifferentIssuer =
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJibGFibGEiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjQ4MDE0NjkyNzgsImlhdCI6MTY0Nzg2OTI3OCwianRpIjoiYU9HRExCYnJUbi1iQUIwVXZzTDZMZyIsImZvbyI6ImJhciJ9.ewFp0uXjPkn6GSGvDcph1MZRPpip669IrpXQ8Qv3Vpw"
+
+      JWTHelper.validateToken(
+        token = tokenWithDifferentIssuer,
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
+      ) should be(false)
+    }
+
     "not decode a token with missing required content" in {
       val tokenWithMissingExp =
         "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImlhdCI6MTU0MTU5MzYwNSwianRpIjoibGZna3liakZTOUNTYldfTXlQNEhldyIsImZvbyI6ImJhciJ9.-ugb7OCoQq1JvBSso2HlfqVRBWM97b8burJTp3J9WeQ"
