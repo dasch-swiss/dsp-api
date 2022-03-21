@@ -20,7 +20,7 @@ require "get_knora_session"
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix,identifier,cookie)
-    server.log("pre_flight called in sipi.init-knora-test.lua", server.loglevel.LOG_DEBUG)
+    server.log("pre_flight called in sipi.init-test.lua", server.loglevel.LOG_DEBUG)
 
 
     --

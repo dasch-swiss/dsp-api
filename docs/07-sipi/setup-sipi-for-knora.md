@@ -17,19 +17,18 @@ folder:
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
 $ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.knora-docker-config.lua
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.docker-config.lua
 ```
 
 where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora`.
 
-`--config=/sipi/config/sipi.knora-docker-config.lua` (or `--config=/sipi/config/sipi.knora-docker-it-config.lua` for
-using sipi for integration testing). Please see `sipi.knora-docker-config.lua` for the settings like URL, port number
+`--config=/sipi/config/sipi.docker-config.lua`. Please see `sipi.docker-config.lua` for the settings like URL, port number
 etc. These settings need to be set accordingly in Knora's `application.conf`. If you use the default settings both in
 Sipi and Knora, there is no need to change these settings.
 
 Whenever a file is requested from Sipi (e.g. a browser trying to
 dereference an image link served by Knora), a preflight function is
-called. This function is defined in `sipi.init-knora.lua` present in the
+called. This function is defined in `sipi.init.lua` present in the
 Sipi root directory. It takes three parameters: `prefix`, `identifier`
 (the name of the requested file), and `cookie`. The prefix is the shortcode
 of the project that the resource containing the file value belongs to.
@@ -57,7 +56,7 @@ like this:
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
 $ docker image rm --force daschswiss/sipi:main // deletes cached image and needs only to be used when newer image is available on dockerhub
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.knora-docker-test-config.lua
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.docker-test-config.lua
 ```
 
 Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
@@ -70,7 +69,7 @@ Additionally, these environment variables can be used to further configure Sipi:
 - `SIPI_WEBAPI_HOSTNAME=localhost`: overrides `knora_path` in Sipi's config
 - `SIPI_WEBAPI_PORT=3333`: overrides `knora_port` in Sipi's config
 
-These variables need to be explicitly used like in `sipi.init-knora.lua`:
+These variables need to be explicitly used like in `sipi.init.lua`:
 
 ```lua
     --

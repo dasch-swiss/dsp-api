@@ -78,7 +78,7 @@ image in the background. The default behaviour is to start Sipi by
 calling the following command:
 
 ```
-$ /sipi/local/bin/sipi -config /sipi/config/sipi.knora-test-config.lua
+$ /sipi/local/bin/sipi -config /sipi/config/sipi.test-config.lua
 ```
 
 To override this default behaviour, start the container by supplying
@@ -101,7 +101,7 @@ $ docker run --name sipi \
              -p 1024:1024 \
              -v $PWD:/localdir \
              daschswiss/sipi \
-             /sipi/local/bin/sipi -config /localdir/sipi.knora-test-config.lua
+             /sipi/local/bin/sipi -config /localdir/sipi.test-config.lua
 ```
 
 ## Redis Server

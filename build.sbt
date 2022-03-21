@@ -125,7 +125,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // add needed files to test jar
     Test / packageBin / mappings ++= Seq(
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
-      (rootBaseDir.value / "sipi" / "config" / "sipi.knora-docker-config.lua") -> "sipi/config/sipi.knora-docker-config.lua"
+      (rootBaseDir.value / "sipi" / "config" / "sipi.docker-config.lua") -> "sipi/config/sipi.docker-config.lua"
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for test
     Test / exportJars := true

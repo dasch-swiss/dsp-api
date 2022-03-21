@@ -1,8 +1,8 @@
--- Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
--- SPDX-License-Identifier: Apache-2.0
+-- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+-- * SPDX-License-Identifier: Apache-2.0
 
 --
--- ATTENTION: This configuration file should only be used for integration testing. It has additional routes defined!!!
+-- configuration file for use with Knora when testing with a locally-compiled Sipi in ../../Sipi
 --
 sipi = {
     --
@@ -15,40 +15,12 @@ sipi = {
     -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
     -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    hostname = '0.0.0.0',
+    hostname = 'localhost',
 
     --
     -- port number the server is listening to
     --
     port = 1024,
-
-    --
-    -- Number of threads to use
-    --
-    nthreads = 8,
-
-    --
-    -- SIPI is using libjpeg to generate the JPEG images. libjpeg requires a quality value which
-    -- corresponds to the compression rate. 100 is (almost) no compression and best quality, 0
-    -- would be full compression and no quality. Reasonable values are between 30 and 95...
-    --
-    jpeg_quality = 60,
-
-    --
-    -- For scaling images, SIPI offers two methods. The value "high" offers best quality using expensive
-    -- algorithms: bilinear interpolation, if downscaling the image is first scaled up to an integer
-    -- multiple of the requires size, and then downscaled using averaging. This results in the best
-    -- image quality. "medium" uses bilinear interpolation but does not do upscaling before
-    -- downscaling. If scaling quality is set to "low", then just a lookup table and nearest integer
-    -- interpolation is being used to scale the images.
-    -- Recognized values are: "high", "medium", "low".
-    --
-    scaling_quality = {
-        jpeg = "medium",
-        tiff = "high",
-        png = "high",
-        j2k = "high"
-    },
 
     --
     -- Number of seconds a connection (socket) remains open
@@ -67,7 +39,7 @@ sipi = {
     -- expected to be urlencoded. Both will be decoded. That is, "/" will be recoignized and expanded
     -- in the final path the image file!
     --
-    imgroot = '/sipi/images', -- make sure that this directory exists
+    imgroot = './images', -- make sure that this directory exists
 
     --
     -- If FALSE, the prefix is not used to build the path to the image files
@@ -96,12 +68,12 @@ sipi = {
     --
     -- Lua script which is executed on initialization of the Lua interpreter
     --
-    initscript = '/sipi/scripts/sipi.init-knora.lua',
+    initscript = './scripts/sipi.init.lua',
 
     --
     -- path to the caching directory
     --
-    cachedir = '/sipi/cache',
+    cachedir = './cache',
 
     --
     -- maximal size of the cache
@@ -111,17 +83,17 @@ sipi = {
     --
     -- if the cache becomes full, the given percentage of file space is marked for reuase
     --
-    cache_hysteresis = 0.15,
+    cache_hysteresis = 0.1,
 
     --
     -- Path to the directory where the scripts for the routes defined below are to be found
     --
-    scriptdir = '/sipi/scripts',
+    scriptdir = './scripts',
 
     ---
-    --- Size of the thumbnails (to be used within Lua)
+    --- Size of the thumbnails
     ---
-    thumb_size = '!128,128',
+    thumb_size = 'pct:4',
 
     --
     -- Path to the temporary directory
@@ -145,23 +117,16 @@ sipi = {
     knora_port = '3333',
 
     --
+    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
+    -- "CRIT", "ALERT", "EMERG"
+    --
+    loglevel = "DEBUG",
+
+    --
     -- The secret for generating JWT's (JSON Web Tokens) (42 characters)
     --
     jwt_secret = 'UP 4888, nice 4-8-4 steam engine',
     --            12345678901234567890123456789012
-
-    --
-    -- Name of the logfile (a ".txt" is added...)
-    --
-    -- logfile = "sipi.log",
-
-
-    --
-    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
-    -- "CRIT", "ALERT", "EMERG"
-    --
-    loglevel = "DEBUG"
-
 }
 
 
@@ -169,7 +134,7 @@ fileserver = {
     --
     -- directory where the documents for the normal webserver are located
     --
-    docroot = '/sipi/server',
+    docroot = './server',
 
     --
     -- route under which the normal webserver shouöd respond to requests
@@ -178,7 +143,9 @@ fileserver = {
 }
 
 --
--- Custom routes. Each route is an URL path associated with a Lua script.
+-- here we define routes that are handled by lua scripts. A route is a defined url:
+-- http://<server-DNS>/<route>
+-- executes the given script defined below
 --
 routes = {
     {
@@ -195,7 +162,20 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_file_info',
+        script = 'test_file_info.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
     }
-
 }
-

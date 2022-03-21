@@ -39,12 +39,53 @@ sipi = {
     -- expected to be urlencoded. Both will be decoded. That is, "/" will be recoignized and expanded
     -- in the final path the image file!
     --
-    imgroot = './test/_test_data/images', -- directory for Knora Sipi integration testing
+    imgroot = '/sipi/images', -- directory for Knora Sipi integration testing
 
     --
     -- If FALSE, the prefix is not used to build the path to the image files
     --
     prefix_as_path = true,
+
+    --
+    -- Lua script which is executed on initialization of the Lua interpreter
+    --
+    initscript = '/sipi/scripts/sipi.init-no-auth.lua',
+
+    --
+    -- path to the caching directory
+    --
+    cachedir = '/sipi/cache',
+
+    --
+    -- maxcimal size of the cache
+    --
+    cachesize = '100M',
+
+    --
+    -- if the cache becomes full, the given percentage of file space is marked for reuase
+    --
+    cache_hysteresis = 0.1,
+
+    --
+    -- Path to the directory where the scripts for the routes defined below are to be found
+    --
+    scriptdir = '/sipi/scripts',
+
+    ---
+    --- Size of the thumbnails
+    ---
+    thumb_size = 'pct:4',
+
+    --
+    -- Path to the temporary directory
+    --
+    tmpdir = '/tmp',
+
+    --
+    -- Path to Knora Application
+    --
+    knora_path = '0.0.0.0',
+
 
     --
     -- In order not to accumulate to many files into one diretory (which slows down file
@@ -66,46 +107,6 @@ sipi = {
     subdir_excludes = { "knora", "thumbs" },
 
     --
-    -- Lua script which is executed on initialization of the Lua interpreter
-    --
-    initscript = './scripts/sipi.init-knora-test.lua',
-
-    --
-    -- path to the caching directory
-    --
-    cachedir = './cache',
-
-    --
-    -- maxcimal size of the cache
-    --
-    cachesize = '100M',
-
-    --
-    -- if the cache becomes full, the given percentage of file space is marked for reuase
-    --
-    cache_hysteresis = 0.1,
-
-    --
-    -- Path to the directory where the scripts for the routes defined below are to be found
-    --
-    scriptdir = './scripts',
-
-    ---
-    --- Size of the thumbnails
-    ---
-    thumb_size = 'pct:4',
-
-    --
-    -- Path to the temporary directory
-    --
-    tmpdir = '/tmp',
-
-    --
-    -- Path to Knora Application
-    --
-    knora_path = '0.0.0.0',
-
-    --
     -- Port of Knora Application
     --
     knora_port = '3333',
@@ -122,12 +123,12 @@ sipi = {
     -- # openssl req -new -key key.pem -out csr.pem
     -- #openssl req -x509 -days 365 -key key.pem -in csr.pem -out certificate.pem
     --
-    -- ssl_certificate = './certificate/certificate.pem',
+    -- ssl_certificate = '/sipi/certificate/certificate.pem',
 
     --
     -- If compiled with SSL support, the path to the key file (see above to create)
     --
-    -- ssl_key = './certificate/key.pem',
+    -- ssl_key = '/sipi/certificate/key.pem',
 
 
     --
@@ -152,7 +153,7 @@ fileserver = {
     --
     -- directory where the documents for the normal webserver are located
     --
-    docroot = './server',
+    docroot = '/sipi/server',
 
     --
     -- route under which the normal webserver shouöd respond to requests
@@ -164,10 +165,30 @@ fileserver = {
 -- Custom routes. Each route is URL path associated with a Lua script.
 --
 routes = {
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_login',
+    --    script = 'Knora_login.lua'
+    --},
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_logout',
+    --    script = 'Knora_logout.lua'
+    --},
     {
-        method = 'POST',
-        route = '/admin_upload',
-        script = 'admin_upload.lua'
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_file_info',
+        script = 'test_file_info.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
     },
     {
         method = 'POST',
@@ -183,21 +204,6 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_functions',
-        script = 'test_functions.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_file_info',
-        script = 'test_file_info.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
     }
 
 }
