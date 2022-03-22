@@ -24,6 +24,8 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |
           |SELECT ?ontology
+          |FROM <http://www.knora.org/ontology/7777/test>
+          |FROM <http://www.knora.org/ontology/6666/test>
           |WHERE {
           |  ?ontology rdf:type owl:Ontology .
           |  ?ontology knora-base:lastModificationDate ?date
@@ -35,8 +37,8 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
       // expect plugin to add lastModificationDate to test ontologies, thus listed in the query results
       val expectedResultBody: SparqlSelectResultBody = expectedResult(
         Seq(
-          Map("ontology" -> "http://www.knora.org/ontology/6666/test"),
-          Map("ontology" -> "http://www.knora.org/ontology/7777/test")
+          Map("ontology" -> "http://www.knora.org/ontology/7777/test"),
+          Map("ontology" -> "http://www.knora.org/ontology/6666/test")
         )
       )
 
