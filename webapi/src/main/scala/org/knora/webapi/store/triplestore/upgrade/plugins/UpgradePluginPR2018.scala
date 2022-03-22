@@ -15,32 +15,29 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 import java.time.Instant
+import com.typesafe.scalalogging.Logger
 
 /**
  * Transforms a repository for DSP-API PR 2018.
  */
-class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
+class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
   private val newModificationDate = Instant.now.toString
   private val ontologyType: IriNode = nodeFactory.makeIriNode(Ontology)
 
   override def transform(model: RdfModel): Unit =
     for (ontology: IriNode <- getOntologiesToTransform(model)) {
-      // println(s"ADDING LMD TO => $ontology")
       model.add(
         subj = ontology,
         pred = nodeFactory.makeIriNode(LastModificationDate),
         obj = nodeFactory.makeDatatypeLiteral(
           value = newModificationDate,
           datatype = DateTime
-        )
+        ),
+        context = Some(ontology.iri)
       )
-      // val lmd = model.find(
-      //   subj = Some(ontology),
-      //   pred =Some(nodeFactory.makeIriNode(LastModificationDate)),
-      //   obj = None
-      // ).toSeq
-      // println(s"L!M!D! => $lmd")
+
+      log.info(s"Updated ontology: ${ontology.iri} with LastModificationDate")
     }
 
   private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] = {
@@ -63,9 +60,8 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends Up
       .map(_.subj)
       .toSet
 
-    val onotologiesWithoutLastModificationDate = findTriplesInOnotlogyType -- findTriplesWithoutLastModificationDate
-
-    // println("ONTOS =>", ontosWithoutLMD)
+    val onotologiesWithoutLastModificationDate =
+      findTriplesInOnotlogyType -- findTriplesWithoutLastModificationDate
 
     val findTriplesAttachedToSystemProject = model
       .find(
@@ -79,8 +75,6 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends Up
 
     val ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject =
       onotologiesWithoutLastModificationDate -- findTriplesAttachedToSystemProject
-
-    // println("!!!!!!!! =>", fuckYeah)
 
     ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject.map {
       case iriNode: IriNode => iriNode
