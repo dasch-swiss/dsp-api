@@ -1,17 +1,17 @@
-# Knora &mdash; Knowledge Organization, Representation, and Annotation
+# DSP-API &mdash; DaSCH Service Platform API
 
 [![Github](https://img.shields.io/github/v/tag/dasch-swiss/dsp-api?include_prereleases&label=Github%20tag)](https://github.com/dasch-swiss/dsp-api)
 [![Docker](https://img.shields.io/docker/v/daschswiss/knora-api?label=Docker%20image)](https://hub.docker.com/r/daschswiss/knora-api)
 [![CI](https://github.com/dasch-swiss/dsp-app/workflows/CI/badge.svg)](https://github.com/dasch-swiss/dsp-api/actions?query=workflow%3ACI)
 
-[Knora](https://www.knora.org/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
+[DSP API](https://admin.dasch.swiss/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
 
 It is developed by the [Swiss National Data and Service Center for the Humanities](https://dasch.swiss)
 at the [University of Basel](https://www.unibas.ch), and is supported by the
 [Swiss Academy of Humanities and Social Sciences](https://www.sagw.ch) and
 the [Swiss National Science Foundation](https://snf.ch).
 
-Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
+DSP-API is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
 released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Features
@@ -38,10 +38,6 @@ released under the [Apache License, Version 2.0](http://www.apache.org/licenses/
 * [Knora API v2](https://docs.knora.org/03-apis/api-v2/)
 * [Knora Admin API](https://docs.knora.org/03-apis/api-admin/)
 * Distribution packaging using [Docker](https://www.docker.com/)
-
-### New features under development
-
-* See the [Roadmap](https://github.com/dasch-swiss/knora-api/wiki/Roadmap)
 
 ## Requirements
 
@@ -129,7 +125,7 @@ implementing the desired functionality.
 
 Use `camelCase` for names of classes, variables, and functions. Make names descriptive, and don't worry if they're long.
 
-Use [Scalafmt](https://scalameta.org/scalafmt/) in [IntelliJ IDEA](https://www.jetbrains.com/idea) to format Scala code.
+Use [Scalafmt](https://scalameta.org/scalafmt/) in Visual Studio Code to format Scala code.
 
 Use whitespace to make your code easier to read.
 Add lots of implementation comments describing what your code is doing,
@@ -175,7 +171,7 @@ data would be necessary, e.g., any changes to the Knora-Base ontologies which ar
 
 ## Release Notes Generation
 
-A pull request usually resolves one issue or user story defined on [Youtrack](https://dasch.myjetbrains.com/youtrack/). Since we started to use the [release-please-action](https://github.com/marketplace/actions/release-please-action) it's very important to set the PR title in the correct way, especially becuase all commits added within the pull request are squashed. Please read the official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#pull-request-guidelines) carefully!
+A pull request usually resolves one issue or user story defined on [Jira](https://dasch.atlassian.net/browse/DEV). Since we started to use the [release-please-action](https://github.com/marketplace/actions/release-please-action) it's very important to set the PR title in the correct way, especially because all commits added within the pull request are squashed. Please read the official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#pull-request-guidelines) carefully!
 
 ## Acknowledgments
 

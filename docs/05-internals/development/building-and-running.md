@@ -103,6 +103,12 @@ Lastly, to print out the entire logs of the running knora-stack, use
 $ make stack-logs
 ```
 
+With the Docker plugin installed, you can attach a terminal to the docker container within VS Code. This will stream the docker logs to the terminal window of the editor.
+
+![screenshot 'VSCode Docker'](figures/vscode-docker.png)
+
+The docker plugin also allows for a number of other useful features, like inspecting the container's file system or attaching a shell to the container.
+
 ## Running the automated tests
 
 To run all test targets, use the following in the command line:
