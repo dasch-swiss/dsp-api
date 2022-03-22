@@ -1,0 +1,43 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+
+# A test ontology that does not contain knora-base:lastModificationDate
+# and it is not attached to knora-admin:SystemProject
+
+<http://www.knora.org/ontology/7777/test> rdf:type owl:Ontology ;
+    rdfs:label "PluginPR2018 test ontology #1" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+    # knora-base:attachedToProject knora-admin:SystemProject .
+    # knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
+
+# A test ontology that does not contain knora-base:lastModificationDate
+# but it is attached to knora-admin:SystemProject
+
+<http://www.knora.org/ontology/0000/test> rdf:type owl:Ontology ;
+    rdfs:label "PluginPR2018 test ontology #2" ;
+    knora-base:attachedToProject knora-admin:SystemProject .
+    # knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+    # knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
+
+# A test ontology that contains knora-base:lastModificationDate
+# and it is not attached to knora-admin:SystemProject
+
+<http://www.knora.org/ontology/6666/test> rdf:type owl:Ontology ;
+    rdfs:label "PluginPR2018 test ontology #3" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/6666> ;
+    # knora-base:attachedToProject knora-admin:SystemProject .
+    knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
+
+# A test resource that contains knora-base:lastModificationDate
+# and it is not attached to knora-admin:SystemProject
+
+<http://www.knora.org/data/1111/test> rdf:type knora-base:Resource ;
+    rdfs:label "PluginPR2018 test ontology #4" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/6666> .
+    # knora-base:attachedToProject knora-admin:SystemProject .
+    # knora-base:lastModificationDate "2019-09-10T08:57:46.633162Z"^^xsd:dateTime .
+

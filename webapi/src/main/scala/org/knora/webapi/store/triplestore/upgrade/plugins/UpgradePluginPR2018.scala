@@ -26,6 +26,7 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends Up
 
   override def transform(model: RdfModel): Unit =
     for (ontology: IriNode <- getOntologiesToTransform(model)) {
+      // println(s"ADDING LMD TO => $ontology")
       model.add(
         subj = ontology,
         pred = nodeFactory.makeIriNode(LastModificationDate),
@@ -34,39 +35,56 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig) extends Up
           datatype = DateTime
         )
       )
+      // val lmd = model.find(
+      //   subj = Some(ontology),
+      //   pred =Some(nodeFactory.makeIriNode(LastModificationDate)),
+      //   obj = None
+      // ).toSeq
+      // println(s"L!M!D! => $lmd")
     }
 
-  private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] =
+  private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] = {
     // find onotlogies
-    model
+    val findTriplesWithoutLastModificationDate = model
+      .find(
+        subj = None,
+        pred = Some(nodeFactory.makeIriNode(LastModificationDate)),
+        obj = None
+      )
+      .map(_.subj)
+      .toSet
+
+    val findTriplesInOnotlogyType = model
       .find(
         subj = None,
         pred = None,
         obj = Some(ontologyType)
       )
       .map(_.subj)
-      .filter { _: RdfResource =>
-        // that have no knora-base:lastModificationDate property
-        model
-          .find(
-            subj = None,
-            pred = Some(nodeFactory.makeIriNode(LastModificationDate)),
-            obj = None
-          )
-          .isEmpty
-      }
-      .filter { _: RdfResource =>
-        // and are not attached to knora-admin:SystemProject
-        model
-          .find(
-            subj = None,
-            pred = Some(nodeFactory.makeIriNode(AttachedToProject)),
-            obj = Some(nodeFactory.makeIriNode(SystemProject))
-          )
-          .isEmpty
-      }
-      .map {
-        case iriNode: IriNode => iriNode
-        case other => throw InconsistentRepositoryDataException(s"Unexpected subject for $ontologyType: $other")
-      }
+      .toSet
+
+    val onotologiesWithoutLastModificationDate = findTriplesInOnotlogyType -- findTriplesWithoutLastModificationDate
+
+    // println("ONTOS =>", ontosWithoutLMD)
+
+    val findTriplesAttachedToSystemProject = model
+      .find(
+        subj = None,
+        pred = Some(nodeFactory.makeIriNode(AttachedToProject)),
+        obj = None
+      )
+      .filter(triple => (triple.obj == nodeFactory.makeIriNode(SystemProject)))
+      .map(_.subj)
+      .toSet
+
+    val ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject =
+      onotologiesWithoutLastModificationDate -- findTriplesAttachedToSystemProject
+
+    // println("!!!!!!!! =>", fuckYeah)
+
+    ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject.map {
+      case iriNode: IriNode => iriNode
+      case other            => throw InconsistentRepositoryDataException(s"Unexpected subject for $ontologyType: $other")
+    }.iterator
+  }
 }
