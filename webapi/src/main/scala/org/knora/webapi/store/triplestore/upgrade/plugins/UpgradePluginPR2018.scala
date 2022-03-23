@@ -41,7 +41,6 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     }
 
   private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] = {
-    // find onotlogies
     val findTriplesWithoutLastModificationDate = model
       .find(
         subj = None,

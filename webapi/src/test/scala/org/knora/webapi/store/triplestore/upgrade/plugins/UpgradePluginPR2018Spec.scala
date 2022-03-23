@@ -25,6 +25,8 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
           |
           |SELECT ?ontology
           |FROM <http://www.knora.org/ontology/7777/test>
+          |FROM <http://www.knora.org/ontology/0000/test>
+          |FROM <http://www.knora.org/data/1111/test>
           |FROM <http://www.knora.org/ontology/6666/test>
           |WHERE {
           |  ?ontology rdf:type owl:Ontology .
