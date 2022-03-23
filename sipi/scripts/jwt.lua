@@ -29,7 +29,7 @@ function get_knora_token()
     server.log("token_issuer:" .. token_issuer, server.loglevel.LOG_DEBUG)
     if token["iss"] ~= token_issuer then
         server.log(token_issuer, server.loglevel.LOG_DEBUG)
-        send_error(401, "Invalid token. The request came from a different server than the one issued the token.")
+        send_error(401, "Invalid token. The token was not issued by the same server that sent the request.")
         return nil
     end
 
