@@ -131,7 +131,12 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
       }
       "succeed with correct token" in {
-        val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
+        val token = JWTHelper.createToken(
+          "myuseriri",
+          settings.jwtSecretKey,
+          settings.jwtLongevity,
+          settings.externalKnoraApiHostPort
+        )
         val tokenCreds = KnoraJWTTokenCredentialsV2(token)
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
@@ -145,7 +150,12 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
       }
       "fail with invalidated token" in {
-        val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
+        val token = JWTHelper.createToken(
+          "myuseriri",
+          settings.jwtSecretKey,
+          settings.jwtLongevity,
+          settings.externalKnoraApiHostPort
+        )
         val tokenCreds = KnoraJWTTokenCredentialsV2(token)
         CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
         val resF = Authenticator invokePrivate authenticateCredentialsV2(

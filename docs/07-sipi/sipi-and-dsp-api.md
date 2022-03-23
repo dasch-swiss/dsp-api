@@ -3,29 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# Interaction Between Sipi and Knora
+# Interaction Between Sipi and DSP-API
 
 ## General Remarks
 
-Knora and Sipi (Simple Image Presentation Interface) are two
-**complementary** software projects. Whereas Knora deals with data that
+DSP-API and Sipi (Simple Image Presentation Interface) are two
+**complementary** software projects. Whereas DSP-API deals with data that
 is written to and read from a triplestore (metadata and annotations),
 Sipi takes care of storing, converting and serving image files as well
 as other types of files such as audio, video, or documents (binary files
 it just stores and serves).
 
-Knora and Sipi stick to a clear division of responsibility regarding
-files: Knora knows about the names of files that are attached to
+DSP-API and Sipi stick to a clear division of responsibility regarding
+files: DSP-API knows about the names of files that are attached to
 resources as well as some metadata and is capable of creating the URLs
 for the client to request them from Sipi, but the whole handling of
 files (storing, naming, organization of the internal directory
 structure, format conversions, and serving) is taken care of by Sipi.
 
-## Adding Files to Knora
+## Adding Files to DSP
 
 A file is first uploaded to Sipi, then its metadata is submitted to
-Knora. The implementation of this procedure is described in
-[Knora and Sipi](../05-internals/design/api-v2/sipi.md). Instructions
+DSP. The implementation of this procedure is described in
+[DSP-API and Sipi](../05-internals/design/api-v2/sipi.md). Instructions
 for the client are given in
 [Creating File Values](../03-apis/api-v2/editing-values.md#creating-file-values)
 (for DSP-API v2) and in
@@ -44,7 +44,7 @@ different IIIF URLs, e.g. at different resolutions. See the `knora-api` ontology
 
 ### File URLs in API v1
 
-In API v1, for each file value, Knora creates several Sipi URLs for accessing the file at different
+In API v1, for each file value, DSP-API creates several Sipi URLs for accessing the file at different
 resolutions:
 
 ```
@@ -91,10 +91,10 @@ Sipi, obtaining the binary representation in the desired quality.
 
 ## Authentication of Users with Sipi
 
-Whenever a file is requested, Sipi asks Knora about the current user's permissions on the given file.
-This is achieved by sharing the Knora session cookie with Sipi. When the user logs in to Knora using his
+Whenever a file is requested, Sipi asks the DSP-API about the current user's permissions on the given file.
+This is achieved by sharing the session cookie with Sipi. When the user logs in to DSP using his
 browser (using either `V1` or `V2` authentication route), a session cookie containing a JWT token representing
-the user is stored in the user's client. This session cookie is then read by Sipi and used to ask Knora for
+the user is stored in the user's client. This session cookie is then read by Sipi and used to ask DSP-API for
 the user's image permissions.
 
 For the session cookie to be sent to Sipi, both the DSP-API and Sipi endpoints need to
