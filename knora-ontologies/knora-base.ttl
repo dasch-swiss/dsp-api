@@ -21,7 +21,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v19" .
+    :ontologyVersion "knora-base v20" .
 
 
 
