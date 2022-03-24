@@ -32,7 +32,7 @@ trait VersionCheck {
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name" -> JsString(BuildInfo.name),
+          "name" -> JsString("version"),
           "webapi" -> JsString(BuildInfo.version),
           "scala" -> JsString(BuildInfo.scalaVersion),
           "akkaHttp" -> JsString(BuildInfo.akkaHttp),
