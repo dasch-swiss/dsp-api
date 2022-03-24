@@ -49,7 +49,7 @@ sipi = {
     --
     -- Lua script which is executed on initialization of the Lua interpreter
     --
-    initscript = '/sipi/scripts/sipi.init-knora-no-auth.lua',
+    initscript = '/sipi/scripts/sipi.init-no-auth.lua',
 
     --
     -- path to the caching directory

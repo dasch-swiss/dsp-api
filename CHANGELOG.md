@@ -1,5 +1,24 @@
 # Changelog
 
+## [19.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v18.0.0...v19.0.0) (2022-03-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* **authentication:** add server specific issuer to JWT token (DEV-555) (#2024)
+
+### Bug Fixes
+
+* **authentication:** add server specific issuer to JWT token (DEV-555) ([#2024](https://www.github.com/dasch-swiss/dsp-api/issues/2024)) ([4bd5b2f](https://www.github.com/dasch-swiss/dsp-api/commit/4bd5b2fccd8ef34c5ff8240269e3c290ab106850))
+* **version:** fix displayed versions ([#2026](https://www.github.com/dasch-swiss/dsp-api/issues/2026)) ([566285c](https://www.github.com/dasch-swiss/dsp-api/commit/566285c227a59f2a6efc93ded171ab548efde3a2))
+
+
+### Maintenance
+
+* improve logging (DEV-634) ([#2021](https://www.github.com/dasch-swiss/dsp-api/issues/2021)) ([85d1057](https://www.github.com/dasch-swiss/dsp-api/commit/85d1057062cb3d76d083b684d21ece8dcb46a1a4))
+* remove warnings (DEV-621) ([#2015](https://www.github.com/dasch-swiss/dsp-api/issues/2015)) ([70630f1](https://www.github.com/dasch-swiss/dsp-api/commit/70630f17de1d684b15726a9e28cf8e58193104cf))
+* **test:** get tests to run in vs code (DEV-601) ([#2020](https://www.github.com/dasch-swiss/dsp-api/issues/2020)) ([747d13d](https://www.github.com/dasch-swiss/dsp-api/commit/747d13de9a0eee479decd48b7d3a186b49f81a2b))
+
 ## [18.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.5.3...v18.0.0) (2022-03-08)
 
 
