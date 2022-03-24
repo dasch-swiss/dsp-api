@@ -41,7 +41,7 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     }
 
   private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] = {
-    val findTriplesWithoutLastModificationDate = model
+    val triplesWithoutLastModificationDate: Set[RdfResource] = model
       .find(
         subj = None,
         pred = Some(nodeFactory.makeIriNode(LastModificationDate)),
@@ -50,7 +50,7 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       .map(_.subj)
       .toSet
 
-    val findTriplesInOnotlogyType = model
+    val triplesInOnotlogyType: Set[RdfResource] = model
       .find(
         subj = None,
         pred = None,
@@ -59,10 +59,10 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       .map(_.subj)
       .toSet
 
-    val onotologiesWithoutLastModificationDate =
-      findTriplesInOnotlogyType -- findTriplesWithoutLastModificationDate
+    val onotologiesWithoutLastModificationDate: Set[RdfResource] =
+      triplesInOnotlogyType -- triplesWithoutLastModificationDate
 
-    val findTriplesAttachedToSystemProject = model
+    val triplesAttachedToSystemProject: Set[RdfResource] = model
       .find(
         subj = None,
         pred = Some(nodeFactory.makeIriNode(AttachedToProject)),
@@ -72,8 +72,8 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       .map(_.subj)
       .toSet
 
-    val ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject =
-      onotologiesWithoutLastModificationDate -- findTriplesAttachedToSystemProject
+    val ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject: Set[RdfResource] =
+      onotologiesWithoutLastModificationDate -- triplesAttachedToSystemProject
 
     ontologiesWithoutLastModificationDateAndNotAttachedToSystemProject.map {
       case iriNode: IriNode => iriNode
