@@ -87,9 +87,6 @@ object Dependencies {
     val chill = "com.twitter" %% "chill" % "0.9.5"
 
     // other
-    //"javax.transaction" % "transaction-api" % "1.1-rev-1",
-    val commonsText = "org.apache.commons" % "commons-text" % "1.6"
-    val commonsIo = "commons-io" % "commons-io" % "2.6"
     val commonsBeanUtil =
       "commons-beanutils" % "commons-beanutils" % "1.9.3" exclude ("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
     val jodd = "org.jodd" % "jodd" % "3.2.6"
@@ -106,8 +103,6 @@ object Dependencies {
     val gwtServlet = "com.google.gwt" % "gwt-servlet" % "2.8.0"
     val saxonHE = "net.sf.saxon" % "Saxon-HE" % "9.9.0-2"
 
-    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
-
     // provides akka jackson (json) support
     val akkaHttpCirce = "de.heikoseeberger" %% "akka-http-circe" % "1.36.0"
     val jacksonScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.3"
@@ -120,31 +115,55 @@ object Dependencies {
 
     val icu4j = "com.ibm.icu" % "icu4j" % "62.1"
 
-    val apacheHttpClient =
-      "org.apache.httpcomponents" % "httpclient" % "4.5.6" exclude ("commons-logging", "commons-logging")
-
     // Graph for Scala            "org.scala-graph:graph-core_2.13:1.13.1",
     val scalaGraph = "org.scala-graph" %% "graph-core" % "1.13.1"
 
     // missing from current BAZEL setup
-    // "ch.qos.logback:logback-core:1.2.9",
-    val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.9"
-    // "org.slf4j:log4j-over-slf4j:1.7.32",
-    val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.32"
-    // "org.slf4j:jcl-over-slf4j:1.7.32",
+    val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.9" % Runtime
+    val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.32" % Runtime
     val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % "1.7.32"
-    // "org.slf4j:slf4j-api:1.7.32",
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.32"
-    // "com.apicatalog:titanium-json-ld:1.2.0",
     val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.2.0"
-    // "org.glassfish:jakarta.json:2.0.1",
     val jakartaJSON = "org.glassfish" % "jakarta.json" % "2.0.1"
-    // "com.typesafe.play:twirl-api_2.13:1.5.1",
     val twirlApi = "com.typesafe.play" %% "twirl-api" % "1.5.1"
-    // "junit:junit:4.13.2",
     val junit = "junit" % "junit" % "4.13.2"
-    // "org.seleniumhq.selenium:selenium-support:3.141.59",
     val seleniumSupport = "org.seleniumhq.selenium" % "selenium-support" % "3.141.59"
+
+    // those found out by plugin
+    val jwtCore = "com.pauldijou" %% "jwt-core" % "5.0.0"
+    val config = "com.typesafe" % "config" % "1.4.0"
+    val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % "10.2.8"
+    val commonsIo = "commons-io" % "commons-io" % "2.11.0"
+    val sprayJson = "io.spray" %% "spray-json" % "1.3.6"
+    val swaggerAnnotations = "io.swagger" % "swagger-annotations" % "1.6.3"
+    val swaggerModels = "io.swagger" % "swagger-models" % "1.6.3"
+    val jsr311Api = "javax.ws.rs" % "jsr311-api" % "1.1.1"
+    val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
+    val commonsPool2 = "org.apache.commons" % "commons-pool2" % "2.6.2"
+    val commonsText = "org.apache.commons" % "commons-text" % "1.8"
+    val httpClient =
+      "org.apache.httpcomponents" % "httpclient" % "4.5.13" exclude ("commons-logging", "commons-logging")
+    val httpCore = "org.apache.httpcomponents" % "httpcore" % "4.4.14"
+    val jenaArq = "org.apache.jena" % "jena-arq" % "4.4.0"
+    val jenaCore = "org.apache.jena" % "jena-core" % "4.4.0"
+    val jenaShacl = "org.apache.jena" % "jena-shacl" % "4.4.0"
+    val jenaTdb = "org.apache.jena" % "jena-tdb" % "4.4.0"
+    val luceneCore = "org.apache.lucene" % "lucene-core" % "8.11.1"
+    val rdf4jModel = "org.eclipse.rdf4j" % "rdf4j-model" % "3.4.4"
+    val rdf4jQuery = "org.eclipse.rdf4j" % "rdf4j-query" % "3.4.4"
+    val rdf4jQueryAlgebraModel = "org.eclipse.rdf4j" % "rdf4j-queryalgebra-model" % "3.4.4"
+    val rdf4jQueryParserApi = "org.eclipse.rdf4j" % "rdf4j-queryparser-api" % "3.4.4"
+    val rdf4jParserSparql = "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "3.4.4"
+    val rdf4jRepositoryApi = "org.eclipse.rdf4j" % "rdf4j-repository-api" % "3.4.4"
+    val rdf4jRepositorySail = "org.eclipse.rdf4j" % "rdf4j-repository-sail" % "3.4.4"
+    val rdf4jRioApi = "org.eclipse.rdf4j" % "rdf4j-rio-api" % "3.4.4"
+    val rdf4jSailApi = "org.eclipse.rdf4j" % "rdf4j-sail-api" % "3.4.4"
+    val rdf4jSailMemory = "org.eclipse.rdf4j" % "rdf4j-sail-memory" % "3.4.4"
+    val rdf4jShacl = "org.eclipse.rdf4j" % "rdf4j-shacl" % "3.4.4"
+    val rdf4jUtil = "org.eclipse.rdf4j" % "rdf4j-util" % "3.4.4"
+    val scalaReflect = "org.scala-lang" % "scala-reflect" % "2.13.7"
+    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
+    val rdf4jApi = "org.slf4j" % "slf4j-api" % "1.7.35"
   }
 
   object WebapiTest {
@@ -181,12 +200,9 @@ object Dependencies {
     akkaProtobufV3,
     akkaSlf4j,
     akkaStream,
-    apacheHttpClient,
     bcprov,
     chill,
     commonsBeanUtil,
-    commonsIo,
-    commonsText,
     commonsValidator,
     diff,
     ehcache,
@@ -213,7 +229,6 @@ object Dependencies {
     saxonHE,
     scalaGraph,
     scalaLogging,
-    scalaXml,
     scallop,
     springSecurityCore,
     swaggerAkkaHttp,
@@ -239,7 +254,41 @@ object Dependencies {
     jakartaJSON,
     twirlApi,
     junit,
-    seleniumSupport
+    seleniumSupport,
+    // those found out by plugin
+    jwtCore,
+    config,
+    akkaHttpCore,
+    commonsIo,
+    sprayJson,
+    swaggerAnnotations,
+    swaggerModels,
+    jsr311Api,
+    commonsLang3,
+    commonsPool2,
+    commonsText,
+    httpClient,
+    httpCore,
+    jenaArq,
+    jenaCore,
+    jenaShacl,
+    jenaTdb,
+    luceneCore,
+    rdf4jModel,
+    rdf4jQuery,
+    rdf4jQueryAlgebraModel,
+    rdf4jQueryParserApi,
+    rdf4jParserSparql,
+    rdf4jRepositoryApi,
+    rdf4jRepositorySail,
+    rdf4jRioApi,
+    rdf4jSailApi,
+    rdf4jSailMemory,
+    rdf4jShacl,
+    rdf4jUtil,
+    scalaReflect,
+    scalaXml,
+    rdf4jApi
   )
 
   val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
