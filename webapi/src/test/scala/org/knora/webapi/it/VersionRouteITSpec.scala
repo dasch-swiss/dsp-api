@@ -17,10 +17,11 @@ import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 
 object VersionRouteITSpec {
-  val config: Config = ConfigFactory.parseString("""
-                                                   |akka.loglevel = "DEBUG"
-                                                   |akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
+  val config: Config = ConfigFactory.parseString(
+  """
+    |akka.loglevel = "DEBUG"
+    |akka.stdout-loglevel = "DEBUG"
+  """.stripMargin)
 }
 
 /**
