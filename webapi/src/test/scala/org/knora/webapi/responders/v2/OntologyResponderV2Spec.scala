@@ -6254,6 +6254,58 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "create a class anything:FoafPerson with a reference to foaf:Person" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
+      println(classIri)
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("FOAF person", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("FOAF person with reference to foaf:Person", Some("en")))
+          )
+        ),
+        subClassOf = Set(
+          "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
+          "http://xmlns.com/foaf/0.1/Person".toSmartIri
+        ),
+        directCardinalities =
+          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.classes.size == 1)
+        val readClassInfo = externalOntology.classes(classIri)
+        readClassInfo.entityInfoContent should ===(classInfoContent)
+
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "change the GUI order of a cardinality in a base class, and update its subclass in the ontology cache" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Thing")
 
