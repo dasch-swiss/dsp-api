@@ -960,7 +960,11 @@ object OntologyHelpers {
 
     val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
       classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri =>
-        cacheData.ontologies(baseClassIri.getOntologyFromEntity).classes(baseClassIri).allCardinalities
+        val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
+        ontology match {
+          case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities
+          case _                        => None
+        }
       }.toMap
 
     // Check that the cardinalities directly defined on the class are compatible with any inheritable
