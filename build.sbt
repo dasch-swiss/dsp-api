@@ -15,6 +15,9 @@ import scala.sys.process.Process
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
+// when true enables run cancellation w/o exiting sbt
+cancelable in Global := true
+
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
 lazy val buildSettings = Seq(
