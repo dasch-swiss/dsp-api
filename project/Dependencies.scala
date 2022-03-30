@@ -49,8 +49,6 @@ object Dependencies {
     val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion
     val akkaHttpJacksonJava = "com.typesafe.akka" %% "akka-http-jackson" % akkaHttpVersion
 
-    val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
-
     //CORS support
     val akkaHttpCors = "ch.megard" %% "akka-http-cors" % "1.0.0"
 
@@ -66,8 +64,6 @@ object Dependencies {
     val kamonCore = "io.kamon" %% "kamon-core" % "2.1.5"
     val kamonScalaFuture = "io.kamon" %% "kamon-scala-future" % "2.1.5"
     val kamonAkkaHttpd = "io.kamon" %% "kamon-akka-http" % "2.1.5"
-    val kamonPrometheus = "io.kamon" %% "kamon-prometheus" % "2.1.5"
-    val kamonLogback = "io.kamon" %% "kamon-logback" % "2.1.5"
     val aspectJWeaver = "org.aspectj" % "aspectjweaver" % "1.9.4"
 
     // input validation
@@ -122,7 +118,6 @@ object Dependencies {
     val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.9" % Runtime
     val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.32" % Runtime
     val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % "1.7.32"
-    val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.32"
     val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.2.0"
     val jakartaJSON = "org.glassfish" % "jakarta.json" % "2.0.1"
     val twirlApi = "com.typesafe.play" %% "twirl-api" % "1.5.1"
@@ -153,7 +148,7 @@ object Dependencies {
     val rdf4jQuery = "org.eclipse.rdf4j" % "rdf4j-query" % "3.4.4"
     val rdf4jQueryAlgebraModel = "org.eclipse.rdf4j" % "rdf4j-queryalgebra-model" % "3.4.4"
     val rdf4jQueryParserApi = "org.eclipse.rdf4j" % "rdf4j-queryparser-api" % "3.4.4"
-    val rdf4jParserSparql = "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "3.4.4"
+    val rdf4jQueryParserSparql = "org.eclipse.rdf4j" % "rdf4j-queryparser-sparql" % "3.4.4"
     val rdf4jRepositoryApi = "org.eclipse.rdf4j" % "rdf4j-repository-api" % "3.4.4"
     val rdf4jRepositorySail = "org.eclipse.rdf4j" % "rdf4j-repository-sail" % "3.4.4"
     val rdf4jRioApi = "org.eclipse.rdf4j" % "rdf4j-rio-api" % "3.4.4"
@@ -163,31 +158,24 @@ object Dependencies {
     val rdf4jUtil = "org.eclipse.rdf4j" % "rdf4j-util" % "3.4.4"
     val scalaReflect = "org.scala-lang" % "scala-reflect" % "2.13.7"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
-    val rdf4jApi = "org.slf4j" % "slf4j-api" % "1.7.35"
+    val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.35"
   }
 
   object WebapiTest {
-    val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test"
-    val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % "test"
-    val akkaHttpTestkit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % "test"
-    val scalaTest = "org.scalatest" %% "scalatest" % "3.2.2" % "test"
-    val gatlingHighcharts = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.5" % "test"
-    val gatlingTestFramework = "io.gatling" % "gatling-test-framework" % "3.2.1" % "test"
-    val testcontainers = "org.testcontainers" % "testcontainers" % "1.16.0" % "test"
-  }
-
-  object TestBinaries {
-    val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
-    val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion
-    val akkaHttpTestkit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion
-    val scalaTest = "org.scalatest" %% "scalatest" % "3.2.2"
-    val gatlingHighcharts = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.5"
-    val gatlingTestFramework = "io.gatling" % "gatling-test-framework" % "3.2.1"
+    val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test
+    val akkaStreamTestkit = "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
+    val akkaHttpTestkit = "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpVersion % Test
+    val scalaTest = "org.scalatest" %% "scalatest" % "3.2.2" % Test
+    val gatlingHighcharts = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.5" % Test
+    val gatlingTestFramework = "io.gatling" % "gatling-test-framework" % "3.2.1" % Test
+    val testcontainers = "org.testcontainers" % "testcontainers" % "1.16.0" % Test
   }
 
   import Compile._
 
   val l = libraryDependencies
+
+  libraryDependencies ++= Seq[sbt.ModuleID](Compile.akkaActor, Compile.akkaHttp)
 
   val webapiLibraryDependencies = l ++= Seq[sbt.ModuleID](
     akkaActor,
@@ -218,8 +206,6 @@ object Dependencies {
     jodd,
     jwtSprayJson,
     kamonCore,
-    kamonLogback,
-    kamonPrometheus,
     kamonScalaFuture,
     logbackCore,
     logbackClassic,
@@ -233,7 +219,6 @@ object Dependencies {
     springSecurityCore,
     swaggerAkkaHttp,
     titaniumJSONLD,
-    typesafeConfig,
     WebapiTest.akkaHttpTestkit,
     WebapiTest.akkaStreamTestkit,
     WebapiTest.akkaTestkit,
@@ -250,7 +235,6 @@ object Dependencies {
     zioTestSbt,
     log4jOverSlf4j,
     jclOverSlf4j,
-    slf4jApi,
     jakartaJSON,
     twirlApi,
     junit,
@@ -278,7 +262,7 @@ object Dependencies {
     rdf4jQuery,
     rdf4jQueryAlgebraModel,
     rdf4jQueryParserApi,
-    rdf4jParserSparql,
+    rdf4jQueryParserSparql,
     rdf4jRepositoryApi,
     rdf4jRepositorySail,
     rdf4jRioApi,
@@ -288,17 +272,6 @@ object Dependencies {
     rdf4jUtil,
     scalaReflect,
     scalaXml,
-    rdf4jApi
-  )
-
-  val upgradeLibraryDependencies = l ++= Seq[sbt.ModuleID](
-    rdf4jRuntime,
-    scallop
-  )
-
-  val webapiTestAndITLibraryDependencies = l ++= Seq[sbt.ModuleID](
-    TestBinaries.gatlingHighcharts,
-    TestBinaries.gatlingTestFramework,
-    TestBinaries.scalaTest
+    slf4jApi
   )
 }
