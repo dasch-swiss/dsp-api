@@ -50,7 +50,7 @@ the `kb:isInProject` property, as described in
 ### Ontologies
 
 Each user-created ontology must be defined as an `owl:Ontology` with the properties `rdfs:label` and `kb:attachedToProject`. 
-Since [DSP-API v19](https://github.com/dasch-swiss/dsp-api/releases/tag/v19.0.0) `kb:lastModificationDate` property is also required. 
+Since [DSP-API v20](https://github.com/dasch-swiss/dsp-api/releases/tag/v20.0.0) `kb:lastModificationDate` property is also required. 
 
 ### Resources
 
