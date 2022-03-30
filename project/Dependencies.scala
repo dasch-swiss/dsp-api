@@ -20,11 +20,15 @@ object Dependencies {
 
   // ZIO
   val ZioVersion = "2.0.0-RC2"
+  val ZioHttpVersion = "2.0.0-RC3"
   val ZioPreludeVersion = "1.0.0-RC10"
   val zio = "dev.zio" %% "zio" % ZioVersion
+  val zioHttp = "io.d11" %% "zhttp" % ZioHttpVersion
   val zioPrelude = "dev.zio" %% "zio-prelude" % ZioPreludeVersion
   val zioTest = "dev.zio" %% "zio-test" % ZioVersion
   val zioTestSbt = "dev.zio" %% "zio-test-sbt" % ZioVersion
+  val izumiReflect = "dev.zio" %% "izumi-reflect" % "2.0.8"
+  val zioStacktracer = "dev.zio" %% "zio-stacktracer" % ZioVersion
 
   // akka
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
@@ -206,4 +210,23 @@ object Dependencies {
     // scalaXml,//
     // slf4jApi
   )
+
+  val dspApiMainLibraryDependencies = Seq(
+    zio,
+    // compile w/o both but plugin complain missing them
+    izumiReflect,
+    zioStacktracer
+  )
+  
+  val schemaApiLibraryDependencies = Seq(
+    zioHttp
+  )
+
+  val schemaCoreLibraryDependencies = Seq(
+    zioPrelude
+  )
+  
+  val schemaRepoLibraryDependencies = Seq()
+  val schemaRepoEventStoreServiceLibraryDependencies = Seq()
+  val schemaRepoSearchServiceLibraryDependencies = Seq()
 }

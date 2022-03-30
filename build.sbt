@@ -223,7 +223,7 @@ lazy val apiMain = project
   .in(file("dsp-api-main"))
   .settings(
     name := "dsp-api-main",
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
@@ -232,7 +232,7 @@ lazy val schemaApi = project
   .in(file("dsp-schema/api"))
   .settings(
     name := "schemaApi",
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.schemaApiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore)
@@ -241,7 +241,7 @@ lazy val schemaCore = project
   .in(file("dsp-schema/core"))
   .settings(
     name := "schemaCore",
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
 
@@ -249,7 +249,7 @@ lazy val schemaRepo = project
   .in(file("dsp-schema/repo"))
   .settings(
     name := "schemaRepo",
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.schemaRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore)
@@ -258,7 +258,7 @@ lazy val schemaRepoEventStoreService = project
   .in(file("dsp-schema/repo-eventstore-service"))
   .settings(
     name := "schemaRepoEventstoreService",
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.schemaRepoEventStoreServiceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
@@ -267,7 +267,7 @@ lazy val schemaRepoSearchService = project
   .in(file("dsp-schema/repo-search-service"))
   .settings(
     name := "dsp-schema-repo-search-service",
-    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.schemaRepoSearchServiceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
