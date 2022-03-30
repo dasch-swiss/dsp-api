@@ -2,7 +2,7 @@
 -- * SPDX-License-Identifier: Apache-2.0
 
 --
--- configuration file for use with Knora when testing with a locally-compiled Sipi in ../../Sipi
+-- configuration file for use with Knora
 --
 sipi = {
     --
@@ -15,7 +15,7 @@ sipi = {
     -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
     -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    hostname = 'localhost',
+    hostname = '0.0.0.0',
 
     --
     -- port number the server is listening to
@@ -30,16 +30,16 @@ sipi = {
     --
     -- Maximal size of a post request
     --
-    max_post_size = '250M',
+    max_post_size = '30M',
 
-    --
+  --
     -- indicates the path to the root of the image directory. Depending on the settings of the variable
     -- "prefix_as_path" the images are search at <imgroot>/<prefix>/<imageid> (prefix_as_path = TRUE)
     -- or <imgroot>/<imageid> (prefix_as_path = FALSE). Please note that "prefix" and "imageid" are
     -- expected to be urlencoded. Both will be decoded. That is, "/" will be recoignized and expanded
     -- in the final path the image file!
     --
-    imgroot = './images', -- make sure that this directory exists
+    imgroot = './test/_test_data/images', -- directory for Knora Sipi integration testing
 
     --
     -- If FALSE, the prefix is not used to build the path to the image files
@@ -68,7 +68,7 @@ sipi = {
     --
     -- Lua script which is executed on initialization of the Lua interpreter
     --
-    initscript = './scripts/sipi.init-knora.lua',
+    initscript = './scripts/sipi.init-test.lua',
 
     --
     -- path to the caching directory
@@ -76,7 +76,7 @@ sipi = {
     cachedir = './cache',
 
     --
-    -- maximal size of the cache
+    -- maxcimal size of the cache
     --
     cachesize = '100M',
 
@@ -101,15 +101,9 @@ sipi = {
     tmpdir = '/tmp',
 
     --
-    -- Maximum age of temporary files, in seconds (requires Knora's upload.lua).
-    -- Defaults to 86400 seconds (1 day).
-    --
-    max_temp_file_age = 86400,
-
-    --
     -- Path to Knora Application
     --
-    knora_path = 'localhost',
+    knora_path = 'api',
 
     --
     -- Port of Knora Application
@@ -117,18 +111,42 @@ sipi = {
     knora_port = '3333',
 
     --
-    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
-    -- "CRIT", "ALERT", "EMERG"
+    -- If compiled with SSL support, the port the server is listening for secure connections
     --
-    loglevel = "DEBUG",
+    -- ssl_port = 1025,
+
+    --
+    -- If compiled with SSL support, the path to the certificate (must be .pem file)
+    -- The follow commands can be used to generate a self-signed certificate
+    -- # openssl genrsa -out key.pem 2048
+    -- # openssl req -new -key key.pem -out csr.pem
+    -- #openssl req -x509 -days 365 -key key.pem -in csr.pem -out certificate.pem
+    --
+    -- ssl_certificate = './certificate/certificate.pem',
+
+    --
+    -- If compiled with SSL support, the path to the key file (see above to create)
+    --
+    -- ssl_key = './certificate/key.pem',
+
 
     --
     -- The secret for generating JWT's (JSON Web Tokens) (42 characters)
     --
     jwt_secret = 'UP 4888, nice 4-8-4 steam engine',
     --            12345678901234567890123456789012
-}
 
+    --
+    -- Name of the logfile (a ".txt" is added...)
+    --
+    logfile = "sipi.log",
+
+    --
+    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
+    -- "CRIT", "ALERT", "EMERG"
+    --
+    loglevel = "DEBUG"
+}
 
 fileserver = {
     --
@@ -143,11 +161,14 @@ fileserver = {
 }
 
 --
--- here we define routes that are handled by lua scripts. A route is a defined url:
--- http://<server-DNS>/<route>
--- executes the given script defined below
+-- Custom routes. Each route is URL path associated with a Lua script.
 --
 routes = {
+    {
+        method = 'POST',
+        route = '/admin_upload',
+        script = 'admin_upload.lua'
+    },
     {
         method = 'POST',
         route = '/upload',
@@ -178,4 +199,5 @@ routes = {
         route = '/test_knora_session_cookie',
         script = 'test_knora_session_cookie.lua'
     }
+
 }

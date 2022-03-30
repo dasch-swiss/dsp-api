@@ -19,6 +19,7 @@ import kamon.Kamon
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.{
   InconsistentRepositoryDataException,
+  MissingLastModificationDateOntologyException,
   SipiException,
   UnexpectedMessageException,
   UnsupportedValueException
@@ -417,7 +418,13 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     case responderMessage: KnoraRequestADM => responderManager forward responderMessage
     case storeMessage: StoreRequest        => storeManager forward storeMessage
 
-    case akka.actor.Status.Failure(ex: Exception) => throw ex
+    case akka.actor.Status.Failure(ex: Exception) =>
+      ex match {
+        case MissingLastModificationDateOntologyException(message, _) =>
+          logger.info("Application stopped because of loading ontology into the cache failed.")
+          appStop()
+        case _ => throw ex
+      }
 
     case other =>
       throw UnexpectedMessageException(

@@ -121,8 +121,8 @@ nav:
   #     - Index: 06-salsah/index.md
   - SIPI:
       - Index: 07-sipi/index.md
-      - Setting Up Sipi for DSP-API: 07-sipi/setup-sipi-for-knora.md
-      - Interaction between Sipi and DSP-API: 07-sipi/sipi-and-knora.md
+      - Setting Up Sipi for DSP-API: 07-sipi/setup-sipi-for-dsp-api.md
+      - Interaction between Sipi and DSP-API: 07-sipi/sipi-and-dsp-api.md
   - Lucene:
       - Overview: 08-lucene/index.md
       - Lucene Query Parser Syntax: 08-lucene/lucene-query-parser-syntax.md

@@ -11,8 +11,10 @@
     <rdfs:label>The Knora admin ontology</rdfs:label>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/00FF/images/v2">
-    <rdfs:label>The images demo ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/00FF"/>
+    <rdfs:label>The images demo ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://api.knora.org/ontology/salsah-gui/v2">
     <knora-api:isBuiltIn rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -21,8 +23,10 @@
     <rdfs:label>The salsah-gui ontology</rdfs:label>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0801/biblio/v2">
-    <rdfs:label>The Biblio ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
+    <rdfs:label>The Biblio ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2">
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
@@ -55,20 +59,28 @@
     >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0806/webern/v2">
-    <rdfs:label>The Anton Webern project ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0806"/>
+    <rdfs:label>The Anton Webern project ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0801/beol/v2">
-    <rdfs:label>The BEOL ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
+    <rdfs:label>The BEOL ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0804/dokubib/v2">
-    <rdfs:label>The dokubib ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0804"/>
+    <rdfs:label>The dokubib ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0803/incunabula/v2">
-    <rdfs:label>The incunabula ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0803"/>
+    <rdfs:label>The incunabula ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://api.knora.org/ontology/shared/example-box/v2">
     <knora-api:isShared rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -79,7 +91,9 @@
     >2018-09-10T14:53:00Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/something/v2">
-    <rdfs:label>The something ontology</rdfs:label>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
+    <rdfs:label>The something ontology</rdfs:label>
+    <knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp"
+    >2012-12-12T12:12:12.120Z</knora-api:lastModificationDate>
   </owl:Ontology>
 </rdf:RDF>

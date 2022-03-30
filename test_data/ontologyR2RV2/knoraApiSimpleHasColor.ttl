@@ -1,10 +1,10 @@
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#> .
+@prefix owl:       <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
 
-knora-api:hasColor  a          owl:DatatypeProperty ;
+knora-api:hasColor  rdf:type   owl:DatatypeProperty ;
         rdfs:comment           "Specifies the color of a region." ;
         rdfs:label             "Color" ;
         rdfs:subPropertyOf     knora-api:hasValue ;
@@ -12,5 +12,5 @@ knora-api:hasColor  a          owl:DatatypeProperty ;
         knora-api:subjectType  knora-api:Region .
 
 <http://api.knora.org/ontology/knora-api/simple/v2>
-        a           owl:Ontology ;
+        rdf:type    owl:Ontology ;
         rdfs:label  "The knora-api ontology in the simple schema" .
