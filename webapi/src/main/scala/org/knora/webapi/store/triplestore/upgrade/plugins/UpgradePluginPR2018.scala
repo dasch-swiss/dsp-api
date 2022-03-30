@@ -50,7 +50,7 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       .map(_.subj)
       .toSet
 
-    val triplesInOnotlogyType: Set[RdfResource] = model
+    val triplesInOntologyType: Set[RdfResource] = model
       .find(
         subj = None,
         pred = None,
@@ -60,7 +60,7 @@ class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       .toSet
 
     val onotologiesWithoutLastModificationDate: Set[RdfResource] =
-      triplesInOnotlogyType -- triplesWithoutLastModificationDate
+      triplesInOntologyType -- triplesWithoutLastModificationDate
 
     val triplesAttachedToSystemProject: Set[RdfResource] = model
       .find(
