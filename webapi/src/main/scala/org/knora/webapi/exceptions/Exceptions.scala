@@ -354,6 +354,9 @@ object InconsistentRepositoryDataException {
     InconsistentRepositoryDataException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
+case class MissingLastModificationDateOntologyException(message: String, cause: Option[Throwable] = None)
+  extends InternalServerException(message, cause)
+
 /**
  * Indicates that the API server generated invalid JSON in an API response.
  *
