@@ -12,6 +12,7 @@ services:
     networks:
       - knora-net
     environment:
+      - TZ=Europe/Zurich
       - ADMIN_PASSWORD=test
       - JVM_ARGS=-Xmx3G
 
@@ -28,6 +29,7 @@ services:
     networks:
       - knora-net
     environment:
+      - TZ=Europe/Zurich
       - SIPI_EXTERNAL_PROTOCOL=http
       - SIPI_EXTERNAL_HOSTNAME=localhost
       - SIPI_EXTERNAL_PORT=1024
@@ -47,6 +49,7 @@ services:
     networks:
       - knora-net
     environment:
+      - TZ=Europe/Zurich
       - KNORA_AKKA_LOGLEVEL=DEBUG
       - KNORA_AKKA_STDOUT_LOGLEVEL=DEBUG
       - KNORA_WEBAPI_DB_CONNECTIONS=2
