@@ -95,7 +95,7 @@ object Dependencies {
     val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.2.0"
     val jakartaJSON = "org.glassfish" % "jakarta.json" % "2.0.1"
 
-    // those found out by plugin
+    // found by plugin
     val jwtCore = "com.pauldijou" %% "jwt-core" % "5.0.0"
     val config = "com.typesafe" % "config" % "1.4.0"
     val akkaHttpCore = "com.typesafe.akka" %% "akka-http-core" % "10.2.8"
@@ -188,39 +188,39 @@ object Dependencies {
     zioTest,
     zioTestSbt,
     jakartaJSON,
-    // those found out by plugin
-    jwtCore,
-    config,
-    akkaHttpCore,
-    commonsIo,
-    sprayJson,
-    swaggerAnnotations,
-    swaggerModels,
-    jsr311Api,
-    commonsLang3,
-    commonsPool2,
-    commonsText,
-    httpClient,
-    httpCore,
-    jenaArq,
-    jenaCore,
-    jenaShacl,
-    jenaTdb,
-    luceneCore,
-    rdf4jModel,
-    rdf4jQuery,
-    rdf4jQueryAlgebraModel,
-    rdf4jQueryParserApi,
-    rdf4jQueryParserSparql,
-    rdf4jRepositoryApi,
-    rdf4jRepositorySail,
-    rdf4jRioApi,
-    rdf4jSailApi,
-    rdf4jSailMemory,
+    // found by plugin - to check if are actually needed
+    // jwtCore,
+    // config,
+    // akkaHttpCore,
+    // commonsIo,//
+    // sprayJson,
+    // swaggerAnnotations,
+    // swaggerModels,
+    // jsr311Api,
+    // commonsLang3,
+    // commonsPool2,
+    // commonsText,//
+    // httpClient,//
+    // httpCore,
+    // jenaArq,
+    // jenaCore,
+    // jenaShacl,
+    // jenaTdb,
+    // luceneCore,
+    // rdf4jModel,
+    // rdf4jQuery,
+    // rdf4jQueryAlgebraModel,
+    // rdf4jQueryParserApi,
+    // rdf4jQueryParserSparql,
+    // rdf4jRepositoryApi,
+    // rdf4jRepositorySail,
+    // rdf4jRioApi,
+    // rdf4jSailApi,
+    // rdf4jSailMemory,
     rdf4jShacl,
-    rdf4jUtil,
-    scalaReflect,
-    scalaXml,
-    slf4jApi
+    // rdf4jUtil,
+    // scalaReflect,
+    // scalaXml,//
+    // slf4jApi
   )
 }
