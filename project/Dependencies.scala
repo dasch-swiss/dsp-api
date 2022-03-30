@@ -36,6 +36,7 @@ object Dependencies {
     // akka
     val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
     val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
+    val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
     // akka http
     val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
@@ -49,6 +50,7 @@ object Dependencies {
 
     // logging
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
+    val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.10"
 
     // Metrics
     val kamonCore = "io.kamon" %% "kamon-core" % "2.1.5"
@@ -90,11 +92,8 @@ object Dependencies {
     val scalaGraph = "org.scala-graph" %% "graph-core" % "1.13.1"
 
     // missing from current BAZEL setup
-    val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.9" % Runtime
-    val log4jOverSlf4j = "org.slf4j" % "log4j-over-slf4j" % "1.7.32" % Runtime
     val titaniumJSONLD = "com.apicatalog" % "titanium-json-ld" % "1.2.0"
     val jakartaJSON = "org.glassfish" % "jakarta.json" % "2.0.1"
-    val twirlApi = "com.typesafe.play" %% "twirl-api" % "1.5.1"
 
     // those found out by plugin
     val jwtCore = "com.pauldijou" %% "jwt-core" % "5.0.0"
@@ -154,6 +153,7 @@ object Dependencies {
     akkaHttp,
     akkaHttpCors,
     akkaHttpSprayJson,
+    akkaSlf4j % Runtime,
     akkaStream,
     chill,
     commonsValidator,
@@ -167,10 +167,10 @@ object Dependencies {
     jwtSprayJson,
     kamonCore,
     kamonScalaFuture,
-    logbackCore,
     saxonHE,
     scalaGraph,
     scalaLogging,
+    logbackClassic % Runtime,
     scallop,
     springSecurityCore,
     swaggerAkkaHttp,
@@ -187,9 +187,7 @@ object Dependencies {
     zioPrelude,
     zioTest,
     zioTestSbt,
-    log4jOverSlf4j,
     jakartaJSON,
-    twirlApi,
     // those found out by plugin
     jwtCore,
     config,
