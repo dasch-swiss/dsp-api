@@ -96,10 +96,6 @@ lazy val webApiCommonSettings = Seq(
   name := "webapi"
 )
 
-// GatlingPlugin - load testing
-// JavaAgent - adds AspectJ Weaver configuration
-// BuildInfoPlugin - allows generation of scala code with version information
-
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
   .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
@@ -108,7 +104,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     resolvers ++= Seq(
       Resolver.bintrayRepo("hseeberger", "maven")
     ),
-    Dependencies.webapiLibraryDependencies
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies
   )
   .settings(
     inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings)
@@ -141,7 +137,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
     }, // allows sbt-javaagent to work with sbt-revolver
     reStart / javaOptions ++= webapiJavaRunOptions,
-    javaAgents += Dependencies.Compile.aspectJWeaver,
+    javaAgents += Dependencies.aspectJWeaver,
     fork := true, // run tests in a forked JVM
     Test / testForkedParallel := false, // run forked tests in parallel
     Test / parallelExecution := false, // run non-forked tests in parallel
@@ -227,7 +223,7 @@ lazy val apiMain = project
   .in(file("dsp-api-main"))
   .settings(
     name := "dsp-api-main",
-    Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
@@ -236,7 +232,7 @@ lazy val schemaApi = project
   .in(file("dsp-schema/api"))
   .settings(
     name := "schemaApi",
-    Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore)
@@ -245,7 +241,7 @@ lazy val schemaCore = project
   .in(file("dsp-schema/core"))
   .settings(
     name := "schemaCore",
-    Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
 
@@ -253,7 +249,7 @@ lazy val schemaRepo = project
   .in(file("dsp-schema/repo"))
   .settings(
     name := "schemaRepo",
-    Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore)
@@ -262,7 +258,7 @@ lazy val schemaRepoEventStoreService = project
   .in(file("dsp-schema/repo-eventstore-service"))
   .settings(
     name := "schemaRepoEventstoreService",
-    Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
@@ -271,7 +267,7 @@ lazy val schemaRepoSearchService = project
   .in(file("dsp-schema/repo-search-service"))
   .settings(
     name := "dsp-schema-repo-search-service",
-    Dependencies.webapiLibraryDependencies,
+    libraryDependencies ++= Dependencies.webapiLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
