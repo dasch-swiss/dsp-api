@@ -29,7 +29,7 @@ trait ManagersWithMockedSipi extends Managers {
 
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
-      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheServiceInMemImpl)
+      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheServiceInMemImpl.layer)
         with LiveActorMaker
     ),
     name = StoreManagerActorName

@@ -40,9 +40,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def putUserADM(user: UserADM): Task[Unit] =
     for {
       bytes <- CacheSerialization.serialize(user)
-      _ <- writeBytesValue(user.id, bytes).catchAll(ex =>
-             ZIO.logWarning(s"Aborting writing 'UserADM' to Redis - ${ex.getMessage()}")
-           )
+      _ <- writeBytesValue(user.id, bytes)
       _ <- writeStringValue(user.username, user.id)
       _ <- writeStringValue(user.email, user.id)
     } yield ()
@@ -103,9 +101,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def putProjectADM(project: ProjectADM): Task[Unit] =
     for {
       bytes <- CacheSerialization.serialize(project)
-      _ <- writeBytesValue(project.id, bytes)
-      _ <- writeStringValue(project.shortcode, project.id)
-      _ <- writeStringValue(project.shortname, project.id)
+      _     <- writeBytesValue(project.id, bytes)
+      _     <- writeStringValue(project.shortcode, project.id)
+      _     <- writeStringValue(project.shortname, project.id)
     } yield ()
 
   /**
@@ -155,7 +153,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @param key   the key.
    * @param value the value.
    */
-  def writeStringValue(key: String, value: String): Task[Boolean] = Task.attempt {
+  def writeStringValue(key: String, value: String): Task[Unit] = Task.attempt {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -166,12 +164,12 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     val conn: Jedis = pool.getResource
     try {
       conn.set(key, value)
-      true
+      ()
     } finally {
       conn.close()
     }
 
-  }.catchAll(ex => ZIO.logError(s"Writing to Redis failed: ${ex.getMessage}") *> Task(false))
+  }.catchAll(ex => ZIO.logError(s"Writing to Redis failed: ${ex.getMessage}"))
 
   /**
    * Get value stored under the key as a string.
@@ -187,7 +185,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
              else Task.succeed(Some(value))
       _ = conn.close()
     } yield res
-  }.catchAll(ex => ZIO.logError(s"Reading string from Redis failed: ${ex.getMessage}") *> Task(None))
+  }.catchAll(ex => ZIO.logError(s"Reading string from Redis failed: ${ex.getMessage}") *> Task.succeed(None))
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
@@ -200,12 +198,12 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     val conn: Jedis = pool.getResource
     try {
       conn.del(keys.toSeq: _*)
-      true
+      ()
     } finally {
       conn.close()
     }
 
-  }.catchAll(ex => ZIO.logError(s"Removing keys from Redis failed: ${ex.getMessage}") *> ZIO.succeed(false))
+  }.catchAll(ex => ZIO.logError(s"Removing keys from Redis failed: ${ex.getMessage}"))
 
   /**
    * Store string or byte array value under key.
@@ -278,7 +276,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     } finally {
       conn.close()
     }
-  }.catchAll(ex => ZIO.logError(s"Ping failed: ${ex.getMessage}") *> Task(CacheServiceStatusNOK))
+  }.catchAll(ex => ZIO.logError(s"Ping failed: ${ex.getMessage}") *> Task.succeed(CacheServiceStatusNOK))
 }
 
 object CacheServiceRedisImpl {

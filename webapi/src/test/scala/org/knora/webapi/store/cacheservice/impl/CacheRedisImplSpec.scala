@@ -12,65 +12,62 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.{TestContainerRedis, UnitSpec}
 
-import scala.concurrent.ExecutionContext
+import zio.test._
+import zio.test.Assertion._
+import zio.test.TestAspect.{ignore, timeout}
+import org.knora.webapi.store.cacheservice.api.CacheService
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceRedisImpl]].
  * Adding the [[TestContainerRedis.PortConfig]] config will start the Redis container and make it
  * available to the test.
  */
-class CacheRedisImplSpec extends UnitSpec(TestContainerRedis.PortConfig) {
+object CacheRedisImplSpec extends DefaultRunnableSpec {
 
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  implicit val ec: ExecutionContext = ExecutionContext.global
+  StringFormatter.initForTest()
+  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val user: UserADM = SharedTestDataADM.imagesUser01
+  private val user: UserADM       = SharedTestDataADM.imagesUser01
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
-  private val redisCache: CacheServiceRedisImpl = new CacheServiceRedisImpl(
-    new CacheServiceSettings(TestContainerRedis.PortConfig)
-  )
-
-  "The CacheServiceRedisImpl" should {
-
-    "successfully store a user" in {
-      val resFuture = redisCache.putUserADM(user)
-      resFuture map { res => res should equal(true) }
-    }
-
-    "successfully retrieve a user by IRI" in {
-      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
-      resFuture map { res => res should equal(Some(user)) }
-    }
-
-    "successfully retrieve a user by USERNAME" in {
-      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
-      resFuture map { res => res should equal(Some(user)) }
-    }
-
-    "successfully retrieve a user by EMAIL" in {
-      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
-      resFuture map { res => res should equal(Some(user)) }
-    }
-
-    "successfully store a project" in {
-      val resFuture = redisCache.putProjectADM(project)
-      resFuture map { res => res should equal(true) }
-    }
-
-    "successfully retrieve a project by IRI" in {
-      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
-      resFuture map { res => res should equal(Some(project)) }
-    }
-
-    "successfully retrieve a project by SHORTNAME" in {
-      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
-      resFuture map { res => res should equal(Some(project)) }
-    }
-
-    "successfully retrieve a project by SHORTCODE" in {
-      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
-      resFuture map { res => res should equal(Some(project)) }
-    }
-  }
+  def spec = suite("CacheRedisImplSpec")(
+    test("successfully store a user and retrieve by IRI") {
+      for {
+        _             <- CacheService(_.putUserADM(user))
+        retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeIri = Some(user.id))))
+      } yield assert(retrievedUser)(equalTo(Some(user)))
+    } +
+      test("successfully store a user and retrieve by USERNAME")(
+        for {
+          _             <- CacheService(_.putUserADM(user))
+          retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username))))
+        } yield assert(retrievedUser)(equalTo(Some(user)))
+      ) +
+      test("successfully store a user and retrieve by EMAIL")(
+        for {
+          _             <- CacheService(_.putUserADM(user))
+          retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email))))
+        } yield assert(retrievedUser)(equalTo(Some(user)))
+      ) +
+      test("successfully store a project and retrieve by IRI")(
+        for {
+          _                <- CacheService(_.putProjectADM(project))
+          retrievedProject <- CacheService(_.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id))))
+        } yield assert(retrievedProject)(equalTo(Some(project)))
+      ) +
+      test("successfully store a project and retrieve by SHORTCODE")(
+        for {
+          _ <- CacheService(_.putProjectADM(project))
+          retrievedProject <-
+            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode))))
+        } yield assert(retrievedProject)(equalTo(Some(project)))
+      ) +
+      test("successfully store a project and retrieve by SHORTNAME")(
+        for {
+          _ <- CacheService(_.putProjectADM(project))
+          retrievedProject <-
+            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
+        } yield assert(retrievedProject)(equalTo(Some(project)))
+      )
+  ).provide(CacheServiceRedisImpl.layer)
 }
