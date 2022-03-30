@@ -1,5 +1,12 @@
 # Changelog
 
+### [19.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v19.0.0...v19.0.1) (2022-03-30)
+
+
+### Maintenance
+
+* fix docker containers timezone ([#2027](https://www.github.com/dasch-swiss/dsp-api/issues/2027)) ([6bbb3fe](https://www.github.com/dasch-swiss/dsp-api/commit/6bbb3fe474fe6a558b0b99f0a833c1a0ed1e1454))
+
 ## [19.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v18.0.0...v19.0.0) (2022-03-24)
 
 
