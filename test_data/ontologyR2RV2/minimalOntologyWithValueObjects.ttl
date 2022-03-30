@@ -1,18 +1,18 @@
-@prefix minimal: <http://0.0.0.0:3333/ontology/0001/minimal/v2#> .
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix knora-api:  <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix minimal:    <http://0.0.0.0:3333/ontology/0001/minimal/v2#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
 <http://0.0.0.0:3333/ontology/0001/minimal/v2>
-        a                               owl:Ontology ;
+        rdf:type                        owl:Ontology ;
         rdfs:label                      "A minimal ontology" ;
         knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2019-09-10T08:57:46.633162Z"^^xsd:dateTimeStamp .
 
-minimal:hasName  a                    owl:ObjectProperty ;
+minimal:hasName  rdf:type             owl:ObjectProperty ;
         rdfs:comment                  "Has name." ;
         rdfs:label                    "has name" ;
         rdfs:subPropertyOf            knora-api:hasValue ;

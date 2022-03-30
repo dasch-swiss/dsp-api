@@ -42,7 +42,7 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
             context = statement.context
           )
 
-          log.warn(
+          log.info(
             s"Updated <${statement.subj}> <${statement.pred}> to <${newPredicateLabel.stringValue}> with <${groupDescriptionWithLanguage}>"
           )
 
@@ -56,7 +56,7 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
             obj = statement.obj,
             context = statement.context
           )
-          log.warn(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
+          log.info(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
       }
 
     for (statement: Statement <- model) {

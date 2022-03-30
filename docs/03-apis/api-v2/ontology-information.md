@@ -40,54 +40,157 @@ The response is in the complex API v2 schema. Sample response:
 
 ```json
 {
-  "@graph" : [ {
-    "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/00FF"
+  "@graph": [
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2017-12-19T15:23:42.166Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The anything ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0001/anything/v2"
     },
-    "rdfs:label" : "The images demo ontology"
-  }, {
-    "@id" : "http://0.0.0.0:3333/ontology/0801/beol/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The something ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0001/something/v2"
     },
-    "rdfs:label" : "The BEOL ontology"
-  }, {
-    "@id" : "http://0.0.0.0:3333/ontology/0804/dokubib/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/0804"
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The images demo ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/00FF" 
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2"
     },
-    "rdfs:label" : "The dokubib ontology"
-  }, {
-    "@id" : "http://api.knora.org/ontology/salsah-gui/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:attachedToProject" : {
-      "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The BEOL ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2"
     },
-    "rdfs:label" : "The salsah-gui ontology"
-  }, {
-    "@id" : "http://api.knora.org/ontology/standoff/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:attachedToProject" : {
-      "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The Biblio ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2"
     },
-    "rdfs:label" : "The standoff ontology"
-  }, {
-    "@id": "http://knora.unil.ch/ontology/0001/anything/v2",
-    "@type": "owl:Ontology",
-    "knora-api:attachedToProject": {
-      "@id": "http://rdfh.ch/projects/0001"
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The Newton-Project ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0801/newton/v2"
     },
-    "knora-api:lastModificationDate": "2017-12-19T15:23:42.166Z",
-    "rdfs:label": "The anything ontology"
-  } ],
-  "@context" : {
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "owl" : "http://www.w3.org/2002/07/owl#"
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The incunabula ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0803"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
+    },
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The dokubib ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0804"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/0804/dokubib/v2"
+    },
+    {
+      "knora-api:lastModificationDate": {
+        "@value": "2022-03-23T07:14:17.445208Z",
+        "@type": "xsd:dateTimeStamp"
+      },
+      "rdfs:label": "The Anton Webern project ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/08AE"
+      },
+      "@type": "owl:Ontology",
+      "@id": "http://0.0.0.0:3333/ontology/08AE/webern/v2"
+    },
+    {
+      "rdfs:label": "The Knora admin ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://www.knora.org/ontology/knora-admin#SystemProject"
+      },
+      "knora-api:isBuiltIn": true,
+      "@type": "owl:Ontology",
+      "@id": "http://api.knora.org/ontology/knora-admin/v2"
+    },
+    {
+      "rdfs:label": "The knora-api ontology in the complex schema",
+      "knora-api:attachedToProject": {
+        "@id": "http://www.knora.org/ontology/knora-admin#SystemProject"
+      },
+      "knora-api:isBuiltIn": true,
+      "@type": "owl:Ontology",
+      "@id": "http://api.knora.org/ontology/knora-api/v2"
+    },
+    {
+      "rdfs:label": "The salsah-gui ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://www.knora.org/ontology/knora-admin#SystemProject"
+      },
+      "knora-api:isBuiltIn": true,
+      "@type": "owl:Ontology",
+      "@id": "http://api.knora.org/ontology/salsah-gui/v2"
+    },
+    {
+      "rdfs:label": "The standoff ontology",
+      "knora-api:attachedToProject": {
+        "@id": "http://www.knora.org/ontology/knora-admin#SystemProject"
+      },
+      "knora-api:isBuiltIn": true,
+      "@type": "owl:Ontology",
+      "@id": "http://api.knora.org/ontology/standoff/v2"
+    }
+  ],
+  "@context": {
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#"
   }
 }
 ```
