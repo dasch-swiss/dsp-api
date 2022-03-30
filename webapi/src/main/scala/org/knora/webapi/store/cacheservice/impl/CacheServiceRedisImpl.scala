@@ -25,7 +25,7 @@ import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import zio._
 
-class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
+case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 
   /**
    * Stores the user under the IRI and additionally the IRI under the keys of
@@ -58,44 +58,37 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
    */
   def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] =
     identifier.hasType match {
-      case UserIdentifierType.Iri =>
-        for {
-          maybeBytes: Option[Array[Byte]] <-
-            getBytesValue(
-              identifier.toIri
-            ) // .catchAll(ex: Exception => logWarning(s"Aborting reading 'UserADM' from Redis - ${ex.getMessage}"))
-          maybeUser: Option[UserADM] <- maybeBytes match {
-                                          case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                                          case None        => ZIO.succeed(None)
-                                        }
-        } yield maybeUser
-
-      case UserIdentifierType.Username =>
-        for {
-          maybeIriKey: Option[String] <-
-            getStringValue(
-              identifier.toUsername
-            ) // .catchAll(ex: Exception => ZIO.logWarning(s"Aborting reading 'UserADM' from Redis - ${ex.getMessage}"))
-          maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
-          maybeUser: Option[UserADM] <- maybeBytes match {
-                                          case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                                          case None        => ZIO.succeed(None)
-                                        }
-        } yield maybeUser
-
-      case UserIdentifierType.Email =>
-        for {
-          maybeIriKey: Option[String] <-
-            getStringValue(
-              identifier.toEmail
-            ) // .catchAll(ex: Exception => ZIO.logWarning(s"Aborting reading 'UserADM' from Redis - ${ex.getMessage}"))
-          maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
-          maybeUser: Option[UserADM] <- maybeBytes match {
-                                          case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                                          case None        => ZIO.succeed(None)
-                                        }
-        } yield maybeUser
+      case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
+      case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toEmail)
+      case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toUsername)
     }
+
+  /**
+   * Retrieves the user stored under the IRI.
+   *
+   * @param id the user's IRI.
+   * @return an optional [[UserADM]].
+   */
+  def getUserByIri(id: String): Task[Option[UserADM]] =
+    for {
+      maybeBytes <- getBytesValue(id)
+      maybeUser <- maybeBytes match {
+                     case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
+                     case None        => ZIO.succeed(None)
+                   }
+    } yield maybeUser
+
+  /**
+   * Retrieves the user stored under the username or email.
+   *
+   * @param usernameOrEmail of the user.
+   * @return an optional [[UserADM]].
+   */
+  def getUserByUsernameOrEmail(usernameOrEmail: String): Task[Option[UserADM]] =
+    for {
+      maybeIriKey <- getStringValue(usernameOrEmail)
+      maybeUser   <- getUserByIri(maybeIriKey.getOrElse("-")) //FIXME: not cool
+    } yield maybeUser
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
@@ -107,67 +100,54 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
    *
    * @param value the stored value
    */
-  def putProjectADM(value: ProjectADM): Task[Unit] = {
-    val resultFuture = for {
-      bytes: Array[Byte] <- CacheSerialization.serialize(value)
-      result: Boolean    <- writeBytesValue(value.id, bytes)
-      _                   = writeStringValue(value.shortcode, value.id)
-      _                   = writeStringValue(value.shortname, value.id)
-    } yield result
-
-    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
-      logger.warn("Aborting writing 'ProjectADM' to Redis - {}", e.getMessage)
-      false
-    }
-
-    recoverableResultFuture
-  }
+  def putProjectADM(project: ProjectADM): Task[Unit] =
+    for {
+      bytes <- CacheSerialization.serialize(project)
+      _ <- writeBytesValue(project.id, bytes)
+      _ <- writeStringValue(project.shortcode, project.id)
+      _ <- writeStringValue(project.shortname, project.id)
+    } yield ()
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
    *
    * @param identifier the project identifier.
    */
-  def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] = {
-
+  def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     // The data is stored under the IRI key.
     // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
-    val resultFuture: Future[Option[ProjectADM]] = identifier.hasType match {
-      case ProjectIdentifierType.IRI =>
-        for {
-          maybeBytes <- getBytesValue(identifier.toIriOption)
-          maybeProject <- maybeBytes match {
-                            case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
-                            case None        => FastFuture.successful(None)
-                          }
-        } yield maybeProject
-      case ProjectIdentifierType.SHORTCODE =>
-        for {
-          maybeIriKey <- getStringValue(identifier.toShortcodeOption)
-          maybeBytes  <- getBytesValue(maybeIriKey)
-          maybeProject: Option[ProjectADM] <- maybeBytes match {
-                                                case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
-                                                case None        => FastFuture.successful(None)
-                                              }
-        } yield maybeProject
-      case ProjectIdentifierType.SHORTNAME =>
-        for {
-          maybeIriKey <- getStringValue(identifier.toShortnameOption)
-          maybeBytes  <- getBytesValue(maybeIriKey)
-          maybeProject: Option[ProjectADM] <- maybeBytes match {
-                                                case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
-                                                case None        => FastFuture.successful(None)
-                                              }
-        } yield maybeProject
+    identifier.hasType match {
+      case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
+      case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
+      case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
     }
 
-    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
-      logger.warn("Aborting reading 'ProjectADM' from Redis - {}", e.getMessage)
-      None
-    }
+  /**
+   * Retrieves the project stored under the IRI.
+   *
+   * @param id the project's IRI
+   * @return an optional [[ProjectADM]].
+   */
+  def getProjectByIri(id: String): Task[Option[ProjectADM]] =
+    for {
+      maybeBytes <- getBytesValue(id)
+      maybeProject <- maybeBytes match {
+                        case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
+                        case None        => ZIO.succeed(None)
+                      }
+    } yield maybeProject
 
-    recoverableResultFuture
-  }
+  /**
+   * Retrieves the project stored under a SHORTCODE or SHORTNAME.
+   *
+   * @param shortcodeOrShortname of the project.
+   * @return an optional [[ProjectADM]]
+   */
+  def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): Task[Option[ProjectADM]] =
+    for {
+      maybeIriKey  <- getStringValue(shortcodeOrShortname)
+      maybeProject <- getProjectByIri(maybeIriKey.getOrElse("-"))
+    } yield maybeProject
 
   /**
    * Store string or byte array value under key.
@@ -175,7 +155,7 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
    * @param key   the key.
    * @param value the value.
    */
-  def writeStringValue(key: String, value: String): Task[Boolean] = {
+  def writeStringValue(key: String, value: String): Task[Boolean] = Task.attempt {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -183,26 +163,15 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
     if (value.isEmpty)
       throw EmptyValue("The string value is empty. Aborting writing to redis.")
 
-    val operationFuture: Future[Boolean] = Future {
-
-      val conn: Jedis = pool.getResource
-      try {
-        conn.set(key, value)
-        true
-      } finally {
-        conn.close()
-      }
-
+    val conn: Jedis = pool.getResource
+    try {
+      conn.set(key, value)
+      true
+    } finally {
+      conn.close()
     }
 
-    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-      // Log any errors.
-      logger.warn("Writing to Redis failed - {}", e.getMessage)
-      false
-    }
-
-    recoverableOperationFuture
-  }
+  }.catchAll(ex => ZIO.logError(s"Writing to Redis failed: ${ex.getMessage}") *> Task(false))
 
   /**
    * Get value stored under the key as a string.
@@ -210,109 +179,33 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
    * @param maybeKey the key.
    */
   def getStringValue(key: String): Task[Option[String]] = {
-
+    // FIXME: make it resource safe, i.e., use Scope and add finalizers for the connection
     for {
-      conn  <- pool.map(_.getResource)
-      maybeValue <- ZIO.fromOption(Option(conn.get(key))).asSome
-    } yield maybeValue
-
-    ZIO.attempt {
-      val conn: Jedis = pool.getResource
-      try {
-        Option(conn.get(key))
-      } finally {
-        conn.close()
-      }
-    }
-
-    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-      // Log any errors.
-      logger.warn("Reading string from Redis failed, {}", e)
-      None
-    }
-
-    recoverableOperationFuture
-  }
+      conn  <- ZIO.attempt(pool.getResource)
+      value <- ZIO.attemptBlocking(conn.get(key))
+      res <- if (value == "nil".getBytes) Task.succeed(None)
+             else Task.succeed(Some(value))
+      _ = conn.close()
+    } yield res
+  }.catchAll(ex => ZIO.logError(s"Reading string from Redis failed: ${ex.getMessage}") *> Task(None))
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
    *
    * @param keys the keys.
    */
-  def removeValues(keys: Set[String]): Task[Boolean] = {
+  def removeValues(keys: Set[String]): Task[Unit] = Task.attemptBlocking {
 
-    logger.debug("removeValues - {}", keys)
-
-    val operationFuture: Future[Boolean] = Future {
-      // del takes a vararg so I nee to convert the set to a swq and then to vararg
-      val conn: Jedis = pool.getResource
-      try {
-        conn.del(keys.toSeq: _*)
-        true
-      } finally {
-        conn.close()
-      }
+    // del takes a vararg so I nee to convert the set to a swq and then to vararg
+    val conn: Jedis = pool.getResource
+    try {
+      conn.del(keys.toSeq: _*)
+      true
+    } finally {
+      conn.close()
     }
 
-    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-      // Log any errors.
-      logger.warn("Removing keys from Redis failed.", e.getMessage)
-      false
-    }
-
-    recoverableOperationFuture
-  }
-
-  /**
-   * Flushes (removes) all stored content from the Redis store.
-   */
-  def flushDB(requestingUser: UserADM): Task[Unit] = {
-
-    if (!requestingUser.isSystemUser) {
-      throw ForbiddenException("Only the system user is allowed to perform this operation.")
-    }
-
-    val operationFuture: Future[Unit] = Future {
-
-      val conn: Jedis = pool.getResource
-      try {
-        conn.flushDB()
-        ()
-      } finally {
-        conn.close()
-      }
-    }
-
-    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-      // Log any errors.
-      logger.warn("Flushing DB failed", e.getMessage)
-      throw e
-    }
-
-    recoverableOperationFuture
-  }
-
-  /**
-   * Pings the Redis store to see if it is available.
-   */
-  def ping(): Task[CacheServiceStatusResponse] = {
-    val operationFuture: Future[CacheServiceStatusResponse] = Future {
-
-      val conn: Jedis = pool.getResource
-      try {
-        conn.ping("test")
-        CacheServiceStatusOK
-      } finally {
-        conn.close()
-      }
-    }
-
-    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-      CacheServiceStatusNOK
-    }
-
-    recoverableOperationFuture
-  }
+  }.catchAll(ex => ZIO.logError(s"Removing keys from Redis failed: ${ex.getMessage}") *> ZIO.succeed(false))
 
   /**
    * Store string or byte array value under key.
@@ -320,7 +213,7 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
    * @param key   the key.
    * @param value the value.
    */
-  private def writeBytesValue(key: String, value: Array[Byte]): Task[Unit] = {
+  private def writeBytesValue(key: String, value: Array[Byte]): Task[Unit] = Task.attemptBlocking {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -328,24 +221,15 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
     if (value.isEmpty)
       throw EmptyValue("The byte array value is empty. Aborting writing to redis.")
 
-    val operationFuture: Future[Boolean] = Future {
-      val conn: Jedis = pool.getResource
-      try {
-        conn.set(key.getBytes, value)
-        true
-      } finally {
-        conn.close()
-      }
+    val conn: Jedis = pool.getResource
+    try {
+      conn.set(key.getBytes, value)
+      ()
+    } finally {
+      conn.close()
     }
 
-    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-      // Log any errors.
-      logger.warn("Writing to Redis failed - {}", e.getMessage)
-      false
-    }
-
-    recoverableOperationFuture
-  }
+  }.catchAll(ex => ZIO.logError(s"Writing to Redis failed: ${ex.getMessage}"))
 
   /**
    * Get value stored under the key as a byte array. If no value is found
@@ -354,33 +238,57 @@ class CacheServiceRedisImpl(pool: Task[JedisPool]) extends CacheService {
    * @param key the key.
    */
   private def getBytesValue(key: String): Task[Option[Array[Byte]]] =
+    // FIXME: make it resource safe, i.e., use Scope and add finalizers for the connection
     for {
-      conn              <- pool.map(_.getResource)
-      value: Array[Byte] = conn.get(key.getBytes)
+      conn  <- ZIO.attempt(pool.getResource).onError(ZIO.logErrorCause(_)).orDie
+      value <- ZIO.attemptBlocking(conn.get(key.getBytes))
       res <- if (value == "nil".getBytes) Task.succeed(None)
              else Task.succeed(Some(value))
-      // try {
-      //   Option(conn.get(key.getBytes))
-      // } finally {
-      //   conn.close()
-      // }
+      _ = conn.close()
     } yield res
 
-  // val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
-  //   // Log any errors.
-  //   logger.warn("Reading byte array from Redis failed - {}", e.getMessage)
-  //   None
-  // }
+  /**
+   * Flushes (removes) all stored content from the Redis store.
+   */
+  def flushDB(requestingUser: UserADM): Task[Unit] = Task.attemptBlocking {
 
-  // recoverableOperationFuture
+    if (!requestingUser.isSystemUser) {
+      throw ForbiddenException("Only the system user is allowed to perform this operation.")
+    }
 
+    val conn: Jedis = pool.getResource
+    try {
+      conn.flushDB()
+      ()
+    } finally {
+      conn.close()
+    }
+
+  }.catchAll(ex => ZIO.logError(s"Flushing DB failed: ${ex.getMessage}"))
+
+  /**
+   * Pings the Redis store to see if it is available.
+   */
+  def ping(): Task[CacheServiceStatusResponse] = Task.attemptBlocking {
+
+    val conn: Jedis = pool.getResource
+    try {
+      conn.ping("test")
+      CacheServiceStatusOK
+    } finally {
+      conn.close()
+    }
+  }.catchAll(ex => ZIO.logError(s"Ping failed: ${ex.getMessage}") *> Task(CacheServiceStatusNOK))
 }
 
 object CacheServiceRedisImpl {
   val layer: ZLayer[Any, Nothing, CacheService] = {
     ZLayer {
       for {
-        pool <- ZIO.attempt(new JedisPool(new JedisPoolConfig(), "localhost", 6379, 20999)) // the Redis Client Pool
+        pool <- ZIO
+                  .attempt(new JedisPool(new JedisPoolConfig(), "localhost", 6379, 20999))
+                  .onError(ZIO.logErrorCause(_))
+                  .orDie // the Redis Client Pool
       } yield CacheServiceRedisImpl(pool)
     }.tap(_ => ZIO.debug("Initializing Redis Cache Service"))
   }
