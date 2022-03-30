@@ -1,233 +1,233 @@
-@prefix standoff: <http://api.knora.org/ontology/standoff/v2#> .
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix knora-api:  <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix standoff:   <http://api.knora.org/ontology/standoff/v2#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 
 standoff:StandoffParagraphTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a paragraph in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffTableCellTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a cell in a table" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffBlockquoteTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a section that is quoted from another source in a text" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        knora-api:isStandoffClass  true .
-
-standoff:StandoffRootTag
-        a                          owl:Class ;
-        rdfs:comment               "Represents the root node if the TextValue has been created from XML" ;
-        rdfs:subClassOf            knora-api:StandoffTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                   owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        knora-api:isStandoffClass  true .
+
+standoff:StandoffRootTag
+        rdf:type                   owl:Class ;
+        rdfs:comment               "Represents the root node if the TextValue has been created from XML" ;
+        rdfs:subClassOf            knora-api:StandoffTag ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type            owl:Restriction ;
                                      owl:maxCardinality  1 ;
                                      owl:onProperty      standoff:standoffRootTagHasDocumentType
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
@@ -235,854 +235,854 @@ standoff:StandoffRootTag
         knora-api:isStandoffClass  true .
 
 standoff:StandoffCiteTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents the title of a work in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffHeader4Tag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a header of level 4 in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
         knora-api:isStandoffClass  true .
 
 standoff:standoffHyperlinkTagHasTarget
-        a                      owl:DatatypeProperty ;
+        rdf:type               owl:DatatypeProperty ;
         rdfs:comment           "describes the target settings of a hyperlink" ;
         knora-api:objectType   xsd:string ;
         knora-api:subjectType  standoff:StandoffHyperlinkTag .
 
 standoff:StandoffVisualTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents visual markup information in a TextValue" ;
         rdfs:subClassOf            knora-api:StandoffTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffSubscriptTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents subscript in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffHyperlinkTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a hyperlink in a text" ;
         rdfs:subClassOf            knora-api:StandoffUriTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                     owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type            owl:Restriction ;
+                                     owl:maxCardinality  1 ;
+                                     owl:onProperty      standoff:standoffHyperlinkTagHasTarget
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:uriValueAsUri
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                     owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                   owl:Restriction ;
-                                     owl:maxCardinality  1 ;
-                                     owl:onProperty      standoff:standoffHyperlinkTagHasTarget
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffTableRowTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a row in a table" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffHeader3Tag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a header of level 3 in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                     owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffBoldTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents bold text in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffLineTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a line to seperate content in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffBrTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a linebreak" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffPreTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a preformatted content in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                     owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffTableTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a table in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffHeader2Tag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a header of level 2 in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                     owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffSuperscriptTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents superscript in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        knora-api:isStandoffClass  true .
-
-standoff:StandoffItalicTag
-        a                          owl:Class ;
-        rdfs:comment               "Represents italics in a TextValue" ;
-        rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        knora-api:isStandoffClass  true .
+
+standoff:StandoffItalicTag
+        rdf:type                   owl:Class ;
+        rdfs:comment               "Represents italics in a TextValue" ;
+        rdfs:subClassOf            standoff:StandoffVisualTag ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
@@ -1090,335 +1090,335 @@ standoff:StandoffItalicTag
         knora-api:isStandoffClass  true .
 
 standoff:StandoffTableBodyTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a table body in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffHeader1Tag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a header of level 1 in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffStructuralTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents structural markup information in a TextValue" ;
         rdfs:subClassOf            knora-api:StandoffTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffListElementTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a list element in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffStrikethroughTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents struck text in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        knora-api:isStandoffClass  true .
-
-standoff:StandoffUnorderedListTag
-        a                          owl:Class ;
-        rdfs:comment               "Represents an unordered list in a TextValue" ;
-        rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        knora-api:isStandoffClass  true .
+
+standoff:StandoffUnorderedListTag
+        rdf:type                   owl:Class ;
+        rdfs:comment               "Represents an unordered list in a TextValue" ;
+        rdfs:subClassOf            standoff:StandoffStructuralTag ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
@@ -1426,293 +1426,293 @@ standoff:StandoffUnorderedListTag
         knora-api:isStandoffClass  true .
 
 standoff:StandoffHeader6Tag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a header of level 6 in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEnd
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEnd
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffUnderlineTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents underlined text in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffVisualTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasStartParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffCodeTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a section of computer source code in a text" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
                                    ] ;
         knora-api:isStandoffClass  true .
 
 standoff:StandoffOrderedListTag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents an ordered list in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasOriginalXMLID
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasStart
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
         knora-api:isStandoffClass  true .
 
 <http://api.knora.org/ontology/standoff/v2>
-        a                            owl:Ontology ;
+        rdf:type                     owl:Ontology ;
         rdfs:label                   "The standoff ontology" ;
         knora-api:attachedToProject  <http://www.knora.org/ontology/knora-admin#SystemProject> ;
         knora-api:isBuiltIn          true .
 
 standoff:StandoffHeader5Tag
-        a                          owl:Class ;
+        rdf:type                   owl:Class ;
         rdfs:comment               "Represents a header of level 5 in a TextValue" ;
         rdfs:subClassOf            standoff:StandoffStructuralTag ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasUUID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartParent
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndParentIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStart
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
                                      owl:onProperty         knora-api:standoffTagHasEndIndex
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
-                                     knora-api:isInherited  true ;
-                                     owl:cardinality        1 ;
-                                     owl:onProperty         knora-api:standoffTagHasStartIndex
-                                   ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:maxCardinality     1 ;
-                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                     owl:onProperty         knora-api:standoffTagHasStartParent
                                    ] ;
-        rdfs:subClassOf            [ a                      owl:Restriction ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasUUID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
                                      knora-api:isInherited  true ;
                                      owl:cardinality        1 ;
                                      owl:onProperty         knora-api:standoffTagHasEnd
                                    ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartParentIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasOriginalXMLID
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStartIndex
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:cardinality        1 ;
+                                     owl:onProperty         knora-api:standoffTagHasStart
+                                   ] ;
+        rdfs:subClassOf            [ rdf:type               owl:Restriction ;
+                                     knora-api:isInherited  true ;
+                                     owl:maxCardinality     1 ;
+                                     owl:onProperty         knora-api:standoffTagHasEndParent
+                                   ] ;
         knora-api:isStandoffClass  true .
 
 standoff:standoffRootTagHasDocumentType
-        a                      owl:DatatypeProperty ;
+        rdf:type               owl:DatatypeProperty ;
         rdfs:comment           "describes the document type" ;
         knora-api:objectType   xsd:string ;
         knora-api:subjectType  standoff:StandoffRootTag .
