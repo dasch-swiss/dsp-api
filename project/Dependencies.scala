@@ -79,6 +79,7 @@ object Dependencies {
     val xmlunitCore = "org.xmlunit" % "xmlunit-core" % "2.1.1"
 
     // other
+    val rdf4jClient = "org.eclipse.rdf4j" % "rdf4j-client" % "3.4.4"
     val scallop = "org.rogach" %% "scallop" % "3.5.1"
     val gwtServlet = "com.google.gwt" % "gwt-servlet" % "2.8.0"
     val saxonHE = "net.sf.saxon" % "Saxon-HE" % "9.9.0-2"
@@ -188,6 +189,7 @@ object Dependencies {
     zioTest,
     zioTestSbt,
     jakartaJSON,
+    rdf4jClient % Test,
     // found by plugin - to check if are actually needed
     // jwtCore,
     // config,
