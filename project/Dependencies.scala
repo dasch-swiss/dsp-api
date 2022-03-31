@@ -44,8 +44,7 @@ object Dependencies {
   val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
 
   // Metrics
-  val aspectJWeaver = "org.aspectj" % "aspectjweaver" % "1.9.4"
-  val kamonAkkaHttpd = "io.kamon" %% "kamon-akka-http" % "2.1.5"
+  val aspectjweaver = "org.aspectj" % "aspectjweaver" % "1.9.4"
   val kamonCore = "io.kamon" %% "kamon-core" % "2.1.5"
   val kamonScalaFuture = "io.kamon" %% "kamon-scala-future" % "2.1.5"
 
