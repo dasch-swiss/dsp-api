@@ -44,3 +44,7 @@ dependencies.txt
 metals.sbt
 
 .tmp/
+
+# exclude python virtual environments used for serving docs locally
+env/
+venv/
