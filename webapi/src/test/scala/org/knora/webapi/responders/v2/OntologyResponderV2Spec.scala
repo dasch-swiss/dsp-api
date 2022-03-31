@@ -6256,7 +6256,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "create a class anything:FoafPerson with a reference to foaf:Person" in {
       val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
-      println(classIri)
 
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
@@ -6303,6 +6302,103 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "create a property anything:hasFoafName as a subproperty of foaf:name" in {
+
+      responderManager ! OntologyMetadataGetByProjectRequestV2(
+        projectIris = Set(anythingProjectIri),
+        requestingUser = anythingAdminUser
+      )
+
+      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      assert(metadataResponse.ontologies.size == 3)
+      anythingLastModDate = metadataResponse
+        .toOntologySchema(ApiV2Complex)
+        .ontologies
+        .find(_.ontologyIri == AnythingOntologyIri)
+        .get
+        .lastModificationDate
+        .get
+
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
+
+      val propertyInfoContent = PropertyInfoContentV2(
+        propertyIri = propertyIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+          ),
+          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
+          ),
+          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("has foaf name", Some("en")),
+              StringLiteralV2("hat foaf Namen", Some("de"))
+            )
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("The foaf name of something", Some("en")),
+              StringLiteralV2("Der foaf Name eines Dinges", Some("de"))
+            )
+          )
+        ),
+        subPropertyOf =
+          Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri, "http://xmlns.com/foaf/0.1/name".toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = propertyInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val property = externalOntology.properties(propertyIri)
+        property.entityInfoContent should ===(propertyInfoContent)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Reload the ontology cache and see if we get the same result.
+
+      responderManager ! LoadOntologiesRequestV2(
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = KnoraSystemInstances.Users.SystemUser
+      )
+
+      expectMsgType[SuccessResponseV2](10.seconds)
+
+      responderManager ! PropertiesGetRequestV2(
+        propertyIris = Set(propertyIri),
+        allLanguages = true,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
+        readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
       }
     }
 
