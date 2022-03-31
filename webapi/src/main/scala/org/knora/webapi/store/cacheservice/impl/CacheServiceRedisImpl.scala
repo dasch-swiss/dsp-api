@@ -40,9 +40,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def putUserADM(user: UserADM): Task[Unit] =
     for {
       bytes <- CacheSerialization.serialize(user)
-      _ <- writeBytesValue(user.id, bytes)
-      _ <- writeStringValue(user.username, user.id)
-      _ <- writeStringValue(user.email, user.id)
+      _     <- writeBytesValue(user.id, bytes)
+      _     <- writeStringValue(user.username, user.id)
+      _     <- writeStringValue(user.email, user.id)
     } yield ()
 
   /**
@@ -57,8 +57,8 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] =
     identifier.hasType match {
       case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
-      case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toEmail)
-      case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toUsername)
+      case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toUsername)
+      case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toEmail)
     }
 
   /**
