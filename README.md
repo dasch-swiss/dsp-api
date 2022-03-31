@@ -139,7 +139,6 @@ There are three sets of automated tests:
 
 * Unit tests, route-to-route tests, and end-to-end tests are under `webapi/src/test`. To run these, type `graphdb:test` or `graphdb-free:test` (depending on which triplestore you're using) at the SBT console in the `webapi` project. To run a single test, use `graphdb:test-only *NameOfTestSpec`.
 * Integration tests, which can involve [Sipi](https://github.com/daschswiss/sipi), are under `src/it`. To run these, first start Sipi, then type `it:test` at the SBT console in the `webapi` project.
-* Browser interaction tests are under `salsah/src/test`, and are written using [Selenium](https://www.seleniumhq.org). To run these, you will need to unpack the correct [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) for your platform found under `salsah/lib/chromedriver` and put it in the same folder. Then start Sipi and the Knora API server, and type `test` at the SBT console in the `salsah` project.
 
 Whenever you add a new feature or fix a bug, you should add one or more tests
 for the change you made.
@@ -172,14 +171,3 @@ data would be necessary, e.g., any changes to the Knora-Base ontologies which ar
 ## Release Notes Generation
 
 A pull request usually resolves one issue or user story defined on [Jira](https://dasch.atlassian.net/browse/DEV). Since we started to use the [release-please-action](https://github.com/marketplace/actions/release-please-action) it's very important to set the PR title in the correct way, especially because all commits added within the pull request are squashed. Please read the official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#pull-request-guidelines) carefully!
-
-## Acknowledgments
-
-![YourKit](https://www.yourkit.com/images/yklogo.png)
-
-The Knora project is using YourKit for profiling.
-
-YourKit supports open source projects with its full-featured Java Profiler.
-YourKit, LLC is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/)
-and [YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/),
-innovative and intelligent tools for profiling Java and .NET applications.
