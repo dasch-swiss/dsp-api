@@ -3,24 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 
-# Knora and Sipi
+# DSP-API and Sipi
 
 ## Configuration
 
-The Knora-specific configuration and scripts for Sipi are in the
-`sipi` subdirectory of the Knora source tree. See the `README.md` there for
-instructions on how to start Sipi with Knora.
+The DSP-API specific configuration and scripts for Sipi are in the
+`sipi` subdirectory of the DSP-API source tree. See the `README.md` for
+instructions on how to start Sipi with DSP-API.
 
 ## Lua Scripts
 
 DSP-API v2 uses custom Lua scripts to control Sipi. These scripts can be
-found in `sipi/scripts` in the Knora source tree.
+found in `sipi/scripts` in the DSP-API source tree.
 
 Each of these scripts expects a [JSON Web Token](https://jwt.io/) in the
-URL parameter `token`. In all cases, the token must be signed by Knora,
-it must have an expiration date and not have expired, its issuer must be `Knora`,
-and its audience must include `Sipi`. The other contents of the expected tokens
-are described below.
+URL parameter `token`. In all cases, the token must be signed by DSP-API,
+it must have an expiration date and not have expired, its issuer must equal 
+the hostname and port of the API, and its audience must include `Sipi`. 
+The other contents of the expected tokens are described below.
 
 ### upload.lua
 
@@ -53,7 +53,7 @@ must be a JSON object containing:
 ### delete_temp_file.lua
 
 The `delete_temp_file.lua` script is available at Sipi's `delete_temp_file` route.
-It is used only if Knora rejects a file value update request. It expects an
+It is used only if DSP-API rejects a file value update request. It expects an
 HTTP `DELETE` request, with a filename as the last component of the URL.
 
 The JWT sent to this script must contain the key `knora-data`, whose value
@@ -64,7 +64,7 @@ must be a JSON object containing:
 
 ## SipiConnector
 
-In Knora, the `org.knora.webapi.iiif.SipiConnector` handles all communication
+In DSP-API, the `org.knora.webapi.iiif.SipiConnector` handles all communication
 with Sipi. It blocks while processing each request, to ensure that the number of
 concurrent requests to Sipi is not greater than
 `akka.actor.deployment./storeManager/iiifManager/sipiConnector.nr-of-instances`.
@@ -76,7 +76,7 @@ If it encounters an error, it returns `SipiException`.
   `upload.lua`. The image is converted to JPEG 2000 and stored in Sipi's `tmp`
   directory. In the response, the client receives the JPEG 2000's unique,
   randomly generated filename.
-2. The client submits a JSON-LD request to a Knora route (`/v2/values` or `/v2/resources`)
+2. The client submits a JSON-LD request to a DSP-API route (`/v2/values` or `/v2/resources`)
    to create or change a file value. The request includes Sipi's internal filename.
 3. During parsing of this JSON-LD request, a `StillImageFileValueContentV2`
    is constructed to represent the file value. During the construction of this
@@ -93,14 +93,14 @@ If it encounters an error, it returns `SipiException`.
    `DeleteTemporaryFileRequestV2` to `SipiConnector`, which makes a request
    to Sipi's `delete_temp_file` route.
 
-If the request to Knora cannot be parsed, the temporary file is not deleted
+If the request to DSP-API cannot be parsed, the temporary file is not deleted
 immediately, but it will be deleted during the processing of a subsequent
 request by Sipi's `upload` route.
 
-If Sipi's `store` route fails, Knora returns the `SipiException` to the client.
+If Sipi's `store` route fails, DSP-API returns the `SipiException` to the client.
 In this case, manual intervention may be necessary to restore consistency
-between Knora and Sipi.
+between DSP-API and Sipi.
 
 If Sipi's `delete_temp_file` route fails, the error is not returned to the client,
-because there is already a Knora error that needs to be returned to the client.
+because there is already a DSP-API error that needs to be returned to the client.
 In this case, the Sipi error is simply logged.

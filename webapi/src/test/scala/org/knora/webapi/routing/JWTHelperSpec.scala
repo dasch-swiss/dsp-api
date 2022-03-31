@@ -25,7 +25,7 @@ object JWTHelperSpec {
 class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
   private val validToken: String =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NTE5MzYwNSwiaWF0IjoxNTQxNTkzNjA1LCJqdGkiOiJsZmdreWJqRlM5Q1NiV19NeVA0SGV3IiwiZm9vIjoiYmFyIn0.qPMJjv8tVOM7KKDxR4Dmdz_kB0FzTOtJBYHSp62Dilk"
+    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjQ4MDE0Njg1MTEsImlhdCI6MTY0Nzg2ODUxMSwianRpIjoiYXVVVUh1aDlUanF2SnBYUXVuOVVfZyIsImZvbyI6ImJhciJ9.6yHse3pNGdDqkC4PXdkm2ZtRqITqSwo0gvCZ__4jzHQ"
 
   "The JWTHelper" should {
 
@@ -34,32 +34,37 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
         userIri = SharedTestDataADM.anythingUser1.id,
         secret = settings.jwtSecretKey,
         longevity = settings.jwtLongevity,
+        issuer = settings.externalKnoraApiHostPort,
         content = Map("foo" -> JsString("bar"))
       )
 
       JWTHelper.extractUserIriFromToken(
         token = token,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some(SharedTestDataADM.anythingUser1.id))
 
       JWTHelper.extractContentFromToken(
         token = token,
         secret = settings.jwtSecretKey,
-        contentName = "foo"
+        contentName = "foo",
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some("bar"))
     }
 
     "validate a token" in {
       JWTHelper.validateToken(
         token = validToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(true)
     }
 
     "extract the user's IRI" in {
       JWTHelper.extractUserIriFromToken(
         token = validToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some(SharedTestDataADM.anythingUser1.id))
     }
 
@@ -67,7 +72,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
       JWTHelper.extractContentFromToken(
         token = validToken,
         secret = settings.jwtSecretKey,
-        contentName = "foo"
+        contentName = "foo",
+        issuer = settings.externalKnoraApiHostPort
       ) should be(Some("bar"))
     }
 
@@ -77,7 +83,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = invalidToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -87,7 +94,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = tokenWithInvalidSubject,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -97,7 +105,8 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = tokenWithMissingExp,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
     }
 
@@ -107,8 +116,20 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
       JWTHelper.extractUserIriFromToken(
         token = expiredToken,
-        secret = settings.jwtSecretKey
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
       ) should be(None)
+    }
+
+    "reject a token with a different issuer than the one who created the token" in {
+      val tokenWithDifferentIssuer =
+        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJibGFibGEiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjQ4MDE0NjkyNzgsImlhdCI6MTY0Nzg2OTI3OCwianRpIjoiYU9HRExCYnJUbi1iQUIwVXZzTDZMZyIsImZvbyI6ImJhciJ9.ewFp0uXjPkn6GSGvDcph1MZRPpip669IrpXQ8Qv3Vpw"
+
+      JWTHelper.validateToken(
+        token = tokenWithDifferentIssuer,
+        secret = settings.jwtSecretKey,
+        issuer = settings.externalKnoraApiHostPort
+      ) should be(false)
     }
   }
 }
