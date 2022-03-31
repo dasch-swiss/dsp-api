@@ -66,48 +66,5 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
             CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
-  ).provide(CacheServiceInMemImpl.layer)
-
-  // "The CacheInMemImpl" should {
-
-  //   "successfully store a user" in {
-  //     val resFuture = inMemCache.putUserADM(user)
-  //     resFuture map { res => res should equal(true) }
-  //   }
-
-  //   "successfully retrieve a user by IRI" in {
-  //     val resFuture = inMemCache.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
-  //     resFuture map { res => res should equal(Some(user)) }
-  //   }
-
-  //   "successfully retrieve a user by USERNAME" in {
-  //     val resFuture = inMemCache.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
-  //     resFuture map { res => res should equal(Some(user)) }
-  //   }
-
-  //   "successfully retrieve a user by EMAIL" in {
-  //     val resFuture = inMemCache.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
-  //     resFuture map { res => res should equal(Some(user)) }
-  //   }
-
-  //   "successfully store a project" in {
-  //     val resFuture = inMemCache.putProjectADM(project)
-  //     resFuture map { res => res should equal(true) }
-  //   }
-
-  //   "successfully retrieve a project by IRI" in {
-  //     val resFuture = inMemCache.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
-  //     resFuture map { res => res should equal(Some(project)) }
-  //   }
-
-  //   "successfully retrieve a project by SHORTNAME" in {
-  //     val resFuture = inMemCache.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
-  //     resFuture map { res => res should equal(Some(project)) }
-  //   }
-
-  //   "successfully retrieve a project by SHORTCODE" in {
-  //     val resFuture = inMemCache.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
-  //     resFuture map { res => res should equal(Some(project)) }
-  //   }
-  // }
+  ).provideShared(CacheServiceInMemImpl.layer)
 }

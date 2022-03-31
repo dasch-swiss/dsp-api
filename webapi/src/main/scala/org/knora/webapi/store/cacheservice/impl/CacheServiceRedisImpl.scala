@@ -24,6 +24,7 @@ import org.knora.webapi.store.cacheservice.api.{CacheService, EmptyKey, EmptyVal
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import zio._
+import org.knora.webapi.store.cacheservice.config.RedisConfig
 
 case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 
@@ -280,11 +281,12 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 }
 
 object CacheServiceRedisImpl {
-  val layer: ZLayer[Any, Nothing, CacheService] = {
+  val layer: ZLayer[RedisConfig, Nothing, CacheService] = {
     ZLayer {
       for {
+        config <- ZIO.service[RedisConfig]
         pool <- ZIO
-                  .attempt(new JedisPool(new JedisPoolConfig(), "localhost", 6379, 20999))
+                  .attempt(new JedisPool(new JedisPoolConfig(), config.server, config.port1, config.port2))
                   .onError(ZIO.logErrorCause(_))
                   .orDie // the Redis Client Pool
       } yield CacheServiceRedisImpl(pool)

@@ -28,8 +28,13 @@ object ActorUtil {
     * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
     * phase, to be able to return ZIO inside an Actor.
     */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter)(implicit ec: ExecutionContext): Unit =
-    future2Message(sender, LegacyRuntime.fromTask(zioTask), log)
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
+    Runtime.default.unsafeRun(for {
+      executor <- ZIO.executor
+      future <- zioTask.toFuture
+      _ <- ZIO.succeed(future2Message(sender, future, log)(executor.asExecutionContext))
+    } yield ())
+    
 
   /**
    * A convenience function that simplifies and centralises error-handling in the `receive` method of supervised Akka

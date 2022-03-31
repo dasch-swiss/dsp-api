@@ -24,7 +24,7 @@ import zio.metrics.MetricLabel
 import java.time.temporal.ChronoUnit
 import zio.metrics.MetricClient
 
-class CacheServiceManager(cs: ZLayer[Any, Nothing, CacheService])
+class CacheServiceManager(cs: CacheService)
     extends Actor
     with ActorLogging
     with LazyLogging
@@ -38,7 +38,7 @@ class CacheServiceManager(cs: ZLayer[Any, Nothing, CacheService])
   /**
    * The Akka actor system's execution context for futures.
    */
-  protected implicit val ec: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  // protected implicit val ec: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   val cacheServiceWriteUserTimer = Metric
     .timer(
@@ -72,7 +72,7 @@ class CacheServiceManager(cs: ZLayer[Any, Nothing, CacheService])
    * @param value the stored value
    */
   private def putUserADM(value: UserADM): Task[Unit] =
-    CacheService(_.putUserADM(value)).provide(cs)
+    cs.putUserADM(value) // cleanup
 
   /**
    * Retrieves the user stored under the identifier (either iri, username,

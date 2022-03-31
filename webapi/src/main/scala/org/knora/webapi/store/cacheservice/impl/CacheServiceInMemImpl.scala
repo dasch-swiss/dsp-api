@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class CacheServiceInMemImpl(
   users: TRef[Map[String, UserADM]],
   projects: TRef[Map[String, ProjectADM]],
-  lut: TRef[Map[String, String]]
+  lut: TRef[Map[String, String]] // sealed trait for key type
 ) extends CacheService {
 
   /**
@@ -87,10 +87,11 @@ case class CacheServiceInMemImpl(
    * @return an optional [[UserADM]].
    */
   def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
-    for {
-      maybeIri  <- lut.get.map(_.get(usernameOrEmail)).commit
-      maybeUser <- getUserByIri(maybeIri.getOrElse("-")) //FIXME: not cool
-    } yield maybeUser
+    (for {
+      maybeIri <- lut.get.map(_.get(usernameOrEmail)).commit //move commit to outside
+      iri      <- ZIO.fromOption(maybeIri) // use STM.fromOption
+      user     <- getUserByIri(iri).some
+    } yield user).unsome // watch Spartan session about error. post example on Spartan channel
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
@@ -108,8 +109,7 @@ case class CacheServiceInMemImpl(
       _ <- projects.update(_ + (value.id -> value))
       _ <- lut.update(_ + (value.shortname -> value.id))
       _ <- lut.update(_ + (value.shortcode -> value.id))
-      _  = ZIO.debug(s"Storing project to Cache: $value")
-    } yield ()).commit
+    } yield ()).commit.tap(_ => ZIO.debug(s"Storing project to Cache: $value"))
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
@@ -145,7 +145,7 @@ case class CacheServiceInMemImpl(
   def getProjectByShortcodeOrShortname(shortcodeOrShortname: String) =
     for {
       maybeIri <- lut.get.map(_.get(shortcodeOrShortname)).commit
-      project  <- getProjectByIri(maybeIri.getOrElse("-"))
+      project  <- getProjectByIri(maybeIri.getOrElse("-")) // cleanup with some/unsome
     } yield project
 
   /**
@@ -173,9 +173,8 @@ case class CacheServiceInMemImpl(
    * @param maybeKey the key.
    * @return an optional [[String]].
    */
-  def getStringValue(key: String): Task[Option[String]] = {
+  def getStringValue(key: String): Task[Option[String]] =
     lut.get.map(_.get(key)).commit
-  }
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
@@ -212,7 +211,7 @@ object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] = {
     ZLayer {
       for {
-        users    <- TRef.make(Map.empty[String, UserADM]).commit
+        users    <- TRef.make(Map.empty[String, UserADM]).commit // use TMap
         projects <- TRef.make(Map.empty[String, ProjectADM]).commit
         lut      <- TRef.make(Map.empty[String, String]).commit
       } yield CacheServiceInMemImpl(users, projects, lut)
