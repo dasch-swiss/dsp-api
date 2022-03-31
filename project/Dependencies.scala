@@ -86,8 +86,6 @@ object Dependencies {
     // caching
     val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
     val jedis   = "redis.clients"  % "jedis"   % "3.1.0-m4"
-    // serialization
-    val chill = "com.twitter" %% "chill" % "0.10.0"
 
     // other
     //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -186,7 +184,6 @@ object Dependencies {
     akkaStream,
     apacheHttpClient,
     bcprov,
-    chill,
     commonsBeanUtil,
     commonsIo,
     commonsText,
