@@ -6,145 +6,143 @@ edit_uri: blob/main/docs/
 copyright: "Copyright © 2021 - 2022 <a href='https://dasch.swiss' target='_blank'>Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.</a>"
 
 nav:
-    - Home: index.md
-    - Introduction:
-          - Index: 01-introduction/index.md
-          - What is DSP?: 01-introduction/what-is-knora.md
-          - Data Formats in DSP-API: 01-introduction/data-formats.md
-          - Standoff/RDF Text Markup: 01-introduction/standoff-rdf.md
-          - An Example Project: 01-introduction/example-project.md
-    - DSP Ontologies:
-          - Index: 02-knora-ontologies/index.md
-          - Introduction: 02-knora-ontologies/introduction.md
-          - The Knora Base Ontology: 02-knora-ontologies/knora-base.md
-          - The SALSAH GUI Ontology: 02-knora-ontologies/salsah-gui.md
-    - APIs:
-          - The DSP APIs:
-                - Index: 03-apis/index.md
-                - Feature Toggles: 03-apis/feature-toggles.md
-          - API V1:
-                - Index: 03-apis/api-v1/index.md
-                - Introduction: 03-apis/api-v1/introduction.md
-                - Authentication: 03-apis/api-v1/authentication.md
-                - Reading and Searching Resources: 03-apis/api-v1/reading-and-searching-resources.md
-                - XML to Standoff Mapping: 03-apis/api-v1/xml-to-standoff-mapping.md
-                - Adding Resources: 03-apis/api-v1/adding-resources.md
-                - Reading and Searching Resources: 03-apis/api-v1/reading-and-searching-resources.md
-                - Reading Values: 03-apis/api-v1/reading-values.md
-                - Adding Values: 03-apis/api-v1/adding-values.md
-                - Changing Values: 03-apis/api-v1/changing-values.md
-                - Deleting Resources and Values: 03-apis/api-v1/delete-resources-and-values.md
-          - API V2:
-                - Index: 03-apis/api-v2/index.md
-                - Introduction: 03-apis/api-v2/introduction.md
-                - Authentication: 03-apis/api-v2/authentication.md
-                - Knora IRIs: 03-apis/api-v2/knora-iris.md
-                - Reading and Searching Resources: 03-apis/api-v2/reading-and-searching-resources.md
-                - Reading the User's Permissions on Resources and Values: 03-apis/api-v2/reading-user-permissions.md
-                - Getting Lists: 03-apis/api-v2/getting-lists.md
-                - XML to Standoff Mapping: 03-apis/api-v2/xml-to-standoff-mapping.md
-                - Gravsearch - Virtual Graph Search: 03-apis/api-v2/query-language.md
-                - Editing Resources: 03-apis/api-v2/editing-resources.md
-                - Editing Values: 03-apis/api-v2/editing-values.md
-                - Querying, Creating, and Updating Ontologies: 03-apis/api-v2/ontology-information.md
-                - TEI/XML: 03-apis/api-v2/tei-xml.md
-                - Permalinks: 03-apis/api-v2/permalinks.md
-          - Admin API:
-                - Index: 03-apis/api-admin/index.md
-                - Introduction: 03-apis/api-admin/introduction.md
-                - Overview: 03-apis/api-admin/overview.md
-                - Users Endpoint: 03-apis/api-admin/users.md
-                - Projects Endpoint: 03-apis/api-admin/projects.md
-                - Groups Endpoint: 03-apis/api-admin/groups.md
-                - Lists Endpoint: 03-apis/api-admin/lists.md
-                - Permissions Endpoint: 03-apis/api-admin/permissions.md
-                - Stores Endpoint: 03-apis/api-admin/stores.md
-          - Util API:
-                - Index: 03-apis/api-util/index.md
-                - Health: 03-apis/api-util/health.md
-                - Version: 03-apis/api-util/version.md
-    - Publishing and Deployment:
-          - Index: 04-publishing-deployment/index.md
-          - Publishing: 04-publishing-deployment/publishing.md
-          - Getting Started with DSP-API: 04-publishing-deployment/getting-started.md
-          - Configuration: 04-publishing-deployment/configuration.md
-          - Updating Repositories when Upgrading DSP-API: 04-publishing-deployment/updates.md
-    - DSP Internals:
-          - Design:
-                - DSP-API Design Principles:
-                      - Index: 05-internals/design/principles/index.md
-                      - Design Overview: 05-internals/design/principles/design-overview.md
-                      - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
-                      - HTTP Module: 05-internals/design/principles/http-module.md
-                      - Store Module: 05-internals/design/principles/store-module.md
-                      - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
-                      - Consistency Checking: 05-internals/design/principles/consistency-checking.md
-                      - Authentication: 05-internals/design/principles/authentication.md
-                      - Feature Toggles: 05-internals/design/principles/feature-toggles.md
-                      - RDF Processing API: 05-internals/design/principles/rdf-api.md
-                - API V1 Design:
-                      - Index: 05-internals/design/api-v1/index.md
-                      - How to Add an API v1 Route: 05-internals/design/api-v1/how-to-add-a-route.md
-                      - JSON in API v1: 05-internals/design/api-v1/json.md
-                - API V2 Design:
-                      - Index: 05-internals/design/api-v2/index.md
-                      - API v2 Design Overview: 05-internals/design/api-v2/overview.md
-                      - Ontology Schemas: 05-internals/design/api-v2/ontology-schemas.md
-                      - Smart IRIs: 05-internals/design/api-v2/smart-iris.md
-                      - Content Wrappers: 05-internals/design/api-v2/content-wrappers.md
-                      - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
-                      - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
-                      - Ontology Management: 05-internals/design/api-v2/ontology-management.md
-                      - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md
-                      - Gravsearch Design: 05-internals/design/api-v2/gravsearch.md
-                      - Standoff Markup: 05-internals/design/api-v2/standoff.md
-                      - Archival Resource Key (ARK) Identifiers: 05-internals/design/api-v2/ark.md
-                      - SPARQL Query Design: 05-internals/design/api-v2/query-design.md
-                - Admin API Design:
-                      - Index: 05-internals/design/api-admin/index.md
-                      - Administration: 05-internals/design/api-admin/administration.md
-          - Development:
-                - Index: 05-internals/development/index.md
-                - Overview: 05-internals/development/overview.md
-                - Build and Running: 05-internals/development/building-and-running.md
-                - Setup Visual Studio Code for development of DSP-API: 05-internals/development/vscode-config.md
-                - Testing: 05-internals/development/testing.md
-                - Docker Cheat Sheet: 05-internals/development/docker-cheat-sheet.md
-                - Monitoring DSP-API: 05-internals/development/monitoring.md
-                - Profiling DSP-API: 05-internals/development/profiling.md
-                - Starting the DSP-Stack inside Docker Container: 05-internals/development/docker-compose.md
-                - Updating Repositories: 05-internals/development/updating-repositories.md
-                - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
-                - Starting GraphDB: 05-internals/development/graphdb.md
-                - Third-Party Dependencies: 05-internals/development/third-party.md
-    - SIPI:
-          - Index: 07-sipi/index.md
-          - Setting Up Sipi for DSP-API: 07-sipi/setup-sipi-for-dsp-api.md
-          - Interaction between Sipi and DSP-API: 07-sipi/sipi-and-dsp-api.md
-    - Lucene:
-          - Overview: 08-lucene/index.md
-          - Lucene Query Parser Syntax: 08-lucene/lucene-query-parser-syntax.md
-    - Frequently Asked Questions: faq/index.md
-    - Release Notes:
-          - Changelog: 00-release-notes/index.md
+      - Home: index.md
+      - Introduction:
+              - Index: 01-introduction/index.md
+              - What is DSP?: 01-introduction/what-is-knora.md
+              - Data Formats in DSP-API: 01-introduction/data-formats.md
+              - Standoff/RDF Text Markup: 01-introduction/standoff-rdf.md
+              - An Example Project: 01-introduction/example-project.md
+      - DSP Ontologies:
+              - Index: 02-knora-ontologies/index.md
+              - Introduction: 02-knora-ontologies/introduction.md
+              - The Knora Base Ontology: 02-knora-ontologies/knora-base.md
+              - The SALSAH GUI Ontology: 02-knora-ontologies/salsah-gui.md
+      - APIs:
+              - The DSP APIs:
+                      - Index: 03-apis/index.md
+                      - Feature Toggles: 03-apis/feature-toggles.md
+              - API V1:
+                      - Index: 03-apis/api-v1/index.md
+                      - Introduction: 03-apis/api-v1/introduction.md
+                      - Authentication: 03-apis/api-v1/authentication.md
+                      - Reading and Searching Resources: 03-apis/api-v1/reading-and-searching-resources.md
+                      - XML to Standoff Mapping: 03-apis/api-v1/xml-to-standoff-mapping.md
+                      - Adding Resources: 03-apis/api-v1/adding-resources.md
+                      - Reading and Searching Resources: 03-apis/api-v1/reading-and-searching-resources.md
+                      - Reading Values: 03-apis/api-v1/reading-values.md
+                      - Adding Values: 03-apis/api-v1/adding-values.md
+                      - Changing Values: 03-apis/api-v1/changing-values.md
+                      - Deleting Resources and Values: 03-apis/api-v1/delete-resources-and-values.md
+              - API V2:
+                      - Index: 03-apis/api-v2/index.md
+                      - Introduction: 03-apis/api-v2/introduction.md
+                      - Authentication: 03-apis/api-v2/authentication.md
+                      - Knora IRIs: 03-apis/api-v2/knora-iris.md
+                      - Reading and Searching Resources: 03-apis/api-v2/reading-and-searching-resources.md
+                      - Reading the User's Permissions on Resources and Values: 03-apis/api-v2/reading-user-permissions.md
+                      - Getting Lists: 03-apis/api-v2/getting-lists.md
+                      - XML to Standoff Mapping: 03-apis/api-v2/xml-to-standoff-mapping.md
+                      - Gravsearch - Virtual Graph Search: 03-apis/api-v2/query-language.md
+                      - Editing Resources: 03-apis/api-v2/editing-resources.md
+                      - Editing Values: 03-apis/api-v2/editing-values.md
+                      - Querying, Creating, and Updating Ontologies: 03-apis/api-v2/ontology-information.md
+                      - TEI/XML: 03-apis/api-v2/tei-xml.md
+                      - Permalinks: 03-apis/api-v2/permalinks.md
+              - Admin API:
+                      - Index: 03-apis/api-admin/index.md
+                      - Introduction: 03-apis/api-admin/introduction.md
+                      - Overview: 03-apis/api-admin/overview.md
+                      - Users Endpoint: 03-apis/api-admin/users.md
+                      - Projects Endpoint: 03-apis/api-admin/projects.md
+                      - Groups Endpoint: 03-apis/api-admin/groups.md
+                      - Lists Endpoint: 03-apis/api-admin/lists.md
+                      - Permissions Endpoint: 03-apis/api-admin/permissions.md
+                      - Stores Endpoint: 03-apis/api-admin/stores.md
+              - Util API:
+                      - Index: 03-apis/api-util/index.md
+                      - Health: 03-apis/api-util/health.md
+                      - Version: 03-apis/api-util/version.md
+      - Publishing and Deployment:
+              - Index: 04-publishing-deployment/index.md
+              - Publishing: 04-publishing-deployment/publishing.md
+              - Getting Started with DSP-API: 04-publishing-deployment/getting-started.md
+              - Configuration: 04-publishing-deployment/configuration.md
+              - Updating Repositories when Upgrading DSP-API: 04-publishing-deployment/updates.md
+      - DSP Internals:
+              - Design:
+                      - DSP-API Design Principles:
+                              - Index: 05-internals/design/principles/index.md
+                              - Design Overview: 05-internals/design/principles/design-overview.md
+                              - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
+                              - HTTP Module: 05-internals/design/principles/http-module.md
+                              - Store Module: 05-internals/design/principles/store-module.md
+                              - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
+                              - Consistency Checking: 05-internals/design/principles/consistency-checking.md
+                              - Authentication: 05-internals/design/principles/authentication.md
+                              - Feature Toggles: 05-internals/design/principles/feature-toggles.md
+                              - RDF Processing API: 05-internals/design/principles/rdf-api.md
+                      - API V1 Design:
+                              - Index: 05-internals/design/api-v1/index.md
+                              - How to Add an API v1 Route: 05-internals/design/api-v1/how-to-add-a-route.md
+                              - JSON in API v1: 05-internals/design/api-v1/json.md
+                      - API V2 Design:
+                              - Index: 05-internals/design/api-v2/index.md
+                              - API v2 Design Overview: 05-internals/design/api-v2/overview.md
+                              - Ontology Schemas: 05-internals/design/api-v2/ontology-schemas.md
+                              - Smart IRIs: 05-internals/design/api-v2/smart-iris.md
+                              - Content Wrappers: 05-internals/design/api-v2/content-wrappers.md
+                              - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
+                              - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
+                              - Ontology Management: 05-internals/design/api-v2/ontology-management.md
+                              - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md
+                              - Gravsearch Design: 05-internals/design/api-v2/gravsearch.md
+                              - Standoff Markup: 05-internals/design/api-v2/standoff.md
+                              - Archival Resource Key (ARK) Identifiers: 05-internals/design/api-v2/ark.md
+                              - SPARQL Query Design: 05-internals/design/api-v2/query-design.md
+                      - Admin API Design:
+                              - Index: 05-internals/design/api-admin/index.md
+                              - Administration: 05-internals/design/api-admin/administration.md
+              - Development:
+                      - Index: 05-internals/development/index.md
+                      - Overview: 05-internals/development/overview.md
+                      - Build and Running: 05-internals/development/building-and-running.md
+                      - Setup Visual Studio Code for development of DSP-API: 05-internals/development/vscode-config.md
+                      - Testing: 05-internals/development/testing.md
+                      - Docker Cheat Sheet: 05-internals/development/docker-cheat-sheet.md
+                      - Monitoring DSP-API: 05-internals/development/monitoring.md
+                      - Starting the DSP-Stack inside Docker Container: 05-internals/development/docker-compose.md
+                      - Updating Repositories: 05-internals/development/updating-repositories.md
+                      - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
+                      - Third-Party Dependencies: 05-internals/development/third-party.md
+      - SIPI:
+              - Index: 07-sipi/index.md
+              - Setting Up Sipi for DSP-API: 07-sipi/setup-sipi-for-dsp-api.md
+              - Interaction between Sipi and DSP-API: 07-sipi/sipi-and-dsp-api.md
+      - Lucene:
+              - Overview: 08-lucene/index.md
+              - Lucene Query Parser Syntax: 08-lucene/lucene-query-parser-syntax.md
+      - Frequently Asked Questions: faq/index.md
+      - Release Notes:
+              - Changelog: 00-release-notes/index.md
 
 plugins:
-    - include-markdown
-    - search
-    - git-revision-date
+      - include-markdown
+      - search
+      - git-revision-date
 
 theme:
-    name: material
-    logo: "assets/icons/dasch-icon-white.svg"
-    favicon: "assets/icons/dasch-favicon.ico"
-    icon:
-        repo: fontawesome/brands/github
-    palette:
-        primary: "deep purple"
-        accent: "deep purple"
-    features:
-        - navigation.tabs
-        - navigation.sections
+      name: material
+      logo: "assets/icons/dasch-icon-white.svg"
+      favicon: "assets/icons/dasch-favicon.ico"
+      icon:
+            repo: fontawesome/brands/github
+      palette:
+            primary: "deep purple"
+            accent: "deep purple"
+      features:
+            - navigation.tabs
+            - navigation.sections
 
 extra_css:
-    - "assets/style/theme.css"
+      - "assets/style/theme.css"
