@@ -282,7 +282,7 @@ if readable then
 
     -- in case of a moving image, we have to extract the frames from video file; they will be used for preview stuff
     if sidecar["duration"] and sidecar["fps"] then
-        success, error_msg = os.execute(config.imgroot .. "/export-moving-image-frames.sh -i " .. storage_dir .. sidecar["internalFilename"])
+        success, error_msg = os.execute("./scripts/export-moving-image-frames.sh -i " .. storage_dir .. sidecar["internalFilename"])
         if not success then
             send_error(500, "export-moving-image-frames.sh failed: " .. error_msg)
             return
