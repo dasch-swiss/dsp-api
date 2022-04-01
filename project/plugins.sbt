@@ -2,9 +2,12 @@ resolvers ++= Seq(
   Resolver.typesafeRepo("releases")
 )
 
+// please don't remove or merge uncommented to main
+addDependencyTreePlugin
+
 // Knora
 addSbtPlugin("com.typesafe.sbt" % "sbt-git" % "1.0.2")
-addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.4")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.9")
 addSbtPlugin("io.kamon" % "sbt-aspectj-runner" % "1.1.1")
 
 // webapi
@@ -18,8 +21,7 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
 addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "1.3.15")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")
 
+// https://github.com/rtimush/sbt-updates
 // addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.1")
+// https://github.com/cb372/sbt-explicit-dependencies
 // addSbtPlugin("com.github.cb372" % "sbt-explicit-dependencies" % "0.2.16")
-
-// please don't remove or merge uncommented to main
-// addDependencyTreePlugin
