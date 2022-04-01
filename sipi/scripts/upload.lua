@@ -246,9 +246,9 @@ for file_index, file_params in pairs(server.uploads) do
         if not height then
             send_error(417, "upload.lua: ffprobe get height failed: " .. height)
         end
-        -- get video fps 
-        -- (this is a bit tricky, because ffprobe returns something like 30/1 or 179/6; so, we have to convert into a floating point number; 
-        -- or we can calculate fps from number of frames divided by duration)
+        -- get video fps
+        -- this is a bit tricky, because ffprobe returns something like 30/1 or 179/6; so, we have to convert into a floating point number;
+        -- or we can calculate fps from number of frames divided by duration
         local fps
         local frames = tonumber(file_meta_json['nb_frames'])
         if not frames then
@@ -272,7 +272,7 @@ for file_index, file_params in pairs(server.uploads) do
             fps = fps
         }
 
-        -- TODO: similar setup for audio files; get duration with ffprobe and write extended sidecar file
+        -- TODO: similar setup for audio files; get duration with ffprobe and write extended sidecar data
     else
         sidecar_data = {
             originalFilename = original_filename,
