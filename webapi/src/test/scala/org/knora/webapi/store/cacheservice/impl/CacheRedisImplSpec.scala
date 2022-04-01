@@ -16,6 +16,7 @@ import zio.test._
 import zio.test.Assertion._
 import zio.test.TestAspect.{ignore, timeout}
 import org.knora.webapi.store.cacheservice.api.CacheService
+import org.knora.webapi.store.cacheservice.config.RedisConfig
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceRedisImpl]].
@@ -69,5 +70,5 @@ object CacheRedisImplSpec extends DefaultRunnableSpec {
             CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
-  ).provide(CacheServiceRedisImpl.layer)
+  ).provideShared(CacheServiceRedisImpl.layer, RedisConfig.hardcoded)
 }

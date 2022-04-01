@@ -5,8 +5,14 @@
 
 package org.knora.webapi.app
 
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.OneForOneStrategy
+import akka.actor.Props
+import akka.actor.Stash
 import akka.actor.SupervisorStrategy._
-import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Stash, Timers}
+import akka.actor.Timers
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -14,55 +20,64 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
-import org.knora.webapi.exceptions.{
-  InconsistentRepositoryDataException,
-  MissingLastModificationDateOntologyException,
-  SipiException,
-  UnexpectedMessageException,
-  UnsupportedValueException
-}
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
+import org.knora.webapi.exceptions.SipiException
+import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.exceptions.UnsupportedValueException
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceGetStatus,
-  CacheServiceStatusNOK,
-  CacheServiceStatusOK
-}
-import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v2.responder.KnoraRequestV2
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, SuccessResponseV2}
 import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.routing._
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.settings._
 import org.knora.webapi.store.StoreManager
+import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
-
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
-import zio.stm.TRef
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import zio.Runtime
 import zio.ZIO
-import com.typesafe.config.ConfigFactory
 import zio.config.typesafe.TypesafeConfig
-import org.knora.webapi.config.AppConfig
+import zio.stm.TRef
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.Failure
+import scala.util.Success
+import org.knora.webapi.store.cacheservice.config.RedisConfig
 
 trait Managers {
   implicit val system: ActorSystem
@@ -79,11 +94,17 @@ trait LiveManagers extends Managers {
    */
   lazy val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.descriptor)
 
+  lazy val cacheServiceManager: CacheServiceManager = Runtime.default
+    .unsafeRun(
+      (for (manager <- ZIO.service[CacheServiceManager])
+        yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
+    )
+
   /**
    * The actor that forwards messages to actors that deal with persistent storage.
    */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, cs = CacheServiceInMemImpl.layer) with LiveActorMaker)
+    Props(new StoreManager(appActor = self, csm = cacheServiceManager) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )

@@ -11,9 +11,10 @@ import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.store.cacheservice.api.CacheService
 import org.knora.webapi.store.iiif.MockableIIIFManager
 import zio.ZLayer
+import org.knora.webapi.store.cacheservice.CacheServiceManager
 
-class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef, cs: ZLayer[Any, Nothing, CacheService])
-    extends StoreManager(appActor, cs)
+class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef, csm: CacheServiceManager)
+    extends StoreManager(appActor, csm)
     with LiveActorMaker {
 
   /**

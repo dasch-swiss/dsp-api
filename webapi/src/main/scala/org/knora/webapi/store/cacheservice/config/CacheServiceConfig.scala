@@ -6,5 +6,5 @@ final case class CacheServiceConfig(enabled: Boolean, redis: RedisConfig)
 
 final case class RedisConfig(server: String, port1: Int, port2: Int)
 object RedisConfig {
-  val hardcode = ZLayer.succeed(RedisConfig("localhost", 6379, 20999))
+  val hardcoded = ZLayer.succeed(RedisConfig("localhost", 6379, 20999))
 }

@@ -266,18 +266,3 @@ trait Task[T] {
     previousResult: Option[TaskResult[T]]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[T]]
 }
-
-/**
- * Provides compatibility methods to transform a ZIO into a future that gets executed
- * imediatelly.
- */
-object LegacyRuntime {
-
-  val runtime = Runtime.default
-
-  /**
-   * Transforms a [[zio.Task]] into a [[Future]].
-   */
-  def fromTask[A](body: => zio.Task[A]): Future[A] =
-    runtime.unsafeRunToFuture(body)
-}

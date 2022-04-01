@@ -33,9 +33,9 @@ import scala.concurrent.{ExecutionContext, Future}
  * @param lut   a lookup table of username/email to IRI.
  */
 case class CacheServiceInMemImpl(
-  users: TRef[Map[String, UserADM]],
-  projects: TRef[Map[String, ProjectADM]],
-  lut: TRef[Map[String, String]] // sealed trait for key type
+  users: TMap[String, UserADM],
+  projects: TMap[String, ProjectADM],
+  lut: TMap[String, String] // sealed trait for key type
 ) extends CacheService {
 
   /**
@@ -50,11 +50,10 @@ case class CacheServiceInMemImpl(
    */
   def putUserADM(value: UserADM): Task[Unit] =
     (for {
-      _ <- users.update(_ + (value.id -> value))
-      _ <- lut.update(_ + (value.username -> value.id))
-      _ <- lut.update(_ + (value.email -> value.id))
-      _  = ZIO.debug(s"Storing user to Cache: $value")
-    } yield ()).commit
+      _ <- users.put(value.id, value)
+      _ <- lut.put(value.username, value.id)
+      _ <- lut.put(value.email, value.id)
+    } yield ()).commit.tap(_ => ZIO.debug(s"Stored UserADM to Cache: $value"))
 
   /**
    * Retrieves the user stored under the identifier (either iri, username, or email).
@@ -78,7 +77,7 @@ case class CacheServiceInMemImpl(
    * @return an optional [[UserADM]].
    */
   def getUserByIri(id: String): ZIO[Any, Nothing, Option[UserADM]] =
-    users.get.map(_.get(id)).commit
+    users.get(id).commit
 
   /**
    * Retrieves the user stored under the username or email.
@@ -88,10 +87,10 @@ case class CacheServiceInMemImpl(
    */
   def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
     (for {
-      maybeIri <- lut.get.map(_.get(usernameOrEmail)).commit //move commit to outside
-      iri      <- ZIO.fromOption(maybeIri) // use STM.fromOption
-      user     <- getUserByIri(iri).some
-    } yield user).unsome // watch Spartan session about error. post example on Spartan channel
+      maybeIri <- lut.get(usernameOrEmail)
+      iri      <- STM.fromOption(maybeIri)
+      user     <- users.get(iri).some
+    } yield user).commit.unsome // watch Spartan session about error. post example on Spartan channel
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
@@ -106,10 +105,10 @@ case class CacheServiceInMemImpl(
    */
   def putProjectADM(value: ProjectADM): Task[Unit] =
     (for {
-      _ <- projects.update(_ + (value.id -> value))
-      _ <- lut.update(_ + (value.shortname -> value.id))
-      _ <- lut.update(_ + (value.shortcode -> value.id))
-    } yield ()).commit.tap(_ => ZIO.debug(s"Storing project to Cache: $value"))
+      _ <- projects.put(value.id, value)
+      _ <- lut.put(value.shortname, value.id)
+      _ <- lut.put(value.shortcode, value.id)
+    } yield ()).commit.tap(_ => ZIO.debug(s"Stored ProjectADM to Cache: $value"))
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
@@ -134,7 +133,7 @@ case class CacheServiceInMemImpl(
    * @return an optional [[ProjectADM]].
    */
   def getProjectByIri(id: String) =
-    projects.get.map(_.get(id)).commit
+    projects.get(id).commit
 
   /**
    * Retrieves the project stored under a SHORTCODE or SHORTNAME.
@@ -143,10 +142,11 @@ case class CacheServiceInMemImpl(
    * @return an optional [[ProjectADM]]
    */
   def getProjectByShortcodeOrShortname(shortcodeOrShortname: String) =
-    for {
-      maybeIri <- lut.get.map(_.get(shortcodeOrShortname)).commit
-      project  <- getProjectByIri(maybeIri.getOrElse("-")) // cleanup with some/unsome
-    } yield project
+    (for {
+      maybeIri <- lut.get(shortcodeOrShortname)
+      iri      <- STM.fromOption(maybeIri)
+      project  <- projects.get(iri).some
+    } yield project).commit.unsome
 
   /**
    * Store string or byte array value under key.
@@ -164,7 +164,7 @@ case class CacheServiceInMemImpl(
              else Task.succeed(key)
       value <- if (value.isEmpty()) Task.fail(emptyValueError)
                else Task.succeed(value)
-    } yield lut.get.map(_ + (key -> value)).commit
+    } yield lut.put(key, value).commit
   }
 
   /**
@@ -174,7 +174,7 @@ case class CacheServiceInMemImpl(
    * @return an optional [[String]].
    */
   def getStringValue(key: String): Task[Option[String]] =
-    lut.get.map(_.get(key)).commit
+    lut.get(key).commit
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
@@ -184,7 +184,7 @@ case class CacheServiceInMemImpl(
   def removeValues(keys: Set[String]): Task[Unit] =
     for {
       _ <- ZIO.logDebug(s"removing keys: $keys")
-      _ <- ZIO.foreach(keys)(key => lut.update(_ - key).commit) // FIXME: is this realy thread safe?
+      _ <- ZIO.foreach(keys)(key => lut.delete(key).commit) // FIXME: is this realy thread safe?
     } yield ()
 
   /**
@@ -192,9 +192,9 @@ case class CacheServiceInMemImpl(
    */
   def flushDB(requestingUser: UserADM): Task[Unit] =
     (for {
-      _ <- users.update(_ => Map.empty[String, UserADM])
-      _ <- projects.update(_ => Map.empty[String, ProjectADM])
-      _ <- lut.update(_ => Map.empty[String, String])
+      _ <- users.foreach((k,v) => users.delete(k))
+      _ <- projects.foreach((k,v) => projects.delete(k))
+      _ <- lut. foreach((k,v) => lut.delete(k))
     } yield ()).commit
 
   /**
@@ -211,10 +211,10 @@ object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] = {
     ZLayer {
       for {
-        users    <- TRef.make(Map.empty[String, UserADM]).commit // use TMap
-        projects <- TRef.make(Map.empty[String, ProjectADM]).commit
-        lut      <- TRef.make(Map.empty[String, String]).commit
+        users    <- TMap.empty[String, UserADM].commit
+        projects <- TMap.empty[String, ProjectADM].commit
+        lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
-    }.tap(_ => ZIO.debug("Initializing In-Memory Cache Service"))
+    }.tap(_ => ZIO.debug("In-Memory Cache Service Initialized"))
   }
 }

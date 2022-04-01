@@ -15,6 +15,10 @@ import org.knora.webapi.store.MockableStoreManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.MockSipiConnector
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import zio.Runtime
+import zio.ZIO
+
 
 /**
  * Mixin trait for running the application with mocked Sipi
@@ -27,9 +31,15 @@ trait ManagersWithMockedSipi extends Managers {
   )
   lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
+  lazy val cacheServiceManager: CacheServiceManager = Runtime.default
+    .unsafeRun(
+      (for (manager <- ZIO.service[CacheServiceManager])
+        yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
+    )
+
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
-      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheServiceInMemImpl.layer)
+      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, csm = cacheServiceManager)
         with LiveActorMaker
     ),
     name = StoreManagerActorName

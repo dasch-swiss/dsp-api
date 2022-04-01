@@ -66,5 +66,5 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
             CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
-  ).provideShared(CacheServiceInMemImpl.layer)
+  ).provide(CacheServiceInMemImpl.layer)
 }

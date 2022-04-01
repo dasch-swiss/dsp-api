@@ -32,10 +32,10 @@ class CacheManagerSpec extends CoreSpec(CacheManagerSpec.config) {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  val user = SharedTestDataADM.imagesUser01
+  val user    = SharedTestDataADM.imagesUser01
   val project = SharedTestDataADM.imagesProject
 
-  "The RedisManager" should {
+  "The CacheManager" should {
 
     "successfully store a user" in {
       storeManager ! CacheServicePutUserADM(user)
