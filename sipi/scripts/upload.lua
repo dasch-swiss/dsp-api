@@ -10,8 +10,7 @@ require "send_response"
 require "jwt"
 require "clean_temp_dir"
 require "util"
-Json = require "json"
--- local sh = require "sh"
+local json = require "json"
 
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
@@ -90,6 +89,7 @@ for file_index, file_params in pairs(server.uploads) do
     --
     local original_filename = file_params["origname"]
     local file_info = get_file_info(original_filename, mime_type)
+    
     if file_info == nil then
         send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
         return
@@ -196,44 +196,6 @@ for file_index, file_params in pairs(server.uploads) do
         end
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
-        
-    --     server.log("I'm a video")
-    --     local uploaded_video
-    --     -- success, uploaded_video = SipiImage.new(file_index, {original = original_filename, hash = "sha256"})
-    --     -- if not success then
-    --     --     send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
-    --     --     return
-    --     -- end
-
-    --     expected (to close 'for' at line 63) near <eof>, scriptname: /sipi/scripts/upload.lua
-
-
-    --     -- move it to its temporary storage location
-    --     success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
-    --     if not success then
-    --         send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
-    --         return
-    --     end
-
-
-    --     -- run shell script to convert video and extract preview frames
-    --     -- use os.execute
-        -- os.execute("ffprobe -i " .. tmp_storage_file_path)
-
-        -- get video file info with ffprobe and save as json file
-        -- local tmp_storage_ffprobe = uuid62 .. ".json"
-        -- local hashed_tmp_storage_ffprobe
-        -- success, hashed_tmp_storage_ffprobe = helper.filename_hash(tmp_storage_ffprobe)
-        -- if not success then
-        --     send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_ffprobe))
-        --     return
-        -- else
-        -- end
-
-        -- local tmp_storage_ffprobe_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_ffprobe
-
-        -- os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
-
     else
         -- It's neither an image nor a video file. Just move it to its temporary storage location.
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
@@ -254,7 +216,6 @@ for file_index, file_params in pairs(server.uploads) do
     --
     local checksum_derivative = file_checksum(tmp_storage_file_path)
 
-
     --
     -- prepare and write sidecar file
     --
@@ -263,53 +224,41 @@ for file_index, file_params in pairs(server.uploads) do
     if media_type == VIDEO then
         
         local handle
-
-        -- get video duration
-        handle = io.popen("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
-        local duration = handle:read("*a")
-        duration = duration:gsub("[\n\r]", "")
-        duration = tonumber(duration);
+        -- get video file information with ffprobe: widht, height, duration and frame rate (fps)
+        handle = io.popen("ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " .. tmp_storage_file_path)
+        local file_meta = handle:read("*a")
         handle:close()
-        -- success, command = os.execute("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path .. " > " .. duration)
-        -- server.log("ffprobe get duration: " .. duration, server.loglevel.LOG_DEBUG)
+        -- decode ffprobe output into json, but only first stream
+        local file_meta_json = json.decode( file_meta )['streams'][1]
+        
+        -- get video duration
+        local duration = tonumber(file_meta_json['duration'])
         if not duration then
             send_error(417, "upload.lua: ffprobe get duration failed: " .. duration)
-        else
-            server.log("upload.lua: ffprobe get duration: " .. duration, server.loglevel.LOG_DEBUG)
         end
         -- get video width (dimX)
-        handle = io.popen("ffprobe -v error -show_entries stream=width -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
-        local width = handle:read("*a")
-        width = width:gsub("[\n\r]", "")
-        width = tonumber(width);
-        handle:close()
+        local width = tonumber(file_meta_json['width']);
         if not width then
             send_error(417, "upload.lua: ffprobe get width failed: " .. width)
-        else
-            server.log("upload.lua: ffprobe get width: " .. width, server.loglevel.LOG_DEBUG)
         end
         -- get video height (dimY)
-        handle = io.popen("ffprobe -v error -show_entries stream=height -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
-        local height = handle:read("*a")
-        height = height:gsub("[\n\r]", "")
-        height = tonumber(height);
-        handle:close()
+        local height = tonumber(file_meta_json['height'])
         if not height then
             send_error(417, "upload.lua: ffprobe get height failed: " .. height)
-        else
-            server.log("upload.lua: ffprobe get height: " .. height, server.loglevel.LOG_DEBUG)
         end
-        -- get video fps
-        -- handle = io.popen("ffprobe -v error -show_entries stream=r_frame_rate -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
-        -- local fps = handle:read("*a")
-        local fps = 29.9997 -- fps:gsub("[\n\r]", "")
-        -- fps = tonumber(fps);
-        -- handle:close()
-        -- if not fps then
-        --     send_error(417, "upload.lua: ffprobe get fps failed: " .. fps)
-        -- else
-        --     server.log("upload.lua: ffprobe get fps: " .. fps, server.loglevel.LOG_DEBUG)
-        -- end
+        -- get video fps 
+        -- (this is a bit tricky, because ffprobe returns something like 30/1 or 179/6; so, we have to convert into a floating point number; 
+        -- or we can calculate fps from number of frames divided by duration)
+        local fps
+        local frames = tonumber(file_meta_json['nb_frames'])
+        if not frames then
+            send_error(417, "upload.lua: ffprobe get frames failed: " .. frames)
+        else
+            fps = frames / duration
+            if not fps then
+                send_error(417, "upload.lua: ffprobe get fps failed: " .. fps)
+            end
+        end
 
         sidecar_data = {
             originalFilename = original_filename,
@@ -323,6 +272,7 @@ for file_index, file_params in pairs(server.uploads) do
             fps = fps
         }
 
+        -- TODO: similar setup for audio files; get duration with ffprobe and write extended sidecar file
     else
         sidecar_data = {
             originalFilename = original_filename,
