@@ -53,8 +53,10 @@ object Dependencies {
   val jenaText = "org.apache.jena" % "jena-text" % jenaVersion
 
   // logging
-  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.4"
-  val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.10"
+  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"    % "3.9.4"
+  val logbackClassic = "ch.qos.logback"              % "logback-classic"  % "1.2.10"
+  val log4jOverSlf4j = "org.slf4j"                   % "log4j-over-slf4j" % "1.7.32"
+  val jclOverSlf4j   = "org.slf4j"                   % "jcl-over-slf4j"   % "1.7.32"
 
   // Metrics
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.1.5"
@@ -182,8 +184,8 @@ object Dependencies {
     zioConfig,
     zioConfigMagnolia,
     zioConfigTypesafe,
-    zioTest % Test,
-    zioTestSbt % Test,
+    zioTest,
+    zioTestSbt,
     log4jOverSlf4j,
     jclOverSlf4j,
     slf4jApi,
