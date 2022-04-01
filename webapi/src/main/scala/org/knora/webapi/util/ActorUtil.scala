@@ -19,7 +19,7 @@ import org.knora.webapi.exceptions.{
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
-
+import org.knora.webapi.core.Logging
 import zio._
 
 object ActorUtil {
@@ -29,12 +29,30 @@ object ActorUtil {
     * phase, to be able to return ZIO inside an Actor.
     */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
-    Runtime.default.unsafeRun(for {
+    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.config)
+    .unsafeRun((for {
       executor <- ZIO.executor
-      future <- zioTask.toFuture
-      _ <- ZIO.succeed(future2Message(sender, future, log)(executor.asExecutionContext))
-    } yield ())
+      _ <- zioTask.fold(ex => handleExeption(ex, sender)(executor.asExecutionContext), success => sender ! success)
+    } yield ()))
     
+  def handleExeption(ex: Throwable, sender: ActorRef)(implicit
+    executionContext: ExecutionContext) = {
+      ex match {
+        case rejectedEx: RequestRejectedException =>
+            // The error was the client's fault. Log the exception, and also
+            // let the client know.
+            ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx") *> ZIO.succeed(sender ! akka.actor.Status.Failure(rejectedEx))
+
+          case otherEx: Exception =>
+            // The error wasn't the client's fault. Log the exception, and also
+            // let the client know.
+            ZIO.logDebug(s"This error is presumably NOT the clients fault: $otherEx") *> ZIO.succeed(sender ! akka.actor.Status.Failure(otherEx)) *> ZIO.fail(throw otherEx)
+
+          case otherThrowable: Throwable =>
+            // Don't try to recover from a Throwable that isn't an Exception.
+            ZIO.logDebug(s"Presumably something realy bad has happened: $otherThrowable") *> ZIO.fail(throw otherThrowable)
+      }
+    }
 
   /**
    * A convenience function that simplifies and centralises error-handling in the `receive` method of supervised Akka

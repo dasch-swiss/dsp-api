@@ -24,7 +24,17 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val user: UserADM       = SharedTestDataADM.imagesUser01
+  private val user: UserADM = SharedTestDataADM.imagesUser01
+  private val userWithApostrophe = UserADM(
+    id = "http://rdfh.ch/users/aaaaaab71e7b0e01",
+    username = "user_with_apostrophe",
+    email = "userWithApostrophe@example.org",
+    givenName = """M\\"Given 'Name""",
+    familyName = """M\\tFamily Name""",
+    status = true,
+    lang = "en"
+  )
+
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
   def spec = suite("CacheInMemImplSpec")(
@@ -45,6 +55,12 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
           _             <- CacheService(_.putUserADM(user))
           retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email))))
         } yield assert(retrievedUser)(equalTo(Some(user)))
+      ) +
+      test("successfully store and retrieve a user with special characters in his name")(
+        for {
+          _             <- CacheService(_.putUserADM(userWithApostrophe))
+          retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id))))
+        } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
       ) +
       test("successfully store a project and retrieve by IRI")(
         for {

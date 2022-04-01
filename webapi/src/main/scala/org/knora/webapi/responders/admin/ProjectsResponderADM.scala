@@ -1425,8 +1425,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @param project a [[ProjectADM]].
    * @return true if writing was successful.
    */
-  private def writeProjectADMToCache(project: ProjectADM): Future[Boolean] = {
-    val result = (storeManager ? CacheServicePutProjectADM(project)).mapTo[Boolean]
+  private def writeProjectADMToCache(project: ProjectADM): Future[Unit] = {
+    val result = (storeManager ? CacheServicePutProjectADM(project)).mapTo[Unit]
     result.map { res =>
       log.debug("writeProjectADMToCache - result: {}", result)
       res

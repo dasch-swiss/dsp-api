@@ -43,7 +43,7 @@ case class CacheServiceManager(cs: CacheService) {
     case CacheServiceRemoveValues(keys)        => removeValues(keys)
     case CacheServiceFlushDB(requestingUser)   => flushDB(requestingUser)
     case CacheServiceGetStatus                 => ping()
-    case other => ZIO.logError(s"RedisManager received an unexpected message: $other")
+    case other                                 => ZIO.logError(s"RedisManager received an unexpected message: $other")
   }
 
   /**
@@ -57,7 +57,7 @@ case class CacheServiceManager(cs: CacheService) {
    * @param value the stored value
    */
   private def putUserADM(value: UserADM): Task[Unit] =
-    cs.putUserADM(value) @@ cacheServiceWriteUserTimer
+    cs.putUserADM(value) // @@ cacheServiceWriteUserTimer
 
   /**
    * Retrieves the user stored under the identifier (either iri, username,

@@ -53,7 +53,7 @@ case class CacheServiceInMemImpl(
       _ <- users.put(value.id, value)
       _ <- lut.put(value.username, value.id)
       _ <- lut.put(value.email, value.id)
-    } yield ()).commit.tap(_ => ZIO.debug(s"Stored UserADM to Cache: $value"))
+    } yield ()).commit.tap(_ => ZIO.logInfo(s"Stored UserADM to Cache: ${value.id}"))
 
   /**
    * Retrieves the user stored under the identifier (either iri, username, or email).
@@ -108,7 +108,7 @@ case class CacheServiceInMemImpl(
       _ <- projects.put(value.id, value)
       _ <- lut.put(value.shortname, value.id)
       _ <- lut.put(value.shortcode, value.id)
-    } yield ()).commit.tap(_ => ZIO.debug(s"Stored ProjectADM to Cache: $value"))
+    } yield ()).commit.tap(_ => ZIO.logInfo(s"Stored ProjectADM to Cache: ${value.id}"))
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
@@ -192,10 +192,10 @@ case class CacheServiceInMemImpl(
    */
   def flushDB(requestingUser: UserADM): Task[Unit] =
     (for {
-      _ <- users.foreach((k,v) => users.delete(k))
-      _ <- projects.foreach((k,v) => projects.delete(k))
-      _ <- lut. foreach((k,v) => lut.delete(k))
-    } yield ()).commit
+      _ <- users.foreach((k, v) => users.delete(k))
+      _ <- projects.foreach((k, v) => projects.delete(k))
+      _ <- lut.foreach((k, v) => lut.delete(k))
+    } yield ()).commit.tap(_ => ZIO.logInfo("In-Memory cache flushed."))
 
   /**
    * Pings the in-memory cache to see if it is available.
@@ -215,6 +215,6 @@ object CacheServiceInMemImpl {
         projects <- TMap.empty[String, ProjectADM].commit
         lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
-    }.tap(_ => ZIO.debug("In-Memory Cache Service Initialized"))
+    }.tap(_ => ZIO.debug(">> In-Memory Cache Service Initialized"))
   }
 }

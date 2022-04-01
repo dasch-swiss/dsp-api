@@ -477,16 +477,16 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
  * @param sessionId   The sessionId,.
  * @param permissions The user's permissions.
  */
-case class UserADM(
+final case class UserADM(
   id: IRI,
   username: String,
   email: String,
-  password: Option[String] = None,
-  token: Option[String] = None,
   givenName: String,
   familyName: String,
   status: Boolean,
   lang: String,
+  password: Option[String] = None,
+  token: Option[String] = None,
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   sessionId: Option[String] = None,

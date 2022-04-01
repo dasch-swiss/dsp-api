@@ -18,7 +18,7 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
 }
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object CacheManagerSpec {
+object CacheServiceManagerSpec {
   val config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -28,7 +28,7 @@ object CacheManagerSpec {
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.serialization.CacheSerialization]].
  */
-class CacheManagerSpec extends CoreSpec(CacheManagerSpec.config) {
+class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -39,7 +39,7 @@ class CacheManagerSpec extends CoreSpec(CacheManagerSpec.config) {
 
     "successfully store a user" in {
       storeManager ! CacheServicePutUserADM(user)
-      expectMsg(true)
+      expectMsg(())
     }
 
     "successfully retrieve a user by IRI" in {
@@ -59,7 +59,7 @@ class CacheManagerSpec extends CoreSpec(CacheManagerSpec.config) {
 
     "successfully store a project" in {
       storeManager ! CacheServicePutProjectADM(project)
-      expectMsg(true)
+      expectMsg(())
     }
 
     "successfully retrieve a project by IRI" in {

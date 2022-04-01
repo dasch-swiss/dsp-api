@@ -78,6 +78,9 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import org.knora.webapi.store.cacheservice.config.RedisConfig
+import zio.ZEnvironment
+import zio.RuntimeConfig
+import org.knora.webapi.core.Logging
 
 trait Managers {
   implicit val system: ActorSystem
@@ -94,7 +97,8 @@ trait LiveManagers extends Managers {
    */
   lazy val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.descriptor)
 
-  lazy val cacheServiceManager: CacheServiceManager = Runtime.default
+  lazy val cacheServiceManager: CacheServiceManager =
+    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.config)
     .unsafeRun(
       (for (manager <- ZIO.service[CacheServiceManager])
         yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)

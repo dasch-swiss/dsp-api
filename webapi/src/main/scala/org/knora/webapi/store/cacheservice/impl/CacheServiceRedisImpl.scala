@@ -263,7 +263,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
       conn.close()
     }
 
-  }.catchAll(ex => ZIO.logError(s"Flushing DB failed: ${ex.getMessage}"))
+  }
+  .catchAll(ex => ZIO.logError(s"Flushing DB failed: ${ex.getMessage}"))
+  .tap(_ => ZIO.logDebug("Redis cache flushed."))
 
   /**
    * Pings the Redis store to see if it is available.
