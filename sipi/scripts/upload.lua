@@ -188,7 +188,6 @@ for file_index, file_params in pairs(server.uploads) do
 
     -- Is this a video file?
     elseif media_type == VIDEO then
-        server.log("upload.lua: video file type " .. media_type, server.loglevel.LOG_DEBUG)
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
             send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
