@@ -37,60 +37,88 @@
             "@id": "http://0.0.0.0:3333/ontology/0001/minimal/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0001/something/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The something ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/0001"
             },
-            "rdfs:label": "The something ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0001/something/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The images demo ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/00FF"
             },
-            "rdfs:label": "The images demo ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/00FF/images/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The BEOL ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
             },
-            "rdfs:label": "The BEOL ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The Biblio ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
             },
-            "rdfs:label": "The Biblio ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The incunabula ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/0803"
             },
-            "rdfs:label": "The incunabula ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0804/dokubib/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The dokubib ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/0804"
             },
-            "rdfs:label": "The dokubib ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0804/dokubib/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0806/webern/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The Anton Webern project ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/0806"
             },
-            "rdfs:label": "The Anton Webern project ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0806/webern/v2"
         },
         {
             "rdfs:label": "The Knora admin ontology",

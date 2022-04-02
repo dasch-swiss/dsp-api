@@ -96,7 +96,7 @@ sipi = {
     --
     -- Lua script which is executed on initialization of the Lua interpreter
     --
-    initscript = '/sipi/scripts/sipi.init-knora.lua',
+    initscript = '/sipi/scripts/sipi.init.lua',
 
     --
     -- path to the caching directory
@@ -195,24 +195,6 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
-    },
-    --
-    -- additional routes used for testing. should not be defined in production.
-    --
-    {
-        method = 'GET',
-        route = '/test_functions',
-        script = 'test_functions.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_file_info',
-        script = 'test_file_info.lua'
-    },
-    {
-        method = 'GET',
-        route = '/test_knora_session_cookie',
-        script = 'test_knora_session_cookie.lua'
     }
 
 }

@@ -20,7 +20,7 @@ require "get_knora_session"
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix, identifier, cookie)
-    server.log("pre_flight called in sipi.init-knora.lua", server.loglevel.LOG_DEBUG)
+    server.log("pre_flight called in sipi.init.lua", server.loglevel.LOG_DEBUG)
 
     if config.prefix_as_path then
         filepath = config.imgroot .. '/' .. prefix .. '/' .. identifier

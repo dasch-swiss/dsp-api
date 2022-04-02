@@ -15,15 +15,6 @@ import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
 
-case class VersionCheckResult(
-  name: String,
-  webapi: String,
-  scala: String,
-  akkaHttp: String,
-  sipi: String,
-  fuseki: String
-)
-
 /**
  * Provides version check logic
  */
@@ -32,38 +23,23 @@ trait VersionCheck {
 
   override implicit val timeout: Timeout = 1.second
 
-  protected def createResponse(result: VersionCheckResult): HttpResponse =
+  protected def createResponse(): HttpResponse = {
+    val sipiVersion: String = BuildInfo.sipi.split(":").apply(1)
+    val fusekiVersion: String =  BuildInfo.fuseki.split(":").apply(1)
+
     HttpResponse(
       status = StatusCodes.OK,
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name" -> JsString(result.name),
-          "webapi" -> JsString(result.webapi),
-          "scala" -> JsString(result.scala),
-          "akkaHttp" -> JsString(result.akkaHttp),
-          "sipi" -> JsString(result.sipi),
-          "fuseki" -> JsString(result.fuseki)
-        ).compactPrint
+          "name" -> JsString("version"),
+          "webapi" -> JsString(BuildInfo.version),
+          "scala" -> JsString(BuildInfo.scalaVersion),
+          "akkaHttp" -> JsString(BuildInfo.akkaHttp),
+          "sipi" -> JsString(sipiVersion),
+          "fuseki" -> JsString(fusekiVersion)
+        ).prettyPrint
       )
-    )
-
-  protected def getVersion: VersionCheckResult = {
-    var sipiVersion = BuildInfo.sipi
-    val sipiIndex = sipiVersion.indexOf(':')
-    sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
-
-    var fusekiVersion = BuildInfo.fuseki
-    val fusekiIndex = fusekiVersion.indexOf(':')
-    fusekiVersion = if (fusekiIndex > 0) fusekiVersion.substring(fusekiIndex + 1) else fusekiVersion
-
-    VersionCheckResult(
-      name = "version",
-      webapi = BuildInfo.version,
-      scala = BuildInfo.version,
-      akkaHttp = BuildInfo.akkaHttp,
-      sipi = sipiVersion,
-      fuseki = fusekiVersion
     )
   }
 }
@@ -79,7 +55,7 @@ class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("version") {
       get { requestContext =>
-        requestContext.complete(createResponse(getVersion))
+        requestContext.complete(createResponse())
       }
     }
 }

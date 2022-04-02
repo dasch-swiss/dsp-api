@@ -1,4 +1,8 @@
 {
+    "knora-api:lastModificationDate": {
+        "@value": "2012-12-12T12:12:12.120Z",
+        "@type": "xsd:dateTimeStamp"
+    },
     "rdfs:label": "The incunabula ontology",
     "@graph": [
         {

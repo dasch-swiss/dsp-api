@@ -1,20 +1,28 @@
 {
     "@graph": [
         {
-            "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The BEOL ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
             },
-            "rdfs:label": "The BEOL ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0801/beol/v2"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2",
-            "@type": "owl:Ontology",
+            "knora-api:lastModificationDate": {
+                "@value": "2012-12-12T12:12:12.120Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "rdfs:label": "The Biblio ontology",
             "knora-api:attachedToProject": {
                 "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
             },
-            "rdfs:label": "The Biblio ontology"
+            "@type": "owl:Ontology",
+            "@id": "http://0.0.0.0:3333/ontology/0801/biblio/v2"
         }
     ],
     "@context": {

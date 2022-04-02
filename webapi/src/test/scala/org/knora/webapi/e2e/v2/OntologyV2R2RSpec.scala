@@ -131,6 +131,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       if (!disableWrite) {
         val fileSuffix = mediaType.fileExtensions.head
         val newOutputFile = Paths.get("..", "test_data", "ontologyR2RV2", s"$fileBasename.$fileSuffix")
+        
+
         Files.createDirectories(newOutputFile.getParent)
         FileUtil.writeTextFile(newOutputFile, responseStr)
       }
