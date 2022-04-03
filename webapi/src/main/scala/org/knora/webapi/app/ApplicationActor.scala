@@ -98,11 +98,11 @@ trait LiveManagers extends Managers {
   lazy val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.descriptor)
 
   lazy val cacheServiceManager: CacheServiceManager =
-    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.config)
-    .unsafeRun(
-      (for (manager <- ZIO.service[CacheServiceManager])
-        yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
-    )
+    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.live)
+      .unsafeRun(
+        (for (manager <- ZIO.service[CacheServiceManager])
+          yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
+      )
 
   /**
    * The actor that forwards messages to actors that deal with persistent storage.

@@ -104,7 +104,7 @@ case class CacheServiceManager(cs: CacheService) {
    * @param k the value.
    */
   private def writeStringValue(k: String, v: String): Task[Unit] =
-    cs.writeStringValue(k, v)
+    cs.putStringValue(k, v)
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.

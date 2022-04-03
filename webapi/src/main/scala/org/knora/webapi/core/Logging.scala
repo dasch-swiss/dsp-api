@@ -10,11 +10,19 @@ object Logging {
   val logFormat             = "[correlation-id = %s] %s"
   def generateCorrelationId = Some(java.util.UUID.randomUUID())
 
-  val config: RuntimeConfigAspect = {
+  val live: RuntimeConfigAspect = {
     SLF4J.slf4j(
       logLevel = LogLevel.Debug,
       format = LogFormat.default,
       _ => "dsp"
     )
   }
+
+  val console: RuntimeConfigAspect = {
+    zio.logging.console(
+      logLevel = LogLevel.Info,
+      format = LogFormat.default
+    )
+  }
+
 }

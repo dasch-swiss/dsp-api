@@ -705,9 +705,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                      featureFactoryConfig = featureFactoryConfig,
                                      requestingUser = requestingUser
                                    )
-
-      result = UserProjectMembershipsGetResponseADM(projects = projects)
-    } yield result
+    } yield UserProjectMembershipsGetResponseADM(projects)
 
   /**
    * Adds a user to a project.
@@ -777,14 +775,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
         // create the update request
-        result <- updateUserADM(
-                    userIri = userIri,
-                    userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = apiRequestID
-                  )
-      } yield result
+        updateUseResult <- updateUserADM(
+                             userIri = userIri,
+                             userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                             featureFactoryConfig = featureFactoryConfig,
+                             requestingUser = requestingUser,
+                             apiRequestID = apiRequestID
+                           )
+      } yield updateUseResult
 
     for {
       // run the task with an IRI lock
@@ -1410,6 +1408,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     for {
+
+      // get current user
       maybeCurrentUser <- getSingleUserADM(
                             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
                             featureFactoryConfig = featureFactoryConfig,
@@ -1421,9 +1421,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ = if (maybeCurrentUser.isEmpty) {
             throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
           }
-
-      // we are changing the user, so lets get rid of the cached copy
-      _ = invalidateCachedUserADM(maybeCurrentUser)
 
       /* Update the user */
       maybeChangedUsername = userUpdatePayload.username match {
@@ -1502,9 +1499,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                     .toString
                                 )
 
-      updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+      // we are changing the user, so lets get rid of the cached copy
+      _ <- invalidateCachedUserADM(maybeCurrentUser)
 
-      /* Verify that the user was updated. */
+      // write the updated user to the triplestore
+      _ <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+
+      /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
                                identifier = UserIdentifierADM(maybeIri = Some(userIri)),
                                featureFactoryConfig = featureFactoryConfig,
@@ -1578,6 +1579,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 "User's 'group' memberships were not updated. Please report this as a possible bug."
               )
           }
+
+      _ <- writeUserADMToCache(
+             maybeUpdatedUserADM.getOrElse(
+               throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug.")
+             )
+           )
 
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
   }
@@ -2032,11 +2039,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       askString <-
         Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
       // _ = log.debug("userExists - query: {}", askString)
-
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result                   = checkUserExistsResponse.result
-
-    } yield result
+    } yield checkUserExistsResponse.result
 
   /**
    * Helper method for checking if an username is already registered.
@@ -2177,23 +2181,22 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   /**
    * Removes the user from cache.
    */
-  private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Boolean] =
+  private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Unit] =
     if (cacheServiceSettings.cacheServiceEnabled) {
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
       // only send to Redis if keys are not empty
       if (keys.nonEmpty) {
-        val result = (storeManager ? CacheServiceRemoveValues(keys)).mapTo[Boolean]
+        val result = (storeManager ? CacheServiceRemoveValues(keys))
         result.map { res =>
           log.debug("invalidateCachedUserADM - result: {}", res)
-          res
         }
       } else {
         // since there was nothing to remove, we can immediately return
-        FastFuture.successful(true)
+        FastFuture.successful(())
       }
     } else {
       // caching is turned off, so nothing to do.
-      FastFuture.successful(true)
+      FastFuture.successful(())
     }
 
 }

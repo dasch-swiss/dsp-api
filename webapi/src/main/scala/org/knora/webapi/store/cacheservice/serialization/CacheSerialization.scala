@@ -15,7 +15,6 @@ import zio._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.springframework.util.SerializationUtils
 
 case class EmptyByteArray(message: String) extends CacheServiceException(message)
 
@@ -29,7 +28,11 @@ object CacheSerialization {
    */
   def serialize[A](value: A): Task[Array[Byte]] =
     ZIO.attempt {
-      SerializationUtils.serialize(value.isInstanceOf[Serializable])
+      val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
+      val oos                           = new ObjectOutputStream(stream)
+      oos.writeObject(value)
+      oos.close()
+      stream.toByteArray
     }
 
   /**
@@ -42,7 +45,10 @@ object CacheSerialization {
       if (bytes.isEmpty) {
         None
       } else {
-        Some(SerializationUtils.deserialize(bytes).asInstanceOf[A])
+        val ois   = new ObjectInputStream(new ByteArrayInputStream(bytes))
+        val value = ois.readObject
+        ois.close()
+        Some(value.asInstanceOf[A])
       }
     }
 }

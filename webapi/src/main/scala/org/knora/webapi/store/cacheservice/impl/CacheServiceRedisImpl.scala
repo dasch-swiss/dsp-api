@@ -41,9 +41,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def putUserADM(user: UserADM): Task[Unit] =
     for {
       bytes <- CacheSerialization.serialize(user)
-      _     <- writeBytesValue(user.id, bytes)
-      _     <- writeStringValue(user.username, user.id)
-      _     <- writeStringValue(user.email, user.id)
+      _     <- putBytesValue(user.id, bytes)
+      _     <- putStringValue(user.username, user.id)
+      _     <- putStringValue(user.email, user.id)
     } yield ()
 
   /**
@@ -102,9 +102,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def putProjectADM(project: ProjectADM): Task[Unit] =
     for {
       bytes <- CacheSerialization.serialize(project)
-      _     <- writeBytesValue(project.id, bytes)
-      _     <- writeStringValue(project.shortcode, project.id)
-      _     <- writeStringValue(project.shortname, project.id)
+      _     <- putBytesValue(project.id, bytes)
+      _     <- putStringValue(project.shortcode, project.id)
+      _     <- putStringValue(project.shortname, project.id)
     } yield ()
 
   /**
@@ -149,12 +149,12 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     } yield maybeProject
 
   /**
-   * Store string or byte array value under key.
+   * Store string value under key.
    *
    * @param key   the key.
    * @param value the value.
    */
-  def writeStringValue(key: String, value: String): Task[Unit] = Task.attempt {
+  def putStringValue(key: String, value: String): Task[Unit] = Task.attempt {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -207,12 +207,12 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   }.catchAll(ex => ZIO.logError(s"Removing keys from Redis failed: ${ex.getMessage}"))
 
   /**
-   * Store string or byte array value under key.
+   * Store byte array value under key.
    *
    * @param key   the key.
    * @param value the value.
    */
-  private def writeBytesValue(key: String, value: Array[Byte]): Task[Unit] = Task.attemptBlocking {
+  private def putBytesValue(key: String, value: Array[Byte]): Task[Unit] = Task.attemptBlocking {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -264,8 +264,8 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     }
 
   }
-  .catchAll(ex => ZIO.logError(s"Flushing DB failed: ${ex.getMessage}"))
-  .tap(_ => ZIO.logDebug("Redis cache flushed."))
+    .catchAll(ex => ZIO.logError(s"Flushing DB failed: ${ex.getMessage}"))
+    .tap(_ => ZIO.logDebug("Redis cache flushed."))
 
   /**
    * Pings the Redis store to see if it is available.

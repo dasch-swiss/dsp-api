@@ -37,7 +37,9 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
 
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
-  def spec = suite("CacheInMemImplSpec")(
+  def spec = userTests + projectTests + otherTests
+
+  val userTests = suite("CacheInMemImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {
       for {
         _             <- CacheService(_.putUserADM(user))
@@ -61,13 +63,16 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
           _             <- CacheService(_.putUserADM(userWithApostrophe))
           retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id))))
         } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
-      ) +
-      test("successfully store a project and retrieve by IRI")(
-        for {
-          _                <- CacheService(_.putProjectADM(project))
-          retrievedProject <- CacheService(_.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id))))
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      ) +
+      )
+  ).provide(CacheServiceInMemImpl.layer)
+
+  val projectTests = suite("CacheInMemImplSpec - project")(
+    test("successfully store a project and retrieve by IRI")(
+      for {
+        _                <- CacheService(_.putProjectADM(project))
+        retrievedProject <- CacheService(_.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id))))
+      } yield assert(retrievedProject)(equalTo(Some(project)))
+    ) +
       test("successfully store a project and retrieve by SHORTCODE")(
         for {
           _ <- CacheService(_.putProjectADM(project))
@@ -81,6 +86,22 @@ object CacheInMemImplSpec extends DefaultRunnableSpec {
           retrievedProject <-
             CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
         } yield assert(retrievedProject)(equalTo(Some(project)))
+      )
+  ).provide(CacheServiceInMemImpl.layer)
+
+  val otherTests = suite("CacheInMemImplSpec - other")(
+    test("successfully store string value")(
+      for {
+        _              <- CacheService(_.putStringValue("my-new-key", "my-new-value"))
+        retrievedValue <- CacheService(_.getStringValue("my-new-key"))
+      } yield assert(retrievedValue)(equalTo(Some("my-new-value")))
+    ) +
+      test("successfully delete stored value")(
+        for {
+          _              <- CacheService(_.putStringValue("my-new-key", "my-new-value"))
+          _              <- CacheService(_.removeValues(Set("my-new-key")))
+          retrievedValue <- CacheService(_.getStringValue("my-new-key"))
+        } yield assert(retrievedValue)(equalTo(None))
       )
   ).provide(CacheServiceInMemImpl.layer)
 }

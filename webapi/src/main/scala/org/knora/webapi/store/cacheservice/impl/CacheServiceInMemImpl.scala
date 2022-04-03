@@ -64,11 +64,11 @@ case class CacheServiceInMemImpl(
    * @param identifier the user identifier.
    */
   def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]] =
-    identifier.hasType match {
+    (identifier.hasType match {
       case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
       case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toUsername)
       case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toEmail)
-    }
+    }).tap(_ => ZIO.logInfo(s"Retrieved UserADM from Cache: ${identifier}"))
 
   /**
    * Retrieves the user stored under the IRI.
@@ -120,11 +120,11 @@ case class CacheServiceInMemImpl(
    * @return an optional [[ProjectADM]]
    */
   def getProjectADM(identifier: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    identifier.hasType match {
+    (identifier.hasType match {
       case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
       case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
       case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
-    }
+    }).tap(_ => ZIO.logInfo(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**
    * Retrieves the project stored under the IRI.
@@ -154,17 +154,16 @@ case class CacheServiceInMemImpl(
    * @param key   the key.
    * @param value the value.
    */
-  def writeStringValue(key: String, value: String): Task[Unit] = {
+  def putStringValue(key: String, value: String): Task[Unit] = {
 
     val emptyKeyError   = EmptyKey("The key under which the value should be written is empty. Aborting write to cache.")
     val emptyValueError = EmptyValue("The string value is empty. Aborting write to cache.")
 
-    for {
-      key <- if (key.isEmpty()) Task.fail(emptyKeyError)
-             else Task.succeed(key)
-      value <- if (value.isEmpty()) Task.fail(emptyValueError)
-               else Task.succeed(value)
-    } yield lut.put(key, value).commit
+    (for {
+      key   <- if (key.isEmpty()) Task.fail(emptyKeyError) else Task.succeed(key)
+      value <- if (value.isEmpty()) Task.fail(emptyValueError) else Task.succeed(value)
+      _     <- lut.put(key, value).commit
+    } yield ()).tap(_ => ZIO.logInfo(s"Wrote key: $key with value: $value to cache."))
   }
 
   /**
@@ -174,7 +173,7 @@ case class CacheServiceInMemImpl(
    * @return an optional [[String]].
    */
   def getStringValue(key: String): Task[Option[String]] =
-    lut.get(key).commit
+    lut.get(key).commit.tap(value => ZIO.logInfo(s"Retrieved key: $key with value: $value from cache."))
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
@@ -182,10 +181,9 @@ case class CacheServiceInMemImpl(
    * @param keys the keys.
    */
   def removeValues(keys: Set[String]): Task[Unit] =
-    for {
-      _ <- ZIO.logDebug(s"removing keys: $keys")
+    (for {
       _ <- ZIO.foreach(keys)(key => lut.delete(key).commit) // FIXME: is this realy thread safe?
-    } yield ()
+    } yield ()).tap(_ => ZIO.logInfo(s"Removed keys from cache: $keys"))
 
   /**
    * Flushes (removes) all stored content from the in-memory cache.
@@ -195,7 +193,7 @@ case class CacheServiceInMemImpl(
       _ <- users.foreach((k, v) => users.delete(k))
       _ <- projects.foreach((k, v) => projects.delete(k))
       _ <- lut.foreach((k, v) => lut.delete(k))
-    } yield ()).commit.tap(_ => ZIO.logInfo("In-Memory cache flushed."))
+    } yield ()).commit.tap(_ => ZIO.logInfo("Flushed in-memory cache"))
 
   /**
    * Pings the in-memory cache to see if it is available.
@@ -215,6 +213,6 @@ object CacheServiceInMemImpl {
         projects <- TMap.empty[String, ProjectADM].commit
         lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
-    }.tap(_ => ZIO.debug(">> In-Memory Cache Service Initialized"))
+    }.tap(_ => ZIO.debug(">>> In-Memory Cache Service Initialized <<<"))
   }
 }

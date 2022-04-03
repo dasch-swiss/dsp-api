@@ -6,7 +6,6 @@
 package org.knora.webapi.store.cacheservice.serialization
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.UnitSpec
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -30,7 +29,7 @@ object CacheSerializationSpec extends DefaultRunnableSpec {
         serialized   <- CacheSerialization.serialize(user)
         deserialized <- CacheSerialization.deserialize[UserADM](serialized)
       } yield assert(deserialized)(equalTo(Some(user)))
-    } +
+    } @@ ignore +
       test("successfully serialize and deserialize a project") {
         for {
           serialized   <- CacheSerialization.serialize(project)
