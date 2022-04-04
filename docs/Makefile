@@ -4,8 +4,6 @@ PNG_FIGURES = $(patsubst %.dot,%.dot.png,$(DOT_FIGURES))
 
 .PHONY: clean
 clean: ## to clean
-	rm -rf $(FORMATDOCDIRV1)/*
-	rm -rf $(FORMATDOCDIRV2)/*
 	rm -f $(PNG_FIGURES)
 
 .PHONY: graphvizfigures
