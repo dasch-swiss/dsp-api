@@ -5,6 +5,8 @@ To have full functionality, the "Scala (Metals)" plugin should be installed.
 Additionally, a number of plugins can be installed for convenience, but are not required. Those include but are by no means limited to:
 - Docker (to attach to running docker containers)
 - Stardog RDF grammar (.ttl sysntax highlighting)
+- Lua
+- REST client
 - ...
 
 
@@ -21,13 +23,15 @@ The tests can be run through make commands or through SBT.
 The most convenient way to run the tests though, is through VSCode.
 Metals recognizes scalatest suits and lets you run them in the text explorer:
 
-TODO: Bild
+![Tests in VSCode](figures/vscode-metals-test.png)
 
 Or with the setting `"metals.testUserInterface": "Code Lenses"` directly in the text:
 
-TODO: Bild
+![Tests in VSCode with Codelens Enabled](figures/vscode-metals-test-codelens.png)
 
 
 ## Debugger
 
-TODO: schreiben
+It is currently not possible to start the stack in debug mode.
+
+Tests can be run in debug mode by running them as described above but chosing `debug test` instead of `test`.
