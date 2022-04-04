@@ -6254,9 +6254,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "create a class anything:FoafPerson with a reference to foaf:Person, " +
+    "create a class anything:FoafPerson as a subclass of foaf:Person, " +
       "create a property anything:hasFoafName as a subproperty of foaf:name, " +
-      "add that property to the class" in {
+      "add that property to the class anything:FoafPerson, then remove all cardinalities from the class anything:FoafPerson" in {
         // create the class anything:FoafPerson
         val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
