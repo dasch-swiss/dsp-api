@@ -1,5 +1,21 @@
 # Changelog
 
+## [20.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v19.0.0...v20.0.0) (2022-03-31)
+
+
+### ⚠ BREAKING CHANGES
+
+* **ontology:** make knora-base:lastModificationDate required property (#2018)
+
+### Maintenance
+
+* fix docker containers timezone ([#2027](https://www.github.com/dasch-swiss/dsp-api/issues/2027)) ([6bbb3fe](https://www.github.com/dasch-swiss/dsp-api/commit/6bbb3fe474fe6a558b0b99f0a833c1a0ed1e1454))
+
+
+### Enhancements
+
+* **ontology:** make knora-base:lastModificationDate required property ([#2018](https://www.github.com/dasch-swiss/dsp-api/issues/2018)) ([64cdce9](https://www.github.com/dasch-swiss/dsp-api/commit/64cdce9dfa305f1e514ada184777e4c0942ef0e2))
+
 ## [19.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v18.0.0...v19.0.0) (2022-03-24)
 
 
