@@ -380,7 +380,7 @@ The first argument must represent a text value (a `knore-api:TextValue` in
 the complex schema, or an `xsd:string` in the simple schema). The second
 argument is a string literal containing the words to be matched, separated by spaces.
 The function supports the
-[Lucene Query Parser syntax](../../08-lucene/index.md).
+[Lucene Query Parser syntax](../../07-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
 This function can only be used as the top-level expression in a `FILTER`.
