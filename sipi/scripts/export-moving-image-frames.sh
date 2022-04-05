@@ -142,14 +142,6 @@ echo ${sep}
 # create the matrix files
 echo 'Start with creating matrix file'
 
-# check the outpath for the matrix files;
-# if exists, delete it and create new
-# if [ -d "matrix" ]
-# then
-#     rm -rf ./matrix
-# fi
-# mkdir -p 'matrix'
-
 # change directory frames
 cd frames
 # Get the number of files: one image = one second of movie
