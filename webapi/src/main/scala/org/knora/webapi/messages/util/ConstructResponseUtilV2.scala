@@ -1085,14 +1085,6 @@ object ConstructResponseUtilV2 {
           MovingImageFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            dimX = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
-            dimY = valueObject.requireIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
-            fps = valueObject
-              .maybeStringObject(OntologyConstants.KnoraBase.Fps.toSmartIri)
-              .map(definedFps => BigDecimal(definedFps)),
-            duration = valueObject
-              .maybeStringObject(OntologyConstants.KnoraBase.Duration.toSmartIri)
-              .map(definedDuration => BigDecimal(definedDuration)),
             comment = valueCommentOption
           )
         )

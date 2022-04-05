@@ -3768,10 +3768,6 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
 case class MovingImageFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  dimX: Int,
-  dimY: Int,
-  fps: Option[BigDecimal] = None,
-  duration: Option[BigDecimal] = None,
   comment: Option[String] = None
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
@@ -3797,10 +3793,7 @@ case class MovingImageFileValueContentV2(
 
       case ApiV2Complex =>
         JsonLDObject(
-          toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
-            OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX -> JsonLDInt(dimX),
-            OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY -> JsonLDInt(dimY)
-          )
+          toJsonLDObjectMapInComplexSchema(fileUrl)
         )
     }
   }
@@ -3859,12 +3852,6 @@ object MovingImageFileValueContentV2 extends ValueContentReaderV2[MovingImageFil
     } yield MovingImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
-      duration = fileValueWithSipiMetadata.sipiFileMetadata.duration,
-      dimX = fileValueWithSipiMetadata.sipiFileMetadata.width
-        .getOrElse(throw SipiException(s"Sipi did not return the video width")),
-      dimY = fileValueWithSipiMetadata.sipiFileMetadata.height
-        .getOrElse(throw SipiException(s"Sipi did not return the video height")),
-      fps = fileValueWithSipiMetadata.sipiFileMetadata.fps,
       comment = getComment(jsonLDObject)
     )
   }

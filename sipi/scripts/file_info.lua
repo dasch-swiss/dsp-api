@@ -144,10 +144,14 @@ function make_audio_file_info(extension)
 end
 
 function make_video_file_info(extension)
-    return {
-        media_type = VIDEO,
-        extension = extension
-    }
+    if not table.contains(video_extensions, extension) then
+        return nil
+    else
+        return {
+            media_type = VIDEO,
+            extension = extension
+        }
+    end
 end
 
 function make_text_file_info(extension)

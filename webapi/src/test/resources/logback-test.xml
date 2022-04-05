@@ -99,10 +99,14 @@
     <logger name="org.knora.webapi.CoreSpec" level="INFO"/>
     <logger name="org.knora.webapi.E2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.R2RSpec" level="INFO"/>
+    <logger name="org.knora.webapi.ITKnoraLiveSpec" level="INFO"/>
 
     <!-- E2E -->
     <logger name="org.knora.webapi.e2e.InstanceCheckerSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.ClientTestDataCollector" level="INFO"/>
+
+    <!-- IT -->
+    <logger name="org.knora.webapi.it.v2.KnoraSipiIntegrationV2ITSpec" level="DEBUG"/>
 
     <!-- http -->
     <logger name="org.knora.webapi.e2e.CORSSupportE2ESpec" level="DEBUG"/>
