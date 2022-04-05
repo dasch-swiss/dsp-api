@@ -309,9 +309,7 @@ When the triplestore-specific version of the query is generated:
 
 Gravsearch also provides some virtual properties, which take advantage of forward-chaining inference
 as an optimisation if the triplestore provides it. For example, the virtual property
-`knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`, but
-with GraphDB it is implemented using a custom inference rule (in `KnoraRules.pie`) and is therefore more
-efficient. If Knora is not using the triplestore's inference, `SparqlTransformer.transformStatementInWhereForNoInference`
+`knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`. If Knora is not using the triplestore's inference, `SparqlTransformer.transformStatementInWhereForNoInference`
 replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 # Optimisation of generated SPARQL
