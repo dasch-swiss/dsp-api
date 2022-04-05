@@ -44,6 +44,10 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ApacheLuceneSupport._
 
 import scala.concurrent.Future
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
+import org.knora.webapi.exceptions.TriplestoreTimeoutException
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -563,9 +567,17 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
       _ = log.debug(triplestoreSpecificPrequerySparql)
 
-      prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(
-        triplestoreSpecificPrequerySparql
-      )).mapTo[SparqlSelectResult]
+      tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
+      prequeryResponseNotMerged <- (tryPrequeryResponseNotMerged match {
+        case Failure(exception) => {
+          exception match {
+            case timeoutException: TriplestoreTimeoutException =>
+              log.error(s"Gravsearch timed out for query: $inputQuery")
+          }
+          throw exception
+        }
+        case Success(value) => value
+      }).mapTo[SparqlSelectResult]
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
