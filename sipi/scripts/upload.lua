@@ -22,11 +22,6 @@ function file_checksum(path)
     return string.match(checksum_orig, "%w*")
 end
 --------------------------------------------------------------------------
--- Write sidecar file
-function write_sidecar_file()
-
-
-end
 
 -- Buffer the response (helps with error handling).
 local success, error_msg
@@ -271,7 +266,7 @@ for file_index, file_params in pairs(server.uploads) do
             fps = fps
         }
 
-        -- TODO: similar setup for audio files; get duration with ffprobe and write extended sidecar data
+        -- TODO: similar setup for audio files; get duration with ffprobe and write extended sidecar data (DEV-770)
     else
         sidecar_data = {
             originalFilename = original_filename,
