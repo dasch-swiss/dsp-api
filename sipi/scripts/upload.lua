@@ -223,7 +223,7 @@ for file_index, file_params in pairs(server.uploads) do
     if media_type == VIDEO then
         
         local handle
-        -- get video file information with ffprobe: widht, height, duration and frame rate (fps)
+        -- get video file information with ffprobe: width, height, duration and frame rate (fps)
         handle = io.popen("ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " .. tmp_storage_file_path)
         local file_meta = handle:read("*a")
         handle:close()
