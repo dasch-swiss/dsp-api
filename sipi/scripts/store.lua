@@ -245,7 +245,7 @@ if not success then
 end
 
 if readable then
-    -- first we read the sidecar file into a string
+    -- read the sidecar file into a string
     local f = io.open(source_sidecar)
     local jsonstr = f:read("*a")
     f:close()
