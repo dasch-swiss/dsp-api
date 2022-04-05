@@ -191,7 +191,7 @@ for file_index, file_params in pairs(server.uploads) do
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
 
     else
-        -- It's neither an image nor a video file. Just move it to its temporary storage location.
+        -- It's neither an image nor a video file. Move it to its temporary storage location.
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
             send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
@@ -218,7 +218,7 @@ for file_index, file_params in pairs(server.uploads) do
     if media_type == VIDEO then
         
         local handle
-        -- get video file information with ffprobe: widht, height, duration and frame rate (fps)
+        -- get video file information with ffprobe: width, height, duration and frame rate (fps)
         handle = io.popen("ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " .. tmp_storage_file_path)
         local file_meta = handle:read("*a")
         handle:close()
