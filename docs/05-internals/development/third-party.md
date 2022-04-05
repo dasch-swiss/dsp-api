@@ -16,7 +16,7 @@ val akkaHttpCors = "ch.megard" %% "akka-http-cors" % "1.0.0"
 ```
 
 The first string corresponds to the group/organization in the library's maven artefact,
-the second sting corresponds to the artefact ID and the third string defines the version.
+the second string corresponds to the artefact ID and the third string defines the version.
 
 The strings are combined with the `%`-operator or the `%%`-operator, the latter fixing the dependency to the specified scala-version.
 
