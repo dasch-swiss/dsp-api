@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Export moving image frames for preview in search results and on timeline
-# Author: André Kilchenmann, a.kilchenmann@unibas.ch
 # Extract frames from mp4 file:
 # - 6 frames per minute
 # Create matrix file:
