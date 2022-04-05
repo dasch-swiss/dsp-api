@@ -911,13 +911,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       (queryHttpClient, queryHttpPost)
     }
 
-    doHttpRequest(
+    val tryHttpRequest = doHttpRequest(
       client = httpClient,
       request = httpPost,
       context = httpContext,
       processResponse = returnResponseAsString,
       simulateTimeout = simulateTimeout
     )
+    tryHttpRequest match {
+      case Failure(exception) => {
+        exception match {
+          case TriplestoreTimeoutException(_, _) =>
+            log.error(s"Triplestore timed out after query: $sparql")
+        }
+        tryHttpRequest
+      }
+      case _ => tryHttpRequest
+    }
   }
 
   /**
