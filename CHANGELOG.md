@@ -1,5 +1,23 @@
 # Changelog
 
+### [20.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.0.0...v20.0.1) (2022-04-05)
+
+
+### Bug Fixes
+
+* docs/requirements.txt to reduce vulnerabilities ([#2034](https://www.github.com/dasch-swiss/dsp-api/issues/2034)) ([b07600d](https://www.github.com/dasch-swiss/dsp-api/commit/b07600dbb45195549248f493401178c2ff1da763))
+
+
+### Maintenance
+
+* distinguish between compile, runtime and test dependencies ([#2028](https://www.github.com/dasch-swiss/dsp-api/issues/2028)) ([7cb326f](https://www.github.com/dasch-swiss/dsp-api/commit/7cb326ff5804b46995d25ce301a17c153af93036))
+* inventory and upgrade of dependencies (DEV-478) ([#2033](https://www.github.com/dasch-swiss/dsp-api/issues/2033)) ([470b77f](https://www.github.com/dasch-swiss/dsp-api/commit/470b77fb8b6e7b0c37392414fe96f4864231e3d0))
+
+
+### Documentation
+
+* replace Bazel and Intellij documentation with SBT and VSCode (DEV-607) ([#2035](https://www.github.com/dasch-swiss/dsp-api/issues/2035)) ([603efef](https://www.github.com/dasch-swiss/dsp-api/commit/603efeffa35204dcbe59554f4ba33cc58c1e66ae))
+
 ## [20.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v19.0.0...v20.0.0) (2022-03-31)
 
 
