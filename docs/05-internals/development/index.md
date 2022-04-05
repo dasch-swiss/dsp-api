@@ -6,13 +6,11 @@
 # Development
 
 - [Overview](overview.md)
-- [Starting GraphDB](graphdb.md)
 - [Build and Running](building-and-running.md)
-- [Setup IntelliJ for development of Knora](intellij-config.md)
+- [Setup Visual Studio Code for development of Knora](vscode-config.md)
 - [Testing](testing.md)
 - [Docker Cheat Sheet](docker-cheat-sheet.md)
 - [Monitoring Knora](monitoring.md)
-- [Profiling Knora](profiling.md)
 - [Starting the Knora Stack inside Docker Container](docker-compose.md)
 - [Updating Repositories](updating-repositories.md)
 - [Generating Client Test Data](generating-client-test-data.md)

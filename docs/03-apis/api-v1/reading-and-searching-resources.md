@@ -189,7 +189,7 @@ interface `vocabularyResponse` in module `resourceResponseFormats`.
 This is a simplified way for searching for resources just by their label. 
 Search by label automatically adds Lucene operators, 
 search strings are expected not to contain any characters with a special meaning in 
-[Lucene Query Parser syntax](../../08-lucene/index.md).
+[Lucene Query Parser syntax](../../07-lucene/index.md).
 
 It is a simple string-based method:
 
@@ -221,7 +221,7 @@ TypeScript interface `resourceLabelSearchResponse` in module
 
 Knora offers a fulltext search that searches through all textual
 representations of values. The search terms have to be URL encoded.
-Fulltext search supports the [Lucene Query Parser syntax](../../08-lucene/index.md).
+Fulltext search supports the [Lucene Query Parser syntax](../../07-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
 ```
@@ -280,19 +280,19 @@ The following table indicates the possible combinations of value types
 and comparison
 operators:
 
-| Value Type       | Comparison Operator                                   |
-| ---------------- | ----------------------------------------------------- |
-| Date Value       | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS                 |
-| Integer Value    | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS                 |
-| Float Value      | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS                 |
-| Text Value       | MATCH_BOOLEAN, MATCH, EQ, !EQ, LIKE, !LIKE, EXISTS    |
-| Geometry Value   | EXISTS                                                |
-| Geoname Value    | EQ, EXISTS                                            |
-| URI Value        | EQ, EXISTS                                            |
-| Resource Pointer | EQ, EXISTS                                            |
-| Color Value      | EQ, EXISTS                                            |
-| List Value       | EQ, EXISTS                                            |
-| Boolean Value    | EQ, !EQ, EXISTS                                       |
+| Value Type       | Comparison Operator                                |
+| ---------------- | -------------------------------------------------- |
+| Date Value       | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS              |
+| Integer Value    | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS              |
+| Float Value      | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS              |
+| Text Value       | MATCH_BOOLEAN, MATCH, EQ, !EQ, LIKE, !LIKE, EXISTS |
+| Geometry Value   | EXISTS                                             |
+| Geoname Value    | EQ, EXISTS                                         |
+| URI Value        | EQ, EXISTS                                         |
+| Resource Pointer | EQ, EXISTS                                         |
+| Color Value      | EQ, EXISTS                                         |
+| List Value       | EQ, EXISTS                                         |
+| Boolean Value    | EQ, !EQ, EXISTS                                    |
 
 Explanation of the comparison operators:
 
@@ -330,7 +330,7 @@ Explanation of the comparison operators:
   value when using EXISTS: "searchval="**. Otherwise, the query
   syntax rules would be violated.
 * `MATCH`: checks if a resource's text value *matches* the search
-  value, see [Lucene Query Parser Syntax](../../08-lucene/lucene-query-parser-syntax.md).
+  value, see [Lucene Query Parser Syntax](../../07-lucene/lucene-query-parser-syntax.md).
 * `LIKE`: checks if the search value is contained in a resource's
   text value using the SPARQL [REGEX](https://www.w3.org/TR/sparql11-query/#func-regex) function,
   thus supporting regular expressions.

@@ -46,3 +46,7 @@ sipi/images/originals/1111/*
 metals.sbt
 
 .tmp/
+
+# exclude python virtual environments used for serving docs locally
+env/
+venv/
