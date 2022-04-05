@@ -4,7 +4,7 @@
 [![Docker](https://img.shields.io/docker/v/daschswiss/knora-api?label=Docker%20image)](https://hub.docker.com/r/daschswiss/knora-api)
 [![CI](https://github.com/dasch-swiss/dsp-app/workflows/CI/badge.svg)](https://github.com/dasch-swiss/dsp-api/actions?query=workflow%3ACI)
 
-[DSP API](https://admin.dasch.swiss/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
+[DSP](https://admin.dasch.swiss/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
 
 It is developed by the [Swiss National Data and Service Center for the Humanities](https://dasch.swiss)
 at the [University of Basel](https://www.unibas.ch), and is supported by the

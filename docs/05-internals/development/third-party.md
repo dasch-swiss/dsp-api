@@ -5,7 +5,7 @@ Third party libraries are managed by SBT.
 ## Defining Dependencies in `Dependencies.scala`
 
 Within the `build.sbt` file, the `Dependencies` package is referenced, which is located in `project/Dependencies.scala`.
-All third party dependencies need to be declared there:
+All third party dependencies need to be declared there.
 
 ### Referencing a third party library
 
@@ -18,7 +18,7 @@ val akkaHttpCors = "ch.megard" %% "akka-http-cors" % "1.0.0"
 The first string corresponds to the group/organization in the library's maven artefact,
 the second string corresponds to the artefact ID and the third string defines the version.
 
-The strings are combined with the `%`-operator or the `%%`-operator, the latter fixing the dependency to the specified scala-version.
+The strings are combined with `%` or `%%` operators, the latter fixing the dependency to the specified scala-version.
 
 It is also possible to use variables in these definitions, e.g. if multiple dependencies share a version number:
 

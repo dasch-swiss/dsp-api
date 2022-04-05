@@ -3,8 +3,8 @@
 To have full functionality, the [Scala Metals](https://scalameta.org/metals/) plugin should be installed.
 
 Additionally, a number of plugins can be installed for convenience, but are not required. Those include but are by no means limited to:
-- Docker (to attach to running docker containers)
-- Stardog RDF grammar (.ttl sysntax highlighting)
+- Docker - to attach to running docker containers
+- Stardog RDF grammar - TTL syntax highlighting
 - Lua
 - REST client
 - ...
