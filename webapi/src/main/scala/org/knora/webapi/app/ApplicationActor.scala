@@ -91,15 +91,14 @@ trait Managers {
 trait LiveManagers extends Managers {
   this: Actor =>
 
-  /**
-   * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable to load
-   * the Typesafe-Config format.
-   */
-  lazy val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.descriptor)
+  
 
+  /**
+    * Initializing the cache service manager, which is a ZLayer,
+    * by unsafe running it.
+    */
   lazy val cacheServiceManager: CacheServiceManager =
-    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun(
+    Main.rt.unsafeRun(
         (for (manager <- ZIO.service[CacheServiceManager])
           yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
       )

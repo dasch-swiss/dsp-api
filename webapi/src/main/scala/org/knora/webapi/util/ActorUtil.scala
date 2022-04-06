@@ -5,22 +5,25 @@
 
 package org.knora.webapi.util
 
-import akka.actor.{ActorRef, Status}
+import akka.actor.ActorRef
+import akka.actor.Status
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
-import org.knora.webapi.exceptions.{
-  ExceptionUtil,
-  RequestRejectedException,
-  UnexpectedMessageException,
-  WrapperException
-}
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
+import org.knora.webapi.app.Main
 import org.knora.webapi.core.Logging
+import org.knora.webapi.exceptions.ExceptionUtil
+import org.knora.webapi.exceptions.RequestRejectedException
+import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.exceptions.WrapperException
 import zio._
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.reflect.ClassTag
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object ActorUtil {
 
@@ -29,8 +32,7 @@ object ActorUtil {
    * phase, to be able to return ZIO inside an Actor.
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
-    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun((for {
+    Main.rt.unsafeRun((for {
         executor <- ZIO.executor
         _        <- zioTask.fold(ex => handleExeption(ex, sender)(executor.asExecutionContext), success => sender ! success)
       } yield ()))
