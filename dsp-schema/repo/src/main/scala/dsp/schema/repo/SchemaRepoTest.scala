@@ -20,5 +20,5 @@ case class SchemaRepoTest() extends SchemaRepo {
 }
 
 object SchemaRepoTest extends (() => SchemaRepo) {
-  val layer: URLayer[Any, SchemaRepo] = (SchemaRepoTest.apply _).toLayer
+  val layer: URLayer[Any, SchemaRepo] = ZLayer.succeed(SchemaRepoTest())
 }
