@@ -112,11 +112,11 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     // add needed files to production jar
     Compile / packageBin / mappings ++= Seq(
-      (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl") -> "knora-ontologies/knora-admin.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl") -> "knora-ontologies/knora-base.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl") -> "knora-ontologies/salsah-gui.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl") -> "knora-ontologies/standoff-data.ttl",
-      (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl") -> "knora-ontologies/standoff-onto.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "knora-admin.ttl")                         -> "knora-ontologies/knora-admin.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "knora-base.ttl")                          -> "knora-ontologies/knora-base.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "salsah-gui.ttl")                          -> "knora-ontologies/salsah-gui.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "standoff-data.ttl")                       -> "knora-ontologies/standoff-data.ttl",
+      (rootBaseDir.value / "knora-ontologies" / "standoff-onto.ttl")                       -> "knora-ontologies/standoff-onto.ttl",
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template" // needed for initialization of triplestore
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for production
@@ -124,7 +124,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // add needed files to test jar
     Test / packageBin / mappings ++= Seq(
       (rootBaseDir.value / "webapi" / "scripts" / "fuseki-repository-config.ttl.template") -> "webapi/scripts/fuseki-repository-config.ttl.template", // needed for initialization of triplestore
-      (rootBaseDir.value / "sipi" / "config" / "sipi.docker-config.lua") -> "sipi/config/sipi.docker-config.lua"
+      (rootBaseDir.value / "sipi" / "config" / "sipi.docker-config.lua")                   -> "sipi/config/sipi.docker-config.lua"
     ),
     // use packaged jars (through packageBin) on classpaths instead of class directories for test
     Test / exportJars := true
@@ -138,14 +138,16 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     }, // allows sbt-javaagent to work with sbt-revolver
     reStart / javaOptions ++= webapiJavaRunOptions,
     javaAgents += Dependencies.aspectJWeaver,
-    fork := true, // run tests in a forked JVM
+    fork := true,                       // run tests in a forked JVM
     Test / testForkedParallel := false, // run forked tests in parallel
-    Test / parallelExecution := false, // run non-forked tests in parallel
+    Test / parallelExecution := false,  // run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
     Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-    Test / testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+    Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+    // add test framework for running zio-tests
+    Test / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .settings(
     // prepare for publishing
@@ -189,8 +191,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       name,
       version,
       "akkaHttp" -> Dependencies.akkaHttpVersion,
-      "sipi" -> Dependencies.sipiImage,
-      "fuseki" -> Dependencies.fusekiImage
+      "sipi"     -> Dependencies.sipiImage,
+      "fuseki"   -> Dependencies.fusekiImage
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )

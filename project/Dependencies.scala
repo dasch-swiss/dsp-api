@@ -75,7 +75,7 @@ object Dependencies {
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "3.1.0-m4"
+  val jedis   = "redis.clients"  % "jedis"   % "4.2.0"
 
   // other
   val jodd        = "org.jodd"          % "jodd"         % "3.2.6"

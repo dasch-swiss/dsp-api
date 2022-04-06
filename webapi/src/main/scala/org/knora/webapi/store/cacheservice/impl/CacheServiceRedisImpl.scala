@@ -288,10 +288,10 @@ object CacheServiceRedisImpl {
       for {
         config <- ZIO.service[RedisConfig]
         pool <- ZIO
-                  .attempt(new JedisPool(new JedisPoolConfig(), config.server, config.port1, config.port2))
+                  .attempt(new JedisPool(new JedisPoolConfig(), config.server, config.port))
                   .onError(ZIO.logErrorCause(_))
                   .orDie // the Redis Client Pool
       } yield CacheServiceRedisImpl(pool)
-    }.tap(_ => ZIO.debug("Redis Cache Service Initialized"))
+    }.tap(_ => ZIO.debug(">>> Redis Cache Service Initialized <<<"))
   }
 }
