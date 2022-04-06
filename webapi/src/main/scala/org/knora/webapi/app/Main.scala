@@ -21,13 +21,13 @@ import java.util.concurrent.TimeUnit
  * The [[LiveCore]] trait provides an actor system and the main application
  * actor.
  */
-object MainApp extends scala.App with LiveCore {
+object Main extends scala.App with LiveCore {
 
   /**
    * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable to load
    * the Typesafe-Config format.
    */
-  val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.descriptor)
+  val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.config)
 
   /**
    * Start server initialisation

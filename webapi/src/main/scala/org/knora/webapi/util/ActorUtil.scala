@@ -10,7 +10,6 @@ import akka.actor.Status
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
-import org.knora.webapi.app.MainApp
 import org.knora.webapi.core.Logging
 import org.knora.webapi.exceptions.ExceptionUtil
 import org.knora.webapi.exceptions.RequestRejectedException
@@ -32,7 +31,7 @@ object ActorUtil {
    * phase, to be able to return ZIO inside an Actor.
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
-    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.live)
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
     .unsafeRun((for {
         executor <- ZIO.executor
         _        <- zioTask.fold(ex => handleExeption(ex, sender)(executor.asExecutionContext), success => sender ! success)

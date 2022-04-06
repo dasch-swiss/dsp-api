@@ -18,14 +18,14 @@ object Dependencies {
   val sipiImage       = "daschswiss/sipi:3.3.4"               // base image the knora-sipi image is created from
   val fusekiImage     = "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml
 
-  val ZioVersion        = "2.0.0-RC3"
+  val ZioVersion        = "2.0.0-RC4"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
-  val ZioConfigVersion  = "3.0.0-RC3"
+  val ZioConfigVersion  = "3.0.0-RC7"
   val ZioSchemaVersion  = "0.2.0-RC1-1"
-  val ZioLoggingVersion = "2.0.0-RC6"
+  val ZioLoggingVersion = "2.0.0-RC7"
   val ZioZmxVersion     = "2.0.0-RC4"
-  val ZioPreludeVersion = "1.0.0-RC10"
+  val ZioPreludeVersion = "1.0.0-RC12"
 
   // ZIO
   val zio               = "dev.zio" %% "zio"                 % ZioVersion

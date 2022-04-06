@@ -4,10 +4,11 @@ import org.knora.webapi.store.cacheservice.config.CacheServiceConfig
 
 import zio.config._
 import zio.config.ConfigDescriptor
-import zio.config.magnolia.DeriveConfigDescriptor
+import zio.config._, typesafe._, magnolia._
+
 
 final case class AppConfig(cacheService: CacheServiceConfig)
 
 object AppConfig {
-  val descriptor: ConfigDescriptor[AppConfig] = DeriveConfigDescriptor.descriptor[AppConfig].mapKey(toKebabCase)
+  val config: ConfigDescriptor[AppConfig] = descriptor[AppConfig].mapKey(toKebabCase)
 }
