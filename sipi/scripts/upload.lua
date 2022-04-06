@@ -10,6 +10,7 @@ require "send_response"
 require "jwt"
 require "clean_temp_dir"
 require "util"
+local json = require "json"
 
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
@@ -21,7 +22,6 @@ function file_checksum(path)
     return string.match(checksum_orig, "%w*")
 end
 --------------------------------------------------------------------------
-
 
 -- Buffer the response (helps with error handling).
 local success, error_msg
@@ -59,6 +59,9 @@ end
 -- A table of data about each file that was uploaded.
 local file_upload_data = {}
 
+-- additional sidecar data in case of video or audio (e.g. duration)
+local additional_sidecar_data = {}
+
 -- Process the uploaded files.
 for file_index, file_params in pairs(server.uploads) do
     --
@@ -67,12 +70,12 @@ for file_index, file_params in pairs(server.uploads) do
     local mime_info
     success, mime_info = server.file_mimetype(file_index)
     if not success then
-        send_error(500, "server.file_mimetype() failed: " .. tostring(mime_info))
+        send_error(415, "server.file_mimetype() failed: " .. tostring(mime_info))
         return
     end
     local mime_type = mime_info["mimetype"]
     if mime_type == nil then
-        send_error(400, "Could not determine MIME type of uploaded file")
+        send_error(415, "Could not determine MIME type of uploaded file")
         return
     end
 
@@ -81,8 +84,9 @@ for file_index, file_params in pairs(server.uploads) do
     --
     local original_filename = file_params["origname"]
     local file_info = get_file_info(original_filename, mime_type)
+    
     if file_info == nil then
-        send_error(400, "Unsupported MIME type: " .. tostring(mime_type))
+        send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
 
@@ -176,8 +180,18 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
         server.log("upload.lua: wrote image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+
+    -- Is this a video file?
+    elseif media_type == VIDEO then
+        success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
+        if not success then
+            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            return
+        end
+        server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+
     else
-        -- It's not an image file. Just move it to its temporary storage location.
+        -- It's neither an image nor a video file. Move it to its temporary storage location.
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
             send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
@@ -199,19 +213,77 @@ for file_index, file_params in pairs(server.uploads) do
     --
     -- prepare and write sidecar file
     --
-    local sidecar_data = {
-        originalFilename = original_filename,
-        checksumOriginal = checksum_original,
-        originalInternalFilename = hashed_tmp_storage_original,
-        internalFilename = tmp_storage_filename,
-        checksumDerivative = checksum_derivative
-    }
+    local sidecar_data = {}
+
+    if media_type == VIDEO then
+        
+        local handle
+        -- get video file information with ffprobe: width, height, duration and frame rate (fps)
+        handle = io.popen("ffprobe -v error -select_streams v:0 -show_entries stream=width,height,bit_rate,duration,nb_frames,r_frame_rate -print_format json -i " .. tmp_storage_file_path)
+        local file_meta = handle:read("*a")
+        handle:close()
+        -- decode ffprobe output into json, but only first stream
+        local file_meta_json = json.decode( file_meta )['streams'][1]
+        
+        -- get video duration
+        local duration = tonumber(file_meta_json['duration'])
+        if not duration then
+            send_error(417, "upload.lua: ffprobe get duration failed: " .. duration)
+        end
+        -- get video width (dimX)
+        local width = tonumber(file_meta_json['width']);
+        if not width then
+            send_error(417, "upload.lua: ffprobe get width failed: " .. width)
+        end
+        -- get video height (dimY)
+        local height = tonumber(file_meta_json['height'])
+        if not height then
+            send_error(417, "upload.lua: ffprobe get height failed: " .. height)
+        end
+        -- get video fps
+        -- this is a bit tricky, because ffprobe returns something like 30/1 or 179/6; so, we have to convert into a floating point number;
+        -- or we can calculate fps from number of frames divided by duration
+        local fps
+        local frames = tonumber(file_meta_json['nb_frames'])
+        if not frames then
+            send_error(417, "upload.lua: ffprobe get frames failed: " .. frames)
+        else
+            fps = frames / duration
+            if not fps then
+                send_error(417, "upload.lua: ffprobe get fps failed: " .. fps)
+            end
+        end
+
+        sidecar_data = {
+            originalFilename = original_filename,
+            checksumOriginal = checksum_original,
+            originalInternalFilename = hashed_tmp_storage_original,
+            internalFilename = tmp_storage_filename,
+            checksumDerivative = checksum_derivative,
+            width = width,
+            height = height,
+            duration = duration,
+            fps = fps
+        }
+
+        -- TODO: similar setup for audio files; get duration with ffprobe and write extended sidecar data (DEV-770)
+    else
+        sidecar_data = {
+            originalFilename = original_filename,
+            checksumOriginal = checksum_original,
+            originalInternalFilename = hashed_tmp_storage_original,
+            internalFilename = tmp_storage_filename,
+            checksumDerivative = checksum_derivative
+        }
+    end
+
+
     local success, jsonstr = server.table_to_json(sidecar_data)
     if not success then
         send_error(500, "Couldn't create json string!")
         return
     end
-    sidecar = io.open(tmp_storage_sidecar_path, "w")
+    local sidecar = io.open(tmp_storage_sidecar_path, "w")
     sidecar:write(jsonstr)
     sidecar:close()
 
@@ -225,6 +297,7 @@ for file_index, file_params in pairs(server.uploads) do
         checksumDerivative = checksum_derivative
     }
     file_upload_data[file_index] = this_file_upload_data
+
 end
 
 -- Clean up old temporary files.

@@ -61,7 +61,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    )
   )
 
   private val instanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
@@ -181,7 +185,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD =
-        readOrWriteTextFile(responseAsString, Paths.get("..", "test_data/resourcesR2RV2/AThing.jsonld"), writeTestDataFiles)
+        readOrWriteTextFile(
+          responseAsString,
+          Paths.get("..", "test_data/resourcesR2RV2/AThing.jsonld"),
+          writeTestDataFiles
+        )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       clientTestDataCollector.addFile(
@@ -476,7 +484,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.OK, responseAsString)
       val expectedAnswerJSONLD =
-        readOrWriteTextFile(responseAsString, Paths.get("..", "test_data/resourcesR2RV2/Testding.jsonld"), writeTestDataFiles)
+        readOrWriteTextFile(
+          responseAsString,
+          Paths.get("..", "test_data/resourcesR2RV2/Testding.jsonld"),
+          writeTestDataFiles
+        )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
       clientTestDataCollector.addFile(
@@ -1006,6 +1018,74 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val text: String =
         resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext")
       assert(text == "this is text with standoff")
+    }
+
+    "create a resource and a property with references to an external ontology (FOAF)" in {
+      val createResourceWithRefToFoaf: String =
+        """{
+          |  "@type" : "freetest:FreeTestSubClassOfFoafPerson",
+          |  "freetest:hasFoafName" : {
+          |    "@type" : "knora-api:TextValue",
+          |    "knora-api:valueAsString" : "this is a foaf name"
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "Test foaf Person",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+          |  }
+          |}""".stripMargin
+
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithRefToFoaf)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK, response.toString)
+      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val resourceIri: IRI =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+      // Request the newly created resource in the complex schema, and check that it matches the ontology.
+      val resourceComplexGetRequest = Get(
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+      val resourceComplexGetResponseAsString = responseToString(resourceComplexGetResponse)
+
+      instanceChecker.check(
+        instanceResponse = resourceComplexGetResponseAsString,
+        expectedClassIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
+        knoraRouteGet = doGetRequest
+      )
+
+      // Request the newly created resource in the simple schema, and check that it matches the ontology.
+      val resourceSimpleGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}")
+        .addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      )
+      val resourceSimpleGetResponse: HttpResponse = singleAwaitingRequest(resourceSimpleGetRequest)
+      val resourceSimpleGetResponseAsString = responseToString(resourceSimpleGetResponse)
+
+      instanceChecker.check(
+        instanceResponse = resourceSimpleGetResponseAsString,
+        expectedClassIri =
+          "http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#FreeTestSubClassOfFoafPerson".toSmartIri,
+        knoraRouteGet = doGetRequest
+      )
+
+      // Check that the value is correct in the simple schema.
+      val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
+      println(resourceSimpleAsJsonLD.body)
+      val foafName: String =
+        resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#hasFoafName")
+      assert(foafName == "this is a foaf name")
     }
 
     "create a resource whose label contains a Unicode escape and quotation marks" in {
@@ -1566,7 +1646,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "create a resource containing escaped text" in {
-      val jsonLDEntity = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
+      val jsonLDEntity =
+        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
       val request = Post(
         s"$baseApiUrl/v2/resources",
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
@@ -2205,7 +2286,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val responseJson: JsValue = JsonParser(responseStr)
 
       val expectedJson: JsValue = JsonParser(
-        readOrWriteTextFile(responseStr, Paths.get("..", "test_data/resourcesR2RV2/IIIFManifest.jsonld"), writeTestDataFiles)
+        readOrWriteTextFile(
+          responseStr,
+          Paths.get("..", "test_data/resourcesR2RV2/IIIFManifest.jsonld"),
+          writeTestDataFiles
+        )
       )
 
       assert(responseJson == expectedJson)

@@ -113,9 +113,12 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit =
+  override def afterAll(): Unit = {
+    // turn on/off in logback-test.xml
+    log.debug(TestContainersAll.SipiContainer.getLogs())
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
+  }
 
   protected def checkIfSipiIsRunning(): Unit = {
     // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
