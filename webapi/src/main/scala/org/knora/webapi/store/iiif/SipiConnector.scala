@@ -107,6 +107,7 @@ class SipiConnector extends Actor with ActorLogging {
    * @param height           the file's height in pixels, if applicable.
    * @param numpages         the number of pages in the file, if applicable.
    * @param duration         the duration of the file in seconds, if applicable.
+   * @param fps              the frame rate of the file, if applicable.
    */
   case class SipiKnoraJsonResponse(
     originalFilename: Option[String],

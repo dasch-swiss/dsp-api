@@ -154,7 +154,6 @@ if prefix ~= token_prefix then
     return
 end
 
-
 -- Check that original file storage directory exists
 local originals_dir = config.imgroot .. "/originals/" .. prefix .. "/"
 success, msg = check_create_dir(config.imgroot .. "/originals/")
@@ -236,6 +235,7 @@ if not success then
     send_error(500, msg)
     return
 end
+
 local hashed_sidecar =  get_file_basename(hashed_filename) .. ".info"
 local source_sidecar = config.imgroot .. "/tmp/" .. hashed_sidecar
 success, readable = server.fs.is_readable(source_sidecar)
@@ -243,8 +243,9 @@ if not success then
     send_error(500, "server.fs.is_readable() failed: " .. readable)
     return
 end
+
 if readable then
-    -- first we read the file into a string
+    -- read the sidecar file into a string
     local f = io.open(source_sidecar)
     local jsonstr = f:read("*a")
     f:close()
@@ -262,7 +263,7 @@ if readable then
         return
     end
 
-    -- copy sidecar file to originals directory
+    -- move sidecar file to originals directory
     local destination2_sidecar = originals_dir .. hashed_sidecar
     success, error_msg = server.fs.moveFile(source_sidecar, destination2_sidecar)
     if not success then
@@ -279,10 +280,17 @@ if readable then
         return
     end
 
+    -- in case of a moving image, we have to extract the frames from video file; they will be used for preview stuff
+    if sidecar["duration"] and sidecar["fps"] then
+        success, error_msg = os.execute("./scripts/export-moving-image-frames.sh -i " .. storage_dir .. sidecar["internalFilename"])
+        if not success then
+            send_error(500, "export-moving-image-frames.sh failed: " .. error_msg)
+            return
+        end
+    end
+
+    server.log("store.lua: moved file " .. source_path .. " to " .. destination_path, server.loglevel.LOG_DEBUG)
 end
-
-
-server.log("store.lua: moved " .. source_path .. " to " .. destination_path, server.loglevel.LOG_DEBUG)
 
 local result = {
     status = 0

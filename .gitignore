@@ -37,6 +37,8 @@ dependencies.txt
 /client-test-data.zip
 /sipi/images/082E/*
 /sipi/images/originals/082E/*
+sipi/images/1111/*
+sipi/images/originals/1111/*
 /dependencies.bzl
 
 .idea/
@@ -44,3 +46,7 @@ dependencies.txt
 metals.sbt
 
 .tmp/
+
+# exclude python virtual environments used for serving docs locally
+env/
+venv/

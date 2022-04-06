@@ -25,20 +25,7 @@ installation of Knora. The different parts are:
 A number of triplestore implementations are available, including [free
 software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
 proprietary options. DSP-API is designed to work with any
-standards-compliant triplestore. It is primarily tested with [Ontotext
-GraphDB](http://ontotext.com/products/graphdb/), a high-performance,
-proprietary triplestore. We recommend GraphDB Standard Edition, but
-GraphDB Free (which is proprietary but available free of charge) also
-works.
-
-DSP-API includes support for [Apache Jena](https://jena.apache.org/),
-which is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
-but use of Jena is deprecated, and support for it will probably be
-removed in the future.
-
-Built-in support and configuration for other triplestores is planned.
-
-See the chapter on [Starting GraphDB](graphdb.md) for more details.
+standards-compliant triplestore. It is primarily tested with [Apache Jena](https://jena.apache.org/).
 
 ## Sipi
 
