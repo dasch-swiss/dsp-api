@@ -19,7 +19,7 @@ import org.knora.webapi.store.cacheservice.api.CacheService
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl]].
  */
-object CacheInMemImplSpec extends DefaultRunnableSpec {
+object CacheInMemImplSpec extends ZIOSpecDefault {
 
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

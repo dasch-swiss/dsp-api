@@ -25,7 +25,7 @@ import org.knora.webapi.testcontainers.RedisTestContainer
  * Adding the [[TestContainerRedis.PortConfig]] config will start the Redis container and make it
  * available to the test.
  */
-object CacheRedisImplSpec extends DefaultRunnableSpec {
+object CacheRedisImplSpec extends ZIOSpecDefault {
 
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

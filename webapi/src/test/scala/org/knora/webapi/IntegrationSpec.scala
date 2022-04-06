@@ -77,14 +77,12 @@ abstract class IntegrationSpec(_config: Config)
   protected def waitForReadyTriplestore(actorRef: ActorRef): Unit = {
     logger.info("Waiting for triplestore to be ready ...")
     implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-    val checkTriplestore: ZIO[Any, Throwable, Unit] = for {
-      checkResult <- ZIO.fromTry(
-        Try(
-          Await
-            .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
-            .asInstanceOf[CheckTriplestoreResponse]
-        )
-      )
+    val checkTriplestore: Task[Unit] = for {
+      checkResult <- ZIO.attemptBlocking {
+                         Await
+                           .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
+                           .asInstanceOf[CheckTriplestoreResponse]
+      }
 
       value <-
         if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
@@ -98,11 +96,11 @@ abstract class IntegrationSpec(_config: Config)
         }
     } yield value
 
-    implicit val rt: Runtime[Clock with Console] = Runtime.default
-    rt.unsafeRun(
-      checkTriplestore
+    Runtime.default.unsafeRun(
+      (checkTriplestore
         .retry(ScheduleUtil.schedule)
         .foldZIO(ex => printLine("Exception Failed"), v => printLine(s"Succeeded with $v"))
+      ).provide(Console.live)
     )
   }
 
@@ -130,16 +128,4 @@ object ScheduleUtil {
       case (_, _, Decision.Done)              => printLine(s"done trying").orDie
       case (_, attempt, Decision.Continue(_)) => printLine(s"attempt #$attempt").orDie
     })
-}
-
-//// ZIO helpers ////
-object LegacyRuntime {
-
-  val runtime: Runtime[Clock with Console] = Runtime.default
-
-  /**
-   * Transforms a [[Task]] into a [[Future]].
-   */
-  def fromTask[A](body: => Task[A]): Future[A] =
-    runtime.unsafeRunToFuture(body)
 }
