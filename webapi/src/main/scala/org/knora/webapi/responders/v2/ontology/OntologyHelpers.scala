@@ -956,11 +956,15 @@ object OntologyHelpers {
       directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
     )
 
-    // Get the cardinalities that the class can inherit.
+    // Get the cardinalities that the class can inherit. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
 
     val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
-      classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri =>
-        cacheData.ontologies(baseClassIri.getOntologyFromEntity).classes(baseClassIri).allCardinalities
+      classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri: SmartIri =>
+        val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
+        ontology match {
+          case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities
+          case _                        => None
+        }
       }.toMap
 
     // Check that the cardinalities directly defined on the class are compatible with any inheritable
