@@ -23,10 +23,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 CONSTRUCT {
     ?ontology ?ontologyPred ?ontologyObj .
 }
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     BIND(IRI("@ontologyIri") AS ?ontology)
 

@@ -6822,17 +6822,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       loadInvalidTestData(invalidOnto)
     }
 
-    "not load an ontology containing a resource property with no object class constraint" ignore { // Consistency checks don't allow this in GraphDB.
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-occ-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
     "not load an ontology containing a resource property with no rdfs:label" in {
       val invalidOnto = List(
         RdfDataObject(
@@ -6870,17 +6859,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       val invalidOnto = List(
         RdfDataObject(
           path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-wrong-base-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property that contains salsah-gui:guiOrder" ignore { // Consistency checks don't allow this in GraphDB.
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-guiorder-onto.ttl",
           name = "http://www.knora.org/ontology/invalid"
         )
       )

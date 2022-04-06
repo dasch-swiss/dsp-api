@@ -15,10 +15,7 @@
   resourceIri: IRI)
 
 SELECT ?p ?o
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     <@resourceIri> ?p ?o .
 }

@@ -953,9 +953,6 @@ in user-created ontologies. Three types of consistency rules are enforced:
 - Constraints on the types of the subjects and objects of OWL object properties must be satisfied.
 - A datatype property may not have an empty string as an object.
 
-The implementation of consistency checking is partly triplestore-dependent; Knora may be able to provide stricter checks
-with some triplestores than with others.
-
 ### OWL Cardinalities
 
 As noted in [Resources](#resources), each subclass of

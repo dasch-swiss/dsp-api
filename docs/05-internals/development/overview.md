@@ -10,7 +10,7 @@ installation of Knora. The different parts are:
 
 1. The cloned [DSP-API](https://github.com/dasch-swiss/dsp-api) Github
    repository
-1. Fuseki - upplied triplestore in the DSP-API Github repository.
+1. Fuseki - supplied triplestore in the DSP-API Github repository.
 1. Sipi by building from
     [source](https://github.com/dasch-swiss/sipi) or using the docker
     [image](https://hub.docker.com/r/daschswiss/sipi/)

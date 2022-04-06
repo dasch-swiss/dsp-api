@@ -22,10 +22,7 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#>
 
 SELECT ?book ?page
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 

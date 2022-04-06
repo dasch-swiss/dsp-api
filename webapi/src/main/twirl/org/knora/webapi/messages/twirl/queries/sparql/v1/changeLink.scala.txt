@@ -126,10 +126,7 @@ INSERT {
         ?linkSource knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     @if(linkUpdateForCurrentLink.linkPropertyIri != linkUpdateForNewLink.linkPropertyIri) {
         @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.linkPropertyIri <${linkUpdateForCurrentLink.linkPropertyIri}> must be equal to linkUpdateForNewLink.linkPropertyIri <${linkUpdateForNewLink.linkPropertyIri}> in this SPARQL template"); ()}

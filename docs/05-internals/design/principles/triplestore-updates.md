@@ -36,10 +36,7 @@ the same data, and may eventually provide functionality to facilitate
 this coordination.)
 
 We can assume that each SPARQL update operation will run in its own
-database transaction with an isolation level of 'read committed'. This
-is what GraphDB does when it receives a SPARQL update over HTTP (see
-[GraphDB SE
-Transactions](http://graphdb.ontotext.com/documentation/standard/storage.html#transaction-control)).
+database transaction with an isolation level of 'read committed'.
 We cannot assume that it is possible to run more than one SPARQL update
 in a single database transaction. (The [SPARQL 1.1
 Protocol](http://www.w3.org/TR/sparql11-protocol/) does not provide a
@@ -253,7 +250,7 @@ Knora enforces consistency constraints using three redundant mechanisms:
 1.  By doing pre-update checks using SPARQL SELECT queries and cached
     ontology data.
 2.  By doing checks in the `WHERE` clauses of SPARQL updates.
-3.  By using GraphDB's built-in consistency checker (see
+3.  **Deprecated**: By using GraphDB's built-in consistency checker (see
     [Consistency Checking](consistency-checking.md)).
 
 We take the view that redundant consistency checks are a good thing.

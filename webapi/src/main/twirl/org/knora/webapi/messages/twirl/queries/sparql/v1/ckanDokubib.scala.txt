@@ -22,10 +22,7 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 prefix dokubib: <http://www.knora.org/ontology/0804/dokubib#>
 
 SELECT ?bild
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     BIND(IRI("@projectIri") as ?projectIri)
 

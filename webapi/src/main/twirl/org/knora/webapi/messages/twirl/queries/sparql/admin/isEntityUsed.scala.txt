@@ -22,10 +22,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
 SELECT DISTINCT ?isUsed
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
   	BIND(IRI("@entityIri") AS ?entity)
     BIND(true AS ?isUsed)
