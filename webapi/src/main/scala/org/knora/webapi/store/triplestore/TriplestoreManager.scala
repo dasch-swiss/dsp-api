@@ -71,7 +71,7 @@ class TriplestoreManager(
     log.debug("TriplestoreManagerActor: start with preStart")
 
     storeActorRef = settings.triplestoreType match {
-      case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki =>
+      case TriplestoreTypes.HttpFuseki =>
         makeActor(
           FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
           name = HttpTriplestoreActorName

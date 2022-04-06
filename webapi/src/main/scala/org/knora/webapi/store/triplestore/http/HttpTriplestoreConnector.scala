@@ -120,45 +120,35 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     .build
 
   private val queryPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/query"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val sparqlUpdatePath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/statements"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/update"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val checkRepositoryPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      "/rest/repositories"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       "/$/server"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val graphPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/statements"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/get"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val repositoryDownloadPath =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/statements"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
@@ -169,9 +159,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
   private val dataInsertPath =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/data"
     } else {
       throw TriplestoreUnsupportedFeatureException(s"$triplestoreType is not supported!")
@@ -414,27 +402,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    * Updates the Lucene full-text search index.
    */
   private def updateLuceneIndex(subjectIri: Option[IRI] = None): Try[SparqlUpdateResponse] =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      val indexUpdateSparqlString = subjectIri match {
-        case Some(definedSubjectIri) =>
-          // A subject's content has changed. Update the index for that subject.
-          s"""PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-             |INSERT DATA { luc:fullTextSearchIndex luc:addToIndex <$definedSubjectIri> . }
-                     """.stripMargin
-
-        case None =>
-          // Add new subjects to the index.
-          """PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-            |INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                    """.stripMargin
-      }
-
-      for {
-        _ <- getSparqlHttpResponse(indexUpdateSparqlString, isUpdate = true)
-      } yield SparqlUpdateResponse()
-    } else {
-      Success(SparqlUpdateResponse())
-    }
+    Success(SparqlUpdateResponse())
 
   /**
    * Performs a SPARQL update operation.
@@ -574,10 +542,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         log.debug(s"added: $graphName")
       }
 
-      if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-        updateLuceneIndex()
-      }
-
       log.debug("==>> Loading Data End")
 
       // Return success if all graphs are inserted successfully.
@@ -593,9 +557,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    * Checks connection to the triplestore.
    */
   private def checkTriplestore(): Try[CheckTriplestoreResponse] =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      checkGraphDBTriplestore()
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       checkFusekiTriplestore()
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
@@ -805,9 +767,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   private def makeNamedGraphDownloadUri(graphIri: IRI): URI = {
     val uriBuilder: URIBuilder = new URIBuilder(graphPath)
 
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      uriBuilder.setParameter("infer", "false").setParameter("context", s"<$graphIri>")
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       uriBuilder.setParameter("graph", s"$graphIri")
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
@@ -896,13 +856,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else {
       // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
       // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
-
       val formParams = new util.ArrayList[NameValuePair]()
-
-      if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-        formParams.add(new BasicNameValuePair("infer", "true"))
-      }
-
       formParams.add(new BasicNameValuePair("query", sparql))
       val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
       val queryHttpPost: HttpPost = new HttpPost(queryPath)
@@ -935,9 +889,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
 
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      uriBuilder.setParameter("infer", "false")
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       // do nothing
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")

@@ -10,11 +10,8 @@ package org.knora.webapi.settings
  * the 'application.conf' file, which can be accessed by the application 'Settings'
  */
 object TriplestoreTypes {
-
   val EmbeddedJenaTdb = "embedded-jena-tdb"
   val EmbeddedGraphDBSE = "embedded-jena-graphdb"
-  val HttpGraphDBSE = "graphdb-se"
-  val HttpGraphDBFree = "graphdb-free"
   val HttpFuseki = "fuseki"
 }
 
