@@ -7,20 +7,22 @@
 @import org.knora.webapi.messages.SmartIri
 
 @*
- * Constructs a prequery that gets the IRIs of all resources of a specified project.
+ * Constructs a prequery that gets all resources from the specified project using SPARQL w/o inference.
  *
- * @param triplestore  the name of the triplestore being used.
- * @param projectIri   the IRI of the project.
+ * @param projectIri        the IRI of the project.
  *@
 @(triplestore: String,
   projectIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getAllResourcesInProjectPrequeryGraphDB(projectIri = projectIri)
-    }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getAllResourcesInProjectPrequeryStandard(projectIri = projectIri)
-    }
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT ?resource
+WHERE {
+    ?resource knora-base:attachedToProject <@projectIri> .
+    ?resourceType rdfs:subClassOf* knora-base:Resource .
+    ?resource rdf:type ?resourceType .
+    ?resource knora-base:creationDate ?creationDate.
 }
+ORDER BY DESC(?creationDate)
