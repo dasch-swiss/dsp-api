@@ -6256,9 +6256,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "create a class anything:FoafPerson as a subclass of foaf:Person" in {
       // create the class anything:FoafPerson
-      val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
+      val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
-      val classInfoContent = ClassInfoContentV2(
+      val classInfoContent: ClassInfoContentV2 = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -6293,13 +6293,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // check if class was created correctly
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent should ===(classInfoContent)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -6310,7 +6310,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "create a property anything:hasFoafName as a subproperty of foaf:name" in {
       // get the class IRI for anything:FoafPerson
-      val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
+      val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
       // create the property anything:hasFoafName
       responderManager ! OntologyMetadataGetByProjectRequestV2(
@@ -6318,7 +6318,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      val metadataResponse = expectMsgType[ReadOntologyMetadataV2](timeout)
+      val metadataResponse: ReadOntologyMetadataV2 = expectMsgType[ReadOntologyMetadataV2](timeout)
       assert(metadataResponse.ontologies.size == 3)
       anythingLastModDate = metadataResponse
         .toOntologySchema(ApiV2Complex)
@@ -6328,9 +6328,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         .lastModificationDate
         .get
 
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
+      val propertyIri: SmartIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
 
-      val propertyInfoContent = PropertyInfoContentV2(
+      val propertyInfoContent: PropertyInfoContentV2 = PropertyInfoContentV2(
         propertyIri = propertyIri,
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -6375,11 +6375,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // check if property was created correctly
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val property = externalOntology.properties(propertyIri)
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+        val property: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
         property.entityInfoContent should ===(propertyInfoContent)
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -6390,9 +6390,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "add property anything:hasFoafName to the class anything:FoafPerson" in {
       // get the class IRI for anything:FoafPerson
-      val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
+      val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
+      val propertyIri: SmartIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
 
       // add a cardinality for the property anything:hasFoafName to the class anything:FoafPerson
       val classWithNewCardinalityInfoContent = ClassInfoContentV2(
@@ -6421,7 +6421,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // check if cardinality was added correctly
-      val expectedDirectCardinalities = Map(
+      val expectedDirectCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map(
         propertyIri -> KnoraCardinalityInfo(
           cardinality = Cardinality.MayHaveOne,
           guiOrder = Some(0)
@@ -6431,7 +6431,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
       )
 
-      val expectedProperties = Set(
+      val expectedProperties: Set[SmartIri] = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
         ExampleSharedOntologyIri.makeEntityIri("hasName"),
@@ -6439,14 +6439,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
         readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
@@ -6456,13 +6456,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "remove all properties from class anything:FoafPerson" in {
       // get the class IRI for anything:FoafPerson
-      val classIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
+      val classIri: SmartIri = AnythingOntologyIri.makeEntityIri("FoafPerson")
 
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
+      val propertyIri: SmartIri = AnythingOntologyIri.makeEntityIri("hasFoafName")
 
       // check if cardinalities on class anything:FoafPerson can be removed
 
-      val classInfoContentWithCardinalityToDeleteAllow = ClassInfoContentV2(
+      val classInfoContentWithCardinalityToDeleteAllow: ClassInfoContentV2 = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -6492,7 +6492,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
 
       // remove cardinalities on the class anything:FoafPerson
-      val classChangeInfoContent = ClassInfoContentV2(
+      val classChangeInfoContent: ClassInfoContentV2 = ClassInfoContentV2(
         classIri = classIri,
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
@@ -6512,20 +6512,20 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // check if cardinalities were removed correctly
-      val expectedPropertiesAfterDeletion = Set(
+      val expectedPropertiesAfterDeletion: Set[SmartIri] = Set(
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkTo.toSmartIri,
         OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.classes.size == 1)
-        val readClassInfo = externalOntology.classes(classIri)
+        val readClassInfo: ReadClassInfoV2 = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent.directCardinalities should ===(classChangeInfoContent.directCardinalities)
         readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedPropertiesAfterDeletion)
 
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newAnythingLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
         )
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
