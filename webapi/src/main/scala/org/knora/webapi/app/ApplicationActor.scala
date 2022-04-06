@@ -98,7 +98,8 @@ trait LiveManagers extends Managers {
     * by unsafe running it.
     */
   lazy val cacheServiceManager: CacheServiceManager =
-    Main.rt.unsafeRun(
+    Runtime(ZEnvironment.default, RuntimeConfig.default @@ Logging.live)
+    .unsafeRun(
         (for (manager <- ZIO.service[CacheServiceManager])
           yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
       )
