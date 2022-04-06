@@ -940,11 +940,6 @@ object OntologyConstants {
     val DocumentFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimX"
     val DocumentFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimY"
 
-    val MovingImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimX"
-    val MovingImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimY"
-    val MovingImageFileValueHasFps: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasFps"
-    val MovingImageFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDuration"
-
     val AudioFileValueHasDuration: IRI = KnoraApiV2PrefixExpansion + "audioFileValueHasDuration"
 
     val IntervalValueHasStart: IRI = KnoraApiV2PrefixExpansion + "intervalValueHasStart"

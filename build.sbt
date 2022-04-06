@@ -137,8 +137,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
     }, // allows sbt-javaagent to work with sbt-revolver
     reStart / javaOptions ++= webapiJavaRunOptions,
-    javaAgents += Dependencies.aspectJWeaver,
-    fork := true,                       // run tests in a forked JVM
+    javaAgents += Dependencies.aspectjweaver,
+    fork := true, // run tests in a forked JVM
     Test / testForkedParallel := false, // run forked tests in parallel
     Test / parallelExecution := false,  // run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects

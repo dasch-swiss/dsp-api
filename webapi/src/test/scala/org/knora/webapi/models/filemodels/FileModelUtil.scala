@@ -129,9 +129,7 @@ object FileModelUtil {
             internalMimeType = internalMimeType.get,
             originalFilename = originalFilename,
             originalMimeType = internalMimeType
-          ),
-          dimX = dimX,
-          dimY = dimY
+          )
         )
       case FileType.TextFile =>
         TextFileValueContentV2(

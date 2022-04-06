@@ -467,7 +467,7 @@ make this kind of "search as you type" possible, a wildcard character is
 automatically added to the last search term. 
 Search by label automatically adds Lucene operators, 
 search strings are expected not to contain any characters with a special meaning in 
-[Lucene Query Parser syntax](../../08-lucene/index.md).
+[Lucene Query Parser syntax](../../07-lucene/index.md).
 
 ```
 HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
@@ -499,7 +499,7 @@ The response to a count query request is an object with one predicate,
 Knora offers a full-text search that searches through all textual
 representations of values and `rdfs:label` of resources. 
 Full-text search supports the 
-[Lucene Query Parser syntax](../../08-lucene/index.md).
+[Lucene Query Parser syntax](../../07-lucene/index.md).
 Note that Lucene's default operator is a logical OR when submitting several search terms.
 
 Please note that the search
