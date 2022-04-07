@@ -2132,4 +2132,154 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       )
     )
   )
+
+  val constructQueryForIncunabulaCompundObject: ConstructQuery = ConstructQuery(
+    constructClause = ConstructClause(
+      statements = Vector(
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
+          QueryVariable("seqnum"),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
+          QueryVariable("file"),
+          None
+        )
+        // StatementPattern(
+        //   QueryVariable("book"),
+        //   IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
+        //   QueryVariable("title"),
+        //   None
+        // )
+      ),
+      querySchema = Some(ApiV2Simple)
+    ),
+    whereClause = WhereClause(
+      patterns = Vector(
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isPartOf".toSmartIri, None),
+          IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
+          QueryVariable("seqnum"),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("seqnum"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://www.w3.org/2001/XMLSchema#integer".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
+          QueryVariable("file"),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("file"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#File".toSmartIri, None),
+          None
+        )
+        // StatementPattern(
+        //   QueryVariable("book"),
+        //   IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        //   IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None),
+        //   None
+        // ),
+        // StatementPattern(
+        //   QueryVariable("book"),
+        //   IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        //   IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+        //   None
+        // ),
+        // StatementPattern(
+        //   QueryVariable("book"),
+        //   IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
+        //   QueryVariable("title"),
+        //   None
+        // ),
+        // StatementPattern(
+        //   IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
+        //   IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None),
+        //   IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
+        //   None
+        // ),
+        // StatementPattern(
+        //   QueryVariable("title"),
+        //   IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        //   IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
+        //   None
+        // ),
+        // FilterPattern(
+        //   CompareExpression(
+        //     QueryVariable("title"),
+        //     CompareExpressionOperator.NOT_EQUALS,
+        //     XsdLiteral(
+        //       "Zeitglöcklein des Lebens und Leidens Christi",
+        //       "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+        //     )
+        //   )
+        // )
+      ),
+      positiveEntities = Set(
+        QueryVariable("page"),
+        QueryVariable("seqnum"),
+        QueryVariable("file"),
+        IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isPartOf".toSmartIri, None),
+        IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
+        IriRef("http://www.w3.org/2001/XMLSchema#integer".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#File".toSmartIri, None)
+        // IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+        // IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri, None),
+        // IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None),
+        // IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
+        // IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None),
+        // IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+        // IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        // QueryVariable("book"),
+        // QueryVariable("title")
+      ),
+      querySchema = Some(ApiV2Simple)
+    ),
+    querySchema = Some(ApiV2Simple)
+  )
 }

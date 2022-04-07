@@ -541,6 +541,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       // variable representing the main resources
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
+      mainResource = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceStatement
+      _ = {
+        println("main var")
+        println(mainResourceVar)
+        println(mainResource)
+      }
+      // TODO: can I infer the project somehow from the main variable?
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
@@ -565,7 +572,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
-      _ = log.debug(triplestoreSpecificPrequerySparql)
+      _ = log.info(triplestoreSpecificPrequerySparql)
 
       tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
       prequeryResponseNotMerged <- (tryPrequeryResponseNotMerged match {

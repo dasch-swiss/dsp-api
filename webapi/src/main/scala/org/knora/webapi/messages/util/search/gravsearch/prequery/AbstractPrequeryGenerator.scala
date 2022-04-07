@@ -196,6 +196,32 @@ abstract class AbstractPrequeryGenerator(
     mainResourceQueryVariables.head
   }
 
+  val mainResourceStatement: StatementPattern = {
+    val mainResSeq = constructClause.statements.filter { stmt =>
+      stmt.obj match {
+        case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean => {
+          val pred = stmt.pred match {
+            case IriRef(iri, _) =>
+              iri.toString == OntologyConstants.KnoraApiV2Simple.IsMainResource || iri.toString == OntologyConstants.KnoraApiV2Complex.IsMainResource
+            case _ => false
+          }
+          pred
+        }
+        case _ => false
+      }
+    }
+
+    if (mainResSeq.isEmpty) {
+      throw GravsearchException("CONSTRUCT clause contains no knora-api:isMainResource")
+    }
+
+    if (mainResSeq.size > 1) {
+      throw GravsearchException("CONSTRUCT clause contains more than one knora-api:isMainResource")
+    }
+    mainResSeq.head
+
+  }
+
   /**
    * Creates additional statements for a non property type (e.g., a resource).
    *

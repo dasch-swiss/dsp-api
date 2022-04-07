@@ -202,65 +202,72 @@ object QueryTraverser {
     // remove statements that would otherwise be expanded by transformStatementInWhere
     val optimisedPatterns = whereTransformer.optimiseQueryPatterns(patterns)
 
-    optimisedPatterns.flatMap {
-      case statementPattern: StatementPattern =>
-        whereTransformer.transformStatementInWhere(
-          statementPattern = statementPattern,
-          inputOrderBy = inputOrderBy
-        )
+    optimisedPatterns.flatMap { x =>
+      // println(s"xxx $x")
+      x match {
+        case statementPattern: StatementPattern => {
+          val stmt = whereTransformer.transformStatementInWhere(
+            statementPattern = statementPattern,
+            inputOrderBy = inputOrderBy
+          )
+          // println("\n\n\n----------\n")
+          // println(s"transformed \n$statementPattern to \n$stmt \n")
+          stmt
+        }
 
-      case filterPattern: FilterPattern =>
-        whereTransformer.transformFilter(
-          filterPattern = filterPattern
-        )
+        case filterPattern: FilterPattern =>
+          whereTransformer.transformFilter(
+            filterPattern = filterPattern
+          )
 
-      case filterNotExistsPattern: FilterNotExistsPattern =>
-        val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
-          patterns = filterNotExistsPattern.patterns,
-          whereTransformer = whereTransformer,
-          inputOrderBy = inputOrderBy
-        )
-
-        Seq(FilterNotExistsPattern(patterns = transformedPatterns))
-
-      case minusPattern: MinusPattern =>
-        val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
-          patterns = minusPattern.patterns,
-          whereTransformer = whereTransformer,
-          inputOrderBy = inputOrderBy
-        )
-
-        Seq(MinusPattern(patterns = transformedPatterns))
-
-      case optionalPattern: OptionalPattern =>
-        val transformedPatterns = transformWherePatterns(
-          patterns = optionalPattern.patterns,
-          whereTransformer = whereTransformer,
-          inputOrderBy = inputOrderBy
-        )
-
-        Seq(OptionalPattern(patterns = transformedPatterns))
-
-      case unionPattern: UnionPattern =>
-        val transformedBlocks: Seq[Seq[QueryPattern]] = unionPattern.blocks.map { blockPatterns: Seq[QueryPattern] =>
-          whereTransformer.enteringUnionBlock()
+        case filterNotExistsPattern: FilterNotExistsPattern =>
           val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
-            patterns = blockPatterns,
+            patterns = filterNotExistsPattern.patterns,
             whereTransformer = whereTransformer,
             inputOrderBy = inputOrderBy
           )
-          whereTransformer.leavingUnionBlock()
-          transformedPatterns
-        }
 
-        Seq(UnionPattern(blocks = transformedBlocks))
+          Seq(FilterNotExistsPattern(patterns = transformedPatterns))
 
-      case luceneQueryPattern: LuceneQueryPattern =>
-        whereTransformer.transformLuceneQueryPattern(luceneQueryPattern)
+        case minusPattern: MinusPattern =>
+          val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
+            patterns = minusPattern.patterns,
+            whereTransformer = whereTransformer,
+            inputOrderBy = inputOrderBy
+          )
 
-      case valuesPattern: ValuesPattern => Seq(valuesPattern)
+          Seq(MinusPattern(patterns = transformedPatterns))
 
-      case bindPattern: BindPattern => Seq(bindPattern)
+        case optionalPattern: OptionalPattern =>
+          val transformedPatterns = transformWherePatterns(
+            patterns = optionalPattern.patterns,
+            whereTransformer = whereTransformer,
+            inputOrderBy = inputOrderBy
+          )
+
+          Seq(OptionalPattern(patterns = transformedPatterns))
+
+        case unionPattern: UnionPattern =>
+          val transformedBlocks: Seq[Seq[QueryPattern]] = unionPattern.blocks.map { blockPatterns: Seq[QueryPattern] =>
+            whereTransformer.enteringUnionBlock()
+            val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
+              patterns = blockPatterns,
+              whereTransformer = whereTransformer,
+              inputOrderBy = inputOrderBy
+            )
+            whereTransformer.leavingUnionBlock()
+            transformedPatterns
+          }
+
+          Seq(UnionPattern(blocks = transformedBlocks))
+
+        case luceneQueryPattern: LuceneQueryPattern =>
+          whereTransformer.transformLuceneQueryPattern(luceneQueryPattern)
+
+        case valuesPattern: ValuesPattern => Seq(valuesPattern)
+
+        case bindPattern: BindPattern => Seq(bindPattern)
+      }
     }
 
   }

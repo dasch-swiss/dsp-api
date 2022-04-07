@@ -9,6 +9,12 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.responders.v2.ontology.Cache
+import scala.concurrent.{ExecutionContext, Future}
+import akka.actor.ActorSystem
+import org.knora.webapi.settings.KnoraDispatchers
+import scala.concurrent._
+import scala.concurrent.duration._
 
 /**
  * Methods and classes for transforming generated SPARQL.
@@ -67,7 +73,7 @@ object SparqlTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[StatementPattern] =
+    ): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
         simulateInference = simulateInference
@@ -128,7 +134,7 @@ object SparqlTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[StatementPattern] =
+    ): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -293,8 +299,17 @@ object SparqlTransformer {
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
     simulateInference: Boolean
-  ): Seq[StatementPattern] = {
+  ): Seq[Seq[QueryPattern]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit lazy val system: ActorSystem = ActorSystem("webapi")
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+    def withPropertyPath(): Seq[QueryPattern] =
+      Seq.empty
+    def withUnion(): Seq[QueryPattern] =
+      Seq.empty
+    def withValues(): Seq[QueryPattern] =
+      Seq.empty
 
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
@@ -324,6 +339,7 @@ object SparqlTransformer {
 
                   // Is the property rdf:type?
                   if (propertyIri == OntologyConstants.Rdf.Type) {
+                    println(s"Property path for Subclass! ${statementPattern.toSparql}")
                     // Yes. Expand using rdfs:subClassOf*.
 
                     val baseClassIri: IriRef = statementPattern.obj match {
@@ -354,13 +370,15 @@ object SparqlTransformer {
                     )
                   } else {
                     // No. Expand using rdfs:subPropertyOf*.
+                    println(s"Property path for Subprop! ${statementPattern.toSparql}")
 
                     val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
                       base = statementPattern.pred,
                       propertyIri = OntologyConstants.Rdfs.SubPropertyOf
                     )
 
-                    Seq(
+                    println("###### skipped propertypath ######")
+                    val prevRes = Seq(
                       StatementPattern(
                         subj = propertyVariable,
                         pred = IriRef(
@@ -375,6 +393,26 @@ object SparqlTransformer {
                         obj = statementPattern.obj
                       )
                     )
+                    println("previously")
+                    println(prevRes)
+                    val ontoCache = Await.result(Cache.getCacheData, 1.second)
+                    println(s"@@@@@ ontologies\n${ontoCache.ontologies.keys.toList}\n")
+                    // println(ontoCache.subPropertyOfRelations.keySet)
+                    ontoCache.subPropertyOfRelations.map(p => println(s"${p._1} \n  -> ${p._2}\n\n\n"))
+                    val unions = Seq(
+                      UnionPattern(
+                        Seq(
+                          Seq(
+                            statementPattern
+                          ),
+                          Seq(
+                            statementPattern // TODO: actually do inference here
+                          )
+                        )
+                      )
+                    )
+                    // Seq(statementPattern)
+                    unions
                   }
 
                 case _ =>
