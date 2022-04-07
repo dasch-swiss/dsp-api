@@ -29,10 +29,7 @@ we recommend converting it to Knora resources, which are stored as RDF.
 
 ### Which triplestores can be used with Knora?
 
-Knora is tested with [Ontotext GraphDB SE](http://graphdb.ontotext.com/).
-Our goal is to support several triplestores, including open-source options.
-Integration with [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/)
-has been partly implemented, but is not currently supported.
+Knora is tested with [Apache Jena Fuseki](https://jena.apache.org/).
 
 ## Knora Ontologies
 

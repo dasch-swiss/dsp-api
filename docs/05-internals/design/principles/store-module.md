@@ -26,14 +26,10 @@ HTTP-based triplestore support is implemented in the
 `org.knora.webapi.triplestore.http` package.
 
 An HTTP-based triplestore is one that is accessed remotely over the HTTP
-protocol. `HttpTriplestoreConnector` supports the following triplestores:
+protocol. `HttpTriplestoreConnector` supports an open source triplestore 
+- [Apache Jena Fuseki](https://jena.apache.org).
 
-   - Ontotext GraphDB
-   - Fuseki 2
-
-### GraphDB
-
-### Fuseki 2
+### Apache Jena Fuseki
 
 ## Embedded Triplestores
 
