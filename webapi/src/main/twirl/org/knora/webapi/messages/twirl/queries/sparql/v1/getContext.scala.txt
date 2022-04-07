@@ -6,10 +6,8 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given the IRI of a resource, gets information about the resources that are part of that resource.
- *
- * If the triplestore type is GraphDB, this template delegates to getContextGraphDB.sparql.txt, which is optimised for
- * GraphDB. Otherwise, it delegates to getContextStandard.sparql.txt.
+ * Given the IRI of a resource, gets information about the resources that are part of that resource
+ * using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
@@ -17,13 +15,92 @@
 @(triplestore: String,
   resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getContextGraphDB(resourceIri = resourceIri)
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?sourceObject
+       ?sourceObjectAttachedToUser
+       ?sourceObjectAttachedToProject
+       ?sourceObjectPermissions
+       ?seqnum
+       ?linkValue
+       ?linkValueCreator
+       ?linkValuePermissions
+       ?firstprop
+       ?fileValue
+       ?internalFilename
+       ?internalMimeType
+       ?originalFilename
+       ?dimX
+       ?dimY
+       ?fileValuePermissions
+       ?fileValueAttachedToUser
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?resource rdf:type ?resourceClass .
+
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+
+    # Find something that relates to this resource via knora-base:isPartOf.
+
+    ?linkingProp rdfs:subPropertyOf* knora-base:isPartOf .
+
+    ?sourceObject ?linkingProp ?resource .
+
+    OPTIONAL {
+        ?seqProp rdfs:subPropertyOf* knora-base:seqnum .
+        ?sourceObject ?seqProp ?seqnumVal .
+        ?seqnumVal knora-base:valueHasInteger ?seqnum .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getContextStandard(triplestore = triplestore,
-                                                 resourceIri = resourceIri)
+
+    ?sourceObject rdfs:label ?firstprop ;
+        knora-base:attachedToUser ?sourceObjectAttachedToUser ;
+        knora-base:attachedToProject ?sourceObjectAttachedToProject ;
+        knora-base:hasPermissions ?sourceObjectPermissions .
+
+    BIND(IRI(CONCAT(STR(?linkingProp), "Value")) AS ?linkValueProp)
+
+    ?sourceObject ?linkValueProp ?linkValue .
+
+    ?linkValue rdf:type knora-base:LinkValue ;
+        rdf:subject ?sourceObject ;
+        rdf:predicate ?linkingProp ;
+        rdf:object ?resource ;
+        knora-base:attachedToUser ?linkValueCreator ;
+        knora-base:hasPermissions ?linkValuePermissions .
+
+      FILTER NOT EXISTS {
+          ?resource knora-base:isDeleted true .
+      }
+
+      FILTER NOT EXISTS {
+          ?sourceObject knora-base:isDeleted true .
+      }
+
+      FILTER NOT EXISTS {
+          ?linkValue knora-base:isDeleted true .
+      }
+
+    OPTIONAL {
+        ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
+        ?sourceObject ?fileValueProp ?fileValue .
+
+        ?fileValue a knora-base:StillImageFileValue .
+
+        FILTER NOT EXISTS {
+            ?fileValue knora-base:isDeleted true .
+        }
+
+        ?fileValue knora-base:internalMimeType ?internalMimeType ;
+                 knora-base:originalFilename ?originalFilename ;
+                 knora-base:internalFilename ?internalFilename ;
+                 knora-base:dimX ?dimX ;
+                 knora-base:dimY ?dimY ;
+                 knora-base:attachedToUser ?fileValueAttachedToUser ;
+                 knora-base:hasPermissions ?fileValuePermissions .
     }
 }
+ORDER BY ?seqnum ?sourceObject ?isPreview

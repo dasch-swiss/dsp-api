@@ -6,10 +6,8 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given the IRI of a resource, gets the regions that point to this resource.
- *
- * If the triplestore type is GraphDB, this template delegates to getRegionsGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to getRegionsStandard.sparql.txt.
+ * Given the IRI of a resource, gets the regions that point to this resource
+ * using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
@@ -17,13 +15,28 @@
  @(triplestore: String,
    resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getRegionsGraphDB(resourceIri = resourceIri)
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?region ?resclass ?regionObjectPermissions ?owner ?project
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+    ?linkingProp rdfs:subPropertyOf* knora-base:isRegionOf .
+    ?region ?linkingProp ?resource .
+
+    ?resclass rdfs:subClassOf* knora-base:Region .
+    ?region a ?resclass .
+
+    ?region knora-base:attachedToUser ?owner ;
+        knora-base:attachedToProject ?project ;
+        knora-base:hasPermissions ?regionObjectPermissions .
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getRegionsStandard(triplestore = triplestore,
-                                                 resourceIri = resourceIri)
+
+    FILTER NOT EXISTS {
+        ?region knora-base:isDeleted true .
     }
 }

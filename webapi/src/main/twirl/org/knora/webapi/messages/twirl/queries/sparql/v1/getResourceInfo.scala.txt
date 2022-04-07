@@ -6,11 +6,8 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets all the properties of a resource, along with the properties of its file values, but not
- * including subproperties of knora-base:hasValue.
- *
- * If the triplestore type is GraphDB, this template delegates to getResourceInfoGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to getResourceInfoStandard.sparql.txt.
+ * Gets all the properties of a resource, along with the properties of its file values, but not including subproperties
+ * of knora-base:hasValue, using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.
@@ -18,13 +15,37 @@
 @(triplestore: String,
   resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourceInfoGraphDB(resourceIri = resourceIri)
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?prop ?obj ?isFileValue ?objPred ?objObj
+WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+
+    ?resource rdf:type ?resourceClass ;
+        knora-base:isDeleted false .
+
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+
+    {
+        @* Query statements about the resource's file values. *@
+
+        ?prop rdfs:subPropertyOf* knora-base:hasFileValue .
+        BIND(true AS ?isFileValue)
+
+        ?resource ?prop ?obj .
+        ?obj knora-base:isDeleted false .
+        ?obj ?objPred ?objObj .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getResourceInfoStandard(triplestore = triplestore,
-                                                      resourceIri = resourceIri)
+    UNION
+    {
+        @* Query other statements about the resource. *@
+
+        ?resource ?prop ?obj .
+
+        FILTER NOT EXISTS {
+            ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
+        }
     }
 }
