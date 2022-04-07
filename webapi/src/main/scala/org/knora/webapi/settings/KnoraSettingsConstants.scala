@@ -11,7 +11,6 @@ package org.knora.webapi.settings
  */
 object TriplestoreTypes {
   val EmbeddedJenaTdb = "embedded-jena-tdb"
-  val EmbeddedGraphDBSE = "embedded-jena-graphdb"
   val HttpFuseki = "fuseki"
 }
 
