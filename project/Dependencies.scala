@@ -9,14 +9,16 @@ import sbt.Keys._
 import sbt.{Def, _}
 
 object Dependencies {
+  
+  val fusekiImage = "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml
+  val sipiImage = "daschswiss/sipi:3.5.0" // base image the knora-sipi image is created from
+  
   // versions
   val akkaHttpVersion = "10.2.9"
   val akkaVersion = "2.6.19"
-  val fusekiImage = "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml
   val jenaVersion = "4.4.0"
   val metricsVersion = "4.0.1"
   val scalaVersion = "2.13.8"
-  val sipiImage = "daschswiss/sipi:3.3.4" // base image the knora-sipi image is created from
   val ZioHttpVersion = "2.0.0-RC3"
   val ZioPreludeVersion = "1.0.0-RC10"
   val ZioVersion = "2.0.0-RC2"
