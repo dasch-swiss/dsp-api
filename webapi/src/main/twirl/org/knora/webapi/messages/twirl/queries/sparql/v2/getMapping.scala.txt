@@ -42,23 +42,10 @@ CONSTRUCT {
     ?datatypeClass knora-base:mappingHasXMLAttributename ?datatypeAttributeName .
     ?datatypeClass knora-base:mappingHasStandoffClass ?datatypeStandoffClass .
 
-
-
 } WHERE {
     BIND(IRI("@mappingIri") as ?mapping)
 
-@if(triplestore.startsWith("graphdb")) {
-    GRAPH <http://www.ontotext.com/explicit> {
-        @{
-            org.knora.webapi.messages.twirl.queries.sparql.v1.txt.generateWhereStatementsForGetMapping()
-
-        }
-    }
-} else {
     @{
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt.generateWhereStatementsForGetMapping()
     }
 }
-
-}
-

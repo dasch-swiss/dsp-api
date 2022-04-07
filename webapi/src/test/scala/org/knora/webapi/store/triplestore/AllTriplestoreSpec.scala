@@ -47,16 +47,6 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
   )
 
   val countTriplesQuery: String =
-    if (tsType.startsWith("graphdb"))
-      """
-        SELECT (COUNT(*) AS ?no)
-        FROM <http://www.ontotext.com/explicit>
-        WHERE
-            {
-                ?s ?p ?o .
-            }
-        """
-    else
       """
         SELECT (COUNT(*) AS ?no)
         WHERE
