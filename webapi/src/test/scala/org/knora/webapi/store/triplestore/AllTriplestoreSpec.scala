@@ -125,34 +125,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-  val searchURI: String = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
-    "<http://jena.apache.org/text#query>"
-  } else {
-    //GraphDB
-    "<http://www.ontotext.com/owlim/lucene#fullTextSearchIndex>"
-  }
-
-  val textSearchQueryGraphDBValueHasString: String =
-    s"""
-        PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-        SELECT DISTINCT *
-        WHERE {
-            ?iri knora-base:valueHasString ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'test' .
-        }
-    """
-
-  val textSearchQueryGraphDBRDFLabel: String =
-    s"""
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-        SELECT DISTINCT *
-        WHERE {
-            ?iri rdfs:label ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'Papa' .
-        }
-    """
+  val searchURI: String = "<http://jena.apache.org/text#query>"
 
   val textSearchQueryFusekiValueHasString: String =
     s"""
