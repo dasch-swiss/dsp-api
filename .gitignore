@@ -33,6 +33,7 @@ sipi/test
 *.tdo
 *.toc
 *.bak
+*.rdb
 .sbtrc
 
 dependencies.txt
