@@ -33,6 +33,10 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
   private val user: UserADM       = SharedTestDataADM.imagesUser01
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
+  /**
+   * Defines a layer which encompases all dependencies that are needed for
+   * for running the tests.
+   */
   val layer = ZLayer.make[CacheService & zio.test.Annotations](
     CacheServiceRedisImpl.layer,
     RedisTestConfig.redisTestContainer,
@@ -40,7 +44,7 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
     RedisTestContainer.layer
   )
 
-  def spec = projectTests
+  def spec = (userTests + projectTests)
 
   val userTests = suite("CacheRedisImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {
@@ -69,21 +73,20 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
         _                <- CacheService(_.putProjectADM(project))
         retrievedProject <- CacheService(_.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id))))
       } yield assert(retrievedProject)(equalTo(Some(project)))
-    )
-    // ) +
-    //   test("successfully store a project and retrieve by SHORTCODE")(
-    //     for {
-    //       _ <- CacheService(_.putProjectADM(project))
-    //       retrievedProject <-
-    //         CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode))))
-    //     } yield assert(retrievedProject)(equalTo(Some(project)))
-    //   ) +
-    //   test("successfully store a project and retrieve by SHORTNAME")(
-    //     for {
-    //       _ <- CacheService(_.putProjectADM(project))
-    //       retrievedProject <-
-    //         CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
-    //     } yield assert(retrievedProject)(equalTo(Some(project)))
-    //   )
-  ) @@ after(ZIO.debug("before"))
+    ) +
+      test("successfully store a project and retrieve by SHORTCODE")(
+        for {
+          _ <- CacheService(_.putProjectADM(project))
+          retrievedProject <-
+            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode))))
+        } yield assert(retrievedProject)(equalTo(Some(project)))
+      ) +
+      test("successfully store a project and retrieve by SHORTNAME")(
+        for {
+          _ <- CacheService(_.putProjectADM(project))
+          retrievedProject <-
+            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
+        } yield assert(retrievedProject)(equalTo(Some(project)))
+      )
+  )
 }

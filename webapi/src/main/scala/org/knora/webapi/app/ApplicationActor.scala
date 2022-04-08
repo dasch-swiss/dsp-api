@@ -91,15 +91,13 @@ trait Managers {
 trait LiveManagers extends Managers {
   this: Actor =>
 
-  
-
   /**
-    * Initializing the cache service manager, which is a ZLayer,
-    * by unsafe running it.
-    */
+   * Initializing the cache service manager, which is a ZLayer,
+   * by unsafe running it.
+   */
   lazy val cacheServiceManager: CacheServiceManager =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ (if (true) Logging.live else Logging.live))
-    .unsafeRun(
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+      .unsafeRun(
         (for (manager <- ZIO.service[CacheServiceManager])
           yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
       )

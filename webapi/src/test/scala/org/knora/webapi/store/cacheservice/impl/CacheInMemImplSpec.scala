@@ -17,11 +17,12 @@ import zio.test.Assertion._
 import zio.test.TestAspect.ignore
 import zio.test.TestAspect.timeout
 import zio.test._
+import zio.ZLayer
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl]].
  */
-object CacheInMemImplSpec extends ZIOSpecDefault {
+object CacheInMemImplSpec extends ZIOSpec[CacheService] {
 
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -39,7 +40,13 @@ object CacheInMemImplSpec extends ZIOSpecDefault {
 
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
-  def spec = userTests + projectTests + otherTests
+  /**
+   * Defines a layer which encompases all dependencies that are needed for
+   * for running the tests.
+   */
+  val layer = ZLayer.make[CacheService](CacheServiceInMemImpl.layer)
+
+  def spec = (userTests + projectTests + otherTests)
 
   val userTests = suite("CacheInMemImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {
@@ -66,7 +73,7 @@ object CacheInMemImplSpec extends ZIOSpecDefault {
           retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id))))
         } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
       )
-  ).provide(CacheServiceInMemImpl.layer)
+  )
 
   val projectTests = suite("CacheInMemImplSpec - project")(
     test("successfully store a project and retrieve by IRI")(
@@ -89,7 +96,7 @@ object CacheInMemImplSpec extends ZIOSpecDefault {
             CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
-  ).provide(CacheServiceInMemImpl.layer)
+  )
 
   val otherTests = suite("CacheInMemImplSpec - other")(
     test("successfully store string value")(
@@ -105,5 +112,5 @@ object CacheInMemImplSpec extends ZIOSpecDefault {
           retrievedValue <- CacheService(_.getStringValue("my-new-key"))
         } yield assert(retrievedValue)(equalTo(None))
       )
-  ).provide(CacheServiceInMemImpl.layer)
+  )
 }
