@@ -32,11 +32,17 @@ object ActorUtil {
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
     Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-    .unsafeRun((for {
+      .unsafeRun((for {
         executor <- ZIO.executor
         _        <- zioTask.fold(ex => handleExeption(ex, sender)(executor.asExecutionContext), success => sender ! success)
       } yield ()))
 
+  /**
+   * @param ex
+   * @param sender
+   * @param executionContext
+   * @return
+   */
   def handleExeption(ex: Throwable, sender: ActorRef)(implicit executionContext: ExecutionContext) =
     ex match {
       case rejectedEx: RequestRejectedException =>

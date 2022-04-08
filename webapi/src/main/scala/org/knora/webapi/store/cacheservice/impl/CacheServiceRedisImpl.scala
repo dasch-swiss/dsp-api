@@ -84,10 +84,11 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @return an optional [[UserADM]].
    */
   def getUserByUsernameOrEmail(usernameOrEmail: String): Task[Option[UserADM]] =
-    for {
+    (for {
       maybeIriKey <- getStringValue(usernameOrEmail)
       maybeUser   <- getUserByIri(maybeIriKey.getOrElse("-")) //FIXME: not cool
-    } yield maybeUser
+      _           <- ZIO.logDebug("blabla")
+    } yield maybeUser).tap(user => ZIO.debug(s"blabla: $user"))
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
