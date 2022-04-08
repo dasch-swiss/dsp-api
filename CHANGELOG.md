@@ -1,5 +1,29 @@
 # Changelog
 
+## [20.1.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.0.0...v20.1.0) (2022-04-07)
+
+
+### Bug Fixes
+
+* docs/requirements.txt to reduce vulnerabilities ([#2034](https://www.github.com/dasch-swiss/dsp-api/issues/2034)) ([b07600d](https://www.github.com/dasch-swiss/dsp-api/commit/b07600dbb45195549248f493401178c2ff1da763))
+
+
+### Maintenance
+
+* distinguish between compile, runtime and test dependencies ([#2028](https://www.github.com/dasch-swiss/dsp-api/issues/2028)) ([7cb326f](https://www.github.com/dasch-swiss/dsp-api/commit/7cb326ff5804b46995d25ce301a17c153af93036))
+* inventory and upgrade of dependencies (DEV-478) ([#2033](https://www.github.com/dasch-swiss/dsp-api/issues/2033)) ([470b77f](https://www.github.com/dasch-swiss/dsp-api/commit/470b77fb8b6e7b0c37392414fe96f4864231e3d0))
+
+
+### Documentation
+
+* replace Bazel and Intellij documentation with SBT and VSCode (DEV-607) ([#2035](https://www.github.com/dasch-swiss/dsp-api/issues/2035)) ([603efef](https://www.github.com/dasch-swiss/dsp-api/commit/603efeffa35204dcbe59554f4ba33cc58c1e66ae))
+
+
+### Enhancements
+
+* **ontology:** Add support for additional ontologies (DEV-512) ([#2029](https://www.github.com/dasch-swiss/dsp-api/issues/2029)) ([50e3186](https://www.github.com/dasch-swiss/dsp-api/commit/50e318628bf7b6e30e4dfd2472e69c3b8ccd65e2))
+* **sipi:** upload video support (DEV-771 / DEV-207) ([#1952](https://www.github.com/dasch-swiss/dsp-api/issues/1952)) ([47f2e28](https://www.github.com/dasch-swiss/dsp-api/commit/47f2e28817fc98af9998a19d56248b638d8ceace))
+
 ## [20.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v19.0.0...v20.0.0) (2022-03-31)
 
 
