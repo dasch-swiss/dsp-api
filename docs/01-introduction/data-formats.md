@@ -5,18 +5,16 @@
 
 # Data Formats in DSP-API
 
-As explained in [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md), the DSP stores data
-in a small number of formats that are suitable for long-term preservation while
-facilitating data reuse.
+Currently, only a limited number of file formats is accepted to be uploaded onto DSP. Some metadata is extracted from the files during the ingest but the file formats are not validated. Only image file formats are currently migrated into another format. Both, the migrated version of the file and the original are kept.
 
-The following is a non-exhaustive list of data formats and how their content
-can be stored and managed by DSP-API:
+The following table shows the accepted file formats:
 
-| Original Format                              | Format in DSP                                                                                                              |
-|----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| Text (XML, LaTeX, Microsoft Word, etc.)      | [Knora resources](../03-apis/api-v2/editing-resources.md) (RDF) containing [Standoff/RDF](standoff-rdf.md)            |
-| Tabular data, including relational databases | [Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
-| Data in tree or graph structures             | [Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
-| Images (JPEG, PNG, etc.)                     | JPEG 2000 files stored by [Sipi](https://github.com/dhlab-basel/Sipi)                                                        |
-| Audio and video files                        | Audio and video files stored by [Sipi](https://github.com/dhlab-basel/Sipi) (in archival formats to be determined)           |
-| PDF                                          | Can be stored by Sipi, but data reuse is improved by extracting the text for storage as [Standoff/RDF](standoff-rdf.md) |
+| Category  | Accepted format           | Converted during ingest?                                                   |
+| --------- | ------------------------- | -------------------------------------------------------------------------- |
+| Text, XML | TXT, LaTeX, XML, etc.     | No                                                                         |
+| Tables    | CSV, XLS, XLSX            | No                                                                         |
+| 2D Images | JPEG, PNG, TIFF, JP2      | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dhlab-basel/Sipi) |
+| Audio     | MPEG (MP3), MP4, WAV      | No                                                                         |
+| Video     | MP4                       | No                                                                         |
+| Office    | PDF, DOC, DOCX, PPT, PPTX | No                                                                         |
+| Archives  | ZIP, TAR, ISO, GZIP, 7Z   | No                                                                         |
