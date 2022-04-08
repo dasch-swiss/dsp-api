@@ -5,26 +5,28 @@
 
 package org.knora.webapi.store.cacheservice.impl
 
-import com.typesafe.scalalogging.{LazyLogging, Logger}
+import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectIdentifierADM,
-  ProjectIdentifierType
-}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceStatusNOK,
-  CacheServiceStatusOK,
-  CacheServiceStatusResponse
-}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
+import org.knora.webapi.store.cacheservice.api.CacheService
+import org.knora.webapi.store.cacheservice.api.EmptyKey
+import org.knora.webapi.store.cacheservice.api.EmptyValue
+import org.knora.webapi.store.cacheservice.config.RedisConfig
 import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
-import org.knora.webapi.store.cacheservice.api.{CacheService, EmptyKey, EmptyValue}
-import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
-
+import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisPool
+import redis.clients.jedis.JedisPoolConfig
 import zio._
-import org.knora.webapi.store.cacheservice.config.RedisConfig
 
 case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 
@@ -69,13 +71,10 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @return an optional [[UserADM]].
    */
   def getUserByIri(id: String): Task[Option[UserADM]] =
-    for {
-      maybeBytes <- getBytesValue(id)
-      maybeUser <- maybeBytes match {
-                     case Some(bytes) => CacheSerialization.deserialize[UserADM](bytes)
-                     case None        => ZIO.succeed(None)
-                   }
-    } yield maybeUser
+    (for {
+      bytes <- getBytesValue(id).some
+      user <- CacheSerialization.deserialize[UserADM](bytes).some
+    } yield user).unsome
 
   /**
    * Retrieves the user stored under the username or email.
@@ -85,10 +84,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    */
   def getUserByUsernameOrEmail(usernameOrEmail: String): Task[Option[UserADM]] =
     (for {
-      maybeIriKey <- getStringValue(usernameOrEmail)
-      maybeUser   <- getUserByIri(maybeIriKey.getOrElse("-")) //FIXME: not cool
-      _           <- ZIO.logDebug("blabla")
-    } yield maybeUser).tap(user => ZIO.debug(s"blabla: $user"))
+      iri  <- getStringValue(usernameOrEmail).some
+      user <- getUserByIri(iri).some
+    } yield user).unsome
 
   /**
    * Stores the project under the IRI and additionally the IRI under the keys
@@ -129,13 +127,10 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @return an optional [[ProjectADM]].
    */
   def getProjectByIri(id: String): Task[Option[ProjectADM]] =
-    for {
-      maybeBytes <- getBytesValue(id)
-      maybeProject <- maybeBytes match {
-                        case Some(bytes) => CacheSerialization.deserialize[ProjectADM](bytes)
-                        case None        => ZIO.succeed(None)
-                      }
-    } yield maybeProject
+    (for {
+      bytes   <- getBytesValue(id).some
+      project <- CacheSerialization.deserialize[ProjectADM](bytes).some
+    } yield project).unsome
 
   /**
    * Retrieves the project stored under a SHORTCODE or SHORTNAME.
@@ -144,10 +139,10 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @return an optional [[ProjectADM]]
    */
   def getProjectByShortcodeOrShortname(shortcodeOrShortname: String): Task[Option[ProjectADM]] =
-    for {
-      maybeIriKey  <- getStringValue(shortcodeOrShortname)
-      maybeProject <- getProjectByIri(maybeIriKey.getOrElse("-"))
-    } yield maybeProject
+    (for {
+      iri     <- getStringValue(shortcodeOrShortname).some
+      project <- getProjectByIri(iri).some
+    } yield project).unsome
 
   /**
    * Store string value under key.

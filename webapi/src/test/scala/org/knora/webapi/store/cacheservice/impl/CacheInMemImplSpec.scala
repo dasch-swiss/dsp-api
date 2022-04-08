@@ -7,14 +7,16 @@ package org.knora.webapi.store.cacheservice.impl
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import zio.test._
-import zio.test.Assertion._
-import zio.test.TestAspect.{ignore, timeout}
 import org.knora.webapi.store.cacheservice.api.CacheService
+import zio.test.Assertion._
+import zio.test.TestAspect.ignore
+import zio.test.TestAspect.timeout
+import zio.test._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl]].

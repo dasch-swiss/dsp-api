@@ -9,8 +9,8 @@ object RedisTestConfig {
   val redisTestContainer: ZLayer[RedisTestContainer, Nothing, RedisConfig] = {
     ZLayer {
       for {
-        rtc <- ZIO.service[RedisTestContainer]        
-      } yield RedisConfig("localhost", rtc.port)
+        rtc <- ZIO.service[RedisTestContainer]
+      } yield RedisConfig("localhost", rtc.container.getFirstMappedPort())
     }.tap(_ => ZIO.debug(">>> Redis Test Config Initialized <<<"))
   }
 }

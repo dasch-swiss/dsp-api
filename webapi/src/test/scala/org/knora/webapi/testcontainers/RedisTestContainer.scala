@@ -1,8 +1,8 @@
 package org.knora.webapi.testcontainers
 
-import zio._
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
+import zio._
 
 final case class RedisTestContainer(container: GenericContainer[Nothing])
 
@@ -17,16 +17,16 @@ object RedisTestContainer {
     container.withExposedPorts(6379)
     container.start()
     container
-  }.orDie
+  }.orDie.tap(_ => ZIO.debug(">>> aquireRedisTestContainer executed <<<"))
 
-  def releaseRedisTestContainer(container: GenericContainer[Nothing]): URIO[Any,Unit] = ZIO.attemptBlocking {
+  def releaseRedisTestContainer(container: GenericContainer[Nothing]): URIO[Any, Unit] = ZIO.attemptBlocking {
     container.stop()
-  }.orDie
+  }.orDie.tap(_ => ZIO.debug(">>> releaseRedisTestContainer executed <<<"))
 
   val layer: ZLayer[Scope, Nothing, RedisTestContainer] = {
     ZLayer {
       for {
-        tc <- ZIO.acquireRelease(aquireRedisTestContainer)(releaseRedisTestContainer(_))
+        tc <- ZIO.acquireRelease(aquireRedisTestContainer)(releaseRedisTestContainer(_)).orDie
       } yield RedisTestContainer(tc)
     }.tap(_ => ZIO.debug(">>> Redis Test Container Initialized <<<"))
   }

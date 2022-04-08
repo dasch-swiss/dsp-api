@@ -29,21 +29,23 @@ object ActorUtil {
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
    * phase, to be able to return ZIO inside an Actor.
+   * 
+   * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
     Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun((for {
-        executor <- ZIO.executor
-        _        <- zioTask.fold(ex => handleExeption(ex, sender)(executor.asExecutionContext), success => sender ! success)
-      } yield ()))
+      .unsafeRun(
+        zioTask.fold(ex => handleExeption(ex, sender), success => sender ! success)
+      )
 
   /**
-   * @param ex
-   * @param sender
-   * @param executionContext
-   * @return
+   * The "throwable" handling part of `zio2Message`. It analyses the kind of throwable
+   * and sends the actor, that made the request in the `ask` pattern, the failure response.
+   *
+   * @param ex the throwable that needs to be handled.
+   * @param sender the actor that made the request in the `ask` pattern.
    */
-  def handleExeption(ex: Throwable, sender: ActorRef)(implicit executionContext: ExecutionContext) =
+  def handleExeption(ex: Throwable, sender: ActorRef): ZIO[Any, Nothing, Unit] =
     ex match {
       case rejectedEx: RequestRejectedException =>
         // The error was the client's fault. Log the exception, and also

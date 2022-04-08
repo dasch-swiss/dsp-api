@@ -7,18 +7,22 @@ package org.knora.webapi.store.cacheservice.impl
 
 import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectIdentifierADM,
-  ProjectIdentifierType
-}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM, UserIdentifierType}
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceStatusOK, CacheServiceStatusResponse}
-import org.knora.webapi.store.cacheservice.api.{CacheService, EmptyKey, EmptyValue}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierType
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
+import org.knora.webapi.store.cacheservice.api.CacheService
+import org.knora.webapi.store.cacheservice.api.EmptyKey
+import org.knora.webapi.store.cacheservice.api.EmptyValue
 import zio._
 import zio.stm._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * In-Memory Cache implementation
@@ -87,9 +91,8 @@ case class CacheServiceInMemImpl(
    */
   def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
     (for {
-      maybeIri <- lut.get(usernameOrEmail)
-      iri      <- STM.fromOption(maybeIri)
-      user     <- users.get(iri).some
+      iri  <- lut.get(usernameOrEmail).some
+      user <- users.get(iri).some
     } yield user).commit.unsome // watch Spartan session about error. post example on Spartan channel
 
   /**
@@ -143,9 +146,8 @@ case class CacheServiceInMemImpl(
    */
   def getProjectByShortcodeOrShortname(shortcodeOrShortname: String) =
     (for {
-      maybeIri <- lut.get(shortcodeOrShortname)
-      iri      <- STM.fromOption(maybeIri)
-      project  <- projects.get(iri).some
+      iri     <- lut.get(shortcodeOrShortname).some
+      project <- projects.get(iri).some
     } yield project).commit.unsome
 
   /**
