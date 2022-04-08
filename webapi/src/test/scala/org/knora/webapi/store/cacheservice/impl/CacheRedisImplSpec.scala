@@ -19,16 +19,13 @@ import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.testcontainers.RedisTestContainer
 import zio._
 import zio.test.Assertion._
-import zio.test.TestAspect.ignore
-import zio.test.TestAspect.timeout
+import zio.test.TestAspect._
 import zio.test._
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceRedisImpl]].
- * Adding the [[TestContainerRedis.PortConfig]] config will start the Redis container and make it
- * available to the test.
  */
-object CacheRedisImplSpec extends ZIOSpecDefault {
+object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
 
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -36,16 +33,14 @@ object CacheRedisImplSpec extends ZIOSpecDefault {
   private val user: UserADM       = SharedTestDataADM.imagesUser01
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
-  def spec =
-    (userTests + projectTests)
-      .provideShared(
-        CacheServiceRedisImpl.layer,
-        RedisTestConfig.redisTestContainer,
-        RedisTestContainer.layer,
-        zio.test.Annotations.live,
-        zio.Scope.default,
-        
-      )
+  val layer = ZLayer.make[CacheService & zio.test.Annotations](
+    CacheServiceRedisImpl.layer,
+    RedisTestConfig.redisTestContainer,
+    zio.test.Annotations.live,
+    RedisTestContainer.layer
+  )
+
+  def spec = projectTests
 
   val userTests = suite("CacheRedisImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {
@@ -74,20 +69,21 @@ object CacheRedisImplSpec extends ZIOSpecDefault {
         _                <- CacheService(_.putProjectADM(project))
         retrievedProject <- CacheService(_.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id))))
       } yield assert(retrievedProject)(equalTo(Some(project)))
-    ) +
-      test("successfully store a project and retrieve by SHORTCODE")(
-        for {
-          _ <- CacheService(_.putProjectADM(project))
-          retrievedProject <-
-            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode))))
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      ) +
-      test("successfully store a project and retrieve by SHORTNAME")(
-        for {
-          _ <- CacheService(_.putProjectADM(project))
-          retrievedProject <-
-            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
-        } yield assert(retrievedProject)(equalTo(Some(project)))
-      )
-  )
+    )
+    // ) +
+    //   test("successfully store a project and retrieve by SHORTCODE")(
+    //     for {
+    //       _ <- CacheService(_.putProjectADM(project))
+    //       retrievedProject <-
+    //         CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode))))
+    //     } yield assert(retrievedProject)(equalTo(Some(project)))
+    //   ) +
+    //   test("successfully store a project and retrieve by SHORTNAME")(
+    //     for {
+    //       _ <- CacheService(_.putProjectADM(project))
+    //       retrievedProject <-
+    //         CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
+    //     } yield assert(retrievedProject)(equalTo(Some(project)))
+    //   )
+  ) @@ after(ZIO.debug("before"))
 }

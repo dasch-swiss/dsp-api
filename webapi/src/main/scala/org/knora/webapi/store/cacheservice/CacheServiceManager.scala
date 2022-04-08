@@ -29,9 +29,20 @@ case class CacheServiceManager(cs: CacheService) {
   val cacheServiceWriteUserTimer = Metric
     .timer(
       name = "cache-service-write-user",
-      chronoUnit = ChronoUnit.MILLIS
+      chronoUnit = ChronoUnit.NANOS
     )
-    .trackDuration
+
+  val cacheServiceWriteProjectTimer = Metric
+    .timer(
+      name = "cache-service-write-project",
+      chronoUnit = ChronoUnit.NANOS
+    )
+
+  val cacheServiceReadProjectTimer = Metric
+    .timer(
+      name = "cache-service-read-project",
+      chronoUnit = ChronoUnit.NANOS
+    )
 
   def receive(msg: CacheServiceRequest) = msg match {
     case CacheServicePutUserADM(value)         => putUserADM(value)
@@ -57,7 +68,10 @@ case class CacheServiceManager(cs: CacheService) {
    * @param value the stored value
    */
   private def putUserADM(value: UserADM): Task[Unit] =
-    cs.putUserADM(value) // @@ cacheServiceWriteUserTimer
+    for {
+      res <- cs.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
+      _   <- cacheServiceWriteUserTimer.value.tap(value => ZIO.debug(value))
+    } yield res
 
   /**
    * Retrieves the user stored under the identifier (either iri, username,
@@ -79,7 +93,10 @@ case class CacheServiceManager(cs: CacheService) {
    * @param value the stored value
    */
   private def putProjectADM(value: ProjectADM): Task[Unit] =
-    cs.putProjectADM(value)
+    for {
+      res <- cs.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
+      _   <- cacheServiceWriteProjectTimer.value.tap(value => ZIO.debug(value))
+    } yield res
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
@@ -87,7 +104,10 @@ case class CacheServiceManager(cs: CacheService) {
    * @param identifier the project identifier.
    */
   private def getProjectADM(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
-    cs.getProjectADM(id)
+    for {
+      res <- cs.getProjectADM(id) @@ cacheServiceReadProjectTimer.trackDuration
+      _   <- cacheServiceReadProjectTimer.value.tap(value => ZIO.debug(value))
+    } yield res
 
   /**
    * Get value stored under the key as a string.
