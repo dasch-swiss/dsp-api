@@ -206,7 +206,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case HelloTriplestore(msg: String) if msg == triplestoreType => sender() ! HelloTriplestore(triplestoreType)
     case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
-      try2Message(sender(), updateLuceneIndex(subjectIri), log)
+      try2Message(sender(), Success(SparqlUpdateResponse()), log)
     case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
       try2Message(sender(), downloadRepository(outputFile, featureFactoryConfig), log)
     case UploadRepositoryRequest(inputFile: Path) => try2Message(sender(), uploadRepository(inputFile), log)
@@ -399,12 +399,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   }
 
   /**
-   * Updates the Lucene full-text search index.
-   */
-  private def updateLuceneIndex(subjectIri: Option[IRI] = None): Try[SparqlUpdateResponse] =
-    Success(SparqlUpdateResponse())
-
-  /**
    * Performs a SPARQL update operation.
    *
    * @param sparqlUpdate the SPARQL update.
@@ -415,9 +409,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     for {
       // Send the request to the triplestore.
       _ <- getSparqlHttpResponse(sparqlUpdate, isUpdate = true)
-
-      // If we're using GraphDB, update the full-text search index.
-      _ = updateLuceneIndex()
     } yield SparqlUpdateResponse()
 
   /**

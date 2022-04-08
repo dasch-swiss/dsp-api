@@ -9,13 +9,13 @@
 @*
  * Constructs a prequery that gets resources from the specified project, using SPARQL w/o inference.
  *
- * @param triplestore       the name of the triplestore being used.
- * @param projectIri        the IRI of the project.
- * @param resourceClassIri  the IRI of the resource class.
- * @param orderByProperty   the IRI of the property to order by.
- * @param orderByValuePredicate the predicate of a Knora value class whose object will be used in ORDER BY.
- * @param offset            the OFFSET to be used.
- * @param limit             the LIMIT to be used.
+ * @param triplestore           the name of the triplestore being used.
+ * @param projectIri            the IRI of the project.
+ * @param resourceClassIri      the IRI of the resource class.
+ * @param maybeOrderByProperty  the IRI of the property to order by.
+ * @param maybeOrderByValuePredicate the predicate of a Knora value class whose object will.
+ * @param offset                the OFFSET to be used.
+ * @param limit                 the LIMIT to be used.
  *@
 @(triplestore: String,
   projectIri: IRI,

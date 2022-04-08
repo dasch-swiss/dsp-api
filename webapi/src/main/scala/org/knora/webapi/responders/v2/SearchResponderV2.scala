@@ -311,12 +311,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             settings = settings
           )
 
-          val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer =
+          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
             new SparqlTransformer.NoInferenceConstructToConstructTransformer
 
           val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = triplestoreSpecificQueryPatternTransformerConstruct
+            transformer = queryPatternTransformerConstruct
           )
 
           // println(triplestoreSpecificQuery.toSparql)
@@ -613,12 +613,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             settings = settings
           )
 
-          val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer =
+          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
             new SparqlTransformer.NoInferenceConstructToConstructTransformer
 
           val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = triplestoreSpecificQueryPatternTransformerConstruct
+            transformer = queryPatternTransformerConstruct
           )
 
           // Convert the result to a SPARQL string and send it to the triplestore.

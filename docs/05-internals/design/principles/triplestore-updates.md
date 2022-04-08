@@ -38,11 +38,9 @@ this coordination.)
 We can assume that each SPARQL update operation will run in its own
 database transaction with an isolation level of 'read committed'.
 We cannot assume that it is possible to run more than one SPARQL update
-in a single database transaction. (The [SPARQL 1.1
-Protocol](http://www.w3.org/TR/sparql11-protocol/) does not provide a
-way to do this, and currently it can be done only by embedding the
-triplestore in the application and using a vendor-specific API, but we
-cannot require this in Knora.)
+in a single database transaction. The [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/) does not provide a way to do this, and currently it 
+can be done only by embedding the triplestore in the application and 
+using a vendor-specific API, but we cannot require this in Knora.)
 
 ### Permissions
 
