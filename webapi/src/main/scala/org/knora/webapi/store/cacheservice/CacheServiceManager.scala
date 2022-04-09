@@ -54,7 +54,7 @@ case class CacheServiceManager(cs: CacheService) {
     case CacheServiceRemoveValues(keys)        => removeValues(keys)
     case CacheServiceFlushDB(requestingUser)   => flushDB(requestingUser)
     case CacheServiceGetStatus                 => ping()
-    case other                                 => ZIO.logError(s"RedisManager received an unexpected message: $other")
+    case other                                 => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
   }
 
   /**
