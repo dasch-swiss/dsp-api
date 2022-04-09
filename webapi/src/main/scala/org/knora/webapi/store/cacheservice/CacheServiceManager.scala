@@ -135,7 +135,7 @@ case class CacheServiceManager(cs: CacheService) {
     cs.removeValues(keys)
 
   /**
-   * Flushes (removes) all stored content from the Redis store.
+   * Flushes (removes) all stored content from the store.
    */
   private def flushDB(requestingUser: UserADM): Task[Unit] =
     cs.flushDB(requestingUser)
