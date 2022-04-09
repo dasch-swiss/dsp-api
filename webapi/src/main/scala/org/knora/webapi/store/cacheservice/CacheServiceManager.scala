@@ -70,7 +70,7 @@ case class CacheServiceManager(cs: CacheService) {
   private def putUserADM(value: UserADM): Task[Unit] =
     for {
       res <- cs.putUserADM(value) @@ cacheServiceWriteUserTimer.trackDuration
-      _   <- cacheServiceWriteUserTimer.value.tap(value => ZIO.debug(value))
+      // _   <- cacheServiceWriteUserTimer.value.tap(value => ZIO.debug(value))
     } yield res
 
   /**
@@ -95,7 +95,7 @@ case class CacheServiceManager(cs: CacheService) {
   private def putProjectADM(value: ProjectADM): Task[Unit] =
     for {
       res <- cs.putProjectADM(value) @@ cacheServiceWriteProjectTimer.trackDuration
-      _   <- cacheServiceWriteProjectTimer.value.tap(value => ZIO.debug(value))
+      // _   <- cacheServiceWriteProjectTimer.value.tap(value => ZIO.debug(value))
     } yield res
 
   /**
@@ -106,7 +106,7 @@ case class CacheServiceManager(cs: CacheService) {
   private def getProjectADM(id: ProjectIdentifierADM): Task[Option[ProjectADM]] =
     for {
       res <- cs.getProjectADM(id) @@ cacheServiceReadProjectTimer.trackDuration
-      _   <- cacheServiceReadProjectTimer.value.tap(value => ZIO.debug(value))
+      // _   <- cacheServiceReadProjectTimer.value.tap(value => ZIO.debug(value))
     } yield res
 
   /**
