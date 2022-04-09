@@ -16,4 +16,4 @@ As part of the move from `Akka` to `ZIO`, it was decided that the `CacheServiceM
 
 ## Consequences
 
-The usage from other actors stays the same. The actor messages and responses didn't change.
+The usage from other actors stays the same. The actor messages and responses don't change.
