@@ -19,14 +19,14 @@ object Dependencies {
   val jenaVersion       = "4.4.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
-  val ZioVersion        = "2.0.0-RC4"
+  val ZioVersion        = "2.0.0-RC5"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
-  val ZioConfigVersion  = "3.0.0-RC7"
-  val ZioSchemaVersion  = "0.2.0-RC1-1"
-  val ZioLoggingVersion = "2.0.0-RC7"
+  val ZioConfigVersion  = "3.0.0-RC8"
+  val ZioSchemaVersion  = "0.2.0-RC5"
+  val ZioLoggingVersion = "2.0.0-RC8"
   val ZioZmxVersion     = "2.0.0-RC4"
-  val ZioPreludeVersion = "1.0.0-RC12"
+  val ZioPreludeVersion = "1.0.0-RC13"
 
   // ZIO - all Scala 3 compatible
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
