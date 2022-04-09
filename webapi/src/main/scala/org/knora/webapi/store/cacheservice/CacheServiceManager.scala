@@ -54,7 +54,7 @@ case class CacheServiceManager(cs: CacheService) {
     case CacheServiceRemoveValues(keys)        => removeValues(keys)
     case CacheServiceFlushDB(requestingUser)   => flushDB(requestingUser)
     case CacheServiceGetStatus                 => ping()
-    case other                                 => ZIO.logError(s"RedisManager received an unexpected message: $other")
+    case other                                 => ZIO.logError(s"CacheServiceManager received an unexpected message: $other")
   }
 
   /**
@@ -121,7 +121,7 @@ case class CacheServiceManager(cs: CacheService) {
    * Store string or byte array value under key.
    *
    * @param k the key.
-   * @param k the value.
+   * @param v the value.
    */
   private def writeStringValue(k: String, v: String): Task[Unit] =
     cs.putStringValue(k, v)
@@ -135,7 +135,7 @@ case class CacheServiceManager(cs: CacheService) {
     cs.removeValues(keys)
 
   /**
-   * Flushes (removes) all stored content from the Redis store.
+   * Flushes (removes) all stored content from the store.
    */
   private def flushDB(requestingUser: UserADM): Task[Unit] =
     cs.flushDB(requestingUser)
