@@ -121,7 +121,7 @@ case class CacheServiceManager(cs: CacheService) {
    * Store string or byte array value under key.
    *
    * @param k the key.
-   * @param k the value.
+   * @param v the value.
    */
   private def writeStringValue(k: String, v: String): Task[Unit] =
     cs.putStringValue(k, v)
