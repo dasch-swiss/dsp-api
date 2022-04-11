@@ -13,7 +13,7 @@ The following table shows the accepted file formats:
 | --------- | ------------------------- | -------------------------------------------------------------------------- |
 | Text, XML | TXT, XML                  | No                                                                         |
 | Tables    | CSV, XLS, XLSX            | No                                                                         |
-| 2D Images | JPEG, PNG, TIFF, JP2      | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dhlab-basel/Sipi) |
+| 2D Images | JPEG, PNG, TIFF, JP2      | Yes, converted to JPEG 2000 by [Sipi](https://github.com/dasch-swiss/sipi) |
 | Audio     | MPEG (MP3), MP4, WAV      | No                                                                         |
 | Video     | MP4                       | No                                                                         |
 | Office    | PDF, DOC, DOCX, PPT, PPTX | No                                                                         |
