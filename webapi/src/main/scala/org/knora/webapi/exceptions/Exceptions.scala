@@ -372,7 +372,7 @@ object InvalidApiJsonException {
 }
 
 /**
- * Indicates that the during caching with the [[org.knora.webapi.store.cacheservice.CacheService]] something went wrong.
+ * Indicates that during caching with [[org.knora.webapi.store.cacheservice.api.CacheService]] something went wrong.
  *
  * @param message a description of the error.
  */

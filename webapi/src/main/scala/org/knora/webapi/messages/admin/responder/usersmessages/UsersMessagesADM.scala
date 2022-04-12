@@ -477,16 +477,16 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
  * @param sessionId   The sessionId,.
  * @param permissions The user's permissions.
  */
-case class UserADM(
+final case class UserADM(
   id: IRI,
   username: String,
   email: String,
-  password: Option[String] = None,
-  token: Option[String] = None,
   givenName: String,
   familyName: String,
   status: Boolean,
   lang: String,
+  password: Option[String] = None,
+  token: Option[String] = None,
   groups: Seq[GroupADM] = Vector.empty[GroupADM],
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   sessionId: Option[String] = None,
@@ -570,8 +570,8 @@ case class UserADM(
    */
   def isSelf(identifier: UserIdentifierADM): Boolean = {
 
-    val iriEquals = identifier.toIriOption.contains(id)
-    val emailEquals = identifier.toEmailOption.contains(email)
+    val iriEquals      = identifier.toIriOption.contains(id)
+    val emailEquals    = identifier.toEmailOption.contains(email)
     val usernameEquals = identifier.toUsernameOption.contains(username)
 
     iriEquals || emailEquals || usernameEquals
@@ -590,8 +590,8 @@ case class UserADM(
   def fullname: String = givenName + " " + familyName
 
   def getDigest: String = {
-    val md = java.security.MessageDigest.getInstance("SHA-1")
-    val time = System.currentTimeMillis().toString
+    val md    = java.security.MessageDigest.getInstance("SHA-1")
+    val time  = System.currentTimeMillis().toString
     val value = (time + this.toString).getBytes("UTF-8")
     md.digest(value).map("%02x".format(_)).mkString
   }
@@ -679,10 +679,10 @@ case class UserADM(
  */
 sealed trait UserInformationTypeADM
 object UserInformationTypeADM {
-  case object Public extends UserInformationTypeADM
-  case object Short extends UserInformationTypeADM
+  case object Public     extends UserInformationTypeADM
+  case object Short      extends UserInformationTypeADM
   case object Restricted extends UserInformationTypeADM
-  case object Full extends UserInformationTypeADM
+  case object Full       extends UserInformationTypeADM
 
   // throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
 }
@@ -692,8 +692,8 @@ object UserInformationTypeADM {
  */
 sealed trait UserIdentifierType
 object UserIdentifierType {
-  case object Iri extends UserIdentifierType
-  case object Email extends UserIdentifierType
+  case object Iri      extends UserIdentifierType
+  case object Email    extends UserIdentifierType
   case object Username extends UserIdentifierType
 }
 
@@ -745,7 +745,7 @@ sealed abstract case class UserIdentifierADM private (
   /**
    * Tries to return the value as email.
    */
-  def toEmail: IRI =
+  def toEmail: String =
     maybeEmail.getOrElse(
       throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.EMAIL' type.")
     )
@@ -759,7 +759,7 @@ sealed abstract case class UserIdentifierADM private (
   /**
    * Tries to return the value as username.
    */
-  def toUsername: IRI =
+  def toUsername: String =
     maybeUsername.getOrElse(
       throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.USERNAME' type.")
     )
@@ -773,7 +773,7 @@ sealed abstract case class UserIdentifierADM private (
   /**
    * Returns the string representation
    */
-  override def toString: IRI =
+  override def toString: String =
     s"UserIdentifierADM(${this.value})"
 
 }
@@ -954,7 +954,7 @@ object UsersADMJsonProtocol
     "newPassword"
   )
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
-  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
+  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
     jsonFormat1(UserProjectMembershipsGetResponseADM)
   implicit val userProjectAdminMembershipsGetResponseADMFormat

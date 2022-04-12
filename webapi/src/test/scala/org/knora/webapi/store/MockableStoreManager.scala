@@ -8,11 +8,13 @@ package org.knora.webapi.store
 import akka.actor.{ActorRef, Props}
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.settings.{KnoraDispatchers, _}
-import org.knora.webapi.store.cacheservice.CacheService
+import org.knora.webapi.store.cacheservice.api.CacheService
 import org.knora.webapi.store.iiif.MockableIIIFManager
+import zio.ZLayer
+import org.knora.webapi.store.cacheservice.CacheServiceManager
 
-class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef, cs: CacheService)
-    extends StoreManager(appActor, cs)
+class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef, csm: CacheServiceManager)
+    extends StoreManager(appActor, csm)
     with LiveActorMaker {
 
   /**

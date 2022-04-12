@@ -14,6 +14,6 @@ case class SchemaRepoLive() extends SchemaRepo {
 
 }
 
-object SchemaRepoLive extends (() => SchemaRepo) {
-  val layer: URLayer[Any, SchemaRepo] = (SchemaRepoLive.apply _).toLayer
+object SchemaRepoLive {
+  val layer: URLayer[Any, SchemaRepo] = ZLayer.succeed(SchemaRepoLive())
 }

@@ -16,13 +16,13 @@ import scala.jdk.CollectionConverters._
  */
 object TestContainerRedis {
 
-  val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
-  val RedisContainer = new GenericContainer(RedisImageName)
-  RedisContainer.withExposedPorts(6379)
-  RedisContainer.start()
+  val redisImageName: DockerImageName = DockerImageName.parse("redis:5")
+  val redisContainer = new GenericContainer(redisImageName)
+  redisContainer.withExposedPorts(6379)
+  redisContainer.start()
 
   private val portMap = Map(
-    "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
+    "app.cache-service.redis.port" -> redisContainer.getFirstMappedPort
   ).asJava
 
   // all tests need to be configured with these ports.

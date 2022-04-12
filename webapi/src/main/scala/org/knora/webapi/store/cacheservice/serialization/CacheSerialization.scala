@@ -5,59 +5,50 @@
 
 package org.knora.webapi.store.cacheservice.serialization
 
-import com.twitter.chill.MeatLocker
 import org.knora.webapi.exceptions.CacheServiceException
 import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import scala.concurrent.{ExecutionContext, Future}
 
+import zio._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
 case class EmptyByteArray(message: String) extends CacheServiceException(message)
 
-object CacheSerialization extends InstrumentationSupport {
+object CacheSerialization {
 
   /**
-   * Serialize objects by using plain java serialization. Java serialization is not
-   * capable to serialize all our objects (e.g., UserADM) and that is why we use the
-   * [[MeatLocker]], which does some magic and allows our case classes to be
-   * serializable.
+   * Serialize objects by using Apache commons.
    *
    * @param value the value we want to serialize as a array of bytes.
-   * @tparam T the type parameter of our value.
+   * @tparam A the type parameter of our value.
    */
-  def serialize[T](value: T)(implicit ec: ExecutionContext): Future[Array[Byte]] = tracedFuture("redis-serialize") {
-
-    Future {
-      val boxedItem: MeatLocker[T] = MeatLocker[T](value)
+  def serialize[A](value: A): Task[Array[Byte]] =
+    ZIO.attempt {
       val stream: ByteArrayOutputStream = new ByteArrayOutputStream()
-      val oos = new ObjectOutputStream(stream)
-      oos.writeObject(boxedItem)
+      val oos                           = new ObjectOutputStream(stream)
+      oos.writeObject(value)
       oos.close()
       stream.toByteArray
     }
-  }
 
   /**
-   * Deserialize objects by using plain java serialization. Java serialization is not
-   * capable to serialize all our objects (e.g., UserADM) and that is why we use the
-   * [[MeatLocker]], which does some magic and allows our case classes to be
-   * serializable.
+   * Deserialize objects by using Apache commons.
    *
-   * @tparam T the type parameter of our value.
+   * @tparam A the type parameter of our value.
    */
-  def deserialize[T](bytes: Array[Byte])(implicit ec: ExecutionContext): Future[Option[T]] =
-    tracedFuture("redis-deserialize") {
-
-      Future {
-        if (bytes.isEmpty) {
-          None
-        } else {
-          val ois = new ObjectInputStream(new ByteArrayInputStream(bytes))
-          val box = ois.readObject
-          ois.close()
-          Some(box.asInstanceOf[MeatLocker[T]].get)
-        }
+  def deserialize[A](bytes: Array[Byte]): Task[Option[A]] =
+    ZIO.attempt {
+      if (bytes.isEmpty) {
+        None
+      } else {
+        val ois   = new ObjectInputStream(new ByteArrayInputStream(bytes))
+        val value = ois.readObject
+        ois.close()
+        Some(value.asInstanceOf[A])
       }
-
     }
 }

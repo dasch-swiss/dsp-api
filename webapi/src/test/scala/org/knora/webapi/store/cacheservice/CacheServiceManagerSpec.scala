@@ -10,12 +10,10 @@ import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceGetProjectADM,
-  CacheServiceGetUserADM,
-  CacheServicePutProjectADM,
-  CacheServicePutUserADM
-}
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProjectADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object CacheServiceManagerSpec {
@@ -32,14 +30,14 @@ class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  val user = SharedTestDataADM.imagesUser01
+  val user    = SharedTestDataADM.imagesUser01
   val project = SharedTestDataADM.imagesProject
 
-  "The RedisManager" should {
+  "The CacheManager" should {
 
     "successfully store a user" in {
       storeManager ! CacheServicePutUserADM(user)
-      expectMsg(true)
+      expectMsg(())
     }
 
     "successfully retrieve a user by IRI" in {
@@ -59,7 +57,7 @@ class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
 
     "successfully store a project" in {
       storeManager ! CacheServicePutProjectADM(project)
-      expectMsg(true)
+      expectMsg(())
     }
 
     "successfully retrieve a project by IRI" in {
