@@ -582,7 +582,7 @@ class ProjectIdentifierADM private (
     maybeShortcode
   ).flatten.head
 
-  def hasType: ProjectIdentifierType.Value =
+  def hasType: ProjectIdentifierType =
     if (maybeIri.isDefined) {
       ProjectIdentifierType.IRI
     } else if (maybeShortcode.isDefined) {
@@ -647,13 +647,11 @@ class ProjectIdentifierADM private (
  *  - Shortcode
  *  - Shortname
  */
-object ProjectIdentifierType extends Enumeration {
-
-  type ProjectIdentifierType
-
-  val IRI: Value = Value(0, "iri")
-  val SHORTCODE: Value = Value(1, "shortcode")
-  val SHORTNAME: Value = Value(2, "shortname")
+sealed trait ProjectIdentifierType
+object ProjectIdentifierType {
+  case object IRI       extends ProjectIdentifierType
+  case object SHORTCODE extends ProjectIdentifierType
+  case object SHORTNAME extends ProjectIdentifierType
 }
 
 /**
