@@ -355,6 +355,28 @@ object QueryTraverser {
     )
   }
 
+  // def getMultiplePrequeryOptions(
+  //   query: SelectQuery,
+  //   transformer: SparqlTransformer.NoInferenceSelectToSelectTransformer
+  // ): Seq[String] = {
+  //   val opts = Seq(0, 1, 2)
+  //   val res = opts.map { opt =>
+  //     println(s"@ $opt")
+  //     query
+  //       .copy(
+  //         fromClause = transformer.getFromClause,
+  //         whereClause = WhereClause(
+  //           patterns = transformWherePatterns(
+  //             patterns = query.whereClause.patterns,
+  //             inputOrderBy = query.orderBy,
+  //             whereTransformer = transformer
+  //           )
+  //         )
+  //       )
+  //   }
+  //   res.map(_.toSparql)
+  // }
+
   def transformSelectToSelect(inputQuery: SelectQuery, transformer: SelectToSelectTransformer): SelectQuery =
     inputQuery.copy(
       fromClause = transformer.getFromClause,

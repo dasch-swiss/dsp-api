@@ -299,129 +299,143 @@ object SparqlTransformer {
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
     simulateInference: Boolean
-  ): Seq[Seq[QueryPattern]] = {
+  ): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    def withPropertyPath(): Seq[QueryPattern] =
-      Seq.empty
-    def withUnion(): Seq[QueryPattern] =
-      Seq.empty
-    def withValues(): Seq[QueryPattern] =
-      Seq.empty
+    def transformStandoffHasStartAncestor(): Seq[QueryPattern] = {
+      val iri = OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri
+      Seq(statementPattern.copy(pred = IriRef(iri, Some('*'))))
+    }
+    def transformRemoveNamedGraph(): Seq[QueryPattern] = Seq(statementPattern.copy(namedGraph = None))
+    def transformUnchanged(): Seq[QueryPattern] = Seq(statementPattern)
+    def transformSimulateInferenceForRDFType(): Seq[QueryPattern] = {
+      val baseClassIri: IriRef = statementPattern.obj match {
+        case iriRef: IriRef => iriRef
+        case other =>
+          throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
+      }
+
+      val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(
+        base = statementPattern.subj,
+        baseClassIri = baseClassIri
+      )
+
+      Seq(
+        StatementPattern(
+          subj = rdfTypeVariable,
+          pred = IriRef(
+            iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
+            propertyPathOperator = Some('*')
+          ),
+          obj = statementPattern.obj
+        ),
+        StatementPattern(
+          subj = statementPattern.subj,
+          pred = statementPattern.pred,
+          obj = rdfTypeVariable
+        )
+      )
+    }
+    def transformSimulateInferenceForOtherStatements(): Seq[QueryPattern] = {
+      val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+        base = statementPattern.pred,
+        propertyIri = OntologyConstants.Rdfs.SubPropertyOf
+      )
+
+      val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
+      val superProps = ontoCache.superPropertyOfRelations
+
+      // val propPath = Seq(
+      //   StatementPattern(
+      //     subj = propertyVariable,
+      //     pred = IriRef(
+      //       iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
+      //       propertyPathOperator = Some('*')
+      //     ),
+      //     obj = statementPattern.pred
+      //   ),
+      //   StatementPattern(
+      //     subj = statementPattern.subj,
+      //     pred = propertyVariable,
+      //     obj = statementPattern.obj
+      //   )
+      // )
+      val unions = {
+        val predIri = statementPattern.pred match {
+          case IriRef(iri, _) => iri
+          case _              => throw new Exception("Nope")
+        }
+        val knownSuperProps = superProps.get(predIri).getOrElse(throw new Exception("Nope")).toSeq
+        Seq(
+          UnionPattern(
+            knownSuperProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+          )
+        )
+      }
+
+      // val values = statementPattern.pred match {
+      //   case IriRef(iri, propertyPathOperator) =>
+      //     val predIri = statementPattern.pred match {
+      //       case IriRef(iri, _) => iri
+      //       case _              => throw new Exception("Nope")
+      //     }
+      //     val knownSuperProps = superProps.get(predIri).getOrElse(throw new Exception("Nope")).map(IriRef(_))
+      //     val valuesQueryVariable =
+      //       createUniqueVariableFromStatement(statementPattern, "values")
+      //     Seq(
+      //       ValuesPattern(valuesQueryVariable, knownSuperProps),
+      //       statementPattern.copy(pred = valuesQueryVariable)
+      //     )
+      //   case _ => throw new Exception("Nope")
+      // }
+      unions
+    }
 
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
         // Simulate knora-api:standoffTagHasStartAncestor, using knora-api:standoffTagHasStartParent.
-        Seq(
-          statementPattern.copy(
-            pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartParent.toSmartIri, Some('*'))
-          )
-        )
-
+        transformStandoffHasStartAncestor()
       case _ =>
         // Is the statement in KnoraExplicitNamedGraph?
         statementPattern.namedGraph match {
           case Some(graphIri: IriRef)
               if graphIri.iri.toString == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph =>
             // Yes. No expansion needed. Just remove KnoraExplicitNamedGraph.
-            Seq(statementPattern.copy(namedGraph = None))
+            transformRemoveNamedGraph()
 
           case _ =>
             // Is inference enabled?
             if (simulateInference) {
               // Yes. The statement might need to be expanded. Is the predicate a property IRI?
               statementPattern.pred match {
-                case iriRef: IriRef =>
+                case iriRef: IriRef => {
                   // Yes.
                   val propertyIri = iriRef.iri.toString
+                  // println(s"Property IRI: $propertyIri")
+                  // println(statementPattern)
+                  // println()
 
                   // Is the property rdf:type?
                   if (propertyIri == OntologyConstants.Rdf.Type) {
-                    println(s"Property path for Subclass! ${statementPattern.toSparql}")
+                    // println(s"Property path for Subclass! ${statementPattern.toSparql}")
                     // Yes. Expand using rdfs:subClassOf*.
+                    transformSimulateInferenceForRDFType()
 
-                    val baseClassIri: IriRef = statementPattern.obj match {
-                      case iriRef: IriRef => iriRef
-                      case other =>
-                        throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
-                    }
-
-                    val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(
-                      base = statementPattern.subj,
-                      baseClassIri = baseClassIri
-                    )
-
-                    Seq(
-                      StatementPattern(
-                        subj = rdfTypeVariable,
-                        pred = IriRef(
-                          iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
-                          propertyPathOperator = Some('*')
-                        ),
-                        obj = statementPattern.obj
-                      ),
-                      StatementPattern(
-                        subj = statementPattern.subj,
-                        pred = statementPattern.pred,
-                        obj = rdfTypeVariable
-                      )
-                    )
                   } else {
                     // No. Expand using rdfs:subPropertyOf*.
-                    println(s"Property path for Subprop! ${statementPattern.toSparql}")
-
-                    val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
-                      base = statementPattern.pred,
-                      propertyIri = OntologyConstants.Rdfs.SubPropertyOf
-                    )
-
-                    println("###### skipped propertypath ######")
-                    val prevRes = Seq(
-                      StatementPattern(
-                        subj = propertyVariable,
-                        pred = IriRef(
-                          iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
-                          propertyPathOperator = Some('*')
-                        ),
-                        obj = statementPattern.pred
-                      ),
-                      StatementPattern(
-                        subj = statementPattern.subj,
-                        pred = propertyVariable,
-                        obj = statementPattern.obj
-                      )
-                    )
-                    println("previously")
-                    println(prevRes)
-                    val ontoCache = Await.result(Cache.getCacheData, 1.second)
-                    println(s"@@@@@ ontologies\n${ontoCache.ontologies.keys.toList}\n")
-                    // println(ontoCache.subPropertyOfRelations.keySet)
-                    ontoCache.subPropertyOfRelations.map(p => println(s"${p._1} \n  -> ${p._2}\n\n\n"))
-                    val unions = Seq(
-                      UnionPattern(
-                        Seq(
-                          Seq(
-                            statementPattern
-                          ),
-                          Seq(
-                            statementPattern // TODO: actually do inference here
-                          )
-                        )
-                      )
-                    )
-                    // Seq(statementPattern)
-                    unions
+                    // println(s"Property path for Subprop! ${statementPattern.toSparql}")
+                    transformSimulateInferenceForOtherStatements()
                   }
-
+                }
                 case _ =>
                   // The predicate isn't a property IRI, so no expansion needed.
-                  Seq(statementPattern)
+                  transformUnchanged()
               }
             } else {
               // Inference is disabled. Just return the statement as is.
-              Seq(statementPattern)
+              transformUnchanged()
             }
         }
     }

@@ -542,11 +542,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // variable representing the main resources
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
       mainResource = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceStatement
-      _ = {
-        println("main var")
-        println(mainResourceVar)
-        println(mainResource)
-      }
+      // _ = {
+      //   println("main var")
+      //   println(mainResourceVar)
+      //   println(mainResource)
+      // }
       // TODO: can I infer the project somehow from the main variable?
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
@@ -571,8 +571,19 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         transformer = triplestoreSpecificQueryPatternTransformerSelect
       )
 
+      // queryOptions =
+      //   triplestoreSpecificQueryPatternTransformerSelect match {
+      //     case t: SparqlTransformer.NoInferenceSelectToSelectTransformer =>
+      //       QueryTraverser.getMultiplePrequeryOptions(nonTriplestoreSpecificPrequery, t)
+      //     case _ => Seq.empty
+      //   }
+
+      // _ = queryOptions.map(s => println(s"Option:\n${s}\n\n"))
+
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
       _ = log.info(triplestoreSpecificPrequerySparql)
+
+      start = System.currentTimeMillis()
 
       tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
       prequeryResponseNotMerged <- (tryPrequeryResponseNotMerged match {
@@ -585,6 +596,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         }
         case Success(value) => value
       }).mapTo[SparqlSelectResult]
+      _ = println(s"Prequery took: ${(System.currentTimeMillis() - start) / 1000.0}s")
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
