@@ -77,7 +77,7 @@ object SparqlTransformer {
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
         simulateInference = simulateInference
-      )
+      ) // TODO-BL: ?
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
@@ -135,7 +135,10 @@ object SparqlTransformer {
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
     ): Seq[QueryPattern] =
-      transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
+      transformStatementInWhereForNoInference(
+        statementPattern = statementPattern,
+        simulateInference = true
+      ) // TODO-BL: ?
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
@@ -166,7 +169,7 @@ object SparqlTransformer {
 
     entityStr
       .replaceAll("[:/.#-]", "")
-      .replaceAll("\\s", "") // TODO: check if this is complete and if it could lead to collision of variable names
+      .replaceAll("\\s", "") // TODO-old: check if this is complete and if it could lead to collision of variable names
   }
 
   /**
@@ -298,7 +301,8 @@ object SparqlTransformer {
    */
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
-    simulateInference: Boolean
+    simulateInference: Boolean,
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     implicit lazy val system: ActorSystem = ActorSystem("webapi")
@@ -362,17 +366,26 @@ object SparqlTransformer {
       //     obj = statementPattern.obj
       //   )
       // )
-      val unions = {
+      val unions: Seq[QueryPattern] = {
         val predIri = statementPattern.pred match {
           case IriRef(iri, _) => iri
-          case _              => throw new Exception("Nope")
+          case _              => throw new GravsearchException(s"Failed to resolve the predicate to an IRI in $statementPattern")
         }
-        val knownSuperProps = superProps.get(predIri).getOrElse(throw new Exception("Nope")).toSeq
-        Seq(
-          UnionPattern(
-            knownSuperProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+        val knownChildProps = superProps
+          .get(predIri)
+          .getOrElse(
+            throw new GravsearchException(s"No known Child Properties for $predIri which should never happen.")
           )
-        )
+          .toSeq
+        if (knownChildProps.length > 1) {
+          Seq(
+            UnionPattern(
+              knownChildProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+            )
+          )
+        } else {
+          Seq(statementPattern)
+        }
       }
 
       // val values = statementPattern.pred match {
