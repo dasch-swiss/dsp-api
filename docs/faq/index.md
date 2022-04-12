@@ -5,7 +5,7 @@
 
 # Frequently Asked Questions
 
-## Data Formats
+## File Formats
 
 ### What file formats does Knora store?
 
