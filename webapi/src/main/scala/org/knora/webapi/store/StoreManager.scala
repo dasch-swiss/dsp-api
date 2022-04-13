@@ -14,11 +14,14 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import org.knora.webapi.store.cacheservice.{CacheService, CacheServiceManager}
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.api.CacheService
 import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
 import scala.concurrent.ExecutionContext
+import zio._
+import org.knora.webapi.util.ActorUtil
 
 /**
  * This actor receives messages for different stores, and forwards them to the corresponding store manager.
@@ -28,7 +31,7 @@ import scala.concurrent.ExecutionContext
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with ActorLogging {
+class StoreManager(appActor: ActorRef, csm: CacheServiceManager) extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
@@ -74,18 +77,10 @@ class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with Acto
     IIIFManagerActorName
   )
 
-  /**
-   * Instantiates the Redis Manager
-   */
-  protected lazy val cacheServiceManager: ActorRef = makeActor(
-    Props(new CacheServiceManager(cs)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    RedisManagerActorName
-  )
-
   def receive: Receive = LoggingReceive {
     case tripleStoreMessage: TriplestoreRequest    => triplestoreManager forward tripleStoreMessage
     case iiifMessages: IIIFRequest                 => iiifManager forward iiifMessages
-    case cacheServiceMessages: CacheServiceRequest => cacheServiceManager forward cacheServiceMessages
+    case cacheServiceMessages: CacheServiceRequest => ActorUtil.zio2Message(sender(), csm receive cacheServiceMessages, log)
     case other =>
       sender() ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
   }

@@ -5,11 +5,11 @@
 
 # Frequently Asked Questions
 
-## Data Formats
+## File Formats
 
-### What data formats does Knora store?
+### What file formats does Knora store?
 
-See [Data Formats in Knora](../01-introduction/data-formats.md).
+See [File Formats in Knora](../01-introduction/file-formats.md).
 
 ### Does Knora store XML files?
 

@@ -33,6 +33,11 @@ docs-install-requirements: ## install requirements
 docs-clean: ## cleans the project directory
 	@rm -rf site/
 
+.PHONY: structurizer
+structurizer: ## starts the structurizer and serves c4 architecture docs
+	@docker pull structurizr/lite
+	@docker run -it --rm -p 8080:8080 -v $(CURRENT_DIR)/docs/architecture:/usr/local/structurizr structurizr/lite
+
 #################################
 # Docker targets
 #################################

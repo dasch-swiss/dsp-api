@@ -18,6 +18,8 @@ webapi-it
 webapi-test
 upgrade/project
 sipi/test
+/docs/architecture/.structurizr
+/docs/architecture/workspace.json
 
 **/target/
 *.aux
@@ -31,6 +33,7 @@ sipi/test
 *.tdo
 *.toc
 *.bak
+*.rdb
 .sbtrc
 
 dependencies.txt

@@ -47,13 +47,13 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
   private val timeout: FiniteDuration = 8.seconds
 
-  private val rootUser = SharedTestDataADM.rootUser
+  private val rootUser          = SharedTestDataADM.rootUser
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
-  private val normalUser = SharedTestDataADM.normalUser
+  private val normalUser        = SharedTestDataADM.normalUser
 
   private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
-  private val imagesProject = SharedTestDataADM.imagesProject
+  private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -380,7 +380,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "UPDATE the user's password (by himself)" in {
         val requesterPassword = Password.make("test").fold(e => throw e.head, v => v)
-        val newPassword = Password.make("test123456").fold(e => throw e.head, v => v)
+        val newPassword       = Password.make("test123456").fold(e => throw e.head, v => v)
         responderManager ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
@@ -408,7 +408,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "UPDATE the user's password (by a system admin)" in {
         val requesterPassword = Password.make("test").fold(e => throw e.head, v => v)
-        val newPassword = Password.make("test654321").fold(e => throw e.head, v => v)
+        val newPassword       = Password.make("test654321").fold(e => throw e.head, v => v)
 
         responderManager ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
@@ -576,10 +576,13 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
     "asked to update the user's project membership" should {
       "ADD user to project" in {
+
+        // get current project memberships
         responderManager ! UserProjectMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.projects should equal(Seq())
 
+        // add user to images project (00FF)
         responderManager ! UserProjectMembershipAddRequestADM(
           normalUser.id,
           imagesProject.id,

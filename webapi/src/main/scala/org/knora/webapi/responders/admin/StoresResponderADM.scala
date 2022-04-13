@@ -14,7 +14,7 @@ import org.knora.webapi.messages.admin.responder.storesmessages.{
   StoreResponderRequestADM
 }
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceFlushDB, CacheServiceFlushDBACK}
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{
   RdfDataObject,
   ResetRepositoryContent,
@@ -84,8 +84,8 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       )).mapTo[SuccessResponseV2]
       _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
-      redisFlushDB <- (storeManager ? CacheServiceFlushDB(systemUser)).mapTo[CacheServiceFlushDBACK]
-      _ = log.debug(s"resetTriplestoreContent - flushing Redis store done - {}", redisFlushDB.toString)
+      _ <- (storeManager ? CacheServiceFlushDB(systemUser))
+      _ = log.debug(s"resetTriplestoreContent - flushing Redis store done.")
 
       result = ResetTriplestoreContentResponseADM(message = "success")
 

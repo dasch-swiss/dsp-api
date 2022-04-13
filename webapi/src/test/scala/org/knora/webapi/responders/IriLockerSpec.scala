@@ -76,10 +76,10 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
       val testIri: IRI = "http://example.org/test2"
 
       val firstApiRequestID = UUID.randomUUID
-      val firstTestResult = Await.result(runRecursiveTask(testIri, firstApiRequestID, 3), 1.second)
+      val firstTestResult   = Await.result(runRecursiveTask(testIri, firstApiRequestID, 3), 1.second)
       assert(firstTestResult == SUCCESS)
       val secondApiRequestID = UUID.randomUUID
-      val secondTestResult = Await.result(runRecursiveTask(testIri, secondApiRequestID, 3), 1.second)
+      val secondTestResult   = Await.result(runRecursiveTask(testIri, secondApiRequestID, 3), 1.second)
       assert(secondTestResult == SUCCESS)
     }
 

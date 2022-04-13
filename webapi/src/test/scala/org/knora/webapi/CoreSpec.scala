@@ -166,10 +166,10 @@ abstract class CoreSpec(_system: ActorSystem)
       case Failure(e)   => logger.error(s"Loading ontologies into cache failed: ${e.getMessage}")
     }
 
-    logger.info("Flush Redis cache started ...")
+    logger.info("CacheServiceFlushDB started ...")
     Try(Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 15 seconds)) match {
-      case Success(res) => logger.info("... flushing Redis cache done.")
-      case Failure(e)   => logger.error(s"Flushing Redis cache failed: ${e.getMessage}")
+      case Success(res) => logger.info("... CacheServiceFlushDB done.")
+      case Failure(e)   => logger.error(s"CacheServiceFlushDB failed: ${e.getMessage}")
     }
   }
 }

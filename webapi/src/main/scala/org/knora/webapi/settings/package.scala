@@ -115,8 +115,8 @@ package object settings {
 
   val SipiConnectorActorName: String = "sipiConnector"
 
-  /* Redis */
-  val RedisManagerActorName: String = "redisManager"
-  val RedisManagerActorPath: String = StoreManagerActorPath + "/" + RedisManagerActorName
+  /* Cache */
+  val CacheServiceManagerActorName: String = "redisManager"
+  val CacheServiceManagerActorPath: String = StoreManagerActorPath + "/" + CacheServiceManagerActorName
 
 }
