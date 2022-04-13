@@ -869,6 +869,52 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
+  // delete the comment of a property definition
+  private def deletePropertyComment(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "properties" / "comment" / Segment) { propertyIriStr: IRI =>
+      delete { requestContext =>
+        val propertyIri = propertyIriStr.toSmartIri
+
+        if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid property IRI for request: $propertyIriStr")
+        }
+
+        val lastModificationDateStr = requestContext.request.uri
+          .query()
+          .toMap
+          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+
+        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
+          lastModificationDateStr,
+          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
+        )
+
+        val requestMessageFuture: Future[DeletePropertyCommentRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield DeletePropertyCommentRequestV2(
+          propertyIri = propertyIri,
+          lastModificationDate = lastModificationDate,
+          apiRequestID = UUID.randomUUID,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+      }
+    }
+
   private def updatePropertyGuiElement(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "properties" / "guielement") {
       put {
