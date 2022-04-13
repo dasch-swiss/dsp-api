@@ -6,6 +6,6 @@
 # Introduction
 
 * [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md)
-* [Data Formats in DSP-API](data-formats.md)
+* [File Formats in DSP-API](file-formats.md)
 * [Standoff/RDF Text Markup](standoff-rdf.md)
 * [An Example Project](example-project.md)
