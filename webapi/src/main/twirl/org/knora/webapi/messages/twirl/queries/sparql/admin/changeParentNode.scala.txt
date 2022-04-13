@@ -30,17 +30,13 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 WITH <@dataNamedGraph>
 DELETE {
-
     ?currentParentNode knora-base:hasSubListNode ?node .
+}
 
-} INSERT {
+INSERT {
     ?newParentNode knora-base:hasSubListNode ?node .
 }
 
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@nodeIri") AS ?node)

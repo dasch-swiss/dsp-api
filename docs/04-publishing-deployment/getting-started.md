@@ -50,9 +50,6 @@ DSP-API is designed to work with any standards-compliant
 triplestore. It is primarily tested with
 [Apache Jena Fuseki](https://jena.apache.org), an open source triplestore.
 
-Built-in support and configuration for a high-performance, proprietary
-triplestore [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is
-provided but unmaintained (GraphDB must be licensed separately by the user).
 Other triplestores are planned.
 
 ## Running the DSP-Stack

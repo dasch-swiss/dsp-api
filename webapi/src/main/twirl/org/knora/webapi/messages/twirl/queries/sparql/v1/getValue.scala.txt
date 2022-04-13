@@ -6,10 +6,7 @@
 @import org.knora.webapi.IRI
 
 @**
- * Queries a knora-base:Value.
- *
- * If the triplestore type is GraphDB, this template delegates to getValueGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to getValueStandard.sparql.txt.
+ * Queries a knora-base:Value using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param iri the IRI of the Value.
@@ -17,13 +14,53 @@
 @(triplestore: String,
   valueIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getValueGraphDB(valueIri = valueIri)
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?objPred ?objObj ?predStandoff ?objStandoff
+WHERE {
+    BIND(IRI("@valueIri") AS ?obj)
+
+    ?resourceProp rdfs:subPropertyOf* knora-base:hasValue .
+
+    {
+        ?resource ?resourceProp ?obj .
+
+        FILTER NOT EXISTS {
+            ?resource knora-base:isDeleted true .
+        }
+
+        FILTER NOT EXISTS {
+            ?obj knora-base:isDeleted true .
+        }
+
+        ?obj ?objPred ?objObj .
+
+        FILTER(?objPred != knora-base:attachedToProject)
+
+        OPTIONAL {
+            FILTER(?objPred = knora-base:valueHasStandoff)
+            ?objObj ?predStandoff ?objStandoff .
+        }
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getValueStandard(triplestore = triplestore,
-                                               valueIri = valueIri)
+    UNION
+    {
+        @* Return the project of the resource that contains the value. *@
+
+        ?resource ?resourceProp ?obj .
+
+        FILTER NOT EXISTS {
+            ?resource knora-base:isDeleted true .
+        }
+
+        FILTER NOT EXISTS {
+            ?obj knora-base:isDeleted true .
+        }
+
+        ?resource knora-base:attachedToProject ?resourceProject .
+
+        BIND(knora-base:attachedToProject AS ?objPred)
+        BIND(?resourceProject AS ?objObj)
     }
 }

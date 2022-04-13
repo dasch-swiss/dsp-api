@@ -6,6 +6,6 @@
 # Lucene 
 
 The Lucene full-text index provided by the triplestore is used to perform full-text searches in Knora. 
-The exact behavior can be different depending on the triplestore, e.g., GraphDB or Fuseki.
+The exact behavior can be different depending on the triplestore.
 
 * [Lucene Query Parser Syntax](lucene-query-parser-syntax.md)

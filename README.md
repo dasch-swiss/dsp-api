@@ -137,7 +137,7 @@ We write automated tests using [ScalaTest](https://www.scalatest.org). You can r
 
 There are three sets of automated tests:
 
-* Unit tests, route-to-route tests, and end-to-end tests are under `webapi/src/test`. To run these, type `graphdb:test` or `graphdb-free:test` (depending on which triplestore you're using) at the SBT console in the `webapi` project. To run a single test, use `graphdb:test-only *NameOfTestSpec`.
+* Unit tests, route-to-route tests, and end-to-end tests are under `webapi/src/test`. To run these, type `test` at the SBT console in the `webapi` project. To run a single test, use `testOnly *NameOfTestSpec`.
 * Integration tests, which can involve [Sipi](https://github.com/daschswiss/sipi), are under `src/it`. To run these, first start Sipi, then type `it:test` at the SBT console in the `webapi` project.
 
 Whenever you add a new feature or fix a bug, you should add one or more tests

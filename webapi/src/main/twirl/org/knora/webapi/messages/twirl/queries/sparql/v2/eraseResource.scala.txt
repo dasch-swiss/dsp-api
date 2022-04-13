@@ -7,7 +7,7 @@
 @import org.knora.webapi._
 
 @**
- * Erases a resource from the triplestore.
+ * Erases a resource from the triplestore using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param dataNamedGraph the named graph to update.
@@ -17,15 +17,55 @@
   dataNamedGraph: IRI,
   resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.eraseResourceGraphDB(dataNamedGraph = dataNamedGraph,
-                                                   resourceIri = resourceIri)
-     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.eraseResourceStandard(triplestore: String,
-                                                    dataNamedGraph = dataNamedGraph,
-                                                    resourceIri = resourceIri)
-     }
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    GRAPH ?dataNamedGraph {
+        <@resourceIri> ?resourcePred ?resourceObj .
+        ?value ?valuePred ?valueObj .
+        ?standoff ?standoffPred ?standoffObj .
+        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
+        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+    }
+} WHERE {
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+
+    @* Make sure the resource is really a resource. *@
+    <@resourceIri> a ?resourceClass .
+    ?resourceClass rdfs:subClassOf* knora-base:Resource .
+
+    {
+        @* Collect all statements whose subject is the resource. *@
+
+        <@resourceIri> ?resourcePred ?resourceObj .
+    } UNION {
+        @* Collect all statements whose subject is a value of the resource. *@
+
+        <@resourceIri> ?valueProp ?currentValue .
+        ?currentValue a ?currentValueClass .
+        ?currentValueClass rdfs:subClassOf* knora-base:Value .
+        ?currentValue knora-base:previousValue* ?value .
+        ?value ?valuePred ?valueObj .
+    } UNION {
+        @* Collect all statements whose subject is a standoff tag attached to a value of the resource. *@
+
+        <@resourceIri> ?valueProp ?currentTextValue .
+        ?currentTextValue a knora-base:TextValue ;
+            knora-base:previousValue* ?textValue .
+        ?textValue knora-base:valueHasStandoff ?standoff .
+        ?standoff ?standoffPred ?standoffObj .
+    } UNION {
+        @* Collect all statements about marked-as-deleted link values that point to the resource. *@
+
+        ?otherResourceCurrentLinkValue rdf:object <@resourceIri> ;
+            a knora-base:LinkValue ;
+            knora-base:isDeleted true ;
+            knora-base:previousValue* ?otherResourceLinkValue .
+        ?otherResourceLinkValue ?otherResourceLinkValuePred ?otherResourceLinkValueObj .
+        ?otherResource ?otherResourceProp ?otherResourceCurrentLinkValue .
+    }
 }
