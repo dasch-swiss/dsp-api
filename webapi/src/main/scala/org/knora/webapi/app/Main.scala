@@ -24,12 +24,6 @@ import java.util.concurrent.TimeUnit
 object Main extends scala.App with LiveCore {
 
   /**
-   * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable to load
-   * the Typesafe-Config format.
-   */
-  val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.config)
-
-  /**
    * Start server initialisation
    */
   appActor ! AppStart(ignoreRepository = false, requiresIIIFService = true)

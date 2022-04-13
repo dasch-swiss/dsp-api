@@ -23,7 +23,6 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
-import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
@@ -65,6 +64,7 @@ import org.knora.webapi.store.StoreManager
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
 import zio.Runtime
@@ -78,9 +78,13 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import org.knora.webapi.store.cacheservice.config.RedisConfig
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import zio.ZEnvironment
 import zio.RuntimeConfig
 import org.knora.webapi.core.Logging
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.JWTConfig
+import org.knora.webapi.store.iiif.config.IIIFServiceConfig
 
 trait Managers {
   implicit val system: ActorSystem
@@ -98,15 +102,37 @@ trait LiveManagers extends Managers {
   lazy val cacheServiceManager: CacheServiceManager =
     Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
       .unsafeRun(
-        (for (manager <- ZIO.service[CacheServiceManager])
-          yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
+        ZIO
+          .service[CacheServiceManager]
+          .provide(
+            CacheServiceInMemImpl.layer,
+            CacheServiceManager.layer
+          )
+      )
+
+  /**
+   * Initializing the IIIF service manager, which is a ZLayer,
+   * by unsafe running it.
+   */
+  lazy val iiifServiceManager: IIIFServiceManager =
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+      .unsafeRun(
+        ZIO
+          .service[IIIFServiceManager]
+          .provide(
+            IIIFServiceManager.layer,
+            IIIFServiceSipiImpl.layer,
+            IIIFServiceConfig.hardcoded,
+            JWTService.layer,
+            JWTConfig.hardcoded
+          )
       )
 
   /**
    * The actor that forwards messages to actors that deal with persistent storage.
    */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, csm = cacheServiceManager) with LiveActorMaker)
+    Props(new StoreManager(self, iiifServiceManager, cacheServiceManager) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )

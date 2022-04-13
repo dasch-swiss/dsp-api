@@ -14,11 +14,18 @@ import org.knora.webapi.settings._
 import org.knora.webapi.store.MockableStoreManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
-import org.knora.webapi.store.iiif.MockSipiConnector
+import org.knora.webapi.store.iiif.impl.MockSipiImpl
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import zio.Runtime
 import zio.ZIO
-
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import zio.RuntimeConfig
+import zio.ZEnvironment
+import org.knora.webapi.core.Logging
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.iiif.config.IIIFServiceConfig
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.JWTConfig
 
 /**
  * Mixin trait for running the application with mocked Sipi
@@ -33,13 +40,28 @@ trait ManagersWithMockedSipi extends Managers {
 
   lazy val cacheServiceManager: CacheServiceManager = Runtime.default
     .unsafeRun(
-      (for (manager <- ZIO.service[CacheServiceManager])
-        yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
+      ZIO
+        .service[CacheServiceManager]
+        .provide(
+          CacheServiceInMemImpl.layer,
+          CacheServiceManager.layer
+        )
     )
+
+  lazy val iiifServiceManager: IIIFServiceManager =
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+      .unsafeRun(
+        ZIO
+          .service[IIIFServiceManager]
+          .provide(
+            IIIFServiceManager.layer,
+            MockSipiImpl.layer
+          )
+      )
 
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
-      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, csm = cacheServiceManager)
+      new MockableStoreManager(appActor = self, iiifsm = iiifServiceManager, csm = cacheServiceManager)
         with LiveActorMaker
     ),
     name = StoreManagerActorName

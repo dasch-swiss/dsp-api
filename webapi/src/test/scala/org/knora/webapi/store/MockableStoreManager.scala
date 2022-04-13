@@ -9,21 +9,12 @@ import akka.actor.{ActorRef, Props}
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.store.cacheservice.api.CacheService
-import org.knora.webapi.store.iiif.MockableIIIFManager
 import zio.ZLayer
 import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
 
-class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef, csm: CacheServiceManager)
-    extends StoreManager(appActor, csm)
+class MockableStoreManager(appActor: ActorRef, iiifsm: IIIFServiceManager, csm: CacheServiceManager)
+    extends StoreManager(appActor, iiifsm, csm)
     with LiveActorMaker {
-
-  /**
-   * Starts the MockableIIIFManager
-   */
-  override lazy val iiifManager: ActorRef = makeActor(
-    Props(new MockableIIIFManager(mockStoreConnectors) with LiveActorMaker)
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    IIIFManagerActorName
-  )
 
 }

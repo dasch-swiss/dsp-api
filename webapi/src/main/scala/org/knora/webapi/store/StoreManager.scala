@@ -16,7 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.api.CacheService
-import org.knora.webapi.store.iiif.IIIFManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
 import scala.concurrent.ExecutionContext
@@ -31,7 +31,7 @@ import org.knora.webapi.util.ActorUtil
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, csm: CacheServiceManager) extends Actor with ActorLogging {
+class StoreManager(appActor: ActorRef, iiifsm: IIIFServiceManager, csm: CacheServiceManager) extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
@@ -69,17 +69,9 @@ class StoreManager(appActor: ActorRef, csm: CacheServiceManager) extends Actor w
     TriplestoreManagerActorName
   )
 
-  /**
-   * Starts the IIIF Manager Actor
-   */
-  protected lazy val iiifManager: ActorRef = makeActor(
-    Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    IIIFManagerActorName
-  )
-
   def receive: Receive = LoggingReceive {
     case tripleStoreMessage: TriplestoreRequest    => triplestoreManager forward tripleStoreMessage
-    case iiifMessages: IIIFRequest                 => iiifManager forward iiifMessages
+    case iiifMessages: IIIFRequest                 => ActorUtil.zio2Message(sender(), iiifsm receive iiifMessages, log)
     case cacheServiceMessages: CacheServiceRequest => ActorUtil.zio2Message(sender(), csm receive cacheServiceMessages, log)
     case other =>
       sender() ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))

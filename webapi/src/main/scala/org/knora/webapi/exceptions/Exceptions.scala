@@ -448,6 +448,9 @@ case class SipiException(message: String, cause: Option[Throwable] = None)
 object SipiException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): SipiException =
     SipiException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  
+  def apply(message: String, e: Throwable): SipiException =
+    SipiException(message, Some(e))
 }
 
 /**
