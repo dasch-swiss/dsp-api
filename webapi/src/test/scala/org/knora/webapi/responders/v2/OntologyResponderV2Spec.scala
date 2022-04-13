@@ -2405,13 +2405,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "delete the comments of a property" in {
-      val propertyIri: SmartIri = AnythingOntologyIri.makeEntityIri("hasName")
+      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasSpecialName")
 
-      responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
+      responderManager ! DeletePropertyCommentRequestV2(
         propertyIri = propertyIri,
-        predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
-        newObjects = None,
-        lastModificationDate = anythingLastModDate,
+        lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
@@ -2421,16 +2419,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
-          newObjectsUnescaped
-        )
-
-        val metadata = externalOntology.ontologyMetadata
-        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+        println("YYY", readPropertyInfo.entityInfoContent.predicates)
+        readPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
         )
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
+        assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreeTestLastModDate
       }
     }
 

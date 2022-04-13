@@ -109,6 +109,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
       changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
+    case deletePropertyCommentRequest: DeletePropertyCommentRequestV2 =>
+      deletePropertyComment(deletePropertyCommentRequest)
     case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
       changePropertyGuiElement(changePropertyGuiElementRequest)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
@@ -3280,17 +3282,31 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield taskResult
   }
 
-  def deletePropertyComment(
-    deletePropertyCommentRequestV2: DeletePropertyCommentRequestV2
-  ): Future[ReadOntologyMetadataV2] = {
-    def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] =
+  /**
+   * Delete the `rdfs:comment` in a property definition.
+   *
+   * @param deletePropertyCommentRequestV2 the request to delete the property's comment
+   * @return a [[ReadOntologyV2]] containing the modified property definition.
+   */
+  private def deletePropertyComment(
+    deletePropertyCommentRequest: DeletePropertyCommentRequestV2
+  ): Future[ReadOntologyV2] = {
+    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] =
       for {
-        cacheData <- Cache.getCacheData
+        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+
+        ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
+
+        currentReadPropertyInfo: ReadPropertyInfoV2 =
+          ontology.properties.getOrElse(
+            internalPropertyIri,
+            throw NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found")
+          )
 
         // Check that the user has permission to update the ontology.
-        projectIri <- OntologyHelpers.checkPermissionsForOntologyUpdate(
+        _ <- OntologyHelpers.checkPermissionsForOntologyUpdate(
           internalOntologyIri = internalOntologyIri,
-          requestingUser = deletePropertyCommentRequestV2.requestingUser
+          requestingUser = deletePropertyCommentRequest.requestingUser
         )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
@@ -3298,83 +3314,177 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           settings,
           storeManager,
           internalOntologyIri = internalOntologyIri,
-          expectedLastModificationDate = deletePropertyCommentRequestV2.lastModificationDate,
-          featureFactoryConfig = deletePropertyCommentRequestV2.featureFactoryConfig
+          expectedLastModificationDate = deletePropertyCommentRequest.lastModificationDate,
+          featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
         )
 
-        // get the metadata of the ontology.
-        oldMetadata: OntologyMetadataV2 = cacheData.ontologies(internalOntologyIri).ontologyMetadata
-        // Was there a comment in the ontology metadata?
-        ontologyHasComment: Boolean = oldMetadata.comment.nonEmpty
+        // If this is a link property, also delete the comment of the corresponding link value property.
+        maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] =
+          if (currentReadPropertyInfo.isLinkProp) {
+            val linkValuePropertyIri: SmartIri =
+              internalPropertyIri.fromLinkPropToLinkValueProp
+            Some(
+              ontology.properties.getOrElse(
+                linkValuePropertyIri,
+                throw InconsistentRepositoryDataException(
+                  s"Link value property $linkValuePropertyIri not found"
+                )
+              )
+            )
+          } else {
+            None
+          }
 
-        // Update the metadata.
+        maybeInternalLinkValuePropertyIri: Option[SmartIri] =
+          if (currentReadPropertyInfo.isLinkProp) {
+            Some(internalPropertyIri.fromLinkPropToLinkValueProp)
+          } else {
+            None
+          }
 
+        // Delete the comment
         currentTime: Instant = Instant.now
 
-        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .changeOntologyMetadata(
-            triplestore = settings.triplestoreType,
+        updateSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .deletePropertyComment(
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
-            newLabel = None,
-            hasOldComment = ontologyHasComment,
-            deleteOldComment = true,
-            newComment = None,
-            lastModificationDate = deletePropertyCommentRequestV2.lastModificationDate,
+            propertyIri = internalPropertyIri,
+            maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
+            lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
             currentTime = currentTime
           )
           .toString()
 
         _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
+        // Check that the ontology's last modification date was updated.
+        _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
+          settings = settings,
+          storeManager = storeManager,
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = currentTime,
+          featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+        )
+
         // Check that the update was successful.
+        loadedPropertyDef: PropertyInfoContentV2 <- OntologyHelpers.loadPropertyDefinition(
+          settings,
+          storeManager,
+          propertyIri = internalPropertyIri,
+          featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+        )
 
-        unescapedNewMetadata = OntologyMetadataV2(
-          ontologyIri = internalOntologyIri,
-          projectIri = Some(projectIri),
-          label = oldMetadata.label,
-          comment = None,
-          lastModificationDate = Some(currentTime)
-        ).unescape
-
-        maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <-
-          OntologyHelpers.loadOntologyMetadata(
-            settings,
-            storeManager,
-            internalOntologyIri = internalOntologyIri,
-            featureFactoryConfig = deleteOntologyCommentRequestV2.featureFactoryConfig
+        propertyDefWithoutComment: PropertyInfoContentV2 =
+          currentReadPropertyInfo.entityInfoContent.copy(
+            predicates = currentReadPropertyInfo.entityInfoContent.predicates.-(
+              OntologyConstants.Rdfs.Comment.toSmartIri
+            ) // deletes the entry with the comment
           )
 
-        _ = maybeLoadedOntologyMetadata match {
-          case Some(loadedOntologyMetadata) =>
-            if (loadedOntologyMetadata != unescapedNewMetadata) {
-              throw UpdateNotPerformedException()
-            }
-
-          case None => throw UpdateNotPerformedException()
+        _ = if (loadedPropertyDef != propertyDefWithoutComment) {
+          throw InconsistentRepositoryDataException(
+            s"Attempted to save property definition $propertyDefWithoutComment, but $loadedPropertyDef was saved"
+          )
         }
 
-        // Update the ontology cache with the unescaped metadata.
+        maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] =
+          maybeCurrentLinkValueReadPropertyInfo.map { linkValueReadPropertyInfo: ReadPropertyInfoV2 =>
+            OntologyHelpers.loadPropertyDefinition(
+              settings,
+              storeManager,
+              propertyIri = linkValueReadPropertyInfo.entityInfoContent.propertyIri,
+              featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+            )
+          }
+
+        maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <-
+          ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+
+        maybeNewLinkValuePropertyDef: Option[PropertyInfoContentV2] =
+          maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef: PropertyInfoContentV2 =>
+            val newLinkPropertyDef: PropertyInfoContentV2 =
+              maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
+                predicates = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates
+              )
+
+            if (loadedLinkValuePropertyDef != newLinkPropertyDef) {
+              throw InconsistentRepositoryDataException(
+                s"Attempted to save link value property definition $newLinkPropertyDef, but $loadedLinkValuePropertyDef was saved"
+              )
+            }
+
+            newLinkPropertyDef
+          }
+
+        // Update the ontology cache using the new property definition.
+        newReadPropertyInfo: ReadPropertyInfoV2 = ReadPropertyInfoV2(
+          entityInfoContent = propertyDefWithoutComment,
+          isEditable = true,
+          isResourceProp = true,
+          isLinkProp = currentReadPropertyInfo.isLinkProp
+        )
+
+        maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] =
+          maybeNewLinkValuePropertyDef.map { newLinkPropertyDef: PropertyInfoContentV2 =>
+            newLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
+              entityInfoContent = newLinkPropertyDef,
+              isResourceProp = true,
+              isLinkValueProp = true
+            )
+          }
+
+        updatedOntologyMetadata: OntologyMetadataV2 = ontology.ontologyMetadata.copy(
+          lastModificationDate = Some(currentTime)
+        )
+
+        updatedOntology: ReadOntologyV2 =
+          ontology.copy(
+            ontologyMetadata = updatedOntologyMetadata,
+            properties =
+              ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
+          )
 
         _ = Cache.storeCacheData(
           cacheData.copy(
-            ontologies = cacheData.ontologies + (internalOntologyIri -> cacheData
-              .ontologies(internalOntologyIri)
-              .copy(ontologyMetadata = unescapedNewMetadata))
+            ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
           )
         )
 
-      } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
+        // Read the data back from the cache.
+
+        response: ReadOntologyV2 <- getPropertyDefinitionsFromOntologyV2(
+          propertyIris = Set(internalPropertyIri),
+          allLanguages = true,
+          requestingUser = deletePropertyCommentRequest.requestingUser
+        )
+
+      } yield response
 
     for {
-      _ <- OntologyHelpers.checkExternalOntologyIriForUpdate(deleteOntologyCommentRequestV2.ontologyIri)
-      internalOntologyIri = deleteOntologyCommentRequestV2.ontologyIri.toOntologySchema(InternalSchema)
+      requestingUser <- FastFuture.successful(deletePropertyCommentRequest.requestingUser)
+
+      externalPropertyIri: SmartIri = deletePropertyCommentRequest.propertyIri
+      externalOntologyIri: SmartIri = externalPropertyIri.getOntologyFromEntity
+
+      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
+        externalOntologyIri = externalOntologyIri,
+        externalEntityIri = externalPropertyIri,
+        requestingUser = requestingUser
+      )
+
+      internalPropertyIri: SmartIri = externalPropertyIri.toOntologySchema(InternalSchema)
+      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID = deleteOntologyCommentRequestV2.apiRequestID,
+      taskResult: ReadOntologyV2 <- IriLocker.runWithIriLock(
+        apiRequestID = deletePropertyCommentRequest.apiRequestID,
         iri = ONTOLOGY_CACHE_LOCK_IRI,
-        task = () => makeTaskFuture(internalOntologyIri = internalOntologyIri)
+        task = () =>
+          makeTaskFuture(
+            internalPropertyIri = internalPropertyIri,
+            internalOntologyIri = internalOntologyIri
+          )
       )
     } yield taskResult
   }
