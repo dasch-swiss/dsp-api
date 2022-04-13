@@ -23,15 +23,11 @@ DSP solves this problem by keeping the data alive. You can query all the data
 in a DSP repository, not just the metadata. You can import thousands of databases into
 DSP, and run queries that search through all of them at once.
 
-Another problem is that researchers use a multitude of different data formats, many of
+Another problem is that researchers use a multitude of different file formats, many of
 which are proprietary and quickly become obsolete. It is not practical to maintain
-all the programs that were used to create and read old data files, or even
-all the operating systems that these programs ran on.
-
-Instead of preserving all these data formats, DSP supports
-the conversion of all sorts of data to a [small number of formats](data-formats.md)
-that are suitable for long-term preservation, and that maintain the data's meaning and
-structure:
+all the programs that were used to create and read old files, or even
+all the operating systems that these programs ran on. Therefore, DSP only accepts a
+certain number of [file formats](file-formats.md).
 
 - Non-binary data is stored as
   [RDF](http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/), in a dedicated
