@@ -10,7 +10,7 @@ nav:
         - Introduction:
                   - Index: 01-introduction/index.md
                   - What is DSP?: 01-introduction/what-is-knora.md
-                  - Data Formats in DSP-API: 01-introduction/data-formats.md
+                  - File Formats in DSP-API: 01-introduction/file-formats.md
                   - Standoff/RDF Text Markup: 01-introduction/standoff-rdf.md
                   - An Example Project: 01-introduction/example-project.md
         - DSP Ontologies:

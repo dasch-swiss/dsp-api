@@ -9,11 +9,8 @@
 @import org.knora.webapi.exceptions.SparqlGenerationException
 @import org.knora.webapi.messages.{SmartIri, StringFormatter}
 
-@**
- * Gets the values of all the Knora properties of one or more resources.
- *
- * If the triplestore type is GraphDB, this template delegates to getResourcePropertiesAndValuesGraphDB.sparql.txt,
- * which is optimised for GraphDB. Otherwise, it delegates to getResourcePropertiesAndValuesStandard.sparql.txt.
+@*
+ * Gets the values of all the Knora properties of one or more resources, using SPARQL w/o inference.
  *
  * @param triplestore                the name of the triplestore being used.
  * @param resourceIris               the IRIs of the requested resources.
@@ -47,37 +44,250 @@
   maybeStandoffMaxStartIndex: Option[Int] = None,
   stringFormatter: StringFormatter)
 
-@if(preview && (maybeVersionDate.isDefined || maybePropertyIri.isDefined)) {
-    @{throw SparqlGenerationException(s"A preview cannot be requested with a property or a version date"); ()}
-}
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIris = resourceIris,
-                                                                    preview = preview,
-                                                                    withDeleted= withDeleted,
-                                                                    maybePropertyIri = maybePropertyIri,
-                                                                    maybeValueUuid = maybeValueUuid,
-                                                                    maybeVersionDate = maybeVersionDate,
-                                                                    maybeValueIri = maybeValueIri,
-                                                                    queryAllNonStandoff = queryAllNonStandoff,
-                                                                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                                                                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
-                                                                    stringFormatter = stringFormatter)
+CONSTRUCT {
+    @* include this inferred information in the results, needed to identify resources *@
+    ?resource a knora-base:Resource ;
+        knora-base:isMainResource true ;
+        knora-base:attachedToProject ?resourceProject ;
+        rdfs:label ?label ;
+        a ?resourceType ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:creationDate ?creationDate ;
+        knora-base:lastModificationDate ?lastModificationDate .
+
+    @*If deleted resources are wanted return deletion info, otherwise just indicated that resource is not deleted. *@
+    @if(!withDeleted) {
+        ?resource knora-base:isDeleted false .
+    } else {
+        ?resource knora-base:isDeleted ?isDeleted ;
+                 knora-base:deleteDate ?deletionDate ;
+                 knora-base:deleteComment ?deleteComment .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValuesStandard(triplestore = triplestore,
-                                                                    resourceIris = resourceIris,
-                                                                    preview = preview,
-                                                                    withDeleted= withDeleted,
-                                                                    maybePropertyIri = maybePropertyIri,
-                                                                    maybeValueUuid = maybeValueUuid,
-                                                                    maybeVersionDate = maybeVersionDate,
-                                                                    maybeValueIri = maybeValueIri,
-                                                                    queryAllNonStandoff = queryAllNonStandoff,
-                                                                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                                                                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
-                                                                    stringFormatter = stringFormatter)
+
+    @* include this inferred information in the results, needed to identify value properties *@
+    ?resource knora-base:hasValue ?valueObject ;
+        ?resourceValueProperty ?valueObject .
+
+    ?valueObject ?valueObjectProperty ?valueObjectValue ;
+        knora-base:valueHasUUID ?currentValueUUID ;
+        knora-base:hasPermissions ?currentValuePermissions .
+
+    @if(maybeStandoffMinStartIndex.nonEmpty) {
+        ?valueObject knora-base:valueHasStandoff ?standoffNode .
+        ?standoffNode ?standoffProperty ?standoffValue  ;
+            knora-base:targetHasOriginalXMLID ?targetOriginalXMLID .
+    }
+
+    @if(queryAllNonStandoff) {
+        @* include this inferred information in the results, needed to identify linking properties *@
+        ?resource knora-base:hasLinkTo ?referredResource ;
+            ?resourceLinkProperty ?referredResource .
+
+        ?referredResource a knora-base:Resource ;
+            ?referredResourcePred ?referredResourceObj .
+    }
+
+} WHERE {
+    VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
+
+    ?resource rdf:type ?resourceType .
+    ?resourceType rdfs:subClassOf* knora-base:Resource .
+
+    ?resource knora-base:attachedToProject ?resourceProject ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:creationDate ?creationDate ;
+        rdfs:label ?label .
+
+    @* If deleted resource is not wanted, ignore deleted resources. *@
+    @if(!withDeleted) {
+        ?resource knora-base:isDeleted false .
+    } else {
+       OPTIONAL {
+            ?resource knora-base:isDeleted ?isDeleted ;
+                    knora-base:deleteDate ?deletionDate .
+        }
+       OPTIONAL {
+            ?resource knora-base:deleteComment ?deleteComment .
+       }
+    }
+
+    @* Is this a version history request? *@
+    @maybeVersionDate match {
+        case Some(versionDate) => {
+            @* Yes. Ensure that the resource was created on or before the target date. *@
+
+            FILTER(?creationDate <= "@versionDate"^^xsd:dateTime)
+        }
+
+        case None => {}
+    }
+
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?lastModificationDate .
+    }
+
+    @* If this isn't a preview request, return the resource's values. *@
+    @if(!preview) {
+        @* There might be resources with no values. *@
+        OPTIONAL {
+            @* Is this a version history request? *@
+            @maybeVersionDate match {
+                case Some(versionDate) => {
+                    @* Yes. Find the values that existed at the target date. *@
+
+                    @* Get the current version of each value. *@
+
+                    ?resource ?resourceValueProperty ?currentValue .
+                    ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+
+                    @maybePropertyIri match {
+                        case Some(propertyIri) => {
+                            FILTER(?resourceValueProperty = <@propertyIri>)
+                        }
+
+                        case None => {}
+                    }
+
+                    @* If deleted values are not required and the value was deleted on or before the target date, ignore all its versions. *@
+                    @if(!withDeleted) {
+                        FILTER NOT EXISTS {
+                            ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
+                            FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
+                        }
+                    }
+
+                    @* Get the current version's UUID, because we're going to return it with the requested version. *@
+                    ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+
+                    @* Filter by value UUID if requested. *@
+                    @maybeValueUuid match {
+                        case Some(valueUuid) => {
+                            FILTER(?currentValueUUID = "@{stringFormatter.base64EncodeUuid(valueUuid)}")
+                        }
+
+                        case None => {}
+                    }
+
+                    @* In each value's history, find a version that was created on or before the target date. *@
+                    ?currentValue knora-base:previousValue* ?valueObject .
+                    ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
+                    FILTER(?valueObjectCreationDate <= "@versionDate"^^xsd:dateTime)
+
+                    @*
+
+                    If the value's history contains another version that was also created on or before
+                    the target date, and is more recent than this one, ignore this one. This should leave at most
+                    one version, which is the most recent version that was created on or before the target date.
+
+                    *@
+                    FILTER NOT EXISTS {
+                        ?currentValue knora-base:previousValue* ?otherValueObject .
+                        ?otherValueObject knora-base:valueCreationDate ?otherValueObjectCreationDate .
+
+                        FILTER(
+                            (?otherValueObjectCreationDate <= "@versionDate"^^xsd:dateTime) &&
+                            (?otherValueObjectCreationDate > ?valueObjectCreationDate)
+                        )
+                    }
+
+                    @* Use the permissions from the current version. *@
+                    ?currentValue knora-base:hasPermissions ?currentValuePermissions
+                }
+
+                case None => {
+                    @* This isn't a version history request. Return the current version of each value. *@
+
+                    ?resource ?resourceValueProperty ?valueObject .
+                    ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
+
+                    @maybePropertyIri match {
+                        case Some(propertyIri) => {
+                            FILTER(?resourceValueProperty = <@propertyIri>)
+                        }
+
+                        case None => {}
+                    }
+
+                    @* Filter by value UUID if requested. *@
+                    @maybeValueUuid match {
+                        case Some(valueUuid) => {
+                            ?valueObject knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(valueUuid)}" .
+                        }
+
+                        case None => {}
+                    }
+
+                    ?valueObject knora-base:hasPermissions ?currentValuePermissions .
+                }
+            }
+
+            @* Filter by value IRI if requested. *@
+            @maybeValueIri match {
+                case Some(valueIri) => {
+                    FILTER(?valueObject = <@valueIri>)
+                }
+
+                case None => {}
+            }
+
+            {
+                ?valueObject a ?valueObjectType ;
+                    ?valueObjectProperty ?valueObjectValue .
+
+                FILTER(?valueObjectProperty != knora-base:valueHasStandoff && ?valueObjectProperty != knora-base:hasPermissions)
+
+                @* Exclude knora-base:valueHasString if requested. *@
+
+                @if(!queryAllNonStandoff) {
+                    FILTER(?valueObjectProperty != knora-base:valueHasString)
+                }
+            }
+            @* Query standoff if requested. *@
+            @maybeStandoffMinStartIndex match {
+                case Some(standoffMinStartIndex) => {
+                    @if(maybeStandoffMaxStartIndex.isEmpty) {
+                        @{throw SparqlGenerationException("maybeStandoffMaxStartIndex must be defined if maybeStandoffMinStartIndex is defined"); ()}
+                    }
+
+                    UNION {
+                        ?valueObject knora-base:valueHasStandoff ?standoffNode .
+                        ?standoffNode ?standoffProperty ?standoffValue ;
+                            knora-base:standoffTagHasStartIndex ?startIndex .
+
+                        OPTIONAL {
+                            ?standoffTag knora-base:standoffTagHasInternalReference ?targetStandoffTag .
+                            ?targetStandoffTag knora-base:standoffTagHasOriginalXMLID ?targetOriginalXMLID .
+                        }
+
+                        FILTER(?startIndex >= @standoffMinStartIndex && ?startIndex <= @{maybeStandoffMaxStartIndex.get})
+                    }
+                }
+
+                case None => {}
+            }
+            @if(queryAllNonStandoff) {
+                UNION {
+                    @*
+
+                    If the value is a link value, get the referred resource, as long as it hasn't been
+                    marked as deleted.
+
+                    *@
+                    ?valueObject a knora-base:LinkValue ;
+                        rdf:predicate ?resourceLinkProperty ;
+                        rdf:object ?referredResource .
+
+                    ?referredResource ?referredResourcePred ?referredResourceObj ;
+                        knora-base:isDeleted false .
+                }
+            }
+        }
     }
 }

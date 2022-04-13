@@ -106,7 +106,6 @@ package object settings {
 
   val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
   val EmbeddedJenaActorName: String = "embeddedJenaTDB"
-  val EmbeddedGraphDBActorNAme: String = "embeddedJenaGraphDB"
   val FakeTriplestoreActorName: String = "fakeTriplestore"
 
   /* Sipi */

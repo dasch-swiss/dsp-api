@@ -46,10 +46,7 @@ DELETE {
         ?restriction ?restrictionPred ?restrictionObj .
     }
 }
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     GRAPH <@ontologyNamedGraphIri> {
         <@ontologyIri> rdf:type owl:Ontology ;
@@ -88,10 +85,7 @@ INSERT {
         }
     }
 }
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     GRAPH <@ontologyNamedGraphIri> {
         <@ontologyIri> rdf:type owl:Ontology ;
@@ -109,10 +103,7 @@ DELETE {
         <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
     }
 }
-@* Ensure that inference is not used in the WHERE clause of this update. *@
-@if(triplestore.startsWith("graphdb")) {
-    USING <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     GRAPH <@ontologyNamedGraphIri> {
         <@ontologyIri> rdf:type owl:Ontology ;

@@ -26,7 +26,7 @@ Knora is written in [Scala](http://www.scala-lang.org/), using the
 [Akka](http://akka.io/) framework for message-based concurrency. It is
 designed to work with any standards-compliant triplestore via
 the [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/), but is currently
-tested only with [Ontotext GraphDB](http://graphdb.ontotext.com/) (with support
+tested only with [Apache Jena Fuseki](https://jena.apache.org) (with support
 for other triplestores coming soon).
 
 ## Knora APIs

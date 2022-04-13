@@ -1,2 +1,0 @@
-drop knora-test-unit .
-exit .

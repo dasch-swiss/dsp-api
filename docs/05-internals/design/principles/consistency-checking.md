@@ -5,6 +5,9 @@
 
 # Consistency Checking
 
+**Attention!** GraphDB is not supported anymore, therefore parts related 
+to it in this document are redundant.
+
 ## Requirements
 
 Knora is designed to prevent inconsistencies in RDF data,

@@ -53,10 +53,6 @@ A number of core settings is additionally configurable through system environmen
 | app.triplestore.use-https                                   | KNORA_WEBAPI_TRIPLESTORE_USE_HTTPS                              | false                |
 | app.triplestore.host                                        | KNORA_WEBAPI_TRIPLESTORE_HOST                                   | localhost            |
 | app.triplestore.auto-init                                   | KNORA_WEBAPI_TRIPLESTORE_AUTOINIT                               | false                |
-| app.triplestore.graphdb.port                                | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_PORT                           | 7200                 |
-| app.triplestore.graphdb.repository-name                     | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME                | knora-test           |
-| app.triplestore.graphdb.username                            | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_USERNAME                       | admin                |
-| app.triplestore.graphdb.password                            | KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_PASSWORD                       | root                 |
 | app.triplestore.fuseki.port                                 | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_PORT                            | 3030                 |
 | app.triplestore.fuseki.repository-name                      | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_REPOSITORY_NAME                 | knora-test           |
 | app.triplestore.fuseki.username                             | KNORA_WEBAPI_TRIPLESTORE_FUSEKI_USERNAME                        | admin                |
