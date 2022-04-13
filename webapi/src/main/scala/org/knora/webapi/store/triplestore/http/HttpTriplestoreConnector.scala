@@ -5,28 +5,38 @@
 
 package org.knora.webapi.store.triplestore.http
 
-import java.io.BufferedInputStream
-import java.net.URI
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
-import java.nio.charset.StandardCharsets
-import java.util
-
-import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorSystem
+import akka.actor.Status
 import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.Consts
+import org.apache.http.HttpEntity
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.NameValuePair
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost, HttpPut}
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.entity.{ContentType, FileEntity, StringEntity}
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.FileEntity
+import org.apache.http.entity.StringEntity
 import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, CloseableHttpClient, HttpClients}
+import org.apache.http.impl.client.BasicAuthCache
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
@@ -35,16 +45,28 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.TriplestoreTypes
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
 import spray.json._
 
-import scala.jdk.CollectionConverters._
+import java.io.BufferedInputStream
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Try}
+import scala.jdk.CollectionConverters._
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
