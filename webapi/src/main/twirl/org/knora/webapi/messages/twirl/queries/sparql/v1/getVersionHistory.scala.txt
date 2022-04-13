@@ -6,10 +6,7 @@
 @import org.knora.webapi.IRI
 
 @**
- * Returns all versions of a value.
- *
- * If the triplestore type is GraphDB, this template delegates to getVersionHistoryGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to getVersionHistoryStandard.sparql.txt.
+ * Returns all versions of a value using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to search.
@@ -23,17 +20,45 @@
    propertyIri: IRI,
    currentValueIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getVersionHistoryGraphDB(resourceIri = resourceIri,
-                                                       propertyIri = propertyIri,
-                                                       currentValueIri = currentValueIri)
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?value ?valueCreationDate ?previousValue ?isLinkValue ?linkValuePredicate ?valueCreator ?project ?valuePermissions
+WHERE {
+    BIND(IRI("@resourceIri") AS ?resource)
+    BIND(IRI("@propertyIri") AS ?prop)
+    BIND(IRI("@currentValueIri") AS ?currentValue)
+
+    ?currentValue knora-base:hasPermissions ?valuePermissions .
+
+    FILTER NOT EXISTS {
+        ?currentValue knora-base:isDeleted true .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getVersionHistoryStandard(triplestore = triplestore,
-                                                        resourceIri = resourceIri,
-                                                        propertyIri = propertyIri,
-                                                        currentValueIri = currentValueIri)
+
+    ?resource ?prop ?currentValue .
+    ?prop rdfs:subPropertyOf* knora-base:hasValue .
+    ?resource knora-base:attachedToProject ?project .
+
+    ?currentValue knora-base:previousValue* ?value .
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
     }
+
+    OPTIONAL {
+        ?value knora-base:valueCreationDate ?valueCreationDate .
+    }
+
+    OPTIONAL {
+        ?value knora-base:previousValue ?previousValue .
+    }
+
+    OPTIONAL {
+        ?value rdf:type knora-base:LinkValue .
+        ?value rdf:predicate ?linkValuePredicate .
+        BIND(true as ?isLinkValue)
+    }
+
+    ?value knora-base:attachedToUser ?valueCreator .
 }

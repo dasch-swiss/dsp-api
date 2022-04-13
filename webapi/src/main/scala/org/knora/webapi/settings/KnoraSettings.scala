@@ -206,29 +206,21 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
   val triplestoreAutoInit: Boolean = config.getBoolean("app.triplestore.auto-init")
 
   val triplestorePort: Int = triplestoreType match {
-    case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
-      config.getInt("app.triplestore.graphdb.port")
     case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
     case _                           => 9999
   }
 
   val triplestoreDatabaseName: String = triplestoreType match {
-    case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
-      config.getString("app.triplestore.graphdb.repository-name")
     case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.repository-name")
     case _                           => ""
   }
 
   val triplestoreUsername: String = triplestoreType match {
-    case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
-      config.getString("app.triplestore.graphdb.username")
     case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.username")
     case _                           => ""
   }
 
   val triplestorePassword: String = triplestoreType match {
-    case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
-      config.getString("app.triplestore.graphdb.password")
     case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.password")
     case _                           => ""
   }

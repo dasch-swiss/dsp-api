@@ -28,10 +28,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 ASK
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     BIND(IRI("@internalPropertyIri") AS ?property)
     BIND(IRI("@internalClassIri") AS ?classIri)

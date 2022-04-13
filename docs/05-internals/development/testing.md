@@ -5,12 +5,6 @@
 
 # Testing
 
-Prerequisite: Before running any tests, a supported triplestore needs to
-be started and initialized through a script inside the "scripts" folder.
-For example, when using "GraphDB Free", the nedded script is
-"graphdb-free-init-knora-test-unit.sh". Please note the occurrence of
-"test-unit" in the name of the script.
-
 ## How to Write Unit Tests
 
 1)  Inside a test, at the beginning, add the following (change the paths

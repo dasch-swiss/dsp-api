@@ -7,12 +7,8 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets the the version history of the values of a resource.
+ * Gets the the version history of the values of a resource, using SPARQL w/o inference.
  *
- * If the triplestore type is GraphDB, this template delegates to getResourceVersionHistoryGraphDB.sparql.txt,
- * which is optimised for GraphDB. Otherwise, it delegates to getResourceVersionHistoryStandard.sparql.txt.
- *
- * @param triplestore           the name of the triplestore being used.
  * @param resourceIri           the IRI of the resource.
  * @param withDeletedResource   indicates if the version history of a deleted resource should be returned or not.
  * @param maybeStartDate        the start of the time period to return, inclusive.
@@ -24,18 +20,46 @@
   maybeStartDate: Option[Instant] = None,
   maybeEndDate: Option[Instant] = None)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourceValueVersionHistoryGraphDB(resourceIri = resourceIri,
-                                                                    withDeletedResource = withDeletedResource,
-                                                                    maybeStartDate = maybeStartDate,
-                                                                    maybeEndDate = maybeEndDate)
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT DISTINCT ?versionDate ?author WHERE {
+    <@resourceIri> ?property ?currentValue .
+    @if(!withDeletedResource) {
+      <@resourceIri> knora-base:isDeleted false .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourceValueVersionHistoryStandard(resourceIri = resourceIri,
-                                                                     withDeletedResource = withDeletedResource,
-                                                                     maybeStartDate = maybeStartDate,
-                                                                     maybeEndDate = maybeEndDate)
+    ?property rdfs:subPropertyOf* knora-base:hasValue .
+
+    ?currentValue knora-base:previousValue* ?valueObject .
+
+    {
+        ?valueObject knora-base:valueCreationDate ?versionDate .
+        ?valueObject knora-base:attachedToUser ?author .
+    } UNION {
+        ?valueObject knora-base:deleteDate ?versionDate .
+        ?valueObject knora-base:deletedBy ?author .
     }
-}
+    @if(withDeletedResource) {
+        UNION {
+            <@resourceIri> knora-base:deleteDate ?versionDate .
+            <@resourceIri> knora-base:attachedToUser ?author .
+        }
+    }
+
+    @maybeStartDate match {
+        case Some(startDate) => {
+            FILTER(?versionDate >= "@startDate"^^xsd:dateTime)
+        }
+
+        case None => {}
+    }
+
+    @maybeEndDate match {
+        case Some(endDate) => {
+            FILTER(?versionDate <  "@endDate"^^xsd:dateTime)
+        }
+
+        case None => {}
+    }
+} ORDER BY DESC(?versionDate)

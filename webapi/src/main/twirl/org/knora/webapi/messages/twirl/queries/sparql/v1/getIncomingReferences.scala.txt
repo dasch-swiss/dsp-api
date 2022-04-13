@@ -6,10 +6,8 @@
 @import org.knora.webapi.IRI
 
 @**
- * Gets information about the incoming references to a resource, as well as about the referring resources.
- *
- * If the triplestore type is GraphDB, this template delegates to getIncomingReferencesGraphDB.sparql.txt, which is
- * optimised for GraphDB. Otherwise, it delegates to getIncomingReferencesStandard.sparql.txt.
+ * Gets information about the incoming references to a resource, as well as about the referring resourceClass
+ * using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
@@ -17,13 +15,76 @@
 @(triplestore: String,
   resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getIncomingReferencesGraphDB(resourceIri = resourceIri)
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?referringResource ?linkProp ?prop ?obj ?isLinkValue ?objPred ?objObj
+WHERE {
+
+    @*
+
+    Find incoming links that are subproperties of knora-base:hasLinkTo but not knora-base:isPartOf.
+
+    Makes use of a subquery in order to limit the number of referring resources.
+
+    *@
+
+    {
+        SELECT ?resource ?referringResource ?linkProp
+        WHERE {
+
+            BIND(IRI("@resourceIri") as ?resource)
+
+            ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+            FILTER NOT EXISTS {
+                ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
+            }
+
+            FILTER NOT EXISTS {
+                ?resource knora-base:isDeleted true .
+            }
+
+            ?referringResource ?linkProp ?resource .
+
+            FILTER NOT EXISTS {
+                ?referringResource knora-base:isDeleted true .
+            }
+        } LIMIT 50
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getIncomingReferencesStandard(triplestore = triplestore,
-                                                            resourceIri = resourceIri)
+
+    {
+        @* Get basic information about the source of each link. *@
+
+        ?referringResource ?prop ?obj .
+
+        FILTER NOT EXISTS {
+            ?prop rdfs:subPropertyOf* knora-base:resourceProperty .
+        }
+
+        BIND(false as ?isLinkValue)
     }
+    UNION
+    {
+        @* Get the LinkValue for each link from ?referringResource to ?resource, so its permissions can be checked. *@
+
+        ?prop rdfs:subPropertyOf* knora-base:hasLinkToValue .
+        ?referringResource ?prop ?obj .
+
+        ?obj ?objPred ?objObj .
+
+        FILTER NOT EXISTS {
+            ?obj knora-base:isDeleted true .
+        }
+
+        BIND(true as ?isLinkValue)
+    }
+
+    OPTIONAL {
+        ?obj rdf:predicate ?linkValuePredicate ;
+            rdf:object ?linkValueObject .
+    }
+
+    FILTER(!?isLinkValue || (?linkValuePredicate = ?linkProp && ?linkValueObject = ?resource))
 }

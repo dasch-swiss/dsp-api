@@ -87,20 +87,7 @@ INSERT {
         }
     }
 }
-@*
 
-GraphDB's consistency checking requires reasoning, but reasoning interferes with certain things
-in the WHERE clauses of our SPARQL updates, so we set a GraphDB-specific flag to return only
-explicit statements in the WHERE clause here.
-
-*@
-@triplestore match {
-    case "graphdb" | "graphdb-free" => {
-        USING <http://www.ontotext.com/explicit>
-    }
-
-    case other => {}
-}
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
     BIND(IRI("@nodeIri") AS ?nodeIri)

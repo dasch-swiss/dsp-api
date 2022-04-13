@@ -25,10 +25,7 @@ prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT DISTINCT ?node ?nodeName ?label ?child
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
     BIND(IRI("@queryNodeIri") as ?leafNode)
     BIND(str("@preferredLanguage") as ?preferredLanguage)
