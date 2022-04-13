@@ -7,6 +7,10 @@
 
 ## Overview
 
+**GraphDB and embedded Jena TDB triplestores support is deprecated** since 
+[v20.1.1](https://github.com/dasch-swiss/dsp-api/releases/tag/v20.1.1) of DSP-API. 
+Documentation remains for historical purposes.
+
 The store module houses the different types of data stores supported by
 Knora. At the moment, only triplestores and IIIF servers (Sipi) are supported.
 The triplestore support is implemented in the

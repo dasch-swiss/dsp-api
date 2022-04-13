@@ -5,7 +5,10 @@
 
 package org.knora.webapi.store.triplestore
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorRef
+import akka.actor.Props
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.core.ActorMaker
@@ -14,7 +17,6 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
 import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.settings._
-import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.ActorUtil._
@@ -76,8 +78,7 @@ class TriplestoreManager(
           FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
           name = HttpTriplestoreActorName
         )
-      case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor](), name = EmbeddedJenaActorName)
-      case unknownType                      => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
+      case unknownType => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
     }
 
     log.debug("TriplestoreManagerActor: finished with preStart")
