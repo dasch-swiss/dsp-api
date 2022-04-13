@@ -33,9 +33,6 @@ import org.knora.webapi.config.JWTConfig
 trait ManagersWithMockedSipi extends Managers {
   this: Actor =>
 
-  lazy val mockStoreConnectors: Map[String, ActorRef] = Map(
-    SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector))
-  )
   lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
   lazy val cacheServiceManager: CacheServiceManager = Runtime.default
