@@ -2404,6 +2404,36 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "delete the comments of a property" in {
+      val propertyIri: SmartIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+      responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
+        propertyIri = propertyIri,
+        predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+        newObjects = None,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
+        readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
+          newObjectsUnescaped
+        )
+
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "not allow a user to create a class if they are not a sysadmin or an admin in the ontology's project" in {
 
       val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
