@@ -1210,11 +1210,10 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeletePropertyCommentRequestV2 = {
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+    val inputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologyV2)
     val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
     val lastModificationDate = propertyUpdateInfo.lastModificationDate
-    val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(propertyInfoContent)
 
     DeletePropertyCommentRequestV2(
       propertyIri = propertyInfoContent.propertyIri,

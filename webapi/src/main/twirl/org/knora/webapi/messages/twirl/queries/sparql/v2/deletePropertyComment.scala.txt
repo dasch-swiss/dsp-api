@@ -34,8 +34,8 @@ PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
 DELETE {
     GRAPH <@ontologyNamedGraphIri> {
-        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
         <@propertyIri> rdfs:comment ?comments.
+        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
         @maybeLinkValuePropertyIri match {
 
@@ -49,10 +49,10 @@ DELETE {
 
         }
     }
-} INSERT {
+}
+INSERT {
     GRAPH <@ontologyNamedGraphIri> {
         <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
-
     }
 }
 WHERE {

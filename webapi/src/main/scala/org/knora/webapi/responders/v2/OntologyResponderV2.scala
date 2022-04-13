@@ -3321,8 +3321,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // If this is a link property, also delete the comment of the corresponding link value property.
         maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] =
           if (currentReadPropertyInfo.isLinkProp) {
-            val linkValuePropertyIri: SmartIri =
-              internalPropertyIri.fromLinkPropToLinkValueProp
+            val linkValuePropertyIri: SmartIri = internalPropertyIri.fromLinkPropToLinkValueProp
             Some(
               ontology.properties.getOrElse(
                 linkValuePropertyIri,
@@ -3335,7 +3334,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             None
           }
 
-        maybeInternalLinkValuePropertyIri: Option[SmartIri] =
+        maybeCurrentLinkValuePropertyIri: Option[SmartIri] =
           if (currentReadPropertyInfo.isLinkProp) {
             Some(internalPropertyIri.fromLinkPropToLinkValueProp)
           } else {
@@ -3350,11 +3349,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             propertyIri = internalPropertyIri,
-            maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
+            maybeLinkValuePropertyIri = maybeCurrentLinkValuePropertyIri,
             lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
             currentTime = currentTime
           )
           .toString()
+
+        _ = println(updateSparql)
 
         _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
@@ -3462,7 +3463,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       } yield response
 
     for {
-      requestingUser <- FastFuture.successful(deletePropertyCommentRequest.requestingUser)
+      requestingUser: UserADM <- FastFuture.successful(deletePropertyCommentRequest.requestingUser)
 
       externalPropertyIri: SmartIri = deletePropertyCommentRequest.propertyIri
       externalOntologyIri: SmartIri = externalPropertyIri.getOntologyFromEntity
