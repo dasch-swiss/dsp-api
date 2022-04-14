@@ -72,14 +72,10 @@ class TriplestoreManager(
   override def preStart(): Unit = {
     log.debug("TriplestoreManagerActor: start with preStart")
 
-    storeActorRef = settings.triplestoreType match {
-      case TriplestoreTypes.HttpFuseki =>
-        makeActor(
-          FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-          name = HttpTriplestoreActorName
-        )
-      case unknownType => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
-    }
+    storeActorRef = makeActor(
+      FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+      name = HttpTriplestoreActorName
+    )
 
     log.debug("TriplestoreManagerActor: finished with preStart")
   }
