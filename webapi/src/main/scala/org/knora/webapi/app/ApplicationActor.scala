@@ -85,15 +85,27 @@ import org.knora.webapi.core.Logging
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.JWTConfig
 import org.knora.webapi.store.iiif.config.IIIFServiceConfig
+import zio.ZLayer
 
 trait Managers {
   implicit val system: ActorSystem
   val responderManager: ActorRef
   val storeManager: ActorRef
+  val cacheServiceManagerLayer: ZLayer[Any, Nothing, CacheServiceManager]
+  val iiifServiceManagerLayer: ZLayer[Any, Nothing, IIIFServiceManager]
 }
 
 trait LiveManagers extends Managers {
   this: Actor =>
+
+  /**
+   * A combined layer, that allows to build a [[CacheServiceManager]].
+   */
+  override val cacheServiceManagerLayer: ZLayer[Any, Nothing, CacheServiceManager] =
+    ZLayer.make[CacheServiceManager](
+      CacheServiceInMemImpl.layer,
+      CacheServiceManager.layer
+    )
 
   /**
    * Initializing the cache service manager, which is a ZLayer,
@@ -105,10 +117,21 @@ trait LiveManagers extends Managers {
         ZIO
           .service[CacheServiceManager]
           .provide(
-            CacheServiceInMemImpl.layer,
-            CacheServiceManager.layer
+            cacheServiceManagerLayer
           )
       )
+
+  /**
+   * A combined layer, that allows to build a [[IIIFServiceManager]].
+   */
+  override val iiifServiceManagerLayer: ZLayer[Any, Nothing, IIIFServiceManager] =
+    ZLayer.make[IIIFServiceManager](
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer,
+      IIIFServiceConfig.hardcoded,
+      JWTService.layer,
+      JWTConfig.hardcoded
+    )
 
   /**
    * Initializing the IIIF service manager, which is a ZLayer,
@@ -120,11 +143,7 @@ trait LiveManagers extends Managers {
         ZIO
           .service[IIIFServiceManager]
           .provide(
-            IIIFServiceManager.layer,
-            IIIFServiceSipiImpl.layer,
-            IIIFServiceConfig.hardcoded,
-            JWTService.layer,
-            JWTConfig.hardcoded
+            iiifServiceManagerLayer
           )
       )
 

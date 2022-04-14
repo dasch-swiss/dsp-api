@@ -32,13 +32,12 @@ final case class IIIFServiceManager(iiifs: IIIFService) {
    * is then translated back to Akka through [[ActorUtil.zio2Message]].
    */
   def receive(msg: IIIFRequest) = msg match {
-    case getFileMetadataRequest: GetFileMetadataRequest => iiifs.getFileMetadata(getFileMetadataRequest)
-    case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest =>
-      iiifs.moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest)
-    case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => iiifs.deleteTemporaryFile(deleteTemporaryFileRequest)
-    case getTextFileRequest: SipiGetTextFileRequest             => iiifs.getTextFileRequest(getTextFileRequest)
-    case IIIFServiceGetStatus                                   => iiifs.getStatus()
-    case other                                                  => ZIO.logError(s"IIIFServiceManager received an unexpected message: $other")
+    case req: GetFileMetadataRequest                     => iiifs.getFileMetadata(req)
+    case req: MoveTemporaryFileToPermanentStorageRequest => iiifs.moveTemporaryFileToPermanentStorage(req)
+    case req: DeleteTemporaryFileRequest                 => iiifs.deleteTemporaryFile(req)
+    case req: SipiGetTextFileRequest                     => iiifs.getTextFileRequest(req)
+    case IIIFServiceGetStatus                            => iiifs.getStatus()
+    case other                                           => ZIO.logError(s"IIIFServiceManager received an unexpected message: $other")
   }
 
 }

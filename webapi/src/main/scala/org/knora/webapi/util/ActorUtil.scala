@@ -29,7 +29,7 @@ object ActorUtil {
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
    * phase, to be able to return ZIO inside an Actor.
-   * 
+   *
    * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
@@ -47,23 +47,24 @@ object ActorUtil {
    */
   def handleExeption(ex: Throwable, sender: ActorRef): ZIO[Any, Nothing, Unit] =
     ex match {
-      case rejectedEx: RequestRejectedException =>
+      case rejectedEx: RequestRejectedException => {
         // The error was the client's fault. Log the exception, and also
         // let the client know.
-        ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx") *> ZIO.succeed(
-          sender ! akka.actor.Status.Failure(rejectedEx)
-        )
+        sender ! akka.actor.Status.Failure(rejectedEx)
+        ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx")
+      }
 
-      case otherEx: Exception =>
+      case otherEx: Exception => {
         // The error wasn't the client's fault. Log the exception, and also
         // let the client know.
-        ZIO.logDebug(s"This error is presumably NOT the clients fault: $otherEx") *> ZIO.succeed(
-          sender ! akka.actor.Status.Failure(otherEx)
-        ) *> ZIO.fail(throw otherEx)
+        sender ! akka.actor.Status.Failure(otherEx)
+        ZIO.logError(s"This error is presumably NOT the clients fault: $otherEx")
+      }
 
       case otherThrowable: Throwable =>
         // Don't try to recover from a Throwable that isn't an Exception.
-        ZIO.logDebug(s"Presumably something realy bad has happened: $otherThrowable") *> ZIO.fail(throw otherThrowable)
+        ZIO.logError(s"Presumably something realy bad has happened: $otherThrowable")
+        throw otherThrowable
     }
 
   /**
