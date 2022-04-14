@@ -3396,6 +3396,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             val newLinkPropertyDef: PropertyInfoContentV2 =
               maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.copy(
                 predicates = maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.predicates
+                  .-(OntologyConstants.Rdfs.Comment.toSmartIri)
               )
 
             if (loadedLinkValuePropertyDef != newLinkPropertyDef) {
@@ -3497,7 +3498,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           )
         } yield taskResult
         else {
-          // return if property has no comment
+          // not change anything if property has no comment
           getPropertyDefinitionsFromOntologyV2(
             propertyIris = Set(internalPropertyIri),
             allLanguages = true,

@@ -2467,10 +2467,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
+
         val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
         propertyReadPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+
+        // CONTINUE HERE: get the linkValue property
         val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
         linkValueReadPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")

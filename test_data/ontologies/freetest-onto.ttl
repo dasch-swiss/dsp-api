@@ -348,10 +348,8 @@
 :hasLinkPropertyWithComment
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
-    rdfs:label                        "Autor"@de,
-                                      "Auteur"@fr,
-                                      "Autore"@it,
-                                      "Author"@en ;
+    rdfs:label                        "Link Property mit Kommentar"@de,
+                                      "Link property with comment"@en;
     rdfs:comment                     "Dies ist der Kommentar"@de,
                                      "This is the comment"@en ;
     knora-base:subjectClassConstraint :Book ;
@@ -361,10 +359,8 @@
 :hasLinkPropertyWithCommentValue
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkToValue ;
-    rdfs:label                        "Autor"@de,
-                                      "Auteur"@fr,
-                                      "Autore"@it,
-                                      "Author"@en ;
+    rdfs:label                        "Link Property mit Kommentar"@de,
+                                      "Link property with comment"@en;
     rdfs:comment                     "Dies ist der Kommentar"@de,
                                      "This is the comment"@en ;
     knora-base:subjectClassConstraint :Book ;
