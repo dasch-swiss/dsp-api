@@ -198,8 +198,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(countSparql)
-
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -264,11 +262,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(searchSparql)
-
       prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql))
         .mapTo[SparqlSelectResult]
-      // _ = println(prequeryResponseNotMerged)
 
       mainResourceVar = QueryVariable("resource")
 
@@ -301,8 +296,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 }
             }
 
-          // println(valueObjectIrisPerResource)
-
           // collect all value object IRIs
           val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
 
@@ -329,8 +322,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             inputQuery = mainQuery,
             transformer = triplestoreSpecificQueryPatternTransformerConstruct
           )
-
-          // println(triplestoreSpecificQuery.toSparql)
 
           for {
             searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -371,8 +362,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         } else {
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
-
-      // _ = println(mappingsAsMap)
 
       apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
         mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -467,8 +456,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         transformer = triplestoreSpecificQueryPatternTransformerSelect
       )
 
-      // _ = println(triplestoreSpecificCountQuery.toSparql)
-
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
         .mapTo[SparqlSelectResult]
 
@@ -531,8 +518,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           featureFactoryConfig = featureFactoryConfig
         )
 
-      // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
-      // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
+      // TODO-old: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
+      // TODO-old: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
         inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
@@ -547,7 +534,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       //   println(mainResourceVar)
       //   println(mainResource)
       // }
-      // TODO: can I infer the project somehow from the main variable?
+      // TODO-BL: can I infer the project somehow from the main variable?
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
       triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
@@ -578,10 +565,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       //     case _ => Seq.empty
       //   }
 
-      // _ = queryOptions.map(s => println(s"Option:\n${s}\n\n"))
-
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
-      _ = log.info(triplestoreSpecificPrequerySparql)
+      _ = log.debug(triplestoreSpecificPrequerySparql)
 
       start = System.currentTimeMillis()
 
@@ -596,7 +581,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         }
         case Success(value) => value
       }).mapTo[SparqlSelectResult]
-      _ = println(s"Prequery took: ${(System.currentTimeMillis() - start) / 1000.0}s")
+      _ = log.debug(s"Prequery took: ${(System.currentTimeMillis() - start) / 1000.0}s")
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
@@ -888,8 +873,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 .toString()
             )
 
-            // _ = println(resourceRequestSparql)
-
             resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
               sparql = resourceRequestSparql,
               featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig
@@ -970,8 +953,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(countSparql)
-
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -1028,8 +1009,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(searchResourceByLabelSparql)
-
       searchResourceByLabelResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = searchResourceByLabelSparql,
         featureFactoryConfig = featureFactoryConfig
@@ -1057,15 +1036,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           }
       }
 
-      // _ = println(mainResourceIris.size)
-
       // separate resources and value objects
       mainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
         constructQueryResults = searchResourceByLabelResponse,
         requestingUser = requestingUser
       )
-
-      //_ = println(queryResultsSeparated)
 
       apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
         mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
