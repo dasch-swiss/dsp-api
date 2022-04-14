@@ -340,7 +340,7 @@ object SparqlTransformer extends LazyLogging {
       //   case _ => throw new Exception("Nope")
       // }
 
-      if (knownChildProps.length > 10) {
+      if (knownChildProps.length > 2) {
         log.debug("Too many known children for cache-inference. Using property path instead")
         propPath
       } else { unions }
