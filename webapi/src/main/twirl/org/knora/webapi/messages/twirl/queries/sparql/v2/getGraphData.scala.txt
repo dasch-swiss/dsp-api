@@ -7,11 +7,8 @@
 @import org.knora.webapi.messages.SmartIri
 
 @**
- * Gets the outbound or inbound links from/to a resource. This query is used recursively to get a graph of
- * resources reachable from a given resource.
- *
- * If the triplestore type is GraphDB, this template delegates to getGraphDataGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to getGraphDataStandard.sparql.txt.
+ * Gets the outbound or inbound links from/to a resource using SPARQL w/o inference. This query is used
+ * recursively to get a graph of resources reachable from a given resource.
  *
  * @param triplestore the name of the triplestore being used.
  * @param startNodeIri the IRI of the resource to use as the starting point of the query.
@@ -27,21 +24,88 @@
   outbound: Boolean,
   limit: Int)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getGraphDataGraphDB(startNodeIri = startNodeIri,
-                                                  startNodeOnly = startNodeOnly,
-                                                  maybeExcludeLinkProperty = maybeExcludeLinkProperty,
-                                                  outbound = outbound,
-                                                  limit = limit)
-    }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getGraphDataStandard(triplestore = triplestore,
-                                                   startNodeIri = startNodeIri,
-                                                   startNodeOnly = startNodeOnly,
-                                                   maybeExcludeLinkProperty = maybeExcludeLinkProperty,
-                                                   outbound = outbound,
-                                                   limit = limit)
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?node ?nodeClass ?nodeLabel ?nodeCreator ?nodeProject ?nodePermissions
+       ?linkValue ?linkProp ?linkValueCreator ?linkValuePermissions
+WHERE {
+    @if(startNodeOnly) {
+        BIND(IRI("@startNodeIri") AS ?node) .
+
+        ?node a ?nodeClass ;
+            rdfs:label ?nodeLabel ;
+            knora-base:attachedToUser ?nodeCreator ;
+            knora-base:attachedToProject ?nodeProject ;
+            knora-base:hasPermissions ?nodePermissions .
+
+        FILTER NOT EXISTS {
+            ?node knora-base:isDeleted true .
+        }
+    } else {
+        BIND(IRI("@startNodeIri") AS ?startNode) .
+
+        ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
+
+        @if(outbound) {
+            ?startNode ?linkProp ?node .
+
+            @maybeExcludeLinkProperty match {
+                case Some(excludeLinkProperty) => {
+
+                    FILTER NOT EXISTS {
+                        ?excludedProp rdfs:subPropertyOf* <@excludeLinkProperty> .
+                        ?startNode ?excludedProp ?node .
+                    }
+
+                }
+
+                case None => {}
+            }
+
+            FILTER NOT EXISTS {
+                ?node knora-base:isDeleted true .
+            }
+
+            ?linkValue a knora-base:LinkValue ;
+                rdf:subject ?startNode ;
+                rdf:predicate ?linkProp ;
+                rdf:object ?node .
+        } else {
+            ?node ?linkProp ?startNode .
+
+            @maybeExcludeLinkProperty match {
+                case Some(excludeLinkProperty) => {
+
+                    FILTER NOT EXISTS {
+                        ?excludedProp rdfs:subPropertyOf* <@excludeLinkProperty> .
+                        ?node ?excludedProp ?startNode .
+                    }
+
+                }
+
+                case None => {}
+            }
+
+            FILTER NOT EXISTS {
+                ?node knora-base:isDeleted true .
+            }
+
+            ?linkValue a knora-base:LinkValue ;
+                rdf:subject ?node ;
+                rdf:predicate ?linkProp ;
+                rdf:object ?startNode .
+        }
+
+        ?node a ?nodeClass ;
+            rdfs:label ?nodeLabel ;
+            knora-base:attachedToUser ?nodeCreator ;
+            knora-base:attachedToProject ?nodeProject ;
+            knora-base:hasPermissions ?nodePermissions .
+
+        ?linkValue knora-base:attachedToUser ?linkValueCreator ;
+            knora-base:hasPermissions ?linkValuePermissions .
     }
 }
+LIMIT @limit

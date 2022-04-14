@@ -308,19 +308,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             settings = settings
           )
 
-          val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
-            if (settings.triplestoreType.startsWith("graphdb")) {
-              // GraphDB
-              new SparqlTransformer.GraphDBConstructToConstructTransformer
-            } else {
-              // Other
-              new SparqlTransformer.NoInferenceConstructToConstructTransformer
-            }
-          }
+          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
+            new SparqlTransformer.NoInferenceConstructToConstructTransformer
 
           val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = triplestoreSpecificQueryPatternTransformerConstruct
+            transformer = queryPatternTransformerConstruct
           )
 
           for {
@@ -437,19 +430,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
 
-      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
-        if (settings.triplestoreType.startsWith("graphdb")) {
-          // GraphDB
-          new SparqlTransformer.GraphDBSelectToSelectTransformer(
-            useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
-          )
-        } else {
-          // Other
-          new SparqlTransformer.NoInferenceSelectToSelectTransformer(
-            simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
-          )
-        }
-      }
+      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
+        new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+        )
 
       triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
         inputQuery = nonTriplestoreSpecificPrequery,
@@ -537,19 +521,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // TODO-BL: can I infer the project somehow from the main variable?
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
-      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
-        if (settings.triplestoreType.startsWith("graphdb")) {
-          // GraphDB
-          new SparqlTransformer.GraphDBSelectToSelectTransformer(
-            useInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
-          )
-        } else {
-          // Other
-          new SparqlTransformer.NoInferenceSelectToSelectTransformer(
-            simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
-          )
-        }
-      }
+      triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer =
+        new SparqlTransformer.NoInferenceSelectToSelectTransformer(
+          simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
+        )
 
       // Convert the preprocessed query to a non-triplestore-specific query.
 
@@ -654,19 +629,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             settings = settings
           )
 
-          val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
-            if (settings.triplestoreType.startsWith("graphdb")) {
-              // GraphDB
-              new SparqlTransformer.GraphDBConstructToConstructTransformer
-            } else {
-              // Other
-              new SparqlTransformer.NoInferenceConstructToConstructTransformer
-            }
-          }
+          val queryPatternTransformerConstruct: ConstructToConstructTransformer =
+            new SparqlTransformer.NoInferenceConstructToConstructTransformer
 
           val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = triplestoreSpecificQueryPatternTransformerConstruct
+            transformer = queryPatternTransformerConstruct
           )
 
           // Convert the result to a SPARQL string and send it to the triplestore.

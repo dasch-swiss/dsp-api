@@ -5,28 +5,38 @@
 
 package org.knora.webapi.store.triplestore.http
 
-import java.io.BufferedInputStream
-import java.net.URI
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
-import java.nio.charset.StandardCharsets
-import java.util
-
-import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.ActorSystem
+import akka.actor.Status
 import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
-import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.Consts
+import org.apache.http.HttpEntity
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.NameValuePair
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.AuthCache
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost, HttpPut}
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
-import org.apache.http.entity.{ContentType, FileEntity, StringEntity}
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.FileEntity
+import org.apache.http.entity.StringEntity
 import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, CloseableHttpClient, HttpClients}
+import org.apache.http.impl.client.BasicAuthCache
+import org.apache.http.impl.client.BasicCredentialsProvider
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpEntity, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
@@ -35,16 +45,28 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol.
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, TriplestoreTypes}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.TriplestoreTypes
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
 import spray.json._
 
-import scala.jdk.CollectionConverters._
+import java.io.BufferedInputStream
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Try}
+import scala.jdk.CollectionConverters._
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -120,45 +142,35 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     .build
 
   private val queryPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/query"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val sparqlUpdatePath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/statements"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/update"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val checkRepositoryPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      "/rest/repositories"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       "/$/server"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val graphPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/statements"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/get"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
     }
 
   private val repositoryDownloadPath =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/statements"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}"
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
@@ -169,9 +181,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
   private val dataInsertPath =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       s"/${settings.triplestoreDatabaseName}/data"
     } else {
       throw TriplestoreUnsupportedFeatureException(s"$triplestoreType is not supported!")
@@ -218,7 +228,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case HelloTriplestore(msg: String) if msg == triplestoreType => sender() ! HelloTriplestore(triplestoreType)
     case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
-      try2Message(sender(), updateLuceneIndex(subjectIri), log)
+      try2Message(sender(), Success(SparqlUpdateResponse()), log)
     case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
       try2Message(sender(), downloadRepository(outputFile, featureFactoryConfig), log)
     case UploadRepositoryRequest(inputFile: Path) => try2Message(sender(), uploadRepository(inputFile), log)
@@ -411,32 +421,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   }
 
   /**
-   * Updates the Lucene full-text search index.
-   */
-  private def updateLuceneIndex(subjectIri: Option[IRI] = None): Try[SparqlUpdateResponse] =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      val indexUpdateSparqlString = subjectIri match {
-        case Some(definedSubjectIri) =>
-          // A subject's content has changed. Update the index for that subject.
-          s"""PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-             |INSERT DATA { luc:fullTextSearchIndex luc:addToIndex <$definedSubjectIri> . }
-                     """.stripMargin
-
-        case None =>
-          // Add new subjects to the index.
-          """PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-            |INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                    """.stripMargin
-      }
-
-      for {
-        _ <- getSparqlHttpResponse(indexUpdateSparqlString, isUpdate = true)
-      } yield SparqlUpdateResponse()
-    } else {
-      Success(SparqlUpdateResponse())
-    }
-
-  /**
    * Performs a SPARQL update operation.
    *
    * @param sparqlUpdate the SPARQL update.
@@ -447,9 +431,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     for {
       // Send the request to the triplestore.
       _ <- getSparqlHttpResponse(sparqlUpdate, isUpdate = true)
-
-      // If we're using GraphDB, update the full-text search index.
-      _ = updateLuceneIndex()
     } yield SparqlUpdateResponse()
 
   /**
@@ -574,10 +555,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         log.debug(s"added: $graphName")
       }
 
-      if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-        updateLuceneIndex()
-      }
-
       log.debug("==>> Loading Data End")
 
       // Return success if all graphs are inserted successfully.
@@ -593,9 +570,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    * Checks connection to the triplestore.
    */
   private def checkTriplestore(): Try[CheckTriplestoreResponse] =
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      checkGraphDBTriplestore()
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       checkFusekiTriplestore()
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
@@ -724,79 +699,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   }
 
   /**
-   * Checks the connection to a GraphDB triplestore.
-   */
-  private def checkGraphDBTriplestore(): Try[CheckTriplestoreResponse] = {
-    // needs to be a local import or other things don't work (spray json black magic)
-    import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
-
-    try {
-      log.debug("checkGraphDBRepository entered")
-
-      // call endpoint returning all repositories
-
-      val context: HttpClientContext = makeHttpContext
-
-      val httpGet = new HttpGet(checkRepositoryPath)
-      httpGet.addHeader("Accept", mimeTypeApplicationJson)
-
-      val responseStr: String = {
-        var maybeResponse: Option[CloseableHttpResponse] = None
-
-        val responseTry: Try[String] = Try {
-          maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
-          EntityUtils.toString(maybeResponse.get.getEntity, StandardCharsets.UTF_8)
-        }
-
-        maybeResponse.foreach(_.close())
-        responseTry.get
-      }
-
-      val jsonArr: JsArray = JsonParser(responseStr).asInstanceOf[JsArray]
-
-      // parse json and check if the repository defined in 'application.conf' is present and correctly defined
-
-      val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
-
-      val idShouldBe: String = settings.triplestoreDatabaseName
-      val sesameTypeForSEShouldBe = "owlim:MonitorRepository"
-      val sesameTypeForFreeShouldBe = "graphdb:FreeSailRepository"
-
-      val neededRepo: Option[GraphDBRepository] = repositories.find(repo =>
-        repo.id == idShouldBe && (repo.sesameType == sesameTypeForSEShouldBe || repo.sesameType == sesameTypeForFreeShouldBe)
-      )
-
-      if (neededRepo.nonEmpty) {
-        // everything looks good
-        Success(
-          CheckTriplestoreResponse(
-            triplestoreStatus = TriplestoreStatus.ServiceAvailable,
-            msg = "Triplestore is available."
-          )
-        )
-      } else {
-        // none of the available repositories meet our requirements
-        Success(
-          CheckTriplestoreResponse(
-            triplestoreStatus = TriplestoreStatus.NotInitialized,
-            msg =
-              s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeForSEShouldBe or $sesameTypeForFreeShouldBe."
-          )
-        )
-      }
-    } catch {
-      case e: Exception =>
-        // println("checkRepository - exception", e)
-        Success(
-          CheckTriplestoreResponse(
-            triplestoreStatus = TriplestoreStatus.ServiceUnavailable,
-            msg = s"Triplestore not available: ${e.getMessage}"
-          )
-        )
-    }
-  }
-
-  /**
    * Makes a triplestore URI for downloading a named graph.
    *
    * @param graphIri the IRI of the named graph.
@@ -805,9 +707,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   private def makeNamedGraphDownloadUri(graphIri: IRI): URI = {
     val uriBuilder: URIBuilder = new URIBuilder(graphPath)
 
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      uriBuilder.setParameter("infer", "false").setParameter("context", s"<$graphIri>")
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       uriBuilder.setParameter("graph", s"$graphIri")
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
@@ -896,13 +796,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } else {
       // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
       // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
-
       val formParams = new util.ArrayList[NameValuePair]()
-
-      if (triplestoreType == TriplestoreTypes.HttpGraphDBSE || triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-        formParams.add(new BasicNameValuePair("infer", "true"))
-      }
-
       formParams.add(new BasicNameValuePair("query", sparql))
       val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
       val queryHttpPost: HttpPost = new HttpPost(queryPath)
@@ -945,9 +839,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
 
-    if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
-      uriBuilder.setParameter("infer", "false")
-    } else if (triplestoreType == TriplestoreTypes.HttpFuseki) {
+    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
       // do nothing
     } else {
       throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")

@@ -1187,7 +1187,5 @@ object OntologyConstants {
     val PermissionNamedGraph: IRI = "http://www.knora.org/data/permissions"
     val PersistentMapNamedGraph: IRI = "http://www.knora.org/data/maps"
     val KnoraExplicitNamedGraph: IRI = "http://www.knora.org/explicit"
-    val GraphDBExplicitNamedGraph: IRI = "http://www.ontotext.com/explicit"
   }
-
 }

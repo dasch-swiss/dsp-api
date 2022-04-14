@@ -19,10 +19,7 @@ prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 SELECT ?s
-@* Ensure that inference is not used in this query. *@
-@if(triplestore.startsWith("graphdb")) {
-    FROM <http://www.ontotext.com/explicit>
-}
+
 WHERE {
 
     ?projectIri rdf:type knora-admin:knoraProject .

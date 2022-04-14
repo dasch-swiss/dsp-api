@@ -47,16 +47,6 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
   )
 
   val countTriplesQuery: String =
-    if (tsType.startsWith("graphdb"))
-      """
-        SELECT (COUNT(*) AS ?no)
-        FROM <http://www.ontotext.com/explicit>
-        WHERE
-            {
-                ?s ?p ?o .
-            }
-        """
-    else
       """
         SELECT (COUNT(*) AS ?no)
         WHERE
@@ -135,34 +125,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-  val searchURI: String = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
-    "<http://jena.apache.org/text#query>"
-  } else {
-    //GraphDB
-    "<http://www.ontotext.com/owlim/lucene#fullTextSearchIndex>"
-  }
-
-  val textSearchQueryGraphDBValueHasString: String =
-    s"""
-        PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-
-        SELECT DISTINCT *
-        WHERE {
-            ?iri knora-base:valueHasString ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'test' .
-        }
-    """
-
-  val textSearchQueryGraphDBRDFLabel: String =
-    s"""
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-        SELECT DISTINCT *
-        WHERE {
-            ?iri rdfs:label ?literal .
-            ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> 'Papa' .
-        }
-    """
+  val searchURI: String = "<http://jena.apache.org/text#query>"
 
   val textSearchQueryFusekiValueHasString: String =
     s"""
@@ -299,9 +262,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
       "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
         within(1000.millis) {
           tsType match {
-            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
-              storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
-            case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+            case TriplestoreTypes.HttpFuseki => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
           }
           expectMsgPF(timeout) { case msg: SparqlSelectResult =>
             //println(msg)
@@ -313,9 +274,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
       "execute the search with the lucene index for 'rdfs:label' properties" in {
         within(1000.millis) {
           tsType match {
-            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
-              storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
-            case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+            case TriplestoreTypes.HttpFuseki => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
           }
           expectMsgPF(timeout) { case msg: SparqlSelectResult =>
             //println(msg)

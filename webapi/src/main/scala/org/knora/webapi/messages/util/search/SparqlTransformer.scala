@@ -22,44 +22,6 @@ import scala.concurrent.duration._
 object SparqlTransformer {
 
   /**
-   * Transforms a non-triplestore-specific SELECT query for GraphDB.
-   *
-   * @param useInference `true` if the triplestore's inference should be used.
-   */
-  class GraphDBSelectToSelectTransformer(useInference: Boolean) extends SelectToSelectTransformer {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] =
-      Seq(statementPattern)
-
-    override def transformStatementInWhere(
-      statementPattern: StatementPattern,
-      inputOrderBy: Seq[OrderCriterion]
-    ): Seq[StatementPattern] =
-      transformKnoraExplicitToGraphDBExplicit(statement = statementPattern, useInference = useInference)
-
-    override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
-
-    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-      moveBindToBeginning(moveLuceneToBeginning(patterns))
-
-    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
-      transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
-
-    override def getFromClause: Option[FromClause] =
-      if (useInference) {
-        None
-      } else {
-        // To turn off inference, add FROM <http://www.ontotext.com/explicit>.
-        Some(FromClause(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri)))
-      }
-
-    override def enteringUnionBlock(): Unit = {}
-
-    override def leavingUnionBlock(): Unit = {}
-  }
-
-  /**
    * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
    *
    * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
@@ -88,34 +50,6 @@ object SparqlTransformer {
       transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 
     override def getFromClause: Option[FromClause] = None
-
-    override def enteringUnionBlock(): Unit = {}
-
-    override def leavingUnionBlock(): Unit = {}
-  }
-
-  /**
-   * Transforms a non-triplestore-specific CONSTRUCT query for GraphDB.
-   */
-  class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] =
-      Seq(statementPattern)
-
-    override def transformStatementInWhere(
-      statementPattern: StatementPattern,
-      inputOrderBy: Seq[OrderCriterion]
-    ): Seq[StatementPattern] =
-      transformKnoraExplicitToGraphDBExplicit(statement = statementPattern, useInference = true)
-
-    override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
-
-    override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-      moveBindToBeginning(moveLuceneToBeginning(patterns))
-
-    override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
-      transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
 
     override def enteringUnionBlock(): Unit = {}
 
@@ -452,63 +386,6 @@ object SparqlTransformer {
             }
         }
     }
-  }
-
-  /**
-   * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
-   *
-   * @param statement    the given statement whose graph name has to be renamed.
-   * @param useInference `true` if the triplestore's inference should be used.
-   * @return the statement with the renamed graph, if given.
-   */
-  private def transformKnoraExplicitToGraphDBExplicit(
-    statement: StatementPattern,
-    useInference: Boolean
-  ): Seq[StatementPattern] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val transformedPattern = statement.copy(
-      pred = statement.pred,
-      namedGraph = statement.namedGraph match {
-        case Some(IriRef(SmartIri(OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph), _)) =>
-          if (useInference) {
-            Some(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri))
-          } else {
-            // Inference will be turned off in a FROM clause, so there's no need to specify a named graph here.
-            None
-          }
-
-        case Some(IriRef(_, _)) =>
-          throw AssertionException(
-            s"Named graphs other than ${OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph} cannot occur in non-triplestore-specific generated search query SPARQL"
-          )
-
-        case None => None
-      }
-    )
-
-    Seq(transformedPattern)
-  }
-
-  /**
-   * Transforms a [[LuceneQueryPattern]] for GraphDB.
-   *
-   * @param luceneQueryPattern the query pattern.
-   * @return GraphDB-specific statements implementing the query.
-   */
-  private def transformLuceneQueryPatternForGraphDB(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    Seq(
-      StatementPattern(
-        subj = luceneQueryPattern.obj, // In GraphDB, an index entry is associated with a literal.
-        pred = IriRef("http://www.ontotext.com/owlim/lucene#fullTextSearchIndex".toSmartIri),
-        obj = XsdLiteral(
-          value = luceneQueryPattern.queryString.getQueryString,
-          datatype = OntologyConstants.Xsd.String.toSmartIri
-        )
-      )
-    ) ++ luceneQueryPattern.literalStatement
   }
 
   /**

@@ -6,10 +6,8 @@
 @import org.knora.webapi.IRI
 
 @**
- * Given the IRI of a resource, finds any other resource that contains the specified resource.
- *
- * If the triplestore type is GraphDB, this template delegates to isPartOfGraphDB.sparql.txt, which is optimised
- * for GraphDB. Otherwise, it delegates to isPartOfStandard.sparql.txt.
+ * Given the IRI of a resource, finds any other resource that contains the specified resource
+ * using SPARQL w/o inference.
  *
  * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource whose containing resource, if any, is to be returned.
@@ -17,13 +15,36 @@
 @(triplestore: String,
   resourceIri: IRI)
 
-@if(triplestore.startsWith("graphdb")) {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.isPartOfGraphDB(resourceIri = resourceIri)
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
+
+SELECT ?containingResource ?containingResourceProject ?linkValue ?linkValueCreator ?linkValuePermissions
+WHERE {
+    BIND(IRI("@resourceIri") as ?resource)
+
+    ?linkingProp rdfs:subPropertyOf* knora-base:isPartOf .
+    ?resource ?linkingProp ?containingResource .
+    ?containingResource knora-base:isDeleted false ;
+        knora-base:attachedToProject ?containingResourceProject .
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
     }
-} else {
-    @{
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.isPartOfStandard(triplestore = triplestore,
-                                               resourceIri = resourceIri)
+
+    BIND(IRI(CONCAT(STR(?linkingProp), "Value")) AS ?linkValueProp)
+
+    ?resource ?linkValueProp ?linkValue .
+
+    ?linkValue rdf:type knora-base:LinkValue ;
+        rdf:subject ?resource ;
+        rdf:predicate ?linkingProp ;
+        rdf:object ?containingResource ;
+        knora-base:attachedToUser ?linkValueCreator ;
+        knora-base:hasPermissions ?linkValuePermissions .
+
+    FILTER NOT EXISTS {
+        ?linkValue knora-base:isDeleted true .
     }
 }
+LIMIT 1
