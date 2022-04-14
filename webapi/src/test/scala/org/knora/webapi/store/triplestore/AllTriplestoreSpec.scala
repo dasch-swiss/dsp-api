@@ -36,7 +36,6 @@ object AllTriplestoreSpec {
 class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
   private val timeout = 30.seconds
-  private val tsType = settings.triplestoreType
 
   // println(system.settings.config.getConfig("app").root().render())
   // println(system.settings.config.getConfig("app.triplestore").root().render())
@@ -158,7 +157,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
    * The Akka documentation describes a bunch of other methods
    * but this is the one I the most
    */
-  s"The Triplestore ($tsType) Actor " when {
+  s"The Triplestore ($settings.triplestoreType) Actor " when {
     "started " should {
       "only start answering after initialization has finished " in {
         storeManager ! CheckTriplestoreRequest()
@@ -171,8 +170,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a Hello " should {
       "reply " in {
         within(1.seconds) {
-          storeManager ! HelloTriplestore(tsType)
-          expectMsg(HelloTriplestore(tsType))
+          storeManager ! HelloTriplestore(settings.triplestoreType)
+          expectMsg(HelloTriplestore(settings.triplestoreType))
         }
       }
     }

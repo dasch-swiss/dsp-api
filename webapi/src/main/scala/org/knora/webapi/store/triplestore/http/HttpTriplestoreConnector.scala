@@ -85,8 +85,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
   override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
-  private val triplestoreType = settings.triplestoreType
-
   private val targetHost: HttpHost = new HttpHost(settings.triplestoreHost, settings.triplestorePort, "http")
 
   private val credsProvider: BasicCredentialsProvider = new BasicCredentialsProvider
@@ -194,7 +192,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
       try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
-    case HelloTriplestore(msg: String) if msg == triplestoreType => sender() ! HelloTriplestore(triplestoreType)
+    case HelloTriplestore(msg: String) if msg == settings.triplestoreType => sender() ! HelloTriplestore(settings.triplestoreType)
     case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
       try2Message(sender(), Success(SparqlUpdateResponse()), log)
