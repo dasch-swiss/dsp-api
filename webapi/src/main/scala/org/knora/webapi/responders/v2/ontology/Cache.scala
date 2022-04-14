@@ -117,7 +117,7 @@ object Cache extends LazyLogging {
       // Get all ontology metadata.
       allOntologyMetadataSparql <- FastFuture.successful(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getAllOntologyMetadata
+          .getAllOntologyMetadata()
           .toString()
       )
       allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
