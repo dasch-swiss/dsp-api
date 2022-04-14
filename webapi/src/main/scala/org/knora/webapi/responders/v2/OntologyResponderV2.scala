@@ -3297,17 +3297,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
 
-        currentReadPropertyInfo: ReadPropertyInfoV2 =
+        propertyToUpdate: ReadPropertyInfoV2 =
           ontology.properties.getOrElse(
             internalPropertyIri,
             throw NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found")
           )
-
-        // Check that the user has permission to update the ontology.
-        _ <- OntologyHelpers.checkPermissionsForOntologyUpdate(
-          internalOntologyIri = internalOntologyIri,
-          requestingUser = deletePropertyCommentRequest.requestingUser
-        )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -3319,8 +3313,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         )
 
         // If this is a link property, also delete the comment of the corresponding link value property.
-        maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] =
-          if (currentReadPropertyInfo.isLinkProp) {
+        maybeLinkValueOfPropertyToUpdate: Option[ReadPropertyInfoV2] =
+          if (propertyToUpdate.isLinkProp) {
             val linkValuePropertyIri: SmartIri = internalPropertyIri.fromLinkPropToLinkValueProp
             Some(
               ontology.properties.getOrElse(
@@ -3334,28 +3328,26 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             None
           }
 
-        maybeCurrentLinkValuePropertyIri: Option[SmartIri] =
-          if (currentReadPropertyInfo.isLinkProp) {
+        maybeLinkValueOfPropertyToUpdateIri: Option[SmartIri] =
+          if (propertyToUpdate.isLinkProp) {
             Some(internalPropertyIri.fromLinkPropToLinkValueProp)
           } else {
             None
           }
 
-        // Delete the comment
         currentTime: Instant = Instant.now
 
+        // Delete the comment
         updateSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .deletePropertyComment(
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             propertyIri = internalPropertyIri,
-            maybeLinkValuePropertyIri = maybeCurrentLinkValuePropertyIri,
+            maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri,
             lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
             currentTime = currentTime
           )
           .toString()
-
-        _ = println(updateSparql)
 
         _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
@@ -3377,8 +3369,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         )
 
         propertyDefWithoutComment: PropertyInfoContentV2 =
-          currentReadPropertyInfo.entityInfoContent.copy(
-            predicates = currentReadPropertyInfo.entityInfoContent.predicates.-(
+          propertyToUpdate.entityInfoContent.copy(
+            predicates = propertyToUpdate.entityInfoContent.predicates.-(
               OntologyConstants.Rdfs.Comment.toSmartIri
             ) // deletes the entry with the comment
           )
@@ -3390,7 +3382,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         }
 
         maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] =
-          maybeCurrentLinkValueReadPropertyInfo.map { linkValueReadPropertyInfo: ReadPropertyInfoV2 =>
+          maybeLinkValueOfPropertyToUpdate.map { linkValueReadPropertyInfo: ReadPropertyInfoV2 =>
             OntologyHelpers.loadPropertyDefinition(
               settings,
               storeManager,
@@ -3405,8 +3397,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         maybeNewLinkValuePropertyDef: Option[PropertyInfoContentV2] =
           maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef: PropertyInfoContentV2 =>
             val newLinkPropertyDef: PropertyInfoContentV2 =
-              maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
-                predicates = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates
+              maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.copy(
+                predicates = maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.predicates
               )
 
             if (loadedLinkValuePropertyDef != newLinkPropertyDef) {
@@ -3423,7 +3415,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           entityInfoContent = propertyDefWithoutComment,
           isEditable = true,
           isResourceProp = true,
-          isLinkProp = currentReadPropertyInfo.isLinkProp
+          isLinkProp = propertyToUpdate.isLinkProp
         )
 
         maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] =

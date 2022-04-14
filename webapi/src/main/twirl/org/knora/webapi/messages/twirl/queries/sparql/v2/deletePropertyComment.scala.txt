@@ -59,5 +59,6 @@ WHERE {
     GRAPH <@ontologyNamedGraphIri> {
         <@ontologyIri> rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+        <@propertyIri> rdfs:comment ?comments.
     }
 }

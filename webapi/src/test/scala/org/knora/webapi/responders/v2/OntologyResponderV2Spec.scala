@@ -2404,9 +2404,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "delete the comments of a property" in {
+    "delete the comment of a property" in {
       val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasSpecialName")
-
       responderManager ! DeletePropertyCommentRequestV2(
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
@@ -2419,7 +2418,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        println("YYY", readPropertyInfo.entityInfoContent.predicates)
         readPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
