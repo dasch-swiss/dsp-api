@@ -11,17 +11,22 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.GroupStatus
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
 
 import java.util.UUID
 import scala.concurrent.Future
@@ -88,7 +93,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getGroups(
-            triplestore = settings.triplestoreType,
             maybeIri = None
           )
           .toString()
@@ -210,7 +214,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getGroups(
-            triplestore = settings.triplestoreType,
             maybeIri = Some(groupIri)
           )
           .toString()
@@ -461,7 +464,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         createNewGroupSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewGroup(
             adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-            triplestore = settings.triplestoreType,
             groupIri,
             groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
             name = createRequest.name.value,
@@ -726,7 +728,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .updateGroup(
             adminNamedGraphIri = "http://www.knora.org/data/admin",
-            triplestore = settings.triplestoreType,
             groupIri,
             maybeName = groupUpdatePayload.name.map(_.value),
             maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),

@@ -5,27 +5,34 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 
+import java.util.UUID
 import scala.collection.immutable.Iterable
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
@@ -731,7 +738,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewAdministrativePermission(
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            triplestore = settings.triplestoreType,
             permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
             permissionIri = newPermissionIri,
             projectIri = project.id,
@@ -1017,7 +1023,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           // not found permission in the cache
 
           for {
-
             sparqlQueryString <- Future(
               org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                 .getDefaultObjectAccessPermission(
@@ -1642,7 +1647,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewDefaultObjectAccessPermission(
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            triplestore = settings.triplestoreType,
             permissionIri = newPermissionIri,
             permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
             projectIri = project.id,
@@ -1703,7 +1707,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getProjectPermissions(
-            triplestore = settings.triplestoreType,
             projectIri = projectIRI
           )
           .toString()
@@ -2165,7 +2168,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getPermissionByIRI(
-            triplestore = settings.triplestoreType,
             permissionIri = permissionIri
           )
           .toString()
@@ -2265,7 +2267,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .updatePermission(
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            triplestore = settings.triplestoreType,
             permissionIri = permissionIri,
             maybeGroup = maybeGroup,
             maybeHasPermissions = maybeHasPermissions,
@@ -2289,7 +2290,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       sparqlDeletePermission: String <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .deletePermission(
-            triplestore = settings.triplestoreType,
             namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
             permissionIri = permissionIri
           )
@@ -2325,7 +2325,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       isPermissionUsedSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .isEntityUsed(
-            triplestore = settings.triplestoreType,
             entityIri = permissionIri
           )
           .toString()
@@ -2344,7 +2343,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getProjectOfEntity(
-            triplestore = settings.triplestoreType,
             entityIri = entityIri
           )
           .toString()

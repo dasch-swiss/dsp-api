@@ -10,8 +10,6 @@
  * Updates an existing project with the provided values.
  *
  * @param dataNamedGraph     the named graph to update.
- * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
-                             results from the WHERE clause of the update.
  * @param projectIri         the IRI of the project we want to update.
  * @param maybeShortname     the new optional value for shortname.
  * @param maybeLongname      the new optional value for longname.
@@ -22,7 +20,6 @@
  * @param maybeSelfjoin      the new optional value for selfjoin.
  *@
 @(adminNamedGraphIri: IRI,
-  triplestore: String,
   projectIri: IRI,
   maybeShortname: Option[String],
   maybeLongname: Option[String],

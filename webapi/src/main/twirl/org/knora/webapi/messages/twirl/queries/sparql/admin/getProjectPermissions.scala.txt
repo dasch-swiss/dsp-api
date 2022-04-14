@@ -8,11 +8,9 @@
 @**
  * Given a project IRI, returns the permissions for that project.
  *
- * @param triplestore the name of the triplestore being used.
  * @param projectIri the project IRI.
  *@
-@(triplestore: String,
-  projectIri: IRI)
+@(projectIri: IRI)
 
 prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>
 

@@ -11,21 +11,26 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
-  ListChildNodeCreatePayloadADM,
-  ListRootNodeCreatePayloadADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{ListIRI, ListName, ProjectIRI}
+import org.knora.webapi.messages.admin.responder.valueObjects.ListIRI
+import org.knora.webapi.messages.admin.responder.valueObjects.ListName
+import org.knora.webapi.messages.admin.responder.valueObjects.ProjectIRI
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
 
 import java.util.UUID
 import scala.annotation.tailrec
@@ -110,7 +115,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getLists(
-            triplestore = settings.triplestoreType,
             maybeProjectIri = projectIri
           )
           .toString()
@@ -316,7 +320,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getListNode(
-            triplestore = settings.triplestoreType,
             nodeIri = nodeIri
           )
           .toString()
@@ -485,7 +488,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getListNode(
-            triplestore = settings.triplestoreType,
             nodeIri = nodeIri
           )
           .toString()
@@ -700,7 +702,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       nodeChildrenQuery <- Future {
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getListNodeWithChildren(
-            triplestore = settings.triplestoreType,
             startNodeIri = ofNodeIri
           )
           .toString()
@@ -790,7 +791,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       nodePathQuery <- Future {
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getNodePath(
-            triplestore = settings.triplestoreType,
             queryNodeIri = queryNodeIri,
             preferredLanguage = requestingUser.lang,
             fallbackLanguage = settings.fallbackLanguage
@@ -984,7 +984,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
             .createNewListNode(
               dataNamedGraph = dataNamedGraph,
-              triplestore = settings.triplestoreType,
               listClassIri = OntologyConstants.KnoraBase.ListNode,
               projectIri = projectIri.value,
               nodeIri = newListNodeIri,
@@ -1008,7 +1007,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
             .createNewListNode(
               dataNamedGraph = dataNamedGraph,
-              triplestore = settings.triplestoreType,
               listClassIri = OntologyConstants.KnoraBase.ListNode,
               projectIri = projectIri.value,
               nodeIri = newListNodeIri,
@@ -1773,7 +1771,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .canDeleteList(
-            triplestore = settings.triplestoreType,
             listIri = iri
           )
           .toString()
@@ -2161,7 +2158,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       changeNodeInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
         .updateListInfo(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           nodeIri = changeNodeInfoRequest.listIri.value,
           hasOldName = hasOldName,
           isRootNode = isRootNode,
@@ -2223,7 +2219,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       isNodeUsedSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .isNodeUsed(
-            triplestore = settings.triplestoreType,
             nodeIri = nodeIri
           )
           .toString()
@@ -2277,7 +2272,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       getParentNodeSparqlString: String <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getParentNode(
-            triplestore = settings.triplestoreType,
             nodeIri = nodeIri
           )
           .toString
@@ -2310,7 +2304,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlDeleteNode: String <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .deleteNode(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
             nodeIri = nodeIri,
             isRootNode = isRootNode
@@ -2350,7 +2343,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlUpdateNodePosition: String <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .updateNodePosition(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
             nodeIri = nodeIri,
             newPosition = newPosition
@@ -2445,7 +2437,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlChangeParentNode: String <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .changeParentNode(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
             nodeIri = nodeIri,
             currentParentIri = oldParentIri,
