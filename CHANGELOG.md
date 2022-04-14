@@ -1,5 +1,23 @@
 # Changelog
 
+### [20.1.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.1.0...v20.1.1) (2022-04-14)
+
+
+### Bug Fixes
+
+* **sipi:** extract frames from video even without aspect ratio (DEV-802) ([#2041](https://www.github.com/dasch-swiss/dsp-api/issues/2041)) ([57d40f7](https://www.github.com/dasch-swiss/dsp-api/commit/57d40f79beed8035ee461562b54abc347746237b))
+
+
+### Documentation
+
+* **ingest:** Add accepted file formats to documentation (DEV-677) ([#2038](https://www.github.com/dasch-swiss/dsp-api/issues/2038)) ([f72e7a0](https://www.github.com/dasch-swiss/dsp-api/commit/f72e7a01e9396430e88c75c1ab3ec2743e6cf053))
+
+
+### Maintenance
+
+* **cacheservice:** use ZIO (DEV-546) ([#2022](https://www.github.com/dasch-swiss/dsp-api/issues/2022)) ([521150f](https://www.github.com/dasch-swiss/dsp-api/commit/521150fbf3dac5ce4c075e6b3ef3c537004a750d))
+* **triplestore:** remove graphDB support ([#2037](https://www.github.com/dasch-swiss/dsp-api/issues/2037)) ([bf17bca](https://www.github.com/dasch-swiss/dsp-api/commit/bf17bcad5fd87313b797cdb6187ef7e42d6e2911))
+
 ## [20.1.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.0.0...v20.1.0) (2022-04-07)
 
 
