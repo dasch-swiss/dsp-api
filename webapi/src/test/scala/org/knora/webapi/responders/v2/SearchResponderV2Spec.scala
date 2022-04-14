@@ -40,7 +40,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
   private val anythingUserProfile = SharedTestDataADM.anythingUser2
   // The default timeout for receiving reply messages from actors.
-  private val timeout = 100.seconds
+  private val timeout = 10.seconds
 
   "The search responder v2" should {
 

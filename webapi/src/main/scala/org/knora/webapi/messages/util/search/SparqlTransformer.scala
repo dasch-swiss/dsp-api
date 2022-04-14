@@ -312,17 +312,18 @@ object SparqlTransformer extends LazyLogging {
           obj = statementPattern.obj
         )
       )
-      val unions: Seq[QueryPattern] = {
-        if (knownChildProps.length > 1) {
-          Seq(
-            UnionPattern(
-              knownChildProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
-            )
-          )
-        } else {
-          Seq(statementPattern)
-        }
-      }
+      propPath
+      // val unions: Seq[QueryPattern] = {
+      //   if (knownChildProps.length > 1) {
+      //     Seq(
+      //       UnionPattern(
+      //         knownChildProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+      //       )
+      //     )
+      //   } else {
+      //     Seq(statementPattern)
+      //   }
+      // }
 
       // val values = statementPattern.pred match {
       //   case IriRef(iri, propertyPathOperator) =>
@@ -340,10 +341,10 @@ object SparqlTransformer extends LazyLogging {
       //   case _ => throw new Exception("Nope")
       // }
 
-      if (knownChildProps.length > 2) {
-        log.debug("Too many known children for cache-inference. Using property path instead")
-        propPath
-      } else { unions }
+      // if (knownChildProps.length > 2) {
+      //   log.debug("Too many known children for cache-inference. Using property path instead")
+      //   propPath
+      // } else { unions }
       // unions
     }
 
