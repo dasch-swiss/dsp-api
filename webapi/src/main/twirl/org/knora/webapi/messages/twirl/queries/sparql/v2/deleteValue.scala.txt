@@ -14,7 +14,6 @@
  * Marks a value as deleted. This template is used for all value types except links.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource containing the value.
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param valueIri the IRI of the value to be marked as deleted.
@@ -26,7 +25,6 @@
  * @param stringFormatter a [[StringFormatter]].
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourceIri: IRI,
   propertyIri: SmartIri,
   valueIri: IRI,

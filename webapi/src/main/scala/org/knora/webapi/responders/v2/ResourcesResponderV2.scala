@@ -5,9 +5,6 @@
 
 package org.knora.webapi.responders.v2
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
@@ -15,55 +12,53 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
-  DefaultObjectAccessPermissionsStringResponseADM,
-  ResourceCreateOperation
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.PermissionUtilADM.{
-  AGreaterThanB,
-  DeletePermission,
-  ModifyPermission,
-  PermissionComparisonResult
-}
+import org.knora.webapi.messages.util.PermissionUtilADM.AGreaterThanB
+import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
+import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
+import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{
-  JsonLDArray,
-  JsonLDDocument,
-  JsonLDInt,
-  JsonLDKeywords,
-  JsonLDObject,
-  JsonLDString,
-  SparqlSelectResult,
-  VariableResultsRow
-}
+import org.knora.webapi.messages.util.rdf.JsonLDArray
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDInt
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.util.rdf.JsonLDObject
+import org.knora.webapi.messages.util.rdf.JsonLDString
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{
-  GetMappingRequestV2,
-  GetMappingResponseV2,
-  GetXSLTransformationRequestV2,
-  GetXSLTransformationResponseV2
-}
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util._
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -273,7 +268,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createNewResources(
             dataNamedGraph = dataNamedGraph,
-            triplestore = settings.triplestoreType,
             resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
             projectIri = createResourceRequestV2.createResource.projectADM.id,
             creatorIri = createResourceRequestV2.requestingUser.id
@@ -446,7 +440,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Generate SPARQL for updating the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changeResourceMetadata(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
             resourceIri = updateResourceMetadataRequestV2.resourceIri,
             resourceClassIri = internalResourceClassIri,
@@ -602,7 +595,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Generate SPARQL for marking the resource as deleted.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .deleteResource(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
             resourceIri = deleteResourceV2.resourceIri,
             maybeDeleteComment = deleteResourceV2.maybeDeleteComment,
@@ -618,7 +610,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .checkResourceDeletion(
-            triplestore = settings.triplestoreType,
             resourceIri = deleteResourceV2.resourceIri
           )
           .toString()
@@ -717,7 +708,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Generate SPARQL for erasing the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .eraseResource(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = dataNamedGraph,
             resourceIri = eraseResourceV2.resourceIri
           )
@@ -1492,7 +1482,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceRequestSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getResourcePropertiesAndValues(
-            triplestore = settings.triplestoreType,
             resourceIris = resourceIrisDistinct,
             preview = preview,
             withDeleted = withDeleted,
@@ -2131,7 +2120,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         sparql <- Future(
           org.knora.webapi.messages.twirl.queries.sparql.v2.txt
             .getGraphData(
-              triplestore = settings.triplestoreType,
               startNodeIri = startNode.nodeIri,
               startNodeOnly = false,
               maybeExcludeLinkProperty = excludePropertyInternal,
@@ -2273,7 +2261,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       sparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getGraphData(
-            triplestore = settings.triplestoreType,
             startNodeIri = graphDataGetRequest.resourceIri,
             maybeExcludeLinkProperty = excludePropertyInternal,
             startNodeOnly = true,
@@ -2398,7 +2385,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getResourceValueVersionHistory(
-          triplestore = settings.triplestoreType,
           withDeletedResource = resourceHistoryRequest.withDeletedResource,
           resourceIri = resourceHistoryRequest.resourceIri,
           maybeStartDate = resourceHistoryRequest.startDate,
@@ -2638,7 +2624,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getAllResourcesInProjectPrequery(
-          triplestore = settings.triplestoreType,
           projectIri = projectInfoResponse.project.id
         )
         .toString

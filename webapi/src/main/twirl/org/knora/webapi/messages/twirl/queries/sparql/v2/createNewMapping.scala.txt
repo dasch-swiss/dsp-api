@@ -9,13 +9,11 @@
 @*
  * Creates a new mapping.
  *
- * @param triplestore the name of the triplestore being used.
  * @param dataNamedGraph the named graph in which the mapping is stored.
  * @param mappingIri the Iri of the new mapping
  * @param mappingElements a sequence of elements to be added to the mapping, each representing an XML tag.
  *@
-@(triplestore: String,
-  dataNamedGraph: IRI,
+@(dataNamedGraph: IRI,
   mappingIri: IRI,
   label: String,
   defaultXSLTransformation: Option[IRI],

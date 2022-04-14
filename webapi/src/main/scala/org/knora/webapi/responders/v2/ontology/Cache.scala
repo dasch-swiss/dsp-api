@@ -7,47 +7,50 @@ package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
-import org.knora.webapi.{ApiV2Complex, InternalSchema, KnoraBaseVersion, OntologySchema}
-import org.knora.webapi.exceptions.{
-  ApplicationCacheException,
-  BadRequestException,
-  MissingLastModificationDateOntologyException,
-  ForbiddenException,
-  InconsistentRepositoryDataException
-}
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{
-  SparqlExtendedConstructRequest,
-  SparqlExtendedConstructResponse,
-  SparqlSelectRequest
-}
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.{ErrorHandlingMap, KnoraSystemInstances, OntologyUtil}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  ClassInfoContentV2,
-  IndividualInfoContentV2,
-  OntologyMetadataV2,
-  PropertyInfoContentV2,
-  ReadClassInfoV2,
-  ReadOntologyV2,
-  ReadPropertyInfoV2
-}
-import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
-import org.knora.webapi.settings.KnoraSettingsImpl
-
-import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern._
 import akka.util.Timeout
-import com.typesafe.scalalogging.{LazyLogging, Logger}
-import java.time.Instant
+import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.KnoraBaseVersion
+import org.knora.webapi.OntologySchema
 import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.exceptions.ApplicationCacheException
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.OntologyUtil
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.IndividualInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.util.cache.CacheUtil
+
+import java.time.Instant
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 object Cache extends LazyLogging {
 
@@ -114,7 +117,7 @@ object Cache extends LazyLogging {
       // Get all ontology metadata.
       allOntologyMetadataSparql <- FastFuture.successful(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getAllOntologyMetadata(triplestore = settings.triplestoreType)
+          .getAllOntologyMetadata
           .toString()
       )
       allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
@@ -162,7 +165,6 @@ object Cache extends LazyLogging {
 
         val ontologyGraphConstructQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getOntologyGraph(
-            triplestore = settings.triplestoreType,
             ontologyGraph = ontologyIri
           )
           .toString
