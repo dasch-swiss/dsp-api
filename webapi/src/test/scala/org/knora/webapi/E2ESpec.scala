@@ -60,18 +60,18 @@ class E2ESpec(_system: ActorSystem)
 
   /* constructors */
   def this(name: String, config: Config) =
-    this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+    this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
   def this(config: Config) =
-    this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+    this(ActorSystem("E2ETest", TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-  def this(name: String) = this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
+  def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-  def this() = this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
+  def this() = this(ActorSystem("E2ETest", TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
   /* needed by the core trait */
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -83,8 +83,12 @@ class E2ESpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
+  // using here the TestManagersWithAllTestContainers trait will also initiate all TestContainers
   lazy val appActor: ActorRef =
-    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+    system.actorOf(
+      Props(new ApplicationActor with TestManagersWithAllTestContainers),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
 
   protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
@@ -138,7 +142,7 @@ class E2ESpec(_system: ActorSystem)
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
+    val responseBodyStr                    = Await.result(responseBodyFuture, 10.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
@@ -148,7 +152,7 @@ class E2ESpec(_system: ActorSystem)
   }
 
   protected def doGetRequest(urlPath: String): String = {
-    val request = Get(s"$baseApiUrl$urlPath")
+    val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)
   }

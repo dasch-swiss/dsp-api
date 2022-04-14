@@ -9,7 +9,8 @@ import magnolia._
 
 import zio._
 import com.typesafe.config.ConfigFactory
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
+import java.util.concurrent.TimeUnit
 
 /**
  * Represents the complete configuration as defined in application.conf.
@@ -27,7 +28,9 @@ final case class AppConfig(
   allowReloadOverHttp: Boolean,
   knoraApi: KnoraAPI,
   sipi: Sipi
-)
+) {
+  val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
+}
 
 final case class KnoraAPI(
   internalHost: String,
@@ -36,9 +39,12 @@ final case class KnoraAPI(
   externalHost: String,
   externalPort: Int
 ) {
-  def internalKnoraApiBaseUrl: String = internalHost + (if (internalPort != 80)
-                                                          ":" + internalPort
-                                                        else "")
+  def internalKnoraApiHostPort: String = internalHost + (if (internalPort != 80)
+                                                           ":" + internalPort
+                                                         else "")
+  def externalKnoraApiBaseUrl: String = externalProtocol + ":" + externalHost + (if (externalPort != 80)
+                                                                                   ":" + externalPort
+                                                                                 else "")
 }
 
 final case class Sipi(
@@ -57,7 +63,12 @@ final case class Sipi(
   videoMimeTypes: List[String],
   audioMimeTypes: List[String],
   archiveMimeTypes: List[String]
-)
+) {
+  def internalBaseUrl = "http://" + internalHost + (if (internalPort != 80)
+                                                      ":" + internalPort
+                                                    else "")
+  val timeoutInSeconds = scala.concurrent.duration.Duration(timeout)
+}
 
 final case class V2(
   fileMetadataRoute: String,
@@ -86,8 +97,8 @@ object AppConfig {
   /**
    * Live configuration reading from application.conf.
    */
-  val live: ZLayer[Any, ReadError[String], AppConfig] =
+  val live: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {
-      config
+      config.orDie
     }.tap(_ => ZIO.debug(">>> AppConfig Initialized <<<"))
 }

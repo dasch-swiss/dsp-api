@@ -83,9 +83,8 @@ import zio.ZEnvironment
 import zio.RuntimeConfig
 import org.knora.webapi.core.Logging
 import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.JWTConfig
-import org.knora.webapi.store.iiif.config.IIIFServiceConfig
 import zio.ZLayer
+import org.knora.webapi.config.AppConfig
 
 trait Managers {
   implicit val system: ActorSystem
@@ -128,9 +127,8 @@ trait LiveManagers extends Managers {
     ZLayer.make[IIIFServiceManager](
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer,
-      IIIFServiceConfig.hardcoded,
       JWTService.layer,
-      JWTConfig.hardcoded
+      AppConfig.live
     )
 
   /**

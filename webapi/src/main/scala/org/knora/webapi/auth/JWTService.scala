@@ -7,8 +7,10 @@ import spray.json.JsValue
 import org.knora.webapi.routing.JWTHelper
 import spray.json.JsObject
 import spray.json.JsString
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 
-final case class JWTService(config: JWTConfig) {
+final case class JWTService(config: AppConfig) {
 
   /**
    * Creates a new JWT token for a specific user and holds some additional
@@ -21,19 +23,19 @@ final case class JWTService(config: JWTConfig) {
     ZIO.succeed {
       JWTHelper.createToken(
         userIri = id,
-        secret = config.secret,
-        longevity = config.longevity,
-        issuer = config.issuer,
+        secret = config.jwtSecretKey,
+        longevity = config.jwtLongevityAsDuration,
+        issuer = config.knoraApi.externalKnoraApiBaseUrl,
         content = content
       )
     }
 }
 
 object JWTService {
-  val layer: ZLayer[JWTConfig, Nothing, JWTService] = {
+  val layer: ZLayer[AppConfig, Nothing, JWTService] = {
     ZLayer {
       for {
-        config <- ZIO.service[JWTConfig]
+        config <- ZIO.service[AppConfig]
       } yield JWTService(config)
     }
   }

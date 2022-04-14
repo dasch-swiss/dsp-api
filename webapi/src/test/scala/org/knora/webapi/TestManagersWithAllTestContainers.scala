@@ -23,11 +23,15 @@ import org.knora.webapi.core.Logging
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.app.LiveManagers
 import zio.ZLayer
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testcontainers.SipiTestContainer
 
 /**
- * Mixin trait for running the application with mocked Sipi
+ * Mixin trait for running the application with Fuseki and Sipi TestContainers.
  */
-trait TestManagersWithMockedSipi extends LiveManagers {
+trait TestManagersWithAllTestContainers extends LiveManagers {
   this: Actor =>
 
   /**
@@ -45,6 +49,10 @@ trait TestManagersWithMockedSipi extends LiveManagers {
   override val iiifServiceManagerLayer: ZLayer[Any, Nothing, IIIFServiceManager] =
     ZLayer.make[IIIFServiceManager](
       IIIFServiceManager.layer,
-      MockSipiImpl.layer
+      IIIFServiceSipiImpl.layer,
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
     )
 }

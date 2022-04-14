@@ -868,7 +868,7 @@ object JWTHelper {
   def createToken(
     userIri: IRI,
     secret: String,
-    longevity: FiniteDuration,
+    longevity: Duration,
     issuer: String,
     content: Map[String, JsValue] = Map.empty
   ): String = {

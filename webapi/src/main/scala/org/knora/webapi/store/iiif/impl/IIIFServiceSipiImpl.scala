@@ -34,14 +34,15 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 import org.knora.webapi.store.iiif.api.IIIFService
 import zio._
-import org.knora.webapi.store.iiif.config.SipiConfig
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.store.iiif.domain._
 import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
 
 /**
  * Makes requests to Sipi.
  */
-case class IIIFServiceSipiImpl(sipiConfig: SipiConfig, jwt: JWTService, httpClient: CloseableHttpClient)
+case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: CloseableHttpClient)
     extends IIIFService {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -96,7 +97,7 @@ case class IIIFServiceSipiImpl(sipiConfig: SipiConfig, jwt: JWTService, httpClie
       )
     )
 
-    val moveFileUrl = s"${sipiConfig.internal.baseUrl}/${sipiConfig.v2.moveFileRoute}?token=$token"
+    val moveFileUrl = s"${config.sipi.internalBaseUrl}/${config.sipi.v2.moveFileRoute}?token=$token"
 
     val formParams = new util.ArrayList[NameValuePair]()
     formParams.add(new BasicNameValuePair("filename", moveTemporaryFileToPermanentStorageRequestV2.internalFilename))
@@ -130,7 +131,7 @@ case class IIIFServiceSipiImpl(sipiConfig: SipiConfig, jwt: JWTService, httpClie
     )
 
     val deleteFileUrl =
-      s"${sipiConfig.internal.baseUrl}/${sipiConfig.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+      s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
     val request = new HttpDelete(deleteFileUrl)
 
     for {
@@ -190,8 +191,9 @@ case class IIIFServiceSipiImpl(sipiConfig: SipiConfig, jwt: JWTService, httpClie
    * Tries to access the IIIF Service to check if Sipi is running.
    */
   def getStatus(): UIO[IIIFServiceStatusResponse] = {
-    val request = new HttpGet(sipiConfig.internal.baseUrl + "/server/test.html")
-    doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
+    val request = new HttpGet(config.sipi.internalBaseUrl + "/server/test.html")
+
+    ZIO.debug(request) *> doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
   }
 
   /**
@@ -202,7 +204,7 @@ case class IIIFServiceSipiImpl(sipiConfig: SipiConfig, jwt: JWTService, httpClie
    */
   private def doSipiRequest(request: HttpRequest): Task[String] = {
     val targetHost: HttpHost =
-      new HttpHost(sipiConfig.external.host, sipiConfig.external.port, sipiConfig.external.protocol)
+      new HttpHost(config.sipi.externalHost, config.sipi.externalPort, config.sipi.externalProtocol)
     val httpContext: HttpClientContext               = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
@@ -257,10 +259,10 @@ object IIIFServiceSipiImpl {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def aquire(config: SipiConfig) = ZIO.attemptBlocking {
+  private def aquire(config: AppConfig) = ZIO.attemptBlocking {
 
     // timeout from config
-    val sipiTimeoutMillis = config.timeout.toMillis.toInt
+    val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
 
     // Create a connection manager with custom configuration.
     val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
@@ -298,22 +300,25 @@ object IIIFServiceSipiImpl {
       .build()
 
     httpClient
-  }.orDie
+  }.tap(_ => ZIO.debug(">>> Aquire Sipi IIIF Service <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
    */
   private def release(httpClient: CloseableHttpClient) = ZIO.attemptBlocking {
     httpClient.close()
-  }.orDie
+  }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
 
-  val layer: ZLayer[SipiConfig & JWTService, Nothing, IIIFService] = {
-    ZLayer.scoped {
+  val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
+    ZLayer {
       for {
-        sipiConfig <- ZIO.service[SipiConfig]
+        config     <- ZIO.service[AppConfig]
         jwtService <- ZIO.service[JWTService]
-        httpClient <- ZIO.acquireRelease(aquire(sipiConfig))(release(_))
-      } yield IIIFServiceSipiImpl(sipiConfig, jwtService, httpClient)
+        // HINT: Scope does not work when used together with unsafeRun to
+        // bridge over to Akka. Need to change this as soon Akka is removed
+        // httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
+        httpClient <- aquire(config)
+      } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }.tap(_ => ZIO.debug(">>> Sipi IIIF Service Initialized <<<"))
   }
 }
