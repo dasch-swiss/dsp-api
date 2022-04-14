@@ -10,13 +10,14 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -32,7 +33,6 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getMapping(
-        triplestore = settings.triplestoreType,
         mappingIri = iri
       )
       .toString()

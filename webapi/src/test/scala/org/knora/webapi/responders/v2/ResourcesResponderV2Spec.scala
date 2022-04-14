@@ -5,37 +5,40 @@
 
 package org.knora.webapi.responders.v2
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import akka.actor.{ActorRef, Props}
+import akka.actor.ActorRef
+import akka.actor.Props
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionYear
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.{
-  CalendarNameGregorian,
-  DatePrecisionYear,
-  KnoraSystemInstances,
-  PermissionUtilADM
-}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.UUID
 import scala.concurrent.duration._
 
 object ResourcesResponderV2Spec {
@@ -520,7 +523,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private def getStandoffTagByUUID(uuid: UUID): Set[IRI] = {
     val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getStandoffTagByUUID(
-        triplestore = settings.triplestoreType,
         uuid = uuid,
         stringFormatter = stringFormatter
       )
@@ -538,7 +540,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private def getDeleteDate(resourceIri: IRI): Instant = {
     val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getDeleteDate(
-        triplestore = settings.triplestoreType,
         entityIri = resourceIri
       )
       .toString()
@@ -2412,7 +2413,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val isEntityUsedSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .isEntityUsed(
-          triplestore = settings.triplestoreType,
           entityIri = resourceIriToErase.get.toSmartIri,
           ignoreKnoraConstraints = true
         )
