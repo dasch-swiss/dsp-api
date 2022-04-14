@@ -11,6 +11,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ontology.Cache
 import scala.concurrent.{ExecutionContext, Future}
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 import akka.actor.ActorSystem
 import org.knora.webapi.settings.KnoraDispatchers
 import scala.concurrent._
@@ -19,7 +20,8 @@ import scala.concurrent.duration._
 /**
  * Methods and classes for transforming generated SPARQL.
  */
-object SparqlTransformer {
+object SparqlTransformer extends LazyLogging {
+  protected val log: Logger = logger
 
   /**
    * Transforms a non-triplestore-specific SELECT for a triplestore that does not have inference enabled (e.g., Fuseki).
@@ -284,33 +286,33 @@ object SparqlTransformer {
 
       val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
       val superProps = ontoCache.superPropertyOfRelations
+      val predIri = statementPattern.pred match {
+        case IriRef(iri, _) => iri
+        case _              => throw new GravsearchException(s"Failed to resolve the predicate to an IRI in $statementPattern")
+      }
+      val knownChildProps = superProps
+        .get(predIri)
+        .getOrElse(
+          throw new GravsearchException(s"No known Child Properties for $predIri which should never happen.")
+        )
+        .toSeq
 
-      // val propPath = Seq(
-      //   StatementPattern(
-      //     subj = propertyVariable,
-      //     pred = IriRef(
-      //       iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
-      //       propertyPathOperator = Some('*')
-      //     ),
-      //     obj = statementPattern.pred
-      //   ),
-      //   StatementPattern(
-      //     subj = statementPattern.subj,
-      //     pred = propertyVariable,
-      //     obj = statementPattern.obj
-      //   )
-      // )
+      val propPath = Seq(
+        StatementPattern(
+          subj = propertyVariable,
+          pred = IriRef(
+            iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
+            propertyPathOperator = Some('*')
+          ),
+          obj = statementPattern.pred
+        ),
+        StatementPattern(
+          subj = statementPattern.subj,
+          pred = propertyVariable,
+          obj = statementPattern.obj
+        )
+      )
       val unions: Seq[QueryPattern] = {
-        val predIri = statementPattern.pred match {
-          case IriRef(iri, _) => iri
-          case _              => throw new GravsearchException(s"Failed to resolve the predicate to an IRI in $statementPattern")
-        }
-        val knownChildProps = superProps
-          .get(predIri)
-          .getOrElse(
-            throw new GravsearchException(s"No known Child Properties for $predIri which should never happen.")
-          )
-          .toSeq
         if (knownChildProps.length > 1) {
           Seq(
             UnionPattern(
@@ -337,7 +339,12 @@ object SparqlTransformer {
       //     )
       //   case _ => throw new Exception("Nope")
       // }
-      unions
+
+      if (knownChildProps.length > 10) {
+        log.debug("Too many known children for cache-inference. Using property path instead")
+        propPath
+      } else { unions }
+      // unions
     }
 
     statementPattern.pred match {
