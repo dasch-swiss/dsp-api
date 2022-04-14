@@ -99,7 +99,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getProjects
+          .getProjects()
           .toString()
       )
       //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")

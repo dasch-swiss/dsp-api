@@ -81,7 +81,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUsers
+          .getUsers()
           .toString()
       )
 
