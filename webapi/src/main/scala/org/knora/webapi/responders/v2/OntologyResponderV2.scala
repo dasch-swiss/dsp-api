@@ -3291,17 +3291,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def deletePropertyComment(
     deletePropertyCommentRequest: DeletePropertyCommentRequestV2
   ): Future[ReadOntologyV2] = {
-    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] =
+    def makeTaskFuture(
+      cacheData: Cache.OntologyCacheData,
+      internalPropertyIri: SmartIri,
+      internalOntologyIri: SmartIri,
+      ontology: ReadOntologyV2,
+      propertyToUpdate: ReadPropertyInfoV2
+    ): Future[ReadOntologyV2] =
       for {
-        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
-
-        ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
-
-        propertyToUpdate: ReadPropertyInfoV2 =
-          ontology.properties.getOrElse(
-            internalPropertyIri,
-            throw NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found")
-          )
 
         // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -3372,7 +3369,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           propertyToUpdate.entityInfoContent.copy(
             predicates = propertyToUpdate.entityInfoContent.predicates.-(
               OntologyConstants.Rdfs.Comment.toSmartIri
-            ) // deletes the entry with the comment
+            ) // the "-" deletes the entry with the comment
           )
 
         _ = if (loadedPropertyDef != propertyDefWithoutComment) {
@@ -3412,7 +3409,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update the ontology cache using the new property definition.
         newReadPropertyInfo: ReadPropertyInfoV2 = ReadPropertyInfoV2(
-          entityInfoContent = propertyDefWithoutComment,
+          entityInfoContent = loadedPropertyDef,
           isEditable = true,
           isResourceProp = true,
           isLinkProp = propertyToUpdate.isLinkProp
@@ -3469,16 +3466,44 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       internalPropertyIri: SmartIri = externalPropertyIri.toOntologySchema(InternalSchema)
       internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
-      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
-      taskResult: ReadOntologyV2 <- IriLocker.runWithIriLock(
-        apiRequestID = deletePropertyCommentRequest.apiRequestID,
-        iri = ONTOLOGY_CACHE_LOCK_IRI,
-        task = () =>
-          makeTaskFuture(
-            internalPropertyIri = internalPropertyIri,
-            internalOntologyIri = internalOntologyIri
-          )
+      cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+
+      ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
+
+      propertyToUpdate: ReadPropertyInfoV2 =
+        ontology.properties.getOrElse(
+          internalPropertyIri,
+          throw NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found")
+        )
+
+      hasComment: Boolean = propertyToUpdate.entityInfoContent.predicates.contains(
+        OntologyConstants.Rdfs.Comment.toSmartIri
       )
+
+      taskResult: ReadOntologyV2 <-
+        if (hasComment) for {
+          // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+          taskResult: ReadOntologyV2 <- IriLocker.runWithIriLock(
+            apiRequestID = deletePropertyCommentRequest.apiRequestID,
+            iri = ONTOLOGY_CACHE_LOCK_IRI,
+            task = () =>
+              makeTaskFuture(
+                cacheData = cacheData,
+                internalPropertyIri = internalPropertyIri,
+                internalOntologyIri = internalOntologyIri,
+                ontology = ontology,
+                propertyToUpdate = propertyToUpdate
+              )
+          )
+        } yield taskResult
+        else {
+          // return if property has no comment
+          getPropertyDefinitionsFromOntologyV2(
+            propertyIris = Set(internalPropertyIri),
+            allLanguages = true,
+            requestingUser = deletePropertyCommentRequest.requestingUser
+          )
+        }
     } yield taskResult
   }
 

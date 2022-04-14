@@ -2404,8 +2404,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "delete the comment of a property" in {
-      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasSpecialName")
+    "delete the comment of a property that has a comment" in {
+      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasPropertyWithComment")
       responderManager ! DeletePropertyCommentRequestV2(
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
@@ -2419,6 +2419,58 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
         readPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreeTestLastModDate
+      }
+    }
+
+    "not update the ontology when trying to delete a comment of a property that has no comment" in {
+      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasPropertyWithoutComment")
+      responderManager ! DeletePropertyCommentRequestV2(
+        propertyIri = propertyIri,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
+        readPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
+        val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreeTestLastModDate == freetestLastModDate)
+        freetestLastModDate = newFreeTestLastModDate
+      }
+    }
+
+    "delete the comment of a link property and remove the comment of the link value property as well" in {
+      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithComment")
+      val linkValueIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithCommentValue")
+
+      responderManager ! DeletePropertyCommentRequestV2(
+        propertyIri = propertyIri,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
+        propertyReadPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
+        linkValueReadPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")

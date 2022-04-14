@@ -38,15 +38,10 @@ DELETE {
         <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
         @maybeLinkValuePropertyIri match {
-
             case Some(linkValuePropertyIri) => {
-
                 <@linkValuePropertyIri> rdfs:comment ?comments .
-
             }
-
             case None => {}
-
         }
     }
 }
