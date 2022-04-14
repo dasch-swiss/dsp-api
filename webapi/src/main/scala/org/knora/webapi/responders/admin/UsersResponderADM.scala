@@ -911,7 +911,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUserByIri(
-                                 triplestore = settings.triplestoreType,
                                  userIri = userIri
                                )
                                .toString()

@@ -9,11 +9,9 @@
  * Gets information about the incoming references to a resource, as well as about the referring resourceClass
  * using SPARQL w/o inference.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  *@
-@(triplestore: String,
-  resourceIri: IRI)
+@(resourceIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

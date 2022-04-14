@@ -8,23 +8,22 @@ package org.knora.webapi.responders.v1
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, NotFoundException}
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.usersmessages.{
-  UserADM,
-  UserGetRequestADM,
-  UserIdentifierADM,
-  UserResponseADM
-}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserGetRequestADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserResponseADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{
-  NamedGraphV1,
-  NamedGraphsGetRequestV1,
-  NamedGraphsResponseV1
-}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphsGetRequestV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.NamedGraphsResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
@@ -100,9 +99,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getProjects(
-            triplestore = settings.triplestoreType
-          )
+          .getProjects
           .toString()
       )
       //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
@@ -274,7 +271,6 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getProjectByIri(
-            triplestore = settings.triplestoreType,
             projectIri = projectIri
           )
           .toString()
@@ -327,7 +323,6 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getProjectByShortname(
-            triplestore = settings.triplestoreType,
             shortname = shortName
           )
           .toString()

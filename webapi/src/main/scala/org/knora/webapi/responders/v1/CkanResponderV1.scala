@@ -5,8 +5,6 @@
 
 package org.knora.webapi.responders.v1
 
-import java.net.URLEncoder
-
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
@@ -15,23 +13,29 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ckanmessages._
-import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{
-  ProjectInfoByShortnameGetRequestV1,
-  ProjectInfoResponseV1,
-  ProjectInfoV1
-}
+import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetRequestV1
+import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByShortnameGetRequestV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
+import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
+import java.net.URLEncoder
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
@@ -206,7 +210,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     for {
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .ckanDokubib(settings.triplestoreType, projectIri, limit)
+          .ckanDokubib(projectIri, limit)
           .toString()
       )
       response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
@@ -326,7 +330,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     for {
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .ckanIncunabula(settings.triplestoreType, projectIri, limit)
+          .ckanIncunabula(projectIri, limit)
           .toString()
       )
       response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
@@ -401,7 +405,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getResourcesByProjectAndType(
-            triplestore = settings.triplestoreType,
             projectIri = projectIri,
             resType = resType
           )

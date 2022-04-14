@@ -218,7 +218,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         sparql <- Future(
           org.knora.webapi.messages.twirl.queries.sparql.v1.txt
             .getGraphData(
-              triplestore = settings.triplestoreType,
               startNodeIri = startNode.nodeIri,
               startNodeOnly = false,
               outbound = outbound // true to query outbound edges, false to query inbound edges
@@ -357,7 +356,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       sparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getGraphData(
-            triplestore = settings.triplestoreType,
             startNodeIri = graphDataGetRequest.resourceIri,
             startNodeOnly = true
           )
@@ -539,7 +537,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         incomingRefsSparql <- Future(
           org.knora.webapi.messages.twirl.queries.sparql.v1.txt
             .getIncomingReferences(
-              triplestore = settings.triplestoreType,
               resourceIri = resourceIri
             )
             .toString()
@@ -1048,7 +1045,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // If this resource is part of another resource, get its parent resource.
       isPartOfSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .isPartOf(
-          triplestore = settings.triplestoreType,
           resourceIri = resourceIri
         )
         .toString()
@@ -1098,7 +1094,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             contextSparqlQuery <- Future(
               org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                 .getContext(
-                  triplestore = settings.triplestoreType,
                   resourceIri = resourceIri
                 )
                 .toString()
@@ -1161,7 +1156,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             regionSparqlQuery <- Future(
               org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                 .getRegions(
-                  triplestore = settings.triplestoreType,
                   resourceIri = resourceIri
                 )
                 .toString()
@@ -2035,7 +2029,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     org.knora.webapi.messages.twirl.queries.sparql.v1.txt
       .createNewResources(
         dataNamedGraph = namedGraph,
-        triplestore = settings.triplestoreType,
         resourcesToCreate = resourcesToCreate,
         projectIri = projectIri,
         creatorIri = creatorIri
@@ -2068,7 +2061,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       createdResourcesSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getCreatedResource(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
           )
           .toString()
@@ -2428,7 +2420,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           .deleteResource(
             dataNamedGraph =
               StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfoResponse.project_info),
-            triplestore = settings.triplestoreType,
             resourceIri = resourceDeleteRequest.resourceIri,
             maybeDeleteComment = resourceDeleteRequest.deleteComment,
             currentTime = currentTime,
@@ -2442,7 +2433,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .checkResourceDeletion(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceDeleteRequest.resourceIri
           )
           .toString()
@@ -2582,7 +2572,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .changeResourceLabel(
             dataNamedGraph = namedGraph,
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri,
             label = label,
             currentTime = currentTime
@@ -2597,7 +2586,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .checkResourceLabelChange(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri,
             label = label
           )
@@ -2659,7 +2647,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getResourceInfo(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
           )
           .toString()
@@ -2694,7 +2681,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       resclassSparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getResourceClass(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
           )
           .toString()
@@ -2989,7 +2975,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getResourcePropertiesAndValues(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
           )
           .toString()
