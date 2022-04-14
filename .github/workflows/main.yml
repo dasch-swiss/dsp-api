@@ -28,11 +28,11 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
+          distribution: 'temurin'
+          java-version: '17'
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -69,11 +69,11 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
+          distribution: 'temurin'
+          java-version: '17'
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -116,11 +116,11 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
+          distribution: 'temurin'
+          java-version: '17'
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -211,11 +211,11 @@ jobs:
         with:
           format: YYYY-MM-DD
           utcOffset: "+02:00"
-      - name: setup java version
-        uses: joschi/setup-jdk@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
         with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
+          distribution: 'temurin'
+          java-version: '17'
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
