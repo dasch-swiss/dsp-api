@@ -204,7 +204,7 @@ case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: C
    */
   private def doSipiRequest(request: HttpRequest): Task[String] = {
     val targetHost: HttpHost =
-      new HttpHost(config.sipi.externalHost, config.sipi.externalPort, config.sipi.externalProtocol)
+      new HttpHost(config.sipi.internalHost, config.sipi.internalPort, config.sipi.internalProtocol)
     val httpContext: HttpClientContext               = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 

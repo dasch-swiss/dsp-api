@@ -8,7 +8,7 @@ import zio._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 
-object ApplicationConfigSpec extends ZIOSpec[AppConfig] {
+object AppConfigSpec extends ZIOSpec[AppConfig] {
 
   val layer = ZLayer.make[AppConfig](AppConfig.live)
 
