@@ -313,7 +313,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = queryPatternTransformerConstruct
+            transformer = queryPatternTransformerConstruct,
+            None // TODO-BL: find out if I should limit here
           )
 
           for {
@@ -425,7 +426,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           whereClause = whereClauseWithoutAnnotations,
           orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
         ),
-        transformer = nonTriplestoreSpecificConstructToSelectTransformer
+        transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+        None // TODO-BL: find out if I should limit here
       )
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
@@ -437,7 +439,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
         inputQuery = nonTriplestoreSpecificPrequery,
-        transformer = triplestoreSpecificQueryPatternTransformerSelect
+        transformer = triplestoreSpecificQueryPatternTransformerSelect,
+        None // TODO-BL: find out if I should limit here
       )
 
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
@@ -505,9 +508,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
+      ontologiesForInferenceMaybe <- QueryTraverser.getOntologiesRelevantForInference(
+        inputQuery.whereClause,
+        storeManager
+      )
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
         inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-        transformer = nonTriplestoreSpecificConstructToSelectTransformer
+        transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+        None
+        // limitInferenceToOntologies = ontologiesForInferenceMaybe
       )
 
       // variable representing the main resources
@@ -523,7 +532,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
         inputQuery = nonTriplestoreSpecificPrequery,
-        transformer = triplestoreSpecificQueryPatternTransformerSelect
+        transformer = triplestoreSpecificQueryPatternTransformerSelect,
+        limitInferenceToOntologies = ontologiesForInferenceMaybe
+        // None // TODO-BL: find out if I should limit here
       )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
@@ -625,7 +636,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = queryPatternTransformerConstruct
+            transformer = queryPatternTransformerConstruct,
+            None // TODO-BL: find out if I should limit here
           )
 
           // Convert the result to a SPARQL string and send it to the triplestore.

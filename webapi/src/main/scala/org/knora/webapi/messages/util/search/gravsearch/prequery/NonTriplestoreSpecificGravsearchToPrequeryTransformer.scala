@@ -55,13 +55,14 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: should I have to pass this here?
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(
       statementPattern = statementPattern,
-      inputOrderBy = inputOrderBy
+      inputOrderBy = inputOrderBy,
+      limitInferenceToOntologies = limitInferenceToOntologies
     )
 
   /**

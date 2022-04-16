@@ -7,6 +7,19 @@ package org.knora.webapi.messages.util.search
 
 import scala.concurrent.ExecutionContext
 import org.knora.webapi.messages.SmartIri
+import scala.concurrent._
+import scala.concurrent.duration._
+import org.knora.webapi.responders.v2.ontology.Cache
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import akka.actor.ActorRef
+import akka.pattern.ask
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.StringFormatter
+import akka.util.Timeout
+import org.knora.webapi.messages.IriConversions._
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -187,6 +200,83 @@ trait ConstructToSelectTransformer extends WhereTransformer {
  * or [[ConstructToSelectTransformer]].
  */
 object QueryTraverser {
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val timeout: Timeout = Duration(5, SECONDS)
+
+  def getOntologiesRelevantForInference(
+    whereClause: WhereClause,
+    storeManager: ActorRef
+  )(implicit executionContext: ExecutionContext): Future[Option[Set[SmartIri]]] = {
+    def getEntities(patterns: Seq[QueryPattern]): Seq[Entity] =
+      patterns.flatMap { pattern =>
+        pattern match {
+          case ValuesPattern(_, values)             => values.toSeq
+          case UnionPattern(blocks)                 => blocks.flatMap(block => getEntities(block))
+          case StatementPattern(subj, pred, obj, _) => List(subj, pred, obj)
+          case LuceneQueryPattern(subj, obj, _, _)  => List(subj, obj)
+          case FilterNotExistsPattern(patterns)     => getEntities(patterns)
+          case MinusPattern(patterns)               => getEntities(patterns)
+          case OptionalPattern(patterns)            => getEntities(patterns)
+          case _                                    => List.empty
+        }
+      }
+
+    val entities = getEntities(whereClause.patterns)
+    // println(entities)
+
+    val res = for {
+      ontoCache <- Cache.getCacheData
+      entityMap = ontoCache.entityDefinedInOntology
+      relevantOntologies = entities.flatMap { entity =>
+        val y: Seq[SmartIri] = entity match {
+          case IriRef(iri, _) => {
+            val internal = iri.toOntologySchema(InternalSchema)
+            val x = entityMap.get(internal) match {
+              case None => {
+                val shortcode = internal.getProjectCode
+                shortcode match {
+                  case None => Seq.empty
+                  case some => {
+                    val projectFuture =
+                      (storeManager ? CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
+                        .mapTo[Option[ProjectADM]]
+                    val projectMaybe = Await.result(projectFuture, 1.second)
+                    projectMaybe match {
+                      case None => Seq.empty
+                      case Some(project) => {
+                        println(s"XXXXXXX - ${project.ontologies}")
+                        project.ontologies.map(_.toSmartIri)
+                      }
+                    }
+                  }
+                }
+                Seq.empty
+                // projectMaybe match {
+                //   case None => Seq.empty[SmartIri]
+                //   case Some(project) => {
+                //     println(s"from project: ${project.ontologies}")
+                //     project.ontologies.map(_.toSmartIri)
+                //   }
+                // }
+              }
+              case Some(iri) => Seq(iri)
+            }
+            x
+          }
+          case _ => Seq.empty
+        }
+        y
+      }.toSet
+      _ = println(relevantOntologies)
+      relevantOntologiesMaybe = relevantOntologies match {
+        case Nil => None
+        case ontologies =>
+          if (ontologies == Set(OntologyConstants.KnoraBase.KnoraBaseOntologyIri)) None
+          else Some(ontologies.toSet)
+      }
+    } yield relevantOntologiesMaybe
+    res
+  }
 
   /**
    * Traverses a WHERE clause, delegating transformation tasks to a [[WhereTransformer]], and returns the transformed query patterns.
@@ -199,7 +289,8 @@ object QueryTraverser {
   def transformWherePatterns(
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
-    whereTransformer: WhereTransformer
+    whereTransformer: WhereTransformer,
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
 
     // Optimization has to be called before WhereTransformer.transformStatementInWhere, because optimisation might
@@ -210,7 +301,8 @@ object QueryTraverser {
       case statementPattern: StatementPattern =>
         whereTransformer.transformStatementInWhere(
           statementPattern = statementPattern,
-          inputOrderBy = inputOrderBy
+          inputOrderBy = inputOrderBy,
+          limitInferenceToOntologies = limitInferenceToOntologies
         )
 
       case filterPattern: FilterPattern =>
@@ -222,7 +314,8 @@ object QueryTraverser {
         val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
           patterns = filterNotExistsPattern.patterns,
           whereTransformer = whereTransformer,
-          inputOrderBy = inputOrderBy
+          inputOrderBy = inputOrderBy,
+          limitInferenceToOntologies = limitInferenceToOntologies
         )
 
         Seq(FilterNotExistsPattern(patterns = transformedPatterns))
@@ -231,7 +324,8 @@ object QueryTraverser {
         val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
           patterns = minusPattern.patterns,
           whereTransformer = whereTransformer,
-          inputOrderBy = inputOrderBy
+          inputOrderBy = inputOrderBy,
+          limitInferenceToOntologies = limitInferenceToOntologies
         )
 
         Seq(MinusPattern(patterns = transformedPatterns))
@@ -240,7 +334,8 @@ object QueryTraverser {
         val transformedPatterns = transformWherePatterns(
           patterns = optionalPattern.patterns,
           whereTransformer = whereTransformer,
-          inputOrderBy = inputOrderBy
+          inputOrderBy = inputOrderBy,
+          limitInferenceToOntologies = limitInferenceToOntologies
         )
 
         Seq(OptionalPattern(patterns = transformedPatterns))
@@ -251,7 +346,8 @@ object QueryTraverser {
           val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
             patterns = blockPatterns,
             whereTransformer = whereTransformer,
-            inputOrderBy = inputOrderBy
+            inputOrderBy = inputOrderBy,
+            limitInferenceToOntologies = limitInferenceToOntologies
           )
           whereTransformer.leavingUnionBlock()
           transformedPatterns
@@ -326,14 +422,19 @@ object QueryTraverser {
    * @param transformer the [[ConstructToSelectTransformer]] to be used.
    * @return the transformed query.
    */
-  def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer)(implicit
+  def transformConstructToSelect(
+    inputQuery: ConstructQuery,
+    transformer: ConstructToSelectTransformer,
+    limitInferenceToOntologies: Option[Set[SmartIri]]
+  )(implicit
     executionContext: ExecutionContext
   ): SelectQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
       patterns = inputQuery.whereClause.patterns,
       inputOrderBy = inputQuery.orderBy,
-      whereTransformer = transformer
+      whereTransformer = transformer,
+      limitInferenceToOntologies = limitInferenceToOntologies
     )
 
     val transformedOrderBy: TransformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
@@ -354,7 +455,11 @@ object QueryTraverser {
     )
   }
 
-  def transformSelectToSelect(inputQuery: SelectQuery, transformer: SelectToSelectTransformer)(implicit
+  def transformSelectToSelect(
+    inputQuery: SelectQuery,
+    transformer: SelectToSelectTransformer,
+    limitInferenceToOntologies: Option[Set[SmartIri]]
+  )(implicit
     executionContext: ExecutionContext
   ): SelectQuery =
     inputQuery.copy(
@@ -363,7 +468,8 @@ object QueryTraverser {
         patterns = transformWherePatterns(
           patterns = inputQuery.whereClause.patterns,
           inputOrderBy = inputQuery.orderBy,
-          whereTransformer = transformer
+          whereTransformer = transformer,
+          limitInferenceToOntologies = limitInferenceToOntologies
         )
       )
     )
@@ -377,13 +483,15 @@ object QueryTraverser {
    */
   def transformConstructToConstruct(
     inputQuery: ConstructQuery,
-    transformer: ConstructToConstructTransformer
+    transformer: ConstructToConstructTransformer,
+    limitInferenceToOntologies: Option[Set[SmartIri]]
   )(implicit executionContext: ExecutionContext): ConstructQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
       patterns = inputQuery.whereClause.patterns,
       inputOrderBy = inputQuery.orderBy,
-      whereTransformer = transformer
+      whereTransformer = transformer,
+      limitInferenceToOntologies = limitInferenceToOntologies
     )
 
     val transformedConstructStatements: Seq[StatementPattern] = inputQuery.constructClause.statements.flatMap {

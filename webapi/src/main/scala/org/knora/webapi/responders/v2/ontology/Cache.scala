@@ -82,6 +82,9 @@ object Cache extends LazyLogging {
     subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
+    classDefinedInOntology: Map[SmartIri, SmartIri],
+    propertyDefinedInOntology: Map[SmartIri, SmartIri],
+    entityDefinedInOntology: Map[SmartIri, SmartIri],
     standoffProperties: Set[SmartIri]
   ) {
     lazy val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologies.values
@@ -437,6 +440,14 @@ object Cache extends LazyLogging {
         }
     }.toSet
 
+    val classDefinedInOntology = classIrisPerOntology.flatMap { case (ontoIri, classIris) =>
+      classIris.map(_ -> ontoIri)
+    }
+    val propertyDefinedInOntology = propertyIrisPerOntology.flatMap { case (ontoIri, propertyIris) =>
+      propertyIris.map(_ -> ontoIri)
+    }
+    // TODO-BL: !!!
+
     // Construct the ontology cache data.
     val ontologyCacheData: OntologyCacheData = OntologyCacheData(
       ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, key => s"Ontology not found: $key"),
@@ -448,6 +459,14 @@ object Cache extends LazyLogging {
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, key => s"Property not found: $key"),
       superPropertyOfRelations =
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperPropertyOfRelations, key => s"Property not found: $key"),
+      classDefinedInOntology =
+        new ErrorHandlingMap[SmartIri, SmartIri](classDefinedInOntology, key => s"Class not found: $key"),
+      propertyDefinedInOntology =
+        new ErrorHandlingMap[SmartIri, SmartIri](propertyDefinedInOntology, key => s"Property not found: $key"),
+      entityDefinedInOntology = new ErrorHandlingMap[SmartIri, SmartIri](
+        propertyDefinedInOntology ++ classDefinedInOntology,
+        key => s"Property not found: $key"
+      ),
       guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](
         allGuiAttributeDefinitions,
         key => s"salsah-gui:Guielement not found: $key"

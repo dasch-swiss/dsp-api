@@ -16,6 +16,8 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import org.knora.webapi.exceptions.NotFoundException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 
 /**
  * Methods and classes for transforming generated SPARQL.
@@ -236,6 +238,7 @@ object SparqlTransformer {
   // TODO-BL: check with other PR if I thought of everything again
   // TODO-BL: find out if we still need the KnoraExplicit named graph stuff
   // TODO-BL: figure out how execution context should ideally be handled
+  // TODO-BL: update docstrings everywhere
 
   // private def optimizeSubProps(): Seq[QueryPattern] = {}
 
@@ -296,9 +299,31 @@ object SparqlTransformer {
                     val knownChildClasses = superClasses
                       .get(baseClassIri.iri)
                       .getOrElse({
-                        Set(predIri)
+                        Set(baseClassIri.iri)
                       })
                       .toSeq
+
+                    // TODO-BL: add limit
+                    // val relevantChildClasses = limitInferenceToOntologies match {
+                    //   case Some(ontologyIris) => {
+                    //     println(ontologyIris)
+                    //     println(baseClassIri.iri)
+                    //     val ontoMap = ontoCache.classDefinedInOntology
+                    //     ontoMap.get(baseClassIri.iri) match {
+                    //       case Some(ontologyIri) => {
+                    //         println(
+                    //           s"Base: ${baseClassIri.iri} \nOntology IRI: $ontologyIri \nConsidered relevant: ${ontologyIris
+                    //             .contains(ontologyIri)}"
+                    //         )
+                    //         knownChildClasses
+                    //       }
+                    //       case None => knownChildClasses
+                    //     }
+                    //   }
+                    //   case None => knownChildClasses
+                    // }
+                    // println(relevantChildClasses.length)
+                    // println(knownChildClasses.length)
 
                     // val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(
                     //   base = statementPattern.subj,
@@ -347,6 +372,36 @@ object SparqlTransformer {
                         Set(predIri)
                       })
                       .toSeq
+                    val relevantChildProps = limitInferenceToOntologies match {
+                      case None => knownChildProps
+                      case Some(ontologyIris) => {
+                        val ontoMap = ontoCache.propertyDefinedInOntology
+                        val relevants = knownChildProps.filter { child =>
+                          val childOntologyIri = ontoMap.getOrElse(
+                            child,
+                            throw new InconsistentRepositoryDataException(
+                              s"Could not find the ontology which defines $child"
+                            )
+                          )
+                          ontologyIris.contains(childOntologyIri)
+                        }
+                        println(s"  ${relevants.length} <- ${knownChildProps.length}")
+                        println(s"  $relevants <- $knownChildProps")
+                        relevants
+                        // knownChildProps.map { child =>
+                        //   ontoMap.get(child) match {
+                        //     case None => { println("WARNING: Nothing found") }
+                        //     case Some(childOnto) => {
+                        //       println(
+                        //         s"    Child $child belongs to $childOnto \n    ->  is in relevants: ${ontologyIris
+                        //           .contains(childOnto)}"
+                        //       )
+                        //     }
+                        //   }
+                        // }
+                        // knownChildProps
+                      }
+                    }
 
                     // val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
                     //   base = statementPattern.pred,
@@ -373,10 +428,12 @@ object SparqlTransformer {
                       //   println(s"Too many known children: ${knownChildProps.length}")
                       //   propertyPath
                       // } else
-                      if (knownChildProps.length > 1) {
+                      if (relevantChildProps.length > 1) {
                         Seq(
                           UnionPattern(
-                            knownChildProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+                            relevantChildProps.map(newPredicate =>
+                              Seq(statementPattern.copy(pred = IriRef(newPredicate)))
+                            )
                           )
                         )
                       } else {

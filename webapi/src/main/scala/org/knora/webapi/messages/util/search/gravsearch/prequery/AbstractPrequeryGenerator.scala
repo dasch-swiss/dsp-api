@@ -572,8 +572,10 @@ abstract class AbstractPrequeryGenerator(
 
   protected def processStatementPatternFromWhereClause(
     statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion]
+    inputOrderBy: Seq[OrderCriterion],
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: should I have to pass this here?
   ): Seq[QueryPattern] =
+    // println(s"XXX $limitInferenceToOntologies     ->     $statementPattern")
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {
       case iriRef: IriRef if OntologyConstants.KnoraApi.GravsearchOptionsIris.contains(iriRef.iri.toString) =>

@@ -67,7 +67,8 @@ private object CountQueryHandler {
         whereClause = whereClauseWithoutAnnotations,
         orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
       ),
-      transformer = nonTriplestoreSpecificConstructToSelectTransformer
+      transformer = nonTriplestoreSpecificConstructToSelectTransformer,
+      None // TODO-BL: ???
     )
 
     nonTriplestoreSpecficPrequery
