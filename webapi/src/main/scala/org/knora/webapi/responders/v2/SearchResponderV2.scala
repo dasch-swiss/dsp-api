@@ -44,6 +44,10 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ApacheLuceneSupport._
 
 import scala.concurrent.Future
+import scala.util.Try
+import org.knora.webapi.exceptions.TriplestoreTimeoutException
+import scala.util.Failure
+import scala.util.Success
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -525,9 +529,25 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
       _ = log.debug(triplestoreSpecificPrequerySparql)
 
-      prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(
-        triplestoreSpecificPrequerySparql
-      )).mapTo[SparqlSelectResult]
+      start = System.currentTimeMillis()
+      tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
+      prequeryResponseNotMerged <- (tryPrequeryResponseNotMerged match {
+        case Failure(exception) => {
+          exception match {
+            case timeoutException: TriplestoreTimeoutException =>
+              log.error(s"Gravsearch timed out for query: $inputQuery")
+          }
+          throw exception
+        }
+        case Success(value) => value
+      }).mapTo[SparqlSelectResult]
+      duration = (System.currentTimeMillis() - start) / 1000.0
+      _ =
+        if (duration < 3) { // TODO-BL: figure out a sensible duration
+          log.debug(s"Prequery took: ${duration}s")
+        } else {
+          log.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql\nInitial Query:\n$inputQuery")
+        }
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
