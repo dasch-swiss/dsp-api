@@ -29,7 +29,7 @@ object SparqlTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[StatementPattern] =
+    ): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
         simulateInference = simulateInference
@@ -62,7 +62,7 @@ object SparqlTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[StatementPattern] =
+    ): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -226,8 +226,9 @@ object SparqlTransformer {
    */
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
-    simulateInference: Boolean
-  ): Seq[StatementPattern] = {
+    simulateInference: Boolean,
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+  ): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     statementPattern.pred match {
