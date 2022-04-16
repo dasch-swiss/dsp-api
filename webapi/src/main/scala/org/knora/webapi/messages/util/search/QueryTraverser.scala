@@ -250,22 +250,18 @@ object QueryTraverser {
       }
 
     val entities = getEntities(whereClause.patterns)
-    println(entities)
+    // println(entities)
 
     val res = for {
       ontoCache <- Cache.getCacheData
       entityMap = ontoCache.entityDefinedInOntology
-      relevantOntologies = entities.flatMap(resolveEntity(_, entityMap, storeManager))
+      relevantOntologies = entities.flatMap(resolveEntity(_, entityMap, storeManager)).toSet
+      // _ = println(relevantOntologies)
       relevantOntologiesMaybe = relevantOntologies match {
         case Nil => None
         case ontologies =>
-          if (ontologies == Set(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri)) {
-            println("Found only knora base");
-            None
-          } // FIXME
-          else {
-            Some(ontologies.toSet)
-          }
+          if (ontologies == Set(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri)) None
+          else Some(ontologies + OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri)
       }
     } yield relevantOntologiesMaybe
     res
