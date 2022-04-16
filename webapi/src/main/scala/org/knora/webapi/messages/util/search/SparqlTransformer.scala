@@ -385,21 +385,7 @@ object SparqlTransformer {
                           )
                           ontologyIris.contains(childOntologyIri)
                         }
-                        println(s"  ${relevants.length} <- ${knownChildProps.length}")
-                        println(s"  $relevants <- $knownChildProps")
                         relevants
-                        // knownChildProps.map { child =>
-                        //   ontoMap.get(child) match {
-                        //     case None => { println("WARNING: Nothing found") }
-                        //     case Some(childOnto) => {
-                        //       println(
-                        //         s"    Child $child belongs to $childOnto \n    ->  is in relevants: ${ontologyIris
-                        //           .contains(childOnto)}"
-                        //       )
-                        //     }
-                        //   }
-                        // }
-                        // knownChildProps
                       }
                     }
 

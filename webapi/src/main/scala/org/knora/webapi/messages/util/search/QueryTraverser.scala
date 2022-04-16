@@ -203,6 +203,34 @@ object QueryTraverser {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout = Duration(5, SECONDS)
 
+  def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], storeManager: ActorRef): Seq[SmartIri] =
+    entity match {
+      case IriRef(iri, _) => {
+        val internal = iri.toOntologySchema(InternalSchema)
+        val maybeOntoIri = map.get(internal)
+        maybeOntoIri match {
+          case Some(iri) => Seq(iri)
+          case None => {
+            val shortcode = internal.getProjectCode
+            shortcode match {
+              case None => Seq.empty
+              case some => {
+                val projectFuture =
+                  (storeManager ? CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
+                    .mapTo[Option[ProjectADM]]
+                val projectMaybe = Await.result(projectFuture, 1.second)
+                projectMaybe match {
+                  case None          => Seq.empty
+                  case Some(project) => project.ontologies.map(_.toSmartIri)
+                }
+              }
+            }
+          }
+        }
+      }
+      case _ => Seq.empty
+    }
+
   def getOntologiesRelevantForInference(
     whereClause: WhereClause,
     storeManager: ActorRef
@@ -222,57 +250,22 @@ object QueryTraverser {
       }
 
     val entities = getEntities(whereClause.patterns)
-    // println(entities)
+    println(entities)
 
     val res = for {
       ontoCache <- Cache.getCacheData
       entityMap = ontoCache.entityDefinedInOntology
-      relevantOntologies = entities.flatMap { entity =>
-        val y: Seq[SmartIri] = entity match {
-          case IriRef(iri, _) => {
-            val internal = iri.toOntologySchema(InternalSchema)
-            val x = entityMap.get(internal) match {
-              case None => {
-                val shortcode = internal.getProjectCode
-                shortcode match {
-                  case None => Seq.empty
-                  case some => {
-                    val projectFuture =
-                      (storeManager ? CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
-                        .mapTo[Option[ProjectADM]]
-                    val projectMaybe = Await.result(projectFuture, 1.second)
-                    projectMaybe match {
-                      case None => Seq.empty
-                      case Some(project) => {
-                        println(s"XXXXXXX - ${project.ontologies}")
-                        project.ontologies.map(_.toSmartIri)
-                      }
-                    }
-                  }
-                }
-                Seq.empty
-                // projectMaybe match {
-                //   case None => Seq.empty[SmartIri]
-                //   case Some(project) => {
-                //     println(s"from project: ${project.ontologies}")
-                //     project.ontologies.map(_.toSmartIri)
-                //   }
-                // }
-              }
-              case Some(iri) => Seq(iri)
-            }
-            x
-          }
-          case _ => Seq.empty
-        }
-        y
-      }.toSet
-      _ = println(relevantOntologies)
+      relevantOntologies = entities.flatMap(resolveEntity(_, entityMap, storeManager))
       relevantOntologiesMaybe = relevantOntologies match {
         case Nil => None
         case ontologies =>
-          if (ontologies == Set(OntologyConstants.KnoraBase.KnoraBaseOntologyIri)) None
-          else Some(ontologies.toSet)
+          if (ontologies == Set(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri)) {
+            println("Found only knora base");
+            None
+          } // FIXME
+          else {
+            Some(ontologies.toSet)
+          }
       }
     } yield relevantOntologiesMaybe
     res

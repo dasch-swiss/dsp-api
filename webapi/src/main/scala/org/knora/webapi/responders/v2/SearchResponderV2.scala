@@ -512,6 +512,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         inputQuery.whereClause,
         storeManager
       )
+      _ = println(ontologiesForInferenceMaybe)
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
         inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
         transformer = nonTriplestoreSpecificConstructToSelectTransformer,
