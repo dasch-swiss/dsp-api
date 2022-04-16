@@ -16,6 +16,7 @@ import org.knora.webapi.messages.util.search.gravsearch.types.{
   PropertyTypeInfo
 }
 import org.knora.webapi.settings.KnoraSettingsImpl
+import scala.concurrent.ExecutionContext
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -53,7 +54,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion]
-  ): Seq[QueryPattern] =
+  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(

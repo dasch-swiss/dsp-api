@@ -9,6 +9,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import scala.concurrent.ExecutionContext
 
 /**
  * Utilities for Gravsearch type inspection.
@@ -156,7 +157,7 @@ object GravsearchTypeInspectionUtil {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[QueryPattern] =
+    )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
       if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]
       } else {
@@ -181,7 +182,7 @@ object GravsearchTypeInspectionUtil {
    * @param whereClause the WHERE clause.
    * @return the same WHERE clause, minus any type annotations.
    */
-  def removeTypeAnnotations(whereClause: WhereClause): WhereClause =
+  def removeTypeAnnotations(whereClause: WhereClause)(implicit executionContext: ExecutionContext): WhereClause =
     whereClause.copy(
       patterns = QueryTraverser.transformWherePatterns(
         patterns = whereClause.patterns,

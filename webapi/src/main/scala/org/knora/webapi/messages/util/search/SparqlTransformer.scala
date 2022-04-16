@@ -9,6 +9,13 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import org.knora.webapi.responders.v2.ontology.Cache
+import scala.concurrent.ExecutionContext
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 /**
  * Methods and classes for transforming generated SPARQL.
@@ -29,7 +36,7 @@ object SparqlTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[QueryPattern] =
+    )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
         simulateInference = simulateInference
@@ -62,7 +69,7 @@ object SparqlTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion]
-    ): Seq[QueryPattern] =
+    )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -217,6 +224,13 @@ object SparqlTransformer {
     luceneQueryPatterns ++ otherPatterns
   }
 
+  // TODO-BL: The following things still need doing:
+  // TODO-BL: Write tests
+  // TODO-BL: check with other PR if I thought of everything again
+  // TODO-BL: find out if we still need the KnoraExplicit named graph stuff
+
+  // private def optimizeSubProps(): Seq[QueryPattern] = {}
+
   /**
    * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
    *
@@ -228,7 +242,7 @@ object SparqlTransformer {
     statementPattern: StatementPattern,
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
-  ): Seq[QueryPattern] = {
+  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     statementPattern.pred match {
@@ -289,27 +303,58 @@ object SparqlTransformer {
                     )
                   } else {
                     // No. Expand using rdfs:subPropertyOf*.
+                    val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
+                    val superProps = ontoCache.superPropertyOfRelations
+                    val predIri = statementPattern.pred match {
+                      case IriRef(iri, _) => iri
+                      case _ =>
+                        throw new GravsearchException(
+                          s"Failed to resolve the predicate to an IRI in $statementPattern"
+                        )
+                    }
+                    val knownChildProps = superProps
+                      .get(predIri)
+                      .getOrElse({
+                        Set(predIri)
+                      })
+                      .toSeq
 
                     val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
                       base = statementPattern.pred,
                       propertyIri = OntologyConstants.Rdfs.SubPropertyOf
                     )
 
-                    Seq(
-                      StatementPattern(
-                        subj = propertyVariable,
-                        pred = IriRef(
-                          iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
-                          propertyPathOperator = Some('*')
-                        ),
-                        obj = statementPattern.pred
-                      ),
-                      StatementPattern(
-                        subj = statementPattern.subj,
-                        pred = propertyVariable,
-                        obj = statementPattern.obj
-                      )
-                    )
+                    // val propertyPath = Seq(
+                    //   StatementPattern(
+                    //     subj = propertyVariable,
+                    //     pred = IriRef(
+                    //       iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
+                    //       propertyPathOperator = Some('*')
+                    //     ),
+                    //     obj = statementPattern.pred
+                    //   ),
+                    //   StatementPattern(
+                    //     subj = statementPattern.subj,
+                    //     pred = propertyVariable,
+                    //     obj = statementPattern.obj
+                    //   )
+                    // )
+                    val unions: Seq[QueryPattern] = {
+                      // if (knownChildProps.length > 10) {
+                      //   println(s"Too many known children: ${knownChildProps.length}")
+                      //   propertyPath
+                      // } else
+                      if (knownChildProps.length > 1) {
+                        Seq(
+                          UnionPattern(
+                            knownChildProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
+                          )
+                        )
+                      } else {
+                        Seq(statementPattern)
+                      }
+                    }
+                    unions
                   }
 
                 case _ =>

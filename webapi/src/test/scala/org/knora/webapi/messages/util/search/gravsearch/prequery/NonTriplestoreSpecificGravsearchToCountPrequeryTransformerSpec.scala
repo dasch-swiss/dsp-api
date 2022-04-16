@@ -19,6 +19,9 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
+import akka.actor.ActorSystem
+import org.knora.webapi.settings.KnoraDispatchers
 
 private object CountQueryHandler {
 
@@ -30,7 +33,7 @@ private object CountQueryHandler {
     query: String,
     responderData: ResponderData,
     featureFactoryConfig: FeatureFactoryConfig
-  ): SelectQuery = {
+  )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 

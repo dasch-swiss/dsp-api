@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.util.search
 
+import scala.concurrent.ExecutionContext
+
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
  *
@@ -65,7 +67,7 @@ trait WhereTransformer {
   def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion]
-  ): Seq[QueryPattern]
+  )(implicit executionContext: ExecutionContext): Seq[QueryPattern]
 
   /**
    * Transforms a [[FilterPattern]] in a WHERE clause into zero or more query patterns.
@@ -196,7 +198,7 @@ object QueryTraverser {
     patterns: Seq[QueryPattern],
     inputOrderBy: Seq[OrderCriterion],
     whereTransformer: WhereTransformer
-  ): Seq[QueryPattern] = {
+  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
 
     // Optimization has to be called before WhereTransformer.transformStatementInWhere, because optimisation might
     // remove statements that would otherwise be expanded by transformStatementInWhere
@@ -322,7 +324,9 @@ object QueryTraverser {
    * @param transformer the [[ConstructToSelectTransformer]] to be used.
    * @return the transformed query.
    */
-  def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer): SelectQuery = {
+  def transformConstructToSelect(inputQuery: ConstructQuery, transformer: ConstructToSelectTransformer)(implicit
+    executionContext: ExecutionContext
+  ): SelectQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
       patterns = inputQuery.whereClause.patterns,
@@ -348,7 +352,9 @@ object QueryTraverser {
     )
   }
 
-  def transformSelectToSelect(inputQuery: SelectQuery, transformer: SelectToSelectTransformer): SelectQuery =
+  def transformSelectToSelect(inputQuery: SelectQuery, transformer: SelectToSelectTransformer)(implicit
+    executionContext: ExecutionContext
+  ): SelectQuery =
     inputQuery.copy(
       fromClause = transformer.getFromClause,
       whereClause = WhereClause(
@@ -370,7 +376,7 @@ object QueryTraverser {
   def transformConstructToConstruct(
     inputQuery: ConstructQuery,
     transformer: ConstructToConstructTransformer
-  ): ConstructQuery = {
+  )(implicit executionContext: ExecutionContext): ConstructQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
       patterns = inputQuery.whereClause.patterns,

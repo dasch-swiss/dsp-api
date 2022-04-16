@@ -2102,6 +2102,19 @@ object OntologyHelpers {
         baseClass -> baseClassAndSubClasses.map(_._2).toSet
       }
 
+  def calculateSuperPropertiesOfRelations(
+    allSubPropertiesOfRelations: Map[SmartIri, Set[SmartIri]]
+  ): Map[SmartIri, Set[SmartIri]] =
+    allSubPropertiesOfRelations.toVector.flatMap { case (subProp: SmartIri, baseProps: Set[SmartIri]) =>
+      baseProps.map { baseProp =>
+        baseProp -> subProp
+      }
+    }
+      .groupBy(_._1)
+      .map { case (baseProp: SmartIri, basePropAndSubProps: Vector[(SmartIri, SmartIri)]) =>
+        baseProp -> basePropAndSubProps.map(_._2).toSet
+      }
+
   /**
    * Given a class loaded from the triplestore, recursively adds its inherited cardinalities to the cardinalities it defines
    * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in

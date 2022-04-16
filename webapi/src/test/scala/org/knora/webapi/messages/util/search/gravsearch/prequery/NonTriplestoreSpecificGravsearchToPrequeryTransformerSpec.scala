@@ -21,6 +21,7 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 
 private object QueryHandler {
 
@@ -33,7 +34,7 @@ private object QueryHandler {
     responderData: ResponderData,
     settings: KnoraSettingsImpl,
     featureFactoryConfig: FeatureFactoryConfig
-  ): SelectQuery = {
+  )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 

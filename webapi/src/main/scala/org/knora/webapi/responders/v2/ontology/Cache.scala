@@ -310,9 +310,8 @@ object Cache extends LazyLogging {
 
     // Make a map in which each property IRI points to the full set of its subproperties. A property is also
     // a superproperty of itself.
-    val allSuperPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = allPropertyIris.map { propertyIri =>
-      (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSuperPropertyOfRelations).toSet + propertyIri)
-    }.toMap
+    val allSuperPropertyOfRelations: Map[SmartIri, Set[SmartIri]] =
+      OntologyHelpers.calculateSuperPropertiesOfRelations(allSubPropertyOfRelations)
 
     // A set of all subproperties of knora-base:resourceProperty.
     val allKnoraResourceProps: Set[SmartIri] = allPropertyIris.filter { prop =>
