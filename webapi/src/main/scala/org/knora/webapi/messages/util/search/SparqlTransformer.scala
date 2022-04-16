@@ -242,7 +242,7 @@ object SparqlTransformer {
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
     simulateInference: Boolean,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: use this to make things faster
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)

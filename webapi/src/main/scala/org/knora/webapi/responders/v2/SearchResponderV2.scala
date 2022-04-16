@@ -194,8 +194,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(countSparql)
-
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -260,11 +258,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(searchSparql)
-
       prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql))
         .mapTo[SparqlSelectResult]
-      // _ = println(prequeryResponseNotMerged)
 
       mainResourceVar = QueryVariable("resource")
 
@@ -297,8 +292,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 }
             }
 
-          // println(valueObjectIrisPerResource)
-
           // collect all value object IRIs
           val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
 
@@ -318,8 +311,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             inputQuery = mainQuery,
             transformer = queryPatternTransformerConstruct
           )
-
-          // println(triplestoreSpecificQuery.toSparql)
 
           for {
             searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -360,8 +351,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         } else {
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
-
-      // _ = println(mappingsAsMap)
 
       apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
         mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -446,8 +435,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         inputQuery = nonTriplestoreSpecificPrequery,
         transformer = triplestoreSpecificQueryPatternTransformerSelect
       )
-
-      // _ = println(triplestoreSpecificCountQuery.toSparql)
 
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
         .mapTo[SparqlSelectResult]
@@ -825,8 +812,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 .toString()
             )
 
-            // _ = println(resourceRequestSparql)
-
             resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
               sparql = resourceRequestSparql,
               featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig
@@ -907,8 +892,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(countSparql)
-
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -965,8 +948,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           .toString()
       )
 
-      // _ = println(searchResourceByLabelSparql)
-
       searchResourceByLabelResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = searchResourceByLabelSparql,
         featureFactoryConfig = featureFactoryConfig
@@ -994,15 +975,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           }
       }
 
-      // _ = println(mainResourceIris.size)
-
       // separate resources and value objects
       mainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
         constructQueryResults = searchResourceByLabelResponse,
         requestingUser = requestingUser
       )
-
-      //_ = println(queryResultsSeparated)
 
       apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
         mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
