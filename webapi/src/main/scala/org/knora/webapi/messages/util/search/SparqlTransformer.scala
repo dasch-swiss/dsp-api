@@ -303,7 +303,7 @@ object SparqlTransformer {
                       })
                       .toSeq
 
-                    // TODO-BL: add limit
+                    // TODO-BL: add limit for subclasses
                     // val relevantChildClasses = limitInferenceToOntologies match {
                     //   case Some(ontologyIris) => {
                     //     println(ontologyIris)
@@ -347,10 +347,6 @@ object SparqlTransformer {
                     // )
 
                     val unions: Seq[QueryPattern] = {
-                      // if (knownChildProps.length > 10) {
-                      //   println(s"Too many known children: ${knownChildProps.length}")
-                      //   propertyPath
-                      // } else
                       if (knownChildClasses.length > 1) {
                         Seq(
                           UnionPattern(
@@ -376,44 +372,17 @@ object SparqlTransformer {
                       case None => knownChildProps
                       case Some(ontologyIris) => {
                         val ontoMap = ontoCache.propertyDefinedInOntology
-                        val relevants = knownChildProps.filter { child =>
-                          val childOntologyIri = ontoMap.getOrElse(
-                            child,
-                            throw new InconsistentRepositoryDataException(
-                              s"Could not find the ontology which defines $child"
-                            )
-                          )
-                          ontologyIris.contains(childOntologyIri)
+                        knownChildProps.filter { child =>
+                          val childOntologyIriMaybe = ontoMap.get(child)
+                          childOntologyIriMaybe match {
+                            case Some(childOntologyIri) => ontologyIris.contains(childOntologyIri)
+                            case None                   => false
+                          }
                         }
-                        relevants
                       }
                     }
 
-                    // val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
-                    //   base = statementPattern.pred,
-                    //   propertyIri = OntologyConstants.Rdfs.SubPropertyOf
-                    // )
-
-                    // val propertyPath = Seq(
-                    //   StatementPattern(
-                    //     subj = propertyVariable,
-                    //     pred = IriRef(
-                    //       iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
-                    //       propertyPathOperator = Some('*')
-                    //     ),
-                    //     obj = statementPattern.pred
-                    //   ),
-                    //   StatementPattern(
-                    //     subj = statementPattern.subj,
-                    //     pred = propertyVariable,
-                    //     obj = statementPattern.obj
-                    //   )
-                    // )
                     val unions: Seq[QueryPattern] = {
-                      // if (knownChildProps.length > 10) {
-                      //   println(s"Too many known children: ${knownChildProps.length}")
-                      //   propertyPath
-                      // } else
                       if (relevantChildProps.length > 1) {
                         Seq(
                           UnionPattern(
