@@ -35,11 +35,13 @@ object SparqlTransformer {
 
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
-      inputOrderBy: Seq[OrderCriterion]
+      inputOrderBy: Seq[OrderCriterion],
+      limitInferenceToOntologies: Option[Set[SmartIri]] = None
     )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
       transformStatementInWhereForNoInference(
         statementPattern = statementPattern,
-        simulateInference = simulateInference
+        simulateInference = simulateInference,
+        limitInferenceToOntologies = limitInferenceToOntologies
       )
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
@@ -68,9 +70,14 @@ object SparqlTransformer {
 
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
-      inputOrderBy: Seq[OrderCriterion]
+      inputOrderBy: Seq[OrderCriterion],
+      limitInferenceToOntologies: Option[Set[SmartIri]] = None
     )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
-      transformStatementInWhereForNoInference(statementPattern = statementPattern, simulateInference = true)
+      transformStatementInWhereForNoInference(
+        statementPattern = statementPattern,
+        simulateInference = true,
+        limitInferenceToOntologies = limitInferenceToOntologies
+      )
 
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 

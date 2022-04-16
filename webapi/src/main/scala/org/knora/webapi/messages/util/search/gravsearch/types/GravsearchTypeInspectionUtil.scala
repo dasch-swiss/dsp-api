@@ -156,7 +156,8 @@ object GravsearchTypeInspectionUtil {
   private class AnnotationRemovingWhereTransformer extends WhereTransformer {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
-      inputOrderBy: Seq[OrderCriterion]
+      inputOrderBy: Seq[OrderCriterion],
+      limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: should I have to pass this here?
     )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
       if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]

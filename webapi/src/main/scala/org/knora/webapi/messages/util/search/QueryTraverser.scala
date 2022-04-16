@@ -6,6 +6,7 @@
 package org.knora.webapi.messages.util.search
 
 import scala.concurrent.ExecutionContext
+import org.knora.webapi.messages.SmartIri
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -66,7 +67,8 @@ trait WhereTransformer {
    */
   def transformStatementInWhere(
     statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion]
+    inputOrderBy: Seq[OrderCriterion],
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern]
 
   /**
