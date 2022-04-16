@@ -228,6 +228,7 @@ object SparqlTransformer {
   // TODO-BL: Write tests
   // TODO-BL: check with other PR if I thought of everything again
   // TODO-BL: find out if we still need the KnoraExplicit named graph stuff
+  // TODO-BL: figure out how execution context should ideally be handled
 
   // private def optimizeSubProps(): Seq[QueryPattern] = {}
 
@@ -244,6 +245,7 @@ object SparqlTransformer {
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
 
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
@@ -269,7 +271,8 @@ object SparqlTransformer {
               statementPattern.pred match {
                 case iriRef: IriRef =>
                   // Yes.
-                  val propertyIri = iriRef.iri.toString
+                  val predIri = iriRef.iri
+                  val propertyIri = predIri.toString
 
                   // Is the property rdf:type?
                   if (propertyIri == OntologyConstants.Rdf.Type) {
@@ -281,37 +284,56 @@ object SparqlTransformer {
                         throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
                     }
 
-                    val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(
-                      base = statementPattern.subj,
-                      baseClassIri = baseClassIri
-                    )
+                    val superClasses = ontoCache.superClassOfRelations
+                    // superClasses.map { case (k, v) => println(s"$k --> $v") }
+                    val knownChildClasses = superClasses
+                      .get(baseClassIri.iri)
+                      .getOrElse({
+                        Set(predIri)
+                      })
+                      .toSeq
 
-                    Seq(
-                      StatementPattern(
-                        subj = rdfTypeVariable,
-                        pred = IriRef(
-                          iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
-                          propertyPathOperator = Some('*')
-                        ),
-                        obj = statementPattern.obj
-                      ),
-                      StatementPattern(
-                        subj = statementPattern.subj,
-                        pred = statementPattern.pred,
-                        obj = rdfTypeVariable
-                      )
-                    )
+                    // val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(
+                    //   base = statementPattern.subj,
+                    //   baseClassIri = baseClassIri
+                    // )
+
+                    // Seq(
+                    //   StatementPattern(
+                    //     subj = rdfTypeVariable,
+                    //     pred = IriRef(
+                    //       iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
+                    //       propertyPathOperator = Some('*')
+                    //     ),
+                    //     obj = statementPattern.obj
+                    //   ),
+                    //   StatementPattern(
+                    //     subj = statementPattern.subj,
+                    //     pred = statementPattern.pred,
+                    //     obj = rdfTypeVariable
+                    //   )
+                    // )
+
+                    val unions: Seq[QueryPattern] = {
+                      // if (knownChildProps.length > 10) {
+                      //   println(s"Too many known children: ${knownChildProps.length}")
+                      //   propertyPath
+                      // } else
+                      if (knownChildClasses.length > 1) {
+                        Seq(
+                          UnionPattern(
+                            knownChildClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
+                          )
+                        )
+                      } else {
+                        Seq(statementPattern)
+                      }
+                    }
+                    unions
                   } else {
                     // No. Expand using rdfs:subPropertyOf*.
-                    val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
+
                     val superProps = ontoCache.superPropertyOfRelations
-                    val predIri = statementPattern.pred match {
-                      case IriRef(iri, _) => iri
-                      case _ =>
-                        throw new GravsearchException(
-                          s"Failed to resolve the predicate to an IRI in $statementPattern"
-                        )
-                    }
                     val knownChildProps = superProps
                       .get(predIri)
                       .getOrElse({
@@ -319,10 +341,10 @@ object SparqlTransformer {
                       })
                       .toSeq
 
-                    val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
-                      base = statementPattern.pred,
-                      propertyIri = OntologyConstants.Rdfs.SubPropertyOf
-                    )
+                    // val propertyVariable: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+                    //   base = statementPattern.pred,
+                    //   propertyIri = OntologyConstants.Rdfs.SubPropertyOf
+                    // )
 
                     // val propertyPath = Seq(
                     //   StatementPattern(
