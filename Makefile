@@ -280,6 +280,13 @@ clean-local-tmp:
 	@rm -rf .tmp
 	@mkdir .tmp
 
+.PHONY: clean-sbt
+clean-sbt: ## clean SBT and Metals related stuff
+	@rm -rf .bloop
+	@rm -rf .bsp
+	@rm -rf .metals
+	@rm -rf target
+
 clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 	@rm -rf .env
 
