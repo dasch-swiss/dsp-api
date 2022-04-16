@@ -23,6 +23,7 @@ import zio.stm._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import org.knora.webapi.config.AppConfig
 
 /**
  * In-Memory Cache implementation

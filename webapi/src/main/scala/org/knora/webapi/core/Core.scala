@@ -10,6 +10,8 @@ import akka.stream.Materializer
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.ExecutionContext
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.cacheservice.CacheServiceManager
 
 /**
  * Knora Core abstraction.
@@ -22,6 +24,10 @@ trait Core {
   implicit val materializer: Materializer
 
   implicit val executionContext: ExecutionContext
+
+  val iiifServiceManager: IIIFServiceManager
+
+  val cacheServiceManager: CacheServiceManager
 
   val appActor: ActorRef
 }

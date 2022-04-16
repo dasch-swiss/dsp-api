@@ -9,6 +9,7 @@ import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusResponse
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 
 trait IIIFService {
 

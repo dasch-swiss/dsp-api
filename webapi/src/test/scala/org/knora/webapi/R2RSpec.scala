@@ -16,7 +16,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.core.Core
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import org.knora.webapi.http.handler
@@ -36,6 +36,21 @@ import org.scalatest.{BeforeAndAfterAll, Suite}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
+
+import zio.Runtime
+import zio.&
+import zio.ZEnvironment
+import zio.RuntimeConfig
+import org.knora.webapi.core.Logging
+import zio.ZIO
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import zio.ZLayer
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.testcontainers.SipiTestContainer
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -79,14 +94,53 @@ class R2RSpec
 
   implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-  lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+
+  // The effect for building a cache service manager and a IIIF service manager.
+  val managers = for {
+    csm    <- ZIO.service[CacheServiceManager]
+    iiifsm <- ZIO.service[IIIFServiceManager]
+  } yield (csm, iiifsm)
+
+  /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
+    )
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
+  lazy val appActor: ActorRef =
+    system.actorOf(
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager)),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
-  val storeManager: ActorRef = appActor
+  val storeManager: ActorRef     = appActor
 
   val routeData: KnoraRouteData = KnoraRouteData(
     system = system,
@@ -116,7 +170,7 @@ class R2RSpec
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+    val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 

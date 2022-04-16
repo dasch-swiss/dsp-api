@@ -24,6 +24,11 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.ExecutionContextExecutor
+import zio.ZLayer
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.MockSipiImpl
 
 /**
  * Tests creating a still image file value using a mock Sipi.
@@ -44,11 +49,14 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with TestManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      MockSipiImpl.layer
+    )
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 

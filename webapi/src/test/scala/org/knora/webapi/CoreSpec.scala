@@ -5,7 +5,7 @@
 
 package org.knora.webapi
 
-import app.{ApplicationActor, LiveManagers}
+import app.ApplicationActor
 import core.Core
 import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import messages.StringFormatter
@@ -34,6 +34,22 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
+
+import zio.Runtime
+import zio.&
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.core.Logging
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.SipiTestContainer
+import zio.ZEnvironment
+import zio.RuntimeConfig
+import zio.ZIO
+import zio.ZLayer
 
 object CoreSpec {
 
@@ -94,8 +110,8 @@ abstract class CoreSpec(_system: ActorSystem)
     )
 
   /* needed by the core trait */
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -107,12 +123,53 @@ abstract class CoreSpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+
+  // The effect for building a cache service manager and a IIIF service manager.
+  val managers = for {
+    csm    <- ZIO.service[CacheServiceManager]
+    iiifsm <- ZIO.service[IIIFServiceManager]
+  } yield (csm, iiifsm)
+
+  /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
+    )
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
   lazy val appActor: ActorRef =
-    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+    system.actorOf(
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager)),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
-  val storeManager: ActorRef = appActor
+  val storeManager: ActorRef     = appActor
 
   val responderData: ResponderData = ResponderData(
     system = system,

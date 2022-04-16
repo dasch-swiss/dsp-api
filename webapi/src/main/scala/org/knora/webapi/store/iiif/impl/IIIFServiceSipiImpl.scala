@@ -42,7 +42,11 @@ import org.knora.webapi.config.AppConfig
 /**
  * Makes requests to Sipi.
  */
-case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: CloseableHttpClient)
+case class IIIFServiceSipiImpl(
+config: AppConfig,
+jwt: JWTService,
+httpClient: CloseableHttpClient
+)
     extends IIIFService {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -84,7 +88,8 @@ case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: C
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
   ): Task[SuccessResponseV2] = {
 
-    val token: UIO[String] = jwt.newToken(
+    // create the JWT token with the necessary permission
+    val jwtToken: UIO[String] = jwt.newToken(
       moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
       Map(
         "knora-data" -> JsObject(
@@ -97,17 +102,29 @@ case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: C
       )
     )
 
-    val moveFileUrl = s"${config.sipi.internalBaseUrl}/${config.sipi.v2.moveFileRoute}?token=$token"
+    // builds the url for the operation
+    def moveFileUrl(token: String) =
+      ZIO.succeed(s"${config.sipi.internalBaseUrl}/${config.sipi.v2.moveFileRoute}?token=$token")
 
+    // build the form to send together with the request
     val formParams = new util.ArrayList[NameValuePair]()
     formParams.add(new BasicNameValuePair("filename", moveTemporaryFileToPermanentStorageRequestV2.internalFilename))
     formParams.add(new BasicNameValuePair("prefix", moveTemporaryFileToPermanentStorageRequestV2.prefix))
     val requestEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-    val queryHttpPost = new HttpPost(moveFileUrl)
-    queryHttpPost.setEntity(requestEntity)
+
+    // build the request
+    def request(url: String, requestEntity: UrlEncodedFormEntity) = {
+      val req = new HttpPost(url)
+      req.setEntity(requestEntity)
+      req
+    }
 
     for {
-      _ <- doSipiRequest(queryHttpPost)
+      token   <- jwtToken
+      url     <- moveFileUrl(token)
+      entity  <- ZIO.succeed(requestEntity)
+      request <- ZIO.succeed(request(url, entity))
+      _       <- doSipiRequest(request)
     } yield SuccessResponseV2("Moved file to permanent storage.")
   }
 
@@ -118,7 +135,8 @@ case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: C
    * @return a [[SuccessResponseV2]].
    */
   def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
-    val token: UIO[String] = jwt.newToken(
+
+    val jwtToken: UIO[String] = jwt.newToken(
       deleteTemporaryFileRequestV2.requestingUser.id,
       Map(
         "knora-data" -> JsObject(
@@ -130,12 +148,15 @@ case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: C
       )
     )
 
-    val deleteFileUrl =
+    def deleteUrl(token: String) = ZIO.succeed(
       s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
-    val request = new HttpDelete(deleteFileUrl)
+    )
 
     for {
-      _ <- doSipiRequest(request)
+      token   <- jwtToken
+      url     <- deleteUrl(token)
+      request <- ZIO.succeed(new HttpDelete(url))
+      _       <- doSipiRequest(request)
     } yield SuccessResponseV2("Deleted temporary file.")
   }
 
@@ -186,6 +207,8 @@ case class IIIFServiceSipiImpl(config: AppConfig, jwt: JWTService, httpClient: C
       responseStr <- doSipiRequest(request).catchAll(ex => handleErrors(ex))
     } yield SipiGetTextFileResponse(responseStr)
   }
+
+  
 
   /**
    * Tries to access the IIIF Service to check if Sipi is running.

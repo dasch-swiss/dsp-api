@@ -86,94 +86,6 @@ import org.knora.webapi.auth.JWTService
 import zio.ZLayer
 import org.knora.webapi.config.AppConfig
 
-trait Managers {
-  implicit val system: ActorSystem
-  val responderManager: ActorRef
-  val storeManager: ActorRef
-  val cacheServiceManagerLayer: ZLayer[Any, Nothing, CacheServiceManager]
-  val iiifServiceManagerLayer: ZLayer[Any, Nothing, IIIFServiceManager]
-}
-
-trait LiveManagers extends Managers {
-  this: Actor =>
-
-  /**
-   * A combined layer, that allows to build a [[CacheServiceManager]].
-   */
-  override val cacheServiceManagerLayer: ZLayer[Any, Nothing, CacheServiceManager] =
-    ZLayer.make[CacheServiceManager](
-      CacheServiceInMemImpl.layer,
-      CacheServiceManager.layer
-    )
-
-  /**
-   * Initializing the cache service manager, which is a ZLayer,
-   * by unsafe running it.
-   */
-  lazy val cacheServiceManager: CacheServiceManager =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun(
-        ZIO
-          .service[CacheServiceManager]
-          .provide(
-            cacheServiceManagerLayer
-          )
-      )
-
-  /**
-   * A combined layer, that allows to build a [[IIIFServiceManager]].
-   */
-  override val iiifServiceManagerLayer: ZLayer[Any, Nothing, IIIFServiceManager] =
-    ZLayer.make[IIIFServiceManager](
-      IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer,
-      JWTService.layer,
-      AppConfig.live
-    )
-
-  /**
-   * Initializing the IIIF service manager, which is a ZLayer,
-   * by unsafe running it.
-   */
-  lazy val iiifServiceManager: IIIFServiceManager =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun(
-        ZIO
-          .service[IIIFServiceManager]
-          .provide(
-            iiifServiceManagerLayer
-          )
-      )
-
-  /**
-   * The actor that forwards messages to actors that deal with persistent storage.
-   */
-  lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(self, iiifServiceManager, cacheServiceManager) with LiveActorMaker)
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = StoreManagerActorName
-  )
-
-  /**
-   * The actor that forwards messages to responder actors to handle API requests.
-   */
-  lazy val responderManager: ActorRef = context.actorOf(
-    Props(
-      new ResponderManager(
-        appActor = self,
-        responderData = ResponderData(
-          system = context.system,
-          appActor = self,
-          knoraSettings = KnoraSettings(system),
-          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
-        )
-      ) with LiveActorMaker
-    )
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = RESPONDER_MANAGER_ACTOR_NAME
-  )
-}
-
 /**
  * This is the first actor in the application. All other actors are children
  * of this actor and thus it takes also the role of the supervisor actor.
@@ -182,8 +94,12 @@ trait LiveManagers extends Managers {
  * the startup and shutdown sequence. Further, it forwards any messages meant
  * for responders or the store to the respective actor.
  */
-class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
-  this: Managers =>
+class ApplicationActor(cacheServiceManager: CacheServiceManager, iiifServiceManager: IIIFServiceManager)
+    extends Actor
+    with Stash
+    with LazyLogging
+    with AroundDirectives
+    with Timers {
 
   logger.debug("entered the ApplicationManager constructor")
 
@@ -225,6 +141,34 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   private val routeData = KnoraRouteData(
     system = system,
     appActor = self
+  )
+
+  /**
+   * The actor that forwards messages to responder actors to handle API requests.
+   */
+  lazy val responderManager: ActorRef = context.actorOf(
+    Props(
+      new ResponderManager(
+        appActor = self,
+        responderData = ResponderData(
+          system = context.system,
+          appActor = self,
+          knoraSettings = KnoraSettings(system),
+          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+        )
+      ) with LiveActorMaker
+    )
+      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = RESPONDER_MANAGER_ACTOR_NAME
+  )
+
+  /**
+   * The actor that forwards messages to actors that deal with persistent storage.
+   */
+  lazy val storeManager: ActorRef = context.actorOf(
+    Props(new StoreManager(self, cacheServiceManager, iiifServiceManager) with LiveActorMaker)
+      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = StoreManagerActorName
   )
 
   /**

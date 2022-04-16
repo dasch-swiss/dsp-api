@@ -23,6 +23,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.nio.file.Paths
 
+import org.knora.webapi.testservices.FileToUpload
+
 object DrawingsGodsV1ITSpec {
   val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
@@ -60,9 +62,9 @@ class DrawingsGodsV1ITSpec
   "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
     val drawingsOfGodsUserEmail = "ddd1@unil.ch"
-    val testPass = "test"
-    val pathToChlaus = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
-    var loginToken: String = ""
+    val testPass                = "test"
+    val pathToChlaus            = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
+    var loginToken: String      = ""
 
     "log in as a Knora user" in {
       /* Correct username and correct password */
@@ -75,7 +77,7 @@ class DrawingsGodsV1ITSpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -89,7 +91,7 @@ class DrawingsGodsV1ITSpec
       // Upload the image to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = MediaTypes.`image/tiff`))
+        filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head

@@ -15,6 +15,8 @@ import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettings
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scala.languageFeature.postfixOps
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.cacheservice.CacheServiceManager
 
 /**
  * The applications actor system.
@@ -53,7 +55,7 @@ trait LiveCore extends Core {
    * sequences.
    */
   lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with LiveManagers)
+    Props(new ApplicationActor(cacheServiceManager, iiifServiceManager))
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = APPLICATION_MANAGER_ACTOR_NAME
   )

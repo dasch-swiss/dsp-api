@@ -31,7 +31,7 @@ import org.knora.webapi.util.ActorUtil
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, iiifsm: IIIFServiceManager, csm: CacheServiceManager)
+class StoreManager(appActor: ActorRef, csm: CacheServiceManager, iiifsm: IIIFServiceManager)
     extends Actor
     with ActorLogging {
   this: ActorMaker =>
@@ -72,9 +72,9 @@ class StoreManager(appActor: ActorRef, iiifsm: IIIFServiceManager, csm: CacheSer
   )
 
   def receive: Receive = LoggingReceive {
-    case req: TriplestoreRequest  => triplestoreManager forward req
-    case req: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifsm.receive(req), log)
     case req: CacheServiceRequest => ActorUtil.zio2Message(sender(), csm.receive(req), log)
+    case req: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifsm.receive(req), log)
+    case req: TriplestoreRequest  => triplestoreManager forward req
     case other =>
       sender() ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
   }

@@ -17,7 +17,7 @@ import akka.stream.Materializer
 import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.core.Core
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
@@ -36,6 +36,25 @@ import spray.json._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.core.Logging
+import zio.RuntimeConfig
+import zio.ZEnvironment
+import zio.ZIO
+import zio.Runtime
+import org.knora.webapi.testservices.SipiTestClientService
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.SipiTestContainer
+import zio.Runtime
+import zio.&
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import zio.ZLayer
+import org.knora.webapi.config.AppConfig
 
 object ITKnoraLiveSpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -60,23 +79,23 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   /* constructors */
   def this(name: String, config: Config) =
     this(
-      ActorSystem(name, TestContainersAll.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig)))
+      ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig)))
     )
   def this(config: Config) =
     this(
       ActorSystem(
         "IntegrationTests",
-        TestContainersAll.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))
+        TestContainerFuseki.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))
       )
     )
   def this(name: String) =
-    this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
   def this() =
-    this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    this(ActorSystem("IntegrationTests", TestContainerFuseki.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
   /* needed by the core trait (represents the KnoraTestCore trait)*/
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -88,10 +107,56 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  lazy val appActor: ActorRef =
-    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+// The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
 
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  /**
+   * The effect for building a cache service manager, a IIIF service manager,
+   * and the sipi test client.
+   */
+  val managers = for {
+    csm        <- ZIO.service[CacheServiceManager]
+    iiifsm     <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
+
+  /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer,
+      SipiTestClientService.layer
+    )
+
+  /**
+   * Create both managers and the sipi client by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
+  lazy val appActor: ActorRef =
+    system.actorOf(
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager)),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
+
+  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
   protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
   protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
@@ -106,9 +171,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     // waits until knora is up and running
     applicationStateRunning()
 
-    // check sipi
-    checkIfSipiIsRunning()
-
     // loadTestData
     loadTestData(rdfDataObjects)
   }
@@ -118,15 +180,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     log.debug(TestContainersAll.SipiContainer.getLogs())
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
-  }
-
-  protected def checkIfSipiIsRunning(): Unit = {
-    // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-    val request = Get(baseInternalSipiUrl + "/server/test.html")
-    val response = singleAwaitingRequest(request)
-    assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-    if (response.status.isSuccess()) logger.info("Sipi is running.")
-    response.entity.discardBytes()
   }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
@@ -169,63 +222,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
-  /**
-   * Represents a file to be uploaded to Sipi.
-   *
-   * @param path     the path of the file.
-   * @param mimeType the MIME type of the file.
-   */
-  protected case class FileToUpload(path: Path, mimeType: ContentType)
+  protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
+    sipiClient.uploadToSipi(loginToken, filesToUpload)
 
-  /**
-   * Represents an image file to be uploaded to Sipi.
-   *
-   * @param fileToUpload the file to be uploaded.
-   * @param width        the image's width in pixels.
-   * @param height       the image's height in pixels.
-   */
-  protected case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
-
-  /**
-   * Uploads a file to Sipi and returns the information in Sipi's response.
-   *
-   * @param loginToken    the login token to be included in the request to Sipi.
-   * @param filesToUpload the files to be uploaded.
-   * @return a [[SipiUploadResponse]] representing Sipi's response.
-   */
-  protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
-    // Make a multipart/form-data request containing the files.
-
-    val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map { fileToUpload =>
-      assert(Files.exists(fileToUpload.path), s"File ${fileToUpload} does not exist")
-
-      Multipart.FormData.BodyPart(
-        "file",
-        HttpEntity.fromPath(fileToUpload.mimeType, fileToUpload.path),
-        Map("filename" -> fileToUpload.path.getFileName.toString)
-      )
-    }
-
-    val sipiFormData = Multipart.FormData(formDataParts: _*)
-
-    // Send Sipi the file in a POST request.
-    val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
-
-    val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
-
-    val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
-
-    // Request the temporary file from Sipi.
-    for (responseEntry <- sipiUploadResponse.uploadedFiles) {
-      val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
-        Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl) + "/full/max/0/default.jpg")
-      } else {
-        Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl) + "/file")
-      }
-
-      checkResponseOK(sipiGetTmpFileRequest)
-    }
-
-    sipiUploadResponse
-  }
 }

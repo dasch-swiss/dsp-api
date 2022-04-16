@@ -21,6 +21,11 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiR
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import zio.ZLayer
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.MockSipiImpl
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -47,11 +52,14 @@ class SipiV1R2RSpec extends R2RSpec {
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
   )
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with TestManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      MockSipiImpl.layer
+    )
 
   object RequestParams {
 

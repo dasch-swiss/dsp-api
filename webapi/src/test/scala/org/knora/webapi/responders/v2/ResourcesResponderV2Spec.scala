@@ -38,6 +38,13 @@ import org.xmlunit.diff.Diff
 
 import scala.concurrent.duration._
 
+import zio.ZLayer
+import zio.&
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.impl.MockSipiImpl
+
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
@@ -401,11 +408,14 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private val graphTestData = new GraphTestData
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with TestManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      MockSipiImpl.layer
+    )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

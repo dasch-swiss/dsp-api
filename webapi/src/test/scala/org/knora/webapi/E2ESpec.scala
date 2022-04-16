@@ -5,7 +5,7 @@
 
 package org.knora.webapi
 
-import app.{ApplicationActor, LiveManagers}
+import app.ApplicationActor
 import core.Core
 import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import messages.StringFormatter
@@ -37,6 +37,21 @@ import scala.languageFeature.postfixOps
 import scala.util.{Failure, Success, Try}
 import org.knora.webapi.exceptions.FileWriteException
 
+import zio.Runtime
+import zio.&
+import zio.ZEnvironment
+import zio.RuntimeConfig
+import org.knora.webapi.core.Logging
+import zio.ZIO
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import zio.ZLayer
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.testcontainers.SipiTestContainer
+
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
 }
@@ -63,7 +78,9 @@ class E2ESpec(_system: ActorSystem)
     this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
   def this(config: Config) =
-    this(ActorSystem("E2ETest", TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+    this(
+      ActorSystem("E2ETest", TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig)))
+    )
 
   def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
@@ -83,10 +100,47 @@ class E2ESpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  // using here the TestManagersWithAllTestContainers trait will also initiate all TestContainers
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+
+  // The effect for building a cache service manager and a IIIF service manager.
+  val managers = for {
+    csm    <- ZIO.service[CacheServiceManager]
+    iiifsm <- ZIO.service[IIIFServiceManager]
+  } yield (csm, iiifsm)
+
+  /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
+    )
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor with TestManagersWithAllTestContainers),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
