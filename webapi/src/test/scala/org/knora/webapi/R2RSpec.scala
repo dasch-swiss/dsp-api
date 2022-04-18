@@ -52,6 +52,7 @@ import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.testservices.TestClientService
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -69,7 +70,7 @@ class R2RSpec
   /* needed by the core trait */
   implicit lazy val _system: ActorSystem = ActorSystem(
     actorSystemNameFrom(getClass),
-    TestContainersAll.PortConfig.withFallback(
+    TestContainerFuseki.PortConfig.withFallback(
       ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())
     )
   )
@@ -99,7 +100,7 @@ class R2RSpec
   val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
 
   // The effect for building a cache service manager and a IIIF service manager.
-  val managers = for {
+  lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
     appConfig <- ZIO.service[AppConfig]
@@ -109,7 +110,7 @@ class R2RSpec
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
-  val effectLayers =
+  lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
@@ -124,7 +125,7 @@ class R2RSpec
   /**
    * Create both managers by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager, appConfig) =
+  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -170,6 +171,14 @@ class R2RSpec
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
 
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.loadTestData(rdfDataObjects)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
+
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
     val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
@@ -184,19 +193,6 @@ class R2RSpec
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-  }
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
-
-    Await.result(
-      appActor ? LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      ),
-      30 seconds
-    )
   }
 
   /**

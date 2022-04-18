@@ -29,7 +29,7 @@ import zio.&
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.MockSipiImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
 import org.knora.webapi.config.AppConfig
 
 /**
@@ -52,12 +52,12 @@ class ValuesV2R2RSpec extends R2RSpec {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   /* we need to run our app with the mocked sipi implementation */
-  override val effectLayers =
+  override lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer,
+      IIIFServiceMockSipiImpl.layer,
       AppConfig.live
     )
 

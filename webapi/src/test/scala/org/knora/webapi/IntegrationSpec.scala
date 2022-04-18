@@ -24,6 +24,26 @@ import zio.{Schedule, _}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
+import org.knora.webapi.core.Logging
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.testcontainers.SipiTestContainer
+import akka.actor.Props
+import org.knora.webapi.app.ApplicationActor
+
+import org.knora.webapi.settings._
+import org.knora.webapi.core.Core
+import org.knora.webapi.util.StartupUtils
+import akka.testkit.TestKit
+import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.messages.app.appmessages.AppStart
+import akka.stream.Materializer
 
 object IntegrationSpec {
 
@@ -51,81 +71,114 @@ object IntegrationSpec {
  * Defines a base class used in tests where only a running Fuseki Container is needed.
  * Does not start the DSP-API server.
  */
-abstract class IntegrationSpec(_config: Config)
-    extends AsyncWordSpecLike
+abstract class IntegrationSpec(_system: ActorSystem)
+    extends TestKit(_system)
+    with Core
+    with StartupUtils
+    with AsyncWordSpecLike
+    with TriplestoreJsonProtocol
     with Matchers
     with BeforeAndAfterAll
     with LazyLogging {
 
-  def this() =
-    this(UnitSpec.defaultConfig)
+  /* constructors */
+  def this(name: String, config: Config) =
+    this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-  implicit val system: ActorSystem =
-    ActorSystem(
-      IntegrationSpec.getCallerName(classOf[IntegrationSpec]),
-      TestContainerFuseki.PortConfig.withFallback(IntegrationSpec.defaultConfig)
+  def this(config: Config) =
+    this(
+      ActorSystem(
+        "IntegrationSpec",
+        TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))
+      )
     )
 
-  implicit val settings: KnoraSettingsImpl = KnoraSettings(system)
-  override implicit val executionContext: ExecutionContext =
-    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-  implicit val timeout: Timeout = settings.defaultTimeout
+  def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
+
+  def this() = this(ActorSystem("IntegrationSpec", TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
+
+  /* needed by the core trait */
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  implicit val materializer: Materializer       = Materializer.matFromSystem(system)
+  implicit override val executionContext        = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  implicit val timeout: Timeout                 = settings.defaultTimeout
+
+  // can be overridden in individual spec
+  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
 
   // needs to be initialized early on
   StringFormatter.initForTest()
 
-  protected def waitForReadyTriplestore(actorRef: ActorRef): Unit = {
-    logger.info("Waiting for triplestore to be ready ...")
-    implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-    val checkTriplestore: Task[Unit] = for {
-      checkResult <- ZIO.attemptBlocking {
-                         Await
-                           .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
-                           .asInstanceOf[CheckTriplestoreResponse]
-      }
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
 
-      value <-
-        if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
-          ZIO.succeed(logger.info("... triplestore is ready."))
-        } else {
-          ZIO.fail(
-            new Exception(
-              s"Triplestore not ready: ${checkResult.triplestoreStatus}"
-            )
-          )
-        }
-    } yield value
-
-    Runtime.default.unsafeRun(
-      (checkTriplestore
-        .retry(ScheduleUtil.schedule)
-        .foldZIO(ex => printLine("Exception Failed"), v => printLine(s"Succeeded with $v"))
-      ).provide(Console.live)
-    )
-  }
-
-  protected def loadTestData(
-    actorRef: ActorRef,
-    rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
-  ): Unit = {
-    logger.info("Loading test data started ...")
-    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Try(Await.result(actorRef ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds.asScala)) match {
-      case Success(res) => logger.info("... loading test data done.")
-      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
-    }
-  }
-}
-
-object ScheduleUtil {
+  // The effect for building a cache service manager and a IIIF service manager.
+  val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
 
   /**
-   * Retry every second for 60 times, i.e., 60 seconds in total.
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
    */
-  def schedule[A]: WithState[(Long, Long), Console, Any, (Long, Long)] = Schedule.spaced(1.second) && Schedule
-    .recurs(60)
-    .onDecision({
-      case (_, _, Decision.Done)              => printLine(s"done trying").orDie
-      case (_, attempt, Decision.Continue(_)) => printLine(s"attempt #$attempt").orDie
-    })
+  val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
+    )
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
+  lazy val appActor: ActorRef =
+    system.actorOf(
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
+
+  override def beforeAll(): Unit = {
+
+    // set allow reload over http
+    appActor ! SetAllowReloadOverHTTPState(true)
+
+    // start the knora service, loading data from the repository
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
+
+    // waits until knora is up and running
+    applicationStateRunning()
+
+    // loadTestData
+    loadTestData(rdfDataObjects)
+
+  }
+
+  override def afterAll(): Unit =
+    /* Stop the server when everything else has finished */
+    TestKit.shutdownActorSystem(system)
+
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.loadTestData(rdfDataObjects)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 }

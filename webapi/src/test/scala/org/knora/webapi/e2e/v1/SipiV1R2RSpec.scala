@@ -5,29 +5,33 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
-
 import akka.actor._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions.FileWriteException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
-import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateRichtextV1}
-import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.ChangeFileValueApiRequestV1
+import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
+import org.knora.webapi.routing.v1.ResourcesRouteV1
+import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-import zio.ZLayer
-import zio.&
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.MockSipiImpl
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
+import zio.&
+import zio.ZLayer
+
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Paths
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -42,12 +46,12 @@ class SipiV1R2RSpec extends R2RSpec {
         """.stripMargin
 
   private val resourcesPath = new ResourcesRouteV1(routeData).knoraApiPath
-  private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
+  private val valuesPath    = new ValuesRouteV1(routeData).knoraApiPath
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
-  private val testPass = "test"
+  private val testPass                    = "test"
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -55,12 +59,12 @@ class SipiV1R2RSpec extends R2RSpec {
   )
 
   /* we need to run our app with the mocked sipi implementation */
-  override val effectLayers =
+  override lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer,
+      IIIFServiceMockSipiImpl.layer,
       AppConfig.live
     )
 

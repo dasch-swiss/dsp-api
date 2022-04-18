@@ -28,7 +28,8 @@ final case class AppConfig(
   cookieDomain: String,
   allowReloadOverHttp: Boolean,
   knoraApi: KnoraAPI,
-  sipi: Sipi
+  sipi: Sipi,
+  triplestore: Triplestore
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
 }
@@ -85,6 +86,17 @@ final case class V2(
   moveFileRoute: String,
   deleteTempFileRoute: String
 )
+
+final case class Triplestore(
+  dbtype: String,
+  useHttps: Boolean,
+  host: String,
+  queryTimeout: String,
+  updateTimeout: String,
+  autoInit: Boolean
+) {
+  val updateTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(updateTimeout))
+}
 
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading

@@ -5,53 +5,67 @@
 
 package org.knora.webapi
 
-import app.ApplicationActor
-import core.Core
-import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
-import messages.StringFormatter
-import messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
-import messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import messages.util.rdf._
-import settings._
-import util.{FileUtil, StartupUtils}
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
-import akka.testkit.{ImplicitSender, TestKit}
-import com.typesafe.config.{Config, ConfigFactory}
+import akka.testkit.ImplicitSender
+import akka.testkit.TestKit
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.core.Logging
+import org.knora.webapi.exceptions.FileWriteException
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.Suite
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json._
-
-import java.nio.file.{Files, Path, Paths}
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.languageFeature.postfixOps
-import scala.util.{Failure, Success, Try}
-import org.knora.webapi.exceptions.FileWriteException
-
-import zio.Runtime
 import zio.&
-import zio.ZEnvironment
+import zio.Runtime
 import zio.RuntimeConfig
-import org.knora.webapi.core.Logging
+import zio.ZEnvironment
 import zio.ZIO
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
 import zio.ZLayer
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.testcontainers.SipiTestContainer
-import org.knora.webapi.config.AppConfig
+import zio._
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
+import scala.languageFeature.postfixOps
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import app.ApplicationActor
+import org.knora.webapi.core.Core
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.settings._
+import org.knora.webapi.util.{FileUtil, StartupUtils}
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -146,7 +160,7 @@ class E2ESpec(_system: ActorSystem)
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
 
   protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
     testToggles = Set.empty,
@@ -169,42 +183,71 @@ class E2ESpec(_system: ActorSystem)
 
     // loadTestData
     loadTestData(rdfDataObjects)
-
   }
 
   override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
 
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-    logger.info("Loading test data started ...")
-    val request = Post(
-      baseApiUrl + "/admin/store/ResetTriplestoreContent",
-      HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.loadTestData(rdfDataObjects)
+      } yield result).provide(TestClientService.layer(appConfig, system))
     )
-    val response = Http().singleRequest(request)
 
-    Try(Await.result(response, 479999.milliseconds)) match {
-      case Success(res) => logger.info("... loading test data done.")
-      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
-    }
-  }
+  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.singleAwaitingRequest(request, duration)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
-  // duration is intentionally like this, so that it could be found with search if seen in a stack trace
-  protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
-    val responseFuture = Http().singleRequest(request)
-    Await.result(responseFuture, duration)
-  }
+  protected def getResponseAsString(request: HttpRequest): String =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.getResponseStringOrThrow(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
+
+  protected def checkResponseOK(request: HttpRequest): Unit =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.checkResponseOK(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
+
+  protected def getResponseAsJson(request: HttpRequest): JsObject =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.getResponseJson(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
+
+  protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.getResponseJsonLD(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr                    = Await.result(responseBodyFuture, 10.seconds)
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
+    val responseBodyStr = Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
   protected def responseToString(httpResponse: HttpResponse): String = {
-    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-    Await.result(responseBodyFuture, 10.seconds)
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
+    Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
   }
 
   protected def doGetRequest(urlPath: String): String = {
@@ -226,11 +269,6 @@ class E2ESpec(_system: ActorSystem)
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-  }
-
-  protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
-    val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(10.seconds).map(_.data.toArray)
-    Await.result(responseBodyFuture, 10.seconds)
   }
 
   /**

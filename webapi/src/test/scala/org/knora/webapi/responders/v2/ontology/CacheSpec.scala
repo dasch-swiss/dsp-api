@@ -46,28 +46,13 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
   val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
 
-  // start fuseki http connector actor
-  private val fusekiActor = system.actorOf(
-    Props(new HttpTriplestoreConnector()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = "httpTriplestoreConnector"
-  )
-
-  override def beforeAll(): Unit = {
-    CacheUtil.createCaches(settings.caches)
-    waitForReadyTriplestore(fusekiActor)
-    loadTestData(fusekiActor, additionalTestData)
-  }
-
-  override protected def afterAll(): Unit =
-    CacheUtil.removeAllCaches()
-
   "The basic functionality of the ontology cache" should {
 
     "successfully load all ontologies" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
         _ <- Cache.loadOntologies(
           settings,
-          fusekiActor,
+          appActor,
           defaultFeatureFactoryConfig,
           KnoraSystemInstances.Users.SystemUser
         )

@@ -15,8 +15,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
 import org.knora.webapi.util.AkkaHttpUtils
 import spray.json._
-
-import scala.concurrent.duration._
+import zio._
 
 object PermissionsADME2ESpec {
 
@@ -37,13 +36,13 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
-  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
+  private val customDOAPIri           = "http://rdfh.ch/permissions/00FF/zTOK3HlWTLGgTO8ZWVnotg"
   "The Permissions Route ('admin/permissions')" when {
     "getting permissions" should {
       "return a group's administrative permission" in {
 
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
-        val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
+        val groupIri   = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
         )
@@ -423,9 +422,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
     "updating permissions" should {
       "change the group of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
           s"""{
              |    "forGroup": "$newGroupIri"
@@ -465,9 +464,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the group of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri        = "http://rdfh.ch/permissions/0803/003-d2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val newGroupIri          = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
           s"""{
              |    "forGroup": "$newGroupIri"
@@ -508,7 +507,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the set of hasPermissions of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -553,7 +552,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the set of hasPermissions of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri        = "http://rdfh.ch/permissions/0803/003-d1"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -604,9 +603,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the resource class of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri        = "http://rdfh.ch/permissions/0803/003-d1"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
-        val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
+        val resourceClassIri     = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         val updateResourceClass =
           s"""{
              |   "forResourceClass":"$resourceClassIri"
@@ -650,9 +649,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the property of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/d1"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
-        val propertyClassIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+        val propertyClassIri     = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
         val updateResourceClass =
           s"""{
              |   "forProperty":"$propertyClassIri"
@@ -695,7 +694,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
     "delete request" should {
       "erase a defaultObjectAccess permission" in {
-        val permissionIri = customDOAPIri
+        val permissionIri        = customDOAPIri
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
@@ -716,7 +715,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         )
       }
       "erase an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri        = "http://rdfh.ch/permissions/00FF/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)

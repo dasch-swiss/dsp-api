@@ -101,7 +101,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    duration: zio.Duration = 5.seconds
+    duration: zio.Duration = 15.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[akka.http.scaladsl.model.HttpResponse](executionContext =>
@@ -127,7 +127,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
           .attemptBlocking(
             Await.result(
               response.entity.toStrict(FiniteDuration(1, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8")),
-              1.seconds.asScala
+              FiniteDuration(1, TimeUnit.SECONDS)
             )
           )
           .mapError(error =>
@@ -356,15 +356,20 @@ object TestClientService extends Accessible[TestClientService] {
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient) = ZIO.attemptBlocking {
+  private def release(httpClient: CloseableHttpClient)(implicit system: ActorSystem) = ZIO.attemptBlocking {
+    akka.http.scaladsl.Http().shutdownAllConnectionPools()
     httpClient.close()
   }.tap(_ => ZIO.debug(">>> Release Test Client Service <<<")).orDie
 
-  def layer(config: AppConfig, system: ActorSystem): ZLayer[Any, Nothing, TestClientService] =
-    ZLayer {
+  def layer(config: AppConfig, actorSystem: ActorSystem): ZLayer[Any, Nothing, TestClientService] = {
+    implicit val system = actorSystem
+
+    ZLayer.scoped {
       for {
         // _          <- ZIO.debug(config.sipi)
-        httpClient <- aquire(config)
-      } yield TestClientService(config, httpClient, system)
+        httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
+      } yield TestClientService(config, httpClient, actorSystem)
     }.tap(_ => ZIO.debug(">>> Test Client Service Initialized <<<"))
+  }
+
 }

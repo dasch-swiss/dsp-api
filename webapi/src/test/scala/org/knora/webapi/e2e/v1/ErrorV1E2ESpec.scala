@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 
-import scala.concurrent.duration._
+import zio._
 
 /**
  * Causes an internal server error to see if logging is working correctly.

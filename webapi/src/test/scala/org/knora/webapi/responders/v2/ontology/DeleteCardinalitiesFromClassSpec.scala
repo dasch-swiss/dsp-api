@@ -35,18 +35,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  // start fuseki http connector actor
-  private val fusekiActor = system.actorOf(
-    Props(new HttpTriplestoreConnector()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = "httpTriplestoreConnector"
-  )
-
   val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
-
-  override def beforeAll(): Unit = {
-    waitForReadyTriplestore(fusekiActor)
-    loadTestData(fusekiActor, additionalTestData)
-  }
 
   // use started actor in tests instead of the store manager
   "DeleteCardinalitiesFromClass" should {
@@ -55,7 +44,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalClassIri, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in resource (instance of that resource class)") }
     }
 
@@ -64,7 +53,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTestResourceClass").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalClassIri, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
       }
@@ -75,7 +64,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalClassIri, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
       resF map { res =>
         println(res); assert(!res, "property is not used in resource (instance of that resource class)")
       }
@@ -87,7 +76,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalClassIri = anythingOntologyIri.makeEntityIri("Thing").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalClassIri, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
     }
 
@@ -96,7 +85,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalClassIri, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, appActor, internalClassIri, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in a resource of subclass") }
     }
 

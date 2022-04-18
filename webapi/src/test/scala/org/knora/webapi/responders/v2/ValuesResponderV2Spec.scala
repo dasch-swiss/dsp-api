@@ -32,7 +32,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.iiif.impl.MockSipiImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -42,7 +42,7 @@ import zio.&
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.impl.MockSipiImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
 import org.knora.webapi.config.AppConfig
 
 /**
@@ -67,12 +67,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val mimeTypeJP2  = "image/jp2"
 
   /* we need to run our app with the mocked sipi implementation */
-  override val effectLayers =
+  override lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer,
+      IIIFServiceMockSipiImpl.layer,
       AppConfig.live
     )
 
