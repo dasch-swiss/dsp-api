@@ -43,6 +43,7 @@ import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.impl.MockSipiImpl
+import org.knora.webapi.config.AppConfig
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -67,11 +68,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer
+      MockSipiImpl.layer,
+      AppConfig.live
     )
 
   override lazy val rdfDataObjects = List(

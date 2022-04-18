@@ -39,6 +39,7 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.MockSipiImpl
 import zio.ZLayer
 import zio.&
+import org.knora.webapi.config.AppConfig
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
@@ -660,11 +661,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
   /* we need to run our app with the mocked sipi implementation */
   override val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer
+      MockSipiImpl.layer,
+      AppConfig.live
     )
 
   // The default timeout for receiving reply messages from actors.

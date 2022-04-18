@@ -30,16 +30,17 @@ object Main extends scala.App with LiveCore {
   // The ZIO runtime used to run functional effects
   val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
 
-  // The effect for building a cache service manager and a IIIF service manager.
+  // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
   val managers = for {
-    csm    <- ZIO.service[CacheServiceManager]
-    iiifsm <- ZIO.service[IIIFServiceManager]
-  } yield (csm, iiifsm)
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
 
   /**
    * Create both managers by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager) =
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers

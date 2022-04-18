@@ -3180,9 +3180,9 @@ object FileValueWithSipiMetadata {
       )
 
       // Ask Sipi about the rest of the file's metadata.
-      tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, internalFilename)
+      tempFilePath = stringFormatter.makeSipiTempFilePath(settings, internalFilename)
       fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-        fileUrl = tempFileUrl,
+        filePath = tempFilePath,
         requestingUser = requestingUser
       )).mapTo[GetFileMetadataResponse]
 

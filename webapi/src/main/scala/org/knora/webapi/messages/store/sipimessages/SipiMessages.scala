@@ -26,10 +26,10 @@ sealed trait SipiRequest extends IIIFRequest {
 /**
  * Requests file metadata from Sipi. A successful response is a [[GetFileMetadataResponse]].
  *
- * @param fileUrl        the URL at which Sipi can serve the file.
+ * @param filePath       the path at which Sipi can serve the file.
  * @param requestingUser the user making the request.
  */
-case class GetFileMetadataRequest(fileUrl: String, requestingUser: UserADM) extends SipiRequest
+case class GetFileMetadataRequest(filePath: String, requestingUser: UserADM) extends SipiRequest
 
 /**
  * Represents file metadata returned by Sipi.

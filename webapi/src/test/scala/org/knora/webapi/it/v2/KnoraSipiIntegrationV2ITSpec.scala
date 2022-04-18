@@ -28,6 +28,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.exceptions.BadRequestException
 
 object KnoraSipiIntegrationV2ITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -479,7 +480,7 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "reject an image file with the wrong file extension" in {
-      val exception = intercept[AssertionException] {
+      val exception = intercept[BadRequestException] {
         uploadToSipi(
           loginToken = loginToken,
           filesToUpload = Seq(

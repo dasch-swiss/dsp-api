@@ -51,6 +51,7 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.config.AppConfig
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -95,20 +96,21 @@ class R2RSpec
   implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
   // The ZIO runtime used to run functional effects
-  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
 
   // The effect for building a cache service manager and a IIIF service manager.
   val managers = for {
-    csm    <- ZIO.service[CacheServiceManager]
-    iiifsm <- ZIO.service[IIIFServiceManager]
-  } yield (csm, iiifsm)
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -122,7 +124,7 @@ class R2RSpec
   /**
    * Create both managers by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager) =
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -134,7 +136,7 @@ class R2RSpec
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 

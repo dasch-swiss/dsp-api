@@ -22,10 +22,12 @@ import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import zio.ZLayer
+import zio.&
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.MockSipiImpl
+import org.knora.webapi.config.AppConfig
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -54,11 +56,12 @@ class SipiV1R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer
+      MockSipiImpl.layer,
+      AppConfig.live
     )
 
   object RequestParams {

@@ -322,11 +322,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         file: Option[FileValueV1] <- apiRequest.file match {
           case Some(filename) =>
             // Ask Sipi about the file's metadata.
-            val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+            val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, filename)
 
             for {
               fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                fileUrl = tempFileUrl,
+                filePath = tempFilePath,
                 requestingUser = userADM
               )).mapTo[GetFileMetadataResponse]
             } yield Some(
@@ -381,11 +381,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         convertedFile <- resourceRequest.file match {
           case Some(filename) =>
             // Ask Sipi about the file's metadata.
-            val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+            val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, filename)
 
             for {
               fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                fileUrl = tempFileUrl,
+                filePath = tempFilePath,
                 requestingUser = userProfile
               )).mapTo[GetFileMetadataResponse]
             } yield Some(

@@ -25,7 +25,7 @@ final case class JWTService(config: AppConfig) {
         userIri = id,
         secret = config.jwtSecretKey,
         longevity = config.jwtLongevityAsDuration,
-        issuer = config.knoraApi.externalKnoraApiBaseUrl,
+        issuer = config.knoraApi.externalKnoraApiHostPort,
         content = content
       )
     }

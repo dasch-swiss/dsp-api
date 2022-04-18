@@ -2801,14 +2801,14 @@ class StringFormatter private (
   }
 
   /**
-   * Constructs a URL for accessing a file that has been uploaded to Sipi's temporary storage.
+   * Constructs a path for accessing a file that has been uploaded to Sipi's temporary storage.
    *
    * @param settings the application settings.
    * @param filename the filename.
    * @return a URL for accessing the file.
    */
-  def makeSipiTempFileUrl(settings: KnoraSettingsImpl, filename: String): String =
-    s"${settings.internalSipiBaseUrl}/tmp/$filename"
+  def makeSipiTempFilePath(settings: KnoraSettingsImpl, filename: String): String =
+    s"/tmp/$filename"
 
   /**
    * Checks whether an IRI already exists in the triplestore.

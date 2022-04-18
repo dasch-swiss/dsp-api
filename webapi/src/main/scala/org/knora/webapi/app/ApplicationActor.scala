@@ -94,8 +94,11 @@ import org.knora.webapi.config.AppConfig
  * the startup and shutdown sequence. Further, it forwards any messages meant
  * for responders or the store to the respective actor.
  */
-class ApplicationActor(cacheServiceManager: CacheServiceManager, iiifServiceManager: IIIFServiceManager)
-    extends Actor
+class ApplicationActor(
+  cacheServiceManager: CacheServiceManager,
+  iiifServiceManager: IIIFServiceManager,
+  appConfig: AppConfig
+) extends Actor
     with Stash
     with LazyLogging
     with AroundDirectives
@@ -166,7 +169,7 @@ class ApplicationActor(cacheServiceManager: CacheServiceManager, iiifServiceMana
    * The actor that forwards messages to actors that deal with persistent storage.
    */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(self, cacheServiceManager, iiifServiceManager) with LiveActorMaker)
+    Props(new StoreManager(self, cacheServiceManager, iiifServiceManager, appConfig) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )

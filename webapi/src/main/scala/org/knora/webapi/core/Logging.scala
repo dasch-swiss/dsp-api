@@ -5,6 +5,7 @@ import zio.logging.backend.SLF4J._
 import zio.logging.backend.SLF4J
 import zio.LogLevel
 import zio.RuntimeConfigAspect
+import zio.logging.LogFormat._
 
 object Logging {
   val logFormat             = "[correlation-id = %s] %s"
@@ -13,15 +14,19 @@ object Logging {
   val live: RuntimeConfigAspect = {
     SLF4J.slf4j(
       logLevel = LogLevel.Debug,
-      format = LogFormat.default,
+      format = LogFormat.colored,
       _ => "dsp"
     )
   }
 
-  val console: RuntimeConfigAspect = {
-    zio.logging.console(
-      logLevel = LogLevel.Info,
-      format = LogFormat.default
+  val textFormat: LogFormat =
+    timestamp.fixed(32).color(LogColor.BLUE) |-| level.highlight |-| label("message", quoted(line)).highlight
+
+  val testing: RuntimeConfigAspect = {
+    SLF4J.slf4j(
+      logLevel = LogLevel.Debug,
+      format = textFormat,
+      _ => "dsp"
     )
   }
 

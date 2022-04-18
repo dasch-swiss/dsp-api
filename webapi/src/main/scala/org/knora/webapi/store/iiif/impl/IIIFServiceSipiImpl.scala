@@ -43,11 +43,10 @@ import org.knora.webapi.config.AppConfig
  * Makes requests to Sipi.
  */
 case class IIIFServiceSipiImpl(
-config: AppConfig,
-jwt: JWTService,
-httpClient: CloseableHttpClient
-)
-    extends IIIFService {
+  config: AppConfig,
+  jwt: JWTService,
+  httpClient: CloseableHttpClient
+) extends IIIFService {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -60,11 +59,11 @@ httpClient: CloseableHttpClient
   def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Task[GetFileMetadataResponse] = {
     import SipiKnoraJsonResponseProtocol._
 
-    val knoraInfoUrl = getFileMetadataRequest.fileUrl + "/knora.json"
-    val sipiRequest  = new HttpGet(knoraInfoUrl)
-
     for {
-      sipiResponseStr <- doSipiRequest(sipiRequest)
+      url             <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      request         <- ZIO.succeed(new HttpGet(url))
+      _               <- ZIO.debug(request)
+      sipiResponseStr <- doSipiRequest(request)
       sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse])
     } yield GetFileMetadataResponse(
       originalFilename = sipiResponse.originalFilename,
@@ -208,16 +207,14 @@ httpClient: CloseableHttpClient
     } yield SipiGetTextFileResponse(responseStr)
   }
 
-  
-
   /**
    * Tries to access the IIIF Service to check if Sipi is running.
    */
-  def getStatus(): UIO[IIIFServiceStatusResponse] = {
-    val request = new HttpGet(config.sipi.internalBaseUrl + "/server/test.html")
-
-    ZIO.debug(request) *> doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
-  }
+  def getStatus(): UIO[IIIFServiceStatusResponse] =
+    for {
+      request  <- ZIO.succeed(new HttpGet(config.sipi.internalBaseUrl + "/server/test.html"))
+      response <- doSipiRequest(request).fold(_ => IIIFServiceStatusNOK, _ => IIIFServiceStatusOK)
+    } yield response
 
   /**
    * Makes an HTTP request to Sipi and returns the response.
@@ -336,6 +333,7 @@ object IIIFServiceSipiImpl {
     ZLayer {
       for {
         config     <- ZIO.service[AppConfig]
+        // _          <- ZIO.debug(config)
         jwtService <- ZIO.service[JWTService]
         // HINT: Scope does not work when used together with unsafeRun to
         // bridge over to Akka. Need to change this as soon Akka is removed

@@ -767,6 +767,7 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       val uploadedPdfFile: SipiUploadResponseEntry = pdfUploadResponse.uploadedFiles.head
+      println(uploadedPdfFile)
       uploadedPdfFile.originalFilename should ===(minimalPdfOriginalFilename)
 
       // Create a resource for the PDF file.
@@ -807,11 +808,13 @@ class KnoraSipiIntegrationV1ITSpec
       val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       val pdfUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+      println(pdfUrl)
       assert(nx == minimalPdfWidth)
       assert(ny == minimalPdfHeight)
 
       // Request the file from Sipi.
-      val sipiGetRequest = Get(pdfUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      val sipiGetRequest = Get(pdfUrl) // ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      println(">>> " + sipiGetRequest.toString)
       checkResponseOK(sipiGetRequest)
     }
 
@@ -913,7 +916,9 @@ class KnoraSipiIntegrationV1ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestZip, mimeType = org.apache.http.entity.ContentType.create("application/zip")))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToTestZip, mimeType = org.apache.http.entity.ContentType.create("application/zip"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -953,7 +958,8 @@ class KnoraSipiIntegrationV1ITSpec
       // Upload the WAV file to Sipi.
       val zipUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMinimalWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav")))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToMinimalWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav")))
       )
 
       val uploadedWavFile: SipiUploadResponseEntry = zipUploadResponse.uploadedFiles.head
@@ -1005,7 +1011,8 @@ class KnoraSipiIntegrationV1ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav")))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToTestWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1046,7 +1053,8 @@ class KnoraSipiIntegrationV1ITSpec
       // Upload the video file to Sipi.
       val zipUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestVideo, mimeType = org.apache.http.entity.ContentType.create("video/mp4")))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToTestVideo, mimeType = org.apache.http.entity.ContentType.create("video/mp4")))
       )
 
       val uploadedVideoFile: SipiUploadResponseEntry = zipUploadResponse.uploadedFiles.head
@@ -1098,7 +1106,8 @@ class KnoraSipiIntegrationV1ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestVideo2, mimeType = org.apache.http.entity.ContentType.create("video/mp4")))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToTestVideo2, mimeType = org.apache.http.entity.ContentType.create("video/mp4")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head

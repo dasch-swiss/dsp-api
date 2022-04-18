@@ -5,56 +5,68 @@
 
 package org.knora.webapi
 
-import java.nio.file.{Files, Path, Paths}
-
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
-import akka.testkit.{ImplicitSender, TestKit}
-import com.typesafe.config.{Config, ConfigFactory}
+import akka.testkit.ImplicitSender
+import akka.testkit.TestKit
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
+import org.knora.webapi.core.Logging
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.app.appmessages.AppStart
+import org.knora.webapi.messages.app.appmessages.AppStop
+import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil, RdfFeatureFactory}
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.settings._
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.StartupUtils
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json._
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.languageFeature.postfixOps
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.core.Logging
+import zio.&
+import zio.Runtime
 import zio.RuntimeConfig
 import zio.ZEnvironment
 import zio.ZIO
-import zio.Runtime
-import org.knora.webapi.testservices.SipiTestClientService
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.testcontainers.SipiTestContainer
-import zio.Runtime
-import zio.&
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import zio.ZLayer
-import org.knora.webapi.config.AppConfig
+import zio._
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -108,15 +120,15 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
 // The ZIO runtime used to run functional effects
-  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
 
   /**
    * The effect for building a cache service manager, a IIIF service manager,
    * and the sipi test client.
    */
   val managers = for {
-    csm        <- ZIO.service[CacheServiceManager]
-    iiifsm     <- ZIO.service[IIIFServiceManager]
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
     appConfig <- ZIO.service[AppConfig]
   } yield (csm, iiifsm, appConfig)
 
@@ -133,8 +145,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
       // FusekiTestContainer.layer,
-      SipiTestContainer.layer,
-      SipiTestClientService.layer
+      SipiTestContainer.layer
     )
 
   /**
@@ -152,13 +163,13 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
-  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
-  protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
-  protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
+  protected val baseApiUrl: String          = appConfig.knoraApi.internalKnoraApiBaseUrl
+  protected val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
+  protected val baseExternalSipiUrl: String = appConfig.sipi.externalBaseUrl
 
   override def beforeAll(): Unit = {
 
@@ -182,47 +193,60 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     TestKit.shutdownActorSystem(system)
   }
 
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-    logger.info("Loading test data started ...")
-    val request = Post(
-      baseApiUrl + "/admin/store/ResetTriplestoreContent",
-      HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.loadTestData(rdfDataObjects)
+      } yield result).provide(TestClientService.layer(appConfig, system))
     )
-    singleAwaitingRequest(request, 479999.milliseconds)
-    logger.info("... loading test data done.")
-  }
 
-  protected def getResponseStringOrThrow(request: HttpRequest): String = {
-    val response: HttpResponse = singleAwaitingRequest(request)
-    val responseBodyStr: String =
-      Await.result(response.entity.toStrict(10999.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
-
-    if (response.status.isSuccess) {
-      responseBodyStr
-    } else {
-      throw AssertionException(
-        s"Got HTTP ${response.status.intValue}\n REQUEST: $request,\n RESPONSE: $responseBodyStr"
-      )
-    }
-  }
+  protected def getResponseStringOrThrow(request: HttpRequest): String =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.getResponseStringOrThrow(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
   protected def checkResponseOK(request: HttpRequest): Unit =
-    getResponseStringOrThrow(request)
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.checkResponseOK(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
   protected def getResponseJson(request: HttpRequest): JsObject =
-    getResponseStringOrThrow(request).parseJson.asJsObject
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.getResponseJson(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
-  protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
-    val responseFuture: Future[HttpResponse] = Http().singleRequest(request)
-    Await.result(responseFuture, duration)
-  }
+  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.singleAwaitingRequest(request, duration)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
-  protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument = {
-    val responseBodyStr = getResponseStringOrThrow(request)
-    JsonLDUtil.parseJsonLD(responseBodyStr)
-  }
+  protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.getResponseJsonLD(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
-    sipiClient.uploadToSipi(loginToken, filesToUpload)
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.uploadToSipi(loginToken, filesToUpload)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
 
 }

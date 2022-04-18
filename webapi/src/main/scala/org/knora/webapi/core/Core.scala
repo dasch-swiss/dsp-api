@@ -12,6 +12,7 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import scala.concurrent.ExecutionContext
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.config.AppConfig
 
 /**
  * Knora Core abstraction.
@@ -28,6 +29,8 @@ trait Core {
   val iiifServiceManager: IIIFServiceManager
 
   val cacheServiceManager: CacheServiceManager
+
+  val appConfig: AppConfig
 
   val appActor: ActorRef
 }

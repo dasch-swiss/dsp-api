@@ -44,6 +44,7 @@ import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.impl.MockSipiImpl
+import org.knora.webapi.config.AppConfig
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -58,14 +59,14 @@ object ResourcesResponderV2Spec {
 
   private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
-  private val aThingIri = "http://rdfh.ch/0001/a-thing"
+  private val aThingIri                  = "http://rdfh.ch/0001/a-thing"
   private var aThingLastModificationDate = Instant.now
-  private val aThingCreationDate = Instant.parse("2016-03-02T15:05:10Z")
+  private val aThingCreationDate         = Instant.parse("2016-03-02T15:05:10Z")
 
-  private val resourceIriToErase = new MutableTestIri
-  private val firstValueIriToErase = new MutableTestIri
-  private val secondValueIriToErase = new MutableTestIri
-  private val standoffTagIrisToErase = collection.mutable.Set.empty[IRI]
+  private val resourceIriToErase                  = new MutableTestIri
+  private val firstValueIriToErase                = new MutableTestIri
+  private val secondValueIriToErase               = new MutableTestIri
+  private val standoffTagIrisToErase              = collection.mutable.Set.empty[IRI]
   private var resourceToEraseLastModificationDate = Instant.now
 }
 
@@ -402,7 +403,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   import ResourcesResponderV2Spec._
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
+  private val resourcesResponderV2SpecFullData          = new ResourcesResponderV2SpecFullData
 
   private var standardMapping: Option[MappingXMLtoStandoff] = None
 
@@ -410,11 +411,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      MockSipiImpl.layer
+      MockSipiImpl.layer,
+      AppConfig.live
     )
 
   override lazy val rdfDataObjects = List(
@@ -804,8 +806,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return the version history of a resource within a date range" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val startDate = Instant.parse("2019-02-08T15:05:11Z")
-      val endDate = Instant.parse("2019-02-13T09:05:10Z")
+      val startDate   = Instant.parse("2019-02-08T15:05:11Z")
+      val endDate     = Instant.parse("2019-02-13T09:05:10Z")
 
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
@@ -866,8 +868,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val response = expectMsgType[GraphDataGetResponseV2](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
+      val edges    = response.edges
+      val nodes    = response.nodes
 
       edges should contain theSameElementsAs graphTestData.graphForAnythingUser1.edges
       nodes should contain theSameElementsAs graphTestData.graphForAnythingUser1.nodes
@@ -884,8 +886,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val response = expectMsgType[GraphDataGetResponseV2](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
+      val edges    = response.edges
+      val nodes    = response.nodes
 
       edges should contain theSameElementsAs graphTestData.graphForIncunabulaUser.edges
       nodes should contain theSameElementsAs graphTestData.graphForIncunabulaUser.nodes
@@ -1799,8 +1801,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "update a resource's metadata when it doesn't have a knora-base:lastModificationDate" in {
       val dateTimeStampBeforeUpdate = Instant.now
-      val newLabel = "new test label"
-      val newPermissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
+      val newLabel                  = "new test label"
+      val newPermissions            = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember"
 
       val updateRequest = UpdateResourceMetadataRequestV2(
         resourceIri = aThingIri,
@@ -1928,7 +1930,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Get the resource from the triplestore and check it.
 
       val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
-      val updatedLastModificationDate = outputResource.lastModificationDate.get
+      val updatedLastModificationDate    = outputResource.lastModificationDate.get
       assert(updatedLastModificationDate == newModificationDate)
       aThingLastModificationDate = updatedLastModificationDate
     }
@@ -1987,7 +1989,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
-      val resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val resourceIri         = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
       val deleteDate: Instant = Instant.now
 
       val deleteRequest = DeleteOrEraseResourceRequestV2(
@@ -2200,8 +2202,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
       resourceIriToErase.set(resourceIri)
       val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
-      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
-      val standoffTagUUIDsToErase = collection.mutable.Set.empty[UUID]
+      val propertyIri: SmartIri      = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
+      val standoffTagUUIDsToErase    = collection.mutable.Set.empty[UUID]
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         propertyIri -> Seq(
@@ -2233,7 +2235,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
-      val outputResource: ReadResourceV2 = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+      val outputResource: ReadResourceV2  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
       val firstTextValue: ReadTextValueV2 = outputResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
       firstValueIriToErase.set(firstTextValue.valueIri)
 
@@ -2266,7 +2268,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         secondValueIriToErase.set(updateValueResponse.valueIri)
       }
 
-      val updatedResource = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
+      val updatedResource                  = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
       val secondTextValue: ReadTextValueV2 = updatedResource.values(propertyIri).head.asInstanceOf[ReadTextValueV2]
       secondValueIriToErase.set(secondTextValue.valueIri)
 
@@ -2309,8 +2311,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "not erase a resource if another resource has a link to it" in {
       // Create a resource with a link to the resource that is to be deleted.
 
-      val resourceWithLinkIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-      val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+      val resourceWithLinkIri: IRI       = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceClassIri: SmartIri     = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
       val linkValuePropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
@@ -2614,7 +2616,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a new value to test create value history event" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
       val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
-      val testValue = "a test value"
+      val testValue   = "a test value"
       // create new value.
 
       responderManager ! CreateValueRequestV2(
@@ -2662,7 +2664,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "delete the newly created value to check the delete value event of resource history" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val resourceIri   = "http://rdfh.ch/0001/thing-with-history"
       val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
       val deleteComment = "delete value test"
       // delete the new value.

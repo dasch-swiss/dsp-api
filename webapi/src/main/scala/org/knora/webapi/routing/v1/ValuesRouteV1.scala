@@ -462,11 +462,11 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     ): Future[ChangeFileValueRequestV1] = {
       val resourceIri =
         stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
-      val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, apiRequest.file)
+      val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, apiRequest.file)
 
       for {
         fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-          fileUrl = tempFileUrl,
+          filePath = tempFilePath,
           requestingUser = userADM
         )).mapTo[GetFileMetadataResponse]
       } yield ChangeFileValueRequestV1(

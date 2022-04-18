@@ -23,6 +23,7 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import org.knora.webapi.config.AppConfig
 
 object ActorUtil {
 
@@ -32,9 +33,9 @@ object ActorUtil {
    *
    * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun(
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ (if (appConfig.testing) Logging.testing else Logging.live))
+      .unsafeRunTask(
         zioTask.fold(ex => handleExeption(ex, sender), success => sender ! success)
       )
 

@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit
  * Represents the complete configuration as defined in application.conf.
  */
 final case class AppConfig(
+  testing: Boolean = false,
   printExtendedConfig: Boolean,
   defaultTimeout: String,
   dumpMessages: Boolean,
@@ -42,9 +43,15 @@ final case class KnoraAPI(
   def internalKnoraApiHostPort: String = internalHost + (if (internalPort != 80)
                                                            ":" + internalPort
                                                          else "")
-  def externalKnoraApiBaseUrl: String = externalProtocol + ":" + externalHost + (if (externalPort != 80)
-                                                                                   ":" + externalPort
-                                                                                 else "")
+  def internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
+                                                                      ":" + internalPort
+                                                                    else "")
+  def externalKnoraApiHostPort: String = externalHost + (if (externalPort != 80)
+                                                           ":" + externalPort
+                                                         else "")
+  def externalKnoraApiBaseUrl: String = externalProtocol + "://" + externalHost + (if (externalPort != 80)
+                                                                                     ":" + externalPort
+                                                                                   else "")
 }
 
 final case class Sipi(
@@ -66,6 +73,9 @@ final case class Sipi(
 ) {
   def internalBaseUrl = "http://" + internalHost + (if (internalPort != 80)
                                                       ":" + internalPort
+                                                    else "")
+  def externalBaseUrl = "http://" + externalHost + (if (externalPort != 80)
+                                                      ":" + externalPort
                                                     else "")
   val timeoutInSeconds = scala.concurrent.duration.Duration(timeout)
 }
