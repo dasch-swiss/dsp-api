@@ -33,7 +33,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  val additionalTestData = List(
+  override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books"
@@ -73,8 +73,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
-        val iri: SmartIri = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasTitle")
+        val iri: SmartIri = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
         val previousCacheDataFuture = Cache.getCacheData
         val previousCacheData = Await.result(previousCacheDataFuture, 2 seconds)
@@ -126,8 +126,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
       "add a value property to the cache." in {
 
-        val iri: SmartIri = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
+        val iri: SmartIri = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
         val previousCacheDataFuture = Cache.getCacheData
         val previousCacheData = Await.result(previousCacheDataFuture, 2 seconds)

@@ -123,16 +123,14 @@ abstract class IntegrationSpec(_system: ActorSystem)
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
-  val effectLayers =
+  lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      AppConfigForTestContainers.testcontainers,
-      JWTService.layer,
-      // FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      AppConfig.live,
+      JWTService.layer
     )
 
   /**
@@ -160,7 +158,7 @@ abstract class IntegrationSpec(_system: ActorSystem)
     appActor ! SetAllowReloadOverHTTPState(true)
 
     // start the knora service, loading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
     // waits until knora is up and running
     applicationStateRunning()
