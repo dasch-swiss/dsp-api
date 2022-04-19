@@ -6,9 +6,12 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.GravsearchException
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+
 import scala.concurrent.ExecutionContext
 
 /**
@@ -157,7 +160,7 @@ object GravsearchTypeInspectionUtil {
     override def transformStatementInWhere(
       statementPattern: StatementPattern,
       inputOrderBy: Seq[OrderCriterion],
-      limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: should I have to pass this here?
+      limitInferenceToOntologies: Option[Set[SmartIri]] = None
     )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
       if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]

@@ -1,5 +1,6 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
+import akka.actor.ActorSystem
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature.FeatureFactoryConfig
@@ -8,20 +9,18 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types.{
-  GravsearchTypeInspectionRunner,
-  GravsearchTypeInspectionUtil
-}
-import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import akka.actor.ActorSystem
-import org.knora.webapi.settings.KnoraDispatchers
+import scala.concurrent.duration._
 
 private object CountQueryHandler {
 
@@ -67,8 +66,7 @@ private object CountQueryHandler {
         whereClause = whereClauseWithoutAnnotations,
         orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
       ),
-      transformer = nonTriplestoreSpecificConstructToSelectTransformer,
-      None // TODO-BL: ???
+      transformer = nonTriplestoreSpecificConstructToSelectTransformer
     )
 
     nonTriplestoreSpecficPrequery

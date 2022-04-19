@@ -411,7 +411,7 @@ object QueryTraverser {
   def transformConstructToSelect(
     inputQuery: ConstructQuery,
     transformer: ConstructToSelectTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit
     executionContext: ExecutionContext
   ): SelectQuery = {

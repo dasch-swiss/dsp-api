@@ -7,10 +7,11 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
+
 import scala.concurrent.ExecutionContext
-import org.knora.webapi.messages.SmartIri
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -37,7 +38,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
   def transformStatementInWhere(
     statementPattern: StatementPattern,
     inputOrderBy: Seq[OrderCriterion],
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: should I have to pass this here?
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.

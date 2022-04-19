@@ -6,18 +6,22 @@
 package org.knora.webapi.messages.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.GravsearchException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ontology.Cache
+
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
-import scala.util.Try
+import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import scala.util.Try
 
 /**
  * Methods and classes for transforming generated SPARQL.

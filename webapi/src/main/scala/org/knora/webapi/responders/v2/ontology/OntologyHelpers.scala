@@ -2102,6 +2102,12 @@ object OntologyHelpers {
         baseClass -> baseClassAndSubClasses.map(_._2).toSet
       }
 
+  /**
+   * Given all the `rdfs:subPropertyOf` relations between properties, calculates all the inverse relations.
+   *
+   * @param allSubPropertiesOfRelations all the `rdfs:subPropertyOf` relations between properties.
+   * @return a map of IRIs of properties to sets of the IRIs of their subproperties.
+   */
   def calculateSuperPropertiesOfRelations(
     allSubPropertiesOfRelations: Map[SmartIri, Set[SmartIri]]
   ): Map[SmartIri, Set[SmartIri]] =
