@@ -110,7 +110,7 @@ object SparqlTransformer {
 
     entityStr
       .replaceAll("[:/.#-]", "")
-      .replaceAll("\\s", "") // TODO: check if this is complete and if it could lead to collision of variable names
+      .replaceAll("\\s", "") // TODO-old: check if this is complete and if it could lead to collision of variable names
   }
 
   /**
@@ -304,24 +304,32 @@ object SparqlTransformer {
                       .toSeq
 
                     // TODO-BL: add limit for subclasses
-                    // val relevantChildClasses = limitInferenceToOntologies match {
-                    //   case Some(ontologyIris) => {
-                    //     println(ontologyIris)
-                    //     println(baseClassIri.iri)
-                    //     val ontoMap = ontoCache.classDefinedInOntology
-                    //     ontoMap.get(baseClassIri.iri) match {
-                    //       case Some(ontologyIri) => {
-                    //         println(
-                    //           s"Base: ${baseClassIri.iri} \nOntology IRI: $ontologyIri \nConsidered relevant: ${ontologyIris
-                    //             .contains(ontologyIri)}"
-                    //         )
-                    //         knownChildClasses
-                    //       }
-                    //       case None => knownChildClasses
-                    //     }
-                    //   }
-                    //   case None => knownChildClasses
-                    // }
+                    val relevantChildClasses = limitInferenceToOntologies match {
+                      case None => knownChildClasses
+                      case Some(ontologyIris) => {
+                        val ontoMap = ontoCache.classDefinedInOntology
+                        knownChildClasses.filter { child =>
+                          val childOntologyIriMaybe = ontoMap.get(child)
+                          childOntologyIriMaybe match {
+                            case Some(childOntologyIri) => ontologyIris.contains(childOntologyIri)
+                            case None                   => false
+                          }
+                        }
+                        //     println(ontologyIris)
+                        //     println(baseClassIri.iri)
+                        //     val ontoMap = ontoCache.classDefinedInOntology
+                        //     ontoMap.get(baseClassIri.iri) match {
+                        //       case Some(ontologyIri) => {
+                        //         println(
+                        //           s"Base: ${baseClassIri.iri} \nOntology IRI: $ontologyIri \nConsidered relevant: ${ontologyIris
+                        //             .contains(ontologyIri)}"
+                        //         )
+                        //         knownChildClasses
+                        //       }
+                        //       case None => knownChildClasses
+                        //     }
+                      }
+                    }
                     // println(relevantChildClasses.length)
                     // println(knownChildClasses.length)
 
@@ -347,10 +355,10 @@ object SparqlTransformer {
                     // )
 
                     val unions: Seq[QueryPattern] = {
-                      if (knownChildClasses.length > 1) {
+                      if (relevantChildClasses.length > 1) {
                         Seq(
                           UnionPattern(
-                            knownChildClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
+                            relevantChildClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
                           )
                         )
                       } else {

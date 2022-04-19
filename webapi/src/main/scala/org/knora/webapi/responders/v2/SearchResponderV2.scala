@@ -516,7 +516,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
         transformer = nonTriplestoreSpecificConstructToSelectTransformer,
         None
-        // limitInferenceToOntologies = ontologiesForInferenceMaybe
       )
 
       // variable representing the main resources
@@ -534,7 +533,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         inputQuery = nonTriplestoreSpecificPrequery,
         transformer = triplestoreSpecificQueryPatternTransformerSelect,
         limitInferenceToOntologies = ontologiesForInferenceMaybe
-        // None // TODO-BL: find out if I should limit here
       )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
@@ -637,7 +635,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           val triplestoreSpecificMainQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
             transformer = queryPatternTransformerConstruct,
-            None // TODO-BL: find out if I should limit here
+            limitInferenceToOntologies = ontologiesForInferenceMaybe
+            // None // TODO-BL: find out if I should limit here
           )
 
           // Convert the result to a SPARQL string and send it to the triplestore.
