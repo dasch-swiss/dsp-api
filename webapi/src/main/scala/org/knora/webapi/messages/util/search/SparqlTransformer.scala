@@ -237,12 +237,8 @@ object SparqlTransformer {
     luceneQueryPatterns ++ otherPatterns
   }
 
-  // TODO-BL: The following things still need doing:
-  // TODO-BL: Write tests
-  // TODO-BL: check with other PR if I thought of everything again
-  // TODO-BL: find out if we still need the KnoraExplicit named graph stuff
-  // TODO-BL: figure out how execution context should ideally be handled
-  // TODO-BL: update docstrings everywhere
+  // TODO-BL: find out if we still need the KnoraExplicit named graph stuff; this should only be relevant when a triplestore does inference
+  // TODO-BL: figure out how execution context should ideally be handled; currently it works, but I'm not sure it's solved "comme il faut"
 
   /**
    * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
@@ -297,6 +293,7 @@ object SparqlTransformer {
                         throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
                     }
 
+                    // look up child classes from ontology cache
                     val superClasses = ontoCache.superClassOfRelations
                     val knownChildClasses = superClasses
                       .get(baseClassIri.iri)
@@ -305,6 +302,7 @@ object SparqlTransformer {
                       })
                       .toSeq
 
+                    // if provided, limit the child classes to those that belong to relevant ontologies
                     val relevantChildClasses = limitInferenceToOntologies match {
                       case None => knownChildClasses
                       case Some(ontologyIris) => {
@@ -319,21 +317,23 @@ object SparqlTransformer {
                       }
                     }
 
-                    val unions: Seq[QueryPattern] = {
-                      if (relevantChildClasses.length > 1) {
-                        Seq(
-                          UnionPattern(
-                            relevantChildClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
-                          )
+                    // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
+                    // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
+                    // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
+                    if (relevantChildClasses.length > 1) {
+                      Seq(
+                        UnionPattern(
+                          relevantChildClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
                         )
-                      } else {
-                        Seq(statementPattern)
-                      }
+                      )
+                    } else {
+                      // if no subclasses are available, the initial statement can be used.
+                      Seq(statementPattern)
                     }
-                    unions
                   } else {
                     // No. Expand using rdfs:subPropertyOf*.
 
+                    // look up child properties from ontology cache
                     val superProps = ontoCache.superPropertyOfRelations
                     val knownChildProps = superProps
                       .get(predIri)
@@ -341,6 +341,8 @@ object SparqlTransformer {
                         Set(predIri)
                       })
                       .toSeq
+
+                    // if provided, limit the child properties to those that belong to relevant ontologies
                     val relevantChildProps = limitInferenceToOntologies match {
                       case None => knownChildProps
                       case Some(ontologyIris) => {
@@ -355,20 +357,21 @@ object SparqlTransformer {
                       }
                     }
 
-                    val unions: Seq[QueryPattern] = {
-                      if (relevantChildProps.length > 1) {
-                        Seq(
-                          UnionPattern(
-                            relevantChildProps.map(newPredicate =>
-                              Seq(statementPattern.copy(pred = IriRef(newPredicate)))
-                            )
+                    // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
+                    // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
+                    // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
+                    if (relevantChildProps.length > 1) {
+                      Seq(
+                        UnionPattern(
+                          relevantChildProps.map(newPredicate =>
+                            Seq(statementPattern.copy(pred = IriRef(newPredicate)))
                           )
                         )
-                      } else {
-                        Seq(statementPattern)
-                      }
+                      )
+                    } else {
+                      // if no subproperties are available, the initial statement can be used
+                      Seq(statementPattern)
                     }
-                    unions
                   }
 
                 case _ =>
