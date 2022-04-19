@@ -33,7 +33,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  override lazy val rdfDataObjects = List(
+  val additionalTestData = List(
     RdfDataObject(
       path = "test_data/ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books"
@@ -46,17 +46,32 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
   val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
 
+  // start fuseki http connector actor
+  private val fusekiActor = system.actorOf(
+    Props(new HttpTriplestoreConnector()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = "httpTriplestoreConnector"
+  )
+
+  override def beforeAll(): Unit = {
+    CacheUtil.createCaches(settings.caches)
+    waitForReadyTriplestore(fusekiActor)
+    loadTestData(fusekiActor, additionalTestData)
+  }
+
+  override protected def afterAll(): Unit =
+    CacheUtil.removeAllCaches()
+
   "The basic functionality of the ontology cache" should {
 
     "successfully load all ontologies" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
         _ <- Cache.loadOntologies(
-          settings,
-          appActor,
-          defaultFeatureFactoryConfig,
-          KnoraSystemInstances.Users.SystemUser
-        )
-        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+               settings,
+               fusekiActor,
+               defaultFeatureFactoryConfig,
+               KnoraSystemInstances.Users.SystemUser
+             )
+        cacheData: Cache.OntologyCacheData       <- Cache.getCacheData
         ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
       } yield ontologies
 
@@ -73,11 +88,11 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
-        val iri: SmartIri = stringFormatter.toSmartIri(rdfDataObjects.head.name)
-        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
+        val iri: SmartIri       = stringFormatter.toSmartIri(additionalTestData.head.name)
+        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasTitle")
 
         val previousCacheDataFuture = Cache.getCacheData
-        val previousCacheData = Await.result(previousCacheDataFuture, 2 seconds)
+        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
         val previousBooksMaybe = previousCacheData.ontologies.get(iri)
         previousBooksMaybe match {
@@ -126,11 +141,11 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
       "add a value property to the cache." in {
 
-        val iri: SmartIri = stringFormatter.toSmartIri(rdfDataObjects.head.name)
-        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
+        val iri: SmartIri             = stringFormatter.toSmartIri(additionalTestData.head.name)
+        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
 
         val previousCacheDataFuture = Cache.getCacheData
-        val previousCacheData = Await.result(previousCacheDataFuture, 2 seconds)
+        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
         val previousBooksMaybe = previousCacheData.ontologies.get(iri)
         previousBooksMaybe match {
@@ -218,9 +233,9 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
       "add a link property and a link value property to the cache." in {
 
-        val ontologyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books")
+        val ontologyIri        = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books")
         val hasPagePropertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPage")
-        val pagePropertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#Page")
+        val pagePropertyIri    = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#Page")
         val hasPageValuePropertyIri =
           stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
         val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
@@ -272,7 +287,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
               isLinkValueProp = true
             )
             val newProps = previousBooks.properties +
-              (hasPagePropertyIri -> hasPageProperties) +
+              (hasPagePropertyIri      -> hasPageProperties) +
               (hasPageValuePropertyIri -> hasPageValueProperties)
             val newBooks = previousBooks.copy(
               ontologyMetadata = previousBooks.ontologyMetadata.copy(
