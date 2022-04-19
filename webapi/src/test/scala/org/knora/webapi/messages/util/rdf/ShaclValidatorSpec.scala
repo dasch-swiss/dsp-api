@@ -51,15 +51,15 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
   private val resultIri: IriNode =
     nodeFactory
       .makeIriNode(OntologyConstants.Shacl.Result)
-  
+
   private val sourceConstraintComponentIri: IriNode =
     nodeFactory
       .makeIriNode(OntologyConstants.Shacl.SourceConstraintComponent)
-  
+
   private val datatypeConstraintComponentIri: IriNode =
     nodeFactory
       .makeIriNode(OntologyConstants.Shacl.DatatypeConstraintComponent)
-  
+
   private val maxCountConstraintComponentIri: IriNode =
     nodeFactory
       .makeIriNode(OntologyConstants.Shacl.MaxCountConstraintComponent)
@@ -111,7 +111,7 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
       )
 
       val shaclPath = Paths.get("test/person.ttl")
-      
+
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = invalidRdfModel,
         shaclPath = shaclPath
