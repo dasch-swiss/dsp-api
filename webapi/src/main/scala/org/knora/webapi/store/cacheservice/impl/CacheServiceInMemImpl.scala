@@ -7,6 +7,7 @@ package org.knora.webapi.store.cacheservice.impl
 
 import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
@@ -23,7 +24,6 @@ import zio.stm._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import org.knora.webapi.config.AppConfig
 
 /**
  * In-Memory Cache implementation

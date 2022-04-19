@@ -112,7 +112,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
       .mapError(error =>
         error match {
           case None            => throw AssertionException("Request timed out.")
-          case Some(throwable) => throwable
+          case Some(throwable) => throw throwable
         }
       )
 
