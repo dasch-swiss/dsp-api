@@ -281,20 +281,6 @@ object Cache extends LazyLogging {
       case (propertyIri, propertyDef) => propertyIri -> propertyDef.subPropertyOf
     }
 
-    // A map of property IRIs to their immediate child properties.
-    val directSuperPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = {
-      allPropertyDefs.map {
-        case (propertyIri, _) => {
-          val children: Set[SmartIri] = allPropertyDefs.map { case (childIri, propertyDef) =>
-            if (propertyDef.subPropertyOf.contains(propertyIri)) childIri
-            else propertyIri
-          // if propertyDef.subPropertyOf.contains(propertyIri) => childIri
-          }.toSet - propertyIri
-          propertyIri -> children
-        }
-      }
-    }
-
     val allClassIris = allClassDefs.keySet
     val allPropertyIris = allPropertyDefs.keySet
 
