@@ -91,7 +91,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
 
     for {
       _ <- ZIO.debug("Loading test data started ...")
-      _ <- singleAwaitingRequest(loadRequest, 100.seconds)
+      _ <- singleAwaitingRequest(loadRequest, 101.seconds)
       _ <- ZIO.debug("... loading test data done.")
     } yield ()
   }
