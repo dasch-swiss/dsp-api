@@ -437,10 +437,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
         )
 
+      ontologiesForInferenceMaybe <- QueryTraverser.getOntologiesRelevantForInference(
+        inputQuery.whereClause,
+        storeManager
+      )
+
       triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
         inputQuery = nonTriplestoreSpecificPrequery,
         transformer = triplestoreSpecificQueryPatternTransformerSelect,
-        None // TODO-BL: find out if I should limit here
+        ontologiesForInferenceMaybe
       )
 
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
@@ -515,7 +520,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
         inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
         transformer = nonTriplestoreSpecificConstructToSelectTransformer,
-        None
+        None // TODO-BL: should be default value
       )
 
       // variable representing the main resources
