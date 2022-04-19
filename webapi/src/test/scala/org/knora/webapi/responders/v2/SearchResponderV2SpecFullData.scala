@@ -2132,4 +2132,100 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       )
     )
   )
+
+  val constructQueryForIncunabulaCompundObject: ConstructQuery = ConstructQuery(
+    constructClause = ConstructClause(
+      statements = Vector(
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+          XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
+          QueryVariable("seqnum"),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
+          QueryVariable("file"),
+          None
+        )
+      ),
+      querySchema = Some(ApiV2Simple)
+    ),
+    whereClause = WhereClause(
+      patterns = Vector(
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isPartOf".toSmartIri, None),
+          IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
+          QueryVariable("seqnum"),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("seqnum"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://www.w3.org/2001/XMLSchema#integer".toSmartIri, None),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("page"),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
+          QueryVariable("file"),
+          None
+        ),
+        StatementPattern(
+          QueryVariable("file"),
+          IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+          IriRef("http://api.knora.org/ontology/knora-api/simple/v2#File".toSmartIri, None),
+          None
+        )
+      ),
+      positiveEntities = Set(
+        QueryVariable("page"),
+        QueryVariable("seqnum"),
+        QueryVariable("file"),
+        IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#StillImageRepresentation".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isPartOf".toSmartIri, None),
+        IriRef("http://rdfh.ch/0803/861b5644b302".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#seqnum".toSmartIri, None),
+        IriRef("http://www.w3.org/2001/XMLSchema#integer".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile".toSmartIri, None),
+        IriRef("http://api.knora.org/ontology/knora-api/simple/v2#File".toSmartIri, None)
+      ),
+      querySchema = Some(ApiV2Simple)
+    ),
+    querySchema = Some(ApiV2Simple)
+  )
+
 }

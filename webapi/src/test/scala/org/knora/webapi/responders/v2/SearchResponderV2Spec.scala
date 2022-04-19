@@ -289,6 +289,23 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "perform an extended search for a particular compound object (book)" in {
+
+      val query = searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject
+
+      responderManager ! GravsearchRequestV2(
+        constructQuery = query,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anonymousUser
+      )
+
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        response.resources.length should equal(25)
+      }
+    }
+
   }
 
 }
