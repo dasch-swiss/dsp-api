@@ -313,8 +313,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           val triplestoreSpecificQuery = QueryTraverser.transformConstructToConstruct(
             inputQuery = mainQuery,
-            transformer = queryPatternTransformerConstruct,
-            None // TODO-BL: find out if I should limit here
+            transformer = queryPatternTransformerConstruct
           )
 
           for {
@@ -426,8 +425,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           whereClause = whereClauseWithoutAnnotations,
           orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
         ),
-        transformer = nonTriplestoreSpecificConstructToSelectTransformer,
-        None // TODO-BL: find out if I should limit here
+        transformer = nonTriplestoreSpecificConstructToSelectTransformer
       )
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
@@ -510,8 +508,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           featureFactoryConfig = featureFactoryConfig
         )
 
-      // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
-      // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
+      // TODO-old: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
+      // TODO-old: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
       ontologiesForInferenceMaybe <- QueryTraverser.getOntologiesRelevantForInference(
         inputQuery.whereClause,
@@ -519,8 +517,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       )
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
         inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-        transformer = nonTriplestoreSpecificConstructToSelectTransformer,
-        None // TODO-BL: should be default value
+        transformer = nonTriplestoreSpecificConstructToSelectTransformer
       )
 
       // variable representing the main resources

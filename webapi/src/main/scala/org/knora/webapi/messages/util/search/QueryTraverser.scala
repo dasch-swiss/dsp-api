@@ -5,21 +5,22 @@
 
 package org.knora.webapi.messages.util.search
 
-import scala.concurrent.ExecutionContext
-import org.knora.webapi.messages.SmartIri
-import scala.concurrent._
-import scala.concurrent.duration._
-import org.knora.webapi.responders.v2.ontology.Cache
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import akka.actor.ActorRef
 import akka.pattern.ask
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.StringFormatter
 import akka.util.Timeout
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
+import org.knora.webapi.responders.v2.ontology.Cache
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent._
+import scala.concurrent.duration._
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -74,8 +75,9 @@ trait WhereTransformer {
   /**
    * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
    *
-   * @param statementPattern the statement to be transformed.
-   * @param inputOrderBy     the ORDER BY clause in the input query.
+   * @param statementPattern           the statement to be transformed.
+   * @param inputOrderBy               the ORDER BY clause in the input query.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the result of the transformation.
    */
   def transformStatementInWhere(
@@ -203,7 +205,12 @@ object QueryTraverser {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout = Duration(5, SECONDS)
 
-  def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], storeManager: ActorRef): Seq[SmartIri] =
+  /**
+   * Helper method that analyzed an RDF Entity and returns a sequence of Ontology IRIs that are being referenced by the entity.
+   * If an IRI appears that can not be resolved by the ontology cache, it will check if the IRI points to project data;
+   * if so, all ontologies defined by the project to which the data belongs, will be included in the results.
+   */
+  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], storeManager: ActorRef): Seq[SmartIri] =
     entity match {
       case IriRef(iri, _) => {
         val internal = iri.toOntologySchema(InternalSchema)
@@ -231,6 +238,13 @@ object QueryTraverser {
       case _ => Seq.empty
     }
 
+  /**
+   * Extracts all ontologies that are relevant to a gravsearch query, in order to allow optimized cache-based inference simulation.
+   *
+   * @param whereClause the WHERE-clause of a gravsearch query.
+   * @return a set of ontology IRIs relevant to the query, or `None`, if no meaningful result could be produced.
+   *         In the latter case, inference should be done on the basis of all available ontologies.
+   */
   def getOntologiesRelevantForInference(
     whereClause: WhereClause,
     storeManager: ActorRef
@@ -267,9 +281,10 @@ object QueryTraverser {
   /**
    * Traverses a WHERE clause, delegating transformation tasks to a [[WhereTransformer]], and returns the transformed query patterns.
    *
-   * @param patterns         the input query patterns.
-   * @param inputOrderBy     the ORDER BY expression in the input query.
-   * @param whereTransformer a [[WhereTransformer]].
+   * @param patterns                   the input query patterns.
+   * @param inputOrderBy               the ORDER BY expression in the input query.
+   * @param whereTransformer           a [[WhereTransformer]].
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the transformed query patterns.
    */
   def transformWherePatterns(
@@ -404,8 +419,9 @@ object QueryTraverser {
   /**
    * Traverses a SELECT query, delegating transformation tasks to a [[ConstructToSelectTransformer]], and returns the transformed query.
    *
-   * @param inputQuery  the query to be transformed.
-   * @param transformer the [[ConstructToSelectTransformer]] to be used.
+   * @param inputQuery                 the query to be transformed.
+   * @param transformer                the [[ConstructToSelectTransformer]] to be used.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the transformed query.
    */
   def transformConstructToSelect(
@@ -463,14 +479,15 @@ object QueryTraverser {
   /**
    * Traverses a CONSTRUCT query, delegating transformation tasks to a [[ConstructToConstructTransformer]], and returns the transformed query.
    *
-   * @param inputQuery  the query to be transformed.
-   * @param transformer the [[ConstructToConstructTransformer]] to be used.
+   * @param inputQuery                 the query to be transformed.
+   * @param transformer                the [[ConstructToConstructTransformer]] to be used.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the transformed query.
    */
   def transformConstructToConstruct(
     inputQuery: ConstructQuery,
     transformer: ConstructToConstructTransformer,
-    limitInferenceToOntologies: Option[Set[SmartIri]]
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): ConstructQuery = {
 
     val transformedWherePatterns = transformWherePatterns(
