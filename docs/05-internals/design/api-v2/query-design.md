@@ -7,10 +7,9 @@
 
 ## Inference
 
-Knora does not require the triplestore to perform inference, but may be able
-to take advantage of inference if the triplestore provides it.
+DSP-API does not require the triplestore to perform inference, as different triplestores implement inference quite differently, so that taking advantage of inference would require triplestore specific code, which is not well maintainable. Instead, the API simulates inference for each Gravsearch query, so that the expected results are returned.
 
-In particular, Knora's SPARQL queries currently need to do the following:
+Gravsearch queries currently need to do the following:
 
 - Given a base property, find triples using a subproperty as predicate, and
   return the subproperty used in each case.
@@ -39,64 +38,35 @@ This query:
 - Finds the Knora values attached to the resource, and returns each value along with
   the property that explicitly attaches it to the resource.
   
-In some triplestores, it can be more efficient to use RDFS inference than to use property path syntax,
-depending on how inference is implemented. For example, Ontotext GraphDB does inference when
-data is inserted, and stores inferred triples in the repository
-([forward chaining with full materialisation](http://graphdb.ontotext.com/documentation/standard/reasoning.html)).
-Moreover, it provides a way of choosing whether to return explicit or inferred triples.
-This allows the query above to be optimised as follows, querying inferred triples but returning
-explicit triples:
+However, such a query is very inefficient. Instead, the API does inference on the query, so that the relevant information can be found in a timely manner.
+
+For this, the query is analyzed to check which project ontologies are relevant to the query. If an ontology is not relevant to a query, then all class and property definitions of this ontology are disregarded for inference.
+
+Then, each statement that requires inference (i.e. that could be phrased with property path syntax, as described above) is cross-referenced with the relevant ontologies, to see which property/class definitions would fit the statement according to the rules of RDF inference. And each of those definitions is is added to the query as a separate `UNION` statement.
+
+E.g.: Given the resource class `B` is a subclass of `A` and the property `hasY` is a subproperty of `hasX`, then the following query
 
 ```sparql
-CONSTRUCT {
-  ?resource a ?resourceClass .
-  ?resource ?resourceValueProperty ?valueObject.
-WHERE {
-  ?resource a knora-base:Resource . # inferred triple
-
-  GRAPH <http://www.ontotext.com/explicit> {
-    ?resource a ?resourceClass .  # explicit triple
-  }
-
-  ?resource knora-base:hasValue ?valueObject . # inferred triple
-
-  GRAPH <http://www.ontotext.com/explicit> {
-    ?resource ?resourceValueProperty ?valueObject . # explicit triple
-  }
+SELECT {
+  ?res ?prop .
+} WHERE {
+  ?res a <A> .
+  ?res <hasX> ?prop .
+}
 ```
 
-By querying inferred triples that are already stored in the repository, the optimised query avoids property path
-syntax and is therefore more efficient, while still only returning explicit triples in the query result.
-
-Other triplestores use a backward-chaining inference strategy, meaning that inference is performed during
-the execution of a SPARQL query, by expanding the query itself. The expanded query is likely to look like
-the first example, using property path syntax, and therefore it is not likely to be more efficient. Moreover,
-other triplestores may not provide a way to return explicit rather than inferred triples. To support such
-a triplestore, Knora uses property path syntax rather than inference.
-See [the Gravsearch design documentation](gravsearch.md#inference) for information on how this is done
-for Gravsearch queries.
-
-The support for Apache Jena Fuseki currently works in this way. However, Fuseki supports both forward-chaining
-and backward-chaining rule engines, although it does not seem to have anything like
-GraphDB's `<http://www.ontotext.com/explicit>`. It would be worth exploring whether Knora's query result
-processing could be changed so that it could use forward-chaining inference as an optimisation, even if
-nothing like `<http://www.ontotext.com/explicit>` is available. For example, the example query= could be written like
-this:
+can be rewritten as
 
 ```sparql
-CONSTRUCT {
-  ?resource a ?resourceClass .
-  ?resource ?resourceValueProperty ?valueObject .
-WHERE {
-  ?resource a knora-base:Resource .
-  ?resource a ?resourceClass .
-  ?resource knora-base:hasValue ?valueObject .
-  ?resource ?resourceValueProperty ?valueObject .
+SELECT {
+  ?res ?prop .
+} WHERE {
+  {?res a <A>} UNION {?res a <B>} .
+  {?res <hasX> ?prop} UNION {?res <hasY> ?prop} .
+}
+
 ```
 
-This would return inferred triples as well as explicit ones: a triple for each base class of the explicit
-`?resourceClass`, and a triple for each base property of the explicit `?resourceValueProperty`. But since Knora knows
-the class and property inheritance hierarchies, it could ignore the additional triples.
 
 ## Querying Past Value Versions
 

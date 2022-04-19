@@ -13,15 +13,15 @@ criteria) while avoiding their drawbacks in terms of performance and
 security (see [The Enduring Myth of the SPARQL
 Endpoint](https://daverog.wordpress.com/2013/06/04/the-enduring-myth-of-the-sparql-endpoint/)).
 It also has the benefit of enabling clients to work with a simpler RDF
-data model than the one Knora actually uses to store data in the
+data model than the one the API actually uses to store data in the
 triplestore, and makes it possible to provide better error-checking.
 
 Rather than being processed directly by the triplestore, a Gravsearch query
-is interpreted by Knora, which enforces certain
+is interpreted by the API, which enforces certain
 restrictions on the query, and implements paging and permission
 checking. The API server generates SPARQL based on the Gravsearch query
 submitted, queries the triplestore, filters the results according to the
-user's permissions, and returns each page of query results as a Knora
+user's permissions, and returns each page of query results as an
 API response. Thus, Gravsearch is a hybrid between a RESTful API and a
 SPARQL endpoint.
 
@@ -78,14 +78,14 @@ The response to a count query request is an object with one predicate,
 A Gravsearch query can be written in either of the two
 [DSP-API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
-anything below the level of a Knora value. If your query needs to refer to
+anything below the level of a DSP-API value. If your query needs to refer to
 standoff markup, you must use the complex schema. Each query must use a single
 schema, with one exception (see [Date Comparisons](#date-comparisons)).
 
 Gravsearch query results can be requested in the simple or complex schema;
 see [API Schema](introduction.md#api-schema).
 
-All examples hereafter run with Knora started locally as documented in the section [Getting Started with DSP-API](../../04-publishing-deployment/getting-started.md). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
+All examples hereafter run with the DSP stack started locally as documented in the section [Getting Started with DSP-API](../../04-publishing-deployment/getting-started.md). If you access another stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
 ### Using the Simple Schema
 
@@ -98,8 +98,7 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 ```
 
-In the simple schema, Knora values are represented as literals, which
-can be used `FILTER` expressions
+In the simple schema, DSP-API values are represented as literals, which can be used `FILTER` expressions
 (see [Filtering on Values in the Simple Schema](#filtering-on-values-in-the-simple-schema)).
 
 ### Using the Complex Schema
@@ -113,7 +112,7 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
 ```
 
-In the complex schema, Knora values are represented as objects belonging
+In the complex schema, DSP-API values are represented as objects belonging
 to subclasses of `knora-api:Value`, e.g. `knora-api:TextValue`, and have
 predicates of their own, which can be used in `FILTER` expressions
 (see [Filtering on Values in the Complex Schema](#filtering-on-values-in-the-complex-schema)).
@@ -180,7 +179,7 @@ permission to see a matching dependent resource, the link value is hidden.
 ## Paging
 
 Gravsearch results are returned in pages. The maximum number of main
-resources per page is determined by Knora (and can be configured
+resources per page is determined by the API (and can be configured
 in `application.conf` via the setting `app/v2/resources-sequence/results-per-page`).
 If some resources have been filtered out because the user does not have
 permission to see them, a page could contain fewer results, or no results.
@@ -193,9 +192,7 @@ one at a time, until the response does not contain `knora-api:mayHaveMoreResults
 ## Inference
 
 Gravsearch queries are understood to imply a subset of
-[RDFS reasoning](https://www.w3.org/TR/rdf11-mt/). Depending on the
-triplestore being used, this may be implemented using the triplestore's
-own reasoner or by query expansion in Knora.
+[RDFS reasoning](https://www.w3.org/TR/rdf11-mt/). This is done by the API by expanding the incoming query.
 
 Specifically, if a statement pattern specifies a property, the pattern will
 also match subproperties of that property, and if a statement specifies that
@@ -203,14 +200,11 @@ a subject has a particular `rdf:type`, the statement will also match subjects
 belonging to subclasses of that type.
 
 If you know that reasoning will not return any additional results for
-your query, you can disable it by adding this line to the `WHERE` clause:
+your query, you can disable it by adding this line to the `WHERE` clause, which may improve query performance:
 
 ```sparql
 knora-api:GravsearchOptions knora-api:useInference false .
 ```
-
-If Knora is implementing reasoning by query expansion, disabling it can
-improve the performance of some queries.
 
 ## Gravsearch Syntax
 
@@ -242,8 +236,8 @@ clauses use the following patterns, with the specified restrictions:
   unordered set of triples. However, a Gravsearch query returns an
   ordered list of resources, which can be ordered by the values of
   specified properties. If the query is written in the complex schema,
-  items below the level of Knora values may not be used in `ORDER BY`.
-- `BIND`: The value assigned must be a Knora resource IRI.
+  items below the level of DSP-API values may not be used in `ORDER BY`.
+- `BIND`: The value assigned must be a DSP resource IRI.
 
 ### Resources, Properties, and Values
 
@@ -267,7 +261,7 @@ must be represented as a query variable.
 
 #### Filtering on Values in the Simple Schema
 
-In the simple schema, a variable representing a Knora value can be used
+In the simple schema, a variable representing a DSP-API value can be used
 directly in a `FILTER` expression. For example:
 
 ```
@@ -277,7 +271,7 @@ FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
 
 Here the type of `?title` is `xsd:string`.
 
-The following Knora value types can be compared with literals in `FILTER`
+The following value types can be compared with literals in `FILTER`
 expressions in the simple schema:
 
 - Text values (`xsd:string`)
@@ -293,7 +287,7 @@ performing an exact match on a list node's label. Labels can be given in differe
 If one of the given list node labels matches, it is considered a match.
 Note that in the simple schema, uniqueness is not guaranteed (as opposed to the complex schema).
 
-A Knora value may not be represented as the literal object of a predicate;
+A DSP-API value may not be represented as the literal object of a predicate;
 for example, this is not allowed:
 
 ```
@@ -302,9 +296,9 @@ for example, this is not allowed:
 
 #### Filtering on Values in the Complex Schema
 
-In the complex schema, variables representing Knora values are not literals.
+In the complex schema, variables representing DSP-API values are not literals.
 You must add something to the query (generally a statement) to get a literal
-from a Knora value. For example:
+from a DSP-API value. For example:
 
 ```
 ?book incunabula:title ?title .
@@ -477,7 +471,7 @@ within a single paragraph.
 If you are only interested in specifying that a resource has some text
 value containing a standoff link to another resource, the most efficient
 way is to use the property `knora-api:hasStandoffLinkTo`, whose subjects and objects
-are resources. This property is automatically maintained by Knora. For example:
+are resources. This property is automatically maintained by the API. For example:
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -621,7 +615,7 @@ CONSTRUCT {
 
 ### Filtering on `rdfs:label`
 
-The `rdfs:label` of a resource is not a Knora value, but you can still search for it.
+The `rdfs:label` of a resource is not a DSP-API value, but you can still search for it.
 This can be done in the same ways in the simple or complex schema:
 
 Using a string literal object:
@@ -706,8 +700,8 @@ clause but not in the `CONSTRUCT` clause, the matching resources or values
 will not be included in the results.
 
 If the query is written in the complex schema, all variables in the `CONSTRUCT`
-clause must refer to Knora resources, Knora values, or properties. Data below
-the level of Knora values may not be mentioned in the `CONSTRUCT` clause.
+clause must refer to DSP-API resources, DSP-API values, or properties. Data below
+the level of values may not be mentioned in the `CONSTRUCT` clause.
 
 Predicates from the `rdf`, `rdfs`, and `owl` ontologies may not be used
 in the `CONSTRUCT` clause. The `rdfs:label` of each matching resource is always
@@ -919,7 +913,7 @@ adding statements with the predicate `rdf:type`. The subject must be a resource 
 and the object must either be `knora-api:Resource` (if the subject is a resource)
 or the subject's specific type (if it is a value).
 
-For example, consider this query that uses a non-Knora property:
+For example, consider this query that uses a non-DSP property:
 
 ```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -990,7 +984,7 @@ CONSTRUCT {
 Note that it only makes sense to use `dcterms:title` in the simple schema, because
 its object is supposed to be a literal.
 
-Here is another example, using a non-Knora class:
+Here is another example, using a non-DSP class:
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
