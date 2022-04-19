@@ -446,7 +446,6 @@ object Cache extends LazyLogging {
     val propertyDefinedInOntology = propertyIrisPerOntology.flatMap { case (ontoIri, propertyIris) =>
       propertyIris.map(_ -> ontoIri)
     }
-    // TODO-BL: !!!
 
     // Construct the ontology cache data.
     val ontologyCacheData: OntologyCacheData = OntologyCacheData(

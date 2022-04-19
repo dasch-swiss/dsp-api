@@ -240,19 +240,18 @@ object SparqlTransformer {
   // TODO-BL: figure out how execution context should ideally be handled
   // TODO-BL: update docstrings everywhere
 
-  // private def optimizeSubProps(): Seq[QueryPattern] = {}
-
   /**
    * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
    *
-   * @param statementPattern  the statement pattern.
-   * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
+   * @param statementPattern           the statement pattern.
+   * @param simulateInference          `true` if RDFS inference should be simulated using property path syntax.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the statement pattern as expanded to work without inference.
    */
   def transformStatementInWhereForNoInference(
     statementPattern: StatementPattern,
     simulateInference: Boolean,
-    limitInferenceToOntologies: Option[Set[SmartIri]] = None // TODO-BL: use this to make things faster
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
@@ -295,7 +294,6 @@ object SparqlTransformer {
                     }
 
                     val superClasses = ontoCache.superClassOfRelations
-                    // superClasses.map { case (k, v) => println(s"$k --> $v") }
                     val knownChildClasses = superClasses
                       .get(baseClassIri.iri)
                       .getOrElse({
@@ -303,7 +301,6 @@ object SparqlTransformer {
                       })
                       .toSeq
 
-                    // TODO-BL: add limit for subclasses
                     val relevantChildClasses = limitInferenceToOntologies match {
                       case None => knownChildClasses
                       case Some(ontologyIris) => {
@@ -315,44 +312,8 @@ object SparqlTransformer {
                             case None                   => false
                           }
                         }
-                        //     println(ontologyIris)
-                        //     println(baseClassIri.iri)
-                        //     val ontoMap = ontoCache.classDefinedInOntology
-                        //     ontoMap.get(baseClassIri.iri) match {
-                        //       case Some(ontologyIri) => {
-                        //         println(
-                        //           s"Base: ${baseClassIri.iri} \nOntology IRI: $ontologyIri \nConsidered relevant: ${ontologyIris
-                        //             .contains(ontologyIri)}"
-                        //         )
-                        //         knownChildClasses
-                        //       }
-                        //       case None => knownChildClasses
-                        //     }
                       }
                     }
-                    // println(relevantChildClasses.length)
-                    // println(knownChildClasses.length)
-
-                    // val rdfTypeVariable: QueryVariable = createUniqueVariableNameForEntityAndBaseClass(
-                    //   base = statementPattern.subj,
-                    //   baseClassIri = baseClassIri
-                    // )
-
-                    // Seq(
-                    //   StatementPattern(
-                    //     subj = rdfTypeVariable,
-                    //     pred = IriRef(
-                    //       iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
-                    //       propertyPathOperator = Some('*')
-                    //     ),
-                    //     obj = statementPattern.obj
-                    //   ),
-                    //   StatementPattern(
-                    //     subj = statementPattern.subj,
-                    //     pred = statementPattern.pred,
-                    //     obj = rdfTypeVariable
-                    //   )
-                    // )
 
                     val unions: Seq[QueryPattern] = {
                       if (relevantChildClasses.length > 1) {
