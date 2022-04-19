@@ -119,9 +119,10 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   /**
    * Performs a http request and returns the body of the response.
    */
-  def getResponseStringOrThrow(request: akka.http.scaladsl.model.HttpRequest): Task[String] =
+  def getResponseString(request: akka.http.scaladsl.model.HttpRequest): Task[String] =
     for {
       response <- singleAwaitingRequest(request)
+      // _    <- ZIO.debug(response)
       body <-
         ZIO
           .attemptBlocking(
@@ -140,8 +141,8 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def checkResponseOK(request: akka.http.scaladsl.model.HttpRequest): Task[Unit] =
     for {
-      _        <- ZIO.debug(request)
-      response <- getResponseStringOrThrow(request)
+      // _        <- ZIO.debug(request)
+      response <- getResponseString(request)
     } yield ()
 
   /**
@@ -149,7 +150,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def getResponseJson(request: akka.http.scaladsl.model.HttpRequest): Task[JsObject] =
     for {
-      body <- getResponseStringOrThrow(request)
+      body <- getResponseString(request)
       json <- ZIO.succeed(body.parseJson.asJsObject)
     } yield json
 
@@ -158,7 +159,8 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def getResponseJsonLD(request: akka.http.scaladsl.model.HttpRequest): Task[JsonLDDocument] =
     for {
-      body <- getResponseStringOrThrow(request)
+      body <- getResponseString(request)
+      // _    <- ZIO.debug(body)
       json <- ZIO.succeed(JsonLDUtil.parseJsonLD(body))
     } yield json
 

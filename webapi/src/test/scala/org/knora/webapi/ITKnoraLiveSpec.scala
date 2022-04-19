@@ -205,7 +205,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     runtime.unsafeRunTask(
       (for {
         testClient <- ZIO.service[TestClientService]
-        result     <- testClient.getResponseStringOrThrow(request)
+        result     <- testClient.getResponseString(request)
       } yield result).provide(TestClientService.layer(appConfig, system))
     )
 

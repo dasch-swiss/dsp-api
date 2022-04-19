@@ -66,6 +66,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings._
 import org.knora.webapi.util.{FileUtil, StartupUtils}
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -119,7 +121,7 @@ class E2ESpec(_system: ActorSystem)
   val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
 
   // The effect for building a cache service manager and a IIIF service manager.
-  val managers = for {
+  lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
     appConfig <- ZIO.service[AppConfig]
@@ -144,7 +146,7 @@ class E2ESpec(_system: ActorSystem)
   /**
    * Create both managers by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager, appConfig) =
+  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -209,7 +211,7 @@ class E2ESpec(_system: ActorSystem)
     runtime.unsafeRunTask(
       (for {
         testClient <- ZIO.service[TestClientService]
-        result     <- testClient.getResponseStringOrThrow(request)
+        result     <- testClient.getResponseString(request)
       } yield result).provide(TestClientService.layer(appConfig, system))
     )
 
@@ -234,6 +236,14 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseJsonLD(request)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
+  
+  protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.uploadToSipi(loginToken, filesToUpload)
       } yield result).provide(TestClientService.layer(appConfig, system))
     )
 

@@ -34,23 +34,35 @@ object ShaclValidatorSpec {
 abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
     extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
 
-  private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set(featureToggle),
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
+  private val featureFactoryConfig: FeatureFactoryConfig =
+    new TestFeatureFactoryConfig(
+      testToggles = Set(featureToggle),
+      parent = new KnoraSettingsFeatureFactoryConfig(settings)
+    )
 
   private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
   private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
   private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator(featureFactoryConfig)
 
-  private val conformsIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.Shacl.Conforms)
-  private val resultIri: IriNode   = nodeFactory.makeIriNode(OntologyConstants.Shacl.Result)
+  private val conformsIri: IriNode =
+    nodeFactory
+      .makeIriNode(OntologyConstants.Shacl.Conforms)
+
+  private val resultIri: IriNode =
+    nodeFactory
+      .makeIriNode(OntologyConstants.Shacl.Result)
+  
   private val sourceConstraintComponentIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.Shacl.SourceConstraintComponent)
+    nodeFactory
+      .makeIriNode(OntologyConstants.Shacl.SourceConstraintComponent)
+  
   private val datatypeConstraintComponentIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.Shacl.DatatypeConstraintComponent)
+    nodeFactory
+      .makeIriNode(OntologyConstants.Shacl.DatatypeConstraintComponent)
+  
   private val maxCountConstraintComponentIri: IriNode =
-    nodeFactory.makeIriNode(OntologyConstants.Shacl.MaxCountConstraintComponent)
+    nodeFactory
+      .makeIriNode(OntologyConstants.Shacl.MaxCountConstraintComponent)
 
   "ShaclValidator" should {
     "accept valid RDF" in {
@@ -70,7 +82,7 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
       )
 
       val shaclPath = Paths.get("test/person.ttl")
-      
+
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = validRdfModel,
         shaclPath = shaclPath
@@ -99,7 +111,7 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
       )
 
       val shaclPath = Paths.get("test/person.ttl")
-      println(shaclPath)
+      
       val validationResult: ShaclValidationResult = shaclValidator.validate(
         rdfModel = invalidRdfModel,
         shaclPath = shaclPath
