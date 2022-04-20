@@ -12,9 +12,16 @@ object Logging {
   val textFormat: LogFormat =
     timestamp.fixed(32).color(LogColor.BLUE) |-| level.highlight.fixed(14) |-| line.highlight
 
-  val testing: RuntimeConfigAspect = {
+  val fromDebug: RuntimeConfigAspect = {
     console(
       logLevel = LogLevel.Debug,
+      format = textFormat
+    )
+  }
+
+  val fromInfo: RuntimeConfigAspect = {
+    console(
+      logLevel = LogLevel.Info,
       format = textFormat
     )
   }

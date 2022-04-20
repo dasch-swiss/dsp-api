@@ -34,7 +34,7 @@ object ActorUtil {
    * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
       .unsafeRunTask(
         zioTask.foldZIO(ex => handleExeption(ex, sender), success => ZIO.succeed(sender ! success))
       )

@@ -4215,8 +4215,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
       responderManager ! changeFileMessage
 
-      println(changeFileMessage)
-
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
         stillImageFileValueIri.set(updateValueResponse.valueIri)
       }

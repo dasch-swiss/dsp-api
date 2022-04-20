@@ -353,7 +353,7 @@ object TestClientService extends Accessible[TestClientService] {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.debug(">>> Aquire Test Client Service <<<")).orDie
+  }.tap(_ => ZIO.logDebug(">>> Aquire Test Client Service <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
@@ -361,7 +361,7 @@ object TestClientService extends Accessible[TestClientService] {
   private def release(httpClient: CloseableHttpClient)(implicit system: ActorSystem) = ZIO.attemptBlocking {
     akka.http.scaladsl.Http().shutdownAllConnectionPools()
     httpClient.close()
-  }.tap(_ => ZIO.debug(">>> Release Test Client Service <<<")).orDie
+  }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
   def layer(config: AppConfig, actorSystem: ActorSystem): ZLayer[Any, Nothing, TestClientService] = {
     implicit val system = actorSystem
@@ -371,7 +371,7 @@ object TestClientService extends Accessible[TestClientService] {
         // _          <- ZIO.debug(config.sipi)
         httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
       } yield TestClientService(config, httpClient, actorSystem)
-    }.tap(_ => ZIO.debug(">>> Test Client Service Initialized <<<"))
+    }.tap(_ => ZIO.logDebug(">>> Test Client Service Initialized <<<"))
   }
 
 }

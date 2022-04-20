@@ -120,7 +120,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
   // The ZIO runtime used to run functional effects
-  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
 
   /**
    * The effect for building a cache service manager, a IIIF service manager,
