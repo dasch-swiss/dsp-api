@@ -36,7 +36,7 @@ object ActorUtil {
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
     Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.testing)
       .unsafeRunTask(
-        zioTask.fold(ex => handleExeption(ex, sender), success => sender ! success)
+        zioTask.foldZIO(ex => handleExeption(ex, sender), success => ZIO.succeed(sender ! success))
       )
 
   /**
@@ -51,21 +51,21 @@ object ActorUtil {
       case rejectedEx: RequestRejectedException => {
         // The error was the client's fault. Log the exception, and also
         // let the client know.
-        ZIO.succeed(sender ! akka.actor.Status.Failure(rejectedEx)) *>
-          ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx")
+        ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx") *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(rejectedEx))
       }
 
       case otherEx: Exception => {
         // The error wasn't the client's fault. Log the exception, and also
         // let the client know.
-        ZIO.succeed(sender ! akka.actor.Status.Failure(otherEx)) *>
-          ZIO.logError(s"This error is presumably NOT the clients fault: $otherEx")
+        ZIO.logError(s"This error is presumably NOT the clients fault: $otherEx") *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(otherEx))
       }
 
       case otherThrowable: Throwable =>
         // Don't try to recover from a Throwable that isn't an Exception.
-        ZIO.succeed(sender ! akka.actor.Status.Failure(otherThrowable)) *>
-          ZIO.logError(s"Presumably something realy bad has happened: $otherThrowable")
+        ZIO.logError(s"Presumably something realy bad has happened: $otherThrowable") *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(otherThrowable))
     }
 
   /**

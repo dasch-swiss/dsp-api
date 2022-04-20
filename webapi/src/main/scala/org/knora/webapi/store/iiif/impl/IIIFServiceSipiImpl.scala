@@ -332,7 +332,7 @@ object IIIFServiceSipiImpl {
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
     ZLayer {
       for {
-        config     <- ZIO.service[AppConfig]
+        config <- ZIO.service[AppConfig]
         // _          <- ZIO.debug(config)
         jwtService <- ZIO.service[JWTService]
         // HINT: Scope does not work when used together with unsafeRun to

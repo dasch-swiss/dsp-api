@@ -30,7 +30,7 @@ case class IIIFServiceMockSipiImpl(str: String) extends IIIFService {
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 
-  override def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Task[GetFileMetadataResponse] =
+  def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Task[GetFileMetadataResponse] =
     ZIO.succeed(
       GetFileMetadataResponse(
         originalFilename = Some("test2.tiff"),
@@ -44,7 +44,7 @@ case class IIIFServiceMockSipiImpl(str: String) extends IIIFService {
       )
     )
 
-  override def moveTemporaryFileToPermanentStorage(
+  def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
   ): Task[SuccessResponseV2] =
     if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == FAILURE_FILENAME) {
@@ -53,7 +53,7 @@ case class IIIFServiceMockSipiImpl(str: String) extends IIIFService {
       ZIO.succeed(SuccessResponseV2("Moved file to permanent storage"))
     }
 
-  override def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
+  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
     if (deleteTemporaryFileRequestV2.internalFilename == FAILURE_FILENAME) {
       ZIO.fail(SipiException("Sipi failed to delete temporary file"))
     } else {
