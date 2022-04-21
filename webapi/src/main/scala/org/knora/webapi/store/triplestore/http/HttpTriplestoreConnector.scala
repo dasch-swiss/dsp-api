@@ -965,10 +965,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
           Option(response.getEntity)
             .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
             case Some(responseEntityStr) =>
-              log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-              throw TriplestoreResponseException(
-                s"Triplestore responded with HTTP code $statusCode: $responseEntityStr"
-              )
+              val msg = s"Triplestore responded with HTTP code $statusCode: $responseEntityStr"
+              log.error(msg)
+              if (statusCode == 503 && responseEntityStr.contains("Query timed out"))
+                throw TriplestoreTimeoutException(msg)
+              else throw TriplestoreResponseException(msg)
 
             case None =>
               log.error(s"Triplestore responded with HTTP code $statusCode")
@@ -994,6 +995,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
           "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
         log.error(socketTimeoutException, message)
         throw TriplestoreTimeoutException(message = message, e = socketTimeoutException, log = log)
+
+      case timeout: TriplestoreTimeoutException =>
+        log.warning("Can not recover from Triplestore Timeout")
+        throw timeout
 
       case notFound: NotFoundException => throw notFound
 
