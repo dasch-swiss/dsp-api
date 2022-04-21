@@ -237,9 +237,6 @@ object SparqlTransformer {
     luceneQueryPatterns ++ otherPatterns
   }
 
-  // TODO-BL: find out if we still need the KnoraExplicit named graph stuff; this should only be relevant when a triplestore does inference
-  // TODO-BL: figure out how execution context should ideally be handled; currently it works, but I'm not sure it's solved "comme il faut"
-
   /**
    * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
    *
