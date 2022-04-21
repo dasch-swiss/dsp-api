@@ -8,8 +8,7 @@
 ## Overview
 
 **GraphDB and embedded Jena TDB triplestores support is deprecated** since 
-[v20.1.1](https://github.com/dasch-swiss/dsp-api/releases/tag/v20.1.1) of DSP-API. 
-Documentation remains for historical purposes.
+[v20.1.1](https://github.com/dasch-swiss/dsp-api/releases/tag/v20.1.1) of DSP-API.
 
 The store module houses the different types of data stores supported by
 Knora. At the moment, only triplestores and IIIF servers (Sipi) are supported.
@@ -24,170 +23,16 @@ which is started when Knora starts. The `StoreManager` then starts the
 `TriplestoreManager` and `IIIFManager`, which each in turn starts their
 correct actor implementation.
 
-## HTTP-based Triplestores
+## Triplestores
 
-HTTP-based triplestore support is implemented in the
-`org.knora.webapi.triplestore.http` package.
+Currently, the only supported triplestore is [Apache Jena Fuseki](https://jena.apache.org), a HTTP-based triplestore.
+
+HTTP-based triplestore support is implemented in the `org.knora.webapi.triplestore.http` package.
 
 An HTTP-based triplestore is one that is accessed remotely over the HTTP
-protocol. `HttpTriplestoreConnector` supports the open source triplestore 
-- [Apache Jena Fuseki](https://jena.apache.org).
+protocol. `HttpTriplestoreConnector` supports the open source triplestore [Apache Jena Fuseki](https://jena.apache.org).
 
-### Apache Jena Fuseki
-
-## Embedded Triplestores
-
-Embedded triplestores are implemented in the
-`org.knora.webapi.triplestore.embedded` package.
-
-An embedded triplestore is one that runs in the same JVM as the Knora
-API server.
-
-### Apache Jena TDB
-
-The support for embedded Jena TDB is currently dropped. The
-documentation and the code will remain in the repository. You can use it
-at your own risk.
-
-The support for the embedded Jena-TDB triplestore is implemented in
-`org.knora.webapi.triplestore.embedded.JenaTDBActor`.
-
-The relevant Jena libraries that are used are the following:
-
-   - Jena API - The library used to work programmatically with RDF data
-   - Jena TDB - Their implementation of a triple store
-
-#### Concurrency
-
-Jena provides concurrency on different levels.
-
-On the Jena TDB level there is the `Dataset` object, representing the
-triple store. On every access, a transaction (read or write) can be
-started.
-
-On the Jena API level there is a `Model` object, which is equivalent to
-an RDF `Graph`. Here we can lock the model, so that MRSW (Multiple
-Reader Single Writer) access is allowed.
-
-   - <https://jena.apache.org/documentation/tdb/tdb_transactions.html>
-   - <https://jena.apache.org/documentation/notes/concurrency-howto.html>
-
-#### Implementation
-
-We employ transactions on the `Dataset` level. This means that every
-thread that accesses the triplestore, starts a read or write enabled
-transaction.
-
-The transaction mechanism in TDB is based on write-ahead-logging. All
-changes made inside a write-transaction are written to journals, then
-propagated to the main database at a suitable moment. This design allows
-for read-transactions to proceed without locking or other overhead over
-the base database.
-
-Transactional TDB supports one active write transaction, and multiple
-read transactions at the same time. Read-transactions started before a
-write-transaction commits see the database in a state without any
-changes visible. Any transaction starting after a write-transaction
-commits sees the database with the changes visible, whether fully
-propagates back to the database or not. There can be active read
-transactions seeing the state of the database before the updates, and
-read transactions seeing the state of the database after the updates
-running at the same time.
-
-#### Configuration
-
-In `application.conf` set to use the embedded triplestore:
-
-```
-    triplestore {
-        dbtype = "embedded-jena-tdb"
-
-        embedded-jena-tdb {
-            persisted = true // "false" -> memory, "true" -> disk
-            loadExistingData = false // "false" -> use data if exists, "false" -> create a fresh store
-            storage-path = "_TMP" // ignored if "memory"
-        }
-
-        reload-on-start = false // ignored if "memory" as it will always reload
-
-        rdf-data = [
-            {
-                path = "knora-ontologies/knora-base.ttl"
-                name = "http://www.knora.org/ontology/knora-base"
-            }
-            {
-                path = "knora-ontologies/salsah-gui.ttl"
-                name = "http://www.knora.org/ontology/salsah-gui"
-            }
-            {
-                path = "test_data/ontologies/incunabula-onto.ttl"
-                name = "http://www.knora.org/ontology/0803/incunabula"
-            }
-            {
-                path = "test_data/demo_data/incunabula-demo-data.ttl"
-                name = "http://www.knora.org/data/incunabula"
-            }
-            {
-                path = "test_data/ontologies/images-onto.ttl"
-                name = "http://www.knora.org/ontology/0804/dokubib"
-            }
-            {
-                path = "test_data/demo_data/images-demo-data.ttl"
-                name = "http://www.knora.org/data/dokubib"
-            }
-        ]
-    }
-```
-
-Here the storage is set to `persistent`, meaning that a Jena TDB store
-will be created under the defined `tdb-storage-path`. The
-`reload-on-start` flag, if set to `true` would reload the triplestore
-with the data referenced in `rdf-data`.
-
-#### TDB Disk Persisted Store
-
-Make sure to set `reload-on-start` to `true` if run for the first time.
-This will create a TDB store and load the data.
-
-If only *read access* is performed, then Knora can be run once with
-reloading enabled. After that, reloading can be turned off, and the
-persisted TDB store can be reused, as any data found under the
-`tdb-storage-path` will be reused.
-
-If the TDB storage files get corrupted, then just delete the folder and
-reload the data anew.
-
-#### Actor Messages
-
-   - `ResetTripleStoreContent(rdfDataObjects: List[RdfDataObject])`
-   - `ResetTripleStoreContentACK()`
-
-The embedded Jena TDB can receive reset messages, and will ACK when
-reloading of the data is finished. `RdfDataObject` is a simple case
-class, containing the path and name (the same as `rdf-data` in the
-config file)
-
-As an example, to use it inside a test you could write something like:
-
-```scala
-    val rdfDataObjects = List (
-           RdfDataObject(path = "knora-ontologies/knora-base.ttl",
-                         name = "http://www.knora.org/ontology/knora-base"),
-           RdfDataObject(path = "knora-ontologies/salsah-gui.ttl",
-                         name = "http://www.knora.org/ontology/salsah-gui"),
-           RdfDataObject(path = "test_data/ontologies/incunabula-onto.ttl",
-                         name = "http://www.knora.org/ontology/0803/incunabula"),
-           RdfDataObject(path = "test_data/all_data/incunabula-data.ttl",
-                         name = "http://www.knora.org/data/incunabula")
-    )
-
-    "Reload data " in {
-        storeManager ! ResetTripleStoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTripleStoreContentACK())
-    }
-```
 
 ## IIIF Servers
 
-Currently, only support for SIPI is implemented in
-`org.knora.webapi.store.iiifSipiConnector`.
+Currently, only support for SIPI is implemented in `org.knora.webapi.store.iiifSipiConnector`.
