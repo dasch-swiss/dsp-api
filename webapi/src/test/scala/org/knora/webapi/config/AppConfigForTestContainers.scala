@@ -32,7 +32,7 @@ object AppConfigForTestContainers {
   /**
    * Intantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
-  private val config: IO[ReadError[String], AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source)
+  private val config: UIO[AppConfig] = (read(descriptor[AppConfig].mapKey(toKebabCase) from source)).orDie
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
@@ -40,8 +40,8 @@ object AppConfigForTestContainers {
   val testcontainers: ZLayer[SipiTestContainer, Nothing, AppConfig] =
     ZLayer {
       for {
-        _         <- ZIO.debug("start of app config")
-        appConfig <- config.tapBoth(ZIO.debug(_), ZIO.debug(_)).orDie
+        // _         <- ZIO.debug("start of app config")
+        appConfig         <- config // .tapBoth(ZIO.debug(_), ZIO.debug(_))
         // fusekiContainer   <- ZIO.service[FusekiTestContainer]
         sipiContainer     <- ZIO.service[SipiTestContainer]
         alteredSipiConfig <- ZIO.succeed(appConfig.sipi.copy(internalPort = sipiContainer.container.getFirstMappedPort))
