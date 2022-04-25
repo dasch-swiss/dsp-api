@@ -345,6 +345,16 @@
     salsah-gui:guiAttribute          "size=80",
                                      "maxlength=255" .
 
+:hasPropertyWithComment2
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasValue ;
+    rdfs:label                       "Property mit einem Kommentar"@de,
+                                     "Property with a comment"@en ;
+    rdfs:comment                     "Dies ist der Kommentar"@de,
+                                     "This is the comment"@en ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:SimpleText .
+
 :hasLinkPropertyWithComment
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkTo ;

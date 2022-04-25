@@ -965,6 +965,87 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "delete the rdfs:comment of a property" in {
+      val propertySegment =
+        URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasPropertyWithComment2", "UTF-8")
+      val lastModificationDate = URLEncoder.encode(freetestLastModDate.toString, "UTF-8")
+
+      println(propertySegment)
+      println(lastModificationDate)
+
+      Delete(
+        s"/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate"
+      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+        val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
+
+        val expectedResponse: String =
+          s"""{
+             |   "knora-api:lastModificationDate": {
+             |       "@value": "${newFreetestLastModDate}",
+             |       "@type": "xsd:dateTimeStamp"
+             |   },
+             |   "rdfs:label": "freetest",
+             |   "@graph": [
+             |      {
+             |         "rdfs:label": [
+             |            {
+             |               "@value": "Property mit einem Kommentar",
+             |               "@language": "de"
+             |            },
+             |            {
+             |               "@value": "Property with a comment",
+             |               "@language": "en"
+             |            }
+             |         ],
+             |         "rdfs:subPropertyOf": {
+             |            "@id": "knora-api:hasValue"
+             |         },
+             |         "@type": "owl:ObjectProperty",
+             |         "knora-api:objectType": {
+             |            "@id": "knora-api:TextValue"
+             |         },
+             |         "salsah-gui:guiElement": {
+             |            "@id": "salsah-gui:SimpleText"
+             |         },
+             |         "@id": "freetest:hasPropertyWithComment2"
+             |      }
+             |   ],
+             |   "knora-api:attachedToProject": {
+             |      "@id": "http://rdfh.ch/projects/0001"
+             |   },
+             |   "@type": "owl:Ontology",
+             |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
+             |   "@context": {
+             |      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+             |      "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+             |      "freetest": "http://0.0.0.0:3333/ontology/0001/freetest/v2#",
+             |      "owl": "http://www.w3.org/2002/07/owl#",
+             |      "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+             |      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+             |      "xsd": "http://www.w3.org/2001/XMLSchema#"
+             |   }
+             |}""".stripMargin
+
+        val expectedResponseToCompare: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(expectedResponse)).unescape
+
+        val responseFromJsonLD: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        responseFromJsonLD.properties.head._2.predicates.toSet should ===(
+          expectedResponseToCompare.properties.head._2.predicates.toSet
+        )
+      }
+    }
+
     "change the salsah-gui:guiElement and salsah-gui:guiAttribute of a property" in {
       val params =
         s"""{
