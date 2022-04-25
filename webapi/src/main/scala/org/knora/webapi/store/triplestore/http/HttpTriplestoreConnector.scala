@@ -996,9 +996,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         log.error(socketTimeoutException, message)
         throw TriplestoreTimeoutException(message = message, e = socketTimeoutException, log = log)
 
-      case timeout: TriplestoreTimeoutException =>
-        log.warning("Can not recover from Triplestore Timeout")
-        throw timeout
+      case timeout: TriplestoreTimeoutException => throw timeout
 
       case notFound: NotFoundException => throw notFound
 
