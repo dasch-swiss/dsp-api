@@ -57,6 +57,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       deleteOntologyComment(featureFactoryConfig) ~
       createProperty(featureFactoryConfig) ~
       updatePropertyLabelsOrComments(featureFactoryConfig) ~
+      deletePropertyComment(featureFactoryConfig) ~
       updatePropertyGuiElement(featureFactoryConfig) ~
       getProperties(featureFactoryConfig) ~
       canDeleteProperty(featureFactoryConfig) ~
