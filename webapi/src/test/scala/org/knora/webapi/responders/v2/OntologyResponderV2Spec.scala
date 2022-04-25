@@ -30,6 +30,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import akka.japi.Predicate
 
 /**
  * Tests [[OntologyResponderV2]].
@@ -2418,7 +2419,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        readPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        readPropertyInfo.entityInfoContent.predicates.contains(
+          OntologyConstants.Rdfs.Comment.toSmartIri
+        ) should ===(false)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
@@ -2442,22 +2445,26 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        readPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        readPropertyInfo.entityInfoContent.predicates.contains(
+          OntologyConstants.Rdfs.Comment.toSmartIri
+        ) should ===(false)
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
         )
+        // the ontology was not changed and thus should not have a new last modification date
         assert(newFreeTestLastModDate == freetestLastModDate)
         freetestLastModDate = newFreeTestLastModDate
       }
     }
 
     "delete the comment of a link property and remove the comment of the link value property as well" in {
-      val propertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithComment")
-      val linkValueIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithCommentValue")
+      val linkPropertyIri: SmartIri = FreeTestOntologyIri.makeEntityIri("hasLinkPropertyWithComment")
+      val linkValueIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
 
+      // delete the comment of the link property
       responderManager ! DeletePropertyCommentRequestV2(
-        propertyIri = propertyIri,
+        propertyIri = linkPropertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -2468,12 +2475,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
 
-        val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(propertyIri)
-        propertyReadPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
-
-        // CONTINUE HERE: get the linkValue property
-        val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
-        linkValueReadPropertyInfo.entityInfoContent.predicates should not contain (OntologyConstants.Rdfs.Comment.toSmartIri)
+        val propertyReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkPropertyIri)
+        propertyReadPropertyInfo.entityInfoContent.predicates.contains(
+          OntologyConstants.Rdfs.Comment.toSmartIri
+        ) should ===(false)
 
         val metadata: OntologyMetadataV2 = externalOntology.ontologyMetadata
         val newFreeTestLastModDate: Instant = metadata.lastModificationDate.getOrElse(
@@ -2481,6 +2486,22 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         assert(newFreeTestLastModDate.isAfter(freetestLastModDate))
         freetestLastModDate = newFreeTestLastModDate
+      }
+
+      // check that the comment of the link value property was deleted as well
+      responderManager ! PropertiesGetRequestV2(
+        propertyIris = Set(linkValueIri),
+        allLanguages = true,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology: ReadOntologyV2 = msg.toOntologySchema(ApiV2Complex)
+        val linkValueReadPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties(linkValueIri)
+
+        linkValueReadPropertyInfo.entityInfoContent.predicates.contains(
+          OntologyConstants.Rdfs.Comment.toSmartIri
+        ) should ===(false)
       }
     }
 
