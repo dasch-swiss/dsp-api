@@ -12,7 +12,6 @@
 @*
  * Gets the values of all the Knora properties of one or more resources, using SPARQL w/o inference.
  *
- * @param triplestore                the name of the triplestore being used.
  * @param resourceIris               the IRIs of the requested resources.
  * @param preview                    indicates if the request should only return preview information.
  * @param withDeleted                indicates if the deleted resources and values should be returned or not.
@@ -31,8 +30,7 @@
  *                                   not be returned.
  * @param stringFormatter            a StringFormatter.
  *@
-@(triplestore: String,
-  resourceIris: Seq[IRI],
+@(resourceIris: Seq[IRI],
   preview: Boolean,
   withDeleted: Boolean,
   queryAllNonStandoff: Boolean,

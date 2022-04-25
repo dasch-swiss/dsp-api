@@ -9,13 +9,11 @@
  * Checks whether any entity in an ontology is used in data or in other ontologies. Returns at most 50 subjects that
  * refer to entities in the ontology.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the ontology's named graph.
  * @param classIris the IRIs of all the classes in the ontology.
  * @param propertyIris the IRIs of all the properties in the ontology.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: SmartIri,
+@(ontologyNamedGraphIri: SmartIri,
   classIris: Set[SmartIri],
   propertyIris: Set[SmartIri])
 

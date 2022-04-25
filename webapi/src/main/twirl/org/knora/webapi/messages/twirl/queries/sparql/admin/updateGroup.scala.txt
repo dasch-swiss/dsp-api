@@ -10,8 +10,6 @@
  * Updates an existing group with the provided values.
  *
  * @param dataNamedGraph    the named graph to update.
- * @param triplestore       the name of the triplestore being used. The template uses this value to exclude inferred
-                            results from the WHERE clause of the update.
  * @param groupIri          the IRI of the group we want to update.
  * @param maybeName         the new optional value for name.
  * @param maybeDescriptions the new optional value for descriptions.
@@ -20,7 +18,6 @@
  * @param maybeSelfjoin     the new optional value for selfjoin.
  *@
 @(adminNamedGraphIri: IRI,
-  triplestore: String,
   groupIri: IRI,
   maybeName: Option[String],
   maybeDescriptions: Option[Seq[StringLiteralV2]],

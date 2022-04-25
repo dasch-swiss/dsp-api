@@ -9,13 +9,11 @@
  * Modifies a resource's rdfs:label.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource containing the value.
  * @param label the resource's new label.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourceIri: IRI,
   label: String,
   currentTime: String)

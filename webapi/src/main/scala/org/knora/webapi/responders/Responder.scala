@@ -6,22 +6,26 @@
 package org.knora.webapi
 package responders
 
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
+import akka.util.Timeout
+import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.language.postfixOps
+
 import exceptions.{BadRequestException, DuplicateValueException, UnexpectedMessageException}
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult
 import messages.{SmartIri, StringFormatter}
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import akka.util.Timeout
-import com.typesafe.scalalogging.{LazyLogging, Logger}
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.language.postfixOps
 
 /**
  * Responder helper methods.
@@ -118,7 +122,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
       isEntityUsedSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .isEntityUsed(
-            triplestore = settings.triplestoreType,
             entityIri = entityIri,
             ignoreKnoraConstraints = ignoreKnoraConstraints,
             ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
@@ -145,7 +148,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
       isClassUsedInDataSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .isClassUsedInData(
-            triplestore = settings.triplestoreType,
             classIri = classIri
           )
           .toString()

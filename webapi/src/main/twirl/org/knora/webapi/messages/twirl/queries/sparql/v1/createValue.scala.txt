@@ -14,7 +14,6 @@
  * when creating a single value in an existing resource.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to update.
  * @param propertyIri the resource property to update.
  * @param newValueIri the new value IRI.
@@ -29,7 +28,6 @@
  * @param stringFormatter a [[StringFormatter]].
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourceIri: IRI,
   propertyIri: IRI,
   newValueIri: IRI,

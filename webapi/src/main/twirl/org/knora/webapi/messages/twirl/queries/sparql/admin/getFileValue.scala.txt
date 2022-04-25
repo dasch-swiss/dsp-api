@@ -9,11 +9,9 @@
  * Given a knora:base:internalFilename, retrieves the file value and information
  * attached to it using SPARQL w/o inference.
  *
- * @param triplestore the name of the triplestore being used.
  * @param fileValueIri the IRI of the file value.
  *@
-@(triplestore: String,
-  filename: String)
+@(filename: String)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

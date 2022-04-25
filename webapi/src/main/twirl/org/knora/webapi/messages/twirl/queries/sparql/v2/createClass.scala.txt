@@ -13,15 +13,13 @@
 @*
  * Creates a new class in an existing ontology. If the class already exists, this update does nothing.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  * @param ontologyIri the IRI of the ontology in which the class should be created.
  * @param classDef the definition of the class to be created.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: SmartIri,
+@(ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   classDef: ClassInfoContentV2,
   lastModificationDate: Instant,

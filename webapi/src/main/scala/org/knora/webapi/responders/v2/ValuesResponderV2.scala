@@ -5,33 +5,37 @@
 
 package org.knora.webapi.responders.v2
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM._
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.Future
 
 /**
@@ -490,7 +494,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .createValue(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           resourceIri = resourceInfo.resourceIri,
           propertyIri = propertyIri,
           newValueIri = newValueIri,
@@ -569,7 +572,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .createLink(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           resourceIri = resourceInfo.resourceIri,
           linkUpdate = sparqlTemplateLinkUpdate,
           newValueUUID = newValueUUID,
@@ -1038,7 +1040,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changeValuePermissions(
             dataNamedGraph = dataNamedGraph,
-            triplestore = settings.triplestoreType,
             resourceIri = resourceInfo.resourceIri,
             propertyIri = submittedInternalPropertyIri,
             currentValueIri = currentValue.valueIri,
@@ -1384,7 +1385,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .addValueVersion(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           resourceIri = resourceInfo.resourceIri,
           propertyIri = propertyIri,
           currentValueIri = currentValue.valueIri,
@@ -1481,7 +1481,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           org.knora.webapi.messages.twirl.queries.sparql.v2.txt
             .changeLinkTarget(
               dataNamedGraph = dataNamedGraph,
-              triplestore = settings.triplestoreType,
               linkSourceIri = resourceInfo.resourceIri,
               linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
               linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
@@ -1527,7 +1526,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changeLinkMetadata(
             dataNamedGraph = dataNamedGraph,
-            triplestore = settings.triplestoreType,
             linkSourceIri = resourceInfo.resourceIri,
             linkUpdate = sparqlTemplateLinkUpdate,
             maybeComment = newLinkValue.comment,
@@ -1706,7 +1704,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .checkValueDeletion(
-            triplestore = settings.triplestoreType,
             valueIri = deletedValueIri
           )
           .toString()
@@ -1841,7 +1838,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .deleteLink(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           linkSourceIri = resourceInfo.resourceIri,
           linkUpdate = sparqlTemplateLinkUpdate,
           maybeComment = deleteComment,
@@ -1907,7 +1903,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .deleteValue(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           resourceIri = resourceInfo.resourceIri,
           propertyIri = propertyIri,
           valueIri = currentValue.valueIri,

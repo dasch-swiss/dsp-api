@@ -10,13 +10,10 @@
  * Delete an existing permission.
  *
  * @param namedGraphIri           the named graph to update.
- * @param triplestore             the name of the triplestore being used. The template uses this value to exclude
-                                  inferred results from the WHERE clause of the update.
  * @param permissionIri           the IRI of the permission we want to delete.
  *@
 
 @(namedGraphIri: IRI,
-  triplestore: String,
   permissionIri: IRI
   )
 

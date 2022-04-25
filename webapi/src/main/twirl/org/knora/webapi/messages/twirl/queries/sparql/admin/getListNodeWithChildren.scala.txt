@@ -8,13 +8,11 @@
 @**
  * Given the start node, returns that node and all its children.
  *
- * @param triplestore the name of the triplestore being used.
  * @param rootNodeIri the IRI of the root node of the list.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  *@
-@(triplestore: String,
-  startNodeIri: IRI)
+@(startNodeIri: IRI)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

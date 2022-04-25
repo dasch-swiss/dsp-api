@@ -5,33 +5,39 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
-import akka.actor.{ActorRef, Props}
+import akka.actor.ActorRef
+import akka.actor.Props
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.app.ApplicationActor
-import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, OntologyConstraintException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.NotFoundException
+import org.knora.webapi.exceptions.OntologyConstraintException
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  ObjectAccessPermissionADM,
-  ObjectAccessPermissionsForResourceGetADM,
-  PermissionADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ObjectAccessPermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ObjectAccessPermissionsForResourceGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.DateUtilV1
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.MessageUtil
+import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.{DateUtilV1, KnoraSystemInstances, MessageUtil, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import spray.json.JsValue
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 /**
@@ -784,7 +790,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
   private def getLastModificationDate(resourceIri: IRI): Option[String] = {
     val lastModSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
       .getLastModificationDate(
-        triplestore = settings.triplestoreType,
         resourceIri = resourceIri
       )
       .toString()

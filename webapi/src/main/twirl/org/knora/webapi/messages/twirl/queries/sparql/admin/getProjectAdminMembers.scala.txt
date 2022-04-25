@@ -9,13 +9,11 @@
 @**
  * Gets all admin members of a project, given the project's IRI, shortname, and/or shortcode.
  *
- * @param triplestore the name of the triplestore being used.
  * @param maybeIri the project's IRI.
  * @param maybeShortname the project's shortname.
  * @param maybeShortcode the project's shortcode.
  *@
-@(triplestore: String,
-  maybeIri: Option[IRI],
+@(maybeIri: Option[IRI],
   maybeShortname: Option[String],
   maybeShortcode: Option[String])
 

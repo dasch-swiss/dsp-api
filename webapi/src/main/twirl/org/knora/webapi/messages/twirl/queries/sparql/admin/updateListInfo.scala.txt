@@ -10,8 +10,6 @@
  * Updates an existing list with the provided values.
  *
  * @param dataNamedGraph     the named graph to update.
- * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
-                             results from the WHERE clause of the update.
  * @param nodeIri            the IRI of the list we want to update.
  * @param projectIri         the IRI of the list's project.
  * @param listClassIri       the IRI of the OWL class that the list should belong to.
@@ -22,7 +20,6 @@
  * @param maybeComments      the new optional comment values.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   nodeIri: IRI,
   projectIri: IRI,
   listClassIri: IRI,

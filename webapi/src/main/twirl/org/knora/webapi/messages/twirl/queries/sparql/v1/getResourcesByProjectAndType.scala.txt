@@ -8,12 +8,10 @@
 @**
  * Gets all resources of a certain type inside a certain project.
  *
- * @param triplestore the name of the triplestore being used.
  * @param projectIri the IRI of the project to query.
  * @param resType the IRI of the resource class to query.
  *@
-@(triplestore: String,
-  projectIri: IRI,
+@(projectIri: IRI,
   resType: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
