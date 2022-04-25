@@ -8,11 +8,9 @@
 @**
  * Gets all admin members of a project, given the project's knora-admin:projectShortname.
  *
- * @param triplestore the name of the triplestore being used.
  * @param shortname the project's `knora-admin:projectShortname`.
  *@
-@(triplestore: String,
-  shortname: String)
+@(shortname: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>

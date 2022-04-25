@@ -8,11 +8,9 @@
 @*
  * Gets a property definition.
  *
- * @param triplestore the name of the triplestore being used.
  * @param classIri the IRI of the property.
  *@
-@(triplestore: String,
-  propertyIri: SmartIri)
+@(propertyIri: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

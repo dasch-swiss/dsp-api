@@ -8,12 +8,10 @@
 @**
  * Checks whether the rdfs:label of a resource has been updated correctly.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource.
  * @param the resource's new label that is expected to exist in the triplestore.
  *@
-@(triplestore: String,
-  resourceIri: IRI,
+@(resourceIri: IRI,
   label: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

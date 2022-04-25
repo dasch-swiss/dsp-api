@@ -5,25 +5,30 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{ApplicationCacheException, ForbiddenException, NotFoundException}
+import org.knora.webapi.exceptions.ApplicationCacheException
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByIRIGetV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
 
+import java.util.UUID
 import scala.concurrent.Future
 
 /**
@@ -76,9 +81,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUsers(
-            triplestore = settings.triplestoreType
-          )
+          .getUsers()
           .toString()
       )
 
@@ -134,7 +137,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getUserByIri(
-            triplestore = settings.triplestoreType,
             userIri = userIri
           )
           .toString()
@@ -176,7 +178,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           sparqlQueryString <- Future(
             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
               .getUserByIri(
-                triplestore = settings.triplestoreType,
                 userIri = userIri
               )
               .toString()
@@ -260,7 +261,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           sparqlQueryString <- Future(
             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
               .getUserByEmail(
-                triplestore = settings.triplestoreType,
                 email = email
               )
               .toString()
@@ -332,7 +332,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getUserByIri(
-            triplestore = settings.triplestoreType,
             userIri = userIri
           )
           .toString()
@@ -373,7 +372,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getUserByIri(
-            triplestore = settings.triplestoreType,
             userIri = userIri
           )
           .toString()
@@ -413,7 +411,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getUserByIri(
-            triplestore = settings.triplestoreType,
             userIri = userIri
           )
           .toString()

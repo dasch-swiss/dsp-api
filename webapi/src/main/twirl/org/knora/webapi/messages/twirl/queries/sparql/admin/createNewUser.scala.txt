@@ -8,8 +8,6 @@
 @*
  * Creates a new user.
  *
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
  * @param userIri the Iri of the new user
  * @param userClassIri the IRI of the OWL class that the new user should belong to.
  * @param username the new user's username.
@@ -23,7 +21,6 @@
  *
  *@
 @(adminNamedGraphIri: IRI,
-  triplestore: String,
   userIri: IRI,
   userClassIri: IRI,
   username: String,

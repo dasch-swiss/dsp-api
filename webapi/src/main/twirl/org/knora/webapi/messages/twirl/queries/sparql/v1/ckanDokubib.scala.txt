@@ -8,12 +8,10 @@
 @**
  * Gets all images that are part of the Dokubib project.
  *
- * @param triplestore the name of the triplestore being used.
  * @param projectIri the IRI of the Dokubib project.
  * @param limitOption the maximum number of rows to return.
  *@
-@(triplestore: String,
-  projectIri: IRI,
+@(projectIri: IRI,
   limitOption: Option[Int])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

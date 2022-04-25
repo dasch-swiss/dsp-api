@@ -9,25 +9,35 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.ApiV2Simple
+import org.knora.webapi.IRI
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.OntologySchema
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.StringFormatter.SalsahGuiAttribute
+import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.{ApiV2Complex, ApiV2Schema, ApiV2Simple, IRI, InternalSchema, OntologySchema}
 
 import java.time.Instant
 import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 object OntologyHelpers {
 
@@ -131,7 +141,6 @@ object OntologyHelpers {
 
       getOntologyInfoSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getOntologyInfo(
-          triplestore = settings.triplestoreType,
           ontologyIri = internalOntologyIri
         )
         .toString()
@@ -1073,7 +1082,6 @@ object OntologyHelpers {
       isOntologyUsedSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .isOntologyUsed(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
             classIris = ontology.classes.keySet,
             propertyIris = ontology.properties.keySet
@@ -1128,7 +1136,6 @@ object OntologyHelpers {
       sparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getPropertyDefinition(
-            triplestore = settings.triplestoreType,
             propertyIri = propertyIri
           )
           .toString()
@@ -1572,7 +1579,6 @@ object OntologyHelpers {
       sparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getClassDefinition(
-            triplestore = settings.triplestoreType,
             classIri = classIri
           )
           .toString()

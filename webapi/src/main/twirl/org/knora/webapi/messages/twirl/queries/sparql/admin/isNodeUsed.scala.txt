@@ -8,11 +8,9 @@
 @*
  * Checks whether a node is used (i.e. is the object of any statements).
  *
- * @param triplestore the name of the triplestore being used.
  * @param nodeIri the IRI of the node.
  *@
-@(triplestore: String,
-  nodeIri: IRI)
+@(nodeIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

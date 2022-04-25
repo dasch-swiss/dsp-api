@@ -10,8 +10,6 @@
  * Updates an existing user with the provided values.
  *
  * @param dataNamedGraph     the named graph to update.
- * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
-                             results from the WHERE clause of the update.
  * @param userIri            the IRI of the user we want to update.
  * @param maybeUsername      the new optional value for username.
  * @param maybeEmail         the new optional value for email.
@@ -25,7 +23,6 @@
  * @param maybeSystemAdmin   the new optional value for system admin.
  *@
 @(adminNamedGraphIri: IRI,
-  triplestore: String,
   userIri: IRI,
   maybeUsername: Option[String],
   maybeEmail: Option[String],

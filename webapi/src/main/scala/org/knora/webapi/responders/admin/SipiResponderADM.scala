@@ -8,26 +8,23 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, NotFoundException}
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectIdentifierADM,
-  ProjectRestrictedViewSettingsADM,
-  ProjectRestrictedViewSettingsGetADM
-}
-import org.knora.webapi.messages.admin.responder.sipimessages.{
-  SipiFileInfoGetRequestADM,
-  SipiFileInfoGetResponseADM,
-  SipiResponderRequestADM
-}
-import org.knora.webapi.messages.store.triplestoremessages.{
-  IriSubjectV2,
-  LiteralV2,
-  SparqlExtendedConstructRequest,
-  SparqlExtendedConstructResponse
-}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
+import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
@@ -68,7 +65,6 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .getFileValue(
-            triplestore = settings.triplestoreType,
             filename = request.filename
           )
           .toString()

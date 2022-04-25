@@ -9,15 +9,12 @@
 @**
  * Changes the parent node of an existing node.
  *
- * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
-                             results from the WHERE clause of the update.
  * @param dataNamedGraph     the named graph to update.
  * @param nodeIri            the IRI of the list we want to update.
  * @param currentParentIri   the IRI of the current parent node.
  * @param newParentIri       the IRI of the new parent node.
  *@
-@(triplestore: String,
-  dataNamedGraph: IRI,
+@(dataNamedGraph: IRI,
   nodeIri: IRI,
   currentParentIri: IRI,
   newParentIri: IRI

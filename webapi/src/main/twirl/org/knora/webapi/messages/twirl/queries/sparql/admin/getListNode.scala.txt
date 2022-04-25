@@ -8,11 +8,9 @@
 @**
  * Given the node IRI of a list node, returns all information about that node.
  *
- * @param triplestore the name of the triplestore being used.
  * @param nodeIri the IRI of node.
  *@
-@(triplestore: String,
-  nodeIri: IRI)
+@(nodeIri: IRI)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

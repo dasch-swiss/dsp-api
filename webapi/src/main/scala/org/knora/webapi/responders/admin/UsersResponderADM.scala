@@ -8,26 +8,38 @@ package org.knora.webapi.responders.admin
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException, _}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
-import org.knora.webapi.messages.admin.responder.valueObjects.{Username, Email, Password, UserStatus, SystemAdmin}
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceGetUserADM,
-  CacheServicePutUserADM,
-  CacheServiceRemoveValues
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
+import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.Email
+import org.knora.webapi.messages.admin.responder.valueObjects.Password
+import org.knora.webapi.messages.admin.responder.valueObjects.SystemAdmin
+import org.knora.webapi.messages.admin.responder.valueObjects.UserStatus
+import org.knora.webapi.messages.admin.responder.valueObjects.Username
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import java.util.UUID
@@ -164,7 +176,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getUsers(
-                                 triplestore = settings.triplestoreType,
                                  maybeIri = None,
                                  maybeUsername = None,
                                  maybeEmail = None
@@ -900,7 +911,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                                .getUserByIri(
-                                 triplestore = settings.triplestoreType,
                                  userIri = userIri
                                )
                                .toString()
@@ -1483,7 +1493,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                     .updateUser(
                                       adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                                      triplestore = settings.triplestoreType,
                                       userIri = userIri,
                                       maybeUsername = maybeChangedUsername,
                                       maybeEmail = maybeChangedEmail,
@@ -1638,7 +1647,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                     .updateUserPassword(
                                       adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                                      triplestore = settings.triplestoreType,
                                       userIri = userIri,
                                       newPassword = password.value
                                     )
@@ -1722,7 +1730,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                       .createNewUser(
                                         adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-                                        triplestore = settings.triplestoreType,
                                         userIri = userIri,
                                         userClassIri = OntologyConstants.KnoraAdmin.User,
                                         username = stringFormatter.toSparqlEncodedString(
@@ -1849,7 +1856,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
                                .getUsers(
-                                 triplestore = settings.triplestoreType,
                                  maybeIri = identifier.toIriOption,
                                  maybeUsername = identifier.toUsernameOption,
                                  maybeEmail = identifier.toEmailOption
