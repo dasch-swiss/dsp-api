@@ -5,19 +5,29 @@
 
 package org.knora.webapi.settings
 
-import java.nio.file.{Files, Path, Paths}
-import java.time.Instant
-
 import akka.ConfigurationException
-import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
+import akka.actor.ActorSystem
+import akka.actor.ExtendedActorSystem
+import akka.actor.Extension
+import akka.actor.ExtensionId
+import akka.actor.ExtensionIdProvider
 import akka.event.LoggingAdapter
-import com.typesafe.config.{Config, ConfigObject, ConfigValue}
-import org.knora.webapi.exceptions.{FeatureToggleException, FileWriteException}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigObject
+import com.typesafe.config.ConfigValue
+import org.knora.webapi.exceptions.FeatureToggleException
+import org.knora.webapi.exceptions.FileWriteException
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
-import scala.jdk.CollectionConverters._
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.time.Instant
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.jdk.CollectionConverters._
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Reads application settings that come from `application.conf`.
@@ -205,25 +215,10 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   val triplestoreAutoInit: Boolean = config.getBoolean("app.triplestore.auto-init")
 
-  val triplestorePort: Int = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
-    case _                           => 9999
-  }
-
-  val triplestoreDatabaseName: String = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.repository-name")
-    case _                           => ""
-  }
-
-  val triplestoreUsername: String = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.username")
-    case _                           => ""
-  }
-
-  val triplestorePassword: String = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.password")
-    case _                           => ""
-  }
+  val triplestorePort: Int = config.getInt("app.triplestore.fuseki.port")
+  val triplestoreDatabaseName: String = config.getString("app.triplestore.fuseki.repository-name")
+  val triplestoreUsername: String = config.getString("app.triplestore.fuseki.username")
+  val triplestorePassword: String = config.getString("app.triplestore.fuseki.password")
 
   //used in the store package
   val tripleStoreConfig: Config = config.getConfig("app.triplestore")

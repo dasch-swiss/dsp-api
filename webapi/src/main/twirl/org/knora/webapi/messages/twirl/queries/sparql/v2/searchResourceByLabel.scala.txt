@@ -10,7 +10,6 @@
 @*
  * Performs a search for resources by their label using SPARQL w/o inference.
  *
- * @param triplestore the name of the triplestore being used.
  * @param searchTerm search terms.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
@@ -18,8 +17,7 @@
  * @param offset offset to be used for paging.
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
-@(triplestore: String,
-  searchTerm: MatchStringWhileTyping,
+@(searchTerm: MatchStringWhileTyping,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limit: Int,

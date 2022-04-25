@@ -13,7 +13,6 @@
  * Deletes an existing link between two resources.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
  * @param linkSourceIri the resource that is the source of the link.
  * @param linkUpdate a [[SparqlTemplateLinkUpdate]] specifying how to update the link.
  * @param maybeComment an optional comment explaining why the link is being deleted.
@@ -23,7 +22,6 @@
  * To find out whether the update succeeded, the application must query the deleted link.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   linkSourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
   maybeComment: Option[String],

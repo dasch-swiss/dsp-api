@@ -9,12 +9,10 @@
 @*
  * Gets the IRIs of a standoff tag identified by UUID.
  *
- * @param triplestore the name of the triplestore being used.
  * @param uuid the standoff tag's UUID.
  * @param stringFormatter a [[StringFormatter]].
  *@
-@(triplestore: String,
-  uuid: UUID,
+@(uuid: UUID,
   stringFormatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

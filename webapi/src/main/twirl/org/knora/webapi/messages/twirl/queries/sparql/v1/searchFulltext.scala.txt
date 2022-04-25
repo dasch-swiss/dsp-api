@@ -8,21 +8,18 @@
 @import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @*
- * Performs a simple full-text search using SPARQL w/o inference (except for the interface to Lucene, which is
- * triplestore-specific).
+ * Performs a simple full-text search using SPARQL w/o inference.
  *
  * The number of rows returned per matching resource is equal to the number of values that matched in the resource,
  * plus one if the resource's label matched.
  *
- * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms to be combined with AND in Lucene full-text search syntax.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  * @param projectIriOption if filtering by project is desired, the IRI of the project to search.
  * @param restypeIriOption if given, searches only for resources of this class and its subclasses.
  *@
-@(triplestore: String,
-  searchTerms: LuceneQueryString,
+@(searchTerms: LuceneQueryString,
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -52,17 +49,7 @@ WHERE {
     BIND(STR("@preferredLanguage") AS ?preferredLanguage)
     BIND(STR("@fallbackLanguage") AS ?fallbackLanguage)
 
-    @triplestore match {
-        case "embedded-jena-tdb" | "fuseki" => {
-
-            ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.getQueryString' .
-
-        }
-
-        case other => {
-            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
-        }
-    }
+    ?matchingSubject <http://jena.apache.org/text#query> '@searchTerms.getQueryString' .
 
     FILTER NOT EXISTS {
         ?matchingSubject knora-base:isDeleted true .
@@ -89,9 +76,7 @@ WHERE {
         ?valueObject knora-base:attachedToUser ?valueCreator ;
             knora-base:hasPermissions ?valuePermissions .
 
-        @if(triplestore == "embedded-jena-tdb" || triplestore == "fuseki") {
-            ?valueObject knora-base:valueHasString ?literal .
-        }
+        ?valueObject knora-base:valueHasString ?literal .
     }
 
     # If the previous OPTIONAL clause executed, ?matchingSubject is a value, and ?containingResource will be set. Otherwise, ?matchingSubject is a resource.

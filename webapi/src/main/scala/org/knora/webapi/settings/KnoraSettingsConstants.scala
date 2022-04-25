@@ -5,15 +5,6 @@
 
 package org.knora.webapi.settings
 
-/**
- * 'SettingsConstants' contains constants of strings, we would generally expect to find in
- * the 'application.conf' file, which can be accessed by the application 'Settings'
- */
-object TriplestoreTypes {
-  val EmbeddedJenaTdb = "embedded-jena-tdb"
-  val HttpFuseki = "fuseki"
-}
-
 object KnoraDispatchers {
 
   /**

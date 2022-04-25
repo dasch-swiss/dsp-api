@@ -8,11 +8,9 @@
 @**
  * Gets the values of all the Knora properties of a resource that have values using SPARQL w/o inference.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be queried.
  *@
-@(triplestore: String,
-  resourceIri: IRI)
+@(resourceIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>

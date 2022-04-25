@@ -10,7 +10,6 @@
 @*
  * Changes the metadata of a resource.
  *
- * @param triplestore the name of the triplestore being used.
  * @param dataNamedGraph the named graph in which the project stores its data.
  * @param resourceIri the IRI of the resource.
  * @param resourceClassIri the IRI of the resource class.
@@ -19,8 +18,7 @@
  * @param maybeLabel the resource's new label, if any.
  * @param maybePermissions the resource's new permissions, if any.
  *@
-@(triplestore: String,
-  dataNamedGraph: IRI,
+@(dataNamedGraph: IRI,
   resourceIri: IRI,
   resourceClassIri: SmartIri,
   maybeLastModificationDate: Option[Instant],

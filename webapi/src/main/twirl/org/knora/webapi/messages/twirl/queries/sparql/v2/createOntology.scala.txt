@@ -9,14 +9,12 @@
 @*
  * Creates a new, empty ontology. If the ontology already exists, this update does nothing.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
  * @param ontologyIri the IRI of the ontology to be created.
  * @param projectIri the IRI of the project that the ontology belongs to.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: SmartIri,
+@(ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   projectIri: SmartIri,
   isShared: Boolean,

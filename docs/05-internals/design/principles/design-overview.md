@@ -279,19 +279,14 @@ SPARQL queries are generated from templates, using the
 [Twirl](https://github.com/playframework/twirl) template engine. For
 example, if we're querying a resource, the template will contain a
 placeholder for the resource's IRI. The templates can be found under
-`src/main/twirl/queries/sparql`. In many cases, different SPARQL must
-be generated for different triplestores; the Twirl template function
-then takes the name of the triplestore as a parameter, and may delegate
-to triplestore-specific templates.
+`src/main/twirl/queries/sparql`.
 
-Responders are not expected to know which triplestore is being used or how it
-is accessed. To perform a SPARQL SELECT query, a responder sends a `SparqlSelectRequest`
+To perform a SPARQL SELECT query, a responder sends a `SparqlSelectRequest`
 message to the `storeManager` actor, like this:
 
 ```scala
         for {
             isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
-                triplestore = settings.triplestoreType,
                 entityIri = entityIri,
                 ignoreKnoraConstraints = ignoreKnoraConstraints,
                 ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject

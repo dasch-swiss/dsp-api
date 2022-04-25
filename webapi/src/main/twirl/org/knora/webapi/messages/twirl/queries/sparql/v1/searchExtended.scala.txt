@@ -9,12 +9,11 @@
 @import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
 
 @**
- * Performs an extended search using SPARQL w/o inference (except for the interface to Lucene, which is triplestore-specific).
+ * Performs an extended search using SPARQL w/o inference.
  *
  * The number of rows returned per matching resource is the product of the number of values that each search criterion
  * matched in the resource.
  *
- * @param triplestore the name of the triplestore being used.
  * @param searchCriteria a list of maps containing search criteria, each of which contains:
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
@@ -22,8 +21,7 @@
  * @param restypeIriOption if given, returns only resources of this class and its subclasses.
  * @param ownerIriOption if filtering by owner is desired, the IRI of the resource owner to search for.
  *@
-@(triplestore: String,
-  searchCriteria: Seq[SearchCriterion],
+@(searchCriteria: Seq[SearchCriterion],
   preferredLanguage: String,
   fallbackLanguage: String,
   projectIriOption: Option[IRI],
@@ -95,19 +93,9 @@ WHERE {
 
                 *@
 
-                @triplestore match {
+                ?valueObject@index <http://jena.apache.org/text#query> ( '@searchCriterion.searchValue' ) .
+                ?valueObject@index knora-base:valueHasString ?literal@index .
 
-                    case "embedded-jena-tdb" | "fuseki" => {
-
-                        ?valueObject@index <http://jena.apache.org/text#query> ( '@searchCriterion.searchValue' ) .
-                        ?valueObject@index knora-base:valueHasString ?literal@index .
-
-                    }
-
-                    case other => {
-                        @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
-                    }
-                }
             }
 
             case SearchComparisonOperatorV1.LIKE => {
@@ -523,36 +511,16 @@ WHERE {
 
                 @for(positiveTerm <- searchCriterion.matchBooleanPositiveTerms) {
 
-                    @triplestore match {
+                    ?valueObject@index <http://jena.apache.org/text#query> ( '@positiveTerm' ) .
 
-                        case "embedded-jena-tdb" | "fuseki" => {
-
-                            ?valueObject@index <http://jena.apache.org/text#query> ( '@positiveTerm' ) .
-
-                        }
-
-                        case other => {
-                            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
-                        }
-                    }
                 }
 
                 @if(searchCriterion.matchBooleanNegativeTerms.nonEmpty) {
                     FILTER NOT EXISTS {
                         @for(negativeTerm <- searchCriterion.matchBooleanNegativeTerms) {
 
-                            @triplestore match {
+                            ?valueObject@index <http://jena.apache.org/text#query> ( '@negativeTerm' ) .
 
-                                case "embedded-jena-tdb" | "fuseki" => {
-
-                                    ?valueObject@index <http://jena.apache.org/text#query> ( '@negativeTerm' ) .
-
-                                }
-
-                                case other => {
-                                    @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
-                                }
-                            }
                         }
                     }
                 }

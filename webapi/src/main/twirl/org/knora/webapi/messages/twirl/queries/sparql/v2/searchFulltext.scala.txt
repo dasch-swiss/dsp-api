@@ -9,15 +9,13 @@
 
 
 @*
- * Performs a simple full-text search using SPARQL w/o inference, except for the interface to Lucene, which is
- * triplestore-specific.
+ * Performs a simple full-text search using SPARQL w/o inference
  *
  * The number of rows returned per matching resource is equal to the number of values that matched in the resource,
  * plus one if the resource's label matched.
  *
  * This template is used only by searchFulltext.scala.txt.
  *
- * @param triplestore the name of the triplestore being used.
  * @param searchTerms search terms.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
@@ -28,8 +26,7 @@
  * @param offset offset for paging (starts with 0)
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
  *@
-@(triplestore: String,
-  searchTerms: LuceneQueryString,
+@(searchTerms: LuceneQueryString,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limitToStandoffClass: Option[IRI],

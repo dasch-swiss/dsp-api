@@ -10,14 +10,11 @@
  * Updates an existing node's position.
  *
  * @param dataNamedGraph     the named graph to update.
- * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
-                             results from the WHERE clause of the update.
  * @param nodeIri            the IRI of the list we want to update.
  * @param newPosition        the new position of the node.
 
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   nodeIri: IRI,
   newPosition: Int)
 

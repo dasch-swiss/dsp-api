@@ -8,11 +8,9 @@
 @**
  * Gets all information about a single project, given the project's knora-admin:projectShortname.
  *
- * @param triplestore the name of the triplestore being used.
  * @param shortname the project's `knora-admin:projectShortname`.
  *@
-@(triplestore: String,
-  shortname: String)
+@(shortname: String)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
