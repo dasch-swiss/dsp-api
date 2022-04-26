@@ -73,6 +73,8 @@ HTTP POST to http://host/v2/searchextended/count
 The response to a count query request is an object with one predicate,
 `http://schema.org/numberOfItems`, with an integer value.
 
+If a gravsearch query times out, a `504 Gateway Timeout` will be returned.
+
 ## Gravsearch and API Schemas
 
 A Gravsearch query can be written in either of the two
