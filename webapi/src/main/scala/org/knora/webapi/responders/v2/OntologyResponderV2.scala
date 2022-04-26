@@ -114,6 +114,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
     case deletePropertyCommentRequest: DeletePropertyCommentRequestV2 =>
       deletePropertyComment(deletePropertyCommentRequest)
+    case deleteClassCommentRequest: DeleteClassCommentRequestV2 =>
+      deleteClassComment(deleteClassCommentRequest)
     case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
       changePropertyGuiElement(changePropertyGuiElementRequest)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
@@ -3492,6 +3494,166 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             propertyIris = Set(internalPropertyIri),
             allLanguages = true,
             requestingUser = deletePropertyCommentRequest.requestingUser
+          )
+        }
+    } yield taskResult
+  }
+
+  /**
+   * Delete the `rdfs:comment` in a class definition.
+   *
+   * @param deleteClassCommentRequestV2 the request to delete the class' comment
+   * @return a [[ReadOntologyV2]] containing the modified class definition.
+   */
+  private def deleteClassComment(
+    deleteClassCommentRequest: DeleteClassCommentRequestV2
+  ): Future[ReadOntologyV2] = {
+    def makeTaskFuture(
+      cacheData: Cache.OntologyCacheData,
+      internalClassIri: SmartIri,
+      internalOntologyIri: SmartIri,
+      ontology: ReadOntologyV2,
+      classToUpdate: ReadClassInfoV2
+    ): Future[ReadOntologyV2] =
+      for {
+
+        // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
+        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+          settings,
+          storeManager,
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = deleteClassCommentRequest.lastModificationDate,
+          featureFactoryConfig = deleteClassCommentRequest.featureFactoryConfig
+        )
+
+        currentTime: Instant = Instant.now
+
+        // Delete the comment
+        updateSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .deleteClassComment(
+            ontologyNamedGraphIri = internalOntologyIri,
+            ontologyIri = internalOntologyIri,
+            classIri = internalClassIri,
+            lastModificationDate = deleteClassCommentRequest.lastModificationDate,
+            currentTime = currentTime
+          )
+          .toString()
+
+        _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+        // Check that the ontology's last modification date was updated.
+        _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
+          settings = settings,
+          storeManager = storeManager,
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = currentTime,
+          featureFactoryConfig = deleteClassCommentRequest.featureFactoryConfig
+        )
+
+        // Check that the update was successful.
+        loadedClassDef: ClassInfoContentV2 <- OntologyHelpers.loadClassDefinition(
+          settings,
+          storeManager,
+          classIri = internalClassIri,
+          featureFactoryConfig = deleteClassCommentRequest.featureFactoryConfig
+        )
+
+        classDefWithoutComment: ClassInfoContentV2 =
+          classToUpdate.entityInfoContent.copy(
+            predicates = classToUpdate.entityInfoContent.predicates.-(
+              OntologyConstants.Rdfs.Comment.toSmartIri
+            ) // the "-" deletes the entry with the comment
+          )
+
+        _ = if (loadedClassDef != classDefWithoutComment) {
+          throw InconsistentRepositoryDataException(
+            s"Attempted to save class definition $classDefWithoutComment, but $loadedClassDef was saved"
+          )
+        }
+
+        // Update the ontology cache using the new class definition.
+        newReadClassInfo: ReadClassInfoV2 = ReadClassInfoV2(
+          entityInfoContent = loadedClassDef,
+          allBaseClasses = classToUpdate.allBaseClasses
+        )
+
+        updatedOntologyMetadata: OntologyMetadataV2 = ontology.ontologyMetadata.copy(
+          lastModificationDate = Some(currentTime)
+        )
+
+        updatedOntology: ReadOntologyV2 =
+          ontology.copy(
+            ontologyMetadata = updatedOntologyMetadata,
+            classes = ontology.classes + (internalClassIri -> newReadClassInfo)
+          )
+
+        _ = Cache.storeCacheData(
+          cacheData.copy(
+            ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
+          )
+        )
+
+        // Read the data back from the cache.
+
+        response: ReadOntologyV2 <- getClassDefinitionsFromOntologyV2(
+          classIris = Set(internalClassIri),
+          allLanguages = true,
+          requestingUser = deleteClassCommentRequest.requestingUser
+        )
+
+      } yield response
+
+    for {
+      requestingUser: UserADM <- FastFuture.successful(deleteClassCommentRequest.requestingUser)
+
+      externalClassIri: SmartIri = deleteClassCommentRequest.classIri
+      externalOntologyIri: SmartIri = externalClassIri.getOntologyFromEntity
+
+      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
+        externalOntologyIri = externalOntologyIri,
+        externalEntityIri = externalClassIri,
+        requestingUser = requestingUser
+      )
+
+      internalClassIri: SmartIri = externalClassIri.toOntologySchema(InternalSchema)
+      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+      cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+
+      ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
+
+      classToUpdate: ReadClassInfoV2 =
+        ontology.classes.getOrElse(
+          internalClassIri,
+          throw NotFoundException(s"Class ${deleteClassCommentRequest.classIri} not found")
+        )
+
+      hasComment: Boolean = classToUpdate.entityInfoContent.predicates.contains(
+        OntologyConstants.Rdfs.Comment.toSmartIri
+      )
+
+      taskResult: ReadOntologyV2 <-
+        if (hasComment) for {
+          // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+          taskResult: ReadOntologyV2 <- IriLocker.runWithIriLock(
+            apiRequestID = deleteClassCommentRequest.apiRequestID,
+            iri = ONTOLOGY_CACHE_LOCK_IRI,
+            task = () =>
+              makeTaskFuture(
+                cacheData = cacheData,
+                internalClassIri = internalClassIri,
+                internalOntologyIri = internalOntologyIri,
+                ontology = ontology,
+                classToUpdate = classToUpdate
+              )
+          )
+        } yield taskResult
+        else {
+          // not change anything if class has no comment
+          getClassDefinitionsFromOntologyV2(
+            classIris = Set(internalClassIri),
+            allLanguages = true,
+            requestingUser = deleteClassCommentRequest.requestingUser
           )
         }
     } yield taskResult

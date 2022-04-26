@@ -45,6 +45,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       getOntology(featureFactoryConfig) ~
       createClass(featureFactoryConfig) ~
       updateClass(featureFactoryConfig) ~
+      deleteClassComment(featureFactoryConfig) ~
       addCardinalities(featureFactoryConfig) ~
       canReplaceCardinalities(featureFactoryConfig) ~
       replaceCardinalities(featureFactoryConfig) ~
@@ -311,45 +312,92 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
   }
 
-  private def updateClass(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / "classes") {
-    put {
-      // Change the labels or comments of a class.
-      entity(as[String]) { jsonRequest => requestContext =>
-        {
-          val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
-            requestingUser <- getUserADM(
+  private def updateClass(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "classes") {
+      put {
+        // Change the labels or comments of a class.
+        entity(as[String]) { jsonRequest => requestContext =>
+          {
+            val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
+              requestingUser <- getUserADM(
+                requestContext = requestContext,
+                featureFactoryConfig = featureFactoryConfig
+              )
+
+              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+              requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
+                jsonLDDocument = requestDoc,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                featureFactoryConfig = featureFactoryConfig,
+                settings = settings,
+                log = log
+              )
+            } yield requestMessage
+
+            RouteUtilV2.runRdfRouteWithFuture(
+              requestMessageF = requestMessageFuture,
               requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-
-            requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-
-            requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
-              jsonLDDocument = requestDoc,
-              apiRequestID = UUID.randomUUID,
-              requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
               featureFactoryConfig = featureFactoryConfig,
               settings = settings,
-              log = log
+              responderManager = responderManager,
+              log = log,
+              targetSchema = ApiV2Complex,
+              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
             )
-          } yield requestMessage
-
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            responderManager = responderManager,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
+          }
         }
       }
     }
-  }
+
+  // delete the comment of a class definition
+  private def deleteClassComment(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "classes" / "comment" / Segment) { classIriStr: IRI =>
+      delete { requestContext =>
+        val classIri = classIriStr.toSmartIri
+
+        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+        }
+
+        val lastModificationDateStr = requestContext.request.uri
+          .query()
+          .toMap
+          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+
+        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
+          lastModificationDateStr,
+          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
+        )
+
+        val requestMessageFuture: Future[DeleteClassCommentRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield DeleteClassCommentRequestV2(
+          classIri = classIri,
+          lastModificationDate = lastModificationDate,
+          apiRequestID = UUID.randomUUID,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+      }
+    }
 
   private def addCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "cardinalities") {
