@@ -1,9 +1,9 @@
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
 
@@ -14,89 +14,56 @@
 ##########################################################
 
 
-<http://rdfh.ch/users/root> rdf:type knora-admin:User ;
-
-                                   knora-admin:username "root"^^xsd:string ;
-
-                                   knora-admin:email "root@example.com"^^xsd:string ;
-
-                                   knora-admin:givenName "System"^^xsd:string ;
-
-                                   knora-admin:familyName "Administrator"^^xsd:string ;
-
-                                   knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                   knora-admin:phone "123456"^^xsd:string ;
-
-                                   knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                   knora-admin:status "true"^^xsd:boolean ;
-
-                                   knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
+<http://rdfh.ch/users/root>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "root"^^xsd:string ;
+    knora-admin:email                "root@example.com"^^xsd:string ;
+    knora-admin:givenName            "System"^^xsd:string ;
+    knora-admin:familyName           "Administrator"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
-<http://rdfh.ch/users/superuser> rdf:type knora-admin:User ;
-
-                                        knora-admin:username "superuser"^^xsd:string ;
-
-                                        knora-admin:email "super.user@example.com"^^xsd:string ;
-
-                                        knora-admin:givenName "Super"^^xsd:string ;
-
-                                        knora-admin:familyName "User"^^xsd:string ;
-
-                                        knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                        knora-admin:phone "123456"^^xsd:string ;
-
-                                        knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                        knora-admin:status "true"^^xsd:boolean ;
-
-                                        knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
+<http://rdfh.ch/users/superuser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "superuser"^^xsd:string ;
+    knora-admin:email                "super.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "Super"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
-<http://rdfh.ch/users/normaluser> rdf:type knora-admin:User ;
-
-                                         knora-admin:username "normaluser"^^xsd:string ;
-
-                                         knora-admin:email "normal.user@example.com"^^xsd:string ;
-
-                                         knora-admin:givenName "Normal"^^xsd:string ;
-
-                                         knora-admin:familyName "User"^^xsd:string ;
-
-                                         knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                         knora-admin:phone "123456"^^xsd:string ;
-
-                                         knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                         knora-admin:status "true"^^xsd:boolean ;
-
-                                         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/normaluser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "normaluser"^^xsd:string ;
+    knora-admin:email                "normal.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "Normal"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
-<http://rdfh.ch/users/inactiveuser> rdf:type knora-admin:User ;
-
-
-                                           knora-admin:username "inactiveuser"^^xsd:string ;
-
-                                           knora-admin:email "inactive.user@example.com"^^xsd:string ;
-
-                                           knora-admin:givenName "Inactive"^^xsd:string ;
-
-                                           knora-admin:familyName "User"^^xsd:string ;
-
-                                           knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                           knora-admin:phone "123456"^^xsd:string ;
-
-                                           knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                           knora-admin:status "false"^^xsd:boolean ;
-
-                                           knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/inactiveuser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "inactiveuser"^^xsd:string ;
+    knora-admin:email                "inactive.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "Inactive"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "false"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ##########################################################
@@ -106,116 +73,77 @@
 ##########################################################
 
 
-<http://rdfh.ch/projects/00FF> rdf:type knora-admin:knoraProject ;
-
-                                knora-admin:projectShortname "images"^^xsd:string ;
-
-                                knora-admin:projectShortcode "00FF"^^xsd:string ;
-
-                                knora-admin:projectLongname "Image Collection Demo"^^xsd:string ;
-
-                                knora-admin:projectDescription "A demo project of a collection of images"@en ;
-
-                                knora-admin:projectKeyword "images"^^xsd:string,
-                                                          "collection"^^xsd:string ;
-
-                                knora-admin:projectRestrictedViewSize "!512,512"^^xsd:string ;
-
-                                knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
-
-                                knora-admin:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
-
-                                knora-admin:status "true"^^xsd:boolean ;
-
-                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+<http://rdfh.ch/projects/00FF>
+    rdf:type                                   knora-admin:knoraProject ;
+    knora-admin:projectShortname               "images"^^xsd:string ;
+    knora-admin:projectShortcode               "00FF"^^xsd:string ;
+    knora-admin:projectLongname                "Image Collection Demo"^^xsd:string ;
+    knora-admin:projectDescription             "A demo project of a collection of images"@en ;
+    knora-admin:projectKeyword                 "images"^^xsd:string,
+                                               "collection"^^xsd:string ;
+    knora-admin:projectRestrictedViewSize      "!512,512"^^xsd:string ;
+    knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
+    knora-admin:belongsToInstitution           <http://rdfh.ch/institutions/dhlab-basel> ;
+    knora-admin:status                         "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean .
 
 
 ## Project Admin
-<http://rdfh.ch/users/c266a56709> rdf:type knora-admin:User ;
-
-                                   knora-admin:username "user01.user1"^^xsd:string ;
-
-                                   knora-admin:email "user01.user1@example.com"^^xsd:string ;
-
-                                   knora-admin:givenName "User01"^^xsd:string ;
-
-                                   knora-admin:familyName "User"^^xsd:string ;
-
-                                   knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                   knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                   knora-admin:status "true"^^xsd:boolean ;
-
-                                   knora-admin:isInProject <http://rdfh.ch/projects/00FF> ;
-
-                                   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-
-                                   knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
+<http://rdfh.ch/users/c266a56709>
+    rdf:type                          knora-admin:User ;
+    knora-admin:username              "user01.user1"^^xsd:string ;
+    knora-admin:email                 "user01.user1@example.com"^^xsd:string ;
+    knora-admin:givenName             "User01"^^xsd:string ;
+    knora-admin:familyName            "User"^^xsd:string ;
+    knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:preferredLanguage     "de"^^xsd:string ;
+    knora-admin:status                "true"^^xsd:boolean ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/00FF> ;
+    knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/00FF> .
 
 
 ## Project Member
-<http://rdfh.ch/users/97cec4000f> rdf:type knora-admin:User ;
-
-                                   knora-admin:username "user02.user"^^xsd:string ;
-
-                                   knora-admin:email "user02.user@example.com"^^xsd:string ;
-
-                                   knora-admin:givenName "User02"^^xsd:string ;
-
-                                   knora-admin:familyName "User"^^xsd:string ;
-
-                                   knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                   knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                   knora-admin:status "true"^^xsd:boolean ;
-
-                                   knora-admin:isInProject <http://rdfh.ch/projects/00FF> ;
-
-                                   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/97cec4000f>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "user02.user"^^xsd:string ;
+    knora-admin:email                "user02.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "User02"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/00FF> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ## Images Reviewer
-<http://rdfh.ch/users/images-reviewer-user> rdf:type knora-admin:User ;
-
-                                         knora-admin:username "images-reviewer-user"^^xsd:string ;
-
-                                         knora-admin:email "images-reviewer-user@example.com"^^xsd:string ;
-
-                                         knora-admin:givenName "User03"^^xsd:string ;
-
-                                         knora-admin:familyName "User"^^xsd:string ;
-
-                                         knora-admin:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
-
-                                         knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                         knora-admin:status "true"^^xsd:boolean ;
-
-                                         knora-admin:isInProject <http://rdfh.ch/projects/00FF> ;
-
-                                         knora-admin:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
-
-                                         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/images-reviewer-user>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "images-reviewer-user"^^xsd:string ;
+    knora-admin:email                "images-reviewer-user@example.com"^^xsd:string ;
+    knora-admin:givenName            "User03"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/00FF> ;
+    knora-admin:isInGroup            <http://rdfh.ch/groups/00FF/images-reviewer> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
-<http://rdfh.ch/groups/00FF/images-reviewer> rdf:type knora-admin:UserGroup ;
-
-                                               knora-admin:groupName "Image reviewer"^^xsd:string ;
-
-                                               knora-admin:groupDescriptions "A group for image reviewers."@en ;
-
-                                               knora-admin:belongsToProject <http://rdfh.ch/projects/00FF> ;
-
-                                               knora-admin:status "true"^^xsd:boolean ;
-
-                                               knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+<http://rdfh.ch/groups/00FF/images-reviewer>
+    rdf:type                       knora-admin:UserGroup ;
+    knora-admin:groupName          "Image reviewer"^^xsd:string ;
+    knora-admin:groupDescriptions  "A group for image reviewers."@en ;
+    knora-admin:belongsToProject   <http://rdfh.ch/projects/00FF> ;
+    knora-admin:status             "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
-<http://rdfh.ch/institutions/dhlab-basel> rdf:type knora-admin:Institution ;
-
-                                          knora-admin:institutionName "Digital Humanities Lab, Basel" .
+<http://rdfh.ch/institutions/dhlab-basel>
+    rdf:type                    knora-admin:Institution ;
+    knora-admin:institutionName "Digital Humanities Lab, Basel" .
 
 
 ##########################################################
@@ -227,15 +155,12 @@
 ### ###########################################
 ### <http://rdfh.ch/projects/0803>
 
-<http://rdfh.ch/projects/0803> rdf:type knora-admin:knoraProject ;
-
-                                          knora-admin:projectShortname "incunabula"^^xsd:string ;
-
-                                          knora-admin:projectShortcode "0803"^^xsd:string;
-
-                                          knora-admin:projectLongname "Bilderfolgen Basler Frühdrucke"^^xsd:string ;
-
-                                          knora-admin:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
+<http://rdfh.ch/projects/0803>
+    rdf:type                                   knora-admin:knoraProject ;
+    knora-admin:projectShortname               "incunabula"^^xsd:string ;
+    knora-admin:projectShortcode               "0803"^^xsd:string ;
+    knora-admin:projectLongname                "Bilderfolgen Basler Frühdrucke"^^xsd:string ;
+    knora-admin:projectDescription             """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
 </p>
 <p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).
 </p>
@@ -244,284 +169,248 @@ Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten 
 </p>
 Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
 </p>"""^^xsd:string ;
-
-                                          knora-admin:projectKeyword "Basler Frühdrucke"^^xsd:string,
-                                                                    "Inkunabel"^^xsd:string,
-                                                                    "Narrenschiff"^^xsd:string,
-                                                                    "Wiegendrucke"^^xsd:string,
-                                                                    "Sebastian Brant"^^xsd:string,
-                                                                    "Bilderfolgen"^^xsd:string,
-                                                                    "early print"^^xsd:string,
-                                                                    "incunabula"^^xsd:string,
-                                                                    "ship of fools"^^xsd:string,
-                                                                    "Kunsthistorisches Seminar Universität Basel"^^xsd:string,
-                                                                    "Late Middle Ages"^^xsd:string,
-                                                                    "Letterpress Printing"^^xsd:string,
-                                                                    "Basel"^^xsd:string,
-                                                                    "Contectualisation of images"^^xsd:string ;
-
-                                          knora-admin:projectLogo "incunabula_logo.png"^^xsd:string ;
-
-                                          knora-admin:projectRestrictedViewSize "!512,512"^^xsd:string ;
-
-                                          knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
-
-                                          knora-admin:status "true"^^xsd:boolean ;
-
-                                          knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
-
+    knora-admin:projectKeyword                 "Basler Frühdrucke"^^xsd:string,
+                                               "Inkunabel"^^xsd:string,
+                                               "Narrenschiff"^^xsd:string,
+                                               "Wiegendrucke"^^xsd:string,
+                                               "Sebastian Brant"^^xsd:string,
+                                               "Bilderfolgen"^^xsd:string,
+                                               "early print"^^xsd:string,
+                                               "incunabula"^^xsd:string,
+                                               "ship of fools"^^xsd:string,
+                                               "Kunsthistorisches Seminar Universität Basel"^^xsd:string,
+                                               "Late Middle Ages"^^xsd:string,
+                                               "Letterpress Printing"^^xsd:string,
+                                               "Basel"^^xsd:string,
+                                               "Contectualisation of images"^^xsd:string ;
+    knora-admin:projectLogo                    "incunabula_logo.png"^^xsd:string ;
+    knora-admin:projectRestrictedViewSize      "!512,512"^^xsd:string ;
+    knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
+    knora-admin:status                         "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled             "false"^^xsd:boolean .
 
 
 ## Project Admin
-<http://rdfh.ch/users/b83acc5f05> rdf:type knora-admin:User ;
-
-                                         knora-admin:username "user.test"^^xsd:string ;
-
-                                         knora-admin:givenName "User"^^xsd:string ;
-
-                                         knora-admin:familyName "Test"^^xsd:string ;
-
-                                         knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                         knora-admin:email "user.test@example.com"^^xsd:string ;
-
-                                         knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                         knora-admin:status "true"^^xsd:boolean ;
-
-                                         knora-admin:isInProject <http://rdfh.ch/projects/0803> ;
-
-                                         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-
-                                         knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0803> .
+<http://rdfh.ch/users/b83acc5f05>
+    rdf:type                          knora-admin:User ;
+    knora-admin:username              "user.test"^^xsd:string ;
+    knora-admin:givenName             "User"^^xsd:string ;
+    knora-admin:familyName            "Test"^^xsd:string ;
+    knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                 "user.test@example.com"^^xsd:string ;
+    knora-admin:preferredLanguage     "de"^^xsd:string ;
+    knora-admin:status                "true"^^xsd:boolean ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0803> ;
+    knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0803> .
 
 
 ## Project Creator and Member
-<http://rdfh.ch/users/91e19f1e01> rdf:type knora-admin:User ;
-
-                                         knora-admin:username "root-alt"^^xsd:string ;
-
-                                         knora-admin:familyName "Admin-alt"^^xsd:string ;
-
-                                         knora-admin:givenName "Administrator-alt"^^xsd:string ;
-
-                                         knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                         knora-admin:email "root-alt@example.com"^^xsd:string ;
-
-                                         knora-admin:phone "123456"^^xsd:string ;
-
-                                         knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                         knora-admin:status "true"^^xsd:boolean ;
-
-                                         knora-admin:isInProject <http://rdfh.ch/projects/0803> ;
-
-                                         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/91e19f1e01>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "root-alt"^^xsd:string ;
+    knora-admin:familyName           "Admin-alt"^^xsd:string ;
+    knora-admin:givenName            "Administrator-alt"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                "root-alt@example.com"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0803> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ## Project Member
-<http://rdfh.ch/users/incunabulaMemberUser> rdf:type knora-admin:User ;
-
-                                         knora-admin:username "incunabulaMemberUser"^^xsd:string ;
-
-                                         knora-admin:familyName "User2"^^xsd:string ;
-
-                                         knora-admin:givenName "Test"^^xsd:string ;
-
-                                         knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                         knora-admin:email "test.user2@test.ch"^^xsd:string ;
-
-                                         knora-admin:phone "123456"^^xsd:string ;
-
-                                         knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                         knora-admin:status "true"^^xsd:boolean ;
-
-                                         knora-admin:isInProject <http://rdfh.ch/projects/0803> ;
-
-                                         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
-
+<http://rdfh.ch/users/incunabulaMemberUser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "incunabulaMemberUser"^^xsd:string ;
+    knora-admin:familyName           "User2"^^xsd:string ;
+    knora-admin:givenName            "Test"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                "test.user2@test.ch"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0803> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
 ###################################
 # MULTI-PROJECT / GROUPS USER     #
 ###################################
 
-<http://rdfh.ch/users/multiuser> rdf:type knora-admin:User ;
-
-                                        knora-admin:username "multiuser"^^xsd:string ;
-
-                                        knora-admin:email "multi.user@example.com"^^xsd:string ;
-
-                                        knora-admin:givenName "Multi"^^xsd:string ;
-
-                                        knora-admin:familyName "User"^^xsd:string ;
-
-                                        knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                        knora-admin:phone "123456"^^xsd:string ;
-
-                                        knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                        knora-admin:status "true"^^xsd:boolean ;
-
-                                        knora-admin:isInProject <http://rdfh.ch/projects/0803> ,
-                                                               <http://rdfh.ch/projects/00FF> ,
-                                                               <http://rdfh.ch/projects/0001> ;
-
-                                        knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-
-                                        knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0803> ,
-                                                                         <http://rdfh.ch/projects/00FF> ,
-                                                                         <http://rdfh.ch/projects/0001> ;
-
-                                        knora-admin:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> .
-
-
+<http://rdfh.ch/users/multiuser>
+    rdf:type                          knora-admin:User ;
+    knora-admin:username              "multiuser"^^xsd:string ;
+    knora-admin:email                 "multi.user@example.com"^^xsd:string ;
+    knora-admin:givenName             "Multi"^^xsd:string ;
+    knora-admin:familyName            "User"^^xsd:string ;
+    knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                 "123456"^^xsd:string ;
+    knora-admin:preferredLanguage     "de"^^xsd:string ;
+    knora-admin:status                "true"^^xsd:boolean ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0803>,
+                                      <http://rdfh.ch/projects/00FF>,
+                                      <http://rdfh.ch/projects/0001> ;
+    knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0803>,
+                                      <http://rdfh.ch/projects/00FF>,
+                                      <http://rdfh.ch/projects/0001> ;
+    knora-admin:isInGroup             <http://rdfh.ch/groups/00FF/images-reviewer> .
 
 
 ###################################
 # ANYTHING PROJECT                #
 ###################################
 
-<http://rdfh.ch/projects/0001> a knora-admin:knoraProject ;
-  knora-admin:projectShortname "anything"^^xsd:string ;
-  knora-admin:projectShortcode "0001"^^xsd:string;
-  knora-admin:projectLongname "Anything Project"^^xsd:string ;
-  knora-admin:projectDescription "Anything Project"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
-  knora-admin:projectKeyword "things"^^xsd:string,
-                             "arbitrary test data"^^xsd:string .
+<http://rdfh.ch/projects/0001>
+    a                              knora-admin:knoraProject ;
+    knora-admin:projectShortname   "anything"^^xsd:string ;
+    knora-admin:projectShortcode   "0001"^^xsd:string ;
+    knora-admin:projectLongname    "Anything Project"^^xsd:string ;
+    knora-admin:projectDescription "Anything Project"^^xsd:string ;
+    knora-admin:status             "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean ;
+    knora-admin:projectKeyword     "things"^^xsd:string,
+                                   "arbitrary test data"^^xsd:string .
 
-<http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-admin:User ;
-  knora-admin:username "anything.user01"^^xsd:string ;
-  knora-admin:givenName "Anything"^^xsd:string ;
-  knora-admin:familyName "User01"^^xsd:string ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-  knora-admin:email "anything.user01@example.org"^^xsd:string ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/0001> ;
-  knora-admin:isInGroup <http://rdfh.ch/groups/0001/thing-searcher> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>
+    a                                knora-admin:User ;
+    knora-admin:username             "anything.user01"^^xsd:string ;
+    knora-admin:givenName            "Anything"^^xsd:string ;
+    knora-admin:familyName           "User01"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                "anything.user01@example.org"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0001> ;
+    knora-admin:isInGroup            <http://rdfh.ch/groups/0001/thing-searcher> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
-<http://rdfh.ch/users/AnythingAdminUser> a knora-admin:User ;
-  knora-admin:username "anything.admin"^^xsd:string ;
-  knora-admin:givenName "Anything"^^xsd:string ;
-  knora-admin:familyName "Admin"^^xsd:string ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-  knora-admin:email "anything.admin@example.org"^^xsd:string ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/0001> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0001> .
+<http://rdfh.ch/users/AnythingAdminUser>
+    a                                 knora-admin:User ;
+    knora-admin:username              "anything.admin"^^xsd:string ;
+    knora-admin:givenName             "Anything"^^xsd:string ;
+    knora-admin:familyName            "Admin"^^xsd:string ;
+    knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                 "anything.admin@example.org"^^xsd:string ;
+    knora-admin:preferredLanguage     "de"^^xsd:string ;
+    knora-admin:status                "true"^^xsd:boolean ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0001> ;
+    knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0001> .
 
-<http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-admin:User ;
-  knora-admin:username "anything.user02" ;
-  knora-admin:givenName "Anything" ;
-  knora-admin:familyName "User02" ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK" ;
-  knora-admin:email "anything.user02@example.org" ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/0001> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>
+    a                                knora-admin:User ;
+    knora-admin:username             "anything.user02" ;
+    knora-admin:givenName            "Anything" ;
+    knora-admin:familyName           "User02" ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK" ;
+    knora-admin:email                "anything.user02@example.org" ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0001> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/0001/thing-searcher> rdf:type knora-admin:UserGroup ;
-  knora-admin:groupName "Thing searcher"^^xsd:string ;
-  knora-admin:groupDescriptions "A group for thing searchers."@en ;
-  knora-admin:belongsToProject <http://rdfh.ch/projects/0001> ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "true"^^xsd:boolean .
+<http://rdfh.ch/groups/0001/thing-searcher>
+    rdf:type                       knora-admin:UserGroup ;
+    knora-admin:groupName          "Thing searcher"^^xsd:string ;
+    knora-admin:groupDescriptions  "A group for thing searchers."@en ;
+    knora-admin:belongsToProject   <http://rdfh.ch/projects/0001> ;
+    knora-admin:status             "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "true"^^xsd:boolean .
 
 
 ###################################
 # DOKUBIB                         #
 ###################################
 
-<http://rdfh.ch/projects/0804> a knora-admin:knoraProject ;
-  knora-admin:projectShortname "dokubib"^^xsd:string ;
-  knora-admin:projectShortcode "0804"^^xsd:string ;
-  knora-admin:projectLongname "Dokubib"^^xsd:string ;
-  knora-admin:projectDescription "Dokubib"^^xsd:string ;
-  knora-admin:status "false"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+<http://rdfh.ch/projects/0804>
+    a                              knora-admin:knoraProject ;
+    knora-admin:projectShortname   "dokubib"^^xsd:string ;
+    knora-admin:projectShortcode   "0804"^^xsd:string ;
+    knora-admin:projectLongname    "Dokubib"^^xsd:string ;
+    knora-admin:projectDescription "Dokubib"^^xsd:string ;
+    knora-admin:status             "false"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 
 ###################################
 # BEOL                            #
 ###################################
 
-<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-admin:knoraProject ;
-  knora-admin:projectShortname "beol"^^xsd:string ;
-  knora-admin:projectShortcode "0801"^^xsd:string ;
-  knora-admin:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
-  knora-admin:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+<http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>
+    a                              knora-admin:knoraProject ;
+    knora-admin:projectShortname   "beol"^^xsd:string ;
+    knora-admin:projectShortcode   "0801"^^xsd:string ;
+    knora-admin:projectLongname    "Bernoulli-Euler Online"^^xsd:string ;
+    knora-admin:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
+    knora-admin:status             "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-admin:User ;
-  knora-admin:username "t.schweizer"^^xsd:string ;
-  knora-admin:familyName "BEOL"^^xsd:string ;
-  knora-admin:givenName "BEOL"^^xsd:string ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-  knora-admin:email "t.schweizer@unibas.ch"^^xsd:string ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF>
+    a                                knora-admin:User ;
+    knora-admin:username             "t.schweizer"^^xsd:string ;
+    knora-admin:familyName           "BEOL"^^xsd:string ;
+    knora-admin:givenName            "BEOL"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                "t.schweizer@unibas.ch"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
-<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE> a knora-admin:User ;
-  knora-admin:username "beol"^^xsd:string ;
-  knora-admin:familyName "BEOL"^^xsd:string ;
-  knora-admin:givenName "BEOL"^^xsd:string ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-  knora-admin:email "beol@example.com"^^xsd:string ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
+<http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE>
+    a                                 knora-admin:User ;
+    knora-admin:username              "beol"^^xsd:string ;
+    knora-admin:familyName            "BEOL"^^xsd:string ;
+    knora-admin:givenName             "BEOL"^^xsd:string ;
+    knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                 "beol@example.com"^^xsd:string ;
+    knora-admin:preferredLanguage     "de"^^xsd:string ;
+    knora-admin:status                "true"^^xsd:boolean ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+    knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
 
 
 ###################################
 # WEBERN                          #
 ###################################
 
-<http://rdfh.ch/projects/0806> a knora-admin:knoraProject ;
-  knora-admin:projectShortname "webern"^^xsd:string ;
-  knora-admin:projectShortcode "0806"^^xsd:string ;
-  knora-admin:projectLongname "Anton Webern Gesamtausgabe"^^xsd:string ;
-  knora-admin:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
+<http://rdfh.ch/projects/0806>
+    a                              knora-admin:knoraProject ;
+    knora-admin:projectShortname   "webern"^^xsd:string ;
+    knora-admin:projectShortcode   "0806"^^xsd:string ;
+    knora-admin:projectLongname    "Anton Webern Gesamtausgabe"^^xsd:string ;
+    knora-admin:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
+    knora-admin:status             "true"^^xsd:boolean ;
+    knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 ## Project Member
-<http://rdfh.ch/users/webernProjectMember> a knora-admin:User ;
-  knora-admin:username "webern-nutzer"^^xsd:string ;
-  knora-admin:familyName "Webern"^^xsd:string ;
-  knora-admin:givenName "Nutzer"^^xsd:string ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-  knora-admin:email "webern-nutzer@example.ch"^^xsd:string ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/0806> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/webernProjectMember>
+    a                                knora-admin:User ;
+    knora-admin:username             "webern-nutzer"^^xsd:string ;
+    knora-admin:familyName           "Webern"^^xsd:string ;
+    knora-admin:givenName            "Nutzer"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                "webern-nutzer@example.ch"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInProject          <http://rdfh.ch/projects/0806> ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 ## Project Admin
-<http://rdfh.ch/users/webernProjectAdmin> a knora-admin:User ;
-  knora-admin:username "webern-admin"^^xsd:string ;
-  knora-admin:familyName "Webern"^^xsd:string ;
-  knora-admin:givenName "Admin"^^xsd:string ;
-  knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-  knora-admin:email "webern-admin@example.ch"^^xsd:string ;
-  knora-admin:preferredLanguage "de"^^xsd:string ;
-  knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/0806> ;
-  knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0806> .
+<http://rdfh.ch/users/webernProjectAdmin>
+    a                                 knora-admin:User ;
+    knora-admin:username              "webern-admin"^^xsd:string ;
+    knora-admin:familyName            "Webern"^^xsd:string ;
+    knora-admin:givenName             "Admin"^^xsd:string ;
+    knora-admin:password              "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:email                 "webern-admin@example.ch"^^xsd:string ;
+    knora-admin:preferredLanguage     "de"^^xsd:string ;
+    knora-admin:status                "true"^^xsd:boolean ;
+    knora-admin:isInProject           <http://rdfh.ch/projects/0806> ;
+    knora-admin:isInSystemAdminGroup  "false"^^xsd:boolean ;
+    knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0806> .
 
