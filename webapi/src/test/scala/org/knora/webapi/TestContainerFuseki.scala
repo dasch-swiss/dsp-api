@@ -18,7 +18,7 @@ import org.knora.webapi.http.version.BuildInfo
 object TestContainerFuseki {
 
   val FusekiImageName: DockerImageName = DockerImageName.parse(BuildInfo.fuseki)
-  val FusekiContainer = new GenericContainer(FusekiImageName)
+  val FusekiContainer                  = new GenericContainer(FusekiImageName)
 
   FusekiContainer.withExposedPorts(3030)
   FusekiContainer.withEnv("ADMIN_PASSWORD", "test")

@@ -42,9 +42,9 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
   private val imagesUser01Email = SharedTestDataADM.imagesUser01.email
-  private val testPass = SharedTestDataADM.testPass
+  private val testPass          = SharedTestDataADM.testPass
 
-  private val groupIri = SharedTestDataADM.imagesReviewerGroup.id
+  private val groupIri    = SharedTestDataADM.imagesReviewerGroup.id
   private val groupIriEnc = java.net.URLEncoder.encode(groupIri, "utf-8")
 
   "The Groups Route ('admin/groups')" when {
@@ -152,7 +152,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         response.status should be(StatusCodes.BadRequest)
 
         val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-        val invalidIri: Boolean = errorMessage.contains(s"IRI: '$customGroupIri' already exists, try another one.")
+        val invalidIri: Boolean  = errorMessage.contains(s"IRI: '$customGroupIri' already exists, try another one.")
         invalidIri should be(true)
       }
     }

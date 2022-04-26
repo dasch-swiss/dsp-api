@@ -24,7 +24,7 @@ abstract class UpgradePluginSpec extends CoreSpec() {
    * @return an [[RdfModel]].
    */
   def trigFileToModel(path: String): RdfModel = {
-    val fileInputStream = new BufferedInputStream(new FileInputStream(path))
+    val fileInputStream    = new BufferedInputStream(new FileInputStream(path))
     val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = TriG)
     fileInputStream.close()
     rdfModel

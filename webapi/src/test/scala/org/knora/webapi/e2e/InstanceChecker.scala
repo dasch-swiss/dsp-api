@@ -54,7 +54,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
    */
   def check(instanceResponse: String, expectedClassIri: SmartIri, knoraRouteGet: String => String): Unit = {
     val instanceElement: InstanceElement = instanceInspector.toElement(instanceResponse)
-    val definitions: Definitions = getDefinitions(classIri = expectedClassIri, knoraRouteGet = knoraRouteGet)
+    val definitions: Definitions         = getDefinitions(classIri = expectedClassIri, knoraRouteGet = knoraRouteGet)
 
     // A map of class IRIs to their immediate base classes.
     val directSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = definitions.classDefs.map {
@@ -116,7 +116,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
     // Check that there are no extra properties.
 
     val allowedInstancePropertyNames: Set[String] = propertyIrisToInstancePropertyNames.values.toSet
-    val extraInstancePropertyNames = instanceElement.propertyObjects.keySet -- allowedInstancePropertyNames
+    val extraInstancePropertyNames                = instanceElement.propertyObjects.keySet -- allowedInstancePropertyNames
 
     if (extraInstancePropertyNames.nonEmpty) {
       throwAndLogAssertionException(
@@ -154,7 +154,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         OntologyConstants.Xsd.String.toSmartIri
       }
 
-      val objectTypeStr = objectType.toString
+      val objectTypeStr                          = objectType.toString
       val objectTypeIsKnoraDefinedClass: Boolean = isKnoraDefinedClass(objectType)
       val objectTypeIsKnoraDatatype: Boolean =
         OntologyConstants.KnoraApiV2Simple.KnoraDatatypes.contains(objectTypeStr)
@@ -335,8 +335,8 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       case Some(classDef) => classDef
 
       case None =>
-        val urlPath = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
-        val classDefStr: String = knoraRouteGet(urlPath)
+        val urlPath                        = s"/v2/ontologies/classes/${URLEncoder.encode(classIri.toString, "UTF-8")}"
+        val classDefStr: String            = knoraRouteGet(urlPath)
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(classDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
@@ -363,8 +363,8 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
       case Some(propertyDef) => propertyDef
 
       case None =>
-        val urlPath = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
-        val propertyDefStr: String = knoraRouteGet(urlPath)
+        val urlPath                        = s"/v2/ontologies/properties/${URLEncoder.encode(propertyIri.toString, "UTF-8")}"
+        val propertyDefStr: String         = knoraRouteGet(urlPath)
         val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(propertyDefStr)
 
         // If Knora returned an error, get the error message and throw an exception.
@@ -450,7 +450,7 @@ class JsonLDInstanceInspector extends InstanceInspector {
           Vector(InstanceElement(elementType = OntologyConstants.Xsd.String, literalContent = Some(literalContent)))
         } else if (jsonLDObject.isDatatypeValue) {
           // This object represents a JSON-LD datatype value.
-          val datatype = jsonLDObject.requireString(JsonLDKeywords.TYPE)
+          val datatype       = jsonLDObject.requireString(JsonLDKeywords.TYPE)
           val literalContent = jsonLDObject.requireString(JsonLDKeywords.VALUE)
           Vector(InstanceElement(elementType = datatype, literalContent = Some(literalContent)))
         } else if (jsonLDObject.isIri) {

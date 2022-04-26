@@ -69,9 +69,9 @@ class UpdateListItemsRouteADME2ESpec
     "test"
   )
 
-  private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+  private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-  private val treeChildNode = treeListNodes.head
+  private val treeChildNode                        = treeListNodes.head
 
   "The List Items Route (/admin/lists)" when {
     "update list root" should {
@@ -389,9 +389,9 @@ class UpdateListItemsRouteADME2ESpec
       }
 
       "not update the position of a node if given IRI is invalid" in {
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val parentIri   = "http://rdfh.ch/lists/0001/notUsedList01"
         val newPosition = 1
-        val nodeIri = "invalid-iri"
+        val nodeIri     = "invalid-iri"
         val updateNodeName =
           s"""{
              |    "parentNodeIri": "$parentIri",
@@ -410,9 +410,9 @@ class UpdateListItemsRouteADME2ESpec
       }
 
       "update only the position of the child node within same parent" in {
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val parentIri   = "http://rdfh.ch/lists/0001/notUsedList01"
         val newPosition = 1
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri     = "http://rdfh.ch/lists/0001/notUsedList014"
         val updateNodeName =
           s"""{
              |    "parentNodeIri": "$parentIri",
@@ -456,9 +456,9 @@ class UpdateListItemsRouteADME2ESpec
       }
 
       "reposition child node to the end of its parent's children" in {
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val parentIri   = "http://rdfh.ch/lists/0001/notUsedList01"
         val newPosition = -1
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
+        val nodeIri     = "http://rdfh.ch/lists/0001/notUsedList012"
         val updateNodeName =
           s"""{
              |    "parentNodeIri": "$parentIri",
@@ -502,9 +502,9 @@ class UpdateListItemsRouteADME2ESpec
       }
 
       "update parent and position of the child node" in {
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList"
+        val parentIri   = "http://rdfh.ch/lists/0001/notUsedList"
         val newPosition = 2
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        val nodeIri     = "http://rdfh.ch/lists/0001/notUsedList015"
         val updateNodeName =
           s"""{
              |    "parentNodeIri": "$parentIri",
@@ -548,9 +548,9 @@ class UpdateListItemsRouteADME2ESpec
       }
 
       "reposition child node to end of another parent's children" in {
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList"
+        val parentIri   = "http://rdfh.ch/lists/0001/notUsedList"
         val newPosition = -1
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        val nodeIri     = "http://rdfh.ch/lists/0001/notUsedList015"
         val updateNodeName =
           s"""{
              |    "parentNodeIri": "$parentIri",

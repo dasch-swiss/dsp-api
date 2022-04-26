@@ -70,8 +70,8 @@ class E2ESpec(_system: ActorSystem)
   def this() = this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
   /* needed by the core trait */
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -138,7 +138,7 @@ class E2ESpec(_system: ActorSystem)
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
+    val responseBodyStr                    = Await.result(responseBodyFuture, 10.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
@@ -148,7 +148,7 @@ class E2ESpec(_system: ActorSystem)
   }
 
   protected def doGetRequest(urlPath: String): String = {
-    val request = Get(s"$baseApiUrl$urlPath")
+    val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)
   }

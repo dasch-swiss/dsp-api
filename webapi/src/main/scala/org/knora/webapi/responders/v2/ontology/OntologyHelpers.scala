@@ -134,21 +134,21 @@ object OntologyHelpers {
   ): Future[Option[OntologyMetadataV2]] = {
     for {
       _ <- Future {
-        if (!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
-          throw AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri")
-        }
-      }
+             if (!internalOntologyIri.getOntologySchema.contains(InternalSchema)) {
+               throw AssertionException(s"Expected an internal ontology IRI: $internalOntologyIri")
+             }
+           }
 
       getOntologyInfoSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-        .getOntologyInfo(
-          ontologyIri = internalOntologyIri
-        )
-        .toString()
+                                .getOntologyInfo(
+                                  ontologyIri = internalOntologyIri
+                                )
+                                .toString()
 
       getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(
-        sparql = getOntologyInfoSparql,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlConstructResponse]
+                                   sparql = getOntologyInfoSparql,
+                                   featureFactoryConfig = featureFactoryConfig
+                                 )).mapTo[SparqlConstructResponse]
 
       metadata: Option[OntologyMetadataV2] =
         if (getOntologyInfoResponse.statements.isEmpty) {
@@ -342,9 +342,9 @@ object OntologyHelpers {
 
       // Identify the Knora resource properties, link properties, link value properties, and file value properties in the cardinalities.
       val knoraResourcePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allKnoraResourceProps)
-      val linkPropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allLinkProps)
-      val linkValuePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allLinkValueProps)
-      val fileValuePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allFileValueProps)
+      val linkPropsInClass          = allPropertyIrisForCardinalitiesInClass.filter(allLinkProps)
+      val linkValuePropsInClass     = allPropertyIrisForCardinalitiesInClass.filter(allLinkValueProps)
+      val fileValuePropsInClass     = allPropertyIrisForCardinalitiesInClass.filter(allFileValueProps)
 
       // Make sure there is a link value property for each link property.
 
@@ -370,8 +370,8 @@ object OntologyHelpers {
 
       // Make sure that the cardinality for each link property is the same as the cardinality for the corresponding link value property.
       for (linkProp <- linkPropsInClass) {
-        val linkValueProp: SmartIri = linkProp.fromLinkPropToLinkValueProp
-        val linkPropCardinality: KnoraCardinalityInfo = allOwlCardinalitiesForClass(linkProp)
+        val linkValueProp: SmartIri                        = linkProp.fromLinkPropToLinkValueProp
+        val linkPropCardinality: KnoraCardinalityInfo      = allOwlCardinalitiesForClass(linkProp)
         val linkValuePropCardinality: KnoraCardinalityInfo = allOwlCardinalitiesForClass(linkValueProp)
 
         if (!linkPropCardinality.equalsWithoutGuiOrder(linkValuePropCardinality)) {
@@ -386,8 +386,8 @@ object OntologyHelpers {
 
       val directCardinalityPropertyIris = directCardinalities.keySet
       val allBaseClasses: Seq[SmartIri] = allSubClassOfRelations(classIri)
-      val isKnoraResourceClass = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
-      val isStandoffClass = allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
+      val isKnoraResourceClass          = allBaseClasses.contains(OntologyConstants.KnoraBase.Resource.toSmartIri)
+      val isStandoffClass               = allBaseClasses.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)
       val isValueClass = !(isKnoraResourceClass || isStandoffClass) && allBaseClasses.contains(
         OntologyConstants.KnoraBase.Value.toSmartIri
       )
@@ -698,7 +698,7 @@ object OntologyHelpers {
       val isResourceProp = allKnoraResourceProps.contains(propertyIri)
       val isValueProp =
         allSubPropertyOfRelations(propertyIri).contains(OntologyConstants.KnoraBase.HasValue.toSmartIri)
-      val isLinkProp = allLinkProps.contains(propertyIri)
+      val isLinkProp      = allLinkProps.contains(propertyIri)
       val isLinkValueProp = allLinkValueProps.contains(propertyIri)
       val isFileValueProp = allFileValueProps.contains(propertyIri)
 
@@ -827,7 +827,7 @@ object OntologyHelpers {
     errorFun: String => Nothing
   )(implicit stringFormatter: StringFormatter): Unit = {
     val propertyIri = propertyInfoContent.propertyIri
-    val predicates = propertyInfoContent.predicates
+    val predicates  = propertyInfoContent.predicates
 
     // Find out which salsah-gui:Guielement the property uses, if any.
     val maybeGuiElementPred: Option[PredicateInfoV2] =
@@ -883,8 +883,8 @@ object OntologyHelpers {
       }
 
     // Check that all required GUI attributes are provided.
-    val requiredAttributeNames = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
-    val providedAttributeNames = guiAttributes.map(_.attributeName)
+    val requiredAttributeNames             = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
+    val providedAttributeNames             = guiAttributes.map(_.attributeName)
     val missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
 
     if (missingAttributeNames.nonEmpty) {
@@ -1080,21 +1080,21 @@ object OntologyHelpers {
   ): Future[Set[IRI]] =
     for {
       isOntologyUsedSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .isOntologyUsed(
-            ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
-            classIris = ontology.classes.keySet,
-            propertyIris = ontology.properties.keySet
-          )
-          .toString()
-      )
+                                org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                  .isOntologyUsed(
+                                    ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
+                                    classIris = ontology.classes.keySet,
+                                    propertyIris = ontology.properties.keySet
+                                  )
+                                  .toString()
+                              )
 
       isOntologyUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql))
-        .mapTo[SparqlSelectResult]
+                                                      .mapTo[SparqlSelectResult]
 
       subjects = isOntologyUsedResponse.results.bindings.map { row =>
-        row.rowMap("s")
-      }.toSet
+                   row.rowMap("s")
+                 }.toSet
     } yield subjects
 
   /**
@@ -1114,9 +1114,9 @@ object OntologyHelpers {
       _ <- checkExternalOntologyIriForUpdate(externalOntologyIri)
       _ <- checkExternalEntityIriForUpdate(externalEntityIri = externalEntityIri)
       _ <- checkPermissionsForOntologyUpdate(
-        internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
-        requestingUser = requestingUser
-      )
+             internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema),
+             requestingUser = requestingUser
+           )
     } yield ()
 
   /**
@@ -1134,17 +1134,17 @@ object OntologyHelpers {
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[PropertyInfoContentV2] =
     for {
       sparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getPropertyDefinition(
-            propertyIri = propertyIri
-          )
-          .toString()
-      )
+                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                    .getPropertyDefinition(
+                      propertyIri = propertyIri
+                    )
+                    .toString()
+                )
 
       constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparql,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                             sparql = sparql,
+                             featureFactoryConfig = featureFactoryConfig
+                           )).mapTo[SparqlExtendedConstructResponse]
     } yield constructResponseToPropertyDefinition(
       propertyIri = propertyIri,
       constructResponse = constructResponse
@@ -1327,109 +1327,109 @@ object OntologyHelpers {
       nonKnoraEntities = (classIris ++ propertyIris).filter(!_.isKnoraEntityIri)
 
       _ = if (nonKnoraEntities.nonEmpty) {
-        throw BadRequestException(
-          s"Some requested entities are not Knora entities: ${nonKnoraEntities.mkString(", ")}"
-        )
-      }
+            throw BadRequestException(
+              s"Some requested entities are not Knora entities: ${nonKnoraEntities.mkString(", ")}"
+            )
+          }
 
       // See if any of the requested entities are unavailable in the requested schema.
 
       classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) { case (acc, classIri) =>
-        // Is this class IRI hard-coded in the requested schema?
-        if (
-          KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd
-            .contains(classIri) ||
-          KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd
-            .contains(classIri)
-        ) {
-          // Yes, so it's available.
-          acc
-        } else {
-          // No. Is it among the classes removed from the internal ontology in the requested schema?
-          classIri.getOntologySchema.get match {
-            case apiV2Schema: ApiV2Schema =>
-              val internalClassIri =
-                classIri.toOntologySchema(InternalSchema)
-              val knoraBaseClassesToRemove = OntologyTransformationRules
-                .getTransformationRules(
-                  classIri.getOntologyFromEntity,
-                  apiV2Schema
-                )
-                .internalClassesToRemove
+                                                    // Is this class IRI hard-coded in the requested schema?
+                                                    if (
+                                                      KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd
+                                                        .contains(classIri) ||
+                                                      KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd
+                                                        .contains(classIri)
+                                                    ) {
+                                                      // Yes, so it's available.
+                                                      acc
+                                                    } else {
+                                                      // No. Is it among the classes removed from the internal ontology in the requested schema?
+                                                      classIri.getOntologySchema.get match {
+                                                        case apiV2Schema: ApiV2Schema =>
+                                                          val internalClassIri =
+                                                            classIri.toOntologySchema(InternalSchema)
+                                                          val knoraBaseClassesToRemove = OntologyTransformationRules
+                                                            .getTransformationRules(
+                                                              classIri.getOntologyFromEntity,
+                                                              apiV2Schema
+                                                            )
+                                                            .internalClassesToRemove
 
-              if (knoraBaseClassesToRemove.contains(internalClassIri)) {
-                // Yes. Include it in the set of unavailable classes.
-                acc + classIri
-              } else {
-                // No. It's available.
-                acc
-              }
+                                                          if (knoraBaseClassesToRemove.contains(internalClassIri)) {
+                                                            // Yes. Include it in the set of unavailable classes.
+                                                            acc + classIri
+                                                          } else {
+                                                            // No. It's available.
+                                                            acc
+                                                          }
 
-            case InternalSchema => acc
-          }
-        }
-      }
+                                                        case InternalSchema => acc
+                                                      }
+                                                    }
+                                                  }
 
       propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
-        case (acc, propertyIri) =>
-          // Is this property IRI hard-coded in the requested schema?
-          if (
-            KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd
-              .contains(propertyIri) ||
-            KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd
-              .contains(propertyIri)
-          ) {
-            // Yes, so it's available.
-            acc
-          } else {
-            // No. See if it's available in the requested schema.
-            propertyIri.getOntologySchema.get match {
-              case apiV2Schema: ApiV2Schema =>
-                val internalPropertyIri =
-                  propertyIri.toOntologySchema(InternalSchema)
+                                                       case (acc, propertyIri) =>
+                                                         // Is this property IRI hard-coded in the requested schema?
+                                                         if (
+                                                           KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd
+                                                             .contains(propertyIri) ||
+                                                           KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd
+                                                             .contains(propertyIri)
+                                                         ) {
+                                                           // Yes, so it's available.
+                                                           acc
+                                                         } else {
+                                                           // No. See if it's available in the requested schema.
+                                                           propertyIri.getOntologySchema.get match {
+                                                             case apiV2Schema: ApiV2Schema =>
+                                                               val internalPropertyIri =
+                                                                 propertyIri.toOntologySchema(InternalSchema)
 
-                // If it's a link value property and it's requested in the simple schema, it's unavailable.
-                if (
-                  apiV2Schema == ApiV2Simple && OntologyHelpers
-                    .isLinkValueProp(internalPropertyIri, cacheData)
-                ) {
-                  acc + propertyIri
-                } else {
-                  // Is it among the properties removed from the internal ontology in the requested schema?
+                                                               // If it's a link value property and it's requested in the simple schema, it's unavailable.
+                                                               if (
+                                                                 apiV2Schema == ApiV2Simple && OntologyHelpers
+                                                                   .isLinkValueProp(internalPropertyIri, cacheData)
+                                                               ) {
+                                                                 acc + propertyIri
+                                                               } else {
+                                                                 // Is it among the properties removed from the internal ontology in the requested schema?
 
-                  val knoraBasePropertiesToRemove =
-                    OntologyTransformationRules
-                      .getTransformationRules(
-                        propertyIri.getOntologyFromEntity,
-                        apiV2Schema
-                      )
-                      .internalPropertiesToRemove
+                                                                 val knoraBasePropertiesToRemove =
+                                                                   OntologyTransformationRules
+                                                                     .getTransformationRules(
+                                                                       propertyIri.getOntologyFromEntity,
+                                                                       apiV2Schema
+                                                                     )
+                                                                     .internalPropertiesToRemove
 
-                  if (
-                    knoraBasePropertiesToRemove.contains(
-                      internalPropertyIri
-                    )
-                  ) {
-                    // Yes. Include it in the set of unavailable properties.
-                    acc + propertyIri
-                  } else {
-                    // No. It's available.
-                    acc
-                  }
-                }
+                                                                 if (
+                                                                   knoraBasePropertiesToRemove.contains(
+                                                                     internalPropertyIri
+                                                                   )
+                                                                 ) {
+                                                                   // Yes. Include it in the set of unavailable properties.
+                                                                   acc + propertyIri
+                                                                 } else {
+                                                                   // No. It's available.
+                                                                   acc
+                                                                 }
+                                                               }
 
-              case InternalSchema => acc
-            }
-          }
-      }
+                                                             case InternalSchema => acc
+                                                           }
+                                                         }
+                                                     }
 
       entitiesUnavailableInSchema = classesUnavailableInSchema ++ propertiesUnavailableInSchema
 
       _ = if (entitiesUnavailableInSchema.nonEmpty) {
-        throw NotFoundException(
-          s"Some requested entities were not found: ${entitiesUnavailableInSchema.mkString(", ")}"
-        )
-      }
+            throw NotFoundException(
+              s"Some requested entities were not found: ${entitiesUnavailableInSchema.mkString(", ")}"
+            )
+          }
 
       // See if any of the requested entities are hard-coded for knora-api.
 
@@ -1456,15 +1456,15 @@ object OntologyHelpers {
           .map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri)
           .toMap
 
-      classIrisForCache = internalToExternalClassIris.keySet
+      classIrisForCache    = internalToExternalClassIris.keySet
       propertyIrisForCache = internalToExternalPropertyIris.keySet
 
       // Get the entities that are available in the ontology cache.
 
       classOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.view
-        .filterKeys(classIrisForCache.map(_.getOntologyFromEntity))
-        .toMap
-        .values
+                                                            .filterKeys(classIrisForCache.map(_.getOntologyFromEntity))
+                                                            .toMap
+                                                            .values
       propertyOntologiesForCache: Iterable[ReadOntologyV2] =
         cacheData.ontologies.view
           .filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity))
@@ -1472,16 +1472,16 @@ object OntologyHelpers {
           .values
 
       classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologiesForCache.flatMap { ontology =>
-        ontology.classes.view
-          .filterKeys(classIrisForCache)
-          .toMap
-      }.toMap
+                                                                    ontology.classes.view
+                                                                      .filterKeys(classIrisForCache)
+                                                                      .toMap
+                                                                  }.toMap
 
       propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologiesForCache.flatMap { ontology =>
-        ontology.properties.view
-          .filterKeys(propertyIrisForCache)
-          .toMap
-      }.toMap
+                                                                          ontology.properties.view
+                                                                            .filterKeys(propertyIrisForCache)
+                                                                            .toMap
+                                                                        }.toMap
 
       allClassesAvailable: Map[SmartIri, ReadClassInfoV2] =
         classesAvailableFromCache ++ hardCodedExternalClassesAvailable
@@ -1491,34 +1491,34 @@ object OntologyHelpers {
       // See if any entities are missing.
 
       allExternalClassIrisAvailable: Set[SmartIri] = allClassesAvailable.keySet.map { classIri =>
-        if (classIri.getOntologySchema.contains(InternalSchema)) {
-          internalToExternalClassIris(classIri)
-        } else {
-          classIri
-        }
-      }
+                                                       if (classIri.getOntologySchema.contains(InternalSchema)) {
+                                                         internalToExternalClassIris(classIri)
+                                                       } else {
+                                                         classIri
+                                                       }
+                                                     }
 
       allExternalPropertyIrisAvailable = allPropertiesAvailable.keySet.map { propertyIri =>
-        if (propertyIri.getOntologySchema.contains(InternalSchema)) {
-          internalToExternalPropertyIris(propertyIri)
-        } else {
-          propertyIri
-        }
-      }
+                                           if (propertyIri.getOntologySchema.contains(InternalSchema)) {
+                                             internalToExternalPropertyIris(propertyIri)
+                                           } else {
+                                             propertyIri
+                                           }
+                                         }
 
-      missingClasses = classIris -- allExternalClassIrisAvailable
+      missingClasses    = classIris -- allExternalClassIrisAvailable
       missingProperties = propertyIris -- allExternalPropertyIrisAvailable
 
       missingEntities = missingClasses ++ missingProperties
 
       _ = if (missingEntities.nonEmpty) {
-        throw NotFoundException(s"Some requested entities were not found: ${missingEntities.mkString(", ")}")
-      }
+            throw NotFoundException(s"Some requested entities were not found: ${missingEntities.mkString(", ")}")
+          }
 
       response = EntityInfoGetResponseV2(
-        classInfoMap = new ErrorHandlingMap(allClassesAvailable, key => s"Resource class $key not found"),
-        propertyInfoMap = new ErrorHandlingMap(allPropertiesAvailable, key => s"Property $key not found")
-      )
+                   classInfoMap = new ErrorHandlingMap(allClassesAvailable, key => s"Resource class $key not found"),
+                   propertyInfoMap = new ErrorHandlingMap(allPropertiesAvailable, key => s"Property $key not found")
+                 )
     } yield response
   }
 
@@ -1540,8 +1540,8 @@ object OntologyHelpers {
       ontologyIris = classIris.map(_.getOntologyFromEntity)
 
       _ = if (ontologyIris.size != 1) {
-        throw BadRequestException(s"Only one ontology may be queried per request")
-      }
+            throw BadRequestException(s"Only one ontology may be queried per request")
+          }
 
       classInfoResponse: EntityInfoGetResponseV2 <-
         getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
@@ -1577,17 +1577,17 @@ object OntologyHelpers {
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ClassInfoContentV2] =
     for {
       sparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getClassDefinition(
-            classIri = classIri
-          )
-          .toString()
-      )
+                  org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                    .getClassDefinition(
+                      classIri = classIri
+                    )
+                    .toString()
+                )
 
       constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparql,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                             sparql = sparql,
+                             featureFactoryConfig = featureFactoryConfig
+                           )).mapTo[SparqlExtendedConstructResponse]
     } yield constructResponseToClassDefinition(
       classIri = classIri,
       constructResponse = constructResponse
@@ -1825,31 +1825,31 @@ object OntologyHelpers {
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     for {
       existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
-        settings,
-        storeManager,
-        internalOntologyIri = internalOntologyIri,
-        featureFactoryConfig = featureFactoryConfig
-      )
+                                                                settings,
+                                                                storeManager,
+                                                                internalOntologyIri = internalOntologyIri,
+                                                                featureFactoryConfig = featureFactoryConfig
+                                                              )
 
       _ = existingOntologyMetadata match {
-        case Some(metadata) =>
-          metadata.lastModificationDate match {
-            case Some(lastModificationDate) =>
-              if (lastModificationDate != expectedLastModificationDate) {
-                errorFun
+            case Some(metadata) =>
+              metadata.lastModificationDate match {
+                case Some(lastModificationDate) =>
+                  if (lastModificationDate != expectedLastModificationDate) {
+                    errorFun
+                  }
+
+                case None =>
+                  throw InconsistentRepositoryDataException(
+                    s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}"
+                  )
               }
 
             case None =>
-              throw InconsistentRepositoryDataException(
-                s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}"
+              throw NotFoundException(
+                s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found"
               )
           }
-
-        case None =>
-          throw NotFoundException(
-            s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found"
-          )
-      }
     } yield ()
 
   /**
@@ -1900,11 +1900,11 @@ object OntologyHelpers {
           .get
 
       _ = if (
-        !requestingUser.permissions.isProjectAdmin(projectIri.toString) && !requestingUser.permissions.isSystemAdmin
-      ) {
-        // not a project or system admin
-        throw ForbiddenException("Ontologies can be modified only by a project or system admin.")
-      }
+            !requestingUser.permissions.isProjectAdmin(projectIri.toString) && !requestingUser.permissions.isSystemAdmin
+          ) {
+            // not a project or system admin
+            throw ForbiddenException("Ontologies can be modified only by a project or system admin.")
+          }
 
     } yield projectIri
 

@@ -20,7 +20,7 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
  */
 class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  private val schemes = Array("http", "https")
+  private val schemes      = Array("http", "https")
   private val urlValidator = new UrlValidator(schemes)
 
   /**
@@ -34,9 +34,9 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         requestContext =>
           val requestMessage = for {
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            ).map(_.asUserProfileV1)
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           ).map(_.asUserProfileV1)
           } yield UsersGetRequestV1(userProfile)
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -56,9 +56,9 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             val requestMessage = if (identifier == "email") {
               for {
                 userProfile <- getUserADM(
-                  requestContext = requestContext,
-                  featureFactoryConfig = featureFactoryConfig
-                ).map(_.asUserProfileV1)
+                                 requestContext = requestContext,
+                                 featureFactoryConfig = featureFactoryConfig
+                               ).map(_.asUserProfileV1)
               } yield UserProfileByEmailGetRequestV1(
                 email = value,
                 userProfileType = UserProfileTypeV1.RESTRICTED,
@@ -68,13 +68,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             } else {
               for {
                 userProfile <- getUserADM(
-                  requestContext = requestContext,
-                  featureFactoryConfig = featureFactoryConfig
-                ).map(_.asUserProfileV1)
+                                 requestContext = requestContext,
+                                 featureFactoryConfig = featureFactoryConfig
+                               ).map(_.asUserProfileV1)
                 userIri = stringFormatter.validateAndEscapeIri(
-                  value,
-                  throw BadRequestException(s"Invalid user IRI $value")
-                )
+                            value,
+                            throw BadRequestException(s"Invalid user IRI $value")
+                          )
               } yield UserProfileByIRIGetRequestV1(
                 userIri = userIri,
                 userProfileType = UserProfileTypeV1.RESTRICTED,
@@ -99,13 +99,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           requestContext =>
             val requestMessage = for {
               userProfile <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              ).map(_.asUserProfileV1)
+                               requestContext = requestContext,
+                               featureFactoryConfig = featureFactoryConfig
+                             ).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
-                userIri,
-                throw BadRequestException(s"Invalid user IRI $userIri")
-              )
+                                 userIri,
+                                 throw BadRequestException(s"Invalid user IRI $userIri")
+                               )
             } yield UserProjectMembershipsGetRequestV1(
               userIri = checkedUserIri,
               userProfileV1 = userProfile,
@@ -127,13 +127,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           requestContext =>
             val requestMessage = for {
               userProfile <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              ).map(_.asUserProfileV1)
+                               requestContext = requestContext,
+                               featureFactoryConfig = featureFactoryConfig
+                             ).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
-                userIri,
-                throw BadRequestException(s"Invalid user IRI $userIri")
-              )
+                                 userIri,
+                                 throw BadRequestException(s"Invalid user IRI $userIri")
+                               )
             } yield UserProjectAdminMembershipsGetRequestV1(
               userIri = checkedUserIri,
               userProfileV1 = userProfile,
@@ -155,13 +155,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           requestContext =>
             val requestMessage = for {
               userProfile <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              ).map(_.asUserProfileV1)
+                               requestContext = requestContext,
+                               featureFactoryConfig = featureFactoryConfig
+                             ).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
-                userIri,
-                throw BadRequestException(s"Invalid user IRI $userIri")
-              )
+                                 userIri,
+                                 throw BadRequestException(s"Invalid user IRI $userIri")
+                               )
             } yield UserGroupMembershipsGetRequestV1(
               userIri = checkedUserIri,
               userProfileV1 = userProfile,

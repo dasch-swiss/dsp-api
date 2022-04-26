@@ -118,13 +118,13 @@ object FeatureToggle {
   /**
    * The name of the HTTP request header containing feature toggles.
    */
-  val REQUEST_HEADER: String = "X-Knora-Feature-Toggles"
+  val REQUEST_HEADER: String           = "X-Knora-Feature-Toggles"
   val REQUEST_HEADER_LOWERCASE: String = REQUEST_HEADER.toLowerCase
 
   /**
    * The name of the HTTP response header that lists configured feature toggles.
    */
-  val RESPONSE_HEADER: String = REQUEST_HEADER
+  val RESPONSE_HEADER: String           = REQUEST_HEADER
   val RESPONSE_HEADER_LOWERCASE: String = REQUEST_HEADER_LOWERCASE
 
   /**
@@ -369,7 +369,7 @@ class RequestContextFeatureFactoryConfig(requestContext: RequestContext, parent:
             headerValueItem.split('=').map(_.trim) match {
               case Array(featureNameAndVersionStr: String, isEnabledStr: String) =>
                 val featureNameAndVersion: Array[String] = featureNameAndVersionStr.split(':').map(_.trim)
-                val featureName: String = featureNameAndVersion.head
+                val featureName: String                  = featureNameAndVersion.head
 
                 // Accept the boolean values that are accepted in application.conf.
                 val isEnabled: Boolean = if (TRUE_STRINGS.contains(isEnabledStr.toLowerCase)) {

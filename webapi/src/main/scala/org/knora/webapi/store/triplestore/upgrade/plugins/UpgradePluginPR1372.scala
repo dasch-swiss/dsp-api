@@ -19,8 +19,8 @@ class UpgradePluginPR1372(featureFactoryConfig: FeatureFactoryConfig) extends Up
 
   // IRI objects representing the IRIs used in this transformation.
   private val ValueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
-  private val PreviousValueIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
-  private val HasPermissionsIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.HasPermissions)
+  private val PreviousValueIri: IriNode     = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
+  private val HasPermissionsIri: IriNode    = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.HasPermissions)
 
   override def transform(model: RdfModel): Unit =
     // Remove knora-base:hasPermissions from all past value versions.

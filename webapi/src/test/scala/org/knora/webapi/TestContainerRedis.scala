@@ -17,7 +17,7 @@ import scala.jdk.CollectionConverters._
 object TestContainerRedis {
 
   val redisImageName: DockerImageName = DockerImageName.parse("redis:5")
-  val redisContainer = new GenericContainer(redisImageName)
+  val redisContainer                  = new GenericContainer(redisImageName)
   redisContainer.withExposedPorts(6379)
   redisContainer.start()
 

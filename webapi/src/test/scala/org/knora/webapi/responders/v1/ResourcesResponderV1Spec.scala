@@ -734,7 +734,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
           propValues.sortBy { valueObject: ResourceCreateValueResponseV1 =>
             val stringValue = valueObject.value.textval.map { case (valType: LiteralValueType.Value, value: String) =>
               value // get string and ignore value type
-            }.head // each value is represented by a map consisting of only one item (e.g. string -> "book title")
+            }.head  // each value is represented by a map consisting of only one item (e.g. string -> "book title")
             stringValue
           }
         )
@@ -1184,7 +1184,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val pubdate = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
 
       val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
-        "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
+        "http://www.knora.org/ontology/0803/incunabula#title"   -> Vector(CreateValueV1WithComment(title1)),
         "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(CreateValueV1WithComment(pubdate)),
         "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
           CreateValueV1WithComment(citation1, None)
@@ -1258,7 +1258,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
-        "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
+        "http://www.knora.org/ontology/0803/incunabula#title"   -> Vector(CreateValueV1WithComment(title1)),
         "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(CreateValueV1WithComment(pubdateRequest)),
         "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
           CreateValueV1WithComment(citation4, None),
@@ -1270,10 +1270,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val valuesExpected = Map(
-        "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(title1),
-        "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(pubdateResponse),
+        "http://www.knora.org/ontology/0803/incunabula#title"    -> Vector(title1),
+        "http://www.knora.org/ontology/0803/incunabula#pubdate"  -> Vector(pubdateResponse),
         "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(citation3, citation1, citation4, citation2),
-        "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(publoc)
+        "http://www.knora.org/ontology/0803/incunabula#publoc"   -> Vector(publoc)
       )
 
       responderManager ! ResourceCreateRequestV1(
@@ -1309,9 +1309,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     }
 
     "create an incunabula:page with a resource pointer" in {
-      val recto = TextValueSimpleV1("recto")
+      val recto    = TextValueSimpleV1("recto")
       val origname = TextValueSimpleV1("Blatt")
-      val seqnum = IntegerValueV1(1)
+      val seqnum   = IntegerValueV1(1)
 
       val fileValue = StillImageFileValueV1(
         internalMimeType = "image/jp2",
@@ -1329,10 +1329,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(
           CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0803/482a33d65c36"))
         ),
-        "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(CreateValueV1WithComment(recto)),
-        "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
+        "http://www.knora.org/ontology/0803/incunabula#pagenum"  -> Vector(CreateValueV1WithComment(recto)),
+        "http://www.knora.org/ontology/0803/incunabula#partOf"   -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
         "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(CreateValueV1WithComment(origname)),
-        "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Vector(CreateValueV1WithComment(seqnum))
+        "http://www.knora.org/ontology/0803/incunabula#seqnum"   -> Vector(CreateValueV1WithComment(seqnum))
       )
 
       val expected = Map(
@@ -1342,11 +1342,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband")
           )
         ),
-        "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(recto),
-        "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(LinkV1(book)),
+        "http://www.knora.org/ontology/0803/incunabula#pagenum"  -> Vector(recto),
+        "http://www.knora.org/ontology/0803/incunabula#partOf"   -> Vector(LinkV1(book)),
         "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(origname),
-        "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Vector(seqnum),
-        OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValue)
+        "http://www.knora.org/ontology/0803/incunabula#seqnum"   -> Vector(seqnum),
+        OntologyConstants.KnoraBase.HasStillImageFileValue       -> Vector(fileValue)
       )
 
       responderManager ! ResourceCreateRequestV1(
@@ -1665,8 +1665,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val response = expectMsgType[GraphDataGetResponseV1](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
+      val edges    = response.edges
+      val nodes    = response.nodes
 
       edges should contain theSameElementsAs graphForAnythingUser1.edges
       nodes should contain theSameElementsAs graphForAnythingUser1.nodes
@@ -1680,8 +1680,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val response = expectMsgType[GraphDataGetResponseV1](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
+      val edges    = response.edges
+      val nodes    = response.nodes
 
       edges should contain theSameElementsAs graphForIncunabulaUser.edges
       nodes should contain theSameElementsAs graphForIncunabulaUser.nodes

@@ -356,13 +356,13 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
   override def doSelect(selectQuery: String): SparqlSelectResult = {
     // Run the query.
 
-    val connection = repository.getConnection
-    val tupleQuery: rdf4j.query.TupleQuery = connection.prepareTupleQuery(selectQuery)
+    val connection                                     = repository.getConnection
+    val tupleQuery: rdf4j.query.TupleQuery             = connection.prepareTupleQuery(selectQuery)
     val tupleQueryResult: rdf4j.query.TupleQueryResult = tupleQuery.evaluate
 
     // Convert the query result to a SparqlSelectResponse.
 
-    val header = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala.toSeq)
+    val header    = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala.toSeq)
     val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
     while (tupleQueryResult.hasNext) {

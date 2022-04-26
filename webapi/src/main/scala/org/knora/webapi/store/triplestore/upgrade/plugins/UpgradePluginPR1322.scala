@@ -15,13 +15,13 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  * Transforms a repository for Knora PR 1322.
  */
 class UpgradePluginPR1322(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory               = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   // IRI objects representing the IRIs used in this transformation.
-  private val ValueHasUUIDIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
+  private val ValueHasUUIDIri: IriNode      = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
   private val ValueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
-  private val PreviousValueIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
+  private val PreviousValueIri: IriNode     = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
 
   override def transform(model: RdfModel): Unit =
     // Add a random UUID to each current value version.

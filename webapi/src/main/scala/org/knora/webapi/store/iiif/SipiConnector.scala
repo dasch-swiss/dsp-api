@@ -38,7 +38,7 @@ import scala.util.Try
  */
 class SipiConnector extends Actor with ActorLogging {
 
-  implicit val system: ActorSystem = context.system
+  implicit val system: ActorSystem                = context.system
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   private val settings = KnoraSettings(system)
@@ -142,10 +142,10 @@ class SipiConnector extends Actor with ActorLogging {
     import SipiKnoraJsonResponseProtocol._
 
     val knoraInfoUrl = getFileMetadataRequest.fileUrl + "/knora.json"
-    val sipiRequest = new HttpGet(knoraInfoUrl)
+    val sipiRequest  = new HttpGet(knoraInfoUrl)
 
     for {
-      sipiResponseStr <- doSipiRequest(sipiRequest)
+      sipiResponseStr                    <- doSipiRequest(sipiRequest)
       sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
     } yield GetFileMetadataResponse(
       originalFilename = sipiResponse.originalFilename,
@@ -177,8 +177,8 @@ class SipiConnector extends Actor with ActorLogging {
         "knora-data" -> JsObject(
           Map(
             "permission" -> JsString("StoreFile"),
-            "filename" -> JsString(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
-            "prefix" -> JsString(moveTemporaryFileToPermanentStorageRequestV2.prefix)
+            "filename"   -> JsString(moveTemporaryFileToPermanentStorageRequestV2.internalFilename),
+            "prefix"     -> JsString(moveTemporaryFileToPermanentStorageRequestV2.prefix)
           )
         )
       )
@@ -214,7 +214,7 @@ class SipiConnector extends Actor with ActorLogging {
         "knora-data" -> JsObject(
           Map(
             "permission" -> JsString("DeleteTempFile"),
-            "filename" -> JsString(deleteTemporaryFileRequestV2.internalFilename)
+            "filename"   -> JsString(deleteTemporaryFileRequestV2.internalFilename)
           )
         )
       )
@@ -286,7 +286,7 @@ class SipiConnector extends Actor with ActorLogging {
    * @return Sipi's response.
    */
   private def doSipiRequest(request: HttpRequest): Try[String] = {
-    val httpContext: HttpClientContext = HttpClientContext.create()
+    val httpContext: HttpClientContext               = HttpClientContext.create()
     var maybeResponse: Option[CloseableHttpResponse] = None
 
     val sipiResponseTry = Try {
@@ -297,7 +297,7 @@ class SipiConnector extends Actor with ActorLogging {
         case None                 => ""
       }
 
-      val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+      val statusCode: Int     = maybeResponse.get.getStatusLine.getStatusCode
       val statusCategory: Int = statusCode / 100
 
       // Was the request successful?

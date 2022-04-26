@@ -147,34 +147,34 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   // A Map of MIME types to Knora API v1 binary format name.
   private val mimeType2V1Format = new ErrorHandlingMap(
     Map(
-      "application/octet-stream" -> "BINARY-UNKNOWN",
-      "image/jpeg" -> "JPEG",
-      "image/jp2" -> "JPEG2000",
-      "image/jpx" -> "JPEG2000",
-      "application/pdf" -> "PDF",
-      "application/postscript" -> "POSTSCRIPT",
-      "application/vnd.ms-powerpoint" -> "PPT",
+      "application/octet-stream"                                                  -> "BINARY-UNKNOWN",
+      "image/jpeg"                                                                -> "JPEG",
+      "image/jp2"                                                                 -> "JPEG2000",
+      "image/jpx"                                                                 -> "JPEG2000",
+      "application/pdf"                                                           -> "PDF",
+      "application/postscript"                                                    -> "POSTSCRIPT",
+      "application/vnd.ms-powerpoint"                                             -> "PPT",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation" -> "PPTX",
-      "application/rtf" -> "RTF",
-      "video/salsah" -> "WEBVIDEO",
-      "text/sgml" -> "SGML",
-      "image/tiff" -> "TIFF",
-      "application/msword" -> "WORD",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> "WORDX",
-      "application/vnd.ms-excel" -> "XLS",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> "XLSX",
-      "application/xml" -> "XML",
-      "text/xml" -> "XML",
-      "text/csv" -> "CSV",
-      "text/plain" -> "TEXT",
-      "application/zip" -> "ZIP",
-      "application/x-compressed-zip" -> "ZIP",
-      "audio/mpeg" -> "AUDIO",
-      "audio/mp4" -> "AUDIO",
-      "audio/wav" -> "AUDIO",
-      "audio/x-wav" -> "AUDIO",
-      "audio/vnd.wave" -> "AUDIO",
-      "video/mp4" -> "VIDEO"
+      "application/rtf"                                                           -> "RTF",
+      "video/salsah"                                                              -> "WEBVIDEO",
+      "text/sgml"                                                                 -> "SGML",
+      "image/tiff"                                                                -> "TIFF",
+      "application/msword"                                                        -> "WORD",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"   -> "WORDX",
+      "application/vnd.ms-excel"                                                  -> "XLS",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"         -> "XLSX",
+      "application/xml"                                                           -> "XML",
+      "text/xml"                                                                  -> "XML",
+      "text/csv"                                                                  -> "CSV",
+      "text/plain"                                                                -> "TEXT",
+      "application/zip"                                                           -> "ZIP",
+      "application/x-compressed-zip"                                              -> "ZIP",
+      "audio/mpeg"                                                                -> "AUDIO",
+      "audio/mp4"                                                                 -> "AUDIO",
+      "audio/wav"                                                                 -> "AUDIO",
+      "audio/x-wav"                                                               -> "AUDIO",
+      "audio/vnd.wave"                                                            -> "AUDIO",
+      "video/mp4"                                                                 -> "VIDEO"
     ),
     { key: String =>
       s"Unknown MIME type: $key"
@@ -346,16 +346,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     } else {
       for {
         checkSubClassResponse <- (responderManager ? CheckSubClassRequestV1(
-          subClassIri = valueType,
-          superClassIri = propertyObjectClassConstraint,
-          userProfile = userProfile
-        )).mapTo[CheckSubClassResponseV1]
+                                   subClassIri = valueType,
+                                   superClassIri = propertyObjectClassConstraint,
+                                   userProfile = userProfile
+                                 )).mapTo[CheckSubClassResponseV1]
 
         _ = if (!checkSubClassResponse.isSubClass) {
-          throw OntologyConstraintException(
-            s"Property $propertyIri requires a value of type $propertyObjectClassConstraint"
-          )
-        }
+              throw OntologyConstraintException(
+                s"Property $propertyIri requires a value of type $propertyObjectClassConstraint"
+              )
+            }
       } yield ()
     }
 
@@ -686,7 +686,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
-    val predicates = valueProps.literalData
+    val predicates   = valueProps.literalData
     val timeStampStr = predicates(OntologyConstants.KnoraBase.ValueHasTimeStamp).literals.head
 
     Future(
@@ -734,16 +734,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       // get the mapping and the related standoff entities
       // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
       mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-        mappingIri = mappingIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = userProfile
-      )).mapTo[GetMappingResponseV2]
+                                                 mappingIri = mappingIri,
+                                                 featureFactoryConfig = featureFactoryConfig,
+                                                 requestingUser = userProfile
+                                               )).mapTo[GetMappingResponseV2]
 
       standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(
-        standoffAssertions = valueProps.standoff,
-        responderManager = responderManager,
-        requestingUser = userProfile
-      )
+                                            standoffAssertions = valueProps.standoff,
+                                            responderManager = responderManager,
+                                            requestingUser = userProfile
+                                          )
 
     } yield TextValueWithStandoffV1(
       utf8str = utf8str,

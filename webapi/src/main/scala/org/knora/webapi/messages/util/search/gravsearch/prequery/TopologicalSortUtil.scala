@@ -41,7 +41,7 @@ object TopologicalSortUtil {
      * @return a list of all permutations of topological order.
      */
     def findPermutations(layeredOrder: graph.LayeredTopologicalOrder[NodeT]): List[Vector[NodeT]] = {
-      val lastLayerNodes: Vector[NodeT] = layeredOrder.last._2.toVector
+      val lastLayerNodes: Vector[NodeT]                    = layeredOrder.last._2.toVector
       val allLowerLayers: Iterable[(Int, Iterable[NodeT])] = layeredOrder.dropRight(1)
 
       // Find all permutations of last layer nodes; i.e leaf nodes.

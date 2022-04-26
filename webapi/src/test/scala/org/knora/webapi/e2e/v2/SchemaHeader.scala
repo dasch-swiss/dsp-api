@@ -17,13 +17,13 @@ import scala.util.Try
  * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
  */
 final class SchemaHeader(token: String) extends ModeledCustomHeader[SchemaHeader] {
-  override def renderInRequests = true
-  override def renderInResponses = true
+  override def renderInRequests             = true
+  override def renderInResponses            = true
   override val companion: SchemaHeader.type = SchemaHeader
-  override def value: String = token
+  override def value: String                = token
 }
 
 object SchemaHeader extends ModeledCustomHeaderCompanion[SchemaHeader] {
-  override val name: String = RouteUtilV2.SCHEMA_HEADER
+  override val name: String         = RouteUtilV2.SCHEMA_HEADER
   override def parse(value: String) = Try(new SchemaHeader(value))
 }

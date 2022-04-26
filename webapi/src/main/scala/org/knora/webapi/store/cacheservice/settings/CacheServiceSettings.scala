@@ -11,7 +11,7 @@ import com.typesafe.config.Config
  * Holds the Cache Service specific settings.
  */
 class CacheServiceSettings(config: Config) {
-  val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
+  val cacheServiceEnabled: Boolean  = config.getBoolean("app.cache-service.enabled")
   val cacheServiceRedisHost: String = config.getString("app.cache-service.redis.host")
-  val cacheServiceRedisPort: Int = config.getInt("app.cache-service.redis.port")
+  val cacheServiceRedisPort: Int    = config.getInt("app.cache-service.redis.port")
 }

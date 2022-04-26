@@ -20,7 +20,7 @@ class UpgradePluginPR1367(featureFactoryConfig: FeatureFactoryConfig) extends Up
     // Fix the datatypes of decimal literals.
 
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
-    val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+    val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
     for (statement: Statement <- model) {
       statement.obj match {

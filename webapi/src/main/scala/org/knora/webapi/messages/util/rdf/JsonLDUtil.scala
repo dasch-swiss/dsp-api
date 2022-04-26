@@ -1117,7 +1117,7 @@ case class JsonLDDocument(
       this
     }
 
-    val bodyAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(documentFlattenedIfRequested.body.toJavaxJsonValue)
+    val bodyAsTitaniumJsonDocument: JsonDocument    = JsonDocument.of(documentFlattenedIfRequested.body.toJavaxJsonValue)
     val contextAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(context.toJavaxJsonValue)
     JsonLd.compact(bodyAsTitaniumJsonDocument, contextAsTitaniumJsonDocument).get
   }
@@ -1137,7 +1137,7 @@ case class JsonLDDocument(
     }
 
     val stringWriter = new StringWriter()
-    val jsonWriter = jsonWriterFactory.createWriter(stringWriter)
+    val jsonWriter   = jsonWriterFactory.createWriter(stringWriter)
     jsonWriter.write(javaxJsonObject)
     jsonWriter.close()
     stringWriter.toString
@@ -1163,7 +1163,7 @@ case class JsonLDDocument(
    * @return the formatted document.
    */
   def toCompactString(flatten: Boolean = false): String = {
-    val config = new util.HashMap[String, Boolean]()
+    val config                               = new util.HashMap[String, Boolean]()
     val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
     formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten)
   }
@@ -1175,7 +1175,7 @@ case class JsonLDDocument(
    */
   def toRdfModel(modelFactory: RdfModelFactory): RdfModel = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val model: RdfModel = modelFactory.makeEmptyModel
+    val model: RdfModel                           = modelFactory.makeEmptyModel
 
     // Add the prefixes and namespaces from the JSON-LD context to the model.
     for ((prefix: String, namespaceValue: JsonLDValue) <- context.value) {
@@ -1281,7 +1281,7 @@ object JsonLDUtil {
   def objectWithLangToJsonLDObject(obj: String, lang: String): JsonLDObject =
     JsonLDObject(
       Map(
-        JsonLDKeywords.VALUE -> JsonLDString(obj),
+        JsonLDKeywords.VALUE    -> JsonLDString(obj),
         JsonLDKeywords.LANGUAGE -> JsonLDString(lang)
       )
     )
@@ -1305,7 +1305,7 @@ object JsonLDUtil {
     JsonLDObject(
       Map(
         JsonLDKeywords.VALUE -> JsonLDString(strValue),
-        JsonLDKeywords.TYPE -> JsonLDString(datatype.toString)
+        JsonLDKeywords.TYPE  -> JsonLDString(datatype.toString)
       )
     )
   }
@@ -1338,15 +1338,15 @@ object JsonLDUtil {
    */
   def parseJsonLD(jsonLDString: String, flatten: Boolean = false): JsonLDDocument = {
     // Parse the string into a jakarta.json.JsonStructure.
-    val stringReader = new StringReader(jsonLDString)
-    val jsonReader: JsonReader = Json.createReader(stringReader)
+    val stringReader                 = new StringReader(jsonLDString)
+    val jsonReader: JsonReader       = Json.createReader(stringReader)
     val jsonStructure: JsonStructure = jsonReader.read()
 
     // Convert the JsonStructure to a Titanium JsonDocument.
     val titaniumDocument: JsonDocument = JsonDocument.of(jsonStructure)
 
     // Use Titanium to compact the document with an empty context.
-    val emptyContext = JsonDocument.of(Json.createObjectBuilder().build())
+    val emptyContext                    = JsonDocument.of(Json.createObjectBuilder().build())
     val compactedJsonObject: JsonObject = JsonLd.compact(titaniumDocument, emptyContext).get
 
     // Convert the resulting jakarta.json.JsonObject to a JsonLDDocument.
@@ -1531,7 +1531,7 @@ object JsonLDUtil {
     // Make JSON-LD content representing the predicates and their objects.
     val predsAndObjs: Map[IRI, JsonLDValue] = groupedByPred.keySet.map { pred: IriNode =>
       val predStatements: Set[Statement] = groupedByPred(pred)
-      val predIri: IRI = pred.iri
+      val predIri: IRI                   = pred.iri
 
       // Is the predicate rdf:type?
       val (jsonLDKey: String, jsonLDObjs: Vector[JsonLDValue]) = if (predIri == OntologyConstants.Rdf.Type) {
@@ -1593,7 +1593,7 @@ object JsonLDUtil {
 
       case datatypeLiteral: DatatypeLiteral =>
         // Is there a native JSON-LD type for this literal?
-        val datatypeIri: IRI = datatypeLiteral.datatype
+        val datatypeIri: IRI      = datatypeLiteral.datatype
         val datatypeValue: String = datatypeLiteral.value
 
         datatypeIri match {

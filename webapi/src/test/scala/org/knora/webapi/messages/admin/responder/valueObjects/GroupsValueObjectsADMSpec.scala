@@ -17,7 +17,7 @@ import zio.prelude.Validation
  */
 class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "GroupIRI value object" when {
-    val validGroupIri = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+    val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
     val groupIRIWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
 
     "created using empty value" should {
@@ -69,7 +69,7 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "GroupDescriptions value object" when {
-    val validDescription = Seq(StringLiteralV2(value = "Valid description", language = Some("en")))
+    val validDescription   = Seq(StringLiteralV2(value = "Valid description", language = Some("en")))
     val invalidDescription = Seq(StringLiteralV2(value = "Invalid description \r", language = Some("en")))
 
     "created using empty value" should {

@@ -13,39 +13,39 @@ import org.knora.webapi.exceptions._
  * Based on `salsah/api/ApiErrors.php`.
  */
 object ApiStatusCodesV1 extends Enumeration {
-  val OK = Value(0)
-  val INVALID_REQUEST_METHOD = Value(1)
-  val CREDENTIALS_NOT_VALID = Value(2)
+  val OK                      = Value(0)
+  val INVALID_REQUEST_METHOD  = Value(1)
+  val CREDENTIALS_NOT_VALID   = Value(2)
   val NO_RIGHTS_FOR_OPERATION = Value(3)
-  val INTERNAL_SALSAH_ERROR = Value(4)
-  val NO_PROPERTIES = Value(5)
-  val NOT_IN_USERDATA = Value(6)
-  val RESOURCE_ID_MISSING = Value(7)
-  val UNKNOWN_VOCABULARY = Value(8)
+  val INTERNAL_SALSAH_ERROR   = Value(4)
+  val NO_PROPERTIES           = Value(5)
+  val NOT_IN_USERDATA         = Value(6)
+  val RESOURCE_ID_MISSING     = Value(7)
+  val UNKNOWN_VOCABULARY      = Value(8)
 
   /**
    * The requested item was not found. This was called NO_NODES_FOUND in SALSAH; its meaning has been broadened here.
    */
   val NOT_FOUND = Value(9)
 
-  val API_ENDPOINT_NOT_FOUND = Value(10)
-  val INVALID_REQUEST_TYPE = Value(11)
-  val PROPERTY_ID_MISSING = Value(12)
-  val NOT_YET_IMPLEMENTED = Value(13)
-  val COULD_NOT_OPEN_PROGRESS_FILE = Value(14)
+  val API_ENDPOINT_NOT_FOUND         = Value(10)
+  val INVALID_REQUEST_TYPE           = Value(11)
+  val PROPERTY_ID_MISSING            = Value(12)
+  val NOT_YET_IMPLEMENTED            = Value(13)
+  val COULD_NOT_OPEN_PROGRESS_FILE   = Value(14)
   val VALUE_ID_OR_RESTYPE_ID_MISSING = Value(15)
 
   val HLIST_ALREADY_EXISTENT = Value(16)
-  val HLIST_NO_LABELS = Value(17)
-  val HLIST_NOT_EXISTING = Value(18)
-  val HLIST_NO_POSITION = Value(19)
+  val HLIST_NO_LABELS        = Value(17)
+  val HLIST_NOT_EXISTING     = Value(18)
+  val HLIST_NO_POSITION      = Value(19)
   val HLIST_INVALID_POSITION = Value(20)
 
-  val SELECTION_NO_LABELS = Value(21)
-  val SELECTION_ALREADY_EXISTENT = Value(22)
+  val SELECTION_NO_LABELS                   = Value(21)
+  val SELECTION_ALREADY_EXISTENT            = Value(22)
   val SELECTION_MISSING_OR_INVALID_POSITION = Value(23)
-  val SELECTION_DELETE_FAILED = Value(24)
-  val SELECTION_NODE_ALREADY_EXISTENT = Value(25)
+  val SELECTION_DELETE_FAILED               = Value(24)
+  val SELECTION_NODE_ALREADY_EXISTENT       = Value(25)
 
   val GEONAMES_GEONAME_ID_EXISTING = Value(26)
 

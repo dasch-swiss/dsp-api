@@ -78,7 +78,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
       case nonJsonLD: NonJsonLD =>
         // Some other format. Convert the JSON-LD document to an RDF model.
         val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-        val rdfModel: RdfModel = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
+        val rdfModel: RdfModel           = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
 
         // Convert the model to the requested format.
         rdfFormatUtil.format(
@@ -133,7 +133,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
       case _ =>
         // Some other format. Parse the Turtle to an RdfModel.
         val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-        val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
+        val rdfModel: RdfModel           = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
         // Return the model in the requested format.
         rdfFormatUtil.format(

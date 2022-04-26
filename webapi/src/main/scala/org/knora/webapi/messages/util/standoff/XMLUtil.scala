@@ -42,7 +42,7 @@ object XMLUtil {
       }
 
     val xmlTransformedStr: StringWriter = new StringWriter()
-    val out = proc.newSerializer(xmlTransformedStr)
+    val out                             = proc.newSerializer(xmlTransformedStr)
 
     val trans = exp.load()
     trans.setInitialContextNode(source)

@@ -97,7 +97,7 @@ object CacheUtil {
    */
   def put[V](cacheName: String, key: String, value: V): Unit = {
     val cacheManager = CacheManager.getInstance()
-    val cacheOption = Option(cacheManager.getCache(cacheName))
+    val cacheOption  = Option(cacheManager.getCache(cacheName))
 
     cacheOption match {
       case Some(cache) =>
@@ -117,7 +117,7 @@ object CacheUtil {
    */
   def get[V](cacheName: String, key: String): Option[V] = {
     val cacheManager = CacheManager.getInstance()
-    val cacheOption = Option(cacheManager.getCache(cacheName))
+    val cacheOption  = Option(cacheManager.getCache(cacheName))
 
     cacheOption match {
       case Some(cache) =>
@@ -145,7 +145,7 @@ object CacheUtil {
    */
   def remove(cacheName: String, key: String): Unit = {
     val cacheManager = CacheManager.getInstance()
-    val cacheOption = Option(cacheManager.getCache(cacheName))
+    val cacheOption  = Option(cacheManager.getCache(cacheName))
 
     cacheOption match {
       case Some(cache) => cache.remove(key)

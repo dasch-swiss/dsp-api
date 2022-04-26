@@ -34,7 +34,7 @@ object MockSipiConnector {
  */
 class MockSipiConnector extends Actor with ActorLogging {
 
-  implicit val system: ActorSystem = context.system
+  implicit val system: ActorSystem                = context.system
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   def receive = {

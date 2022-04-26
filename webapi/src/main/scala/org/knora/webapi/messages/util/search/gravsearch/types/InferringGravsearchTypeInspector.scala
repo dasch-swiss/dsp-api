@@ -507,9 +507,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         case Some(typesFromFilters: Set[SmartIri]) =>
           // Yes. Return those types.
           typesFromFilters.map { typeFromFilter: SmartIri =>
-            val isValueType = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeFromFilter.toString)
+            val isValueType       = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeFromFilter.toString)
             val isStandoffTagType = typeFromFilter.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag
-            val isResourceType = !(isValueType || isStandoffTagType)
+            val isResourceType    = !(isValueType || isStandoffTagType)
             val inferredType = NonPropertyTypeInfo(
               typeFromFilter,
               isResourceType = isResourceType,
@@ -853,31 +853,31 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
       // Iterate over the inference rules until no new type information can be inferred.
       intermediateResult: IntermediateTypeInspectionResult = doIterations(
-        iterationNumber = 1,
-        intermediateResult = previousResult,
-        entityInfo = allEntityInfo,
-        usageIndex = usageIndex
-      )
+                                                               iterationNumber = 1,
+                                                               intermediateResult = previousResult,
+                                                               entityInfo = allEntityInfo,
+                                                               usageIndex = usageIndex
+                                                             )
 
       // refine the determined types before sending to the next inspector
       refinedIntermediateResult: IntermediateTypeInspectionResult = refineDeterminedTypes(
-        intermediateResult = intermediateResult,
-        entityInfo = allEntityInfo
-      )
+                                                                      intermediateResult = intermediateResult,
+                                                                      entityInfo = allEntityInfo
+                                                                    )
 
       // sanitize the inconsistent resource types inferred for an entity
       sanitizedResults: IntermediateTypeInspectionResult = sanitizeInconsistentResourceTypes(
-        refinedIntermediateResult,
-        usageIndex.querySchema,
-        entityInfo = allEntityInfo
-      )
+                                                             refinedIntermediateResult,
+                                                             usageIndex.querySchema,
+                                                             entityInfo = allEntityInfo
+                                                           )
 
       // Pass the intermediate result to the next type inspector in the pipeline.
       lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-        intermediateResult = sanitizedResults,
-        whereClause = whereClause,
-        requestingUser = requestingUser
-      )
+                                                        intermediateResult = sanitizedResults,
+                                                        whereClause = whereClause,
+                                                        requestingUser = requestingUser
+                                                      )
     } yield lastResult
   }
 
@@ -899,73 +899,83 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       // Ask the ontology responder about all the Knora class and property IRIs mentioned in the query.
 
       initialEntityInfoRequest = EntityInfoGetRequestV2(
-        classIris = usageIndex.knoraClassIris,
-        propertyIris = usageIndex.knoraPropertyIris,
-        requestingUser = requestingUser
-      )
+                                   classIris = usageIndex.knoraClassIris,
+                                   propertyIris = usageIndex.knoraPropertyIris,
+                                   requestingUser = requestingUser
+                                 )
 
       initialEntityInfo: EntityInfoGetResponseV2 <- (responderManager ? initialEntityInfoRequest)
-        .mapTo[EntityInfoGetResponseV2]
+                                                      .mapTo[EntityInfoGetResponseV2]
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
       initialEntityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
-        usageIndex = usageIndex,
-        entityInfo = initialEntityInfo
-      )
+                                                                   usageIndex = usageIndex,
+                                                                   entityInfo = initialEntityInfo
+                                                                 )
 
       // Ask the ontology responder about all the Knora classes mentioned as subject or object types of the
       // properties returned.
 
       subjectAndObjectTypes: Set[SmartIri] = initialEntityInfoInInputSchemas.propertyInfoMap.foldLeft(
-        Set.empty[SmartIri]
-      ) { case (acc, (propertyIri, propertyDef)) =>
-        val propertyIriSchema = propertyIri.getOntologySchema match {
-          case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-          case other                          => throw AssertionException(s"Expected an ApiV2Schema, got $other")
-        }
+                                               Set.empty[SmartIri]
+                                             ) { case (acc, (propertyIri, propertyDef)) =>
+                                               val propertyIriSchema = propertyIri.getOntologySchema match {
+                                                 case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                                                 case other =>
+                                                   throw AssertionException(s"Expected an ApiV2Schema, got $other")
+                                               }
 
-        val maybeSubjectType: Option[SmartIri] = propertyDef.entityInfoContent.getPredicateIriObject(
-          OntologyConstants.KnoraApi.getSubjectTypePredicate(propertyIriSchema).toSmartIri
-        ) match {
-          case Some(subjectType) if subjectType.isKnoraEntityIri => Some(subjectType)
-          case _                                                 => None
-        }
+                                               val maybeSubjectType: Option[SmartIri] =
+                                                 propertyDef.entityInfoContent.getPredicateIriObject(
+                                                   OntologyConstants.KnoraApi
+                                                     .getSubjectTypePredicate(propertyIriSchema)
+                                                     .toSmartIri
+                                                 ) match {
+                                                   case Some(subjectType) if subjectType.isKnoraEntityIri =>
+                                                     Some(subjectType)
+                                                   case _ => None
+                                                 }
 
-        val maybeObjectType: Option[SmartIri] = propertyDef.entityInfoContent.getPredicateIriObject(
-          OntologyConstants.KnoraApi.getObjectTypePredicate(propertyIriSchema).toSmartIri
-        ) match {
-          case Some(objectType) if objectType.isKnoraEntityIri => Some(objectType)
-          case _                                               => None
-        }
+                                               val maybeObjectType: Option[SmartIri] =
+                                                 propertyDef.entityInfoContent.getPredicateIriObject(
+                                                   OntologyConstants.KnoraApi
+                                                     .getObjectTypePredicate(propertyIriSchema)
+                                                     .toSmartIri
+                                                 ) match {
+                                                   case Some(objectType) if objectType.isKnoraEntityIri =>
+                                                     Some(objectType)
+                                                   case _ => None
+                                                 }
 
-        acc ++ maybeSubjectType ++ maybeObjectType
-      }
+                                               acc ++ maybeSubjectType ++ maybeObjectType
+                                             }
 
       additionalEntityInfoRequest = EntityInfoGetRequestV2(
-        classIris = subjectAndObjectTypes,
-        requestingUser = requestingUser
-      )
+                                      classIris = subjectAndObjectTypes,
+                                      requestingUser = requestingUser
+                                    )
 
       additionalEntityInfo: EntityInfoGetResponseV2 <- (responderManager ? additionalEntityInfoRequest)
-        .mapTo[EntityInfoGetResponseV2]
+                                                         .mapTo[EntityInfoGetResponseV2]
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(
-        knoraClassIris = usageIndex.knoraClassIris ++ subjectAndObjectTypes
-      )
+                                          knoraClassIris = usageIndex.knoraClassIris ++ subjectAndObjectTypes
+                                        )
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
       additionalEntityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
-        usageIndex = usageIndexWithAdditionalClasses,
-        entityInfo = additionalEntityInfo
-      )
+                                                                      usageIndex = usageIndexWithAdditionalClasses,
+                                                                      entityInfo = additionalEntityInfo
+                                                                    )
 
       // Combine all the entity info into one object.
-      allEntityInfo: EntityInfoGetResponseV2 = initialEntityInfoInInputSchemas.copy(
-        classInfoMap = initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
-      )
+      allEntityInfo: EntityInfoGetResponseV2 =
+        initialEntityInfoInInputSchemas.copy(
+          classInfoMap = initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
+        )
 
     } yield (usageIndexWithAdditionalClasses, allEntityInfo)
 
@@ -1414,7 +1424,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       usageIndex.copy(
         entitiesComparedInFilters = usageIndex.entitiesComparedInFilters +
           (leftTypeableVariable -> (currentComparisonsForLeftVariable + rightTypeableEntity)) +
-          (rightTypeableEntity -> (currentComparisonsForRightEntity + leftTypeableVariable))
+          (rightTypeableEntity  -> (currentComparisonsForRightEntity + leftTypeableVariable))
       )
     }
 
@@ -1563,7 +1573,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
           usageIndex.copy(
             typedEntitiesInFilters = usageIndex.typedEntitiesInFilters +
-              (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)) +
+              (textVar        -> (currentTextVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri)) +
               (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri))
           )
 

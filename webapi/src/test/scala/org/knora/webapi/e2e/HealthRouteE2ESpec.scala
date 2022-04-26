@@ -36,9 +36,9 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     "return 'OK' for state 'Running'" in {
 
-      val request = Get(baseApiUrl + s"/health")
-      val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String = responseToString(response)
+      val request                    = Get(baseApiUrl + s"/health")
+      val response: HttpResponse     = singleAwaitingRequest(request)
+      val responseStr: String        = responseToString(response)
       val responseHeadersStr: String = response.headers.map(_.toString).mkString("\n")
 
       response.status should be(StatusCodes.OK)
@@ -70,9 +70,9 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
       appActor ! SetAppState(AppStates.Stopped)
 
-      val request = Get(baseApiUrl + s"/health")
+      val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String = responseToString(response)
+      val responseStr: String    = responseToString(response)
 
       logger.debug(response.toString())
 
@@ -93,9 +93,9 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
     "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
       appActor ! SetAppState(AppStates.MaintenanceMode)
 
-      val request = Get(baseApiUrl + s"/health")
+      val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
-      val responseStr: String = responseToString(response)
+      val responseStr: String    = responseToString(response)
 
       logger.debug(response.toString())
 

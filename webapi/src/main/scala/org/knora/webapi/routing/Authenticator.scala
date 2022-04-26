@@ -76,42 +76,42 @@ trait Authenticator extends InstrumentationSupport {
 
     for {
       userADM <- getUserADMThroughCredentialsV2(
-        credentials = credentials,
-        featureFactoryConfig = featureFactoryConfig
-      ) // will return or throw
+                   credentials = credentials,
+                   featureFactoryConfig = featureFactoryConfig
+                 ) // will return or throw
       userProfile = userADM.asUserProfileV1
 
       cookieDomain = Some(settings.cookieDomain)
       sessionToken = JWTHelper.createToken(
-        userProfile.userData.user_id.get,
-        settings.jwtSecretKey,
-        settings.jwtLongevity,
-        settings.externalKnoraApiHostPort
-      )
+                       userProfile.userData.user_id.get,
+                       settings.jwtSecretKey,
+                       settings.jwtLongevity,
+                       settings.externalKnoraApiHostPort
+                     )
 
       httpResponse = HttpResponse(
-        headers = List(
-          headers.`Set-Cookie`(
-            HttpCookie(
-              KNORA_AUTHENTICATION_COOKIE_NAME,
-              sessionToken,
-              domain = cookieDomain,
-              path = Some("/"),
-              httpOnly = true
-            )
-          )
-        ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          ContentTypes.`application/json`,
-          JsObject(
-            "status" -> JsNumber(0),
-            "message" -> JsString("credentials are OK"),
-            "sid" -> JsString(sessionToken),
-            "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
-          ).compactPrint
-        )
-      )
+                       headers = List(
+                         headers.`Set-Cookie`(
+                           HttpCookie(
+                             KNORA_AUTHENTICATION_COOKIE_NAME,
+                             sessionToken,
+                             domain = cookieDomain,
+                             path = Some("/"),
+                             httpOnly = true
+                           )
+                         )
+                       ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
+                       status = StatusCodes.OK,
+                       entity = HttpEntity(
+                         ContentTypes.`application/json`,
+                         JsObject(
+                           "status"      -> JsNumber(0),
+                           "message"     -> JsString("credentials are OK"),
+                           "sid"         -> JsString(sessionToken),
+                           "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                         ).compactPrint
+                       )
+                     )
     } yield httpResponse
   }
 
@@ -135,45 +135,45 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will throw exception if not valid and thus trigger the correct response
       _ <- authenticateCredentialsV2(
-        credentials = Some(credentials),
-        featureFactoryConfig = featureFactoryConfig
-      )
+             credentials = Some(credentials),
+             featureFactoryConfig = featureFactoryConfig
+           )
 
       settings = KnoraSettings(system)
 
       userADM <- getUserByIdentifier(
-        identifier = credentials.identifier,
-        featureFactoryConfig = featureFactoryConfig
-      )
+                   identifier = credentials.identifier,
+                   featureFactoryConfig = featureFactoryConfig
+                 )
 
       cookieDomain = Some(settings.cookieDomain)
       token = JWTHelper.createToken(
-        userADM.id,
-        settings.jwtSecretKey,
-        settings.jwtLongevity,
-        settings.externalKnoraApiHostPort
-      )
+                userADM.id,
+                settings.jwtSecretKey,
+                settings.jwtLongevity,
+                settings.externalKnoraApiHostPort
+              )
 
       httpResponse = HttpResponse(
-        headers = List(
-          headers.`Set-Cookie`(
-            HttpCookie(
-              KNORA_AUTHENTICATION_COOKIE_NAME,
-              token,
-              domain = cookieDomain,
-              path = Some("/"),
-              httpOnly = true
-            )
-          )
-        ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          ContentTypes.`application/json`,
-          JsObject(
-            "token" -> JsString(token)
-          ).compactPrint
-        )
-      )
+                       headers = List(
+                         headers.`Set-Cookie`(
+                           HttpCookie(
+                             KNORA_AUTHENTICATION_COOKIE_NAME,
+                             token,
+                             domain = cookieDomain,
+                             path = Some("/"),
+                             httpOnly = true
+                           )
+                         )
+                       ), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
+                       status = StatusCodes.OK,
+                       entity = HttpEntity(
+                         ContentTypes.`application/json`,
+                         JsObject(
+                           "token" -> JsString(token)
+                         ).compactPrint
+                       )
+                     )
 
     } yield httpResponse
   }
@@ -249,23 +249,23 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will authenticate and either return or throw
       userADM: UserADM <- getUserADMThroughCredentialsV2(
-        credentials = credentials,
-        featureFactoryConfig = featureFactoryConfig
-      )
+                            credentials = credentials,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
 
       userProfile: UserProfileV1 = userADM.asUserProfileV1
 
       httpResponse = HttpResponse(
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          ContentTypes.`application/json`,
-          JsObject(
-            "status" -> JsNumber(0),
-            "message" -> JsString("credentials are OK"),
-            "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
-          ).compactPrint
-        )
-      )
+                       status = StatusCodes.OK,
+                       entity = HttpEntity(
+                         ContentTypes.`application/json`,
+                         JsObject(
+                           "status"      -> JsNumber(0),
+                           "message"     -> JsString("credentials are OK"),
+                           "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                         ).compactPrint
+                       )
+                     )
     } yield httpResponse
   }
 
@@ -287,19 +287,19 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will throw exception if not valid
       _ <- authenticateCredentialsV2(
-        credentials = credentials,
-        featureFactoryConfig = featureFactoryConfig
-      )
+             credentials = credentials,
+             featureFactoryConfig = featureFactoryConfig
+           )
 
       httpResponse = HttpResponse(
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          ContentTypes.`application/json`,
-          JsObject(
-            "message" -> JsString("credentials are OK")
-          ).compactPrint
-        )
-      )
+                       status = StatusCodes.OK,
+                       entity = HttpEntity(
+                         ContentTypes.`application/json`,
+                         JsObject(
+                           "message" -> JsString("credentials are OK")
+                         ).compactPrint
+                       )
+                     )
     } yield httpResponse
   }
 
@@ -318,7 +318,7 @@ trait Authenticator extends InstrumentationSupport {
 
     val credentials = extractCredentialsV2(requestContext)
 
-    val settings = KnoraSettings(system)
+    val settings     = KnoraSettings(system)
     val cookieDomain = Some(settings.cookieDomain)
 
     credentials match {
@@ -343,7 +343,7 @@ trait Authenticator extends InstrumentationSupport {
           entity = HttpEntity(
             ContentTypes.`application/json`,
             JsObject(
-              "status" -> JsNumber(0),
+              "status"  -> JsNumber(0),
               "message" -> JsString("Logout OK")
             ).compactPrint
           )
@@ -368,7 +368,7 @@ trait Authenticator extends InstrumentationSupport {
           entity = HttpEntity(
             ContentTypes.`application/json`,
             JsObject(
-              "status" -> JsNumber(0),
+              "status"  -> JsNumber(0),
               "message" -> JsString("Logout OK")
             ).compactPrint
           )
@@ -380,7 +380,7 @@ trait Authenticator extends InstrumentationSupport {
           entity = HttpEntity(
             ContentTypes.`application/json`,
             JsObject(
-              "status" -> JsNumber(0),
+              "status"  -> JsNumber(0),
               "message" -> JsString("Logout OK")
             ).compactPrint
           )
@@ -427,11 +427,11 @@ trait Authenticator extends InstrumentationSupport {
     } else {
       for {
         userADM <- getUserADMThroughCredentialsV2(
-          credentials = credentials,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                     credentials = credentials,
+                     featureFactoryConfig = featureFactoryConfig
+                   )
         userProfile: UserProfileV1 = userADM.asUserProfileV1
-        _ = log.debug("Authenticator - getUserProfileV1 - userProfile: {}", userProfile)
+        _                          = log.debug("Authenticator - getUserProfileV1 - userProfile: {}", userProfile)
 
         /* we return the userProfileV1 without sensitive information */
       } yield userProfile.ofType(UserProfileTypeV1.RESTRICTED)
@@ -470,9 +470,9 @@ trait Authenticator extends InstrumentationSupport {
 
       for {
         user: UserADM <- getUserADMThroughCredentialsV2(
-          credentials = credentials,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                           credentials = credentials,
+                           featureFactoryConfig = featureFactoryConfig
+                         )
         _ = log.debug("Authenticator - getUserADM - user: {}", user)
 
         /* we return the complete UserADM */
@@ -488,19 +488,19 @@ trait Authenticator extends InstrumentationSupport {
  */
 object Authenticator extends InstrumentationSupport {
 
-  val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
-  val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
+  val BAD_CRED_PASSWORD_MISMATCH  = "bad credentials: user found, but password did not match"
+  val BAD_CRED_USER_NOT_FOUND     = "bad credentials: user not found"
   val BAD_CRED_EMAIL_NOT_SUPPLIED = "bad credentials: no email supplied"
-  val BAD_CRED_NONE_SUPPLIED = "bad credentials: none found"
-  val BAD_CRED_USER_INACTIVE = "bad credentials: user inactive"
-  val BAD_CRED_NOT_VALID = "bad credentials: not valid"
+  val BAD_CRED_NONE_SUPPLIED      = "bad credentials: none found"
+  val BAD_CRED_USER_INACTIVE      = "bad credentials: user inactive"
+  val BAD_CRED_NOT_VALID          = "bad credentials: not valid"
 
-  val KNORA_AUTHENTICATION_COOKIE_NAME = "KnoraAuthentication"
+  val KNORA_AUTHENTICATION_COOKIE_NAME       = "KnoraAuthentication"
   val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 
   val sessionStore: scala.collection.mutable.Map[String, UserADM] = scala.collection.mutable.Map()
-  implicit val timeout: Timeout = Duration(5, SECONDS)
-  val log: Logger = Logger(LoggerFactory.getLogger(this.getClass))
+  implicit val timeout: Timeout                                   = Duration(5, SECONDS)
+  val log: Logger                                                 = Logger(LoggerFactory.getLogger(this.getClass))
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -526,40 +526,42 @@ object Authenticator extends InstrumentationSupport {
       settings <- FastFuture.successful(KnoraSettings(system))
 
       result <- credentials match {
-        case Some(passCreds: KnoraPasswordCredentialsV2) =>
-          for {
-            user <- getUserByIdentifier(
-              identifier = passCreds.identifier,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                  case Some(passCreds: KnoraPasswordCredentialsV2) =>
+                    for {
+                      user <- getUserByIdentifier(
+                                identifier = passCreds.identifier,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
 
-            /* check if the user is active, if not, then no need to check the password */
-            _ = if (!user.isActive) {
-              log.debug("authenticateCredentials - user is not active")
-              throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
-            }
+                      /* check if the user is active, if not, then no need to check the password */
+                      _ = if (!user.isActive) {
+                            log.debug("authenticateCredentials - user is not active")
+                            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                          }
 
-            _ = if (!user.passwordMatch(passCreds.password)) {
-              log.debug("authenticateCredentialsV2 - password did not match")
-              throw BadCredentialsException(BAD_CRED_NOT_VALID)
-            }
-          } yield true
-        case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-          if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
-            log.debug("authenticateCredentialsV2 - token was not valid")
-            throw BadCredentialsException(BAD_CRED_NOT_VALID)
-          }
-          FastFuture.successful(true)
-        case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-          if (!JWTHelper.validateToken(sessionToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
-            log.debug("authenticateCredentialsV2 - session token was not valid")
-            throw BadCredentialsException(BAD_CRED_NOT_VALID)
-          }
-          FastFuture.successful(true)
-        case None =>
-          log.debug("authenticateCredentialsV2 - no credentials supplied")
-          throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-      }
+                      _ = if (!user.passwordMatch(passCreds.password)) {
+                            log.debug("authenticateCredentialsV2 - password did not match")
+                            throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                          }
+                    } yield true
+                  case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+                    if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
+                      log.debug("authenticateCredentialsV2 - token was not valid")
+                      throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                    }
+                    FastFuture.successful(true)
+                  case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+                    if (
+                      !JWTHelper.validateToken(sessionToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)
+                    ) {
+                      log.debug("authenticateCredentialsV2 - session token was not valid")
+                      throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                    }
+                    FastFuture.successful(true)
+                  case None =>
+                    log.debug("authenticateCredentialsV2 - no credentials supplied")
+                    throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+                }
 
     } yield result
 
@@ -607,8 +609,8 @@ object Authenticator extends InstrumentationSupport {
     // log.debug("extractCredentialsFromParametersV2 - params: {}", params)
 
     // check for iri, email, or username parameters
-    val maybeIriIdentifier: Option[String] = params.get("iri").map(_.head)
-    val maybeEmailIdentifier: Option[String] = params.get("email").map(_.head)
+    val maybeIriIdentifier: Option[String]      = params.get("iri").map(_.head)
+    val maybeEmailIdentifier: Option[String]    = params.get("email").map(_.head)
     val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
     val maybeIdentifier: Option[String] =
       List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
@@ -691,8 +693,8 @@ object Authenticator extends InstrumentationSupport {
         // try to decode email/password
         val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
           case Some(value) =>
-            val trimmedValue = value.substring(5).trim() // remove 'Basic '
-            val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
+            val trimmedValue    = value.substring(5).trim() // remove 'Basic '
+            val decodedValue    = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
             val decodedValueArr = decodedValue.split(":", 2)
             (Some(decodedValueArr(0)), Some(decodedValueArr(1)))
           case None =>
@@ -756,48 +758,52 @@ object Authenticator extends InstrumentationSupport {
       authenticated <- authenticateCredentialsV2(credentials = credentials, featureFactoryConfig = featureFactoryConfig)
 
       user: UserADM <- credentials match {
-        case Some(passCreds: KnoraPasswordCredentialsV2) =>
-          // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
-          getUserByIdentifier(
-            identifier = passCreds.identifier,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-          val userIri: IRI = JWTHelper.extractUserIriFromToken(
-            jwtToken,
-            settings.jwtSecretKey,
-            settings.externalKnoraApiHostPort
-          ) match {
-            case Some(iri) => iri
-            case None      =>
-              // should not happen, as the token is already validated
-              throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-          }
-          // log.debug("getUserADMThroughCredentialsV2 - used token")
-          getUserByIdentifier(
-            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-            featureFactoryConfig = featureFactoryConfig
-          )
-        case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-          val userIri: IRI = JWTHelper.extractUserIriFromToken(
-            sessionToken,
-            settings.jwtSecretKey,
-            settings.externalKnoraApiHostPort
-          ) match {
-            case Some(iri) => iri
-            case None      =>
-              // should not happen, as the token is already validated
-              throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-          }
-          // log.debug("getUserADMThroughCredentialsV2 - used session token")
-          getUserByIdentifier(
-            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-            featureFactoryConfig = featureFactoryConfig
-          )
-        case None =>
-          // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
-          throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-      }
+                         case Some(passCreds: KnoraPasswordCredentialsV2) =>
+                           // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
+                           getUserByIdentifier(
+                             identifier = passCreds.identifier,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+                           val userIri: IRI = JWTHelper.extractUserIriFromToken(
+                             jwtToken,
+                             settings.jwtSecretKey,
+                             settings.externalKnoraApiHostPort
+                           ) match {
+                             case Some(iri) => iri
+                             case None      =>
+                               // should not happen, as the token is already validated
+                               throw AuthenticationException(
+                                 "No IRI found inside token. Please report this as a possible bug."
+                               )
+                           }
+                           // log.debug("getUserADMThroughCredentialsV2 - used token")
+                           getUserByIdentifier(
+                             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+                           val userIri: IRI = JWTHelper.extractUserIriFromToken(
+                             sessionToken,
+                             settings.jwtSecretKey,
+                             settings.externalKnoraApiHostPort
+                           ) match {
+                             case Some(iri) => iri
+                             case None      =>
+                               // should not happen, as the token is already validated
+                               throw AuthenticationException(
+                                 "No IRI found inside token. Please report this as a possible bug."
+                               )
+                           }
+                           // log.debug("getUserADMThroughCredentialsV2 - used session token")
+                           getUserByIdentifier(
+                             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         case None =>
+                           // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
+                           throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+                       }
 
     } yield user
   }
@@ -825,18 +831,18 @@ object Authenticator extends InstrumentationSupport {
   ): Future[UserADM] = tracedFuture("authenticator-get-user-by-identifier") {
     for {
       maybeUserADM <- (responderManager ? UserGetADM(
-        identifier = identifier,
-        userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )).mapTo[Option[UserADM]]
+                        identifier = identifier,
+                        userInformationTypeADM = UserInformationTypeADM.Full,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                      )).mapTo[Option[UserADM]]
 
       user = maybeUserADM match {
-        case Some(u) => u
-        case None =>
-          log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
-          throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
-      }
+               case Some(u) => u
+               case None =>
+                 log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
+                 throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
+             }
       // _ = log.debug(s"getUserByIdentifier - user: $user")
     } yield user
   }

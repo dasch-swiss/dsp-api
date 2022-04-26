@@ -97,7 +97,7 @@ object MessageUtil {
 
       // Handle case classes.
       case caseClass: Product =>
-        val objClass = obj.getClass
+        val objClass     = obj.getClass
         val objClassName = objClass.getSimpleName
 
         val fieldMap: Map[String, Any] = caseClass.getClass.getDeclaredFields.foldLeft(Map[String, Any]()) {
@@ -124,12 +124,12 @@ object MessageUtil {
       case _ =>
         // Generate a named parameter initializer for each of the class's non-method fields.
 
-        val objClass = obj.getClass
+        val objClass     = obj.getClass
         val objClassName = objClass.getSimpleName
 
         val runtimeMirror: ru.Mirror = ru.runtimeMirror(objClass.getClassLoader)
-        val instanceMirror = runtimeMirror.reflect(obj)
-        val objType: ru.Type = runtimeMirror.classSymbol(objClass).toType
+        val instanceMirror           = runtimeMirror.reflect(obj)
+        val objType: ru.Type         = runtimeMirror.classSymbol(objClass).toType
 
         val members: Iterable[String] = objType.members.filter(member => !member.isMethod).flatMap { member =>
           val memberName = member.name.toString.trim
@@ -142,7 +142,7 @@ object MessageUtil {
                 case e: Exception => throw new Exception(s"Can't format member $memberName in class $objClassName", e)
               }
 
-            val memberValue = fieldMirror.get
+            val memberValue       = fieldMirror.get
             val memberValueString = toSource(memberValue)
             Some(s"$memberName = $memberValueString")
           } else {

@@ -77,17 +77,17 @@ class RepositoryUpdater(
   private val tempDirNamePrefix: String = "knora"
 
   /**
-    * Deletes directories inside temp directory starting with `tempDirNamePrefix`.
-    */  
+   * Deletes directories inside temp directory starting with `tempDirNamePrefix`.
+   */
   def deleteTempDirectories(): Unit = {
-    val rootDir = new File("/tmp/")
+    val rootDir         = new File("/tmp/")
     val getTempToDelete = rootDir.listFiles.filter(_.getName.startsWith(tempDirNamePrefix))
 
     if (getTempToDelete.length != 0) {
-      getTempToDelete.foreach(dir => {
+      getTempToDelete.foreach { dir =>
         val dirToDelete = new Directory(dir)
         dirToDelete.deleteRecursively()
-      })
+      }
       log.info(s"Deleted temp directories: ${getTempToDelete.map(_.getName()).mkString(", ")}")
     }
   }
@@ -100,7 +100,7 @@ class RepositoryUpdater(
   def maybeUpdateRepository: Future[RepositoryUpdatedResponse] =
     for {
       foundRepositoryVersion: Option[String] <- getRepositoryVersion
-      requiredRepositoryVersion = org.knora.webapi.KnoraBaseVersion
+      requiredRepositoryVersion               = org.knora.webapi.KnoraBaseVersion
 
       // Is the repository up to date?
       repositoryUpToDate: Boolean = foundRepositoryVersion.contains(requiredRepositoryVersion)
@@ -133,7 +133,7 @@ class RepositoryUpdater(
   private def getRepositoryVersion: Future[Option[String]] =
     for {
       repositoryVersionResponse: SparqlSelectResult <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery))
-        .mapTo[SparqlSelectResult]
+                                                         .mapTo[SparqlSelectResult]
 
       bindings = repositoryVersionResponse.results.bindings
 
@@ -190,23 +190,23 @@ class RepositoryUpdater(
     log.info(s"Repository update using download directory $downloadDir")
 
     // The file to save the repository in.
-    val downloadedRepositoryFile = downloadDir.resolve("downloaded-repository.nq")
+    val downloadedRepositoryFile  = downloadDir.resolve("downloaded-repository.nq")
     val transformedRepositoryFile = downloadDir.resolve("transformed-repository.nq")
     log.info("Downloading repository file...")
 
     for {
       // Ask the store actor to download the repository to the file.
       _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(
-        outputFile = downloadedRepositoryFile,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[FileWrittenResponse]
+                                  outputFile = downloadedRepositoryFile,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )).mapTo[FileWrittenResponse]
 
       // Run the transformations to produce an output file.
       _ = doTransformations(
-        downloadedRepositoryFile = downloadedRepositoryFile,
-        transformedRepositoryFile = transformedRepositoryFile,
-        pluginsForNeededUpdates = pluginsForNeededUpdates
-      )
+            downloadedRepositoryFile = downloadedRepositoryFile,
+            transformedRepositoryFile = transformedRepositoryFile,
+            pluginsForNeededUpdates = pluginsForNeededUpdates
+          )
 
       _ = log.info("Emptying the repository...")
 
@@ -217,7 +217,7 @@ class RepositoryUpdater(
 
       // Upload the transformed repository.
       _: RepositoryUploadedResponse <- (appActor ? UploadRepositoryRequest(transformedRepositoryFile))
-        .mapTo[RepositoryUploadedResponse]
+                                         .mapTo[RepositoryUploadedResponse]
     } yield RepositoryUpdatedResponse(
       message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
     )

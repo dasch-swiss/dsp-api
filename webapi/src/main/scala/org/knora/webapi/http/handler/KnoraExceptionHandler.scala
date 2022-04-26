@@ -110,7 +110,7 @@ object KnoraExceptionHandler extends LazyLogging {
 
     val responseFields: Map[String, JsValue] = Map(
       "status" -> JsNumber(apiStatus.id),
-      "error" -> JsString(makeClientErrorMessage(ex, settings))
+      "error"  -> JsString(makeClientErrorMessage(ex, settings))
     ) ++ maybeAccess
 
     HttpResponse(

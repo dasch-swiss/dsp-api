@@ -477,14 +477,14 @@ object SharedTestDataADM {
    */
   val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
-  val customResourceIRI: IRI = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
+  val customResourceIRI: IRI                    = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
   val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/4PnSvolsTEa86KJ2EG76SQ"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
     "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/fdqCOaqT6dP19pWI84X1XQ"
-  val customValueUUID = "fdqCOaqT6dP19pWI84X1XQ"
-  val customValueIRI: IRI = "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA"
+  val customValueUUID                     = "fdqCOaqT6dP19pWI84X1XQ"
+  val customValueIRI: IRI                 = "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA"
   val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
-  val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
+  val customValueCreationDate: Instant    = Instant.parse("2020-06-09T17:04:54.502951Z")
 
   val customListIRI: IRI = "http://rdfh.ch/lists/0001/qq54wdGKR0S5zsbR5-9wtg"
 

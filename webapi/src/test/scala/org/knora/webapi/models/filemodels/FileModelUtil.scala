@@ -191,19 +191,19 @@ object FileModelUtil {
  * Constants for use in FileModels.
  */
 object FileModelConstants {
-  val documentRepresentation = "DocumentRepresentation"
-  val textRepresentation = "TextRepresentation"
-  val stillImageRepresentation = "StillImageRepresentation"
+  val documentRepresentation    = "DocumentRepresentation"
+  val textRepresentation        = "TextRepresentation"
+  val stillImageRepresentation  = "StillImageRepresentation"
   val movingImageRepresentation = "MovingImageRepresentation"
-  val audioRepresentation = "AudioRepresentation"
-  val archiveRepresentation = "ArchiveRepresentation"
-  val knoraApiPrefix = "knora-api"
-  val anythingShortcode = "0001"
+  val audioRepresentation       = "AudioRepresentation"
+  val archiveRepresentation     = "ArchiveRepresentation"
+  val knoraApiPrefix            = "knora-api"
+  val anythingShortcode         = "0001"
   val defaultJsonLdContextMap = Map(
-    "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+    "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
   )
 }
 
@@ -213,10 +213,10 @@ object FileType {
     pageCount: Option[Int] = Some(1),
     dimX: Option[Int] = Some(100),
     dimY: Option[Int] = Some(100)
-  ) extends FileType
-  case class StillImageFile(dimX: Int = 100, dimY: Int = 100) extends FileType
+  )                                                            extends FileType
+  case class StillImageFile(dimX: Int = 100, dimY: Int = 100)  extends FileType
   case class MovingImageFile(dimX: Int = 100, dimY: Int = 100) extends FileType
-  case object TextFile extends FileType
-  case object AudioFile extends FileType
-  case object ArchiveFile extends FileType
+  case object TextFile                                         extends FileType
+  case object AudioFile                                        extends FileType
+  case object ArchiveFile                                      extends FileType
 }

@@ -63,10 +63,10 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
 
     val xslTransformationFuture = for {
       xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2(
-        xsltTextRepresentationIri = xslTransformationIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = userProfile
-      )).mapTo[GetXSLTransformationResponseV2]
+                              xsltTextRepresentationIri = xslTransformationIri,
+                              featureFactoryConfig = featureFactoryConfig,
+                              requestingUser = userProfile
+                            )).mapTo[GetXSLTransformationResponseV2]
     } yield GetXSLTransformationResponseV1(
       xslt = xsltTransformation.xslt
     )
@@ -139,10 +139,10 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
   ): Future[GetMappingResponseV1] =
     for {
       mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-        mappingIri = mappingIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = userProfile
-      )).mapTo[GetMappingResponseV2]
+                                                 mappingIri = mappingIri,
+                                                 featureFactoryConfig = featureFactoryConfig,
+                                                 requestingUser = userProfile
+                                               )).mapTo[GetMappingResponseV2]
     } yield GetMappingResponseV1(
       mappingIri = mappingResponse.mappingIri,
       mapping = mappingResponse.mapping,

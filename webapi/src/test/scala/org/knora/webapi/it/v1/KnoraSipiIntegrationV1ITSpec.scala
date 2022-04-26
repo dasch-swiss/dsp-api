@@ -50,56 +50,56 @@ class KnoraSipiIntegrationV1ITSpec
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  private val userEmail = SharedTestDataADM.rootUser.email
-  private val password = SharedTestDataADM.testPass
-  private val pathToChlaus = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
-  private val pathToMarbles = Paths.get("..", "test_data/test_route/images/marbles.tif")
+  private val userEmail               = SharedTestDataADM.rootUser.email
+  private val password                = SharedTestDataADM.testPass
+  private val pathToChlaus            = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
+  private val pathToMarbles           = Paths.get("..", "test_data/test_route/images/marbles.tif")
   private val pathToXSLTransformation = Paths.get("..", "test_data/test_route/texts/letterToHtml.xsl")
   private val pathToMappingWithXSLT =
     Paths.get("..", "test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml")
   private val secondPageIri = new MutableTestIri
 
-  private val pathToBEOLBodyXSLTransformation = Paths.get("..", "test_data/test_route/texts/beol/standoffToTEI.xsl")
-  private val pathToBEOLStandoffTEIMapping = Paths.get("..", "test_data/test_route/texts/beol/BEOLTEIMapping.xml")
+  private val pathToBEOLBodyXSLTransformation   = Paths.get("..", "test_data/test_route/texts/beol/standoffToTEI.xsl")
+  private val pathToBEOLStandoffTEIMapping      = Paths.get("..", "test_data/test_route/texts/beol/BEOLTEIMapping.xml")
   private val pathToBEOLHeaderXSLTransformation = Paths.get("..", "test_data/test_route/texts/beol/header.xsl")
-  private val pathToBEOLGravsearchTemplate = Paths.get("..", "test_data/test_route/texts/beol/gravsearch.txt")
-  private val pathToBEOLLetterMapping = Paths.get("..", "test_data/test_route/texts/beol/testLetter/beolMapping.xml")
-  private val pathToBEOLBulkXML = Paths.get("..", "test_data/test_route/texts/beol/testLetter/bulk.xml")
-  private val letterIri = new MutableTestIri
-  private val gravsearchTemplateIri = new MutableTestIri
+  private val pathToBEOLGravsearchTemplate      = Paths.get("..", "test_data/test_route/texts/beol/gravsearch.txt")
+  private val pathToBEOLLetterMapping           = Paths.get("..", "test_data/test_route/texts/beol/testLetter/beolMapping.xml")
+  private val pathToBEOLBulkXML                 = Paths.get("..", "test_data/test_route/texts/beol/testLetter/bulk.xml")
+  private val letterIri                         = new MutableTestIri
+  private val gravsearchTemplateIri             = new MutableTestIri
 
-  private val pdfResourceIri = new MutableTestIri
-  private val zipResourceIri = new MutableTestIri
-  private val wavResourceIri = new MutableTestIri
+  private val pdfResourceIri   = new MutableTestIri
+  private val zipResourceIri   = new MutableTestIri
+  private val wavResourceIri   = new MutableTestIri
   private val videoResourceIri = new MutableTestIri
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
-  private val pathToMinimalPdf = Paths.get("..", s"test_data/test_route/files/$minimalPdfOriginalFilename")
-  private val minimalPdfWidth = 1250
-  private val minimalPdfHeight = 600
+  private val pathToMinimalPdf           = Paths.get("..", s"test_data/test_route/files/$minimalPdfOriginalFilename")
+  private val minimalPdfWidth            = 1250
+  private val minimalPdfHeight           = 600
 
   private val testPdfOriginalFilename = "test.pdf"
-  private val pathToTestPdf = Paths.get("..", s"test_data/test_route/files/$testPdfOriginalFilename")
-  private val testPdfWidth = 2480
-  private val testPdfHeight = 3508
+  private val pathToTestPdf           = Paths.get("..", s"test_data/test_route/files/$testPdfOriginalFilename")
+  private val testPdfWidth            = 2480
+  private val testPdfHeight           = 3508
 
   private val minimalZipOriginalFilename = "minimal.zip"
-  private val pathToMinimalZip = Paths.get("..", s"test_data/test_route/files/$minimalZipOriginalFilename")
+  private val pathToMinimalZip           = Paths.get("..", s"test_data/test_route/files/$minimalZipOriginalFilename")
 
   private val testZipOriginalFilename = "test.zip"
-  private val pathToTestZip = Paths.get("..", s"test_data/test_route/files/$testZipOriginalFilename")
+  private val pathToTestZip           = Paths.get("..", s"test_data/test_route/files/$testZipOriginalFilename")
 
   private val minimalWavOriginalFilename = "minimal.wav"
-  private val pathToMinimalWav = Paths.get("..", s"test_data/test_route/files/$minimalWavOriginalFilename")
+  private val pathToMinimalWav           = Paths.get("..", s"test_data/test_route/files/$minimalWavOriginalFilename")
 
   private val testWavOriginalFilename = "test.wav"
-  private val pathToTestWav = Paths.get("..", s"test_data/test_route/files/$testWavOriginalFilename")
+  private val pathToTestWav           = Paths.get("..", s"test_data/test_route/files/$testWavOriginalFilename")
 
   private val testVideoOriginalFilename = "testVideo.mp4"
-  private val pathToTestVideo = Paths.get("..", s"test_data/test_route/files/$testVideoOriginalFilename")
+  private val pathToTestVideo           = Paths.get("..", s"test_data/test_route/files/$testVideoOriginalFilename")
 
   private val testVideo2OriginalFilename = "testVideo2.mp4"
-  private val pathToTestVideo2 = Paths.get("..", s"test_data/test_route/files/$testVideoOriginalFilename")
+  private val pathToTestVideo2           = Paths.get("..", s"test_data/test_route/files/$testVideoOriginalFilename")
 
   /**
    * Adds the IRI of a XSL transformation to the given mapping.
@@ -191,7 +191,7 @@ class KnoraSipiIntegrationV1ITSpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -285,7 +285,7 @@ class KnoraSipiIntegrationV1ITSpec
       val knoraParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#Thing"),
-          "label" -> JsString("Wild thing"),
+          "label"      -> JsString("Wild thing"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(
             Map(
@@ -293,7 +293,7 @@ class KnoraSipiIntegrationV1ITSpec
                 JsObject(
                   Map(
                     "richtext_value" -> JsObject(
-                      "xml" -> JsString(standoffXml),
+                      "xml"        -> JsString(standoffXml),
                       "mapping_id" -> JsString("http://rdfh.ch/standoff/mappings/StandardMapping")
                     )
                   )
@@ -382,8 +382,8 @@ class KnoraSipiIntegrationV1ITSpec
         baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
-      val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val origname = locdata.fields("origname").asInstanceOf[JsString].value
+      val locdata            = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val origname           = locdata.fields("origname").asInstanceOf[JsString].value
       val imageUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       assert(origname == dest.getFileName.toString)
@@ -411,10 +411,10 @@ class KnoraSipiIntegrationV1ITSpec
       val knoraParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
-          "label" -> JsString("XSLT"),
+          "label"      -> JsString("XSLT"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedFile.internalFilename)
+          "file"       -> JsString(uploadedFile.internalFilename)
         )
       )
 
@@ -532,10 +532,10 @@ class KnoraSipiIntegrationV1ITSpec
       val bodyXsltParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
-          "label" -> JsString("XSLT"),
+          "label"      -> JsString("XSLT"),
           "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedBodyXsltFile.internalFilename)
+          "file"       -> JsString(uploadedBodyXsltFile.internalFilename)
         )
       )
 
@@ -602,10 +602,10 @@ class KnoraSipiIntegrationV1ITSpec
       val gravsearchTemplateParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#TextRepresentation"),
-          "label" -> JsString("BEOL Gravsearch template"),
+          "label"      -> JsString("BEOL Gravsearch template"),
           "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedGravsearchTemplateFile.internalFilename)
+          "file"       -> JsString(uploadedGravsearchTemplateFile.internalFilename)
         )
       )
 
@@ -637,10 +637,10 @@ class KnoraSipiIntegrationV1ITSpec
       val headerXsltParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
-          "label" -> JsString("BEOL header XSLT"),
+          "label"      -> JsString("BEOL header XSLT"),
           "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedHeaderXsltFile.internalFilename)
+          "file"       -> JsString(uploadedHeaderXsltFile.internalFilename)
         )
       )
 
@@ -761,10 +761,10 @@ class KnoraSipiIntegrationV1ITSpec
       val createDocumentResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
-          "label" -> JsString("PDF file"),
+          "label"      -> JsString("PDF file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedPdfFile.internalFilename)
+          "file"       -> JsString(uploadedPdfFile.internalFilename)
         )
       )
 
@@ -790,9 +790,9 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
-      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx                                 = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       val pdfUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       assert(nx == minimalPdfWidth)
@@ -834,9 +834,9 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
-      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx                                 = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       assert(nx == testPdfWidth)
       assert(ny == testPdfHeight)
     }
@@ -855,10 +855,10 @@ class KnoraSipiIntegrationV1ITSpec
       val archiveResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#ArchiveRepresentation"),
-          "label" -> JsString("Zip file"),
+          "label"      -> JsString("Zip file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedZipFile.internalFilename)
+          "file"       -> JsString(uploadedZipFile.internalFilename)
         )
       )
 
@@ -884,7 +884,7 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -924,7 +924,7 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -947,10 +947,10 @@ class KnoraSipiIntegrationV1ITSpec
       val createAudioResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#AudioRepresentation"),
-          "label" -> JsString("Wav file"),
+          "label"      -> JsString("Wav file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedWavFile.internalFilename)
+          "file"       -> JsString(uploadedWavFile.internalFilename)
         )
       )
 
@@ -976,7 +976,7 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val audioResourceResponse: JsObject = getResponseJson(audioResourceRequest)
-      val locdata = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -1016,7 +1016,7 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val audioResourceResponse: JsObject = getResponseJson(audioResourceRequest)
-      val locdata = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val wavUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -1040,10 +1040,10 @@ class KnoraSipiIntegrationV1ITSpec
       val createVideoResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#MovingImageRepresentation"),
-          "label" -> JsString("Wav file"),
+          "label"      -> JsString("Wav file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedVideoFile.internalFilename)
+          "file"       -> JsString(uploadedVideoFile.internalFilename)
         )
       )
 
@@ -1069,7 +1069,7 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val videoResourceResponse: JsObject = getResponseJson(videoResourceRequest)
-      val locdata = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val videoUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -1109,7 +1109,7 @@ class KnoraSipiIntegrationV1ITSpec
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val videoResourceResponse: JsObject = getResponseJson(videoResourceRequest)
-      val locdata = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val videoUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 

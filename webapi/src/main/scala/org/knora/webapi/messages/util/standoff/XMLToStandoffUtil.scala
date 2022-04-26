@@ -426,7 +426,7 @@ class XMLToStandoffUtil(
         }
 
       val xmlStrWithSep: StringWriter = new StringWriter()
-      val out = proc.newSerializer(xmlStrWithSep)
+      val out                         = proc.newSerializer(xmlStrWithSep)
 
       val trans = exp.load()
       trans.setInitialContextNode(source)
@@ -521,7 +521,7 @@ class XMLToStandoffUtil(
     }
 
     val groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]] = tags.groupBy(_.parentIndex)
-    val stringBuilder = new StringBuilder(XmlHeader)
+    val stringBuilder                                          = new StringBuilder(XmlHeader)
 
     // Start with the root.
     groupedTags.get(None) match {
@@ -688,17 +688,17 @@ class XMLToStandoffUtil(
         tag.uuid -> tag
       }.toMap
 
-    val oldTags = makeStandoffTagUuidMap(oldStandoff)
+    val oldTags  = makeStandoffTagUuidMap(oldStandoff)
     val oldUuids = oldTags.keySet
 
-    val newTags = makeStandoffTagUuidMap(newStandoff)
+    val newTags  = makeStandoffTagUuidMap(newStandoff)
     val newUuids = newTags.keySet
 
     val addedTagUuids = newUuids -- oldUuids
-    val addedTags = addedTagUuids.map(uuid => newTags(uuid))
+    val addedTags     = addedTagUuids.map(uuid => newTags(uuid))
 
     val removedTagUuids = oldUuids -- newUuids
-    val removedTags = removedTagUuids.map(uuid => oldTags(uuid))
+    val removedTags     = removedTagUuids.map(uuid => oldTags(uuid))
 
     (addedTags, removedTags)
   }
@@ -778,8 +778,8 @@ class XMLToStandoffUtil(
         // We got an XML element. Generate a standoff tag for it.
         // println(s"got Elem <${elem.label}>")
 
-        val newTagIndex = acc.nextIndex
-        val attrMap = elem.attributes.asAttrMap
+        val newTagIndex    = acc.nextIndex
+        val attrMap        = elem.attributes.asAttrMap
         val isEmptyElement = elem.text.length == 0
 
         if (isEmptyElement && attrMap.contains(XmlClixStartIdAttrName)) {

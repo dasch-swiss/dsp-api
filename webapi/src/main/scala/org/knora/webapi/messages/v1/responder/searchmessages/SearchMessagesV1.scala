@@ -59,7 +59,7 @@ case class ExtendedSearchGetRequestV1(
   propertyIri: Seq[IRI] = Nil, // parallel structure
   propertyValueType: Seq[IRI] = Nil,
   compareProps: Seq[SearchComparisonOperatorV1.Value] = Nil, // parallel structure
-  searchValue: Seq[String] = Nil, // parallel structure
+  searchValue: Seq[String] = Nil,                            // parallel structure
   startAt: Int,
   showNRows: Int,
   userProfile: UserADM
@@ -89,17 +89,17 @@ case class SearchGetResponseV1(
  * Enumeration representing the possible operators for comparing properties to a given value
  */
 object SearchComparisonOperatorV1 extends Enumeration {
-  val EXISTS = Value(0, "EXISTS")
-  val EQ = Value(1, "EQ")
-  val NOT_EQ = Value(2, "!EQ")
-  val GT = Value(3, "GT")
-  val GT_EQ = Value(4, "GT_EQ")
-  val LT = Value(5, "LT")
-  val LT_EQ = Value(6, "LT_EQ")
-  val MATCH = Value(7, "MATCH")
+  val EXISTS        = Value(0, "EXISTS")
+  val EQ            = Value(1, "EQ")
+  val NOT_EQ        = Value(2, "!EQ")
+  val GT            = Value(3, "GT")
+  val GT_EQ         = Value(4, "GT_EQ")
+  val LT            = Value(5, "LT")
+  val LT_EQ         = Value(6, "LT_EQ")
+  val MATCH         = Value(7, "MATCH")
   val MATCH_BOOLEAN = Value(8, "MATCH_BOOLEAN")
-  val LIKE = Value(9, "LIKE")
-  val NOT_LIKE = Value(10, "!LIKE")
+  val LIKE          = Value(9, "LIKE")
+  val NOT_LIKE      = Value(10, "!LIKE")
 
   val valueMap: Map[String, SearchComparisonOperatorV1.Value] = values.map(v => (v.toString, v)).toMap
 
@@ -165,6 +165,6 @@ object SearchV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
   implicit val searchPreviewDimensionsV1Format: JsonFormat[SearchPreviewDimensionsV1] = jsonFormat2(
     SearchPreviewDimensionsV1
   )
-  implicit val searchResultRowV1Format: JsonFormat[SearchResultRowV1] = jsonFormat11(SearchResultRowV1)
+  implicit val searchResultRowV1Format: JsonFormat[SearchResultRowV1]      = jsonFormat11(SearchResultRowV1)
   implicit val searchResponseV1Format: RootJsonFormat[SearchGetResponseV1] = jsonFormat4(SearchGetResponseV1)
 }

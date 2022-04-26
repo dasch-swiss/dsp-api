@@ -28,17 +28,17 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
           projectID = stringFormatter.validateProjectShortcode(
-            projectIDAndFile.head,
-            throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")
-          )
+                        projectIDAndFile.head,
+                        throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")
+                      )
           filename = stringFormatter.toSparqlEncodedString(
-            projectIDAndFile(1),
-            throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'")
-          )
+                       projectIDAndFile(1),
+                       throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'")
+                     )
           _ = log.info(s"/admin/files route called for filename $filename")
         } yield SipiFileInfoGetRequestADM(
           projectID = projectID,

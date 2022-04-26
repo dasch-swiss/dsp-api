@@ -29,7 +29,7 @@ object ActorUtil {
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
    * phase, to be able to return ZIO inside an Actor.
-   * 
+   *
    * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =

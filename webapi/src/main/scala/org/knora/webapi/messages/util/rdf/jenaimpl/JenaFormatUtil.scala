@@ -89,7 +89,7 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
     import JenaConversions._
 
     val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
-    val stringWriter: StringWriter = new StringWriter
+    val stringWriter: StringWriter                  = new StringWriter
 
     rdfFormat match {
       case Turtle =>

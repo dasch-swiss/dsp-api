@@ -148,8 +148,8 @@ trait ListV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with 
       }
 
       val fields = Map(
-        "id" -> tree.id.toJson,
-        "name" -> tree.name.toJson,
+        "id"    -> tree.id.toJson,
+        "name"  -> tree.name.toJson,
         "label" -> tree.label.toJson,
         "level" -> tree.level.toJson
       ) ++ childrenOption
