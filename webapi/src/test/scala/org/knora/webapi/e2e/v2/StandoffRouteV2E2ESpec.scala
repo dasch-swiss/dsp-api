@@ -284,7 +284,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
           Map("filename" -> freetestXSLTFile)
         )
       )
-      val sipiRequest = Post(s"${appConfig.sipi.internalBaseUrl}/upload?token=$loginToken", sipiFormData)
+      val sipiRequest  = Post(s"${appConfig.sipi.internalBaseUrl}/upload?token=$loginToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
       val uploadedFile = responseToString(sipiResponse).parseJson.asJsObject
         .convertTo[SipiUploadResponse]

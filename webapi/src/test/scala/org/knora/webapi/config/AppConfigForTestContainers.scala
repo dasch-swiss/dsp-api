@@ -41,7 +41,7 @@ object AppConfigForTestContainers {
     ZLayer {
       for {
         // _         <- ZIO.debug("start of app config")
-        appConfig         <- config // .tapBoth(ZIO.debug(_), ZIO.debug(_))
+        appConfig <- config // .tapBoth(ZIO.debug(_), ZIO.debug(_))
         // fusekiContainer   <- ZIO.service[FusekiTestContainer]
         sipiContainer     <- ZIO.service[SipiTestContainer]
         alteredSipiConfig <- ZIO.succeed(appConfig.sipi.copy(internalPort = sipiContainer.container.getFirstMappedPort))
