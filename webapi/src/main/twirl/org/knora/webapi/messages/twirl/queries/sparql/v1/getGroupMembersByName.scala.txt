@@ -8,11 +8,9 @@
 @**
  * Gets all members of a group, given the group's knora-admin:groupName.
  *
- * @param triplestore the name of the triplestore being used.
  * @param name the group's `knora-admin:groupName`.
  *@
-@(triplestore: String,
-  projectIri: IRI,
+@(projectIri: IRI,
   name: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

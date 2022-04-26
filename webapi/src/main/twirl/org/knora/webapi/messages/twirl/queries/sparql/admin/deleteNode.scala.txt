@@ -10,13 +10,10 @@
  * Delete a node (root or child). If a child node is deleted, remove it from the list of its parent's sublist nodes.
  *
  * @param dataNamedGraph     the named graph to update.
- * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
-                             results from the WHERE clause of the update.
  * @param nodeIri            the IRI of the list we want to update.
  * @param isRootNode         flag to identify node type.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   nodeIri: IRI,
   isRootNode: Boolean
   )

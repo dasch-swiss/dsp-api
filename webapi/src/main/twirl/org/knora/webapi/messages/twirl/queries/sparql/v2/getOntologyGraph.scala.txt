@@ -8,11 +8,9 @@
 @*
  * Gets the contents of an ontology graph.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyGraph the IRI of the ontology graph.
  *@
-@(triplestore: String,
-  ontologyGraph: SmartIri)
+@(ontologyGraph: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

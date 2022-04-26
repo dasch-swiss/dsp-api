@@ -10,12 +10,10 @@
 @**
  * Gets all information about a single or all user.
  *
- * @param triplestore the name of the triplestore being used.
  * @param maybeIri the users's IRI.
  * @param maybeEmail the users's email.
  *@
-@(triplestore: String,
-  maybeIri: Option[IRI],
+@(maybeIri: Option[IRI],
   maybeUsername: Option[String],
   maybeEmail: Option[String])
 

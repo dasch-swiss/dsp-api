@@ -8,10 +8,8 @@
 @import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
- * Performs a search for resources matching the given criteria, using SPARQL w/o inference
- * (except for the interface to Lucene, which is triplestore-specific).
+ * Performs a search for resources matching the given criteria, using SPARQL w/o inference.
  *
- * @param triplestore the name of the triplestore being used.
  * @param phrase the search phrase (e.g. "Reise ins").
  * @param lastTerm the last search term (e.g. "Heili").
  * @param resourceTypeIri if set, restricts search to this resource class and its subclasses.
@@ -20,8 +18,7 @@
  * @param limitOfResults limits number of resources to be returned.
  * @param separator the separator to be used when concatenating the value strings.
  *@
-@(triplestore: String,
-  searchPhrase: MatchStringWhileTyping,
+@(searchPhrase: MatchStringWhileTyping,
   restypeIriOption: Option[IRI],
   numberOfProps: Int,
   limitOfResults: Int,
@@ -37,20 +34,10 @@ SELECT DISTINCT ?resourceIri ?resourceClass ?firstProp ?attachedToUser ?attached
 }
 WHERE {
 
-    @triplestore match {
+    ?resourceIri <http://jena.apache.org/text#query> '@searchPhrase.generateLiteralForLuceneIndexWithExactSequence' .
+    ?resourceIri rdfs:label ?firstProp .
+    @searchPhrase.generateRegexFilterStatementForExactSequenceMatch("firstProp")
 
-        case "embedded-jena-tdb" | "fuseki" => {
-
-            ?resourceIri <http://jena.apache.org/text#query> '@searchPhrase.generateLiteralForLuceneIndexWithExactSequence' .
-            ?resourceIri rdfs:label ?firstProp .
-            @searchPhrase.generateRegexFilterStatementForExactSequenceMatch("firstProp")
-
-        }
-
-        case other => {
-            @{throw SparqlGenerationException(s"Triplestore type $other is not supported in this SPARQL template"); ()}
-        }
-    }
 
     FILTER NOT EXISTS {
         ?resourceIri knora-base:isDeleted true .

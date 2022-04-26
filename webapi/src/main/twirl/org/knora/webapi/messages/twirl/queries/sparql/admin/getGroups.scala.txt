@@ -8,11 +8,9 @@
 @**
  * Gets information about a single or all groups.
  *
- * @param triplestore the name of the triplestore being used.
  * @param maybeIri the IRI of the group.
  *@
-@(triplestore: String,
-  maybeIri: Option[IRI])
+@(maybeIri: Option[IRI])
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

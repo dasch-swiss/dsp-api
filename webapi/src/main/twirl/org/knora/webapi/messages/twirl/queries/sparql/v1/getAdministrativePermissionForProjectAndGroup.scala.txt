@@ -8,11 +8,9 @@
 @**
  * Gets the administrative permission object identified by IRI.
  *
- * @param triplestore the name of the triplestore being used.
  * @param administrativePermissionIri the permission's IRI.
  *@
-@(triplestore: String,
-  projectIri: IRI,
+@(projectIri: IRI,
   groupIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

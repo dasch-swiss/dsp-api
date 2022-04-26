@@ -10,8 +10,6 @@
  * Creates a new group.
  *
  * @param adminNamedGraphIri the IRI of the admin graph.
- * @param triplestore the name of the triplestore being used. The template uses this value to exclude inferred
-                      results from the WHERE clause of the update.
  * @param groupIri the Iri of the new group
  * @param groupClassIri the IRI of the OWL class that the new group should belong to.
  * @param name the new group's name.
@@ -21,7 +19,6 @@
  * @param hasSelfJoinEnabled the new group's self-join status.
  *@
 @(adminNamedGraphIri: IRI,
-  triplestore: String,
   groupIri: IRI,
   groupClassIri: IRI,
   name: String,

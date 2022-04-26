@@ -8,38 +8,38 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{
-  AssertionException,
-  BadRequestException,
-  GravsearchException,
-  InconsistentRepositoryDataException
-}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.GravsearchException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, SparqlSelectResultBody, VariableResultsRow}
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.SparqlSelectResultBody
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
-import org.knora.webapi.messages.util.search.gravsearch.prequery.{
-  AbstractPrequeryGenerator,
-  NonTriplestoreSpecificGravsearchToCountPrequeryTransformer,
-  NonTriplestoreSpecificGravsearchToPrequeryTransformer
-}
+import org.knora.webapi.messages.util.search.gravsearch.prequery.AbstractPrequeryGenerator
+import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
+import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ErrorHandlingMap, ResponderData}
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  EntityInfoGetRequestV2,
-  EntityInfoGetResponseV2,
-  ReadClassInfoV2,
-  ReadPropertyInfoV2
-}
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ApacheLuceneSupport._
 
@@ -180,7 +180,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       countSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchFulltext(
-            triplestore = settings.triplestoreType,
             searchTerms = searchTerms,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
@@ -246,7 +245,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       searchSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchFulltext(
-            triplestore = settings.triplestoreType,
             searchTerms = searchTerms,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
@@ -774,7 +772,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getResourcesByClassInProjectPrequery(
-          triplestore = settings.triplestoreType,
           projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
           resourceClassIri = internalClassIri,
           maybeOrderByProperty = maybeInternalOrderByPropertyIri,
@@ -811,7 +808,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             resourceRequestSparql <- Future(
               org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                 .getResourcePropertiesAndValues(
-                  triplestore = settings.triplestoreType,
                   resourceIris = mainResourceIris,
                   preview = false,
                   withDeleted = false,
@@ -896,7 +892,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       countSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchResourceByLabel(
-            triplestore = settings.triplestoreType,
             searchTerm = searchPhrase,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
@@ -954,7 +949,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       searchResourceByLabelSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchResourceByLabel(
-            triplestore = settings.triplestoreType,
             searchTerm = searchPhrase,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),

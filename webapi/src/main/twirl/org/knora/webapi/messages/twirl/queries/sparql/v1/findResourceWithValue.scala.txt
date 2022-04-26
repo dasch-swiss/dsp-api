@@ -8,11 +8,9 @@
 @**
  * Searches for a resource that has a given value.
  *
- * @param triplestore the name of the triplestore being used.
  * @param searchValueIri the IRI of the value to look for.
  *@
-@(triplestore: String,
-  searchValueIri: IRI)
+@(searchValueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>

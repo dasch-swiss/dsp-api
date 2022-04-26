@@ -8,11 +8,9 @@
 @**
  * Checks if a list can be deleted (none of its nodes is used in data).
  *
- * @param triplestore the name of the triplestore being used.
  * @param listIri the IRI of the list to be checked.
  *@
-@(triplestore: String,
-  listIri: IRI)
+@(listIri: IRI)
 
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
