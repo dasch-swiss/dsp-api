@@ -1,619 +1,688 @@
-###
+    ###
 # * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 # * SPDX-License-Identifier: Apache-2.0
 ###
 
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xml:        <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix standoff:   <http://www.knora.org/ontology/standoff#> .
 
-<http://rdfh.ch/standoff/mappings/StandardMapping> a knora-base:XMLToStandoffMapping ;
-	rdfs:label "mapping for HTML"@en ;
-    knora-base:hasMappingElement 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/pUaXWHPtSPak0Vu30zrTkA> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/IveyAwIDSw-Pu-5nSml3hQ> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/mVcdUbE3TiijJW9o5AB61A> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/562D-BvkTmC4iwicsGyoVw> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/wl8QpeAmSrukY1KEdEqN6Q> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/RKhuK-_tRR60DfQEuH-r1Q> ,
-                                 
-                                 #### additional elements
-                                 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/6FnEh0eXQa-iVsU_-QHwBA> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/dphc7sQRSOijx4QC9W-XDg> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_WsDrPeVSgy7OGixWQcChQ> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8lj49RdOQ1WDruSuhppcoQ> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8PAZAyZXRsauRYMRkfNVew> ,
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vOE-UntgTimZYKifxJau5Q> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8d5ngrswSgydQ7Nth0w3kQ> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/USzK8q7nQpe2k_BQ3O2-fg> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/uJ4GgFl_Qki-cYHae_nAtA> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/X-SQznMkTx-LZRLAY74ePA> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/62844c98-7251-11e7-8cf> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vlGCAF3kQyywpobNu1T7ng> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ZeSrjYCxT-anWm8YYy61Uw> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/a05L2z3NT3iMWMn7nFqIOA> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vncrL3zVRxiUzHyK6EE6Cw> ,
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/niV5iI8DTVK3on2ySXvXRQ> , 
-                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858> . 
-                                 
+<http://rdfh.ch/standoff/mappings/StandardMapping>
+    a                            knora-base:XMLToStandoffMapping ;
+    rdfs:label                   "mapping for HTML"@en ;
+    knora-base:hasMappingElement <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/pUaXWHPtSPak0Vu30zrTkA>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/IveyAwIDSw-Pu-5nSml3hQ>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/mVcdUbE3TiijJW9o5AB61A>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/562D-BvkTmC4iwicsGyoVw>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/wl8QpeAmSrukY1KEdEqN6Q>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/RKhuK-_tRR60DfQEuH-r1Q>,
+
+                                     #### additional elements
+
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/6FnEh0eXQa-iVsU_-QHwBA>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/dphc7sQRSOijx4QC9W-XDg>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_WsDrPeVSgy7OGixWQcChQ>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8lj49RdOQ1WDruSuhppcoQ>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8PAZAyZXRsauRYMRkfNVew>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vOE-UntgTimZYKifxJau5Q>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8d5ngrswSgydQ7Nth0w3kQ>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/USzK8q7nQpe2k_BQ3O2-fg>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/uJ4GgFl_Qki-cYHae_nAtA>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/X-SQznMkTx-LZRLAY74ePA>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/62844c98-7251-11e7-8cf>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vlGCAF3kQyywpobNu1T7ng>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ZeSrjYCxT-anWm8YYy61Uw>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/a05L2z3NT3iMWMn7nFqIOA>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vncrL3zVRxiUzHyK6EE6Cw>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/niV5iI8DTVK3on2ySXvXRQ>,
+                                 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858> .
+
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g>
-    a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffRootTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
-	knora-base:mappingHasXMLTagname "text"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffRootTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingHasXMLTagname            "text"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLAttribute <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ewU6KAXfS2-o5JLyMp5AWQ> .
+    knora-base:mappingHasXMLAttribute          <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ewU6KAXfS2-o5JLyMp5AWQ> .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ewU6KAXfS2-o5JLyMp5AWQ>
-	a knora-base:MappingXMLAttribute ;
+    a                                     knora-base:MappingXMLAttribute ;
     knora-base:mappingHasStandoffProperty standoff:standoffRootTagHasDocumentType ;
-	knora-base:mappingHasXMLAttributename "documentType"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string .
+    knora-base:mappingHasXMLAttributename "documentType"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace     "noNamespace"^^xsd:string .
 
-<http://rdfh.ch/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg> 
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffParagraphTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg>
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffParagraphTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "p"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "p"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4XIn2zgbSN-swe5PdPjogg>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffItalicTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffItalicTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "em"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "em"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/pUaXWHPtSPak0Vu30zrTkA>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffBoldTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffBoldTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "strong"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "strong"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/IveyAwIDSw-Pu-5nSml3hQ>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffUnderlineTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffUnderlineTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "u"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "u"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/mVcdUbE3TiijJW9o5AB61A>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffSubscriptTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffSubscriptTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "sub"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "sub"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/562D-BvkTmC4iwicsGyoVw>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffSuperscriptTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffSuperscriptTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "sup"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "sup"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/wl8QpeAmSrukY1KEdEqN6Q>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffStrikethroughTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffStrikethroughTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "strike"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "strike"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/9f0iFk1JTu-gsMHtyUZqcg>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass knora-base:StandoffUriTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         knora-base:StandoffUriTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "a"^^xsd:string ;
-	knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4bsitijFRVymnUxomS1LTg> .
+    knora-base:mappingHasXMLTagname            "a"^^xsd:string ;
+    knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4bsitijFRVymnUxomS1LTg> .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4bsitijFRVymnUxomS1LTg>
-	a knora-base:MappingStandoffDataTypeClass ;
-    knora-base:mappingHasStandoffClass knora-base:StandoffUriTag ;
-	knora-base:mappingHasXMLAttributename "href"^^xsd:string .
+    a                                     knora-base:MappingStandoffDataTypeClass ;
+    knora-base:mappingHasStandoffClass    knora-base:StandoffUriTag ;
+    knora-base:mappingHasXMLAttributename "href"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ODwo82ZLRsiWBVXvipRk1w>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass knora-base:StandoffLinkTag ;
-	knora-base:mappingHasXMLClass "salsah-link" ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         knora-base:StandoffLinkTag ;
+    knora-base:mappingHasXMLClass              "salsah-link" ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "a"^^xsd:string ;
-	knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/Gs_0yBwLStaj_Em3cs4Erg> .
+    knora-base:mappingHasXMLTagname            "a"^^xsd:string ;
+    knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/Gs_0yBwLStaj_Em3cs4Erg> .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/Gs_0yBwLStaj_Em3cs4Erg>
-	a knora-base:MappingStandoffDataTypeClass ;
-    knora-base:mappingHasStandoffClass knora-base:StandoffLinkTag ;
-	knora-base:mappingHasXMLAttributename "href"^^xsd:string .
+    a                                     knora-base:MappingStandoffDataTypeClass ;
+    knora-base:mappingHasStandoffClass    knora-base:StandoffLinkTag ;
+    knora-base:mappingHasXMLAttributename "href"^^xsd:string .
 
-<http://rdfh.ch/standoff/mappings/StandardMapping/elements/RKhuK-_tRR60DfQEuH-r1Q> 
-    a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass knora-base:StandoffInternalReferenceTag ;
-	knora-base:mappingHasXMLClass "internal-link" ;
-	knora-base:mappingHasXMLNamespace "noNamespace" ;
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/RKhuK-_tRR60DfQEuH-r1Q>
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         knora-base:StandoffInternalReferenceTag ;
+    knora-base:mappingHasXMLClass              "internal-link" ;
+    knora-base:mappingHasXMLNamespace          "noNamespace" ;
     knora-base:mappingElementRequiresSeparator false ;
-	knora-base:mappingHasXMLTagname "a" ;
-	knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/Yf-leJ6PRK2dc79yoaZwCQ> .
+    knora-base:mappingHasXMLTagname            "a" ;
+    knora-base:mappingHasStandoffDataTypeClass <http://rdfh.ch/standoff/mappings/StandardMapping/elements/Yf-leJ6PRK2dc79yoaZwCQ> .
 
-<http://rdfh.ch/standoff/mappings/StandardMapping/elements/Yf-leJ6PRK2dc79yoaZwCQ> 
-    a knora-base:MappingStandoffDataTypeClass ;
-	knora-base:mappingHasStandoffClass knora-base:StandoffInternalReferenceTag ;
-	knora-base:mappingHasXMLAttributename "href" .
+<http://rdfh.ch/standoff/mappings/StandardMapping/elements/Yf-leJ6PRK2dc79yoaZwCQ>
+    a                                     knora-base:MappingStandoffDataTypeClass ;
+    knora-base:mappingHasStandoffClass    knora-base:StandoffInternalReferenceTag ;
+    knora-base:mappingHasXMLAttributename "href" .
 
 
 ###################### additional elements
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/6FnEh0eXQa-iVsU_-QHwBA>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffHeader1Tag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffHeader1Tag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "h1"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "h1"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/dphc7sQRSOijx4QC9W-XDg>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffHeader2Tag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffHeader2Tag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "h2"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "h2"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_WsDrPeVSgy7OGixWQcChQ>
-	a knora-base:MappingElement ;
+    a                                          knora-base:MappingElement ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasStandoffClass standoff:StandoffHeader3Tag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
-	knora-base:mappingHasXMLTagname "h3"^^xsd:string .
+    knora-base:mappingHasStandoffClass         standoff:StandoffHeader3Tag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingHasXMLTagname            "h3"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8lj49RdOQ1WDruSuhppcoQ>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffHeader4Tag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffHeader4Tag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "h4"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "h4"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8PAZAyZXRsauRYMRkfNVew>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffHeader5Tag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffHeader5Tag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "h5"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "h5"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vOE-UntgTimZYKifxJau5Q>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffHeader6Tag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffHeader6Tag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "h6"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "h6"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/8d5ngrswSgydQ7Nth0w3kQ>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffOrderedListTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffOrderedListTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "ol"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "ol"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/USzK8q7nQpe2k_BQ3O2-fg>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffUnorderedListTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffUnorderedListTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "ul"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "ul"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/uJ4GgFl_Qki-cYHae_nAtA>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffListElementTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffListElementTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "li"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "li"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/X-SQznMkTx-LZRLAY74ePA>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffTableTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffTableTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "table"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "table"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/62844c98-7251-11e7-8cf>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffTableBodyTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffTableBodyTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "tbody"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "tbody"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/_-8MPxJFSAiZm1T-g3Ymzg>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffTableRowTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffTableRowTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "tr"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "tr"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vlGCAF3kQyywpobNu1T7ng>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffTableCellTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffTableCellTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "td"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "td"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ktOIwFHSTm-GC1RVF3HZpw>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffBrTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffBrTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "br"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "br"^^xsd:string .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/ZeSrjYCxT-anWm8YYy61Uw>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffLineTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
-	knora-base:mappingHasXMLTagname "hr"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffLineTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingHasXMLTagname            "hr"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/a05L2z3NT3iMWMn7nFqIOA>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffPreTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
-	knora-base:mappingHasXMLTagname "pre"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffPreTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingHasXMLTagname            "pre"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true .
-    
+
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/vncrL3zVRxiUzHyK6EE6Cw>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffCiteTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
-	knora-base:mappingHasXMLTagname "cite"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffCiteTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
+    knora-base:mappingHasXMLTagname            "cite"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/niV5iI8DTVK3on2ySXvXRQ>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffBlockquoteTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffBlockquoteTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "blockquote"^^xsd:string .
-    
+    knora-base:mappingHasXMLTagname            "blockquote"^^xsd:string .
+
 <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5b548e03-7ece-4ed7-858>
-	a knora-base:MappingElement ;
-	knora-base:mappingHasStandoffClass standoff:StandoffCodeTag ;
-	knora-base:mappingHasXMLClass "noClass"^^xsd:string ;
-	knora-base:mappingHasXMLNamespace "noNamespace"^^xsd:string ;
+    a                                          knora-base:MappingElement ;
+    knora-base:mappingHasStandoffClass         standoff:StandoffCodeTag ;
+    knora-base:mappingHasXMLClass              "noClass"^^xsd:string ;
+    knora-base:mappingHasXMLNamespace          "noNamespace"^^xsd:string ;
     knora-base:mappingElementRequiresSeparator true ;
-	knora-base:mappingHasXMLTagname "code"^^xsd:string .
+    knora-base:mappingHasXMLTagname            "code"^^xsd:string .
 
 ### TEI Mapping for standard standoff tags
 
-<http://rdfh.ch/standoff/mappings/TEIMapping> a knora-base:XMLToStandoffMapping ;
-	rdfs:label "mapping for TEI"@en .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "text" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffRootTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/MOy-bMF0TgGt6pIIvx-pCA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/MOy-bMF0TgGt6pIIvx-pCA> a <http://www.knora.org/ontology/knora-base#MappingXMLAttribute> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "documentType" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty> <http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA> <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/GbaDZ4QVSm-d60SCh1QtLw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/GbaDZ4QVSm-d60SCh1QtLw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "entity" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/knora-base#StandoffLinkTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/7IDT3KQXQomK3lsbL3dIkw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/7IDT3KQXQomK3lsbL3dIkw> a <http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/knora-base#StandoffLinkTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "ref" .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/GbaDZ4QVSm-d60SCh1QtLw> <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/8iX0RVMCTzSIkiXoSsSohQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/8iX0RVMCTzSIkiXoSsSohQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "a" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHyperlinkTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/iCm_T_0XRpOLT8-oFFi-Ww> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/iCm_T_0XRpOLT8-oFFi-Ww> a <http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "href" .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/8iX0RVMCTzSIkiXoSsSohQ> <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "ref" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/geuxwEE9RIO4c6XoEKYnbA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/geuxwEE9RIO4c6XoEKYnbA> a <http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "target" .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw> <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/yR6wtWrURAqDCx3PG7sTEw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/yR6wtWrURAqDCx3PG7sTEw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "quote" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffBlockquoteTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/GJOU1kSBS7S0BxsM6UjptA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/GJOU1kSBS7S0BxsM6UjptA> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "code" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffCodeTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/saI66uYOTbOcrOFx0mtapw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/saI66uYOTbOcrOFx0mtapw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "p" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffParagraphTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/eRt9fdGtTRKkoFKmS7gFGw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/eRt9fdGtTRKkoFKmS7gFGw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "header1" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHeader1Tag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/tsgsx-gMQ3Sym8I33dOKqA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/tsgsx-gMQ3Sym8I33dOKqA> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "header2" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHeader2Tag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/wBBNendcRa2O4U4FVLMjQA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/wBBNendcRa2O4U4FVLMjQA> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "header3" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHeader3Tag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/ftCHMSKwS1GBi0-ZuxsS7A> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/ftCHMSKwS1GBi0-ZuxsS7A> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "header4" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHeader4Tag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/ecq9qviQTf-VhuUZn79bFQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/ecq9qviQTf-VhuUZn79bFQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "header5" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHeader5Tag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/8U-7yGNwQ36QlDV-RqhGmw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/8U-7yGNwQ36QlDV-RqhGmw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "header6" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffHeader6Tag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/q326GBTBST-BkQI0agewVQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/q326GBTBST-BkQI0agewVQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "ol" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffOrderedListTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/VQMlF_3XTQOOaEznR2zxZA> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/VQMlF_3XTQOOaEznR2zxZA> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "ul" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffUnorderedListTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/TEI2R2U0RryBHu6lW1tFpQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/TEI2R2U0RryBHu6lW1tFpQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "listitem" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffListElementTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/9Mk9npFQRE-eysxdDpMWNw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/9Mk9npFQRE-eysxdDpMWNw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "table" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffTableTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/YByOHp77SeSjV6vLabCKsQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/YByOHp77SeSjV6vLabCKsQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "tablebody" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffTableBodyTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/3W22Mk0TRIOvIBDRHFYk4A> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/3W22Mk0TRIOvIBDRHFYk4A> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "row" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffTableRowTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/UYjTqKdwSrGPlJUgE5-nEg> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/UYjTqKdwSrGPlJUgE5-nEg> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "cell" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffTableCellTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/Meec4tZORuqgGOCdmxeSdg> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/Meec4tZORuqgGOCdmxeSdg> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "br" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffBrTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/Ung9GeMAQPS_16HfwC9yTQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/Ung9GeMAQPS_16HfwC9yTQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "cite" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffCiteTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/3tieaPBlTDmCmaPZhZxEaw> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/3tieaPBlTDmCmaPZhZxEaw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "em" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffItalicTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/M7ecL9R6S5GFgXDdQGeWgg> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/M7ecL9R6S5GFgXDdQGeWgg> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "b" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffBoldTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/haMZ6-wARbiGyH-Q-knozg> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/haMZ6-wARbiGyH-Q-knozg> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "u" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffUnderlineTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/WmWgN_SWSoCaMnCB1_wq2g> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/WmWgN_SWSoCaMnCB1_wq2g> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "strike" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffStrikethroughTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/0N45BDlyQ76QvxsrKv5GUQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/0N45BDlyQ76QvxsrKv5GUQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "sup" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffSuperscriptTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/zqSCbkF0Ru2NasKDGETWBQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/zqSCbkF0Ru2NasKDGETWBQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "sub" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffSubscriptTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/BpwRrhIyTu2nc_wyW4o9bQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/BpwRrhIyTu2nc_wyW4o9bQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "line" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffLineTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/bwmtyHbrSBKmIBBVEdLcLQ> .
-
-<http://rdfh.ch/standoff/mappings/TEIMapping/elements/bwmtyHbrSBKmIBBVEdLcLQ> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "pre" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
-	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffPreTag> ;
-	<http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    a          knora-base:XMLToStandoffMapping ;
+    rdfs:label "mapping for TEI"@en .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA>
+    a                                                                  <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>    "text" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>  "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>      "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/standoff#StandoffRootTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLAttribute>  <http://rdfh.ch/standoff/mappings/TEIMapping/elements/MOy-bMF0TgGt6pIIvx-pCA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/MOy-bMF0TgGt6pIIvx-pCA>
+    a                                                                     <http://www.knora.org/ontology/knora-base#MappingXMLAttribute> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>     "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "documentType" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffProperty> <http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA>
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/GbaDZ4QVSm-d60SCh1QtLw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/GbaDZ4QVSm-d60SCh1QtLw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "entity" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/knora-base#StandoffLinkTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/7IDT3KQXQomK3lsbL3dIkw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/7IDT3KQXQomK3lsbL3dIkw>
+    a                                                                     <http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>    <http://www.knora.org/ontology/knora-base#StandoffLinkTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "ref" .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/GbaDZ4QVSm-d60SCh1QtLw>
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/8iX0RVMCTzSIkiXoSsSohQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/8iX0RVMCTzSIkiXoSsSohQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "a" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHyperlinkTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/iCm_T_0XRpOLT8-oFFi-Ww> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/iCm_T_0XRpOLT8-oFFi-Ww>
+    a                                                                     <http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>    <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "href" .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/8iX0RVMCTzSIkiXoSsSohQ>
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "ref" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffDataTypeClass> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/geuxwEE9RIO4c6XoEKYnbA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/geuxwEE9RIO4c6XoEKYnbA>
+    a                                                                     <http://www.knora.org/ontology/knora-base#MappingStandoffDataTypeClass> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>    <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLAttributename> "target" .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw>
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/yR6wtWrURAqDCx3PG7sTEw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/yR6wtWrURAqDCx3PG7sTEw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "quote" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffBlockquoteTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/GJOU1kSBS7S0BxsM6UjptA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/GJOU1kSBS7S0BxsM6UjptA>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "code" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffCodeTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/saI66uYOTbOcrOFx0mtapw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/saI66uYOTbOcrOFx0mtapw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "p" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffParagraphTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/eRt9fdGtTRKkoFKmS7gFGw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/eRt9fdGtTRKkoFKmS7gFGw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "header1" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHeader1Tag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/tsgsx-gMQ3Sym8I33dOKqA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/tsgsx-gMQ3Sym8I33dOKqA>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "header2" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHeader2Tag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/wBBNendcRa2O4U4FVLMjQA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/wBBNendcRa2O4U4FVLMjQA>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "header3" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHeader3Tag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/ftCHMSKwS1GBi0-ZuxsS7A> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/ftCHMSKwS1GBi0-ZuxsS7A>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "header4" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHeader4Tag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/ecq9qviQTf-VhuUZn79bFQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/ecq9qviQTf-VhuUZn79bFQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "header5" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHeader5Tag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/8U-7yGNwQ36QlDV-RqhGmw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/8U-7yGNwQ36QlDV-RqhGmw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "header6" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffHeader6Tag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/q326GBTBST-BkQI0agewVQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/q326GBTBST-BkQI0agewVQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "ol" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffOrderedListTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/VQMlF_3XTQOOaEznR2zxZA> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/VQMlF_3XTQOOaEznR2zxZA>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "ul" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffUnorderedListTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/TEI2R2U0RryBHu6lW1tFpQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/TEI2R2U0RryBHu6lW1tFpQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "listitem" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffListElementTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/9Mk9npFQRE-eysxdDpMWNw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/9Mk9npFQRE-eysxdDpMWNw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "table" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffTableTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/YByOHp77SeSjV6vLabCKsQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/YByOHp77SeSjV6vLabCKsQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "tablebody" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffTableBodyTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/3W22Mk0TRIOvIBDRHFYk4A> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/3W22Mk0TRIOvIBDRHFYk4A>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "row" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffTableRowTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/UYjTqKdwSrGPlJUgE5-nEg> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/UYjTqKdwSrGPlJUgE5-nEg>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "cell" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffTableCellTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/Meec4tZORuqgGOCdmxeSdg> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/Meec4tZORuqgGOCdmxeSdg>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "br" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffBrTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/Ung9GeMAQPS_16HfwC9yTQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/Ung9GeMAQPS_16HfwC9yTQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "cite" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffCiteTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "true"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/3tieaPBlTDmCmaPZhZxEaw> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/3tieaPBlTDmCmaPZhZxEaw>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "em" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffItalicTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/M7ecL9R6S5GFgXDdQGeWgg> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/M7ecL9R6S5GFgXDdQGeWgg>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "b" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffBoldTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/haMZ6-wARbiGyH-Q-knozg> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/haMZ6-wARbiGyH-Q-knozg>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "u" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffUnderlineTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/WmWgN_SWSoCaMnCB1_wq2g> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/WmWgN_SWSoCaMnCB1_wq2g>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "strike" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffStrikethroughTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/0N45BDlyQ76QvxsrKv5GUQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/0N45BDlyQ76QvxsrKv5GUQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "sup" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffSuperscriptTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/zqSCbkF0Ru2NasKDGETWBQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/zqSCbkF0Ru2NasKDGETWBQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "sub" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffSubscriptTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/BpwRrhIyTu2nc_wyW4o9bQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/BpwRrhIyTu2nc_wyW4o9bQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "line" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffLineTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping>
+    <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/bwmtyHbrSBKmIBBVEdLcLQ> .
+
+<http://rdfh.ch/standoff/mappings/TEIMapping/elements/bwmtyHbrSBKmIBBVEdLcLQ>
+    a                                                                          <http://www.knora.org/ontology/knora-base#MappingElement> ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLTagname>            "pre" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace>          "noNamespace" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasXMLClass>              "noClass" ;
+    <http://www.knora.org/ontology/knora-base#mappingHasStandoffClass>         <http://www.knora.org/ontology/standoff#StandoffPreTag> ;
+    <http://www.knora.org/ontology/knora-base#mappingElementRequiresSeparator> "false"^^xsd:boolean .
