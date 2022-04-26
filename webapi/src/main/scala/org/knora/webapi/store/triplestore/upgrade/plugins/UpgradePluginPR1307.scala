@@ -19,8 +19,8 @@ class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends Up
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
   // IRI objects representing the IRIs used in this transformation.
-  private val rdfTypeIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
-  private val TextValueIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
+  private val rdfTypeIri: IriNode          = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)
+  private val TextValueIri: IriNode        = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.TextValue)
   private val ValueHasStandoffIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
   private val StandoffTagHasStartIndexIri: IriNode =
     nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasStartIndex)
@@ -63,7 +63,7 @@ class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends Up
      */
     lazy val newIri: IriNode = {
       val oldSubjStr: String = oldIri.stringValue
-      val slashPos: Int = oldSubjStr.lastIndexOf('/')
+      val slashPos: Int      = oldSubjStr.lastIndexOf('/')
       nodeFactory.makeIriNode(oldSubjStr.substring(0, slashPos + 1) + startIndex.toString)
     }
 

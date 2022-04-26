@@ -56,27 +56,27 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
   private val resourcesPathV1 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV1(routeData).knoraApiPath)
   private val resourcesPathV2 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
-  private val valuesPathV1 = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
+  private val valuesPathV1    = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
 
-  private val superUser = SharedTestDataADM.superUser
+  private val superUser      = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email
 
-  private val imagesUser = SharedTestDataADM.imagesUser01
+  private val imagesUser      = SharedTestDataADM.imagesUser01
   private val imagesUserEmail = imagesUser.email
 
-  private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
+  private val incunabulaUser      = SharedTestDataADM.incunabulaProjectAdminUser
   private val incunabulaUserEmail = incunabulaUser.email
 
-  private val incunabulaUser2 = SharedTestDataADM.incunabulaCreatorUser
+  private val incunabulaUser2      = SharedTestDataADM.incunabulaCreatorUser
   private val incunabulaUserEmail2 = incunabulaUser2.email
 
-  private val anythingUser = SharedTestDataADM.anythingUser1
+  private val anythingUser      = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email
 
-  private val anythingAdmin = SharedTestDataADM.anythingAdminUser
+  private val anythingAdmin      = SharedTestDataADM.anythingAdminUser
   private val anythingAdminEmail = anythingAdmin.email
 
-  private val beolUser = SharedTestDataADM.beolUser
+  private val beolUser      = SharedTestDataADM.beolUser
   private val beolUserEmail = beolUser.email
 
   private val password = SharedTestDataADM.testPass
@@ -103,20 +103,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
   )
 
-  private val firstThingIri = new MutableTestIri
-  private val firstTextValueIRI = new MutableTestIri
-  private val secondThingIri = new MutableTestIri
-  private val thirdThingIri = new MutableTestIri
-  private val fourthThingIri = new MutableTestIri
-  private val fifthThingIri = new MutableTestIri
-  private val sixthThingIri = new MutableTestIri
-  private val seventhThingIri = new MutableTestIri
-  private val eighthThingIri = new MutableTestIri
-  private val abelAuthorIri = new MutableTestIri
-  private val mathIntelligencerIri = new MutableTestIri
-  private val deutschesDingIri = new MutableTestIri
-  private val standoffLangDingIri = new MutableTestIri
-  private val thingWithString = new MutableTestIri
+  private val firstThingIri         = new MutableTestIri
+  private val firstTextValueIRI     = new MutableTestIri
+  private val secondThingIri        = new MutableTestIri
+  private val thirdThingIri         = new MutableTestIri
+  private val fourthThingIri        = new MutableTestIri
+  private val fifthThingIri         = new MutableTestIri
+  private val sixthThingIri         = new MutableTestIri
+  private val seventhThingIri       = new MutableTestIri
+  private val eighthThingIri        = new MutableTestIri
+  private val abelAuthorIri         = new MutableTestIri
+  private val mathIntelligencerIri  = new MutableTestIri
+  private val deutschesDingIri      = new MutableTestIri
+  private val standoffLangDingIri   = new MutableTestIri
+  private val thingWithString       = new MutableTestIri
   private val thingWithCreationDate = new MutableTestIri
 
   // incunabula book with title "Eyn biechlin ..."
@@ -310,9 +310,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.OK, response.toString)
 
-        val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+        val responseJson: Map[String, JsValue]    = responseAs[String].parseJson.asJsObject.fields
         val resourceContext: Map[String, JsValue] = responseJson("resource_context").asJsObject.fields
-        val resinfo: Map[String, JsValue] = resourceContext("resinfo").asJsObject.fields
+        val resinfo: Map[String, JsValue]         = resourceContext("resinfo").asJsObject.fields
 
         resinfo.get("regions") match {
           case Some(JsArray(regionsVector)) =>
@@ -1422,7 +1422,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
         responseStr should include("createdResources")
 
-        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val responseJson: JsObject         = AkkaHttpUtils.httpResponseToJson(response)
         val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
         abelAuthorIri.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
         mathIntelligencerIri.set(createdResources(2).asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
@@ -1677,10 +1677,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         BasicHttpCredentials(beolUserEmail, password)
       ) ~> resourcesPathV1 ~> check {
         val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
-        val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
-        val zippedFilenames = collection.mutable.Set.empty[String]
-        val zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))
-        var zipEntry: ZipEntry = null
+        val responseBytes: Array[Byte]              = Await.result(responseBodyFuture, 5.seconds)
+        val zippedFilenames                         = collection.mutable.Set.empty[String]
+        val zipInputStream                          = new ZipInputStream(new ByteArrayInputStream(responseBytes))
+        var zipEntry: ZipEntry                      = null
 
         while ({
           zipEntry = zipInputStream.getNextEntry
@@ -1701,10 +1701,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         BasicHttpCredentials(beolUserEmail, password)
       ) ~> resourcesPathV1 ~> check {
         val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
-        val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
-        val zippedFilenames = collection.mutable.Set.empty[String]
+        val responseBytes: Array[Byte]              = Await.result(responseBodyFuture, 5.seconds)
+        val zippedFilenames                         = collection.mutable.Set.empty[String]
 
-        val zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))
+        val zipInputStream     = new ZipInputStream(new ByteArrayInputStream(responseBytes))
         var zipEntry: ZipEntry = null
 
         while ({
@@ -1726,10 +1726,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         BasicHttpCredentials(beolUserEmail, password)
       ) ~> resourcesPathV1 ~> check {
         val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
-        val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
-        val zippedFilenames = collection.mutable.Set.empty[String]
-        val zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))
-        var zipEntry: ZipEntry = null
+        val responseBytes: Array[Byte]              = Await.result(responseBodyFuture, 5.seconds)
+        val zippedFilenames                         = collection.mutable.Set.empty[String]
+        val zipInputStream                          = new ZipInputStream(new ByteArrayInputStream(responseBytes))
+        var zipEntry: ZipEntry                      = null
 
         while ({
           zipEntry = zipInputStream.getNextEntry
@@ -1750,7 +1750,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
       val xmlStringBuilder = new StringBuilder
-      val random = new Random
+      val random           = new Random
 
       xmlStringBuilder.append(
         """<?xml version="1.0" encoding="UTF-8"?>
@@ -2046,7 +2046,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
         responseStr should include("createdResources")
 
-        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val responseJson: JsObject         = AkkaHttpUtils.httpResponseToJson(response)
         val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
         thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
 
@@ -2117,7 +2117,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
         responseStr should include("createdResources")
 
-        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val responseJson: JsObject         = AkkaHttpUtils.httpResponseToJson(response)
         val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
         thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
 
@@ -2178,7 +2178,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, responseStr)
         responseStr should include("createdResources")
 
-        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val responseJson: JsObject         = AkkaHttpUtils.httpResponseToJson(response)
         val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
         thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
 
@@ -2210,7 +2210,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
         val responseStr = responseAs[String]
         responseStr should include("createdResources")
-        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val responseJson: JsObject         = AkkaHttpUtils.httpResponseToJson(response)
         val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
         thingWithCreationDate.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
       }

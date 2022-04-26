@@ -65,12 +65,12 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
    */
   "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
-    val drawingsOfGodsUserEmail = "ddd1@unil.ch"
+    val drawingsOfGodsUserEmail   = "ddd1@unil.ch"
     val paroleReligieuseUserEmail = "parole@unil.ch"
-    val testPass = "test"
-    val thingIri = new MutableTestIri
-    val firstValueIri = new MutableTestIri
-    val secondValueIri = new MutableTestIri
+    val testPass                  = "test"
+    val thingIri                  = new MutableTestIri
+    val firstValueIri             = new MutableTestIri
+    val secondValueIri            = new MutableTestIri
 
     "allow parole-religieuse user to create a resource inside his own project (1a)" in {
 

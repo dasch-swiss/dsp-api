@@ -58,53 +58,58 @@ class AnnotationReadingGravsearchTypeInspector(
     for {
       // Get all the type annotations.
       typeAnnotations: Seq[GravsearchTypeAnnotation] <- Future {
-        QueryTraverser.visitWherePatterns(
-          patterns = whereClause.patterns,
-          whereVisitor = new AnnotationCollectingWhereVisitor(
-            whereClause.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
-          ),
-          initialAcc = Vector.empty[GravsearchTypeAnnotation]
-        )
-      }
+                                                          QueryTraverser.visitWherePatterns(
+                                                            patterns = whereClause.patterns,
+                                                            whereVisitor = new AnnotationCollectingWhereVisitor(
+                                                              whereClause.querySchema.getOrElse(
+                                                                throw AssertionException(
+                                                                  s"WhereClause has no querySchema"
+                                                                )
+                                                              )
+                                                            ),
+                                                            initialAcc = Vector.empty[GravsearchTypeAnnotation]
+                                                          )
+                                                        }
 
       // Collect the information in the type annotations.
-      intermediateResult: IntermediateTypeInspectionResult = typeAnnotations.foldLeft(previousResult) {
-        case (acc: IntermediateTypeInspectionResult, typeAnnotation: GravsearchTypeAnnotation) =>
-          typeAnnotation.annotationProp match {
-            case TypeAnnotationProperties.RdfType =>
-              val isResource =
-                OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeAnnotation.typeIri.toString)
-              val isValue =
-                GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeAnnotation.typeIri.toString)
-              acc.addTypes(
-                typeAnnotation.typeableEntity,
-                Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = isResource, isValueType = isValue))
-              )
+      intermediateResult: IntermediateTypeInspectionResult =
+        typeAnnotations.foldLeft(previousResult) {
+          case (acc: IntermediateTypeInspectionResult, typeAnnotation: GravsearchTypeAnnotation) =>
+            typeAnnotation.annotationProp match {
+              case TypeAnnotationProperties.RdfType =>
+                val isResource =
+                  OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeAnnotation.typeIri.toString)
+                val isValue =
+                  GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeAnnotation.typeIri.toString)
+                acc.addTypes(
+                  typeAnnotation.typeableEntity,
+                  Set(NonPropertyTypeInfo(typeAnnotation.typeIri, isResourceType = isResource, isValueType = isValue))
+                )
 
-            case TypeAnnotationProperties.ObjectType =>
-              val isResource =
-                OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeAnnotation.typeIri.toString)
-              val isValue =
-                GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeAnnotation.typeIri.toString)
-              acc.addTypes(
-                typeAnnotation.typeableEntity,
-                Set(
-                  PropertyTypeInfo(
-                    typeAnnotation.typeIri,
-                    objectIsResourceType = isResource,
-                    objectIsValueType = isValue
+              case TypeAnnotationProperties.ObjectType =>
+                val isResource =
+                  OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeAnnotation.typeIri.toString)
+                val isValue =
+                  GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(typeAnnotation.typeIri.toString)
+                acc.addTypes(
+                  typeAnnotation.typeableEntity,
+                  Set(
+                    PropertyTypeInfo(
+                      typeAnnotation.typeIri,
+                      objectIsResourceType = isResource,
+                      objectIsValueType = isValue
+                    )
                   )
                 )
-              )
-          }
-      }
+            }
+        }
 
       // Pass the intermediate result to the next type inspector in the pipeline.
       lastResult: IntermediateTypeInspectionResult <- runNextInspector(
-        intermediateResult = intermediateResult,
-        whereClause = whereClause,
-        requestingUser = requestingUser
-      )
+                                                        intermediateResult = intermediateResult,
+                                                        whereClause = whereClause,
+                                                        requestingUser = requestingUser
+                                                      )
     } yield lastResult
 
   /**

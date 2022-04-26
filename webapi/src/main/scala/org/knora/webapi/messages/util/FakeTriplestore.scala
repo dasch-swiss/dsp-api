@@ -68,7 +68,7 @@ object FakeTriplestore {
     this.synchronized {
       log.info("Collecting data for fake triplestore")
       val paddedQueryNum = f"$queryNum%04d"
-      val queryDir = fakeTriplestoreDir.get.resolve(paddedQueryNum)
+      val queryDir       = fakeTriplestoreDir.get.resolve(paddedQueryNum)
       Files.createDirectories(queryDir)
       val sparqlFile = queryDir.resolve(s"query-$paddedQueryNum.rq")
       FileUtil.writeTextFile(sparqlFile, sparql)

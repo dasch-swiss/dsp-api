@@ -27,7 +27,7 @@ class ServerVersionE2ESpec extends E2ESpec(ServerVersionE2ESpec.config) {
 
   "The Server" should {
     "return the custom 'Server' header with every response" in {
-      val request = Get(baseApiUrl + s"/admin/projects")
+      val request                = Get(baseApiUrl + s"/admin/projects")
       val response: HttpResponse = singleAwaitingRequest(request)
       response.headers should contain(ServerVersion.serverVersionHeader)
       response.headers.find(_.name == "Server") match {

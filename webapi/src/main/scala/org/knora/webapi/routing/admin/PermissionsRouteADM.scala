@@ -16,7 +16,7 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
  */
 class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
   private val createPermissionRoute: CreatePermissionRouteADM = new CreatePermissionRouteADM(routeData)
-  private val getPermissionRoute: GetPermissionsRouteADM = new GetPermissionsRouteADM(routeData)
+  private val getPermissionRoute: GetPermissionsRouteADM      = new GetPermissionsRouteADM(routeData)
   private val updatePermissionRoute: UpdatePermissionRouteADM = new UpdatePermissionRouteADM(routeData)
   private val deletePermissionRoute: DeletePermissionRouteADM = new DeletePermissionRouteADM(routeData)
 

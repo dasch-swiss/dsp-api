@@ -21,7 +21,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
     "work for a 'StringLiteralV2' without language tag" in {
 
       val string = StringLiteralV2("stringwithoutlang", None)
-      val json = string.toJson.compactPrint
+      val json   = string.toJson.compactPrint
 
       json should be("{\"value\":\"stringwithoutlang\"}")
 
@@ -33,7 +33,7 @@ class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADM
     "work for a 'StringLiteralV2' with language tag" in {
 
       val string = StringLiteralV2("stringwithlang", Some("de"))
-      val json = string.toJson.compactPrint
+      val json   = string.toJson.compactPrint
 
       json should be("{\"value\":\"stringwithlang\",\"language\":\"de\"}")
 

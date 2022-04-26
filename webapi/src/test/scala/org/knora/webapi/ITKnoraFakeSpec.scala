@@ -61,9 +61,9 @@ class ITKnoraFakeSpec(_system: ActorSystem)
     this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
 
   /* needed by the core trait */
-  implicit lazy val system: ActorSystem = _system
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val system: ActorSystem           = _system
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   /* Needs to be initialized before any responders */
@@ -72,7 +72,7 @@ class ITKnoraFakeSpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
   protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
   protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
@@ -94,7 +94,7 @@ class ITKnoraFakeSpec(_system: ActorSystem)
   }
 
   protected def getResponseString(request: HttpRequest): String = {
-    val response = singleAwaitingRequest(request)
+    val response        = singleAwaitingRequest(request)
     val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
     assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
     responseBodyStr

@@ -72,9 +72,9 @@ class OldListsRouteADMFeatureE2ESpec
     "test"
   )
 
-  private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+  private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-  private val customChildNodeIRI = "http://rdfh.ch/lists/0001/vQgijJZKSqawFooJPyhYkw"
+  private val customChildNodeIRI                   = "http://rdfh.ch/lists/0001/vQgijJZKSqawFooJPyhYkw"
   def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String =
     s"""{
        |    "parentNodeIri": "$parentNodeIri",
@@ -431,10 +431,10 @@ class OldListsRouteADMFeatureE2ESpec
     }
 
     "used to modify list information" should {
-      val newListIri = new MutableTestIri
-      val firstChildIri = new MutableTestIri
+      val newListIri     = new MutableTestIri
+      val firstChildIri  = new MutableTestIri
       val secondChildIri = new MutableTestIri
-      val thirdChildIri = new MutableTestIri
+      val thirdChildIri  = new MutableTestIri
 
       "create a list" in {
         val createListRequest: String =
@@ -521,7 +521,7 @@ class OldListsRouteADMFeatureE2ESpec
              |}
                 """.stripMargin
 
-        val request01 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
+        val request01                = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
         val response01: HttpResponse = singleAwaitingRequest(request01)
         // println(s"response: ${response01.toString}")
         response01.status should be(StatusCodes.BadRequest)
@@ -536,7 +536,7 @@ class OldListsRouteADMFeatureE2ESpec
              |}
                 """.stripMargin
 
-        val request02 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
+        val request02                = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
         val response02: HttpResponse = singleAwaitingRequest(request02)
         // println(s"response: ${response02.toString}")
         response02.status should be(StatusCodes.BadRequest)
@@ -551,7 +551,7 @@ class OldListsRouteADMFeatureE2ESpec
              |}
                 """.stripMargin
 
-        val request03 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
+        val request03                = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
         val response03: HttpResponse = singleAwaitingRequest(request03)
         // println(s"response: ${response03.toString}")
         response03.status should be(StatusCodes.BadRequest)
@@ -804,8 +804,8 @@ class OldListsRouteADMFeatureE2ESpec
       "add child to list - to the root node" in {
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val name = "first"
-        val label = "New First Child List Node Value"
+        val name    = "first"
+        val label   = "New First Child List Node Value"
         val comment = "New First Child List Node Comment"
 
         val addChildToRoot = addChildListNodeRequest(
@@ -876,8 +876,8 @@ class OldListsRouteADMFeatureE2ESpec
       "add second child to list - to the root node" in {
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val name = "second"
-        val label = "New Second Child List Node Value"
+        val name    = "second"
+        val label   = "New Second Child List Node Value"
         val comment = "New Second Child List Node Comment"
 
         val addSecondChildToRoot = addChildListNodeRequest(
@@ -948,8 +948,8 @@ class OldListsRouteADMFeatureE2ESpec
       "insert new child in a specific position" in {
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val name = "child with position"
-        val label = "Inserted List Node Label"
+        val name    = "child with position"
+        val label   = "Inserted List Node Label"
         val comment = "Inserted List Node Comment"
 
         val insertChild =
@@ -1024,8 +1024,8 @@ class OldListsRouteADMFeatureE2ESpec
       "add child to second child node" in {
         val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")
 
-        val name = "third"
-        val label = "New Third Child List Node Value"
+        val name    = "third"
+        val label   = "New Third Child List Node Value"
         val comment = "New Third Child List Node Comment"
 
         val addChildToSecondChild = addChildListNodeRequest(

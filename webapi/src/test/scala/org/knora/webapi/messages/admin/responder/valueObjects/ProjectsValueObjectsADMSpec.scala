@@ -17,7 +17,7 @@ import zio.prelude.Validation
  */
 class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "ProjectIRI value object" when {
-    val validProjectIri = "http://rdfh.ch/projects/0001"
+    val validProjectIri            = "http://rdfh.ch/projects/0001"
     val projectIRIWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
 
     "created using empty value" should {
@@ -48,7 +48,7 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Shortcode value object" when {
-    val validShortcode = "1234"
+    val validShortcode   = "1234"
     val invalidShortcode = "12345"
 
     "created using empty value" should {
@@ -77,7 +77,7 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Shortname value object" when {
-    val validShortname = "validShortname"
+    val validShortname   = "validShortname"
     val invalidShortname = "~!@#$%^&*()_+"
 
     "created using empty value" should {

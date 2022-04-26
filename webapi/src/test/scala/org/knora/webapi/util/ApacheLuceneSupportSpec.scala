@@ -13,7 +13,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "leave a Lucene query unchanged" in {
 
-      val searchString = "Reise Land"
+      val searchString             = "Reise Land"
       val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
       assert(searchExpression == "Reise Land")
@@ -21,7 +21,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "leave a Lucene query unchanged (2)" in {
 
-      val searchString = "Reise ins Land"
+      val searchString             = "Reise ins Land"
       val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
       assert(searchExpression == "Reise ins Land")
@@ -29,7 +29,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "leave a Lucene query containing phrases and terms unchanged" in {
 
-      val searchString = "\"Leonhard Euler\" Bernoulli"
+      val searchString             = "\"Leonhard Euler\" Bernoulli"
       val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
       assert(searchExpression == "\"Leonhard Euler\" Bernoulli")
@@ -38,7 +38,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "leave a Lucene query containing two phrases and one term unchanged" in {
 
-      val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
+      val searchString             = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
       val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
       assert(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula")
@@ -47,7 +47,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "leave a Lucene query containing two phrases and two terms unchanged" in {
 
-      val searchString = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
+      val searchString             = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
       val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
       assert(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria")
@@ -56,7 +56,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "get terms contained in  a Lucene query" in {
 
-      val searchString = "Reise Land"
+      val searchString             = "Reise Land"
       val singleTerms: Seq[String] = ApacheLuceneSupport.LuceneQueryString(searchString).getSingleTerms
 
       assert(singleTerms.size === 2)
@@ -65,7 +65,7 @@ class ApacheLuceneSupportSpec extends CoreSpec() {
 
     "handle one phrase correctly" in {
 
-      val searchString = "\"Leonhard Euler\""
+      val searchString             = "\"Leonhard Euler\""
       val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
       assert(searchExpression == "\"Leonhard Euler\"")

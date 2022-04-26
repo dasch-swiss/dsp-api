@@ -36,10 +36,10 @@ object GroupsResponderADMSpec {
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
-  private val timeout = 5.seconds
-  private val imagesProject = SharedTestDataADM.imagesProject
+  private val timeout             = 5.seconds
+  private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
-  private val rootUser = SharedTestDataADM.rootUser
+  private val rootUser            = SharedTestDataADM.rootUser
 
   "The GroupsResponder " when {
     "asked about all groups" should {
@@ -104,7 +104,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         )
 
         val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
-        val newGroupInfo = received.group
+        val newGroupInfo                        = received.group
 
         newGroupInfo.name should equal("NewGroup")
         newGroupInfo.descriptions should equal(
@@ -161,7 +161,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         )
 
         val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
-        val updatedGroupInfo = received.group
+        val updatedGroupInfo                    = received.group
 
         updatedGroupInfo.name should equal("UpdatedGroupName")
         updatedGroupInfo.descriptions should equal(

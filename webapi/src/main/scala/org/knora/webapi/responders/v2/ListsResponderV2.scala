@@ -52,10 +52,10 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
   ): Future[ListGetResponseV2] =
     for {
       listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(
-        iri = listIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = requestingUser
-      )).mapTo[ListGetResponseADM]
+                                               iri = listIri,
+                                               featureFactoryConfig = featureFactoryConfig,
+                                               requestingUser = requestingUser
+                                             )).mapTo[ListGetResponseADM]
 
     } yield ListGetResponseV2(list = listResponseADM.list, requestingUser.lang, settings.fallbackLanguage)
 
@@ -74,10 +74,10 @@ class ListsResponderV2(responderData: ResponderData) extends Responder(responder
   ): Future[NodeGetResponseV2] =
     for {
       nodeResponse: ChildNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(
-        iri = nodeIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = requestingUser
-      )).mapTo[ChildNodeInfoGetResponseADM]
+                                                     iri = nodeIri,
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     requestingUser = requestingUser
+                                                   )).mapTo[ChildNodeInfoGetResponseADM]
     } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, requestingUser.lang, settings.fallbackLanguage)
 
 }

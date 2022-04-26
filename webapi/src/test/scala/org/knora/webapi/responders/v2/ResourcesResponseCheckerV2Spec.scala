@@ -12,7 +12,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 class ResourcesResponseCheckerV2Spec extends CoreSpec() {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
+  private val resourcesResponderV2SpecFullData        = new ResourcesResponderV2SpecFullData
   private val resourcesResponderCheckerV2SpecFullData = new ResourcesResponseCheckerV2SpecFullData
 
   "The ResourcesResponseCheckerV2" should {

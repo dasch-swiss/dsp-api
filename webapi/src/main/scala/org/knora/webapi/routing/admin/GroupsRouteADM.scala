@@ -51,9 +51,9 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     get { requestContext =>
       val requestMessage = for {
         requestingUser <- getUserADM(
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
       } yield GroupsGetRequestADM(
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
@@ -80,9 +80,9 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
       val requestMessage = for {
         requestingUser <- getUserADM(
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
       } yield GroupGetRequestADM(
         groupIri = checkedGroupIri,
         featureFactoryConfig = featureFactoryConfig,
@@ -111,9 +111,9 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield GroupMembersGetRequestADM(
           groupIri = checkedGroupIri,
           featureFactoryConfig = featureFactoryConfig,
@@ -137,18 +137,18 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   private def createGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath) {
     post {
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val id: Validation[Throwable, Option[GroupIRI]] = GroupIRI.make(apiRequest.id)
-        val name: Validation[Throwable, GroupName] = GroupName.make(apiRequest.name)
+        val id: Validation[Throwable, Option[GroupIRI]]            = GroupIRI.make(apiRequest.id)
+        val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
         val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
-        val project: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.project)
-        val status: Validation[Throwable, GroupStatus] = GroupStatus.make(apiRequest.status)
-        val selfjoin: Validation[Throwable, GroupSelfJoin] = GroupSelfJoin.make(apiRequest.selfjoin)
+        val project: Validation[Throwable, ProjectIRI]             = ProjectIRI.make(apiRequest.project)
+        val status: Validation[Throwable, GroupStatus]             = GroupStatus.make(apiRequest.status)
+        val selfjoin: Validation[Throwable, GroupSelfJoin]         = GroupSelfJoin.make(apiRequest.selfjoin)
 
         val validatedGroupCreatePayload: Validation[Throwable, GroupCreatePayloadADM] =
           Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
 
         val requestMessage = for {
-          payload <- toFuture(validatedGroupCreatePayload)
+          payload        <- toFuture(validatedGroupCreatePayload)
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield GroupCreateRequestADM(
           createRequest = payload,
@@ -191,14 +191,14 @@ class GroupsRouteADM(routeData: KnoraRouteData)
         val name: Validation[Throwable, Option[GroupName]] = GroupName.make(apiRequest.name)
         val descriptions: Validation[Throwable, Option[GroupDescriptions]] =
           GroupDescriptions.make(apiRequest.descriptions)
-        val status: Validation[Throwable, Option[GroupStatus]] = GroupStatus.make(apiRequest.status)
+        val status: Validation[Throwable, Option[GroupStatus]]     = GroupStatus.make(apiRequest.status)
         val selfjoin: Validation[Throwable, Option[GroupSelfJoin]] = GroupSelfJoin.make(apiRequest.selfjoin)
 
         val validatedGroupUpdatePayload: Validation[Throwable, GroupUpdatePayloadADM] =
           Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
 
         val requestMessage = for {
-          payload <- toFuture(validatedGroupUpdatePayload)
+          payload        <- toFuture(validatedGroupUpdatePayload)
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield GroupChangeRequestADM(
           groupIri = checkedGroupIri,
@@ -243,9 +243,9 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield GroupChangeStatusRequestADM(
             groupIri = checkedGroupIri,
             changeGroupRequest = apiRequest,
@@ -276,9 +276,9 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
       val requestMessage = for {
         requestingUser <- getUserADM(
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
       } yield GroupChangeStatusRequestADM(
         groupIri = checkedGroupIri,
         changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),

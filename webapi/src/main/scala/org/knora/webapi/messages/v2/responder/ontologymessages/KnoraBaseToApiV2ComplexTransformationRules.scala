@@ -1457,23 +1457,23 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val ResourceCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> Cardinality.MayHaveMany,
-    OntologyConstants.KnoraApiV2Complex.ArkUrl -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.VersionDate -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.UserHasPermission -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.IsDeleted -> Cardinality.MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.ArkUrl               -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.VersionArkUrl        -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.VersionDate          -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.UserHasPermission    -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.IsDeleted            -> Cardinality.MayHaveOne
   )
 
   private val DateBaseCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear  -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear    -> Cardinality.MustHaveOne,
     OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar -> Cardinality.MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth   -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay   -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay     -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra   -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasEndEra     -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar   -> Cardinality.MustHaveOne
   )
 
   private val UriBaseCardinalities = Map(
@@ -1494,7 +1494,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
 
   private val IntervalBaseCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.IntervalValueHasStart -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd -> Cardinality.MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.IntervalValueHasEnd   -> Cardinality.MustHaveOne
   )
 
   private val ColorBaseCardinalities = Map(
@@ -1502,33 +1502,33 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
   )
 
   private val ValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.ValueAsString -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.HasPermissions -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.ValueAsString     -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.HasPermissions    -> Cardinality.MustHaveOne,
     OntologyConstants.KnoraApiV2Complex.UserHasPermission -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.ArkUrl -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.IsDeleted -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> Cardinality.MustHaveOne
+    OntologyConstants.KnoraApiV2Complex.ArkUrl            -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.VersionArkUrl     -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.IsDeleted         -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.ValueHasUUID      -> Cardinality.MustHaveOne
   )
 
   private val TextValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff -> Cardinality.MayHaveMany,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.TextValueHasMapping -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasStandoff              -> Cardinality.MayHaveMany,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup                -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage              -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueAsXml                    -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueAsHtml                   -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.TextValueHasMapping               -> Cardinality.MayHaveOne,
     OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> Cardinality.MayHaveOne
   )
 
   private val StandoffTagCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartParentIndex -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex -> Cardinality.MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.StandoffTagHasEndParentIndex   -> Cardinality.MayHaveOne
   )
 
   private val LinkValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasSource -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasSource    -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.LinkValueHasTarget    -> Cardinality.MayHaveOne,
     OntologyConstants.KnoraApiV2Complex.LinkValueHasSourceIri -> Cardinality.MayHaveOne,
     OntologyConstants.KnoraApiV2Complex.LinkValueHasTargetIri -> Cardinality.MayHaveOne
   )
@@ -1546,20 +1546,20 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
   )
 
   private val FileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.FileValueAsUrl -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.FileValueAsUrl       -> Cardinality.MustHaveOne,
     OntologyConstants.KnoraApiV2Complex.FileValueHasFilename -> Cardinality.MustHaveOne
   )
 
   private val StillImageFileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimX        -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasDimY        -> Cardinality.MustHaveOne,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValueHasIIIFBaseUrl -> Cardinality.MustHaveOne
   )
 
   private val DocumentFileValueCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX -> Cardinality.MayHaveOne,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> Cardinality.MayHaveOne
+    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimX      -> Cardinality.MayHaveOne,
+    OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY      -> Cardinality.MayHaveOne
   )
 
   private val AudioFileValueCardinalities = Map(
@@ -1654,25 +1654,25 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
    * added to the specified classes to obtain `knora-api`.
    */
   override val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
-    OntologyConstants.KnoraApiV2Complex.Resource -> ResourceCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DateBase -> DateBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.UriBase -> UriBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.BooleanBase -> BooleanBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.IntBase -> IntBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DecimalBase -> DecimalBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.IntervalBase -> IntervalBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.ColorBase -> ColorBaseCardinalities,
-    OntologyConstants.KnoraApiV2Complex.Value -> ValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.TextValue -> TextValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.StandoffTag -> StandoffTagCardinalities,
-    OntologyConstants.KnoraApiV2Complex.LinkValue -> LinkValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.GeomValue -> GeomValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.ListValue -> ListValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.GeonameValue -> GeonameValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.FileValue -> FileValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.Resource            -> ResourceCardinalities,
+    OntologyConstants.KnoraApiV2Complex.DateBase            -> DateBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.UriBase             -> UriBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.BooleanBase         -> BooleanBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.IntBase             -> IntBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.DecimalBase         -> DecimalBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.IntervalBase        -> IntervalBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.ColorBase           -> ColorBaseCardinalities,
+    OntologyConstants.KnoraApiV2Complex.Value               -> ValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.TextValue           -> TextValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.StandoffTag         -> StandoffTagCardinalities,
+    OntologyConstants.KnoraApiV2Complex.LinkValue           -> LinkValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.GeomValue           -> GeomValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.ListValue           -> ListValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.GeonameValue        -> GeonameValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.FileValue           -> FileValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValue -> DocumentFileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.AudioFileValue -> AudioFileValueCardinalities
+    OntologyConstants.KnoraApiV2Complex.DocumentFileValue   -> DocumentFileValueCardinalities,
+    OntologyConstants.KnoraApiV2Complex.AudioFileValue      -> AudioFileValueCardinalities
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> Cardinality.KnoraCardinalityInfo(cardinality)

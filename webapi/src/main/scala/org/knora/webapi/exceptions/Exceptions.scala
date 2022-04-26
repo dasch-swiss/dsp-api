@@ -355,7 +355,7 @@ object InconsistentRepositoryDataException {
 }
 
 case class MissingLastModificationDateOntologyException(message: String, cause: Option[Throwable] = None)
-  extends InternalServerException(message, cause)
+    extends InternalServerException(message, cause)
 
 /**
  * Indicates that the API server generated invalid JSON in an API response.

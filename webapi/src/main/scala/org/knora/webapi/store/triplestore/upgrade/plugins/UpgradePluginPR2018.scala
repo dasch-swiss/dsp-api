@@ -22,8 +22,8 @@ import com.typesafe.scalalogging.Logger
  */
 class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-  private val newModificationDate = Instant.now.toString
-  private val ontologyType: IriNode = nodeFactory.makeIriNode(Ontology)
+  private val newModificationDate         = Instant.now.toString
+  private val ontologyType: IriNode       = nodeFactory.makeIriNode(Ontology)
 
   override def transform(model: RdfModel): Unit =
     for (ontology: IriNode <- getOntologiesToTransform(model)) {

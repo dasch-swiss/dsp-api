@@ -257,7 +257,7 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     // Get the namespaces used in all the named graphs in the dataset.
     val namedGraphNamespaces: Map[String, IRI] = datasetGraph.listGraphNodes.asScala.flatMap {
       graphNode: jena.graph.Node =>
-        val graph: jena.graph.Graph = datasetGraph.getGraph(graphNode)
+        val graph: jena.graph.Graph                  = datasetGraph.getGraph(graphNode)
         val prefixMapping: jena.shared.PrefixMapping = graph.getPrefixMapping
         prefixMapping.getNsPrefixMap.asScala
     }.toMap
@@ -410,12 +410,12 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
 
     // Convert the query result to a SparqlSelectResponse.
 
-    val header = SparqlSelectResultHeader(resultSet.getResultVars.asScala.toSeq)
+    val header    = SparqlSelectResultHeader(resultSet.getResultVars.asScala.toSeq)
     val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
     while (resultSet.hasNext) {
       val querySolution: jena.query.QuerySolution = resultSet.next
-      val varNames: Iterator[String] = querySolution.varNames.asScala
+      val varNames: Iterator[String]              = querySolution.varNames.asScala
 
       val rowMap: Map[String, String] = varNames.map { varName =>
         val varValue: jena.graph.Node = querySolution.get(varName).asNode

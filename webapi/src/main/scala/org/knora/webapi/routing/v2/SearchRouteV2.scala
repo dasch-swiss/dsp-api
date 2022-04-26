@@ -23,11 +23,11 @@ import scala.concurrent.Future
  */
 class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  private val LIMIT_TO_PROJECT = "limitToProject"
+  private val LIMIT_TO_PROJECT        = "limitToProject"
   private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
-  private val OFFSET = "offset"
+  private val OFFSET                  = "offset"
   private val LIMIT_TO_STANDOFF_CLASS = "limitToStandoffClass"
-  private val RETURN_FILES = "returnFiles"
+  private val RETURN_FILES            = "returnFiles"
 
   /**
    * Returns the route.
@@ -50,7 +50,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   private def getOffsetFromParams(params: Map[String, String]): Int = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val offsetStr = params.get(OFFSET)
+    val offsetStr                                 = params.get(OFFSET)
 
     offsetStr match {
       case Some(offset: String) =>
@@ -75,7 +75,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   private def getProjectFromParams(params: Map[String, String]): Option[IRI] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val limitToProjectIriStr = params.get(LIMIT_TO_PROJECT)
+    val limitToProjectIriStr                      = params.get(LIMIT_TO_PROJECT)
 
     val limitToProjectIri: Option[IRI] = limitToProjectIriStr match {
 
@@ -103,7 +103,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   private def getResourceClassFromParams(params: Map[String, String]): Option[SmartIri] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val limitToResourceClassIriStr = params.get(LIMIT_TO_RESOURCE_CLASS)
+    val limitToResourceClassIriStr                = params.get(LIMIT_TO_RESOURCE_CLASS)
 
     limitToResourceClassIriStr match {
       case Some(resourceClassIriStr: String) =>
@@ -128,7 +128,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * @return the internal standoff class, if any.
    */
   private def getStandoffClass(params: Map[String, String]): Option[SmartIri] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit val stringFormatter: StringFormatter  = StringFormatter.getGeneralInstance
     val limitToStandoffClassIriStr: Option[String] = params.get(LIMIT_TO_STANDOFF_CLASS)
 
     limitToStandoffClassIriStr match {
@@ -179,9 +179,9 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessage: Future[FullTextSearchCountRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield FullTextSearchCountRequestV2(
             searchValue = escapedSearchStr,
             limitToProject = limitToProject,
@@ -238,14 +238,14 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           throw BadRequestException(s"Invalid boolean value for '$RETURN_FILES'")
         )
 
-        val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+        val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
         val requestMessage: Future[FulltextSearchRequestV2] = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield FulltextSearchRequestV2(
           searchValue = escapedSearchStr,
           offset = offset,
@@ -280,9 +280,9 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessage: Future[GravsearchCountRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield GravsearchCountRequestV2(
             constructQuery = constructQuery,
             featureFactoryConfig = featureFactoryConfig,
@@ -310,9 +310,9 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
             val requestMessage: Future[GravsearchCountRequestV2] = for {
               requestingUser <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                  requestContext = requestContext,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )
             } yield GravsearchCountRequestV2(
               constructQuery = constructQuery,
               featureFactoryConfig = featureFactoryConfig,
@@ -338,15 +338,15 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     "v2" / "searchextended" / Segment
   ) { sparql => // Segment is a URL encoded string representing a Gravsearch query
     get { requestContext =>
-      val constructQuery = GravsearchParser.parseQuery(sparql)
-      val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+      val constructQuery                   = GravsearchParser.parseQuery(sparql)
+      val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
       val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
       val requestMessage: Future[GravsearchRequestV2] = for {
         requestingUser <- getUserADM(
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
       } yield GravsearchRequestV2(
         constructQuery = constructQuery,
         targetSchema = targetSchema,
@@ -372,15 +372,15 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[String]) { gravsearchQuery => requestContext =>
         {
-          val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-          val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+          val constructQuery                   = GravsearchParser.parseQuery(gravsearchQuery)
+          val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
           val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
           val requestMessage: Future[GravsearchRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield GravsearchRequestV2(
             constructQuery = constructQuery,
             targetSchema = targetSchema,
@@ -428,9 +428,9 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield SearchResourceByLabelCountRequestV2(
             searchValue = searchString,
             limitToProject = limitToProject,
@@ -480,9 +480,9 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
       val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
         requestingUser <- getUserADM(
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
       } yield SearchResourceByLabelRequestV2(
         searchValue = searchString,
         offset = offset,

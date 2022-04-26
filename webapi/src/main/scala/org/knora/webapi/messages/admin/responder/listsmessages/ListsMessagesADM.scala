@@ -756,7 +756,7 @@ case class ListRootNodeADM(
   def unescape: ListRootNodeADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedLabels   = stringFormatter.unescapeStringLiteralSeq(labels)
     val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
 
     val unescapedName: Option[String] = name match {
@@ -931,19 +931,19 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         case root: ListRootNodeInfoADM =>
           if (root.name.nonEmpty) {
             JsObject(
-              "id" -> root.id.toJson,
+              "id"         -> root.id.toJson,
               "projectIri" -> root.projectIri.toJson,
-              "name" -> root.name.toJson,
-              "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
-              "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+              "name"       -> root.name.toJson,
+              "labels"     -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+              "comments"   -> JsArray(root.comments.stringLiterals.map(_.toJson)),
               "isRootNode" -> true.toJson
             )
           } else {
             JsObject(
-              "id" -> root.id.toJson,
+              "id"         -> root.id.toJson,
               "projectIri" -> root.projectIri.toJson,
-              "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
-              "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+              "labels"     -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+              "comments"   -> JsArray(root.comments.stringLiterals.map(_.toJson)),
               "isRootNode" -> true.toJson
             )
           }
@@ -951,19 +951,19 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         case child: ListChildNodeInfoADM =>
           if (child.name.nonEmpty) {
             JsObject(
-              "id" -> child.id.toJson,
-              "name" -> child.name.toJson,
-              "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-              "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
-              "position" -> child.position.toJson,
+              "id"          -> child.id.toJson,
+              "name"        -> child.name.toJson,
+              "labels"      -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+              "comments"    -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+              "position"    -> child.position.toJson,
               "hasRootNode" -> child.hasRootNode.toJson
             )
           } else {
             JsObject(
-              "id" -> child.id.toJson,
-              "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-              "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
-              "position" -> child.position.toJson,
+              "id"          -> child.id.toJson,
+              "labels"      -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+              "comments"    -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+              "position"    -> child.position.toJson,
               "hasRootNode" -> child.hasRootNode.toJson
             )
           }
@@ -1060,19 +1060,19 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
       node match {
         case root: ListRootNodeADM =>
           JsObject(
-            "id" -> root.id.toJson,
+            "id"         -> root.id.toJson,
             "projectIri" -> root.projectIri.toJson,
-            "name" -> root.name.toJson,
-            "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
-            "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+            "name"       -> root.name.toJson,
+            "labels"     -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+            "comments"   -> JsArray(root.comments.stringLiterals.map(_.toJson)),
             "isRootNode" -> true.toJson,
-            "children" -> JsArray(root.children.map(write).toVector)
+            "children"   -> JsArray(root.children.map(write).toVector)
           )
 
         case child: ListChildNodeADM =>
           JsObject(
-            "id" -> child.id.toJson,
-            "name" -> child.name.toJson,
+            "id"     -> child.id.toJson,
+            "name"   -> child.name.toJson,
             "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
             "comments" -> JsArray(
               child.comments
@@ -1080,9 +1080,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 .stringLiterals
                 .map(_.toJson)
             ),
-            "position" -> child.position.toJson,
+            "position"    -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
-            "children" -> JsArray(child.children.map(write).toVector)
+            "children"    -> JsArray(child.children.map(write).toVector)
           )
       }
 
@@ -1163,9 +1163,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
      */
     def write(element: NodePathElementADM): JsValue =
       JsObject(
-        "id" -> element.id.toJson,
-        "name" -> element.name.toJson,
-        "labels" -> JsArray(element.labels.stringLiterals.map(_.toJson)),
+        "id"       -> element.id.toJson,
+        "name"     -> element.name.toJson,
+        "labels"   -> JsArray(element.labels.stringLiterals.map(_.toJson)),
         "comments" -> JsArray(element.comments.stringLiterals.map(_.toJson))
       )
 
@@ -1319,7 +1319,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] =
     jsonFormat(NodePathGetResponseADM, "elements")
   implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
-  implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
+  implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM]   = jsonFormat(ListGetResponseADM, "list")
   implicit val listNodeGetResponseADMFormat: RootJsonFormat[ListNodeGetResponseADM] =
     jsonFormat(ListNodeGetResponseADM, "node")
   implicit val listInfoGetResponseADMFormat: RootJsonFormat[RootNodeInfoGetResponseADM] =

@@ -323,7 +323,7 @@ object StandoffTagUtilV2 {
         }
     }.toVector
 
-    val xmlStandoffUtil = new XMLToStandoffUtil()
+    val xmlStandoffUtil                    = new XMLToStandoffUtil()
     val textWithStandoff: TextWithStandoff = xmlStandoffUtil.xml2TextWithStandoff(xml, elementsSeparatorRequired, log)
 
     val standoffTagsV2: Seq[StandoffTagV2] = convertXMLStandoffTagToStandoffTagV2(
@@ -1066,140 +1066,160 @@ object StandoffTagUtilV2 {
 
     for {
       standoffEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(
-        standoffClassIris = standoffClassIris,
-        standoffPropertyIris = standoffPropertyIris,
-        requestingUser = requestingUser
-      )).mapTo[StandoffEntityInfoGetResponseV2]
+                                                             standoffClassIris = standoffClassIris,
+                                                             standoffPropertyIris = standoffPropertyIris,
+                                                             requestingUser = requestingUser
+                                                           )).mapTo[StandoffEntityInfoGetResponseV2]
 
       standoffTags = standoffAssertions.map { case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
-        val standoffTagSmartIri: SmartIri = standoffTagIri.toSmartIri
+                       val standoffTagSmartIri: SmartIri = standoffTagIri.toSmartIri
 
-        if (!standoffTagSmartIri.isKnoraStandoffIri) {
-          throw InconsistentRepositoryDataException(s"Invalid standoff tag IRI: $standoffTagIri")
-        }
+                       if (!standoffTagSmartIri.isKnoraStandoffIri) {
+                         throw InconsistentRepositoryDataException(s"Invalid standoff tag IRI: $standoffTagIri")
+                       }
 
-        // The start index in the tag's IRI should match the one in its assertions.
+                       // The start index in the tag's IRI should match the one in its assertions.
 
-        val startIndexFromIri: Int = standoffTagSmartIri.getStandoffStartIndex.get
-        val startIndexFromAssertions: Int =
-          standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
+                       val startIndexFromIri: Int = standoffTagSmartIri.getStandoffStartIndex.get
+                       val startIndexFromAssertions: Int =
+                         standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
 
-        if (startIndexFromAssertions != startIndexFromIri) {
-          throw InconsistentRepositoryDataException(
-            s"Standoff tag $standoffTagIri has start index $startIndexFromAssertions (expected $startIndexFromIri)"
-          )
-        }
+                       if (startIndexFromAssertions != startIndexFromIri) {
+                         throw InconsistentRepositoryDataException(
+                           s"Standoff tag $standoffTagIri has start index $startIndexFromAssertions (expected $startIndexFromIri)"
+                         )
+                       }
 
-        // create a sequence of `StandoffTagAttributeV2` from the given attributes
-        val attributes: Seq[StandoffTagAttributeV2] =
-          (standoffTagAssertions -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
-            case (propIri: IRI, value) =>
-              val propSmartIri = propIri.toSmartIri
-              val propDef: ReadPropertyInfoV2 = standoffEntities.standoffPropertyInfoMap(propSmartIri)
-              val propPredicates: Map[SmartIri, PredicateInfoV2] = propDef.entityInfoContent.predicates
+                       // create a sequence of `StandoffTagAttributeV2` from the given attributes
+                       val attributes: Seq[StandoffTagAttributeV2] =
+                         (standoffTagAssertions -- StandoffProperties.systemProperties - OntologyConstants.Rdf.Type).map {
+                           case (propIri: IRI, value) =>
+                             val propSmartIri                                   = propIri.toSmartIri
+                             val propDef: ReadPropertyInfoV2                    = standoffEntities.standoffPropertyInfoMap(propSmartIri)
+                             val propPredicates: Map[SmartIri, PredicateInfoV2] = propDef.entityInfoContent.predicates
 
-              // check if the given property has an object type constraint (linking property) or an object data type constraint
-              if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)) {
+                             // check if the given property has an object type constraint (linking property) or an object data type constraint
+                             if (
+                               propPredicates.contains(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri)
+                             ) {
 
-                // it is a linking property
-                // check if it refers to a resource or a standoff node
+                               // it is a linking property
+                               // check if it refers to a resource or a standoff node
 
-                if (propDef.isStandoffInternalReferenceProperty) {
-                  // it refers to a standoff node, recreate the original id
+                               if (propDef.isStandoffInternalReferenceProperty) {
+                                 // it refers to a standoff node, recreate the original id
 
-                  // value points to another standoff node
+                                 // value points to another standoff node
 
-                  // If a v2 SPARQL template was used, the XML ID is in this standoff tag.
-                  val originalId: String =
-                    standoffTagAssertions.get(OntologyConstants.KnoraBase.TargetHasOriginalXMLID) match {
-                      case Some(targetXmlID) => targetXmlID
+                                 // If a v2 SPARQL template was used, the XML ID is in this standoff tag.
+                                 val originalId: String =
+                                   standoffTagAssertions.get(OntologyConstants.KnoraBase.TargetHasOriginalXMLID) match {
+                                     case Some(targetXmlID) => targetXmlID
 
-                      case None =>
-                        // If a v1 SPARQL template was used, we have to get the target node and to get its XML ID.
-                        standoffAssertions(value).getOrElse(
-                          OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
-                          throw InconsistentRepositoryDataException(
-                            s"referred standoff $value node has no original XML id"
-                          )
-                        )
-                    }
+                                     case None =>
+                                       // If a v1 SPARQL template was used, we have to get the target node and to get its XML ID.
+                                       standoffAssertions(value).getOrElse(
+                                         OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
+                                         throw InconsistentRepositoryDataException(
+                                           s"referred standoff $value node has no original XML id"
+                                         )
+                                       )
+                                   }
 
-                  // recreate the original id reference
-                  StandoffTagInternalReferenceAttributeV2(standoffPropertyIri = propSmartIri, value = originalId)
-                } else {
-                  // it refers to a knora resource
-                  StandoffTagIriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
-                }
-              } else if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)) {
+                                 // recreate the original id reference
+                                 StandoffTagInternalReferenceAttributeV2(
+                                   standoffPropertyIri = propSmartIri,
+                                   value = originalId
+                                 )
+                               } else {
+                                 // it refers to a knora resource
+                                 StandoffTagIriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
+                               }
+                             } else if (
+                               propPredicates.contains(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)
+                             ) {
 
-                // it is a data type property (literal)
-                val propDataType: PredicateInfoV2 =
-                  propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)
+                               // it is a data type property (literal)
+                               val propDataType: PredicateInfoV2 =
+                                 propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)
 
-                propDataType.objects.headOption match {
-                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
-                    StandoffTagStringAttributeV2(standoffPropertyIri = propSmartIri, value = value)
+                               propDataType.objects.headOption match {
+                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.String))) =>
+                                   StandoffTagStringAttributeV2(standoffPropertyIri = propSmartIri, value = value)
 
-                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
-                    StandoffTagIntegerAttributeV2(standoffPropertyIri = propSmartIri, value = value.toInt)
+                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Integer))) =>
+                                   StandoffTagIntegerAttributeV2(
+                                     standoffPropertyIri = propSmartIri,
+                                     value = value.toInt
+                                   )
 
-                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Decimal))) =>
-                    StandoffTagDecimalAttributeV2(standoffPropertyIri = propSmartIri, value = BigDecimal(value))
+                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Decimal))) =>
+                                   StandoffTagDecimalAttributeV2(
+                                     standoffPropertyIri = propSmartIri,
+                                     value = BigDecimal(value)
+                                   )
 
-                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
-                    StandoffTagBooleanAttributeV2(standoffPropertyIri = propSmartIri, value = value.toBoolean)
+                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
+                                   StandoffTagBooleanAttributeV2(
+                                     standoffPropertyIri = propSmartIri,
+                                     value = value.toBoolean
+                                   )
 
-                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) |
-                      Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTimeStamp))) =>
-                    val timeStamp = stringFormatter.xsdDateTimeStampToInstant(
-                      value,
-                      throw DataConversionException(s"Couldn't parse timestamp: $value")
-                    )
-                    StandoffTagTimeAttributeV2(standoffPropertyIri = propSmartIri, value = timeStamp)
+                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) |
+                                     Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTimeStamp))) =>
+                                   val timeStamp = stringFormatter.xsdDateTimeStampToInstant(
+                                     value,
+                                     throw DataConversionException(s"Couldn't parse timestamp: $value")
+                                   )
+                                   StandoffTagTimeAttributeV2(standoffPropertyIri = propSmartIri, value = timeStamp)
 
-                  case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
-                    StandoffTagUriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
+                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
+                                   StandoffTagUriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
 
-                  case None =>
-                    throw InconsistentRepositoryDataException(
-                      s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri"
-                    )
+                                 case None =>
+                                   throw InconsistentRepositoryDataException(
+                                     s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri"
+                                   )
 
-                  case other =>
-                    throw InconsistentRepositoryDataException(
-                      s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri"
-                    )
+                                 case other =>
+                                   throw InconsistentRepositoryDataException(
+                                     s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri"
+                                   )
 
-                }
-              } else {
-                throw InconsistentRepositoryDataException(
-                  s"no object class or data type constraint found for property '$propIri'"
-                )
-              }
+                               }
+                             } else {
+                               throw InconsistentRepositoryDataException(
+                                 s"no object class or data type constraint found for property '$propIri'"
+                               )
+                             }
 
-          }.toVector
+                         }.toVector
 
-        StandoffTagV2(
-          standoffTagClassIri = standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri,
-          startPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
-          endPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
-          dataType = standoffEntities
-            .standoffClassInfoMap(standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri)
-            .standoffDataType,
-          startIndex = startIndexFromAssertions,
-          endIndex = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
-          uuid = stringFormatter.decodeUuid(standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)),
-          originalXMLID = standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
-          startParentIndex = standoffTagAssertions
-            .get(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
-            .flatMap(_.toSmartIri.getStandoffStartIndex),
-          endParentIndex = standoffTagAssertions
-            .get(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
-            .flatMap(_.toSmartIri.getStandoffStartIndex),
-          attributes = attributes
-        )
-      }.toVector
-        .sortBy(_.startIndex)
+                       StandoffTagV2(
+                         standoffTagClassIri = standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri,
+                         startPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStart).toInt,
+                         endPosition = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasEnd).toInt,
+                         dataType = standoffEntities
+                           .standoffClassInfoMap(standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri)
+                           .standoffDataType,
+                         startIndex = startIndexFromAssertions,
+                         endIndex =
+                           standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasEndIndex).map(_.toInt),
+                         uuid = stringFormatter.decodeUuid(
+                           standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasUUID)
+                         ),
+                         originalXMLID =
+                           standoffTagAssertions.get(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID),
+                         startParentIndex = standoffTagAssertions
+                           .get(OntologyConstants.KnoraBase.StandoffTagHasStartParent)
+                           .flatMap(_.toSmartIri.getStandoffStartIndex),
+                         endParentIndex = standoffTagAssertions
+                           .get(OntologyConstants.KnoraBase.StandoffTagHasEndParent)
+                           .flatMap(_.toSmartIri.getStandoffStartIndex),
+                         attributes = attributes
+                       )
+                     }.toVector
+                       .sortBy(_.startIndex)
     } yield standoffTags
   }
 

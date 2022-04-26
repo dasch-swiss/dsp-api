@@ -73,7 +73,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   def getUserByIri(id: String): Task[Option[UserADM]] =
     (for {
       bytes <- getBytesValue(id).some
-      user <- CacheSerialization.deserialize[UserADM](bytes).some
+      user  <- CacheSerialization.deserialize[UserADM](bytes).some
     } yield user).unsome
 
   /**
@@ -178,8 +178,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     for {
       conn  <- ZIO.attempt(pool.getResource)
       value <- ZIO.attemptBlocking(conn.get(key))
-      res <- if (value == "nil".getBytes) Task.succeed(None)
-             else Task.succeed(Some(value))
+      res <-
+        if (value == "nil".getBytes) Task.succeed(None)
+        else Task.succeed(Some(value))
       _ = conn.close()
     } yield res
   }.catchAll(ex => ZIO.logError(s"Reading string from Redis failed: ${ex.getMessage}") *> Task.succeed(None))
@@ -237,8 +238,9 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     for {
       conn  <- ZIO.attempt(pool.getResource).onError(ZIO.logErrorCause(_)).orDie
       value <- ZIO.attemptBlocking(conn.get(key.getBytes))
-      res <- if (value == "nil".getBytes) Task.succeed(None)
-             else Task.succeed(Some(value))
+      res <-
+        if (value == "nil".getBytes) Task.succeed(None)
+        else Task.succeed(Some(value))
       _ = conn.close()
     } yield res
 

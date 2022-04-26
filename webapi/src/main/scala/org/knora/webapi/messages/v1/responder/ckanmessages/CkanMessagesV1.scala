@@ -187,7 +187,7 @@ object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     CkanProjectDatasetFileV1
   )
   implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)
-  implicit val ckanProjectInfoV1Format: JsonFormat[CkanProjectInfoV1] = jsonFormat4(CkanProjectInfoV1)
-  implicit val ckanProjectV1Format: JsonFormat[CkanProjectV1] = jsonFormat2(CkanProjectV1)
-  implicit val ckanResponseV1Format: RootJsonFormat[CkanResponseV1] = jsonFormat1(CkanResponseV1)
+  implicit val ckanProjectInfoV1Format: JsonFormat[CkanProjectInfoV1]       = jsonFormat4(CkanProjectInfoV1)
+  implicit val ckanProjectV1Format: JsonFormat[CkanProjectV1]               = jsonFormat2(CkanProjectV1)
+  implicit val ckanResponseV1Format: RootJsonFormat[CkanResponseV1]         = jsonFormat1(CkanResponseV1)
 }

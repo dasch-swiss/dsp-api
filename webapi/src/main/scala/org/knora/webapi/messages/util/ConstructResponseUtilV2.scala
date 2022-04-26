@@ -949,14 +949,14 @@ object ConstructResponseUtilV2 {
 
       for {
         standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromConstructResults(
-          standoffAssertions = valueObject.standoff,
-          responderManager = responderManager,
-          requestingUser = requestingUser
-        )
+                                             standoffAssertions = valueObject.standoff,
+                                             responderManager = responderManager,
+                                             requestingUser = requestingUser
+                                           )
 
         valueHasMaxStandoffStartIndex: Int = valueObject.requireIntObject(
-          OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri
-        )
+                                               OntologyConstants.KnoraBase.ValueHasMaxStandoffStartIndex.toSmartIri
+                                             )
         lastStartIndexQueried = standoff.last.startIndex
 
         // Should we get more the rest of the standoff for the same text value?
@@ -968,11 +968,11 @@ object ConstructResponseUtilV2 {
 
             for {
               standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(
-                resourceIri = resourceIri,
-                valueIri = valueObject.subjectIri,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = requestingUser
-              )).mapTo[GetStandoffResponseV2]
+                                    resourceIri = resourceIri,
+                                    valueIri = valueObject.subjectIri,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = requestingUser
+                                  )).mapTo[GetStandoffResponseV2]
             } yield standoff ++ standoffResponse.standoff
           } else {
             // We're not supposed to get any more standoff here, either because we have all of it already,
@@ -1155,17 +1155,17 @@ object ConstructResponseUtilV2 {
         // Yes. Construct a ReadResourceV2 representing the nested resource.
         for {
           nestedResource <- constructReadResourceV2(
-            resourceIri = referredResourceIri,
-            resourceWithValueRdfData = nestedResourceAssertions,
-            mappings = mappings,
-            queryStandoff = queryStandoff,
-            versionDate = versionDate,
-            responderManager = responderManager,
-            requestingUser = requestingUser,
-            targetSchema = targetSchema,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings
-          )
+                              resourceIri = referredResourceIri,
+                              resourceWithValueRdfData = nestedResourceAssertions,
+                              mappings = mappings,
+                              queryStandoff = queryStandoff,
+                              versionDate = versionDate,
+                              responderManager = responderManager,
+                              requestingUser = requestingUser,
+                              targetSchema = targetSchema,
+                              featureFactoryConfig = featureFactoryConfig,
+                              settings = settings
+                            )
         } yield linkValue.copy(
           nestedResource = Some(nestedResource)
         )
@@ -1339,10 +1339,10 @@ object ConstructResponseUtilV2 {
           case ApiV2Simple =>
             for {
               nodeResponse <- (responderManager ? NodeGetRequestV2(
-                nodeIri = listNodeIri,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = requestingUser
-              )).mapTo[NodeGetResponseV2]
+                                nodeIri = listNodeIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = requestingUser
+                              )).mapTo[NodeGetResponseV2]
             } yield listNode.copy(
               listNodeLabel = nodeResponse.node
                 .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
@@ -1444,7 +1444,7 @@ object ConstructResponseUtilV2 {
       mayHaveDeletedStatements match {
         case Some(isDeleted: Boolean) =>
           if (isDeleted) {
-            val deleteDate = rdfData.requireDateTimeObject(OntologyConstants.KnoraBase.DeleteDate.toSmartIri)
+            val deleteDate         = rdfData.requireDateTimeObject(OntologyConstants.KnoraBase.DeleteDate.toSmartIri)
             val maybeDeleteComment = rdfData.maybeStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
 
             Some(
@@ -1492,29 +1492,29 @@ object ConstructResponseUtilV2 {
           .map { valObj: ValueRdfData =>
             for {
               valueContent: ValueContentV2 <- createValueContentV2FromValueRdfData(
-                resourceIri = resourceIri,
-                valueObject = valObj,
-                mappings = mappings,
-                queryStandoff = queryStandoff,
-                responderManager = responderManager,
-                requestingUser = requestingUser,
-                targetSchema = targetSchema,
-                featureFactoryConfig = featureFactoryConfig,
-                settings = settings
-              )
+                                                resourceIri = resourceIri,
+                                                valueObject = valObj,
+                                                mappings = mappings,
+                                                queryStandoff = queryStandoff,
+                                                responderManager = responderManager,
+                                                requestingUser = requestingUser,
+                                                targetSchema = targetSchema,
+                                                featureFactoryConfig = featureFactoryConfig,
+                                                settings = settings
+                                              )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
-              permissions = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+              permissions    = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
               valueCreationDate: Instant = valObj.requireDateTimeObject(
-                OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri
-              )
+                                             OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri
+                                           )
               valueDeletionInfo = getDeletionInfo(valObj)
               valueHasUUID: UUID = stringFormatter.decodeUuid(
-                valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri)
-              )
+                                     valObj.requireStringObject(OntologyConstants.KnoraBase.ValueHasUUID.toSmartIri)
+                                   )
               previousValueIri: Option[IRI] = valObj.maybeIriObject(
-                OntologyConstants.KnoraBase.PreviousValue.toSmartIri
-              )
+                                                OntologyConstants.KnoraBase.PreviousValue.toSmartIri
+                                              )
 
             } yield valueContent match {
               case linkValueContentV2: LinkValueContentV2 =>
@@ -1570,11 +1570,12 @@ object ConstructResponseUtilV2 {
       }
 
     for {
-      projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-        identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = requestingUser
-      )).mapTo[ProjectGetResponseADM]
+      projectResponse: ProjectGetResponseADM <-
+        (responderManager ? ProjectGetRequestADM(
+          identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )).mapTo[ProjectGetResponseADM]
 
       valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
     } yield ReadResourceV2(

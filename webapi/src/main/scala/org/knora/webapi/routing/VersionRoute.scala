@@ -24,20 +24,20 @@ trait VersionCheck {
   override implicit val timeout: Timeout = 1.second
 
   protected def createResponse(): HttpResponse = {
-    val sipiVersion: String = BuildInfo.sipi.split(":").apply(1)
-    val fusekiVersion: String =  BuildInfo.fuseki.split(":").apply(1)
+    val sipiVersion: String   = BuildInfo.sipi.split(":").apply(1)
+    val fusekiVersion: String = BuildInfo.fuseki.split(":").apply(1)
 
     HttpResponse(
       status = StatusCodes.OK,
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name" -> JsString("version"),
-          "webapi" -> JsString(BuildInfo.version),
-          "scala" -> JsString(BuildInfo.scalaVersion),
+          "name"     -> JsString("version"),
+          "webapi"   -> JsString(BuildInfo.version),
+          "scala"    -> JsString(BuildInfo.scalaVersion),
           "akkaHttp" -> JsString(BuildInfo.akkaHttp),
-          "sipi" -> JsString(sipiVersion),
-          "fuseki" -> JsString(fusekiVersion)
+          "sipi"     -> JsString(sipiVersion),
+          "fuseki"   -> JsString(fusekiVersion)
         ).prettyPrint
       )
     )

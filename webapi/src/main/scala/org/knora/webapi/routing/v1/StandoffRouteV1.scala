@@ -36,7 +36,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           type Name = String
 
           val JSON_PART = "json"
-          val XML_PART = "xml"
+          val XML_PART  = "xml"
 
           // collect all parts of the multipart as it arrives into a map
           val allPartsFuture: Future[Map[Name, String]] = formdata.parts
@@ -66,9 +66,9 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
 
             allParts: Map[Name, String] <- allPartsFuture
 
@@ -87,12 +87,13 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                   throw BadRequestException("JSON params structure is invalid: " + e.toString)
               }
 
-            xml: String = allParts
-              .getOrElse(
-                XML_PART,
-                throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
-              )
-              .toString
+            xml: String =
+              allParts
+                .getOrElse(
+                  XML_PART,
+                  throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
+                )
+                .toString
           } yield CreateMappingRequestV1(
             xml = xml,
             label = stringFormatter.toSparqlEncodedString(

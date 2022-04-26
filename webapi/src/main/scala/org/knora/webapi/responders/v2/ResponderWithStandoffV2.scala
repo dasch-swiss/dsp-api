@@ -51,10 +51,10 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
     val mappingResponsesFuture: Vector[Future[GetMappingResponseV2]] = mappingIris.map { mappingIri: IRI =>
       for {
         mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-          mappingIri = mappingIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )).mapTo[GetMappingResponseV2]
+                                                   mappingIri = mappingIri,
+                                                   featureFactoryConfig = featureFactoryConfig,
+                                                   requestingUser = requestingUser
+                                                 )).mapTo[GetMappingResponseV2]
       } yield mappingResponse
     }.toVector
 
@@ -62,8 +62,8 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
       mappingResponses: Vector[GetMappingResponseV2] <- Future.sequence(mappingResponsesFuture)
 
       // get the default XSL transformations
-      mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
-        mapping: GetMappingResponseV2 =>
+      mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] =
+        mappingResponses.map { mapping: GetMappingResponseV2 =>
           for {
             // if given, get the default XSL transformation
             xsltOption: Option[String] <-
@@ -94,10 +94,10 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
             XSLTransformation = xsltOption
           )
 
-      }
+        }
 
       mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
-      mappingsAsMap: Map[IRI, MappingAndXSLTransformation] = mappings.toMap
+      mappingsAsMap: Map[IRI, MappingAndXSLTransformation]  = mappings.toMap
     } yield mappingsAsMap
 
   }

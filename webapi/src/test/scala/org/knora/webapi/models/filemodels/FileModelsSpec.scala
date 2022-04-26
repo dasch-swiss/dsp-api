@@ -20,12 +20,12 @@ import spray.json.DefaultJsonProtocol._
 
 class FileModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val fileNamePDF = "document-file.pdf"
-  private val fileNameImage = "image.jp2"
-  private val fileNameVideo = "video.mp4"
-  private val fileNameAudio = "audio.mpeg"
-  private val fileNameText = "text.txt"
-  private val fileNameArchive = "archive.zip"
+  private val fileNamePDF                       = "document-file.pdf"
+  private val fileNameImage                     = "image.jp2"
+  private val fileNameVideo                     = "video.mp4"
+  private val fileNameAudio                     = "audio.mpeg"
+  private val fileNameText                      = "text.txt"
+  private val fileNameArchive                   = "archive.zip"
 
   "FileModelsUtil," when {
 
@@ -100,10 +100,10 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a DocumentRepresentation with custom values" in {
         val internalFilename = "document-file.doc"
-        val dimX = Some(20)
-        val dimY = Some(30)
-        val pageCount = Some(550)
-        val customLabel = "a custom label"
+        val dimX             = Some(20)
+        val dimY             = Some(30)
+        val pageCount        = Some(550)
+        val customLabel      = "a custom label"
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(
             pageCount = pageCount,
@@ -233,7 +233,7 @@ class FileModelsSpec extends CoreSpec {
         val expectedJSON = Map(
           "@type" -> "knora-api:DocumentRepresentation".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
-            "@type" -> "knora-api:DocumentFileValue",
+            "@type"                          -> "knora-api:DocumentFileValue",
             "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "knora-api:attachedToProject" -> Map(
@@ -241,21 +241,21 @@ class FileModelsSpec extends CoreSpec {
           ).toJson,
           "rdfs:label" -> "test label".toJson,
           "@context" -> Map(
-            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
-            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+            "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
           ).toJson
         ).toJson
         json should equal(expectedJSON)
       }
 
       "correctly serialize a DocumentRepresentation with custom values" in {
-        val className = Some("ThingDocument")
+        val className    = Some("ThingDocument")
         val ontologyName = "biblio"
-        val shortcode = SharedTestDataADM.beolProject.shortcode
-        val ontologyIRI = SharedTestDataADM.beolProject.ontologies.find(_.endsWith(ontologyName))
-        val label = "a custom label"
+        val shortcode    = SharedTestDataADM.beolProject.shortcode
+        val ontologyIRI  = SharedTestDataADM.beolProject.ontologies.find(_.endsWith(ontologyName))
+        val label        = "a custom label"
 
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(pageCount = None, dimX = Some(20), dimY = None),
@@ -273,7 +273,7 @@ class FileModelsSpec extends CoreSpec {
         val expectedJSON = Map(
           "@type" -> s"$ontologyName:${className.get}".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
-            "@type" -> "knora-api:DocumentFileValue",
+            "@type"                          -> "knora-api:DocumentFileValue",
             "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "knora-api:attachedToProject" -> Map(
@@ -281,10 +281,10 @@ class FileModelsSpec extends CoreSpec {
           ).toJson,
           "rdfs:label" -> label.toJson,
           "@context" -> Map(
-            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-            "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
-            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd" -> "http://www.w3.org/2001/XMLSchema#",
+            "rdf"        -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "knora-api"  -> "http://api.knora.org/ontology/knora-api/v2#",
+            "rdfs"       -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd"        -> "http://www.w3.org/2001/XMLSchema#",
             ontologyName -> ontologyIRI.get
           ).toJson
         ).toJson
@@ -334,24 +334,24 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "correctly serialize a DocumentRepresentation with custom values" in {
-        val pageCount = None
-        val dimX = Some(20)
-        val dimY = None
-        val project = SharedTestDataADM.beolProject
-        val shortcode = project.shortcode
-        val label = "a custom label"
-        val resourceIRI = stringFormatter.makeRandomResourceIri(shortcode)
-        val comment = Some("This is a custom comment")
-        val internalMimetype = Some("application/msword")
-        val originalFilename = Some("document-file.docm")
-        val originalMimeType = Some("application/vnd.ms-word.document.macroEnabled.12")
-        val customValueIRI = Some(stringFormatter.makeRandomResourceIri(shortcode).toSmartIri)
-        val customValueUUID = Some(UUID.randomUUID())
-        val customValueCreationDate = Some(Instant.now())
-        val valuePermissions = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
-        val resourcePermissions = Some("V knora-admin:UnknownUser|M knora-admin:ProjectMember,knora-admin:KnownUser")
-        val valuePropertyIRI = "http://www.knora.org/ontology/0801/biblio#hasThingDocumentValue".toSmartIri
-        val resourceClassIRI = "http://www.knora.org/ontology/0801/biblio#Book".toSmartIri
+        val pageCount                  = None
+        val dimX                       = Some(20)
+        val dimY                       = None
+        val project                    = SharedTestDataADM.beolProject
+        val shortcode                  = project.shortcode
+        val label                      = "a custom label"
+        val resourceIRI                = stringFormatter.makeRandomResourceIri(shortcode)
+        val comment                    = Some("This is a custom comment")
+        val internalMimetype           = Some("application/msword")
+        val originalFilename           = Some("document-file.docm")
+        val originalMimeType           = Some("application/vnd.ms-word.document.macroEnabled.12")
+        val customValueIRI             = Some(stringFormatter.makeRandomResourceIri(shortcode).toSmartIri)
+        val customValueUUID            = Some(UUID.randomUUID())
+        val customValueCreationDate    = Some(Instant.now())
+        val valuePermissions           = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
+        val resourcePermissions        = Some("V knora-admin:UnknownUser|M knora-admin:ProjectMember,knora-admin:KnownUser")
+        val valuePropertyIRI           = "http://www.knora.org/ontology/0801/biblio#hasThingDocumentValue".toSmartIri
+        val resourceClassIRI           = "http://www.knora.org/ontology/0801/biblio#Book".toSmartIri
         val customResourceCreationDate = Some(Instant.now())
 
         val documentRepresentation = UploadFileRequest.make(
@@ -415,7 +415,7 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a DocumentRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
 
         val change = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -438,12 +438,12 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a DocumentRepresentation with custom values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
-        val pageCount = Some(33)
-        val dimX = Some(44)
-        val dimY = Some(55)
-        val className = "CustomDocumentResource"
+        val resourceIRI  = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI     = stringFormatter.makeRandomResourceIri("0000")
+        val pageCount    = Some(33)
+        val dimX         = Some(44)
+        val dimY         = Some(55)
+        val className    = "CustomDocumentResource"
         val ontologyName = "anything"
 
         val change = ChangeFileRequest.make(
@@ -474,7 +474,7 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a StillImageRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
 
         val change = ChangeFileRequest.make(
           fileType = FileType.StillImageFile(),
@@ -497,7 +497,7 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a MovingImageRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
 
         val change = ChangeFileRequest.make(
           fileType = FileType.MovingImageFile(),
@@ -520,7 +520,7 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a AudioRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
 
         val change = ChangeFileRequest.make(
           fileType = FileType.AudioFile,
@@ -538,7 +538,7 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a TextRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
 
         val change = ChangeFileRequest.make(
           fileType = FileType.TextFile,
@@ -556,7 +556,7 @@ class FileModelsSpec extends CoreSpec {
 
       "create a valid representation of a ArchiveRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
-        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("0000")
 
         val change = ChangeFileRequest.make(
           fileType = FileType.ArchiveFile,
@@ -578,7 +578,7 @@ class FileModelsSpec extends CoreSpec {
 
       "correctly serialize a DocumentRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
-        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("7777")
 
         val documentRepresentation = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -588,18 +588,18 @@ class FileModelsSpec extends CoreSpec {
         )
         val json = documentRepresentation.toJsonLd.parseJson
         val expectedJSON = Map(
-          "@id" -> resourceIRI.toJson,
+          "@id"   -> resourceIRI.toJson,
           "@type" -> "knora-api:DocumentRepresentation".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
-            "@id" -> valueIRI,
-            "@type" -> "knora-api:DocumentFileValue",
+            "@id"                            -> valueIRI,
+            "@type"                          -> "knora-api:DocumentFileValue",
             "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "@context" -> Map(
-            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
-            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+            "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
           ).toJson
         ).toJson
         json should equal(expectedJSON)
@@ -607,9 +607,9 @@ class FileModelsSpec extends CoreSpec {
 
       "correctly serialize a DocumentRepresentation with custom values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
-        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
-        val className = "CustomDocumentRepresentation"
-        val prefix = "onto"
+        val valueIRI    = stringFormatter.makeRandomResourceIri("7777")
+        val className   = "CustomDocumentRepresentation"
+        val prefix      = "onto"
 
         val documentRepresentation = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -621,18 +621,18 @@ class FileModelsSpec extends CoreSpec {
         )
         val json = documentRepresentation.toJsonLd.parseJson
         val expectedJSON = Map(
-          "@id" -> resourceIRI.toJson,
+          "@id"   -> resourceIRI.toJson,
           "@type" -> s"$prefix:$className".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
-            "@id" -> valueIRI,
-            "@type" -> "knora-api:DocumentFileValue",
+            "@id"                            -> valueIRI,
+            "@type"                          -> "knora-api:DocumentFileValue",
             "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "@context" -> Map(
-            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
-            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
-            "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+            "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd"       -> "http://www.w3.org/2001/XMLSchema#"
           ).toJson
         ).toJson
         json should equal(expectedJSON)
@@ -643,7 +643,7 @@ class FileModelsSpec extends CoreSpec {
 
       "correctly serialize a DocumentRepresentation with default values" in {
         val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
-        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI    = stringFormatter.makeRandomResourceIri("7777")
 
         val documentRepresentation = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),
@@ -674,19 +674,19 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "correctly serialize a DocumentRepresentation with custom values" in {
-        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
-        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
-        val className = "CustomDocumentRepresentation"
-        val prefix = "onto"
-        val fileName = "wordfile.docx"
-        val internalMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        val originalFileName = "original-wordfile.doc"
-        val originalMimetype = "application/msword"
-        val customComment = "a comment on this word file"
-        val valuePermission = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
+        val resourceIRI             = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI                = stringFormatter.makeRandomResourceIri("7777")
+        val className               = "CustomDocumentRepresentation"
+        val prefix                  = "onto"
+        val fileName                = "wordfile.docx"
+        val internalMimeType        = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        val originalFileName        = "original-wordfile.doc"
+        val originalMimetype        = "application/msword"
+        val customComment           = "a comment on this word file"
+        val valuePermission         = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
         val customValueCreationDate = Some(Instant.now())
-        val customValueVersionIRI = Some(stringFormatter.makeRandomResourceIri("7777").toSmartIri)
-        val resourceClassIRI = "http://www.knora.org/ontology/0801/biblio#Book".toSmartIri
+        val customValueVersionIRI   = Some(stringFormatter.makeRandomResourceIri("7777").toSmartIri)
+        val resourceClassIRI        = "http://www.knora.org/ontology/0801/biblio#Book".toSmartIri
 
         val documentRepresentation = ChangeFileRequest.make(
           fileType = FileType.DocumentFile(),

@@ -78,9 +78,10 @@ class StoreManager(appActor: ActorRef, csm: CacheServiceManager) extends Actor w
   )
 
   def receive: Receive = LoggingReceive {
-    case tripleStoreMessage: TriplestoreRequest    => triplestoreManager forward tripleStoreMessage
-    case iiifMessages: IIIFRequest                 => iiifManager forward iiifMessages
-    case cacheServiceMessages: CacheServiceRequest => ActorUtil.zio2Message(sender(), csm receive cacheServiceMessages, log)
+    case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
+    case iiifMessages: IIIFRequest              => iiifManager forward iiifMessages
+    case cacheServiceMessages: CacheServiceRequest =>
+      ActorUtil.zio2Message(sender(), csm receive cacheServiceMessages, log)
     case other =>
       sender() ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
   }

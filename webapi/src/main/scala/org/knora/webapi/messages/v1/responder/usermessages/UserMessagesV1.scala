@@ -253,10 +253,10 @@ case class UserProfileV1(
 
         UserProfileV1(
           userData = newUserData,
-          groups = Vector.empty[IRI], // removed groups
+          groups = Vector.empty[IRI],                    // removed groups
           projects_info = Map.empty[IRI, ProjectInfoV1], // removed projects
-          permissionData = PermissionsDataADM(), // remove permissions
-          sessionId = None // removed sessionId
+          permissionData = PermissionsDataADM(),         // remove permissions
+          sessionId = None                               // removed sessionId
         )
       case UserProfileTypeV1.RESTRICTED =>
         val oldUserData = userData
@@ -290,8 +290,8 @@ case class UserProfileV1(
     }
 
   def getDigest: String = {
-    val md = java.security.MessageDigest.getInstance("SHA-1")
-    val time = System.currentTimeMillis().toString
+    val md    = java.security.MessageDigest.getInstance("SHA-1")
+    val time  = System.currentTimeMillis().toString
     val value = (time + userData.toString).getBytes("UTF-8")
     md.digest(value).map("%02x".format(_)).mkString
   }
@@ -364,9 +364,9 @@ object UserProfileTypeV1 extends Enumeration {
 
   type UserProfileType = Value
 
-  val SHORT: UserProfileTypeV1.Value = Value(0, "short") // only userdata
+  val SHORT: UserProfileTypeV1.Value      = Value(0, "short")      // only userdata
   val RESTRICTED: UserProfileTypeV1.Value = Value(1, "restricted") // without sensitive information
-  val FULL: UserProfileTypeV1.Value = Value(2, "full") // everything, including sensitive information
+  val FULL: UserProfileTypeV1.Value       = Value(2, "full")       // everything, including sensitive information
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -397,9 +397,9 @@ object UserV1JsonProtocol
     with ProjectV1JsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
-  implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
-  implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
+  implicit val userDataV1Format: JsonFormat[UserDataV1]                           = lazyFormat(jsonFormat8(UserDataV1))
+  implicit val userProfileV1Format: JsonFormat[UserProfileV1]                     = jsonFormat6(UserProfileV1)
+  implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1]       = jsonFormat1(UsersGetResponseV1)
   implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)
   implicit val userProjectMembershipsGetResponseV1Format: RootJsonFormat[UserProjectMembershipsGetResponseV1] =
     jsonFormat1(UserProjectMembershipsGetResponseV1)

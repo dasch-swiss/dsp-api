@@ -48,7 +48,7 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
   "The standoff responder" should {
     "create a standoff mapping" in {
       val mappingName = "customMapping"
-      val mapping = DefineStandoffMapping.make(mappingName)
+      val mapping     = DefineStandoffMapping.make(mappingName)
       val xmlContent =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

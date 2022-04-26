@@ -309,7 +309,7 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-  implicit val groupADMFormat: JsonFormat[GroupADM] = jsonFormat6(GroupADM)
+  implicit val groupADMFormat: JsonFormat[GroupADM]           = jsonFormat6(GroupADM)
   implicit val groupShortADMFormat: JsonFormat[GroupShortADM] = jsonFormat5(GroupShortADM)
   implicit val groupsGetResponseADMFormat: RootJsonFormat[GroupsGetResponseADM] =
     jsonFormat(GroupsGetResponseADM, "groups")

@@ -219,16 +219,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       groupIris.map { groupIri =>
         for {
           maybeGroup <- (responderManager ? GroupGetADM(
-            groupIri = groupIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )).mapTo[Option[GroupADM]]
+                          groupIri = groupIri,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )).mapTo[Option[GroupADM]]
 
           group = maybeGroup.getOrElse(
-            throw InconsistentRepositoryDataException(
-              s"Cannot find information for group: '$groupIri'. Please report as possible bug."
-            )
-          )
+                    throw InconsistentRepositoryDataException(
+                      s"Cannot find information for group: '$groupIri'. Please report as possible bug."
+                    )
+                  )
           res = (group.project.id, groupIri)
         } yield res
       }
@@ -247,7 +247,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         if (projectIris.nonEmpty) {
           for {
             projectIri <- projectIris.toVector
-            res = (projectIri, OntologyConstants.KnoraAdmin.ProjectMember)
+            res         = (projectIri, OntologyConstants.KnoraAdmin.ProjectMember)
           } yield res
         } else {
           Seq.empty[(IRI, IRI)]
@@ -259,7 +259,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         if (projectIris.nonEmpty) {
           for {
             projectAdminForGroup <- isInProjectAdminGroups
-            res = (projectAdminForGroup, OntologyConstants.KnoraAdmin.ProjectAdmin)
+            res                   = (projectAdminForGroup, OntologyConstants.KnoraAdmin.ProjectAdmin)
           } yield res
         } else {
           Seq.empty[(IRI, IRI)]
@@ -278,7 +278,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       /* combine explicit groups with materialized implicit groups */
       /* here we don't add the KnownUser group, as this would inflate the whole thing. */
       /* we instead inject the relevant information in defaultObjectAccessPermissionsStringForEntityGetV1 */
-      allGroups = groups ++ projectMembers ++ projectAdmins ++ systemAdmin
+      allGroups        = groups ++ projectMembers ++ projectAdmins ++ systemAdmin
       groupsPerProject = allGroups.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
       // _ = log.debug(s"permissionsProfileGetV1 - groupsPerProject: {}", MessageUtil.toSource(groupsPerProject))
 
@@ -293,9 +293,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       /* construct the permission profile from the different parts */
       result = PermissionsDataADM(
-        groupsPerProject = groupsPerProject,
-        administrativePermissionsPerProject = administrativePermissionsPerProject
-      )
+                 groupsPerProject = groupsPerProject,
+                 administrativePermissionsPerProject = administrativePermissionsPerProject
+               )
       //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
 
     } yield result
@@ -323,15 +323,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       for {
         /* Get administrative permissions for the knora-base:ProjectAdmin group */
-        administrativePermissionsOnProjectAdminGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(
-          projectIri,
-          List(OntologyConstants.KnoraAdmin.ProjectAdmin)
-        )
+        administrativePermissionsOnProjectAdminGroup: Set[PermissionADM] <-
+          administrativePermissionForGroupsGetADM(
+            projectIri,
+            List(OntologyConstants.KnoraAdmin.ProjectAdmin)
+          )
         _ = if (administrativePermissionsOnProjectAdminGroup.nonEmpty) {
-          if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)) {
-            permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
-          }
-        }
+              if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin)) {
+                permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
+              }
+            }
         //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
 
         /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
@@ -348,53 +349,54 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           }
         }
         _ = if (administrativePermissionsOnCustomGroups.nonEmpty) {
-          if (permissionsListBuffer.isEmpty) {
-            permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
-          }
-        }
+              if (permissionsListBuffer.isEmpty) {
+                permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
+              }
+            }
         //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
 
         /* Get administrative permissions for the knora-base:ProjectMember group */
-        administrativePermissionsOnProjectMemberGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(
-          projectIri,
-          List(OntologyConstants.KnoraAdmin.ProjectMember)
-        )
+        administrativePermissionsOnProjectMemberGroup: Set[PermissionADM] <-
+          administrativePermissionForGroupsGetADM(
+            projectIri,
+            List(OntologyConstants.KnoraAdmin.ProjectMember)
+          )
         _ = if (administrativePermissionsOnProjectMemberGroup.nonEmpty) {
-          if (permissionsListBuffer.isEmpty) {
-            if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember)) {
-              permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
+              if (permissionsListBuffer.isEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember)) {
+                  permissionsListBuffer += (("ProjectMember", administrativePermissionsOnProjectMemberGroup))
+                }
+              }
             }
-          }
-        }
         //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
 
         /* Get administrative permissions for the knora-base:KnownUser group */
         administrativePermissionsOnKnownUserGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(
-          projectIri,
-          List(OntologyConstants.KnoraAdmin.KnownUser)
-        )
+                                                                           projectIri,
+                                                                           List(OntologyConstants.KnoraAdmin.KnownUser)
+                                                                         )
         _ = if (administrativePermissionsOnKnownUserGroup.nonEmpty) {
-          if (permissionsListBuffer.isEmpty) {
-            if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
-              permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
+              if (permissionsListBuffer.isEmpty) {
+                if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
+                  permissionsListBuffer += (("KnownUser", administrativePermissionsOnKnownUserGroup))
+                }
+              }
             }
-          }
-        }
         //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
 
         projectAdministrativePermissions: (IRI, Set[PermissionADM]) = permissionsListBuffer.length match {
-          case 1 =>
-            log.debug(
-              s"userAdministrativePermissionsGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, administrativePermissions: ${permissionsListBuffer.head._2}"
-            )
-            (projectIri, permissionsListBuffer.head._2)
+                                                                        case 1 =>
+                                                                          log.debug(
+                                                                            s"userAdministrativePermissionsGetV1 - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, administrativePermissions: ${permissionsListBuffer.head._2}"
+                                                                          )
+                                                                          (projectIri, permissionsListBuffer.head._2)
 
-          case 0 => (projectIri, Set.empty[PermissionADM])
-          case _ =>
-            throw AssertionException(
-              "The permissions list buffer holding default object permissions should never be larger then 1."
-            )
-        }
+                                                                        case 0 => (projectIri, Set.empty[PermissionADM])
+                                                                        case _ =>
+                                                                          throw AssertionException(
+                                                                            "The permissions list buffer holding default object permissions should never be larger then 1."
+                                                                          )
+                                                                      }
 
       } yield projectAdministrativePermissions
     }
@@ -437,13 +439,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       //_ = log.debug(s"administrativePermissionForGroupsGetADM - projectIri: $projectIri, groupIri: $groupIri")
 
       groupPermissions: Future[Seq[PermissionADM]] = administrativePermissionForProjectGroupGetADM(
-        projectIri,
-        groupIri,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      ).map {
-        case Some(ap: AdministrativePermissionADM) => ap.hasPermissions.toSeq
-        case None                                  => Seq.empty[PermissionADM]
-      }
+                                                       projectIri,
+                                                       groupIri,
+                                                       requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                     ).map {
+                                                       case Some(ap: AdministrativePermissionADM) =>
+                                                         ap.hasPermissions.toSeq
+                                                       case None => Seq.empty[PermissionADM]
+                                                     }
 
     } yield groupPermissions
 
@@ -458,8 +461,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       /* Combine permission sequences */
       combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionADM]) { (acc, seq) =>
-        acc ++ seq
-      }
+                   acc ++ seq
+                 }
       /* Remove possible duplicate permissions */
       result: Set[PermissionADM] = PermissionUtilADM.removeDuplicatePermissions(combined)
 
@@ -483,12 +486,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[AdministrativePermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getAdministrativePermissionsForProject(
-            projectIri = projectIRI
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getAdministrativePermissionsForProject(
+                                 projectIri = projectIRI
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"administrativePermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
       permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -497,15 +500,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
 
-      permissionsWithProperties: Map[String, Map[String, String]] = permissionsQueryResponseRows
-        .groupBy(_.rowMap("s"))
-        .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
-          (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
-        }
+      permissionsWithProperties: Map[String, Map[String, String]] =
+        permissionsQueryResponseRows
+          .groupBy(_.rowMap("s"))
+          .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
+            (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
+          }
       //_ = log.debug(s"administrativePermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
 
-      administrativePermissions: Seq[AdministrativePermissionADM] = permissionsWithProperties.map {
-        case (permissionIri: IRI, propsMap: Map[String, String]) =>
+      administrativePermissions: Seq[AdministrativePermissionADM] =
+        permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
           /* parse permissions */
           val hasPermissions: Set[PermissionADM] =
             PermissionUtilADM.parsePermissionsWithType(
@@ -530,7 +534,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             ),
             hasPermissions = hasPermissions
           )
-      }.toSeq
+        }.toSeq
 
       /* construct response object */
       response = permissionsmessages.AdministrativePermissionsForProjectGetResponseADM(administrativePermissions)
@@ -553,10 +557,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
       result = administrativePermission match {
-        case ap: AdministrativePermissionADM =>
-          AdministrativePermissionGetResponseADM(ap)
-        case _ => throw BadRequestException(s"$administrativePermissionIri is not an administrative permission.")
-      }
+                 case ap: AdministrativePermissionADM =>
+                   AdministrativePermissionGetResponseADM(ap)
+                 case _ =>
+                   throw BadRequestException(s"$administrativePermissionIri is not an administrative permission.")
+               }
     } yield result
 
   /**
@@ -574,13 +579,13 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[Option[AdministrativePermissionADM]] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getAdministrativePermissionForProjectAndGroup(
-            projectIri = projectIri,
-            groupIri = groupIri
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getAdministrativePermissionForProjectAndGroup(
+                                 projectIri = projectIri,
+                                 groupIri = groupIri
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"administrativePermissionForProjectGroupGetADM - query: $sparqlQueryString")
 
       permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -638,17 +643,17 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[AdministrativePermissionGetResponseADM] =
     for {
       ap <- administrativePermissionForProjectGroupGetADM(
-        projectIri,
-        groupIri,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
+              projectIri,
+              groupIri,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
       result = ap match {
-        case Some(ap) => permissionsmessages.AdministrativePermissionGetResponseADM(ap)
-        case None =>
-          throw NotFoundException(
-            s"No Administrative Permission found for project: $projectIri, group: $groupIri combination"
-          )
-      }
+                 case Some(ap) => permissionsmessages.AdministrativePermissionGetResponseADM(ap)
+                 case None =>
+                   throw NotFoundException(
+                     s"No Administrative Permission found for project: $projectIri, group: $groupIri combination"
+                   )
+               }
     } yield result
 
   /**
@@ -679,33 +684,35 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         // does the permission already exist
         checkResult: Option[AdministrativePermissionADM] <- administrativePermissionForProjectGroupGetADM(
-          createRequest.forProject,
-          createRequest.forGroup,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                                                              createRequest.forProject,
+                                                              createRequest.forGroup,
+                                                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                            )
 
         _ = checkResult match {
-          case Some(ap: AdministrativePermissionADM) =>
-            throw DuplicateValueException(
-              s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
-                s"Use its IRI ${ap.iri} to modify it, if necessary."
-            )
-          case None => ()
-        }
+              case Some(ap: AdministrativePermissionADM) =>
+                throw DuplicateValueException(
+                  s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
+                    s"This permission currently has the scope '${PermissionUtilADM
+                      .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
+                    s"Use its IRI ${ap.iri} to modify it, if necessary."
+                )
+              case None => ()
+            }
 
         // get project
         maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[ProjectADM]]
+                                              identifier =
+                                                ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                                            )).mapTo[Option[ProjectADM]]
 
         // if it doesnt exist then throw an error
-        project: ProjectADM = maybeProject.getOrElse(
-          throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request.")
-        )
+        project: ProjectADM =
+          maybeProject.getOrElse(
+            throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request.")
+          )
 
         // get group
         groupIri: IRI <-
@@ -714,57 +721,63 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           } else {
             for {
               maybeGroup <- (responderManager ? GroupGetADM(
-                groupIri = createRequest.forGroup,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )).mapTo[Option[GroupADM]]
+                              groupIri = createRequest.forGroup,
+                              featureFactoryConfig = featureFactoryConfig,
+                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                            )).mapTo[Option[GroupADM]]
 
               // if it does not exist then throw an error
-              group: GroupADM = maybeGroup.getOrElse(
-                throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request.")
-              )
+              group: GroupADM =
+                maybeGroup.getOrElse(
+                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request.")
+                )
             } yield group.id
           }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri: IRI <- checkOrCreateEntityIri(
-          customPermissionIri,
-          stringFormatter.makeRandomPermissionIri(project.shortcode)
-        )
+                                   customPermissionIri,
+                                   stringFormatter.makeRandomPermissionIri(project.shortcode)
+                                 )
 
         // Create the administrative permission.
         createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .createNewAdministrativePermission(
-            namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
-            permissionIri = newPermissionIri,
-            projectIri = project.id,
-            groupIri = groupIri,
-            permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
-          )
-          .toString
+                                                       .createNewAdministrativePermission(
+                                                         namedGraphIri =
+                                                           OntologyConstants.NamedGraphs.PermissionNamedGraph,
+                                                         permissionClassIri =
+                                                           OntologyConstants.KnoraAdmin.AdministrativePermission,
+                                                         permissionIri = newPermissionIri,
+                                                         projectIri = project.id,
+                                                         groupIri = groupIri,
+                                                         permissions = PermissionUtilADM.formatPermissionADMs(
+                                                           createRequest.hasPermissions,
+                                                           PermissionType.AP
+                                                         )
+                                                       )
+                                                       .toString
 
         // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
         _ <- (storeManager ? SparqlUpdateRequest(createAdministrativePermissionSparqlString))
-          .mapTo[SparqlUpdateResponse]
+               .mapTo[SparqlUpdateResponse]
 
         // try to retrieve the newly created permission
         maybePermission <- administrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = newPermissionIri,
-          requestingUser = requestingUser,
-          apiRequestID = apiRequestID
-        )
+                             administrativePermissionIri = newPermissionIri,
+                             requestingUser = requestingUser,
+                             apiRequestID = apiRequestID
+                           )
         newAdminPermission: AdministrativePermissionADM = maybePermission.administrativePermission
       } yield AdministrativePermissionCreateResponseADM(administrativePermission = newAdminPermission)
 
     for {
       // run the task with an IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        PERMISSIONS_GLOBAL_LOCK_IRI,
-        () => createPermissionTask(createRequest, requestingUser)
-      )
+                      apiRequestID,
+                      PERMISSIONS_GLOBAL_LOCK_IRI,
+                      () => createPermissionTask(createRequest, requestingUser)
+                    )
     } yield taskResult
   }
 
@@ -788,20 +801,20 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       projectIri <- getProjectOfEntity(resourceIri)
       // Check user's permission for the operation
       _ = if (
-        !requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdmin(projectIri)
-        && !requestingUser.isSystemUser
-      ) {
-        throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-      }
+            !requestingUser.isSystemAdmin
+            && !requestingUser.permissions.isProjectAdmin(projectIri)
+            && !requestingUser.isSystemUser
+          ) {
+            throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
+          }
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getObjectAccessPermission(
-            resourceIri = Some(resourceIri),
-            valueIri = None
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getObjectAccessPermission(
+                                 resourceIri = Some(resourceIri),
+                                 valueIri = None
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"objectAccessPermissionsForResourceGetV1 - query: $sparqlQueryString")
 
       permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -846,20 +859,20 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       projectIri <- getProjectOfEntity(valueIri)
       // Check user's permission for the operation
       _ = if (
-        !requestingUser.isSystemAdmin
-        && !requestingUser.permissions.isProjectAdmin(projectIri)
-        && !requestingUser.isSystemUser
-      ) {
-        throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-      }
+            !requestingUser.isSystemAdmin
+            && !requestingUser.permissions.isProjectAdmin(projectIri)
+            && !requestingUser.isSystemUser
+          ) {
+            throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
+          }
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getObjectAccessPermission(
-            resourceIri = None,
-            valueIri = Some(valueIri)
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getObjectAccessPermission(
+                                 resourceIri = None,
+                                 valueIri = Some(valueIri)
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"objectAccessPermissionsForValueGetV1 - query: $sparqlQueryString")
 
       permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -907,12 +920,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getDefaultObjectAccessPermissionsForProject(
-            projectIri = projectIri
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getDefaultObjectAccessPermissionsForProject(
+                                 projectIri = projectIri
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
       permissionsQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -921,35 +934,45 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
 
-      permissionsWithProperties: Map[String, Map[String, String]] = permissionsQueryResponseRows
-        .groupBy(_.rowMap("s"))
-        .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
-          (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
-        }
+      permissionsWithProperties: Map[String, Map[String, String]] =
+        permissionsQueryResponseRows
+          .groupBy(_.rowMap("s"))
+          .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
+            (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
+          }
       //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
 
       permissions: Seq[DefaultObjectAccessPermissionADM] = permissionsWithProperties.map {
-        case (permissionIri: IRI, propsMap: Map[String, String]) =>
-          /* parse permissions */
-          val hasPermissions: Set[PermissionADM] =
-            PermissionUtilADM.parsePermissionsWithType(
-              propsMap.get(OntologyConstants.KnoraBase.HasPermissions),
-              PermissionType.OAP
-            )
+                                                             case (permissionIri: IRI, propsMap: Map[String, String]) =>
+                                                               /* parse permissions */
+                                                               val hasPermissions: Set[PermissionADM] =
+                                                                 PermissionUtilADM.parsePermissionsWithType(
+                                                                   propsMap.get(
+                                                                     OntologyConstants.KnoraBase.HasPermissions
+                                                                   ),
+                                                                   PermissionType.OAP
+                                                                 )
 
-          /* construct permission object */
-          DefaultObjectAccessPermissionADM(
-            iri = permissionIri,
-            forProject = propsMap.getOrElse(
-              OntologyConstants.KnoraAdmin.ForProject,
-              throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project.")
-            ),
-            forGroup = propsMap.get(OntologyConstants.KnoraAdmin.ForGroup),
-            forResourceClass = propsMap.get(OntologyConstants.KnoraAdmin.ForResourceClass),
-            forProperty = propsMap.get(OntologyConstants.KnoraAdmin.ForProperty),
-            hasPermissions = hasPermissions
-          )
-      }.toSeq
+                                                               /* construct permission object */
+                                                               DefaultObjectAccessPermissionADM(
+                                                                 iri = permissionIri,
+                                                                 forProject = propsMap.getOrElse(
+                                                                   OntologyConstants.KnoraAdmin.ForProject,
+                                                                   throw InconsistentRepositoryDataException(
+                                                                     s"Permission $permissionIri has no project."
+                                                                   )
+                                                                 ),
+                                                                 forGroup =
+                                                                   propsMap.get(OntologyConstants.KnoraAdmin.ForGroup),
+                                                                 forResourceClass = propsMap.get(
+                                                                   OntologyConstants.KnoraAdmin.ForResourceClass
+                                                                 ),
+                                                                 forProperty = propsMap.get(
+                                                                   OntologyConstants.KnoraAdmin.ForProperty
+                                                                 ),
+                                                                 hasPermissions = hasPermissions
+                                                               )
+                                                           }.toSeq
 
       /* construct response object */
       response = DefaultObjectAccessPermissionsForProjectGetResponseADM(permissions)
@@ -972,10 +995,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       defaultObjectAccessPermission <- permissionGetADM(permissionIri, requestingUser)
       result = defaultObjectAccessPermission match {
-        case doap: DefaultObjectAccessPermissionADM =>
-          DefaultObjectAccessPermissionGetResponseADM(doap)
-        case _ => throw BadRequestException(s"$permissionIri is not a default object access permission.")
-      }
+                 case doap: DefaultObjectAccessPermissionADM =>
+                   DefaultObjectAccessPermissionGetResponseADM(doap)
+                 case _ => throw BadRequestException(s"$permissionIri is not a default object access permission.")
+               }
     } yield result
 
   /**
@@ -1019,15 +1042,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
           for {
             sparqlQueryString <- Future(
-              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                .getDefaultObjectAccessPermission(
-                  projectIri = projectIri,
-                  maybeGroupIri = groupIri,
-                  maybeResourceClassIri = resourceClassIri,
-                  maybePropertyIri = propertyIri
-                )
-                .toString()
-            )
+                                   org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                     .getDefaultObjectAccessPermission(
+                                       projectIri = projectIri,
+                                       maybeGroupIri = groupIri,
+                                       maybeResourceClassIri = resourceClassIri,
+                                       maybePropertyIri = propertyIri
+                                     )
+                                     .toString()
+                                 )
 
             // _ = logger.debug(s"defaultObjectAccessPermissionGetADM - query: $sparqlQueryString")
 
@@ -1080,9 +1103,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
               } else {
                 None
               }
-            _ = logger.debug(
-              s"defaultObjectAccessPermissionGetADM - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission"
-            )
+            _ =
+              logger.debug(
+                s"defaultObjectAccessPermissionGetADM - p: $projectIri, g: $groupIri, r: $resourceClassIri, p: $propertyIri, permission: $permission"
+              )
           } yield permission
       }
 
@@ -1118,7 +1142,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           /* if the query was for a property, then we need to additionally check if it is a system property */
           if (propertyIri.isDefined) {
             val systemProject = OntologyConstants.KnoraAdmin.SystemProject
-            val doapF = defaultObjectAccessPermissionGetADM(systemProject, groupIri, resourceClassIri, propertyIri)
+            val doapF         = defaultObjectAccessPermissionGetADM(systemProject, groupIri, resourceClassIri, propertyIri)
             doapF.mapTo[Option[DefaultObjectAccessPermissionADM]].map {
               case Some(systemDoap) => DefaultObjectAccessPermissionGetResponseADM(systemDoap)
               case None =>
@@ -1151,14 +1175,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
       groupPermissions: Future[Seq[PermissionADM]] = defaultObjectAccessPermissionGetADM(
-        projectIri = projectIri,
-        groupIri = Some(groupIri),
-        resourceClassIri = None,
-        propertyIri = None
-      ).map {
-        case Some(doap: DefaultObjectAccessPermissionADM) => doap.hasPermissions.toSeq
-        case None                                         => Seq.empty[PermissionADM]
-      }
+                                                       projectIri = projectIri,
+                                                       groupIri = Some(groupIri),
+                                                       resourceClassIri = None,
+                                                       propertyIri = None
+                                                     ).map {
+                                                       case Some(doap: DefaultObjectAccessPermissionADM) =>
+                                                         doap.hasPermissions.toSeq
+                                                       case None => Seq.empty[PermissionADM]
+                                                     }
 
     } yield groupPermissions
 
@@ -1173,14 +1198,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       /* Combine permission sequences */
       combined = cleanedAllPermissions.foldLeft(Seq.empty[PermissionADM]) { (acc, seq) =>
-        acc ++ seq
-      }
+                   acc ++ seq
+                 }
       /* Remove possible duplicate permissions */
       result: Set[PermissionADM] = PermissionUtilADM.removeDuplicatePermissions(combined)
 
-      _ = logger.debug(
-        s"defaultObjectAccessPermissionsForGroupsGetADM - INPUT [ projectIri: $projectIri, groups: $groups ], RESULT [ $result ]"
-      )
+      _ =
+        logger.debug(
+          s"defaultObjectAccessPermissionsForGroupsGetADM - INPUT [ projectIri: $projectIri, groups: $groups ], RESULT [ $result ]"
+        )
     } yield result
     result
   }
@@ -1198,15 +1224,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[Set[PermissionADM]] =
     for {
       defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(
-        projectIri = projectIri,
-        groupIri = None,
-        resourceClassIri = Some(resourceClassIri),
-        propertyIri = None
-      )
+                                                                              projectIri = projectIri,
+                                                                              groupIri = None,
+                                                                              resourceClassIri = Some(resourceClassIri),
+                                                                              propertyIri = None
+                                                                            )
       defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
-        case Some(doap) => doap.hasPermissions
-        case None       => Set.empty[PermissionADM]
-      }
+                                                 case Some(doap) => doap.hasPermissions
+                                                 case None       => Set.empty[PermissionADM]
+                                               }
     } yield defaultPermissions
 
   /**
@@ -1224,15 +1250,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[Set[PermissionADM]] =
     for {
       defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(
-        projectIri = projectIri,
-        groupIri = None,
-        resourceClassIri = Some(resourceClassIri),
-        propertyIri = Some(propertyIri)
-      )
+                                                                              projectIri = projectIri,
+                                                                              groupIri = None,
+                                                                              resourceClassIri = Some(resourceClassIri),
+                                                                              propertyIri = Some(propertyIri)
+                                                                            )
       defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
-        case Some(doap) => doap.hasPermissions
-        case None       => Set.empty[PermissionADM]
-      }
+                                                 case Some(doap) => doap.hasPermissions
+                                                 case None       => Set.empty[PermissionADM]
+                                               }
     } yield defaultPermissions
 
   /**
@@ -1248,15 +1274,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[Set[PermissionADM]] =
     for {
       defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(
-        projectIri = projectIri,
-        groupIri = None,
-        resourceClassIri = None,
-        propertyIri = Some(propertyIri)
-      )
+                                                                              projectIri = projectIri,
+                                                                              groupIri = None,
+                                                                              resourceClassIri = None,
+                                                                              propertyIri = Some(propertyIri)
+                                                                            )
       defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
-        case Some(doap) => doap.hasPermissions
-        case None       => Set.empty[PermissionADM]
-      }
+                                                 case Some(doap) => doap.hasPermissions
+                                                 case None       => Set.empty[PermissionADM]
+                                               }
     } yield defaultPermissions
 
   /**
@@ -1284,9 +1310,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       /* Get the groups the user is member of. */
       userGroupsOption: Option[Seq[IRI]] <- Future(targetUser.permissions.groupsPerProject.get(projectIri))
       userGroups: Seq[IRI] = userGroupsOption match {
-        case Some(groups) => groups
-        case None         => Seq.empty[IRI]
-      }
+                               case Some(groups) => groups
+                               case None         => Seq.empty[IRI]
+                             }
 
       /* Explicitly add 'SystemAdmin' and 'KnownUser' groups. */
       extendedUserGroups: List[IRI] =
@@ -1309,19 +1335,19 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       ///////////////////////
       /* Get the default object access permissions for the knora-base:ProjectAdmin group */
       defaultPermissionsOnProjectAdminGroup: Set[PermissionADM] <- defaultObjectAccessPermissionsForGroupsGetADM(
-        projectIri,
-        List(OntologyConstants.KnoraAdmin.ProjectAdmin)
-      )
+                                                                     projectIri,
+                                                                     List(OntologyConstants.KnoraAdmin.ProjectAdmin)
+                                                                   )
       _ = if (defaultPermissionsOnProjectAdminGroup.nonEmpty) {
-        if (
-          extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin) || extendedUserGroups.contains(
-            OntologyConstants.KnoraAdmin.SystemAdmin
-          )
-        ) {
-          permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
-          // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
-        }
-      }
+            if (
+              extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectAdmin) || extendedUserGroups.contains(
+                OntologyConstants.KnoraAdmin.SystemAdmin
+              )
+            ) {
+              permissionsListBuffer += (("ProjectAdmin", defaultPermissionsOnProjectAdminGroup))
+              // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectAdminGroup: $defaultPermissionsOnProjectAdminGroup")
+            }
+          }
 
       ///////////////////////////////
       // RESOURCE CLASS / PROPERTY
@@ -1339,9 +1365,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnProjectResourceClassProperty.nonEmpty) {
-        permissionsListBuffer += (("ProjectResourceClassProperty", defaultPermissionsOnProjectResourceClassProperty))
-        // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
-      }
+            permissionsListBuffer += (
+              (
+                "ProjectResourceClassProperty",
+                defaultPermissionsOnProjectResourceClassProperty
+              )
+            )
+            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClassProperty: {}", defaultPermissionsOnProjectResourceClassProperty)
+          }
 
       /* system resource class / property combination */
       defaultPermissionsOnSystemResourceClassProperty: Set[PermissionADM] <- {
@@ -1357,9 +1388,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnSystemResourceClassProperty.nonEmpty) {
-        permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
-        // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
-      }
+            permissionsListBuffer += (("SystemResourceClassProperty", defaultPermissionsOnSystemResourceClassProperty))
+            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClassProperty: {}", defaultPermissionsOnSystemResourceClassProperty)
+          }
 
       ///////////////////////
       // RESOURCE CLASS
@@ -1376,9 +1407,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnProjectResourceClass.nonEmpty) {
-        permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
-        // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
-      }
+            permissionsListBuffer += (("ProjectResourceClass", defaultPermissionsOnProjectResourceClass))
+            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectResourceClass: {}", defaultPermissionsOnProjectResourceClass)
+          }
 
       /* Get the default object access permissions defined on the resource class inside the SystemProject */
       defaultPermissionsOnSystemResourceClass: Set[PermissionADM] <- {
@@ -1393,9 +1424,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnSystemResourceClass.nonEmpty) {
-        permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
-        // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
-      }
+            permissionsListBuffer += (("SystemResourceClass", defaultPermissionsOnSystemResourceClass))
+            // log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemResourceClass: {}", defaultPermissionsOnSystemResourceClass)
+          }
 
       ///////////////////////
       // PROPERTY
@@ -1412,9 +1443,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnProjectProperty.nonEmpty) {
-        permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
-        // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
-      }
+            permissionsListBuffer += (("ProjectProperty", defaultPermissionsOnProjectProperty))
+            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectProperty: {}", defaultPermissionsOnProjectProperty)
+          }
 
       /* system property */
       defaultPermissionsOnSystemProperty: Set[PermissionADM] <- {
@@ -1429,9 +1460,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnSystemProperty.nonEmpty) {
-        permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
-        // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
-      }
+            permissionsListBuffer += (("SystemProperty", defaultPermissionsOnSystemProperty))
+            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnSystemProperty: {}", defaultPermissionsOnSystemProperty)
+          }
 
       ///////////////////////
       // CUSTOM GROUPS
@@ -1456,9 +1487,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnCustomGroups.nonEmpty) {
-        permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
-        // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
-      }
+            permissionsListBuffer += (("CustomGroups", defaultPermissionsOnCustomGroups))
+            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnCustomGroups: $defaultPermissionsOnCustomGroups")
+          }
 
       ///////////////////////
       // PROJECT MEMBER
@@ -1472,15 +1503,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnProjectMemberGroup.nonEmpty) {
-        if (
-          extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember) || extendedUserGroups.contains(
-            OntologyConstants.KnoraAdmin.SystemAdmin
-          )
-        ) {
-          permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
-        }
-        // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
-      }
+            if (
+              extendedUserGroups.contains(OntologyConstants.KnoraAdmin.ProjectMember) || extendedUserGroups.contains(
+                OntologyConstants.KnoraAdmin.SystemAdmin
+              )
+            ) {
+              permissionsListBuffer += (("ProjectMember", defaultPermissionsOnProjectMemberGroup))
+            }
+            // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnProjectMemberGroup: $defaultPermissionsOnProjectMemberGroup")
+          }
 
       ///////////////////////
       // KNOWN USER
@@ -1494,11 +1525,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
       }
       _ = if (defaultPermissionsOnKnownUserGroup.nonEmpty) {
-        if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
-          permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
-          // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
-        }
-      }
+            if (extendedUserGroups.contains(OntologyConstants.KnoraAdmin.KnownUser)) {
+              permissionsListBuffer += (("KnownUser", defaultPermissionsOnKnownUserGroup))
+              // logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - defaultPermissionsOnKnownUserGroup: $defaultPermissionsOnKnownUserGroup")
+            }
+          }
 
       ///////////////////////
       // FALLBACK PERMISSION IF NONE COULD BE FOUND
@@ -1517,15 +1548,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       /* Create permissions string */
       result = permissionsListBuffer.length match {
-        case 1 => PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
-        case _ =>
-          throw AssertionException(
-            "The permissions list buffer holding default object permissions should never be larger then 1."
-          )
-      }
-      _ = logger.debug(
-        s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result"
-      )
+                 case 1 => PermissionUtilADM.formatPermissionADMs(permissionsListBuffer.head._2, PermissionType.OAP)
+                 case _ =>
+                   throw AssertionException(
+                     "The permissions list buffer holding default object permissions should never be larger then 1."
+                   )
+               }
+      _ =
+        logger.debug(
+          s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result"
+        )
     } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
   }
 
@@ -1543,13 +1575,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       permission <- permissionGetADM(permissionIri, requestingUser)
       result = permission match {
-        case doap: DefaultObjectAccessPermissionADM =>
-          DefaultObjectAccessPermissionGetResponseADM(doap)
-        case ap: AdministrativePermissionADM =>
-          AdministrativePermissionGetResponseADM(ap)
-        case _ =>
-          throw BadRequestException(s"$permissionIri is not a default object access or an administrative permission.")
-      }
+                 case doap: DefaultObjectAccessPermissionADM =>
+                   DefaultObjectAccessPermissionGetResponseADM(doap)
+                 case ap: AdministrativePermissionADM =>
+                   AdministrativePermissionGetResponseADM(ap)
+                 case _ =>
+                   throw BadRequestException(
+                     s"$permissionIri is not a default object access or an administrative permission."
+                   )
+               }
     } yield result
 
   private def defaultObjectAccessPermissionCreateRequestADM(
@@ -1568,52 +1602,54 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     ): Future[DefaultObjectAccessPermissionCreateResponseADM] =
       for {
         checkResult <- defaultObjectAccessPermissionGetADM(
-          createRequest.forProject,
-          createRequest.forGroup,
-          createRequest.forResourceClass,
-          createRequest.forProperty
-        )
+                         createRequest.forProject,
+                         createRequest.forGroup,
+                         createRequest.forResourceClass,
+                         createRequest.forProperty
+                       )
 
         _ = checkResult match {
-          case Some(doap: DefaultObjectAccessPermissionADM) =>
-            val errorMessage = if (doap.forGroup.nonEmpty) {
-              s"and group: '${doap.forGroup.get}' "
-            } else {
-              val resourceClassExists = if (doap.forResourceClass.nonEmpty) {
-                s"and resourceClass: '${doap.forResourceClass.get}' "
-              } else ""
-              val propExists = if (doap.forProperty.nonEmpty) {
-                s"and property: '${doap.forProperty.get}' "
-              } else ""
-              resourceClassExists + propExists
+              case Some(doap: DefaultObjectAccessPermissionADM) =>
+                val errorMessage = if (doap.forGroup.nonEmpty) {
+                  s"and group: '${doap.forGroup.get}' "
+                } else {
+                  val resourceClassExists = if (doap.forResourceClass.nonEmpty) {
+                    s"and resourceClass: '${doap.forResourceClass.get}' "
+                  } else ""
+                  val propExists = if (doap.forProperty.nonEmpty) {
+                    s"and property: '${doap.forProperty.get}' "
+                  } else ""
+                  resourceClassExists + propExists
+                }
+                throw DuplicateValueException(
+                  s"A default object access permission for project: '${createRequest.forProject}' " +
+                    errorMessage + "combination already exists. " +
+                    s"This permission currently has the scope '${PermissionUtilADM
+                      .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
+                    s"Use its IRI ${doap.iri} to modify it, if necessary."
+                )
+              case None => ()
             }
-            throw DuplicateValueException(
-              s"A default object access permission for project: '${createRequest.forProject}' " +
-                errorMessage + "combination already exists. " +
-                s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
-                s"Use its IRI ${doap.iri} to modify it, if necessary."
-            )
-          case None => ()
-        }
 
         // get project
         maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[ProjectADM]]
+                                              identifier =
+                                                ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                                            )).mapTo[Option[ProjectADM]]
 
         // if it doesnt exist then throw an error
-        project: ProjectADM = maybeProject.getOrElse(
-          throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request.")
-        )
+        project: ProjectADM =
+          maybeProject.getOrElse(
+            throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request.")
+          )
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri: IRI <- checkOrCreateEntityIri(
-          customPermissionIri,
-          stringFormatter.makeRandomPermissionIri(project.shortcode)
-        )
+                                   customPermissionIri,
+                                   stringFormatter.makeRandomPermissionIri(project.shortcode)
+                                 )
         // verify group, if any given.
         // Is a group given that is not a built-in one?
         maybeGroupIri: Option[IRI] <-
@@ -1621,14 +1657,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             // Yes. Check if it is a known group.
             for {
               maybeGroup <- (responderManager ? GroupGetADM(
-                groupIri = createRequest.forGroup.get,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )).mapTo[Option[GroupADM]]
+                              groupIri = createRequest.forGroup.get,
+                              featureFactoryConfig = featureFactoryConfig,
+                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                            )).mapTo[Option[GroupADM]]
 
-              group: GroupADM = maybeGroup.getOrElse(
-                throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request.")
-              )
+              group: GroupADM =
+                maybeGroup.getOrElse(
+                  throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request.")
+                )
             } yield Some(group.id)
           } else {
             // No, return given group as it is. That means:
@@ -1639,34 +1676,40 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         // Create the default object access permission.
         createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .createNewDefaultObjectAccessPermission(
-            namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            permissionIri = newPermissionIri,
-            permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-            projectIri = project.id,
-            maybeGroupIri = maybeGroupIri,
-            maybeResourceClassIri = createRequest.forResourceClass,
-            maybePropertyIri = createRequest.forProperty,
-            permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.OAP)
-          )
-          .toString
+                                                               .createNewDefaultObjectAccessPermission(
+                                                                 namedGraphIri =
+                                                                   OntologyConstants.NamedGraphs.PermissionNamedGraph,
+                                                                 permissionIri = newPermissionIri,
+                                                                 permissionClassIri =
+                                                                   OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
+                                                                 projectIri = project.id,
+                                                                 maybeGroupIri = maybeGroupIri,
+                                                                 maybeResourceClassIri = createRequest.forResourceClass,
+                                                                 maybePropertyIri = createRequest.forProperty,
+                                                                 permissions = PermissionUtilADM.formatPermissionADMs(
+                                                                   createRequest.hasPermissions,
+                                                                   PermissionType.OAP
+                                                                 )
+                                                               )
+                                                               .toString
 
         _ <- (storeManager ? SparqlUpdateRequest(createNewDefaultObjectAccessPermissionSparqlString))
-          .mapTo[SparqlUpdateResponse]
+               .mapTo[SparqlUpdateResponse]
 
         // try to retrieve the newly created permission
         maybePermission <- defaultObjectAccessPermissionGetADM(
-          createRequest.forProject,
-          createRequest.forGroup,
-          createRequest.forResourceClass,
-          createRequest.forProperty
-        )
+                             createRequest.forProject,
+                             createRequest.forGroup,
+                             createRequest.forResourceClass,
+                             createRequest.forProperty
+                           )
 
-        newDefaultObjectAcessPermission: DefaultObjectAccessPermissionADM = maybePermission.getOrElse(
-          throw BadRequestException(
-            "Requested default object access permission could not be created, report this as a possible bug."
+        newDefaultObjectAcessPermission: DefaultObjectAccessPermissionADM =
+          maybePermission.getOrElse(
+            throw BadRequestException(
+              "Requested default object access permission could not be created, report this as a possible bug."
+            )
           )
-        )
 
       } yield DefaultObjectAccessPermissionCreateResponseADM(defaultObjectAccessPermission =
         newDefaultObjectAcessPermission
@@ -1675,10 +1718,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       // run the task with an IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        PERMISSIONS_GLOBAL_LOCK_IRI,
-        () => createPermissionTask(createRequest, requestingUser)
-      )
+                      apiRequestID,
+                      PERMISSIONS_GLOBAL_LOCK_IRI,
+                      () => createPermissionTask(createRequest, requestingUser)
+                    )
     } yield taskResult
   }
 
@@ -1699,17 +1742,17 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   ): Future[PermissionsForProjectGetResponseADM] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getProjectPermissions(
-            projectIri = projectIRI
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                               .getProjectPermissions(
+                                 projectIri = projectIRI
+                               )
+                               .toString()
+                           )
 
       permissionsQueryResponse <- (storeManager ? SparqlConstructRequest(
-        sparql = sparqlQueryString,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlConstructResponse]
+                                    sparql = sparqlQueryString,
+                                    featureFactoryConfig = featureFactoryConfig
+                                  )).mapTo[SparqlConstructResponse]
 
       /* extract response statements */
       permissionsQueryResponseStatements: Map[IRI, Seq[(IRI, String)]] = permissionsQueryResponse.statements
@@ -1719,7 +1762,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           throw NotFoundException(s"No permission could be found for $projectIRI.")
         } else {
           permissionsQueryResponseStatements.map { statement =>
-            val permissionIri = statement._1
+            val permissionIri       = statement._1
             val (_, permissionType) = statement._2.filter(_._1 == OntologyConstants.Rdf.Type).head
             PermissionInfoADM(iri = permissionIri, permissionType = permissionType)
           }.toSet
@@ -1750,27 +1793,27 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     def verifyPermissionGroupUpdate: Future[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(
-          permissionIri = permissionIri,
-          requestingUser = requestingUser
-        )
+                               permissionIri = permissionIri,
+                               requestingUser = requestingUser
+                             )
         _ = updatedPermission match {
-          case ap: AdministrativePermissionADM =>
-            if (ap.forGroup != changePermissionGroupRequest.forGroup)
-              throw UpdateNotPerformedException(
-                s"The group of permission $permissionIri was not updated. Please report this as a bug."
-              )
-          case doap: DefaultObjectAccessPermissionADM =>
-            if (doap.forGroup.get != changePermissionGroupRequest.forGroup) {
-              throw UpdateNotPerformedException(
-                s"The group of permission $permissionIri was not updated. Please report this as a bug."
-              )
-            } else {
-              if (doap.forProperty.isDefined || doap.forResourceClass.isDefined)
-                throw UpdateNotPerformedException(
-                  s"The $permissionIri is not correctly updated. Please report this as a bug."
-                )
+              case ap: AdministrativePermissionADM =>
+                if (ap.forGroup != changePermissionGroupRequest.forGroup)
+                  throw UpdateNotPerformedException(
+                    s"The group of permission $permissionIri was not updated. Please report this as a bug."
+                  )
+              case doap: DefaultObjectAccessPermissionADM =>
+                if (doap.forGroup.get != changePermissionGroupRequest.forGroup) {
+                  throw UpdateNotPerformedException(
+                    s"The group of permission $permissionIri was not updated. Please report this as a bug."
+                  )
+                } else {
+                  if (doap.forProperty.isDefined || doap.forResourceClass.isDefined)
+                    throw UpdateNotPerformedException(
+                      s"The $permissionIri is not correctly updated. Please report this as a bug."
+                    )
+                }
             }
-        }
       } yield updatedPermission
 
     /**
@@ -1785,32 +1828,40 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // get permission
         permission <- permissionGetADM(permissioniri, requestingUser)
         response <- permission match {
-          // Is permission an administrative permission?
-          case ap: AdministrativePermissionADM =>
-            // Yes. Update the group
-            for {
-              _ <- updatePermission(permissionIri = ap.iri, maybeGroup = Some(changePermissionGroupRequest.forGroup))
-              updatedPermission <- verifyPermissionGroupUpdate
-            } yield AdministrativePermissionGetResponseADM(updatedPermission.asInstanceOf[AdministrativePermissionADM])
-          case doap: DefaultObjectAccessPermissionADM =>
-            //No. It is a default object access permission
-            for {
-              // if a doap permission has a group defined, it cannot have either resourceClass or property
-              _ <- updatePermission(permissionIri = doap.iri, maybeGroup = Some(changePermissionGroupRequest.forGroup))
-              updatedPermission <- verifyPermissionGroupUpdate
-            } yield DefaultObjectAccessPermissionGetResponseADM(
-              updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
-            )
-        }
+                      // Is permission an administrative permission?
+                      case ap: AdministrativePermissionADM =>
+                        // Yes. Update the group
+                        for {
+                          _ <- updatePermission(
+                                 permissionIri = ap.iri,
+                                 maybeGroup = Some(changePermissionGroupRequest.forGroup)
+                               )
+                          updatedPermission <- verifyPermissionGroupUpdate
+                        } yield AdministrativePermissionGetResponseADM(
+                          updatedPermission.asInstanceOf[AdministrativePermissionADM]
+                        )
+                      case doap: DefaultObjectAccessPermissionADM =>
+                        //No. It is a default object access permission
+                        for {
+                          // if a doap permission has a group defined, it cannot have either resourceClass or property
+                          _ <- updatePermission(
+                                 permissionIri = doap.iri,
+                                 maybeGroup = Some(changePermissionGroupRequest.forGroup)
+                               )
+                          updatedPermission <- verifyPermissionGroupUpdate
+                        } yield DefaultObjectAccessPermissionGetResponseADM(
+                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
+                        )
+                    }
       } yield response
 
     for {
       // run list info update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        permissionIri,
-        () => permissionGroupChangeTask(permissionIri, changePermissionGroupRequest, requestingUser)
-      )
+                      apiRequestID,
+                      permissionIri,
+                      () => permissionGroupChangeTask(permissionIri, changePermissionGroupRequest, requestingUser)
+                    )
     } yield taskResult
   }
 
@@ -1838,19 +1889,19 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
-          case ap: AdministrativePermissionADM =>
-            if (!ap.hasPermissions.equals(expectedPermissions))
-              throw UpdateNotPerformedException(
-                s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug."
-              )
-          case doap: DefaultObjectAccessPermissionADM =>
-            if (!doap.hasPermissions.equals(expectedPermissions)) {
-              throw UpdateNotPerformedException(
-                s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug."
-              )
+              case ap: AdministrativePermissionADM =>
+                if (!ap.hasPermissions.equals(expectedPermissions))
+                  throw UpdateNotPerformedException(
+                    s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug."
+                  )
+              case doap: DefaultObjectAccessPermissionADM =>
+                if (!doap.hasPermissions.equals(expectedPermissions)) {
+                  throw UpdateNotPerformedException(
+                    s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug."
+                  )
+                }
+              case _ => None
             }
-          case _ => None
-        }
       } yield updatedPermission
 
     /**
@@ -1865,45 +1916,54 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // get permission
         permission <- permissionGetADM(permissionIri, requestingUser)
         response <- permission match {
-          // Is permission an administrative permission?
-          case ap: AdministrativePermissionADM =>
-            // Yes.
-            val verifiedPermissions =
-              PermissionsMessagesUtilADM.verifyHasPermissionsAP(changeHasPermissionsRequest.hasPermissions)
-            for {
-              formattedPermissions <- Future(
-                PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.AP)
-              )
-              _ <- updatePermission(permissionIri = ap.iri, maybeHasPermissions = Some(formattedPermissions))
-              updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
-            } yield AdministrativePermissionGetResponseADM(updatedPermission.asInstanceOf[AdministrativePermissionADM])
-          case doap: DefaultObjectAccessPermissionADM =>
-            //No. It is a default object access permission.
-            val verifiedPermissions =
-              PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(changeHasPermissionsRequest.hasPermissions)
-            for {
-              formattedPermissions <- Future(
-                PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.OAP)
-              )
-              _ <- updatePermission(permissionIri = doap.iri, maybeHasPermissions = Some(formattedPermissions))
-              updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
-            } yield DefaultObjectAccessPermissionGetResponseADM(
-              updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
-            )
-          case _ =>
-            throw UpdateNotPerformedException(
-              s"Permission $permissionIri was not updated. Please report this as a bug."
-            )
-        }
+                      // Is permission an administrative permission?
+                      case ap: AdministrativePermissionADM =>
+                        // Yes.
+                        val verifiedPermissions =
+                          PermissionsMessagesUtilADM.verifyHasPermissionsAP(changeHasPermissionsRequest.hasPermissions)
+                        for {
+                          formattedPermissions <-
+                            Future(
+                              PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.AP)
+                            )
+                          _ <-
+                            updatePermission(permissionIri = ap.iri, maybeHasPermissions = Some(formattedPermissions))
+                          updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
+                        } yield AdministrativePermissionGetResponseADM(
+                          updatedPermission.asInstanceOf[AdministrativePermissionADM]
+                        )
+                      case doap: DefaultObjectAccessPermissionADM =>
+                        //No. It is a default object access permission.
+                        val verifiedPermissions =
+                          PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(
+                            changeHasPermissionsRequest.hasPermissions
+                          )
+                        for {
+                          formattedPermissions <-
+                            Future(
+                              PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.OAP)
+                            )
+                          _ <-
+                            updatePermission(permissionIri = doap.iri, maybeHasPermissions = Some(formattedPermissions))
+                          updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
+                        } yield DefaultObjectAccessPermissionGetResponseADM(
+                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
+                        )
+                      case _ =>
+                        throw UpdateNotPerformedException(
+                          s"Permission $permissionIri was not updated. Please report this as a bug."
+                        )
+                    }
       } yield response
 
     for {
       // run list info update with an local IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        permissionIri,
-        () => permissionHasPermissionsChangeTask(permissionIri, changeHasPermissionsRequest, requestingUser)
-      )
+      taskResult <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          permissionIri,
+          () => permissionHasPermissionsChangeTask(permissionIri, changeHasPermissionsRequest, requestingUser)
+        )
     } yield taskResult
   }
 
@@ -1931,22 +1991,22 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
-          case doap: DefaultObjectAccessPermissionADM =>
-            if (doap.forResourceClass.get != changePermissionResourceClass.forResourceClass)
-              throw UpdateNotPerformedException(
-                s"The resource class of ${doap.iri} was not updated. Please report this as a bug."
-              )
+              case doap: DefaultObjectAccessPermissionADM =>
+                if (doap.forResourceClass.get != changePermissionResourceClass.forResourceClass)
+                  throw UpdateNotPerformedException(
+                    s"The resource class of ${doap.iri} was not updated. Please report this as a bug."
+                  )
 
-            if (doap.forGroup.isDefined)
-              throw UpdateNotPerformedException(
-                s"The $permissionIri is not correctly updated. Please report this as a bug."
-              )
+                if (doap.forGroup.isDefined)
+                  throw UpdateNotPerformedException(
+                    s"The $permissionIri is not correctly updated. Please report this as a bug."
+                  )
 
-          case _ =>
-            throw UpdateNotPerformedException(
-              s"Incorrect permission type returned for $permissionIri. Please report this as a bug."
-            )
-        }
+              case _ =>
+                throw UpdateNotPerformedException(
+                  s"Incorrect permission type returned for $permissionIri. Please report this as a bug."
+                )
+            }
       } yield updatedPermission
 
     /**
@@ -1961,38 +2021,39 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // get permission
         permission <- permissionGetADM(permissionIri, requestingUser)
         response <- permission match {
-          // Is permission an administrative permission?
-          case ap: AdministrativePermissionADM =>
-            // Yes.
-            throw BadRequestException(
-              s"Permission ${ap.iri} is of type administrative permission. " +
-                s"Only a default object access permission defined for a resource class can be updated."
-            )
-          case doap: DefaultObjectAccessPermissionADM =>
-            //No. It is a default object access permission.
-            for {
-              _ <- updatePermission(
-                permissionIri = doap.iri,
-                maybeResourceClass = Some(changePermissionResourceClass.forResourceClass)
-              )
-              updatedPermission <- verifyUpdateOfResourceClass
-            } yield DefaultObjectAccessPermissionGetResponseADM(
-              updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
-            )
-          case _ =>
-            throw UpdateNotPerformedException(
-              s"Permission $permissionIri was not updated. Please report this as a bug."
-            )
-        }
+                      // Is permission an administrative permission?
+                      case ap: AdministrativePermissionADM =>
+                        // Yes.
+                        throw BadRequestException(
+                          s"Permission ${ap.iri} is of type administrative permission. " +
+                            s"Only a default object access permission defined for a resource class can be updated."
+                        )
+                      case doap: DefaultObjectAccessPermissionADM =>
+                        //No. It is a default object access permission.
+                        for {
+                          _ <- updatePermission(
+                                 permissionIri = doap.iri,
+                                 maybeResourceClass = Some(changePermissionResourceClass.forResourceClass)
+                               )
+                          updatedPermission <- verifyUpdateOfResourceClass
+                        } yield DefaultObjectAccessPermissionGetResponseADM(
+                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
+                        )
+                      case _ =>
+                        throw UpdateNotPerformedException(
+                          s"Permission $permissionIri was not updated. Please report this as a bug."
+                        )
+                    }
       } yield response
 
     for {
       // run list info update with an local IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        permissionIri,
-        () => permissionResourceClassChangeTask(permissionIri, changePermissionResourceClass, requestingUser)
-      )
+      taskResult <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          permissionIri,
+          () => permissionResourceClassChangeTask(permissionIri, changePermissionResourceClass, requestingUser)
+        )
     } yield taskResult
   }
 
@@ -2020,22 +2081,22 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
-          case doap: DefaultObjectAccessPermissionADM =>
-            if (doap.forProperty.get != changePermissionPropertyRequest.forProperty)
-              throw UpdateNotPerformedException(
-                s"The property of ${doap.iri} was not updated. Please report this as a bug."
-              )
+              case doap: DefaultObjectAccessPermissionADM =>
+                if (doap.forProperty.get != changePermissionPropertyRequest.forProperty)
+                  throw UpdateNotPerformedException(
+                    s"The property of ${doap.iri} was not updated. Please report this as a bug."
+                  )
 
-            if (doap.forGroup.isDefined)
-              throw UpdateNotPerformedException(
-                s"The $permissionIri is not correctly updated. Please report this as a bug."
-              )
+                if (doap.forGroup.isDefined)
+                  throw UpdateNotPerformedException(
+                    s"The $permissionIri is not correctly updated. Please report this as a bug."
+                  )
 
-          case _ =>
-            throw UpdateNotPerformedException(
-              s"Incorrect permission type returned for $permissionIri. Please report this as a bug."
-            )
-        }
+              case _ =>
+                throw UpdateNotPerformedException(
+                  s"Incorrect permission type returned for $permissionIri. Please report this as a bug."
+                )
+            }
       } yield updatedPermission
 
     /**
@@ -2050,38 +2111,38 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // get permission
         permission <- permissionGetADM(permissionIri, requestingUser)
         response <- permission match {
-          // Is permission an administrative permission?
-          case ap: AdministrativePermissionADM =>
-            // Yes.
-            throw BadRequestException(
-              s"Permission ${ap.iri} is of type administrative permission. " +
-                s"Only a default object access permission defined for a property can be updated."
-            )
-          case doap: DefaultObjectAccessPermissionADM =>
-            //No. It is a default object access permission.
-            for {
-              _ <- updatePermission(
-                permissionIri = doap.iri,
-                maybeProperty = Some(changePermissionPropertyRequest.forProperty)
-              )
-              updatedPermission <- verifyUpdateOfProperty
-            } yield DefaultObjectAccessPermissionGetResponseADM(
-              updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
-            )
-          case _ =>
-            throw UpdateNotPerformedException(
-              s"Permission $permissionIri was not updated. Please report this as a bug."
-            )
-        }
+                      // Is permission an administrative permission?
+                      case ap: AdministrativePermissionADM =>
+                        // Yes.
+                        throw BadRequestException(
+                          s"Permission ${ap.iri} is of type administrative permission. " +
+                            s"Only a default object access permission defined for a property can be updated."
+                        )
+                      case doap: DefaultObjectAccessPermissionADM =>
+                        //No. It is a default object access permission.
+                        for {
+                          _ <- updatePermission(
+                                 permissionIri = doap.iri,
+                                 maybeProperty = Some(changePermissionPropertyRequest.forProperty)
+                               )
+                          updatedPermission <- verifyUpdateOfProperty
+                        } yield DefaultObjectAccessPermissionGetResponseADM(
+                          updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM]
+                        )
+                      case _ =>
+                        throw UpdateNotPerformedException(
+                          s"Permission $permissionIri was not updated. Please report this as a bug."
+                        )
+                    }
       } yield response
 
     for {
       // run permission update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        permissionIri,
-        () => permissionPropertyChangeTask(permissionIri, changePermissionPropertyRequest, requestingUser)
-      )
+                      apiRequestID,
+                      permissionIri,
+                      () => permissionPropertyChangeTask(permissionIri, changePermissionPropertyRequest, requestingUser)
+                    )
     } yield taskResult
   }
 
@@ -2107,10 +2168,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         _ <- permissionGetADM(permissionIri, requestingUser)
         // Is permission in use?
         _ <- isPermissionUsed(
-          permissionIri = permissionIri,
-          errorFun =
-            throw UpdateNotPerformedException(s"Permission $permissionIri cannot be deleted, because it is in use.")
-        )
+               permissionIri = permissionIri,
+               errorFun = throw UpdateNotPerformedException(
+                 s"Permission $permissionIri cannot be deleted, because it is in use."
+               )
+             )
 
         _ <- deletePermission(permissionIri)
 
@@ -2119,10 +2181,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       // run list info update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        permissionIri,
-        () => permissionDeleteTask()
-      )
+                      apiRequestID,
+                      permissionIri,
+                      () => permissionDeleteTask()
+                    )
     } yield taskResult
   }
 
@@ -2160,82 +2222,88 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       // SPARQL query statement to get permission by IRI.
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getPermissionByIRI(
-            permissionIri = permissionIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getPermissionByIRI(
+                           permissionIri = permissionIri
+                         )
+                         .toString()
+                     )
       permissionQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
       /* extract response rows */
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
       groupedPermissionsQueryResponse: Map[String, Seq[String]] = permissionQueryResponseRows
-        .groupBy(_.rowMap("p"))
-        .map { case (predicate, rows) =>
-          predicate -> rows.map(_.rowMap("o"))
-        }
+                                                                    .groupBy(_.rowMap("p"))
+                                                                    .map { case (predicate, rows) =>
+                                                                      predicate -> rows.map(_.rowMap("o"))
+                                                                    }
 
       /* check if we have found something */
       _ = if (groupedPermissionsQueryResponse.isEmpty)
-        throw NotFoundException(s"Permission with given IRI: $permissionIri not found.")
+            throw NotFoundException(s"Permission with given IRI: $permissionIri not found.")
 
       projectIri = groupedPermissionsQueryResponse
-        .getOrElse(
-          OntologyConstants.KnoraAdmin.ForProject,
-          throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project attached")
-        )
-        .head
+                     .getOrElse(
+                       OntologyConstants.KnoraAdmin.ForProject,
+                       throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project attached")
+                     )
+                     .head
 
       // Before returning the permission check that the requesting user has permission to see it
       _ = verifyUsersRightForOperation(
-        requestingUser = requestingUser,
-        projectIri = projectIri,
-        permissionIri = permissionIri
-      )
+            requestingUser = requestingUser,
+            projectIri = projectIri,
+            permissionIri = permissionIri
+          )
 
       permissionType: Option[String] = groupedPermissionsQueryResponse
-        .getOrElse(OntologyConstants.Rdf.Type, throw InconsistentRepositoryDataException(s"RDF type is not returned."))
-        .headOption
+                                         .getOrElse(
+                                           OntologyConstants.Rdf.Type,
+                                           throw InconsistentRepositoryDataException(s"RDF type is not returned.")
+                                         )
+                                         .headOption
       permission = permissionType match {
-        case Some(OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission) =>
-          val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.OAP
-          )
-          val forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head)
-          val forResourceClass =
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head)
-          val forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head)
-          DefaultObjectAccessPermissionADM(
-            iri = permissionIri,
-            forProject = projectIri,
-            forGroup = forGroup,
-            forResourceClass = forResourceClass,
-            forProperty = forProperty,
-            hasPermissions = hasPermissions
-          )
-        case Some(OntologyConstants.KnoraAdmin.AdministrativePermission) =>
-          val forGroup = groupedPermissionsQueryResponse
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.ForGroup,
-              throw InconsistentRepositoryDataException(s"Permission $permissionIri has no group attached")
-            )
-            .head
-          val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
-            groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
-            PermissionType.AP
-          )
+                     case Some(OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission) =>
+                       val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
+                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
+                         PermissionType.OAP
+                       )
+                       val forGroup =
+                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head)
+                       val forResourceClass =
+                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head)
+                       val forProperty =
+                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head)
+                       DefaultObjectAccessPermissionADM(
+                         iri = permissionIri,
+                         forProject = projectIri,
+                         forGroup = forGroup,
+                         forResourceClass = forResourceClass,
+                         forProperty = forProperty,
+                         hasPermissions = hasPermissions
+                       )
+                     case Some(OntologyConstants.KnoraAdmin.AdministrativePermission) =>
+                       val forGroup = groupedPermissionsQueryResponse
+                         .getOrElse(
+                           OntologyConstants.KnoraAdmin.ForGroup,
+                           throw InconsistentRepositoryDataException(s"Permission $permissionIri has no group attached")
+                         )
+                         .head
+                       val hasPermissions = PermissionUtilADM.parsePermissionsWithType(
+                         groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head),
+                         PermissionType.AP
+                       )
 
-          AdministrativePermissionADM(
-            iri = permissionIri,
-            forProject = projectIri,
-            forGroup = forGroup,
-            hasPermissions = hasPermissions
-          )
-        case _ => throw BadRequestException(s"Invalid permission type returned, please report this as a bug.")
-      }
+                       AdministrativePermissionADM(
+                         iri = permissionIri,
+                         forProject = projectIri,
+                         forGroup = forGroup,
+                         hasPermissions = hasPermissions
+                       )
+                     case _ =>
+                       throw BadRequestException(s"Invalid permission type returned, please report this as a bug.")
+                   }
     } yield permission
 
   /**
@@ -2258,17 +2326,17 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       // Generate SPARQL for changing the permission.
       sparqlChangePermission: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .updatePermission(
-            namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            permissionIri = permissionIri,
-            maybeGroup = maybeGroup,
-            maybeHasPermissions = maybeHasPermissions,
-            maybeResourceClass = maybeResourceClass,
-            maybeProperty = maybeProperty
-          )
-          .toString()
-      )
+                                          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                            .updatePermission(
+                                              namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+                                              permissionIri = permissionIri,
+                                              maybeGroup = maybeGroup,
+                                              maybeHasPermissions = maybeHasPermissions,
+                                              maybeResourceClass = maybeResourceClass,
+                                              maybeProperty = maybeProperty
+                                            )
+                                            .toString()
+                                        )
 
       _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermission)).mapTo[SparqlUpdateResponse]
     } yield ()
@@ -2282,29 +2350,29 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       // Generate SPARQL for erasing a permission.
       sparqlDeletePermission: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .deletePermission(
-            namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-            permissionIri = permissionIri
-          )
-          .toString()
-      )
+                                          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                            .deletePermission(
+                                              namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+                                              permissionIri = permissionIri
+                                            )
+                                            .toString()
+                                        )
 
       // Do the update.
       _ <- (storeManager ? SparqlUpdateRequest(sparqlDeletePermission)).mapTo[SparqlUpdateResponse]
 
       // Verify that the permission was deleted correctly.
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
-      )
-      askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
+                   )
+      askResponse                   <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       permissionStillExists: Boolean = askResponse.result
 
       _ = if (permissionStillExists) {
-        throw UpdateNotPerformedException(
-          s"Permission <$permissionIri> was not erased. Please report this as a possible bug."
-        )
-      }
+            throw UpdateNotPerformedException(
+              s"Permission <$permissionIri> was not erased. Please report this as a possible bug."
+            )
+          }
     } yield ()
 
   /**
@@ -2317,31 +2385,31 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Future[Unit] =
     for {
       isPermissionUsedSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .isEntityUsed(
-            entityIri = permissionIri
-          )
-          .toString()
-      )
+                                  org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                    .isEntityUsed(
+                                      entityIri = permissionIri
+                                    )
+                                    .toString()
+                                )
 
       isPermissionUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isPermissionUsedSparql))
-        .mapTo[SparqlSelectResult]
+                                                        .mapTo[SparqlSelectResult]
 
       _ = if (isPermissionUsedResponse.results.bindings.nonEmpty) {
-        errorFun
-      }
+            errorFun
+          }
     } yield ()
 
   def getProjectOfEntity(entityIri: IRI): Future[IRI] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getProjectOfEntity(
-            entityIri = entityIri
-          )
-          .toString()
-      )
-      response <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                               .getProjectOfEntity(
+                                 entityIri = entityIri
+                               )
+                               .toString()
+                           )
+      response                     <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
       projectIri =
         if (rows.size == 0) {

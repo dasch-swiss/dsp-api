@@ -35,20 +35,20 @@ class ValuesV1R2RSpec extends R2RSpec {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-  private val integerValueIri = new MutableTestIri
-  private val timeValueIri = new MutableTestIri
-  private val textValueIri = new MutableTestIri
-  private val linkValueIri = new MutableTestIri
+  private val integerValueIri      = new MutableTestIri
+  private val timeValueIri         = new MutableTestIri
+  private val textValueIri         = new MutableTestIri
+  private val linkValueIri         = new MutableTestIri
   private val textValueWithLangIri = new MutableTestIri
-  private val boringComment = "This is a boring comment."
+  private val boringComment        = "This is a boring comment."
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  private val anythingUser = SharedTestDataV1.anythingUser1
+  private val anythingUser      = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
-  private val testPass = "test"
+  private val testPass          = "test"
 
   private val mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
@@ -68,7 +68,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       ) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-        val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+        val valueIri: IRI                      = responseJson("id").asInstanceOf[JsString].value
         integerValueIri.set(valueIri)
       }
     }
@@ -89,7 +89,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-        val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+        val valueIri: IRI                      = responseJson("id").asInstanceOf[JsString].value
         integerValueIri.set(valueIri)
       }
     }
@@ -117,7 +117,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       ) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-        val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+        val valueIri: IRI                      = responseJson("id").asInstanceOf[JsString].value
         timeValueIri.set(valueIri)
       }
     }
@@ -138,7 +138,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-        val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+        val valueIri: IRI                      = responseJson("id").asInstanceOf[JsString].value
         timeValueIri.set(valueIri)
       }
     }
@@ -303,7 +303,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       ) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-        val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+        val valueIri: IRI                      = responseJson("id").asInstanceOf[JsString].value
         linkValueIri.set(valueIri)
       }
     }
@@ -332,7 +332,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       ) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-        val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+        val valueIri: IRI                      = responseJson("id").asInstanceOf[JsString].value
         linkValueIri.set(valueIri)
       }
     }
@@ -345,8 +345,8 @@ class ValuesV1R2RSpec extends R2RSpec {
         assert(status == StatusCodes.OK, response.toString)
 
         val responseObj = AkkaHttpUtils.httpResponseToJson(response).fields
-        val comment = responseObj("comment").asInstanceOf[JsString].value
-        val linkValue = responseObj("value").asJsObject.fields
+        val comment     = responseObj("comment").asInstanceOf[JsString].value
+        val linkValue   = responseObj("value").asJsObject.fields
 
         assert(
           linkValue("subjectIri").asInstanceOf[JsString].value == "http://rdfh.ch/0001/a-thing" &&

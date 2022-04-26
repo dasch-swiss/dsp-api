@@ -17,7 +17,7 @@ import zio.prelude.Validation
  */
 class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "ListIRI value object" when {
-    val validListIri = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
+    val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
     val listIRIWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
 
     "created using empty value" should {
@@ -83,7 +83,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Labels value object" when {
-    val validLabels = Seq(StringLiteralV2(value = "New Label", language = Some("en")))
+    val validLabels   = Seq(StringLiteralV2(value = "New Label", language = Some("en")))
     val invalidLabels = Seq(StringLiteralV2(value = "\r", language = Some("en")))
 
     "created using empty value" should {
@@ -107,7 +107,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Comments value object" when {
-    val validComments = Seq(StringLiteralV2(value = "Valid comment", language = Some("en")))
+    val validComments   = Seq(StringLiteralV2(value = "Valid comment", language = Some("en")))
     val invalidComments = Seq(StringLiteralV2(value = "Invalid comment \r", language = Some("en")))
 
     "created using empty value" should {

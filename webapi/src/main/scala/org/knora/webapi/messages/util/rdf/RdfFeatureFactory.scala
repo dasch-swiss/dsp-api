@@ -22,15 +22,15 @@ object RdfFeatureFactory extends FeatureFactory {
   private val JENA_TOGGLE_NAME = "jena-rdf-library"
 
   // Jena singletons.
-  private val jenaNodeFactory = new JenaNodeFactory
-  private val jenaModelFactory = new JenaModelFactory(jenaNodeFactory)
-  private val jenaFormatUtil = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
+  private val jenaNodeFactory                                = new JenaNodeFactory
+  private val jenaModelFactory                               = new JenaModelFactory(jenaNodeFactory)
+  private val jenaFormatUtil                                 = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
   private var jenaShaclValidator: Option[JenaShaclValidator] = None
 
   // RDF4J singletons.
-  private val rdf4jNodeFactory = new RDF4JNodeFactory
-  private val rdf4jModelFactory = new RDF4JModelFactory(rdf4jNodeFactory)
-  private val rdf4jFormatUtil = new RDF4JFormatUtil(modelFactory = rdf4jModelFactory, nodeFactory = rdf4jNodeFactory)
+  private val rdf4jNodeFactory                                 = new RDF4JNodeFactory
+  private val rdf4jModelFactory                                = new RDF4JModelFactory(rdf4jNodeFactory)
+  private val rdf4jFormatUtil                                  = new RDF4JFormatUtil(modelFactory = rdf4jModelFactory, nodeFactory = rdf4jNodeFactory)
   private var rdf4jShaclValidator: Option[RDF4JShaclValidator] = None
 
   /**

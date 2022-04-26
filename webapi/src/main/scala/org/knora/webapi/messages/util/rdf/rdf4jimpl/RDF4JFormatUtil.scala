@@ -80,7 +80,7 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory, private val n
   override def formatNonJsonLD(rdfModel: RdfModel, rdfFormat: NonJsonLD, prettyPrint: Boolean): String = {
     import RDF4JConversions._
 
-    val stringWriter = new StringWriter
+    val stringWriter                   = new StringWriter
     val rdfWriter: rdf4j.rio.RDFWriter = rdf4j.rio.Rio.createWriter(rdfFormatToRDF4JFormat(rdfFormat), stringWriter)
 
     if (prettyPrint && rdfFormat.supportsPrettyPrinting) {

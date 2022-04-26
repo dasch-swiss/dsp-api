@@ -41,12 +41,12 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
 
   // swagger will publish at: http://locahost:3333/api-docs/swagger.json
 
-  override val host: String = settings.externalKnoraApiHostPort // the url of your api, not swagger's json endpoint
-  override val basePath = "/" //the basePath for the API you are exposing
-  override val apiDocsPath = "api-docs" //where you want the swagger-json endpoint exposed
-  override val info: Info = Info(version = "1.8.0") //provides license and other description details
+  override val host: String                       = settings.externalKnoraApiHostPort // the url of your api, not swagger's json endpoint
+  override val basePath                           = "/"                               //the basePath for the API you are exposing
+  override val apiDocsPath                        = "api-docs"                        //where you want the swagger-json endpoint exposed
+  override val info: Info                         = Info(version = "1.8.0")           //provides license and other description details
   override val externalDocs: Option[ExternalDocs] = Some(new ExternalDocs("Knora Docs", "http://docs.knora.org"))
-  override val securitySchemeDefinitions = Map("basicAuth" -> new BasicAuthDefinition())
+  override val securitySchemeDefinitions          = Map("basicAuth" -> new BasicAuthDefinition())
 
   /**
    * Returns the route.

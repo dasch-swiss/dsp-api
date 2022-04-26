@@ -91,7 +91,7 @@ case class CacheServiceInMemImpl(
    */
   def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[UserADM]] =
     (for {
-      iri <- lut.get(usernameOrEmail).some
+      iri  <- lut.get(usernameOrEmail).some
       user <- users.get(iri).some
     } yield user).commit.unsome // watch Spartan session about error. post example on Spartan channel
 
@@ -146,7 +146,7 @@ case class CacheServiceInMemImpl(
    */
   def getProjectByShortcodeOrShortname(shortcodeOrShortname: String) =
     (for {
-      iri <- lut.get(shortcodeOrShortname).some
+      iri     <- lut.get(shortcodeOrShortname).some
       project <- projects.get(iri).some
     } yield project).commit.unsome
 
@@ -158,13 +158,13 @@ case class CacheServiceInMemImpl(
    */
   def putStringValue(key: String, value: String): Task[Unit] = {
 
-    val emptyKeyError = EmptyKey("The key under which the value should be written is empty. Aborting write to cache.")
+    val emptyKeyError   = EmptyKey("The key under which the value should be written is empty. Aborting write to cache.")
     val emptyValueError = EmptyValue("The string value is empty. Aborting write to cache.")
 
     (for {
-      key <- if (key.isEmpty()) Task.fail(emptyKeyError) else Task.succeed(key)
+      key   <- if (key.isEmpty()) Task.fail(emptyKeyError) else Task.succeed(key)
       value <- if (value.isEmpty()) Task.fail(emptyValueError) else Task.succeed(value)
-      _ <- lut.put(key, value).commit
+      _     <- lut.put(key, value).commit
     } yield ()).tap(_ => ZIO.logDebug(s"Wrote key: $key with value: $value to cache."))
   }
 
@@ -211,9 +211,9 @@ object CacheServiceInMemImpl {
   val layer: ZLayer[Any, Nothing, CacheService] = {
     ZLayer {
       for {
-        users <- TMap.empty[String, UserADM].commit
+        users    <- TMap.empty[String, UserADM].commit
         projects <- TMap.empty[String, ProjectADM].commit
-        lut <- TMap.empty[String, String].commit
+        lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
     }.tap(_ => ZIO.debug(">>> In-Memory Cache Service Initialized <<<"))
   }
