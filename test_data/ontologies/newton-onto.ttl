@@ -1,23 +1,24 @@
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf:<http://xmlns.com/foaf/0.1/> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix bibo: <http://purl.org/ontology/bibo/> .
-@prefix event: <http://purl.org/NET/c4dm/event.owl#> .
+@prefix :           <http://www.knora.org/ontology/0801/newton#> .
+@prefix xml:        <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
+@prefix dcterms:    <http://purl.org/dc/terms/> .
+@prefix bibo:       <http://purl.org/ontology/bibo/> .
+@prefix event:      <http://purl.org/NET/c4dm/event.owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
-@prefix biblio: <http://www.knora.org/ontology/0801/biblio#> .
+@prefix beol:       <http://www.knora.org/ontology/0801/beol#> .
+@prefix biblio:     <http://www.knora.org/ontology/0801/biblio#> .
 @base <http://www.knora.org/ontology/0801/newton#> .
 
-@prefix : <http://www.knora.org/ontology/0801/newton#> .
 
-<http://www.knora.org/ontology/0801/newton> rdf:type owl:Ontology ;
-    rdfs:label "The Newton-Project ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+<http://www.knora.org/ontology/0801/newton>
+    rdf:type                        owl:Ontology ;
+    rdfs:label                      "The Newton-Project ontology" ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
     knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
 
 ##########################################################
@@ -30,89 +31,67 @@
 ### ###########################################
 ### newton:hasAbbreviatedTitle
 
-:hasAbbreviatedTitle rdf:type owl:ObjectProperty ;
-
-
-                rdfs:label "Abkürzung des Titels"@de ,
-                           "Abbreviation of Title"@en ;
-
-                rdfs:comment """Represents the abbreviated title of the letter."""@en ;
-
-                knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :letter ;
-
-                salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                rdfs:subPropertyOf knora-base:hasValue .
+:hasAbbreviatedTitle
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:label                        "Abkürzung des Titels"@de,
+                                      "Abbreviation of Title"@en ;
+    rdfs:comment                      """Represents the abbreviated title of the letter."""@en ;
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    knora-base:subjectClassConstraint :letter ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    rdfs:subPropertyOf                knora-base:hasValue .
 
 ### ###########################################
 ### newton:newtonProjectID
 
-:newtonProjectID rdf:type owl:ObjectProperty ;
-
-
-                rdfs:label "Letter in The Newton Project"@de ,
-                           "Letter in The Newton Project"@en ;
-
-                rdfs:comment """Represents the letter in The Newton Project."""@en ;
-
-                knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :letter ;
-
-                salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                rdfs:subPropertyOf knora-base:hasValue .
+:newtonProjectID
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:label                        "Letter in The Newton Project"@de,
+                                      "Letter in The Newton Project"@en ;
+    rdfs:comment                      """Represents the letter in The Newton Project."""@en ;
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    knora-base:subjectClassConstraint :letter ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    rdfs:subPropertyOf                knora-base:hasValue .
 
 ### ###########################################
 ### newton:hasFacsimiles
 
-:hasFacsimiles rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:UriValue ;
-
-                   knora-base:subjectClassConstraint :letter ;
-
-                   rdfs:subPropertyOf knora-base:hasValue ;
-
-                   rdfs:label "Faksimile"@de ,
-                              "Facsimile"@en ;
-
-                   rdfs:comment """Die Faksimilen von deisem Brief ist vorhanden in"""@de ,
-                              """The Facsimiles of this letter are available in"""@en .
+:hasFacsimiles
+    rdf:type                          owl:ObjectProperty ;
+    knora-base:objectClassConstraint  knora-base:UriValue ;
+    knora-base:subjectClassConstraint :letter ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "Faksimile"@de,
+                                      "Facsimile"@en ;
+    rdfs:comment                      """Die Faksimilen von deisem Brief ist vorhanden in"""@de,
+                                      """The Facsimiles of this letter are available in"""@en .
 
 ### ###########################################
 ### newton:isReplyTo
 
-:isReplyTo rdf:type owl:ObjectProperty ;
-
-              rdfs:subPropertyOf knora-base:hasLinkTo ;
-
-              rdfs:label "Antwort auf"@de ,
-                         "Reply to"@en ;
-
-              rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
-                           """Letter is reply to another letter"""@en ;
-
-              knora-base:objectClassConstraint :letter ;
-
-              salsah-gui:guiElement salsah-gui:Searchbox .
+:isReplyTo
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasLinkTo ;
+    rdfs:label                       "Antwort auf"@de,
+                                     "Reply to"@en ;
+    rdfs:comment                     """Der Brief ist eine Antwort auf einen Brief"""@de,
+                                     """Letter is reply to another letter"""@en ;
+    knora-base:objectClassConstraint :letter ;
+    salsah-gui:guiElement            salsah-gui:Searchbox .
 
 ### ###########################################
 ### newton:isReplyToValue
 
-:isReplyToValue rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   knora-base:subjectClassConstraint :letter ;
-
-                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
-
-                   rdfs:label "Antwort auf"@de ,
-                              "Reply to"@en ;
-
-                   rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
-                                """Letter is reply to another letter"""@en .
+:isReplyToValue
+    rdf:type                          owl:ObjectProperty ;
+    knora-base:objectClassConstraint  knora-base:LinkValue ;
+    knora-base:subjectClassConstraint :letter ;
+    rdfs:subPropertyOf                knora-base:hasLinkToValue ;
+    rdfs:label                        "Antwort auf"@de,
+                                      "Reply to"@en ;
+    rdfs:comment                      """Der Brief ist eine Antwort auf einen Brief"""@de,
+                                      """Letter is reply to another letter"""@en .
 
 
 ##########################################################
@@ -124,46 +103,33 @@
 ### ###########################################
 ### newton:letter
 
-:letter rdf:type owl:Class ;
-
-        rdfs:subClassOf beol:basicLetter ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasAbbreviatedTitle ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :newtonProjectID ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ]  ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasFacsimiles ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :isReplyTo ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :isReplyToValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ;
-
-        knora-base:resourceIcon "letter.png" ;
-
-        rdfs:label "Brief"@de ,
-                   "Lettre"@fr ,
-                   "Letter"@en ;
-
-        rdfs:comment "A resource representing a letter from The Newton Project"@en .
+:letter
+    rdf:type                owl:Class ;
+    rdfs:subClassOf         beol:basicLetter,
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasAbbreviatedTitle ;
+                              owl:maxCardinality  "1"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :newtonProjectID ;
+                              owl:minCardinality  "1"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :hasFacsimiles ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :isReplyTo ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :isReplyToValue ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger ] ;
+    knora-base:resourceIcon "letter.png" ;
+    rdfs:label              "Brief"@de,
+                            "Lettre"@fr,
+                            "Letter"@en ;
+    rdfs:comment            "A resource representing a letter from The Newton Project"@en .
 
 

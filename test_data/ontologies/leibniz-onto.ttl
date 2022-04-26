@@ -1,23 +1,24 @@
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf:<http://xmlns.com/foaf/0.1/> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix bibo: <http://purl.org/ontology/bibo/> .
-@prefix event: <http://purl.org/NET/c4dm/event.owl#> .
+@prefix :           <http://www.knora.org/ontology/0801/leibniz#> .
+@prefix xml:        <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
+@prefix dcterms:    <http://purl.org/dc/terms/> .
+@prefix bibo:       <http://purl.org/ontology/bibo/> .
+@prefix event:      <http://purl.org/NET/c4dm/event.owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
-@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
-@prefix biblio: <http://www.knora.org/ontology/0801/biblio#> .
+@prefix beol:       <http://www.knora.org/ontology/0801/beol#> .
+@prefix biblio:     <http://www.knora.org/ontology/0801/biblio#> .
 @base <http://www.knora.org/ontology/0801/leibniz#> .
 
-@prefix : <http://www.knora.org/ontology/0801/leibniz#> .
 
-<http://www.knora.org/ontology/0801/leibniz> rdf:type owl:Ontology ;
-    rdfs:label "The Briefportal Leibniz ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+<http://www.knora.org/ontology/0801/leibniz>
+    rdf:type                        owl:Ontology ;
+    rdfs:label                      "The Briefportal Leibniz ontology" ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
     knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
 
 ##########################################################
@@ -29,92 +30,69 @@
 ### ###########################################
 ### leibniz:letterID
 
-:letterID rdf:type owl:ObjectProperty ;
-
-
-                rdfs:label "Brief in dem Briefportal Leibniz"@de ,
-                           "Letter in the Briefportal Leibniz"@en ;
-
-                rdfs:comment """Represents the letter in the Briefportal Leibniz."""@en ;
-
-                knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :letter ;
-
-                salsah-gui:guiElement salsah-gui:SimpleText ;
-
-                rdfs:subPropertyOf knora-base:hasValue .
+:letterID
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:label                        "Brief in dem Briefportal Leibniz"@de,
+                                      "Letter in the Briefportal Leibniz"@en ;
+    rdfs:comment                      """Represents the letter in the Briefportal Leibniz."""@en ;
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    knora-base:subjectClassConstraint :letter ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    rdfs:subPropertyOf                knora-base:hasValue .
 
 ### ###########################################
 ### leibniz:isReplyTo
 
-:isReplyTo rdf:type owl:ObjectProperty ;
-
-              rdfs:subPropertyOf knora-base:hasLinkTo ;
-
-              rdfs:label "Antwort auf"@de ,
-                         "Reply to"@en ;
-
-              rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
-                           """Letter is reply to another letter"""@en ;
-
-              knora-base:objectClassConstraint :letter ;
-
-              salsah-gui:guiElement salsah-gui:Searchbox .
+:isReplyTo
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasLinkTo ;
+    rdfs:label                       "Antwort auf"@de,
+                                     "Reply to"@en ;
+    rdfs:comment                     """Der Brief ist eine Antwort auf einen Brief"""@de,
+                                     """Letter is reply to another letter"""@en ;
+    knora-base:objectClassConstraint :letter ;
+    salsah-gui:guiElement            salsah-gui:Searchbox .
 
 ### ###########################################
 ### leibniz:isReplyToValue
 
-:isReplyToValue rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   knora-base:subjectClassConstraint :letter ;
-
-                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
-
-                   rdfs:label "Antwort auf"@de ,
-                              "Reply to"@en ;
-
-                   rdfs:comment """Der Brief ist eine Antwort auf einen Brief"""@de ,
-                                """Letter is reply to another letter"""@en .
+:isReplyToValue
+    rdf:type                          owl:ObjectProperty ;
+    knora-base:objectClassConstraint  knora-base:LinkValue ;
+    knora-base:subjectClassConstraint :letter ;
+    rdfs:subPropertyOf                knora-base:hasLinkToValue ;
+    rdfs:label                        "Antwort auf"@de,
+                                      "Reply to"@en ;
+    rdfs:comment                      """Der Brief ist eine Antwort auf einen Brief"""@de,
+                                      """Letter is reply to another letter"""@en .
 
 
 ### ###########################################
 ### leibniz:citation
 
-:citation rdf:type owl:ObjectProperty ;
-
-                rdfs:subPropertyOf knora-base:hasLinkTo ;
-
-                rdfs:label "Zitiervorschlag"@de ,
-                           "Citation"@en ;
-
-                rdfs:comment """Zitierfähige Vollfassung"""@de ,
-                             """printversion for citation"""@en ;
-
-                knora-base:subjectClassConstraint :letter ;
-
-                knora-base:objectClassConstraint biblio:letter ;
-
-                salsah-gui:guiElement salsah-gui:Searchbox .
+:citation
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasLinkTo ;
+    rdfs:label                        "Zitiervorschlag"@de,
+                                      "Citation"@en ;
+    rdfs:comment                      """Zitierfähige Vollfassung"""@de,
+                                      """printversion for citation"""@en ;
+    knora-base:subjectClassConstraint :letter ;
+    knora-base:objectClassConstraint  biblio:letter ;
+    salsah-gui:guiElement             salsah-gui:Searchbox .
 
 ### ###########################################
 ### leibniz:citationValue
 
-:citationValue rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   knora-base:subjectClassConstraint :letter ;
-
-                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
-
-                  rdfs:label "Zitiervorschlag"@de ,
-                             "Citation"@en ;
-
-                  rdfs:comment """Zitierfähige Vollfassung"""@de ,
-                               """printversion for citation"""@en .
-
+:citationValue
+    rdf:type                          owl:ObjectProperty ;
+    knora-base:objectClassConstraint  knora-base:LinkValue ;
+    knora-base:subjectClassConstraint :letter ;
+    rdfs:subPropertyOf                knora-base:hasLinkToValue ;
+    rdfs:label                        "Zitiervorschlag"@de,
+                                      "Citation"@en ;
+    rdfs:comment                      """Zitierfähige Vollfassung"""@de,
+                                      """printversion for citation"""@en .
 
 
 ##########################################################
@@ -126,46 +104,33 @@
 ### ###########################################
 ### leibniz:letter
 
-:letter rdf:type owl:Class ;
-
-        rdfs:subClassOf beol:basicLetter ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :letterID ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :isReplyTo ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :isReplyToValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :citation ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :citationValue ;
-                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ;
-
-        knora-base:resourceIcon "letter.png" ;
-
-        rdfs:label "Brief"@de ,
-                   "Lettre"@fr ,
-                   "Letter"@en ;
-
-        rdfs:comment "A resource representing a letter from the Briefportal Leibniz"@en .
+:letter
+    rdf:type                owl:Class ;
+    rdfs:subClassOf         beol:basicLetter,
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :letterID ;
+                              owl:minCardinality  "1"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :isReplyTo ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :isReplyToValue ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :citation ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger ],
+                            [ rdf:type            owl:Restriction ;
+                              owl:onProperty      :citationValue ;
+                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger ] ;
+    knora-base:resourceIcon "letter.png" ;
+    rdfs:label              "Brief"@de,
+                            "Lettre"@fr,
+                            "Letter"@en ;
+    rdfs:comment            "A resource representing a letter from the Briefportal Leibniz"@en .
 
 
