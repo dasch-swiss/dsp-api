@@ -970,9 +970,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasPropertyWithComment2", "UTF-8")
       val lastModificationDate = URLEncoder.encode(freetestLastModDate.toString, "UTF-8")
 
-      println(propertySegment)
-      println(lastModificationDate)
-
       Delete(
         s"/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate"
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
