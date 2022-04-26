@@ -23,16 +23,19 @@
 :hasTitle
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasValue ;
-    rdfs:label                        "Titel"@de, "title"@en ;
+    rdfs:label                        "Titel"@de,
+                                      "title"@en ;
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  knora-base:TextValue ;
     salsah-gui:guiElement             salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute           "size=80", "maxlength=255" .
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
 
 :hasTextType
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasValue ;
-    rdfs:label                        "Hat Textsorte"@de, "Has text type"@en ;
+    rdfs:label                        "Hat Textsorte"@de,
+                                      "Has text type"@en ;
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  knora-base:ListValue ;
     salsah-gui:guiElement             salsah-gui:List ;
@@ -43,22 +46,26 @@
     rdf:type                owl:Class ;
     rdfs:subClassOf         knora-base:Resource ;
     knora-base:resourceIcon "book.png" ;
-    rdfs:label              "Buch"@de, "Book"@en ;
+    rdfs:label              "Buch"@de,
+                            "Book"@en ;
     rdfs:comment            """A resource describing a book."""@en .
 
 
 :hasPageNumber
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
-    rdfs:label                       "Seitenzahl"@de, "Page number"@en ;
+    rdfs:label                       "Seitenzahl"@de,
+                                     "Page number"@en ;
     knora-base:objectClassConstraint knora-base:IntValue ;
     salsah-gui:guiElement            salsah-gui:Spinbox ;
-    salsah-gui:guiAttribute          "min=0", "max=-1" .
+    salsah-gui:guiAttribute          "min=0",
+                                     "max=-1" .
 
 
 :Page
     rdf:type                owl:Class ;
     rdfs:subClassOf         knora-base:Resource ;
     knora-base:resourceIcon "page.png" ;
-    rdfs:label              "Seite"@de, "Page"@en ;
+    rdfs:label              "Seite"@de,
+                            "Page"@en ;
     rdfs:comment            """A resource describing a page in a book."""@en .

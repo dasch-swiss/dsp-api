@@ -1,9 +1,9 @@
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base:  <http://www.knora.org/ontology/knora-base#> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
 ##########################################################
@@ -15,48 +15,30 @@
 
 ### Default Object Access Permissions on knora-base:LinkObj resource class
 <http://rdfh.ch/permissions/0000/001-d1>
-
-                      rdf:type knora-admin:DefaultObjectAccessPermission ;
-
-                      knora-admin:forProject knora-admin:SystemProject ;
-
-                      knora-admin:forResourceClass knora-base:LinkObj ;
-
-                      knora-base:hasPermissions "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
-
+    rdf:type                     knora-admin:DefaultObjectAccessPermission ;
+    knora-admin:forProject       knora-admin:SystemProject ;
+    knora-admin:forResourceClass knora-base:LinkObj ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
 
 
 ### Default Object Access Permissions on knora-base:Region resource class
 <http://rdfh.ch/permissions/0000/001-d2>
-
-                      rdf:type knora-admin:DefaultObjectAccessPermission ;
-
-                      knora-admin:forProject knora-admin:SystemProject ;
-
-                      knora-admin:forResourceClass knora-base:Region ;
-
-                      knora-base:hasPermissions "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
-
+    rdf:type                     knora-admin:DefaultObjectAccessPermission ;
+    knora-admin:forProject       knora-admin:SystemProject ;
+    knora-admin:forResourceClass knora-base:Region ;
+    knora-base:hasPermissions    "M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"^^xsd:string .
 
 
 ### Default Object Access Permissions on knora-base:hasStillImageFileValue property
 <http://rdfh.ch/permissions/0000/001-d3>
-
-                      rdf:type knora-admin:DefaultObjectAccessPermission ;
-
-                      knora-admin:forProject knora-admin:SystemProject ;
-
-                      knora-admin:forProperty knora-base:hasStillImageFileValue ;
-
-                      knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
+    rdf:type                  knora-admin:DefaultObjectAccessPermission ;
+    knora-admin:forProject    knora-admin:SystemProject ;
+    knora-admin:forProperty   knora-base:hasStillImageFileValue ;
+    knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
 
 ### Default Object Access Permissions on knora-base:hasDocumentFileValue property
 <http://rdfh.ch/permissions/0000/001-d4>
-
-                      rdf:type knora-admin:DefaultObjectAccessPermission ;
-
-                      knora-admin:forProject knora-admin:SystemProject ;
-
-                      knora-admin:forProperty knora-base:hasDocumentFileValue ;
-
-                      knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
+    rdf:type                  knora-admin:DefaultObjectAccessPermission ;
+    knora-admin:forProject    knora-admin:SystemProject ;
+    knora-admin:forProperty   knora-base:hasDocumentFileValue ;
+    knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
