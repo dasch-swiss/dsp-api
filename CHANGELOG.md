@@ -1,5 +1,12 @@
 # Changelog
 
+### [20.1.2](https://www.github.com/dasch-swiss/dsp-api/compare/v20.1.1...v20.1.2) (2022-04-26)
+
+
+### Maintenance
+
+* **triplestore:** remove embedded-jena-tdb related code ([#2043](https://www.github.com/dasch-swiss/dsp-api/issues/2043)) ([a5ea62e](https://www.github.com/dasch-swiss/dsp-api/commit/a5ea62eeaaadb97caa456e7dc9e6946c44abcf5b))
+
 ### [20.1.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.1.0...v20.1.1) (2022-04-14)
 
 
