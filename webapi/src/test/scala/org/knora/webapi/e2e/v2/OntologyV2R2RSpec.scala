@@ -995,11 +995,11 @@ class OntologyV2R2RSpec extends R2RSpec {
              |      {
              |         "rdfs:label": [
              |            {
-             |               "@value": "Property mit einem Kommentar",
+             |               "@value": "Property mit einem Kommentar 2",
              |               "@language": "de"
              |            },
              |            {
-             |               "@value": "Property with a comment",
+             |               "@value": "Property with a comment 2",
              |               "@language": "en"
              |            }
              |         ],
@@ -1039,6 +1039,82 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         responseFromJsonLD.properties.head._2.predicates.toSet should ===(
           expectedResponseToCompare.properties.head._2.predicates.toSet
+        )
+      }
+    }
+
+    "delete the rdfs:comment of a class" in {
+      val classSegment: String =
+        URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/freetest/v2#BookWithComment2", "UTF-8")
+      val lastModificationDate = URLEncoder.encode(freetestLastModDate.toString, "UTF-8")
+
+      Delete(
+        s"/v2/ontologies/classes/comment/$classSegment?lastModificationDate=$lastModificationDate"
+      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+        val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
+
+        val expectedResponse: String =
+          s"""{
+             |   "knora-api:lastModificationDate": {
+             |       "@value": "${newFreetestLastModDate}",
+             |       "@type": "xsd:dateTimeStamp"
+             |   },
+             |   "rdfs:label": "freetest",
+             |   "@graph": [
+             |      {
+             |         "rdfs:label": [
+             |            {
+             |               "@value": "Buch 2 mit Kommentar",
+             |               "@language": "de"
+             |            },
+             |            {
+             |               "@value": "Book 2 with comment",
+             |               "@language": "en"
+             |            }
+             |         ],
+             |         "rdfs:subClassOf": [
+             |            {
+             |               "@id": "knora-api:Resource"
+             |            }
+             |         ],
+             |         "@type": "owl:Class",
+             |         "@id": "freetest:BookWithComment2"
+             |      }
+             |   ],
+             |   "knora-api:attachedToProject": {
+             |      "@id": "http://rdfh.ch/projects/0001"
+             |   },
+             |   "@type": "owl:Ontology",
+             |   "@id": "http://0.0.0.0:3333/ontology/0001/freetest/v2",
+             |   "@context": {
+             |      "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+             |      "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+             |      "freetest": "http://0.0.0.0:3333/ontology/0001/freetest/v2#",
+             |      "owl": "http://www.w3.org/2002/07/owl#",
+             |      "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+             |      "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+             |      "xsd": "http://www.w3.org/2001/XMLSchema#"
+             |   }
+             |}""".stripMargin
+
+        val expectedResponseToCompare: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(expectedResponse)).unescape
+
+        val responseFromJsonLD: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+        println(responseFromJsonLD)
+        responseFromJsonLD.classes.head._2.predicates.toSet should ===(
+          expectedResponseToCompare.classes.head._2.predicates.toSet
         )
       }
     }

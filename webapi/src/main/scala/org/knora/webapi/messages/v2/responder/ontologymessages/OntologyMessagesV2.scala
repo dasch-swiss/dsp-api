@@ -1309,6 +1309,80 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   }
 }
 
+/**
+ * Deletes the comment from a class. A successful response will be a [[ReadOntologyV2]].
+ *
+ * @param classIri             the IRI of the class.
+ * @param lastModificationDate the ontology's last modification date
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class DeleteClassCommentRequestV2(
+  classIri: SmartIri,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends OntologiesResponderRequestV2
+
+/**
+ * Constructs instances of [[DeleteClassCommentRequestV2]] based on JSON-LD input.
+ */
+object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClassCommentRequestV2] {
+
+  /**
+   * Converts a JSON-LD request to a [[DeleteClassCommentRequestV2]].
+   *
+   * @param jsonLDDocument       the JSON-LD input.
+   * @param apiRequestID         the UUID of the API request.
+   * @param requestingUser       the user making the request.
+   * @param responderManager     a reference to the responder manager.
+   * @param storeManager         a reference to the store manager.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param settings             the application settings.
+   * @param log                  a logging adapter.
+   * @return a [[DeleteClassCommentRequestV2]] representing the input.
+   */
+  override def fromJsonLD(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+
+  private def fromJsonLDSync(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): DeleteClassCommentRequestV2 = {
+    val inputOntologyV2: InputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo: ClassUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologyV2)
+    val classInfoContent: ClassInfoContentV2 = classUpdateInfo.classInfoContent
+    val lastModificationDate: Instant = classUpdateInfo.lastModificationDate
+
+    DeleteClassCommentRequestV2(
+      classIri = classInfoContent.classIri,
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
 case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,

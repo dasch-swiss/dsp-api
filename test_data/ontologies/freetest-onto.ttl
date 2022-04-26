@@ -312,6 +312,38 @@
                            knora-base:TextValue ;
     salsah-gui:guiElement  salsah-gui:Richtext .
 
+:BookWithComment
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch mit Kommentar"@de,
+                    "Book with comment"@en ;
+    rdfs:comment    """A comment for book"""@en .
+
+:BookWithoutComment
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch ohne Kommentar"@de,
+                    "Book without comment"@en .
+
+:BookWithComment2
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch 2 mit Kommentar"@de,
+                    "Book 2 with comment"@en ;
+    rdfs:comment    """A comment for book"""@en .
+
 :hasFoafName
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue,
@@ -348,8 +380,8 @@
 :hasPropertyWithComment2
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
-    rdfs:label                       "Property mit einem Kommentar"@de,
-                                     "Property with a comment"@en ;
+    rdfs:label                       "Property mit einem Kommentar 2"@de,
+                                     "Property with a comment 2"@en ;
     rdfs:comment                     "Dies ist der Kommentar"@de,
                                      "This is the comment"@en ;
     knora-base:objectClassConstraint knora-base:TextValue ;
