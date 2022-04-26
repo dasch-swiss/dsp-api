@@ -1152,6 +1152,80 @@ object ChangePropertyLabelsOrCommentsRequestV2
 }
 
 /**
+ * Deletes the comment from a property. A successful response will be a [[ReadOntologyV2]].
+ *
+ * @param propertyIri          the IRI of the property.
+ * @param lastModificationDate the ontology's last modification date
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class DeletePropertyCommentRequestV2(
+  propertyIri: SmartIri,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends OntologiesResponderRequestV2
+
+/**
+ * Constructs instances of [[DeletePropertyCommentRequestV2]] based on JSON-LD input.
+ */
+object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeletePropertyCommentRequestV2] {
+
+  /**
+   * Converts a JSON-LD request to a [[DeletePropertyCommentRequestV2]].
+   *
+   * @param jsonLDDocument       the JSON-LD input.
+   * @param apiRequestID         the UUID of the API request.
+   * @param requestingUser       the user making the request.
+   * @param responderManager     a reference to the responder manager.
+   * @param storeManager         a reference to the store manager.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param settings             the application settings.
+   * @param log                  a logging adapter.
+   * @return a [[DeletePropertyCommentRequestV2]] representing the input.
+   */
+  override def fromJsonLD(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+
+  private def fromJsonLDSync(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): DeletePropertyCommentRequestV2 = {
+    val inputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologyV2)
+    val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+    val lastModificationDate = propertyUpdateInfo.lastModificationDate
+
+    DeletePropertyCommentRequestV2(
+      propertyIri = propertyInfoContent.propertyIri,
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
+/**
  * Requests that a class's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classIri             the IRI of the property.
