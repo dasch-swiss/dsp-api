@@ -47,7 +47,6 @@ import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.TriplestoreTypes
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
@@ -85,8 +84,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   private val settings = KnoraSettings(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
   override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
-
-  private val triplestoreType = settings.triplestoreType
 
   private val targetHost: HttpHost = new HttpHost(settings.triplestoreHost, settings.triplestorePort, "http")
 
@@ -141,51 +138,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     .setDefaultRequestConfig(longRequestConfig)
     .build
 
-  private val queryPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      s"/${settings.triplestoreDatabaseName}/query"
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
+  private val queryPath: String = s"/${settings.triplestoreDatabaseName}/query"
 
-  private val sparqlUpdatePath: String =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      s"/${settings.triplestoreDatabaseName}/update"
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
+  private val sparqlUpdatePath: String = s"/${settings.triplestoreDatabaseName}/update"
 
-  private val checkRepositoryPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      "/$/server"
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
+  private val checkRepositoryPath: String = "/$/server"
 
-  private val graphPath: String =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      s"/${settings.triplestoreDatabaseName}/get"
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
+  private val graphPath: String = s"/${settings.triplestoreDatabaseName}/get"
 
-  private val repositoryDownloadPath =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      s"/${settings.triplestoreDatabaseName}"
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
+  private val repositoryDownloadPath = s"/${settings.triplestoreDatabaseName}"
 
   private val repositoryUploadPath = repositoryDownloadPath
 
   private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
-  private val dataInsertPath =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      s"/${settings.triplestoreDatabaseName}/data"
-    } else {
-      throw TriplestoreUnsupportedFeatureException(s"$triplestoreType is not supported!")
-    }
+  private val dataInsertPath = s"/${settings.triplestoreDatabaseName}/data"
 
   /**
    * Receives a message requesting a SPARQL select or update, and returns an appropriate response message or
@@ -225,7 +192,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
       try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
-    case HelloTriplestore(msg: String) if msg == triplestoreType => sender() ! HelloTriplestore(triplestoreType)
+    case HelloTriplestore(msg: String) if msg == settings.triplestoreType => sender() ! HelloTriplestore(settings.triplestoreType)
     case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
       try2Message(sender(), Success(SparqlUpdateResponse()), log)
@@ -268,11 +235,22 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       parseTry match {
         case Success(parsed) => Success(parsed)
         case Failure(e) =>
-          log.error(
-            e,
-            s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
-          )
-          Failure(TriplestoreResponseException("Couldn't parse JSON from triplestore", e, log))
+          if (resultStr.contains("##  Query cancelled due to timeout during execution")) {
+            log.error(e, "Triplestore timed out while sending a response, after sending statuscode 200.")
+            Failure(
+              TriplestoreTimeoutException(
+                "Triplestore timed out while sending a response, after sending statuscode 200.",
+                e,
+                log
+              )
+            )
+          } else {
+            log.error(
+              e,
+              s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
+            )
+            Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+          }
       }
     }
 
@@ -336,11 +314,22 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       parseTry match {
         case Success(parsed) => Success(parsed)
         case Failure(e) =>
-          log.error(
-            e,
-            s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
-          )
-          Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+          if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
+            log.error(e, "Triplestore timed out while sending a response, after sending statuscode 200.")
+            Failure(
+              TriplestoreTimeoutException(
+                "Triplestore timed out while sending a response, after sending statuscode 200.",
+                e,
+                log
+              )
+            )
+          } else {
+            log.error(
+              e,
+              s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
+            )
+            Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+          }
       }
     }
 
@@ -414,9 +403,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     } yield response
 
     parseTry match {
-      case Success(parsed) => Success(parsed)
+      case Success(parsed)                               => Success(parsed)
+      case Failure(timeout: TriplestoreTimeoutException) => Failure(timeout)
       case Failure(e) =>
-        Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+        Failure(
+          TriplestoreResponseException(
+            s"Couldn't parse Turtle from triplestore: ${sparqlExtendedConstructRequest}",
+            e,
+            log
+          )
+        )
     }
   }
 
@@ -569,12 +565,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   /**
    * Checks connection to the triplestore.
    */
-  private def checkTriplestore(): Try[CheckTriplestoreResponse] =
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      checkFusekiTriplestore()
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
+  private def checkTriplestore(): Try[CheckTriplestoreResponse] = checkFusekiTriplestore()
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If the it is not
@@ -706,13 +697,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    */
   private def makeNamedGraphDownloadUri(graphIri: IRI): URI = {
     val uriBuilder: URIBuilder = new URIBuilder(graphPath)
-
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      uriBuilder.setParameter("graph", s"$graphIri")
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
-
+    uriBuilder.setParameter("graph", s"$graphIri")
     uriBuilder.build()
   }
 
@@ -837,12 +822,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     val httpContext: HttpClientContext = makeHttpContext
 
     val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
-
-    if (triplestoreType == TriplestoreTypes.HttpFuseki) {
-      // do nothing
-    } else {
-      throw UnsupportedTriplestoreException(s"Unsupported triplestore type: $triplestoreType")
-    }
 
     val httpGet = new HttpGet(uriBuilder.build())
     httpGet.addHeader("Accept", mimeTypeApplicationNQuads)
@@ -974,10 +953,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
           Option(response.getEntity)
             .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
             case Some(responseEntityStr) =>
-              log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-              throw TriplestoreResponseException(
-                s"Triplestore responded with HTTP code $statusCode: $responseEntityStr"
-              )
+              val msg = s"Triplestore responded with HTTP code $statusCode: $responseEntityStr"
+              log.error(msg)
+              if (statusCode == 503 && responseEntityStr.contains("Query timed out"))
+                throw TriplestoreTimeoutException(msg)
+              else throw TriplestoreResponseException(msg)
 
             case None =>
               log.error(s"Triplestore responded with HTTP code $statusCode")
@@ -1003,6 +983,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
           "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
         log.error(socketTimeoutException, message)
         throw TriplestoreTimeoutException(message = message, e = socketTimeoutException, log = log)
+
+      case timeout: TriplestoreTimeoutException => throw timeout
 
       case notFound: NotFoundException => throw notFound
 

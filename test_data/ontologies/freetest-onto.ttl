@@ -322,3 +322,57 @@
     salsah-gui:guiElement            salsah-gui:SimpleText ;
     salsah-gui:guiAttribute          "size=80",
                                      "maxlength=255" .
+
+:hasPropertyWithComment
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasValue ;
+    rdfs:label                       "Property mit einem Kommentar"@de,
+                                     "Property with a comment"@en ;
+    rdfs:comment                     "Dies ist der Kommentar"@de,
+                                     "This is the comment"@en ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute          "size=80",
+                                     "maxlength=255" .
+
+:hasPropertyWithoutComment
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasValue ;
+    rdfs:label                       "Property ohne Kommentar"@de,
+                                     "Property without a comment"@en ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute          "size=80",
+                                     "maxlength=255" .
+
+:hasPropertyWithComment2
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:subPropertyOf               knora-base:hasValue ;
+    rdfs:label                       "Property mit einem Kommentar"@de,
+                                     "Property with a comment"@en ;
+    rdfs:comment                     "Dies ist der Kommentar"@de,
+                                     "This is the comment"@en ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:SimpleText .
+
+:hasLinkPropertyWithComment
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasLinkTo ;
+    rdfs:label                        "Link Property mit Kommentar"@de,
+                                      "Link property with comment"@en;
+    rdfs:comment                     "Dies ist der Kommentar"@de,
+                                     "This is the comment"@en ;
+    knora-base:subjectClassConstraint :Book ;
+    knora-base:objectClassConstraint  :Author ;
+    salsah-gui:guiElement             salsah-gui:Searchbox .
+
+:hasLinkPropertyWithCommentValue
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasLinkToValue ;
+    rdfs:label                        "Link Property mit Kommentar"@de,
+                                      "Link property with comment"@en;
+    rdfs:comment                     "Dies ist der Kommentar"@de,
+                                     "This is the comment"@en ;
+    knora-base:subjectClassConstraint :Book ;
+    knora-base:objectClassConstraint  knora-base:LinkValue ;
+    salsah-gui:guiElement             salsah-gui:Searchbox .

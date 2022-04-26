@@ -9,7 +9,6 @@
 @*
  * Changes the metadata attached to an ontology.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology should be stored.
  * @param ontologyIri the IRI of the ontology to be created.
  * @param newLabel the ontology's new label.
@@ -19,8 +18,7 @@
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: SmartIri,
+@(ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   newLabel: Option[String],
   hasOldComment: Boolean,

@@ -9,14 +9,12 @@
  * Marks a resource as deleted.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource to be marked as deleted.
  * @param maybeDeleteComment an optional comment explaining why the value is being deleted.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
  * @param requestingUser the IRI of the user making the request.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourceIri: IRI,
   maybeDeleteComment: Option[String],
   currentTime: String,

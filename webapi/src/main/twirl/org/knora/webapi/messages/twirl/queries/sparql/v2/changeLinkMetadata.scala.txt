@@ -13,7 +13,6 @@
  * Changes the metadata on a LinkValue.
  *
  * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
  * @param linkSourceIri the resource that is the source of the link.
  * @param linkUpdate a [[SparqlTemplateLinkUpdate]] specifying how to update the link value.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
@@ -22,7 +21,6 @@
  * To find out whether the update succeeded, the application must query the deleted link.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   linkSourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
   maybeComment: Option[String],

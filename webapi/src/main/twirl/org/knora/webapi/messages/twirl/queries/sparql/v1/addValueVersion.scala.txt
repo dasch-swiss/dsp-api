@@ -14,7 +14,6 @@
  * Inserts a new version of an existing value of a resource property.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to update.
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the most recent existing version of the value.
@@ -35,7 +34,6 @@
  * find out whether the operation succeeded, the application must query the property's version history.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourceIri: IRI,
   propertyIri: IRI,
   currentValueIri: IRI,

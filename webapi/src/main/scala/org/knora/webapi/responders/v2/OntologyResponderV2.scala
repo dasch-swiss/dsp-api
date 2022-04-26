@@ -7,34 +7,37 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{
-  SmartIriLiteralV2,
-  SparqlUpdateRequest,
-  SparqlUpdateResponse,
-  StringLiteralV2
-}
-import org.knora.webapi.messages.util.{ErrorHandlingMap, ResponderData}
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
-import org.knora.webapi.responders.v2.ontology.{Cache, Cardinalities, OntologyHelpers}
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.v2.ontology.Cardinalities
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.util._
-import org.knora.webapi._
 
 import java.time.Instant
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * Responds to requests dealing with ontologies.
@@ -109,6 +112,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
       changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
+    case deletePropertyCommentRequest: DeletePropertyCommentRequestV2 =>
+      deletePropertyComment(deletePropertyCommentRequest)
     case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
       changePropertyGuiElement(changePropertyGuiElementRequest)
     case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
@@ -535,7 +540,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         createOntologySparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createOntology(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             projectIri = createOntologyRequest.projectIri,
@@ -671,7 +675,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changeOntologyMetadata(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             newLabel = changeOntologyMetadataRequest.label,
@@ -790,7 +793,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changeOntologyMetadata(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             newLabel = None,
@@ -992,7 +994,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createClass(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             classDef = internalClassDefWithLinkValueProps,
@@ -1181,7 +1182,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .replaceClassCardinalities(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             classIri = internalClassIri,
@@ -1430,7 +1430,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .addCardinalitiesToClass(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             classIri = internalClassIri,
@@ -1689,7 +1688,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .replaceClassCardinalities(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             classIri = internalClassIri,
@@ -1931,7 +1929,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .deleteClass(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             classIri = internalClassIri,
@@ -2113,7 +2110,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .deleteProperty(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             propertyIri = internalPropertyIri,
@@ -2250,7 +2246,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .deleteOntology(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri
           )
           .toString()
@@ -2549,7 +2544,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createProperty(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             propertyDef = internalPropertyDef,
@@ -2758,7 +2752,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changePropertyGuiElement(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             propertyIri = internalPropertyIri,
@@ -2985,7 +2978,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changePropertyLabelsOrComments(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             propertyIri = internalPropertyIri,
@@ -3174,7 +3166,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .changeClassLabelsOrComments(
-            triplestore = settings.triplestoreType,
             ontologyNamedGraphIri = internalOntologyIri,
             ontologyIri = internalOntologyIri,
             classIri = internalClassIri,
@@ -3277,6 +3268,232 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalOntologyIri = internalOntologyIri
           )
       )
+    } yield taskResult
+  }
+
+  /**
+   * Delete the `rdfs:comment` in a property definition.
+   *
+   * @param deletePropertyCommentRequestV2 the request to delete the property's comment
+   * @return a [[ReadOntologyV2]] containing the modified property definition.
+   */
+  private def deletePropertyComment(
+    deletePropertyCommentRequest: DeletePropertyCommentRequestV2
+  ): Future[ReadOntologyV2] = {
+    def makeTaskFuture(
+      cacheData: Cache.OntologyCacheData,
+      internalPropertyIri: SmartIri,
+      internalOntologyIri: SmartIri,
+      ontology: ReadOntologyV2,
+      propertyToUpdate: ReadPropertyInfoV2
+    ): Future[ReadOntologyV2] =
+      for {
+
+        // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
+        _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+          settings,
+          storeManager,
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = deletePropertyCommentRequest.lastModificationDate,
+          featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+        )
+
+        // If this is a link property, also delete the comment of the corresponding link value property.
+        maybeLinkValueOfPropertyToUpdate: Option[ReadPropertyInfoV2] =
+          if (propertyToUpdate.isLinkProp) {
+            val linkValuePropertyIri: SmartIri = internalPropertyIri.fromLinkPropToLinkValueProp
+            Some(
+              ontology.properties.getOrElse(
+                linkValuePropertyIri,
+                throw InconsistentRepositoryDataException(
+                  s"Link value property $linkValuePropertyIri not found"
+                )
+              )
+            )
+          } else {
+            None
+          }
+
+        maybeLinkValueOfPropertyToUpdateIri: Option[SmartIri] =
+          if (propertyToUpdate.isLinkProp) {
+            Some(internalPropertyIri.fromLinkPropToLinkValueProp)
+          } else {
+            None
+          }
+
+        currentTime: Instant = Instant.now
+
+        // Delete the comment
+        updateSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .deletePropertyComment(
+            ontologyNamedGraphIri = internalOntologyIri,
+            ontologyIri = internalOntologyIri,
+            propertyIri = internalPropertyIri,
+            maybeLinkValuePropertyIri = maybeLinkValueOfPropertyToUpdateIri,
+            lastModificationDate = deletePropertyCommentRequest.lastModificationDate,
+            currentTime = currentTime
+          )
+          .toString()
+
+        _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+        // Check that the ontology's last modification date was updated.
+        _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
+          settings = settings,
+          storeManager = storeManager,
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = currentTime,
+          featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+        )
+
+        // Check that the update was successful.
+        loadedPropertyDef: PropertyInfoContentV2 <- OntologyHelpers.loadPropertyDefinition(
+          settings,
+          storeManager,
+          propertyIri = internalPropertyIri,
+          featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+        )
+
+        propertyDefWithoutComment: PropertyInfoContentV2 =
+          propertyToUpdate.entityInfoContent.copy(
+            predicates = propertyToUpdate.entityInfoContent.predicates.-(
+              OntologyConstants.Rdfs.Comment.toSmartIri
+            ) // the "-" deletes the entry with the comment
+          )
+
+        _ = if (loadedPropertyDef != propertyDefWithoutComment) {
+          throw InconsistentRepositoryDataException(
+            s"Attempted to save property definition $propertyDefWithoutComment, but $loadedPropertyDef was saved"
+          )
+        }
+
+        maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] =
+          maybeLinkValueOfPropertyToUpdate.map { linkValueReadPropertyInfo: ReadPropertyInfoV2 =>
+            OntologyHelpers.loadPropertyDefinition(
+              settings,
+              storeManager,
+              propertyIri = linkValueReadPropertyInfo.entityInfoContent.propertyIri,
+              featureFactoryConfig = deletePropertyCommentRequest.featureFactoryConfig
+            )
+          }
+
+        maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <-
+          ActorUtil.optionFuture2FutureOption(maybeLoadedLinkValuePropertyDefFuture)
+
+        maybeNewLinkValuePropertyDef: Option[PropertyInfoContentV2] =
+          maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef: PropertyInfoContentV2 =>
+            val newLinkPropertyDef: PropertyInfoContentV2 =
+              maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.copy(
+                predicates = maybeLinkValueOfPropertyToUpdate.get.entityInfoContent.predicates
+                  .-(OntologyConstants.Rdfs.Comment.toSmartIri)
+              )
+
+            if (loadedLinkValuePropertyDef != newLinkPropertyDef) {
+              throw InconsistentRepositoryDataException(
+                s"Attempted to save link value property definition $newLinkPropertyDef, but $loadedLinkValuePropertyDef was saved"
+              )
+            }
+
+            newLinkPropertyDef
+          }
+
+        // Update the ontology cache using the new property definition.
+        newReadPropertyInfo: ReadPropertyInfoV2 = ReadPropertyInfoV2(
+          entityInfoContent = loadedPropertyDef,
+          isEditable = true,
+          isResourceProp = true,
+          isLinkProp = propertyToUpdate.isLinkProp
+        )
+
+        maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] =
+          maybeNewLinkValuePropertyDef.map { newLinkPropertyDef: PropertyInfoContentV2 =>
+            newLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
+              entityInfoContent = newLinkPropertyDef,
+              isResourceProp = true,
+              isLinkValueProp = true
+            )
+          }
+
+        updatedOntologyMetadata: OntologyMetadataV2 = ontology.ontologyMetadata.copy(
+          lastModificationDate = Some(currentTime)
+        )
+
+        updatedOntology: ReadOntologyV2 =
+          ontology.copy(
+            ontologyMetadata = updatedOntologyMetadata,
+            properties =
+              ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
+          )
+
+        _ = Cache.storeCacheData(
+          cacheData.copy(
+            ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
+          )
+        )
+
+        // Read the data back from the cache.
+
+        response: ReadOntologyV2 <- getPropertyDefinitionsFromOntologyV2(
+          propertyIris = Set(internalPropertyIri),
+          allLanguages = true,
+          requestingUser = deletePropertyCommentRequest.requestingUser
+        )
+
+      } yield response
+
+    for {
+      requestingUser: UserADM <- FastFuture.successful(deletePropertyCommentRequest.requestingUser)
+
+      externalPropertyIri: SmartIri = deletePropertyCommentRequest.propertyIri
+      externalOntologyIri: SmartIri = externalPropertyIri.getOntologyFromEntity
+
+      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
+        externalOntologyIri = externalOntologyIri,
+        externalEntityIri = externalPropertyIri,
+        requestingUser = requestingUser
+      )
+
+      internalPropertyIri: SmartIri = externalPropertyIri.toOntologySchema(InternalSchema)
+      internalOntologyIri: SmartIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+      cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+
+      ontology: ReadOntologyV2 = cacheData.ontologies(internalOntologyIri)
+
+      propertyToUpdate: ReadPropertyInfoV2 =
+        ontology.properties.getOrElse(
+          internalPropertyIri,
+          throw NotFoundException(s"Property ${deletePropertyCommentRequest.propertyIri} not found")
+        )
+
+      hasComment: Boolean = propertyToUpdate.entityInfoContent.predicates.contains(
+        OntologyConstants.Rdfs.Comment.toSmartIri
+      )
+
+      taskResult: ReadOntologyV2 <-
+        if (hasComment) for {
+          // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+          taskResult: ReadOntologyV2 <- IriLocker.runWithIriLock(
+            apiRequestID = deletePropertyCommentRequest.apiRequestID,
+            iri = ONTOLOGY_CACHE_LOCK_IRI,
+            task = () =>
+              makeTaskFuture(
+                cacheData = cacheData,
+                internalPropertyIri = internalPropertyIri,
+                internalOntologyIri = internalOntologyIri,
+                ontology = ontology,
+                propertyToUpdate = propertyToUpdate
+              )
+          )
+        } yield taskResult
+        else {
+          // not change anything if property has no comment
+          getPropertyDefinitionsFromOntologyV2(
+            propertyIris = Set(internalPropertyIri),
+            allLanguages = true,
+            requestingUser = deletePropertyCommentRequest.requestingUser
+          )
+        }
     } yield taskResult
   }
 

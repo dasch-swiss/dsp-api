@@ -10,8 +10,6 @@
  * Creates a new root list node.
  *
  * @param dataNamedGraph    the name of the graph into which the new list node will be created.
- * @param triplestore       the name of the triplestore being used. The template uses this value to exclude inferred
-                            results from the WHERE clause of the update.
  * @param listClassIri      the IRI of the OWL class that the list should belong to.
  * @param projectIri        the IRI of the list's project.
  * @param nodeIri           the IRI of the new list node.
@@ -24,7 +22,6 @@
  *
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   listClassIri: IRI,
   projectIri : IRI,
   nodeIri: IRI,

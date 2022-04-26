@@ -8,11 +8,9 @@
 @**
  * Query a newly created resource.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the Iri of the resource.
  *@
-@(triplestore: String,
-  resourceIri: IRI)
+@(resourceIri: IRI)
 
 SELECT ?p ?o
 

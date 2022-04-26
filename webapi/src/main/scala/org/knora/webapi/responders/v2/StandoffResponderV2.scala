@@ -5,46 +5,59 @@
 
 package org.knora.webapi.responders.v2
 
-import java.io._
-import java.util.UUID
-
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
+import org.knora.webapi.messages.twirl.MappingElement
+import org.knora.webapi.messages.twirl.MappingStandoffDatatypeClass
+import org.knora.webapi.messages.twirl.MappingXMLAttribute
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
-import org.knora.webapi.messages.util.{ConstructResponseUtilV2, KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  Cardinality,
-  ReadClassInfoV2,
-  StandoffEntityInfoGetRequestV2,
-  StandoffEntityInfoGetResponseV2
-}
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
 import org.xml.sax.SAXException
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.xml.{Elem, Node, NodeSeq, XML}
+import java.io._
+import java.util.UUID
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.Schema
+import javax.xml.validation.SchemaFactory
+import javax.xml.validation.{Validator => JValidator}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.xml.Elem
+import scala.xml.Node
+import scala.xml.NodeSeq
+import scala.xml.XML
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
@@ -92,7 +105,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       resourceRequestSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getResourcePropertiesAndValues(
-            triplestore = settings.triplestoreType,
             resourceIris = Seq(getStandoffRequestV2.resourceIri),
             preview = false,
             withDeleted = false,
@@ -482,7 +494,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         // check if the mapping IRI already exists
         getExistingMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getMapping(
-            triplestore = settings.triplestoreType,
             mappingIri = mappingIri
           )
           .toString()
@@ -498,7 +509,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         createNewMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .createNewMapping(
-            triplestore = settings.triplestoreType,
             dataNamedGraph = namedGraph,
             mappingIri = mappingIri,
             label = label,
@@ -820,7 +830,6 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
     val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getMapping(
-        triplestore = settings.triplestoreType,
         mappingIri = mappingIri
       )
       .toString()

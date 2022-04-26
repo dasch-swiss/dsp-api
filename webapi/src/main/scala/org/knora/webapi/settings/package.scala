@@ -105,7 +105,6 @@ package object settings {
   val TriplestoreManagerActorPath: String = StoreManagerActorPath + "/" + TriplestoreManagerActorName
 
   val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
-  val EmbeddedJenaActorName: String = "embeddedJenaTDB"
   val FakeTriplestoreActorName: String = "fakeTriplestore"
 
   /* Sipi */

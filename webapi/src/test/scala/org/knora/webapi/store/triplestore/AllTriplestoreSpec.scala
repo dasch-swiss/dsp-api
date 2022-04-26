@@ -10,7 +10,6 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.settings.TriplestoreTypes
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -37,7 +36,6 @@ object AllTriplestoreSpec {
 class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
   private val timeout = 30.seconds
-  private val tsType = settings.triplestoreType
 
   // println(system.settings.config.getConfig("app").root().render())
   // println(system.settings.config.getConfig("app.triplestore").root().render())
@@ -159,7 +157,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
    * The Akka documentation describes a bunch of other methods
    * but this is the one I the most
    */
-  s"The Triplestore ($tsType) Actor " when {
+  s"The Triplestore ($settings.triplestoreType) Actor " when {
     "started " should {
       "only start answering after initialization has finished " in {
         storeManager ! CheckTriplestoreRequest()
@@ -172,8 +170,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a Hello " should {
       "reply " in {
         within(1.seconds) {
-          storeManager ! HelloTriplestore(tsType)
-          expectMsg(HelloTriplestore(tsType))
+          storeManager ! HelloTriplestore(settings.triplestoreType)
+          expectMsg(HelloTriplestore(settings.triplestoreType))
         }
       }
     }
@@ -261,9 +259,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a search request " should {
       "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
         within(1000.millis) {
-          tsType match {
-            case TriplestoreTypes.HttpFuseki => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
-          }
+          storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
           expectMsgPF(timeout) { case msg: SparqlSelectResult =>
             //println(msg)
             msg.results.bindings.size should ===(3)
@@ -273,9 +269,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
       "execute the search with the lucene index for 'rdfs:label' properties" in {
         within(1000.millis) {
-          tsType match {
-            case TriplestoreTypes.HttpFuseki => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
-          }
+          storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
           expectMsgPF(timeout) { case msg: SparqlSelectResult =>
             //println(msg)
             msg.results.bindings.size should ===(1)

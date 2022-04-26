@@ -8,11 +8,9 @@
 @**
  * Gets all information about a user, given the user's knora-admin:userid.
  *
- * @param triplestore the name of the triplestore being used.
  * @param username the user's `knora-admin:userid`.
  *@
-@(triplestore: String,
-  email: String)
+@(email: String)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>

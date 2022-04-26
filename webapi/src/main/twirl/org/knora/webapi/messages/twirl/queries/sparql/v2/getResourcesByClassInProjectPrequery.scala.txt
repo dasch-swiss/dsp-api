@@ -9,7 +9,6 @@
 @*
  * Constructs a prequery that gets resources from the specified project, using SPARQL w/o inference.
  *
- * @param triplestore           the name of the triplestore being used.
  * @param projectIri            the IRI of the project.
  * @param resourceClassIri      the IRI of the resource class.
  * @param maybeOrderByProperty  the IRI of the property to order by.
@@ -17,8 +16,7 @@
  * @param offset                the OFFSET to be used.
  * @param limit                 the LIMIT to be used.
  *@
-@(triplestore: String,
-  projectIri: IRI,
+@(projectIri: IRI,
   resourceClassIri: SmartIri,
   maybeOrderByProperty: Option[SmartIri],
   maybeOrderByValuePredicate: Option[SmartIri],

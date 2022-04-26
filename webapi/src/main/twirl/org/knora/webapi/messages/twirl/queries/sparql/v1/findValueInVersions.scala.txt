@@ -9,13 +9,11 @@
  * Searches for a value in the version history of the values of a resource property. If the value is found, returns
  * all assertions about it. If the value is not found, returns no rows.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to search.
  * @param propertyIri the property to search.
  * @param searchValueIri the IRI of the value to look for.
  *@
-@(triplestore: String,
-  resourceIri: IRI,
+@(resourceIri: IRI,
   propertyIri: IRI,
   searchValueIri: IRI)
 

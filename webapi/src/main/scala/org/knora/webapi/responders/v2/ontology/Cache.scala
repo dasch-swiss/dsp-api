@@ -125,7 +125,7 @@ object Cache extends LazyLogging {
       // Get all ontology metadata.
       allOntologyMetadataSparql <- FastFuture.successful(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getAllOntologyMetadata(triplestore = settings.triplestoreType)
+          .getAllOntologyMetadata()
           .toString()
       )
       allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
@@ -173,7 +173,6 @@ object Cache extends LazyLogging {
 
         val ontologyGraphConstructQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .getOntologyGraph(
-            triplestore = settings.triplestoreType,
             ontologyGraph = ontologyIri
           )
           .toString

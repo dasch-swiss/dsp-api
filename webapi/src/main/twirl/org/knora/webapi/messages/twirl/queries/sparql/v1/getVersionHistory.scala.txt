@@ -8,15 +8,13 @@
 @**
  * Returns all versions of a value using SPARQL w/o inference.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to search.
  * @param propertyIri the property to search.
  * @param currentValueIri the most recent version of the value.
  *
  * Returns nothing if currentValueIri is not the most recent version.
  *@
- @(triplestore: String,
-   resourceIri: IRI,
+ @(resourceIri: IRI,
    propertyIri: IRI,
    currentValueIri: IRI)
 

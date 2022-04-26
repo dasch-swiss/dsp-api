@@ -10,8 +10,6 @@
  * Updates an existing permission's properties.
  *
  * @param namedGraphIri           the named graph to update.
- * @param triplestore             the name of the triplestore being used. The template uses this value to exclude
-                                  inferred results from the WHERE clause of the update.
  * @param permissionIri           the IRI of the permission we want to update.
  * @param maybeGroup              the IRI of the new group.
  * @param maybeHasPermissions     the new set of permission values as string.
@@ -20,7 +18,6 @@
  *@
 
 @(namedGraphIri: IRI,
-  triplestore: String,
   permissionIri: IRI,
   maybeGroup: Option[IRI],
   maybeHasPermissions: Option[String],

@@ -13,13 +13,11 @@
  * Creates new resources.
  *
  * @param dataNamedGraph    the named graph in which the project stores its data.
- * @param triplestore       the name of the triplestore being used.
  * @param resourcesToCreate a collection of resources to be created.
  * @param projectIri        the IRI of the project in which the resources are to be created.
  * @param creatorIri        the IRI of the creator of the resources.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
   projectIri: IRI,
   creatorIri: IRI)

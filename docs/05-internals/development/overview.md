@@ -24,7 +24,7 @@ installation of Knora. The different parts are:
 A number of triplestore implementations are available, including [free
 software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
 proprietary options. DSP-API is designed to work with any
-standards-compliant triplestore. It is primarily tested with [Apache Jena](https://jena.apache.org/).
+standards-compliant triplestore. It is primarily tested with [Apache Jena Fuseki](https://jena.apache.org/).
 
 ## Sipi
 

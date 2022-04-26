@@ -8,11 +8,9 @@
 @**
  * Gets the knora-base:lastModificationDate of a resource.
  *
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the resource to be queried.
  *@
-@(triplestore: String,
-  resourceIri: IRI)
+@(resourceIri: IRI)
 
 prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 

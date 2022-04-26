@@ -184,7 +184,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       countSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchFulltext(
-            triplestore = settings.triplestoreType,
             searchTerms = searchTerms,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
@@ -248,7 +247,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       searchSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchFulltext(
-            triplestore = settings.triplestoreType,
             searchTerms = searchTerms,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
@@ -793,7 +791,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getResourcesByClassInProjectPrequery(
-          triplestore = settings.triplestoreType,
           projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
           resourceClassIri = internalClassIri,
           maybeOrderByProperty = maybeInternalOrderByPropertyIri,
@@ -830,7 +827,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             resourceRequestSparql <- Future(
               org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                 .getResourcePropertiesAndValues(
-                  triplestore = settings.triplestoreType,
                   resourceIris = mainResourceIris,
                   preview = false,
                   withDeleted = false,
@@ -913,7 +909,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       countSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchResourceByLabel(
-            triplestore = settings.triplestoreType,
             searchTerm = searchPhrase,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
@@ -969,7 +964,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       searchResourceByLabelSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .searchResourceByLabel(
-            triplestore = settings.triplestoreType,
             searchTerm = searchPhrase,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),

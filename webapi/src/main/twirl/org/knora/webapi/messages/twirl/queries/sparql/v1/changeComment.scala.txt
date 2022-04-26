@@ -9,7 +9,6 @@
  * Creates a new version of a value, with identical content except for a new comment.
  *
  * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
  * @param resourceIri the IRI of the resource containing the value.
  * @param propertyIri the IRI of the property that points from the resource to the value.
  * @param currentValueIri the IRI of the current version of the value.
@@ -18,7 +17,6 @@
  * @param currentTime a timestamp that will be attached to the value.
  *@
 @(dataNamedGraph: IRI,
-  triplestore: String,
   resourceIri: IRI,
   propertyIri: IRI,
   currentValueIri: IRI,

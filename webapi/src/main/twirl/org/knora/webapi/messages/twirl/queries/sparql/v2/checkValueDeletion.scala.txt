@@ -8,11 +8,9 @@
 @**
  * Checks whether a knora-base:Value exists and is deleted.
  *
- * @param triplestore the name of the triplestore being used.
  * @param valueIri the IRI of the value.
  *@
-@(triplestore: String,
-  valueIri: IRI)
+@(valueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>

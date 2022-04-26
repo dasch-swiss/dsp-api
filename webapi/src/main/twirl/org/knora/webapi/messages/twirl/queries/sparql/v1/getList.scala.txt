@@ -8,13 +8,11 @@
 @**
  * Given the root node of a hierarchical list, returns that node and all its children.
  *
- * @param triplestore the name of the triplestore being used.
  * @param rootNodeIri the IRI of the root node of the list.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  *@
-@(triplestore: String,
-  rootNodeIri: IRI,
+@(rootNodeIri: IRI,
   preferredLanguage: String,
   fallbackLanguage: String)
 

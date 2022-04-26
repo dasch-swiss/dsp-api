@@ -8,8 +8,6 @@
 @*
  * Creates a new administrative permission.
  * @param namedGraphIri           the name of the graph into which the new permission will be created.
- * @param triplestore             the name of the triplestore being used. The template uses this value to exclude inferred
-                                    results from the WHERE clause of the update.
  * @param permissionIri           the Iri of the new administrative permission.
  * @param permissionClassIri      the IRI of the OWL class that the new administrative permission should belong to.
  * @param projectIri the project.
@@ -18,7 +16,6 @@
  *
  *@
 @(namedGraphIri: IRI,
-  triplestore: String,
   permissionIri: IRI,
   permissionClassIri: IRI,
   projectIri: IRI,

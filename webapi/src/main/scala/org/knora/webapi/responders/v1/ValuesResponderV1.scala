@@ -5,44 +5,49 @@
 
 package org.knora.webapi.responders.v1
 
-import java.time.Instant
-
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForPropertyGetADM,
-  DefaultObjectAccessPermissionsStringResponseADM,
-  PermissionADM,
-  PermissionType
-}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData, ValueUtilV1}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.ValueUtilV1
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetRequestV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByIRIGetV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileByIRIGetV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 
+import java.time.Instant
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -727,7 +732,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         getFileValuesSparql = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getFileValuesForResource(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri
           )
           .toString()
@@ -1151,7 +1155,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .changeComment(
             dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-            triplestore = settings.triplestoreType,
             resourceIri = findResourceWithValueResult.resourceIri,
             propertyIri = findResourceWithValueResult.propertyIri,
             currentValueIri = changeCommentRequest.valueIri,
@@ -1297,7 +1300,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                 .deleteLink(
                   dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-                  triplestore = settings.triplestoreType,
                   linkSourceIri = findResourceWithValueResult.resourceIri,
                   linkUpdate = sparqlTemplateLinkUpdate,
                   maybeComment = deleteValueRequest.deleteComment,
@@ -1351,7 +1353,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
                 .deleteValue(
                   dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-                  triplestore = settings.triplestoreType,
                   resourceIri = findResourceWithValueResult.resourceIri,
                   propertyIri = findResourceWithValueResult.propertyIri,
                   valueIri = deleteValueRequest.valueIri,
@@ -1371,7 +1372,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .checkValueDeletion(
-            triplestore = settings.triplestoreType,
             valueIri = deletedValueIri
           )
           .toString()
@@ -1454,7 +1454,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future {
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getVersionHistory(
-            triplestore = settings.triplestoreType,
             resourceIri = versionHistoryRequest.resourceIri,
             propertyIri = versionHistoryRequest.propertyIri,
             currentValueIri = versionHistoryRequest.currentValueIri
@@ -1692,7 +1691,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getValue(
-            triplestore = settings.triplestoreType,
             valueIri = valueIri
           )
           .toString()
@@ -1734,7 +1732,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getLinkSourceAndTargetPermissions(
-            triplestore = settings.triplestoreType,
             linkValueIri = linkValueIri
           )
           .toString()
@@ -1795,7 +1792,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future {
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .findLinkValueByIri(
-            triplestore = settings.triplestoreType,
             subjectIri = subjectIri,
             predicateIri = predicateIri,
             maybeObjectIri = objectIri,
@@ -1842,7 +1838,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlQuery <- Future {
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .findLinkValueByObject(
-            triplestore = settings.triplestoreType,
             subjectIri = subjectIri,
             predicateIri = predicateIri,
             objectIri = objectIri
@@ -2168,7 +2163,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .findValueInVersions(
-            triplestore = settings.triplestoreType,
             resourceIri = resourceIri,
             propertyIri = propertyIri,
             searchValueIri = searchValueIri
@@ -2270,7 +2264,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       findResourceSparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .findResourceWithValue(
-            triplestore = settings.triplestoreType,
             searchValueIri = valueIri
           )
           .toString()
@@ -2388,7 +2381,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .createLink(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           resourceIri = resourceIri,
           linkUpdate = sparqlTemplateLinkUpdate,
           creationDate = currentTime,
@@ -2467,7 +2459,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .createValue(
           dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
           resourceIri = resourceIri,
           propertyIri = propertyIri,
           newValueIri = newValueIri,
@@ -2569,7 +2560,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .changeLink(
           dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-          triplestore = settings.triplestoreType,
           linkSourceIri = resourceIri,
           linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
           linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
@@ -2723,7 +2713,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .addValueVersion(
           dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-          triplestore = settings.triplestoreType,
           resourceIri = resourceIri,
           propertyIri = propertyIri,
           currentValueIri = currentValueIri,

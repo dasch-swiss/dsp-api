@@ -8,11 +8,9 @@
 @**
  * Gets all information about a user, given the user's IRI.
  *
- * @param triplestore the name of the triplestore being used.
  * @param userIri the user's IRI.
  *@
-@(triplestore: String,
-  userIri: IRI)
+@(userIri: IRI)
 
 SELECT ?s ?p ?o
 
