@@ -25,7 +25,7 @@ import scala.concurrent.duration.{Duration, SECONDS}
 object ResourceHtmlView {
 
   private implicit val timeout: Timeout = Duration(5, SECONDS)
-  val log = Logger(LoggerFactory.getLogger("org.knora.webapi.viewhandlers.ResourceHtmlView"))
+  val log                               = Logger(LoggerFactory.getLogger("org.knora.webapi.viewhandlers.ResourceHtmlView"))
 
   /**
    * A user representing the Knora API server, used in those cases where a user is required.
@@ -90,7 +90,7 @@ object ResourceHtmlView {
   private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorRef): String = {
 
     val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
-    val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
+    val nodePath     = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
     nodePath.nodelist.foldLeft("") { (z, i) =>
       z + i.label.get + " / "

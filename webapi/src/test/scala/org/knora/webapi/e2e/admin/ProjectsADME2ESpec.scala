@@ -46,10 +46,10 @@ class ProjectsADME2ESpec
 
   private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
-  private val rootEmail = SharedTestDataADM.rootUser.email
-  private val testPass = SharedTestDataADM.testPass
-  private val projectIri = SharedTestDataADM.imagesProject.id
-  private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
+  private val rootEmail        = SharedTestDataADM.rootUser.email
+  private val testPass         = SharedTestDataADM.testPass
+  private val projectIri       = SharedTestDataADM.imagesProject.id
+  private val projectIriEnc    = URLEncoder.encode(projectIri, "utf-8")
   private val projectShortname = SharedTestDataADM.imagesProject.shortname
   private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
@@ -66,7 +66,7 @@ class ProjectsADME2ESpec
   "The Projects Route ('admin/projects')" when {
     "used to query for project information" should {
       "return all projects" in {
-        val request = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+        val request                = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
@@ -764,9 +764,9 @@ class ProjectsADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val trigStrFuture: Future[String] = Unmarshal(response.entity).to[String]
-        val trigStr: String = Await.result(trigStrFuture, Timeout(5.seconds).duration)
-        val parsedTrig: RdfModel = parseTrig(trigStr)
-        val contextIris: Set[IRI] = parsedTrig.getContexts
+        val trigStr: String               = Await.result(trigStrFuture, Timeout(5.seconds).duration)
+        val parsedTrig: RdfModel          = parseTrig(trigStr)
+        val contextIris: Set[IRI]         = parsedTrig.getContexts
 
         assert(
           contextIris == Set(

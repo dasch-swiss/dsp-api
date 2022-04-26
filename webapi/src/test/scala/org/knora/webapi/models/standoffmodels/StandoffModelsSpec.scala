@@ -20,7 +20,7 @@ class StandoffModelsSpec extends CoreSpec {
 
       "create a valid representation of the mapping with default values" in {
         val mappingName = "customMapping"
-        val mapping = DefineStandoffMapping.make(mappingName)
+        val mapping     = DefineStandoffMapping.make(mappingName)
 
         mapping.mappingName should equal(mappingName)
         mapping.projectIRI should equal(ANYTHING_PROJECT_IRI)
@@ -29,7 +29,7 @@ class StandoffModelsSpec extends CoreSpec {
 
       "create a valid representation of the mapping with custom values" in {
         val mappingName = "customMapping"
-        val projectIRI = INCUNABULA_PROJECT_IRI
+        val projectIRI  = INCUNABULA_PROJECT_IRI
         val customLabel = "this is a custom mapping with a custom label"
         val mapping = DefineStandoffMapping.make(
           mappingName = mappingName,
@@ -46,8 +46,8 @@ class StandoffModelsSpec extends CoreSpec {
     "serializing to JSON-LD," should {
       "create a valid serialization of a standoff mapping request with default values" in {
         val mappingName = "customMapping"
-        val mapping = DefineStandoffMapping.make(mappingName)
-        val json = mapping.toJSONLD().parseJson
+        val mapping     = DefineStandoffMapping.make(mappingName)
+        val json        = mapping.toJSONLD().parseJson
 
         val expectedJSON =
           s"""
@@ -68,7 +68,7 @@ class StandoffModelsSpec extends CoreSpec {
       }
       "create a valid serialization of a standoff mapping request with custom values" in {
         val mappingName = "customMapping"
-        val projectIRI = INCUNABULA_PROJECT_IRI
+        val projectIRI  = INCUNABULA_PROJECT_IRI
         val customLabel = "this is a custom mapping with a custom label"
         val mapping = DefineStandoffMapping.make(
           mappingName = mappingName,

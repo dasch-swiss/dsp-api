@@ -137,16 +137,16 @@ object ResourceUtilV2 {
   ): Future[Unit] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkListNodeExistsByIri(listNodeIri = listNodeIri)
-          .toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       .checkListNodeExistsByIri(listNodeIri = listNodeIri)
+                       .toString
+                   )
 
       checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 
       _ = if (!checkListNodeExistsResponse.result) {
-        throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
-      }
+            throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
+          }
     } yield ()
 
   /**

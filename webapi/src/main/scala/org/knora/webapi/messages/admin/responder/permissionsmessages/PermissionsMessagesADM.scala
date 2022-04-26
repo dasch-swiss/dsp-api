@@ -1203,7 +1203,7 @@ case class ResourceCreateOperation(resourceClass: IRI) extends OperationADM
 sealed trait PermissionProfileType
 object PermissionProfileType {
   case object Restricted extends PermissionProfileType
-  case object Full extends PermissionProfileType
+  case object Full       extends PermissionProfileType
 }
 
 /**

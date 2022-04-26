@@ -57,7 +57,7 @@ case class CacheServiceInMemImpl(
       _ <- users.put(value.id, value)
       _ <- lut.put(value.username, value.id)
       _ <- lut.put(value.email, value.id)
-    } yield ()).commit.tap(_ => ZIO.logInfo(s"Stored UserADM to Cache: ${value.id}"))
+    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored UserADM to Cache: ${value.id}"))
 
   /**
    * Retrieves the user stored under the identifier (either iri, username, or email).
@@ -72,7 +72,7 @@ case class CacheServiceInMemImpl(
       case UserIdentifierType.Iri      => getUserByIri(identifier.toIri)
       case UserIdentifierType.Username => getUserByUsernameOrEmail(identifier.toUsername)
       case UserIdentifierType.Email    => getUserByUsernameOrEmail(identifier.toEmail)
-    }).tap(_ => ZIO.logInfo(s"Retrieved UserADM from Cache: ${identifier}"))
+    }).tap(_ => ZIO.logDebug(s"Retrieved UserADM from Cache: ${identifier}"))
 
   /**
    * Retrieves the user stored under the IRI.
@@ -111,7 +111,7 @@ case class CacheServiceInMemImpl(
       _ <- projects.put(value.id, value)
       _ <- lut.put(value.shortname, value.id)
       _ <- lut.put(value.shortcode, value.id)
-    } yield ()).commit.tap(_ => ZIO.logInfo(s"Stored ProjectADM to Cache: ${value.id}"))
+    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored ProjectADM to Cache: ${value.id}"))
 
   /**
    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
@@ -127,7 +127,7 @@ case class CacheServiceInMemImpl(
       case ProjectIdentifierType.IRI       => getProjectByIri(identifier.toIri)
       case ProjectIdentifierType.SHORTCODE => getProjectByShortcodeOrShortname(identifier.toShortcode)
       case ProjectIdentifierType.SHORTNAME => getProjectByShortcodeOrShortname(identifier.toShortname)
-    }).tap(_ => ZIO.logInfo(s"Retrieved ProjectADM from Cache: $identifier"))
+    }).tap(_ => ZIO.logDebug(s"Retrieved ProjectADM from Cache: $identifier"))
 
   /**
    * Retrieves the project stored under the IRI.
@@ -165,7 +165,7 @@ case class CacheServiceInMemImpl(
       key   <- if (key.isEmpty()) Task.fail(emptyKeyError) else Task.succeed(key)
       value <- if (value.isEmpty()) Task.fail(emptyValueError) else Task.succeed(value)
       _     <- lut.put(key, value).commit
-    } yield ()).tap(_ => ZIO.logInfo(s"Wrote key: $key with value: $value to cache."))
+    } yield ()).tap(_ => ZIO.logDebug(s"Wrote key: $key with value: $value to cache."))
   }
 
   /**
@@ -175,7 +175,7 @@ case class CacheServiceInMemImpl(
    * @return an optional [[String]].
    */
   def getStringValue(key: String): Task[Option[String]] =
-    lut.get(key).commit.tap(value => ZIO.logInfo(s"Retrieved key: $key with value: $value from cache."))
+    lut.get(key).commit.tap(value => ZIO.logDebug(s"Retrieved key: $key with value: $value from cache."))
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
@@ -185,7 +185,7 @@ case class CacheServiceInMemImpl(
   def removeValues(keys: Set[String]): Task[Unit] =
     (for {
       _ <- ZIO.foreach(keys)(key => lut.delete(key).commit) // FIXME: is this realy thread safe?
-    } yield ()).tap(_ => ZIO.logInfo(s"Removed keys from cache: $keys"))
+    } yield ()).tap(_ => ZIO.logDebug(s"Removed keys from cache: $keys"))
 
   /**
    * Flushes (removes) all stored content from the in-memory cache.
@@ -195,7 +195,7 @@ case class CacheServiceInMemImpl(
       _ <- users.foreach((k, v) => users.delete(k))
       _ <- projects.foreach((k, v) => projects.delete(k))
       _ <- lut.foreach((k, v) => lut.delete(k))
-    } yield ()).commit.tap(_ => ZIO.logInfo("Flushed in-memory cache"))
+    } yield ()).commit.tap(_ => ZIO.logDebug("Flushed in-memory cache"))
 
   /**
    * Pings the in-memory cache to see if it is available.

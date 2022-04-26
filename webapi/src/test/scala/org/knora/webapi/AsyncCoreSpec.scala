@@ -72,7 +72,7 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
 
   /* needed by the core trait */
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit val materializer: Materializer       = Materializer.matFromSystem(system)
   override implicit val executionContext: ExecutionContext =
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
@@ -90,7 +90,7 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
-  val storeManager: ActorRef = appActor
+  val storeManager: ActorRef     = appActor
 
   val responderData: ResponderData = ResponderData(
     system = system,

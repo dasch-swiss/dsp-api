@@ -842,7 +842,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
   "querying the user's 'PermissionsDataADM' with 'hasPermissionFor'" should {
     "return true if the user is allowed to create a resource (root user)" in {
 
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri       = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(
@@ -856,7 +856,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return true if the user is allowed to create a resource (project admin user)" in {
 
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri       = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.incunabulaProjectAdminUser.permissions
@@ -867,7 +867,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return true if the user is allowed to create a resource (project member user)" in {
 
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri       = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.incunabulaMemberUser.permissions
@@ -877,7 +877,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return false if the user is not allowed to create a resource" in {
-      val projectIri = INCUNABULA_PROJECT_IRI
+      val projectIri       = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
       val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(
@@ -890,9 +890,9 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri = IMAGES_PROJECT_IRI
-      val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
-      val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
+      val projectIri                 = IMAGES_PROJECT_IRI
+      val allowedResourceClassIri01  = s"$IMAGES_ONTOLOGY_IRI#bild"
+      val allowedResourceClassIri02  = s"$IMAGES_ONTOLOGY_IRI#bildformat"
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result1 = SharedTestDataADM.imagesReviewerUser.permissions
@@ -905,7 +905,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return false if the user is not allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri = IMAGES_PROJECT_IRI
+      val projectIri                 = IMAGES_PROJECT_IRI
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result = SharedTestDataADM.imagesReviewerUser.permissions
@@ -918,14 +918,14 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return true if the user has the 'ProjectAdminAllPermission' (incunabula project admin user)" in {
       val projectIri = INCUNABULA_PROJECT_IRI
-      val result = SharedTestDataADM.incunabulaProjectAdminUser.permissions.hasProjectAdminAllPermissionFor(projectIri)
+      val result     = SharedTestDataADM.incunabulaProjectAdminUser.permissions.hasProjectAdminAllPermissionFor(projectIri)
 
       result should be(true)
     }
 
     "return false if the user has the 'ProjectAdminAllPermission' (incunabula member user)" in {
       val projectIri = INCUNABULA_PROJECT_IRI
-      val result = SharedTestDataADM.incunabulaMemberUser.permissions.hasProjectAdminAllPermissionFor(projectIri)
+      val result     = SharedTestDataADM.incunabulaMemberUser.permissions.hasProjectAdminAllPermissionFor(projectIri)
 
       result should be(false)
     }
@@ -945,7 +945,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "not update permission group if invalid permission IRI given" in {
       val permissionIri = "invalid-permission-iri"
-      val newGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+      val newGroupIri   = SharedTestDataADM.imagesReviewerGroup.id
       val caught = intercept[BadRequestException](
         PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -959,7 +959,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "not update permission group if invalid group IRI given" in {
       val permissionIri = SharedPermissionsTestData.perm001_d1.iri
-      val newGroupIri = "invalid-group-iri"
+      val newGroupIri   = "invalid-group-iri"
       val caught = intercept[BadRequestException](
         PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -972,7 +972,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "not update hasPermissions set of a permission if invalid permission IRI given" in {
-      val permissionIri = "invalid-permission-iri"
+      val permissionIri  = "invalid-permission-iri"
       val hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
       val caught = intercept[BadRequestException](
         PermissionChangeHasPermissionsRequestADM(
@@ -986,7 +986,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "not update hasPermissions set of a permission if invalid empty set given" in {
-      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val permissionIri  = SharedPermissionsTestData.perm001_d1.iri
       val hasPermissions = Set.empty[PermissionADM]
       val caught = intercept[BadRequestException](
         PermissionChangeHasPermissionsRequestADM(
@@ -1000,7 +1000,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "not update resource class of a doap if invalid permission IRI given" in {
-      val permissionIri = "invalid-permission-iri"
+      val permissionIri    = "invalid-permission-iri"
       val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
       val caught = intercept[BadRequestException](
         PermissionChangeResourceClassRequestADM(
@@ -1014,7 +1014,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "not update resource class of a doap if invalid resource class IRI is given" in {
-      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val permissionIri    = SharedPermissionsTestData.perm001_d1.iri
       val resourceClassIri = "invalid-iri"
       val caught = intercept[BadRequestException](
         PermissionChangeResourceClassRequestADM(
@@ -1029,7 +1029,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "not update property of a doap if invalid permission IRI given" in {
       val permissionIri = "invalid-permission-iri"
-      val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+      val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
       val caught = intercept[BadRequestException](
         PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
@@ -1043,7 +1043,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "not update property of a doap if invalid property IRI is given" in {
       val permissionIri = SharedPermissionsTestData.perm001_d1.iri
-      val propertyIri = "invalid-iri"
+      val propertyIri   = "invalid-iri"
       val caught = intercept[BadRequestException](
         PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,

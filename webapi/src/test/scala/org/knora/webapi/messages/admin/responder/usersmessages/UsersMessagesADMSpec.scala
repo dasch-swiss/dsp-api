@@ -26,18 +26,18 @@ object UsersMessagesADMSpec {
  */
 class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
-  private val id = SharedTestDataADM.rootUser.id
-  private val username = SharedTestDataADM.rootUser.username
-  private val email = SharedTestDataADM.rootUser.email
-  private val password = SharedTestDataADM.rootUser.password
-  private val token = SharedTestDataADM.rootUser.token
-  private val givenName = SharedTestDataADM.rootUser.givenName
-  private val familyName = SharedTestDataADM.rootUser.familyName
-  private val status = SharedTestDataADM.rootUser.status
-  private val lang = SharedTestDataADM.rootUser.lang
-  private val groups = SharedTestDataADM.rootUser.groups
-  private val projects = SharedTestDataADM.rootUser.projects
-  private val sessionId = SharedTestDataADM.rootUser.sessionId
+  private val id          = SharedTestDataADM.rootUser.id
+  private val username    = SharedTestDataADM.rootUser.username
+  private val email       = SharedTestDataADM.rootUser.email
+  private val password    = SharedTestDataADM.rootUser.password
+  private val token       = SharedTestDataADM.rootUser.token
+  private val givenName   = SharedTestDataADM.rootUser.givenName
+  private val familyName  = SharedTestDataADM.rootUser.familyName
+  private val status      = SharedTestDataADM.rootUser.status
+  private val lang        = SharedTestDataADM.rootUser.lang
+  private val groups      = SharedTestDataADM.rootUser.groups
+  private val projects    = SharedTestDataADM.rootUser.projects
+  private val sessionId   = SharedTestDataADM.rootUser.sessionId
   private val permissions = SharedTestDataADM.rootUser.permissions
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -94,7 +94,7 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
     "allow checking the SCrypt passwords" in {
       val encoder = new SCryptPasswordEncoder()
-      val hp = encoder.encode("123456")
+      val hp      = encoder.encode("123456")
       val up = UserADM(
         id = "something",
         username = "something",
@@ -120,7 +120,7 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
     "allow checking the BCrypt passwords" in {
       val encoder = new BCryptPasswordEncoder()
-      val hp = encoder.encode("123456")
+      val hp      = encoder.encode("123456")
       val up = UserADM(
         id = "something",
         username = "something",
@@ -177,7 +177,7 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
     "check whether a user identified by email is the same as a user identified by username" in {
       val userEmail = "user@example.org"
-      val username = "user"
+      val username  = "user"
 
       val user = UserADM(
         id = "http://rdfh.ch/users/example",
@@ -189,7 +189,7 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
         lang = "en"
       )
 
-      val emailID = UserIdentifierADM(maybeEmail = Some(userEmail))
+      val emailID    = UserIdentifierADM(maybeEmail = Some(userEmail))
       val usernameID = UserIdentifierADM(maybeUsername = Some(username))
 
       assert(user.isSelf(emailID))

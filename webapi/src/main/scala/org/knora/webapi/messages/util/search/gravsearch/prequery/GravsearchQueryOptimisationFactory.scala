@@ -266,8 +266,8 @@ class ReorderPatternsByDependencyOptimisationFeature(
         val cycle: graph.Cycle = graph.findCycle.get
 
         // the cyclic node is the one that cycle starts and ends with
-        val cyclicNode: graph.NodeT = cycle.endNode
-        val cyclicEdge: graph.EdgeT = cyclicNode.edges.last
+        val cyclicNode: graph.NodeT        = cycle.endNode
+        val cyclicEdge: graph.EdgeT        = cyclicNode.edges.last
         val originNodeOfCyclicEdge: String = cyclicEdge._1.value
         val TargetNodeOfCyclicEdge: String = cyclicEdge._2.value
         val graphComponentsWithOutCycle =

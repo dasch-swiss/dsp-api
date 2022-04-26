@@ -41,7 +41,7 @@ object ListsResponderADMSpec {
 class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
-  implicit private val timeout = 5.seconds
+  implicit private val timeout                          = 5.seconds
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   override lazy val rdfDataObjects = List(
@@ -156,10 +156,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         received.list.children.map(_.sorted) should be(treeListChildNodes.map(_.sorted))
       }
     }
-    val newListIri = new MutableTestIri
-    val firstChildIri = new MutableTestIri
+    val newListIri     = new MutableTestIri
+    val firstChildIri  = new MutableTestIri
     val secondChildIri = new MutableTestIri
-    val thirdChildIri = new MutableTestIri
+    val thirdChildIri  = new MutableTestIri
 
     "used to modify lists" should {
       "create a list" in {
@@ -201,9 +201,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "create a list with special characters in its labels" in {
-        val labelWithSpecialCharacter = "Neue \\\"Liste\\\""
+        val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
-        val nameWithSpecialCharacter = "a new \\\"name\\\""
+        val nameWithSpecialCharacter    = "a new \\\"name\\\""
         responderManager ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
@@ -233,7 +233,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         givenLabel.value shouldEqual stringFormatter.fromSparqlEncodedString(labelWithSpecialCharacter)
         givenLabel.language shouldEqual Some("de")
 
-        val comments = received.list.listinfo.comments.stringLiterals
+        val comments     = received.list.listinfo.comments.stringLiterals
         val givenComment = comments.head
         givenComment.language shouldEqual Some("de")
         givenComment.value shouldEqual stringFormatter.fromSparqlEncodedString(commentWithSpecialCharacter)
@@ -301,7 +301,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not update basic list information if name is duplicate" in {
-        val name = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
+        val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
         val projectIRI = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
@@ -344,7 +344,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         )
 
         val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-        val nodeInfo = received.nodeinfo
+        val nodeInfo                              = received.nodeinfo
 
         // check correct node info
         val childNodeInfo = nodeInfo match {
@@ -397,7 +397,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         )
 
         val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-        val nodeInfo = received.nodeinfo
+        val nodeInfo                              = received.nodeinfo
 
         // check correct node info
         val childNodeInfo = nodeInfo match {
@@ -449,7 +449,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         )
 
         val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
-        val nodeInfo = received.nodeinfo
+        val nodeInfo                              = received.nodeinfo
 
         // check correct node info
         val childNodeInfo = nodeInfo match {
@@ -558,7 +558,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition node List014 from position 3 to 1 (shift to right)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -572,10 +572,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         )
 
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(parentIri)
 
-        val children = parentNode.getChildren
+        val children      = parentNode.getChildren
         val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 1)
         isNodeUpdated should be(true)
 
@@ -591,7 +591,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition node List011 from position 0 to end (shift to left)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
+        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList011"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -604,11 +604,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
 
         /* check parent node */
         parentNode.getNodeId should be(parentIri)
-        val children = parentNode.getChildren
+        val children      = parentNode.getChildren
         val isNodeUpdated = children.exists(child => child.id == nodeIri && child.position == 4)
         isNodeUpdated should be(true)
 
@@ -624,7 +624,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition node List013 in position 2 of another parent" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList013"
+        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList013"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
         val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
@@ -638,7 +638,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(newParentIri)
 
         /* check children of new parent node */
@@ -675,7 +675,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition node List015 to the end of another parent's children" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList015"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
         val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
@@ -689,7 +689,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(newParentIri)
 
         /* check children of new parent node */
@@ -721,7 +721,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List015 back in end of its original parent node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList015"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -734,7 +734,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(newParentIri)
 
         /* check children of new parent node */
@@ -746,7 +746,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List013 back in position 2 of its original parent node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList013"
+        val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList013"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -759,7 +759,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(newParentIri)
 
         /* check children of new parent node */
@@ -771,7 +771,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List011 back in its original place" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
+        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList011"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -784,14 +784,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(parentIri)
         val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
         isNodeUpdated should be(true)
       }
 
       "put List014 back in its original position" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -804,14 +804,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(parentIri)
         val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 3)
         isNodeUpdated should be(true)
       }
 
       "reposition node in a position equal to length of new parents children" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList03"
+        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList03"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -824,14 +824,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(parentIri)
         val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 5)
         isNodeUpdated should be(true)
       }
 
       "reposition List014 in position 0 of its sibling which does not have a child" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList015"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
@@ -844,7 +844,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
-        val parentNode = received.node
+        val parentNode                              = received.node
         parentNode.getNodeId should be(parentIri)
         val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
         isNodeUpdated should be(true)
@@ -902,8 +902,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
-        val parentNode = received.node
-        val remainingChildren = parentNode.getChildren
+        val parentNode                           = received.node
+        val remainingChildren                    = parentNode.getChildren
         remainingChildren.size should be(4)
         //Tailing children should be shifted to left
         remainingChildren.last.position should be(3)
@@ -923,8 +923,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
-        val parentNode = received.node
-        val remainingChildren = parentNode.getChildren
+        val parentNode                           = received.node
+        val remainingChildren                    = parentNode.getChildren
         remainingChildren.size should be(1)
         val firstChild = remainingChildren.head
         firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")

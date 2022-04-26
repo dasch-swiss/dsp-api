@@ -54,15 +54,15 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
       maybeChildren <- listGetV1(rootNodeIri, userProfile)
 
       children = maybeChildren match {
-        case children: Seq[ListNodeV1] if children.nonEmpty => children
-        case _                                              => throw NotFoundException(s"List not found: $rootNodeIri")
-      }
+                   case children: Seq[ListNodeV1] if children.nonEmpty => children
+                   case _                                              => throw NotFoundException(s"List not found: $rootNodeIri")
+                 }
 
       // consider routing path here ("hlists" | "selections") and return the correct case class
       result = pathType match {
-        case PathType.HList     => HListGetResponseV1(hlist = children)
-        case PathType.Selection => SelectionGetResponseV1(selection = children)
-      }
+                 case PathType.HList     => HListGetResponseV1(hlist = children)
+                 case PathType.Selection => SelectionGetResponseV1(selection = children)
+               }
 
     } yield result
 
@@ -142,20 +142,19 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
     for {
       listQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getList(
-            rootNodeIri = rootNodeIri,
-            preferredLanguage = userProfile.userData.lang,
-            fallbackLanguage = settings.fallbackLanguage
-          )
-          .toString()
-      }
+                     org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                       .getList(
+                         rootNodeIri = rootNodeIri,
+                         preferredLanguage = userProfile.userData.lang,
+                         fallbackLanguage = settings.fallbackLanguage
+                       )
+                       .toString()
+                   }
       listQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
 
       // Group the results to map each node to the SPARQL query results representing its children.
-      groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] = listQueryResponse.results.bindings.groupBy(row =>
-        row.rowMap("node")
-      )
+      groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] =
+        listQueryResponse.results.bindings.groupBy(row => row.rowMap("node"))
 
       rootNodeChildren = groupedByNodeIri.getOrElse(rootNodeIri, Seq.empty[VariableResultsRow])
 
@@ -225,16 +224,16 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
     for {
       nodePathQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getNodePath(
-            queryNodeIri = queryNodeIri,
-            preferredLanguage = userProfile.userData.lang,
-            fallbackLanguage = settings.fallbackLanguage
-          )
-          .toString()
-      }
+                         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                           .getNodePath(
+                             queryNodeIri = queryNodeIri,
+                             preferredLanguage = userProfile.userData.lang,
+                             fallbackLanguage = settings.fallbackLanguage
+                           )
+                           .toString()
+                       }
       nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery))
-        .mapTo[SparqlSelectResult]
+                                                .mapTo[SparqlSelectResult]
 
       /*
 
@@ -252,16 +251,16 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
 
       // A Map of node IRIs to query result rows.
       nodeMap: Map[IRI, Map[String, String]] = nodePathResponse.results.bindings.map { row =>
-        row.rowMap("node") -> row.rowMap
-      }.toMap
+                                                 row.rowMap("node") -> row.rowMap
+                                               }.toMap
 
       // A Map of child node IRIs to parent node IRIs.
       parentMap: Map[IRI, IRI] = nodePathResponse.results.bindings.foldLeft(Map.empty[IRI, IRI]) { case (acc, row) =>
-        row.rowMap.get("child") match {
-          case Some(child) => acc + (child -> row.rowMap("node"))
-          case None        => acc
-        }
-      }
+                                   row.rowMap.get("child") match {
+                                     case Some(child) => acc + (child -> row.rowMap("node"))
+                                     case None        => acc
+                                   }
+                                 }
     } yield NodePathGetResponseV1(
       nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil)
     )

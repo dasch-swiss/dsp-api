@@ -70,9 +70,9 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     //log.debug("projectsGetRequestV1")
     for {
       projects <- projectsGetV1(
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                    featureFactoryConfig = featureFactoryConfig,
+                    userProfile = userProfile
+                  )
 
       result =
         if (projects.nonEmpty) {
@@ -98,10 +98,10 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
   ): Future[Seq[ProjectInfoV1]] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getProjects()
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getProjects()
+                               .toString()
+                           )
       //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
       projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -109,70 +109,72 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
 
       projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
-      projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] = projectsResponseRows.groupBy(_.rowMap("s")).map {
-        case (projIri: String, rows: Seq[VariableResultsRow]) =>
+      projectsWithProperties: Map[IRI, Map[IRI, Seq[String]]] =
+        projectsResponseRows.groupBy(_.rowMap("s")).map { case (projIri: String, rows: Seq[VariableResultsRow]) =>
           (
             projIri,
             rows.groupBy(_.rowMap("p")).map { case (predicate: IRI, literals: Seq[VariableResultsRow]) =>
               predicate -> literals.map(_.rowMap("o"))
             }
           )
-      }
+        }
       //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
 
       ontologiesForProjects <- getOntologiesForProjects(
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                 featureFactoryConfig = featureFactoryConfig,
+                                 userProfile = userProfile
+                               )
 
       projects = projectsWithProperties.map { case (projectIri: String, propsMap: Map[String, Seq[String]]) =>
-        val keywordsSeq: Seq[String] =
-          propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword, Seq.empty[String]).sorted
+                   val keywordsSeq: Seq[String] =
+                     propsMap.getOrElse(OntologyConstants.KnoraAdmin.ProjectKeyword, Seq.empty[String]).sorted
 
-        val maybeKeywords: Option[String] = if (keywordsSeq.nonEmpty) {
-          Some(keywordsSeq.mkString(", "))
-        } else {
-          None
-        }
+                   val maybeKeywords: Option[String] = if (keywordsSeq.nonEmpty) {
+                     Some(keywordsSeq.mkString(", "))
+                   } else {
+                     None
+                   }
 
-        val ontologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
+                   val ontologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
 
-        ProjectInfoV1(
-          id = projectIri,
-          shortname = propsMap
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.ProjectShortname,
-              throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined.")
-            )
-            .head,
-          shortcode = propsMap
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.ProjectShortcode,
-              throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined.")
-            )
-            .head,
-          longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname).map(_.head),
-          description = propsMap.get(OntologyConstants.KnoraAdmin.ProjectDescription).map(_.head),
-          keywords = maybeKeywords,
-          logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo).map(_.head),
-          institution = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToInstitution).map(_.head),
-          ontologies = ontologies,
-          status = propsMap
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.Status,
-              throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined.")
-            )
-            .head
-            .toBoolean,
-          selfjoin = propsMap
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.HasSelfJoinEnabled,
-              throw InconsistentRepositoryDataException(s"Project: $projectIri has no hasSelfJoinEnabled defined.")
-            )
-            .head
-            .toBoolean
-        )
-      }.toSeq
+                   ProjectInfoV1(
+                     id = projectIri,
+                     shortname = propsMap
+                       .getOrElse(
+                         OntologyConstants.KnoraAdmin.ProjectShortname,
+                         throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined.")
+                       )
+                       .head,
+                     shortcode = propsMap
+                       .getOrElse(
+                         OntologyConstants.KnoraAdmin.ProjectShortcode,
+                         throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined.")
+                       )
+                       .head,
+                     longname = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLongname).map(_.head),
+                     description = propsMap.get(OntologyConstants.KnoraAdmin.ProjectDescription).map(_.head),
+                     keywords = maybeKeywords,
+                     logo = propsMap.get(OntologyConstants.KnoraAdmin.ProjectLogo).map(_.head),
+                     institution = propsMap.get(OntologyConstants.KnoraAdmin.BelongsToInstitution).map(_.head),
+                     ontologies = ontologies,
+                     status = propsMap
+                       .getOrElse(
+                         OntologyConstants.KnoraAdmin.Status,
+                         throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined.")
+                       )
+                       .head
+                       .toBoolean,
+                     selfjoin = propsMap
+                       .getOrElse(
+                         OntologyConstants.KnoraAdmin.HasSelfJoinEnabled,
+                         throw InconsistentRepositoryDataException(
+                           s"Project: $projectIri has no hasSelfJoinEnabled defined."
+                         )
+                       )
+                       .head
+                       .toBoolean
+                   )
+                 }.toSeq
 
     } yield projects
 
@@ -192,28 +194,28 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     for {
       // Get a UserADM for the UserProfileV1, because we need it to send a message to OntologyResponderV1.
       userADM: UserADM <- userProfile match {
-        case Some(profile) =>
-          profile.userData.user_id match {
-            case Some(user_iri) =>
-              (responderManager ? UserGetRequestADM(
-                identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )).mapTo[UserResponseADM].map(_.user)
+                            case Some(profile) =>
+                              profile.userData.user_id match {
+                                case Some(user_iri) =>
+                                  (responderManager ? UserGetRequestADM(
+                                    identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                                  )).mapTo[UserResponseADM].map(_.user)
 
-            case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
-          }
+                                case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
+                              }
 
-        case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
-      }
+                            case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
+                          }
 
       // Get the ontologies per project.
 
       namedGraphsResponse <- (responderManager ? NamedGraphsGetRequestV1(
-        projectIris = projectIris,
-        featureFactoryConfig = featureFactoryConfig,
-        userADM = userADM
-      )).mapTo[NamedGraphsResponseV1]
+                               projectIris = projectIris,
+                               featureFactoryConfig = featureFactoryConfig,
+                               userADM = userADM
+                             )).mapTo[NamedGraphsResponseV1]
 
     } yield namedGraphsResponse.vocabularies.map { namedGraph: NamedGraphV1 =>
       namedGraph.project_id -> namedGraph.id
@@ -240,15 +242,15 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     //log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
     for {
       maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(
-        projectIri = projectIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                                   projectIri = projectIri,
+                                                   featureFactoryConfig = featureFactoryConfig,
+                                                   userProfile = userProfile
+                                                 )
 
       projectInfo = maybeProjectInfo match {
-        case Some(pi) => pi
-        case None     => throw NotFoundException(s"Project '$projectIri' not found")
-      }
+                      case Some(pi) => pi
+                      case None     => throw NotFoundException(s"Project '$projectIri' not found")
+                    }
     } yield ProjectInfoResponseV1(
       project_info = projectInfo
     )
@@ -269,20 +271,20 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getProjectByIri(
-            projectIri = projectIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getProjectByIri(
+                           projectIri = projectIri
+                         )
+                         .toString()
+                     )
 
       projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
-        projectIris = Set(projectIri),
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                                     projectIris = Set(projectIri),
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     userProfile = userProfile
+                                                   )
 
       projectOntologies = ontologiesForProjects.getOrElse(projectIri, Seq.empty[IRI])
 
@@ -321,12 +323,12 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getProjectByShortname(
-            shortname = shortName
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getProjectByShortname(
+                                 shortname = shortName
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
 
       projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -341,19 +343,19 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
         }
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
-        projectIris = Set(projectIri),
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                                     projectIris = Set(projectIri),
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     userProfile = userProfile
+                                                   )
 
       projectOntologies = ontologiesForProjects(projectIri)
 
       projectInfo = createProjectInfoV1(
-        projectResponse = projectResponse.results.bindings,
-        projectIri = projectIri,
-        ontologies = projectOntologies,
-        userProfile
-      )
+                      projectResponse = projectResponse.results.bindings,
+                      projectIri = projectIri,
+                      ontologies = projectOntologies,
+                      userProfile
+                    )
 
     } yield ProjectInfoResponseV1(
       project_info = projectInfo
@@ -446,14 +448,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
   def projectByIriExists(projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkProjectExistsByIri(projectIri = projectIri)
-          .toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       .checkProjectExistsByIri(projectIri = projectIri)
+                       .toString
+                   )
       //_ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = checkProjectExistsResponse.result
+      result                      = checkProjectExistsResponse.result
 
     } yield result
 
@@ -466,14 +468,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
   def projectByShortnameExists(shortname: String): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkProjectExistsByShortname(shortname = shortname)
-          .toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       .checkProjectExistsByShortname(shortname = shortname)
+                       .toString
+                   )
       //_ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = checkProjectExistsResponse.result
+      result                      = checkProjectExistsResponse.result
 
     } yield result
 
@@ -486,14 +488,14 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
   def projectByShortcodeExists(shortcode: String): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkProjectExistsByShortcode(shortcode = shortcode)
-          .toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       .checkProjectExistsByShortcode(shortcode = shortcode)
+                       .toString
+                   )
       //_ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = checkProjectExistsResponse.result
+      result                      = checkProjectExistsResponse.result
 
     } yield result
 }

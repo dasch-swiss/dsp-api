@@ -31,7 +31,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
   import ListsResponderV2Spec._
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val listsResponderV2SpecFullData = new ListsResponderV2SpecFullData
+  private val listsResponderV2SpecFullData              = new ListsResponderV2SpecFullData
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

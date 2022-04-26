@@ -63,9 +63,9 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield GetStandoffPageRequestV2(
             resourceIri = resourceIri.toString,
             valueIri = valueIri.toString,
@@ -90,7 +90,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
       post {
         entity(as[Multipart.FormData]) { formData: Multipart.FormData => requestContext =>
           val JSON_PART = "json"
-          val XML_PART = "xml"
+          val XML_PART  = "xml"
           type Name = String
 
           val apiRequestID = UUID.randomUUID
@@ -124,36 +124,38 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
             allParts: Map[Name, String] <- allPartsFuture
-            jsonldDoc = JsonLDUtil.parseJsonLD(
-              allParts
-                .getOrElse(
-                  JSON_PART,
-                  throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")
-                )
-                .toString
-            )
+            jsonldDoc =
+              JsonLDUtil.parseJsonLD(
+                allParts
+                  .getOrElse(
+                    JSON_PART,
+                    throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")
+                  )
+                  .toString
+              )
 
             metadata: CreateMappingRequestMetadataV2 <- CreateMappingRequestMetadataV2.fromJsonLD(
-              jsonLDDocument = jsonldDoc,
-              apiRequestID = apiRequestID,
-              requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
-              featureFactoryConfig = featureFactoryConfig,
-              settings = settings,
-              log = log
-            )
+                                                          jsonLDDocument = jsonldDoc,
+                                                          apiRequestID = apiRequestID,
+                                                          requestingUser = requestingUser,
+                                                          responderManager = responderManager,
+                                                          storeManager = storeManager,
+                                                          featureFactoryConfig = featureFactoryConfig,
+                                                          settings = settings,
+                                                          log = log
+                                                        )
 
-            xml: String = allParts
-              .getOrElse(
-                XML_PART,
-                throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
-              )
-              .toString
+            xml: String =
+              allParts
+                .getOrElse(
+                  XML_PART,
+                  throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
+                )
+                .toString
           } yield CreateMappingRequestV2(
             metadata = metadata,
             xml = CreateMappingRequestXMLV2(xml),

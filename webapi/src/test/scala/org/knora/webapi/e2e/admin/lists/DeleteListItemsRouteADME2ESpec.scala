@@ -70,7 +70,7 @@ class DeleteListItemsRouteADME2ESpec
     "test"
   )
 
-  private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+  private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
   "The List Items Route (/admin/lists)" when {
@@ -107,7 +107,7 @@ class DeleteListItemsRouteADME2ESpec
         )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+        val node     = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
         val children = node.getChildren
         children.size should be(2)
         // last child must be shifted one place to left
@@ -171,7 +171,7 @@ class DeleteListItemsRouteADME2ESpec
   "Candeletelist route (/admin/lists/candelete)" when {
     "used to query if list can be deleted" should {
       "return TRUE for unused list" in {
-        val unusedList = "http://rdfh.ch/lists/0001/notUsedList"
+        val unusedList        = "http://rdfh.ch/lists/0001/notUsedList"
         val unusedListEncoded = java.net.URLEncoder.encode(unusedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + unusedListEncoded) ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password)
@@ -187,7 +187,7 @@ class DeleteListItemsRouteADME2ESpec
       }
 
       "return FALSE for used list" in {
-        val usedList = "http://rdfh.ch/lists/0001/treeList01"
+        val usedList        = "http://rdfh.ch/lists/0001/treeList01"
         val usedListEncoded = java.net.URLEncoder.encode(usedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + usedListEncoded) ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password)
@@ -203,7 +203,7 @@ class DeleteListItemsRouteADME2ESpec
       }
 
       "return exception for bad list iri" in {
-        val badlistIri = "bad list Iri"
+        val badlistIri        = "bad list Iri"
         val badListIriEncoded = java.net.URLEncoder.encode(badlistIri, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + badListIriEncoded) ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password)

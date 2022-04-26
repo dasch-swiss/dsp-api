@@ -18,10 +18,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
   implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
-  val booksBookIri: String = "http://www.knora.org/ontology/0001/books#Book"
+  val booksBookIri: String     = "http://www.knora.org/ontology/0001/books#Book"
   val booksHasTextType: String = "http://www.knora.org/ontology/0001/books#hasTextType"
-  val testUser1: String = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-  val testUser2: String = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+  val testUser1: String        = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+  val testUser2: String        = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
   val bookTemplateReadResource: ReadResourceV2 = ReadResourceV2(
     label = "",
     resourceIri = "",

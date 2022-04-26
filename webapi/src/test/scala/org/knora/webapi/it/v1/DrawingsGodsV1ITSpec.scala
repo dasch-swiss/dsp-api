@@ -60,9 +60,9 @@ class DrawingsGodsV1ITSpec
   "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
     val drawingsOfGodsUserEmail = "ddd1@unil.ch"
-    val testPass = "test"
-    val pathToChlaus = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
-    var loginToken: String = ""
+    val testPass                = "test"
+    val pathToChlaus            = Paths.get("..", "test_data/test_route/images/Chlaus.jpg")
+    var loginToken: String      = ""
 
     "log in as a Knora user" in {
       /* Correct username and correct password */
@@ -75,7 +75,7 @@ class DrawingsGodsV1ITSpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 

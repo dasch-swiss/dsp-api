@@ -35,12 +35,12 @@ class SipiV1R2RSpec extends R2RSpec {
         """.stripMargin
 
   private val resourcesPath = new ResourcesRouteV1(routeData).knoraApiPath
-  private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
+  private val valuesPath    = new ValuesRouteV1(routeData).knoraApiPath
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
-  private val testPass = "test"
+  private val testPass                    = "test"
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

@@ -34,13 +34,13 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         requestContext =>
           val requestMessage: Future[ListGetRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
             listIri: IRI = stringFormatter.validateAndEscapeIri(
-              lIri,
-              throw BadRequestException(s"Invalid list IRI: '$lIri'")
-            )
+                             lIri,
+                             throw BadRequestException(s"Invalid list IRI: '$lIri'")
+                           )
           } yield ListGetRequestV2(
             listIri = listIri,
             featureFactoryConfig = featureFactoryConfig,
@@ -67,13 +67,13 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         requestContext =>
           val requestMessage: Future[NodeGetRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
             nodeIri: IRI = stringFormatter.validateAndEscapeIri(
-              nIri,
-              throw BadRequestException(s"Invalid list IRI: '$nIri'")
-            )
+                             nIri,
+                             throw BadRequestException(s"Invalid list IRI: '$nIri'")
+                           )
           } yield NodeGetRequestV2(
             nodeIri = nodeIri,
             featureFactoryConfig = featureFactoryConfig,

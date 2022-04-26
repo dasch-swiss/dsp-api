@@ -74,16 +74,16 @@ import scala.util.Try
 class HttpTriplestoreConnector extends Actor with ActorLogging with InstrumentationSupport {
 
   // MIME type constants.
-  private val mimeTypeApplicationJson = "application/json"
+  private val mimeTypeApplicationJson              = "application/json"
   private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
-  private val mimeTypeTextTurtle = "text/turtle"
-  private val mimeTypeApplicationSparqlUpdate = "application/sparql-update"
-  private val mimeTypeApplicationNQuads = "application/n-quads"
+  private val mimeTypeTextTurtle                   = "text/turtle"
+  private val mimeTypeApplicationSparqlUpdate      = "application/sparql-update"
+  private val mimeTypeApplicationNQuads            = "application/n-quads"
 
-  private implicit val system: ActorSystem = context.system
-  private val settings = KnoraSettings(system)
+  private implicit val system: ActorSystem        = context.system
+  private val settings                            = KnoraSettings(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-  override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+  override val log: LoggingAdapter                = akka.event.Logging(system, this.getClass.getName)
 
   private val targetHost: HttpHost = new HttpHost(settings.triplestoreHost, settings.triplestorePort, "http")
 
@@ -192,8 +192,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
       try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
-    case HelloTriplestore(msg: String) if msg == settings.triplestoreType => sender() ! HelloTriplestore(settings.triplestoreType)
-    case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
+    case HelloTriplestore(msg: String) if msg == settings.triplestoreType =>
+      sender() ! HelloTriplestore(settings.triplestoreType)
+    case CheckTriplestoreRequest() => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
       try2Message(sender(), Success(SparqlUpdateResponse()), log)
     case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
@@ -267,9 +268,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
       // Are we preparing a fake triplestore?
       _ = if (settings.prepareFakeTriplestore) {
-        // Yes: add the query and the response to it.
-        FakeTriplestore.add(sparql, resultStr, log)
-      }
+            // Yes: add the query and the response to it.
+            FakeTriplestore.add(sparql, resultStr, log)
+          }
 
       // _ = println(s"SPARQL: $logDelimiter$sparql")
       // _ = println(s"Result: $logDelimiter$resultStr")
@@ -296,13 +297,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       rdfFormatUtil: RdfFormatUtil
     ): Try[SparqlConstructResponse] = {
       val parseTry = Try {
-        val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+        val rdfModel: RdfModel                                 = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
         val statementMap: mutable.Map[IRI, Seq[(IRI, String)]] = mutable.Map.empty
 
         for (st: Statement <- rdfModel) {
-          val subjectIri = st.subj.stringValue
+          val subjectIri   = st.subj.stringValue
           val predicateIri = st.pred.stringValue
-          val objectIri = st.obj.stringValue
+          val objectIri    = st.obj.stringValue
           val currentStatementsForSubject: Seq[(IRI, String)] =
             statementMap.getOrElse(subjectIri, Vector.empty[(IRI, String)])
           statementMap += (subjectIri -> (currentStatementsForSubject :+ (predicateIri, objectIri)))
@@ -338,10 +339,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         getSparqlHttpResponse(sparqlConstructRequest.sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
 
       response <- parseTurtleResponse(
-        sparql = sparqlConstructRequest.sparql,
-        turtleStr = turtleStr,
-        rdfFormatUtil = rdfFormatUtil
-      )
+                    sparql = sparqlConstructRequest.sparql,
+                    turtleStr = turtleStr,
+                    rdfFormatUtil = rdfFormatUtil
+                  )
     } yield response
   }
 
@@ -367,11 +368,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
 
       _ = rdfFormatUtil.turtleToQuadsFile(
-        rdfSource = RdfStringSource(turtleStr),
-        graphIri = graphIri,
-        outputFile = outputFile,
-        outputFormat = outputFormat
-      )
+            rdfSource = RdfStringSource(turtleStr),
+            graphIri = graphIri,
+            outputFile = outputFile,
+            outputFormat = outputFormat
+          )
     } yield FileWrittenResponse()
   }
 
@@ -390,16 +391,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     val parseTry = for {
       turtleStr <- getSparqlHttpResponse(
-        sparqlExtendedConstructRequest.sparql,
-        isUpdate = false,
-        acceptMimeType = mimeTypeTextTurtle
-      )
+                     sparqlExtendedConstructRequest.sparql,
+                     isUpdate = false,
+                     acceptMimeType = mimeTypeTextTurtle
+                   )
 
       response <- SparqlExtendedConstructResponse.parseTurtleResponse(
-        turtleStr = turtleStr,
-        rdfFormatUtil = rdfFormatUtil,
-        log = log
-      )
+                    turtleStr = turtleStr,
+                    rdfFormatUtil = rdfFormatUtil,
+                    log = log
+                  )
     } yield response
 
     parseTry match {
@@ -438,7 +439,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   def sparqlHttpAsk(sparql: String): Try[SparqlAskResponse] =
     for {
       resultString <- getSparqlHttpResponse(sparql, isUpdate = false)
-      _ = log.debug("sparqlHttpAsk - resultString: {}", resultString)
+      _             = log.debug("sparqlHttpAsk - resultString: {}", resultString)
 
       result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
     } yield SparqlAskResponse(result)
@@ -474,7 +475,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     val response: Try[DropAllRepositoryContentACK] = for {
       result: String <- getSparqlHttpResponse(dropAllSparqlString, isUpdate = true)
-      _ = log.debug(s"==>> Drop All Data End, Result: $result")
+      _               = log.debug(s"==>> Drop All Data End, Result: $result")
     } yield DropAllRepositoryContentACK()
 
     response.recover { case t: Exception =>
@@ -596,7 +597,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         responseTry.get
       }
 
-      val nameShouldBe = settings.triplestoreDatabaseName
+      val nameShouldBe               = settings.triplestoreDatabaseName
       val fusekiServer: FusekiServer = JsonParser(responseStr).convertTo[FusekiServer]
       val neededDataset: Option[FusekiDataset] =
         fusekiServer.datasets.find(dataset => dataset.dsName == s"/$nameShouldBe" && dataset.dsState)
@@ -674,8 +675,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       }
 
     val httpContext: HttpClientContext = makeHttpContext
-    val httpPost: HttpPost = new HttpPost("/$/datasets")
-    val stringEntity = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeTextTurtle))
+    val httpPost: HttpPost             = new HttpPost("/$/datasets")
+    val stringEntity                   = new StringEntity(triplestoreConfig, ContentType.create(mimeTypeTextTurtle))
     httpPost.setEntity(stringEntity)
 
     doHttpRequest(
@@ -717,7 +718,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     featureFactoryConfig: FeatureFactoryConfig
   ): Try[FileWrittenResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
-    val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
+    val httpGet                        = new HttpGet(makeNamedGraphDownloadUri(graphIri))
     httpGet.addHeader("Accept", mimeTypeTextTurtle)
 
     val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(
@@ -742,7 +743,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    */
   private def sparqlHttpGraphData(graphIri: IRI): Try[NamedGraphDataResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
-    val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
+    val httpGet                        = new HttpGet(makeNamedGraphDownloadUri(graphIri))
     httpGet.addHeader("Accept", mimeTypeTextTurtle)
     val makeResponse: CloseableHttpResponse => NamedGraphDataResponse = returnGraphDataAsTurtle(graphIri)
 
@@ -774,7 +775,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
       // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
-      val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
+      val requestEntity  = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
       val updateHttpPost = new HttpPost(sparqlUpdatePath)
       updateHttpPost.setEntity(requestEntity)
       (updateHttpClient, updateHttpPost)
@@ -784,7 +785,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       val formParams = new util.ArrayList[NameValuePair]()
       formParams.add(new BasicNameValuePair("query", sparql))
       val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
-      val queryHttpPost: HttpPost = new HttpPost(queryPath)
+      val queryHttpPost: HttpPost             = new HttpPost(queryPath)
       queryHttpPost.setEntity(requestEntity)
       queryHttpPost.addHeader("Accept", acceptMimeType)
       (queryHttpClient, queryHttpPost)
@@ -851,8 +852,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    */
   private def uploadRepository(inputFile: Path): Try[RepositoryUploadedResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
-    val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
-    val fileEntity = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
+    val httpPost: HttpPost             = new HttpPost(repositoryUploadPath)
+    val fileEntity                     = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
     httpPost.setEntity(fileEntity)
 
     doHttpRequest(
@@ -871,10 +872,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    */
   private def insertDataGraphRequest(graphContent: String, graphName: String): Try[InsertGraphDataContentResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
-    val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
+    val uriBuilder: URIBuilder         = new URIBuilder(dataInsertPath)
     uriBuilder.addParameter("graph", graphName)
     val httpPut: HttpPut = new HttpPut(uriBuilder.build())
-    val requestEntity = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
+    val requestEntity    = new StringEntity(graphContent, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
     httpPut.setEntity(requestEntity)
     val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(graphName)
 
@@ -892,7 +893,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    * @return httpContext with credentials and authorization
    */
   private def makeHttpContext: HttpClientContext = {
-    val authCache: AuthCache = new BasicAuthCache
+    val authCache: AuthCache   = new BasicAuthCache
     val basicAuth: BasicScheme = new BasicScheme
     authCache.put(targetHost, basicAuth)
 
@@ -930,7 +931,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         throw new java.net.SocketTimeoutException("Simulated read timeout")
       }
 
-      val start = System.currentTimeMillis()
+      val start    = System.currentTimeMillis()
       val response = client.execute(targetHost, request, context)
       maybeResponse = Some(response)
       val statusCode: Int = response.getStatusLine.getStatusCode

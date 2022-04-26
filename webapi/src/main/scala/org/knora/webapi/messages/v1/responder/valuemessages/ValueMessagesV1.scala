@@ -592,9 +592,9 @@ case class ValueObjectV1(
  * of the values of this enumeration; use `lookup` instead, because it reports errors better.
  */
 object KnoraCalendarV1 extends Enumeration {
-  val JULIAN: Value = Value(0, "JULIAN")
-  val GREGORIAN: Value = Value(1, "GREGORIAN")
-  val JEWISH: Value = Value(2, "JEWISH")
+  val JULIAN: Value        = Value(0, "JULIAN")
+  val GREGORIAN: Value     = Value(1, "GREGORIAN")
+  val JEWISH: Value        = Value(2, "JEWISH")
   val REVOLUTIONARY: Value = Value(3, "REVOLUTIONARY")
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
@@ -618,9 +618,9 @@ object KnoraCalendarV1 extends Enumeration {
  * of the values of this enumeration; use `lookup` instead, because it reports errors better.
  */
 object KnoraPrecisionV1 extends Enumeration {
-  val DAY: Value = Value(0, "DAY")
+  val DAY: Value   = Value(0, "DAY")
   val MONTH: Value = Value(1, "MONTH")
-  val YEAR: Value = Value(2, "YEAR")
+  val YEAR: Value  = Value(2, "YEAR")
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -699,14 +699,14 @@ case class TextValueWithStandoffV1(
     language match {
       case Some(lang) =>
         JsObject(
-          "xml" -> JsString(xml),
+          "xml"        -> JsString(xml),
           "mapping_id" -> JsString(mappingIri),
-          "language" -> JsString(lang)
+          "language"   -> JsString(lang)
         )
 
       case None =>
         JsObject(
-          "xml" -> JsString(xml),
+          "xml"        -> JsString(xml),
           "mapping_id" -> JsString(mappingIri)
         )
     }
@@ -767,7 +767,7 @@ case class TextValueWithStandoffV1(
           }
 
         val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
-        val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+        val endParentIndex: Option[Int]   = standoffTag.standoffNode.endParentIndex
 
         // return standoff tag with updated attributes
         standoffTag.copy(
@@ -848,7 +848,7 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String] = None)
     language match {
       case Some(lang) =>
         JsObject(
-          "utf8str" -> JsString(utf8str),
+          "utf8str"  -> JsString(utf8str),
           "language" -> JsString(lang)
         )
 
@@ -1910,17 +1910,17 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       )
   }
 
-  implicit val createFileV1Format: RootJsonFormat[CreateFileV1] = jsonFormat3(CreateFileV1)
-  implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
-  implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
-  implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat7(StillImageFileValueV1)
-  implicit val documentFileValueV1Format: JsonFormat[DocumentFileValueV1] = jsonFormat8(DocumentFileValueV1)
-  implicit val archiveFileValueV1Format: JsonFormat[ArchiveFileValueV1] = jsonFormat5(ArchiveFileValueV1)
-  implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat5(TextFileValueV1)
-  implicit val audioFileValueV1Format: JsonFormat[AudioFileValueV1] = jsonFormat6(AudioFileValueV1)
+  implicit val createFileV1Format: RootJsonFormat[CreateFileV1]                 = jsonFormat3(CreateFileV1)
+  implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1]     = jsonFormat7(ValueGetResponseV1)
+  implicit val dateValueV1Format: JsonFormat[DateValueV1]                       = jsonFormat5(DateValueV1)
+  implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1]   = jsonFormat7(StillImageFileValueV1)
+  implicit val documentFileValueV1Format: JsonFormat[DocumentFileValueV1]       = jsonFormat8(DocumentFileValueV1)
+  implicit val archiveFileValueV1Format: JsonFormat[ArchiveFileValueV1]         = jsonFormat5(ArchiveFileValueV1)
+  implicit val textFileValueV1Format: JsonFormat[TextFileValueV1]               = jsonFormat5(TextFileValueV1)
+  implicit val audioFileValueV1Format: JsonFormat[AudioFileValueV1]             = jsonFormat6(AudioFileValueV1)
   implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat9(MovingImageFileValueV1)
-  implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
-  implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
+  implicit val valueVersionV1Format: JsonFormat[ValueVersionV1]                 = jsonFormat3(ValueVersionV1)
+  implicit val linkValueV1Format: JsonFormat[LinkValueV1]                       = jsonFormat4(LinkValueV1)
   implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat1(
     ValueVersionHistoryGetResponseV1
   )

@@ -33,7 +33,7 @@ object CreateClassRequest {
     label: LangString,
     comment: Option[LangString]
   ): CreateClassRequest = {
-    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
+    val ontologyId           = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val maybeComment: String = Comments.handleOptionalComment(comment)
 
     val value = s"""{
@@ -94,8 +94,8 @@ object CreatePropertyRequest {
     label: LangString,
     comment: Option[LangString]
   ): CreatePropertyRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val LocalHost_Ontology   = "http://0.0.0.0:3333/ontology"
+    val ontologyId           = LocalHost_Ontology + s"/0001/$ontologyName/v2"
     val maybeComment: String = Comments.handleOptionalComment(comment)
 
     val optionalSubjectClass = subjectClassName match {
@@ -151,15 +151,15 @@ sealed trait CardinalityRestriction {
 object CardinalityRestriction {
   case object MaxCardinalityOne extends CardinalityRestriction {
     val cardinality = "owl:maxCardinality"
-    val value = 1
+    val value       = 1
   }
   case object MinCardinalityOne extends CardinalityRestriction {
     val cardinality = "owl:minCardinality"
-    val value = 1
+    val value       = 1
   }
   case object MinCardinalityZero extends CardinalityRestriction {
     val cardinality = "owl:minCardinality"
-    val value = 0
+    val value       = 0
   }
 }
 
@@ -194,9 +194,9 @@ object AddCardinalitiesRequest {
     className: String,
     restrictions: List[Restriction]
   ): AddCardinalitiesRequest = {
-    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
+    val ontologyId                 = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)
-    val value = s"""
+    val value                      = s"""
                    |{
                    |  "@id" : "$ontologyId",
                    |  "@type" : "owl:Ontology",

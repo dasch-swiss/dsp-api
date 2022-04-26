@@ -40,7 +40,7 @@ object ProjectsResponderADMSpec {
 class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config) with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val timeout = 5.seconds
+  private val timeout                                   = 5.seconds
 
   private val rootUser = SharedTestDataADM.rootUser
 
@@ -310,9 +310,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "CREATE a project that its info has special characters" in {
 
-        val longnameWithSpecialCharacter = "New \\\"Longname\\\""
+        val longnameWithSpecialCharacter    = "New \\\"Longname\\\""
         val descriptionWithSpecialCharacter = "project \\\"description\\\""
-        val keywordWithSpecialCharacter = "new \\\"keyword\\\""
+        val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
         responderManager ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("project_with_character").fold(error => throw error.head, value => value),
@@ -497,7 +497,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
-        val members = received.members
+        val members                                = received.members
 
         members.size should be(4)
 
@@ -516,7 +516,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
-        val members = received.members
+        val members                                = received.members
 
         members.size should be(4)
 
@@ -535,7 +535,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
-        val members = received.members
+        val members                                = received.members
 
         members.size should be(4)
 
@@ -581,7 +581,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-        val members = received.members
+        val members                                     = received.members
 
         members.size should be(2)
 
@@ -598,7 +598,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-        val members = received.members
+        val members                                     = received.members
 
         members.size should be(2)
 
@@ -615,7 +615,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
-        val members = received.members
+        val members                                     = received.members
 
         members.size should be(2)
 

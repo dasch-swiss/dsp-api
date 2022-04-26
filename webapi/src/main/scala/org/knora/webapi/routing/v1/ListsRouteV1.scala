@@ -29,19 +29,19 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       get { requestContext =>
         val requestMessageFuture = for {
           userProfile <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          ).map(_.asUserProfileV1)
+                           requestContext = requestContext,
+                           featureFactoryConfig = featureFactoryConfig
+                         ).map(_.asUserProfileV1)
           listIri = stringFormatter.validateAndEscapeIri(
-            iri,
-            throw BadRequestException(s"Invalid param list IRI: $iri")
-          )
+                      iri,
+                      throw BadRequestException(s"Invalid param list IRI: $iri")
+                    )
 
           requestMessage = requestContext.request.uri.query().get("reqtype") match {
-            case Some("node")  => NodePathGetRequestV1(listIri, userProfile)
-            case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-            case None          => HListGetRequestV1(listIri, userProfile)
-          }
+                             case Some("node")  => NodePathGetRequestV1(listIri, userProfile)
+                             case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                             case None          => HListGetRequestV1(listIri, userProfile)
+                           }
         } yield requestMessage
 
         RouteUtilV1.runJsonRouteWithFuture(
@@ -57,19 +57,19 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         get { requestContext =>
           val requestMessageFuture = for {
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            ).map(_.asUserProfileV1)
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           ).map(_.asUserProfileV1)
             selIri = stringFormatter.validateAndEscapeIri(
-              iri,
-              throw BadRequestException(s"Invalid param list IRI: $iri")
-            )
+                       iri,
+                       throw BadRequestException(s"Invalid param list IRI: $iri")
+                     )
 
             requestMessage = requestContext.request.uri.query().get("reqtype") match {
-              case Some("node")  => NodePathGetRequestV1(selIri, userProfile)
-              case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
-              case None          => SelectionGetRequestV1(selIri, userProfile)
-            }
+                               case Some("node")  => NodePathGetRequestV1(selIri, userProfile)
+                               case Some(reqtype) => throw BadRequestException(s"Invalid reqtype: $reqtype")
+                               case None          => SelectionGetRequestV1(selIri, userProfile)
+                             }
           } yield requestMessage
 
           RouteUtilV1.runJsonRouteWithFuture(

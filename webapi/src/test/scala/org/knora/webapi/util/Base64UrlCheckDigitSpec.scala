@@ -11,8 +11,8 @@ import org.knora.webapi.CoreSpec
  * Tests [[Base64UrlCheckDigit]].
  */
 class Base64UrlCheckDigitSpec extends CoreSpec {
-  private val base64UrlCheckDigit = new Base64UrlCheckDigit
-  private val correctResourceID = "cmfk1DMHRBiR4-_6HXpEFA"
+  private val base64UrlCheckDigit         = new Base64UrlCheckDigit
+  private val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
   private val correctResourceIDCheckDigit = "n"
 
   "Base64UrlCheckDigit" should {

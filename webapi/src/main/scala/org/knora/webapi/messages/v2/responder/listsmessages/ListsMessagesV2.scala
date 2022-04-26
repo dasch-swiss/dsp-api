@@ -172,9 +172,9 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
           OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         ),
         "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-        "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-        "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
+        "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+        "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
       )
     )
 
@@ -270,9 +270,9 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
           OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
         ),
         "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-        "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-        "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
+        "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+        "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
       )
     )
 

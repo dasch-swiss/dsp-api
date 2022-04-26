@@ -38,11 +38,11 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
 
   private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-  private val anythingAdminEmail = SharedTestDataV1.anythingAdminUser.userData.email.get
+  private val anythingAdminEmail    = SharedTestDataV1.anythingAdminUser.userData.email.get
   private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")
-  private val normalUserEmail = SharedTestDataV1.normalUser.userData.email.get
-  private val normalUserEmailEnc = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
-  private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+  private val normalUserEmail       = SharedTestDataV1.normalUser.userData.email.get
+  private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
+  private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -50,7 +50,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
 
   def sessionLogin(email: String, password: String): String = {
 
-    val request = Get(baseApiUrl + s"/v1/session?login&email=$email&password=$password")
+    val request                = Get(baseApiUrl + s"/v1/session?login&email=$email&password=$password")
     val response: HttpResponse = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK)
 

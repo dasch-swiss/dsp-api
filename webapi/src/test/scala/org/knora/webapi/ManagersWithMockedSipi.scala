@@ -19,7 +19,6 @@ import org.knora.webapi.store.cacheservice.CacheServiceManager
 import zio.Runtime
 import zio.ZIO
 
-
 /**
  * Mixin trait for running the application with mocked Sipi
  */

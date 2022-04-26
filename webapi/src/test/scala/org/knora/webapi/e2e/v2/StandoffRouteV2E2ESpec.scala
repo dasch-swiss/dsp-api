@@ -38,9 +38,9 @@ import scala.concurrent.duration._
 class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val anythingUser = SharedTestDataADM.anythingUser1
+  private val anythingUser      = SharedTestDataADM.anythingUser1
   private val anythingUserEmail = anythingUser.email
-  private val password = SharedTestDataADM.testPass
+  private val password          = SharedTestDataADM.testPass
 
   private val pathToXMLWithStandardMapping = "../test_data/test_route/texts/StandardHTML.xml"
 
@@ -50,14 +50,14 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   private val pathToFreetestCustomMappingWithTransformation =
     "../test_data/test_route/texts/freetestCustomMappingWithTransformation.xml"
   private val pathToFreetestXMLTextValue = "../test_data/test_route/texts/freetestXMLTextValue.xml"
-  private val freetestXSLTFile = "freetestCustomMappingTransformation.xsl"
-  private val pathToFreetestXSLTFile = s"../test_data/test_route/texts/$freetestXSLTFile"
-  private val freetestCustomMappingIRI = "http://rdfh.ch/projects/0001/mappings/FreetestCustomMapping"
+  private val freetestXSLTFile           = "freetestCustomMappingTransformation.xsl"
+  private val pathToFreetestXSLTFile     = s"../test_data/test_route/texts/$freetestXSLTFile"
+  private val freetestCustomMappingIRI   = "http://rdfh.ch/projects/0001/mappings/FreetestCustomMapping"
   private val freetestCustomMappingWithTranformationIRI =
     "http://rdfh.ch/projects/0001/mappings/FreetestCustomMappingWithTransformation"
-  private val freetestOntologyIRI = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+  private val freetestOntologyIRI  = "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
   private val freetestTextValueIRI = new MutableTestIri
-  private val freetestXSLTIRI = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
+  private val freetestXSLTIRI      = "http://rdfh.ch/0001/xYSnl8dmTw2RM6KQGVqNDA"
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
@@ -71,7 +71,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   )
 
   def createMapping(mappingPath: String, mappingName: String): HttpResponse = {
-    val mappingFile = Paths.get(mappingPath)
+    val mappingFile   = Paths.get(mappingPath)
     val mappingParams = DefineStandoffMapping.make(mappingName = mappingName).toJSONLD()
 
     val formDataMapping = Multipart.FormData(
@@ -98,17 +98,17 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
       ).toJson,
       "rdfs:label" -> "obj_inst1".toJson,
       "freetest:hasText" -> Map(
-        "@type" -> "knora-api:TextValue".toJson,
+        "@type"                    -> "knora-api:TextValue".toJson,
         "knora-api:textValueAsXml" -> xmlContent.toJson,
         "knora-api:textValueHasMapping" -> Map(
           "@id" -> mappingIRI.toJson
         ).toJson
       ).toJson,
       "@context" -> Map(
-        "anything" -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
-        "freetest" -> freetestOntologyIRI.toJson,
-        "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
-        "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
+        "anything"  -> "http://0.0.0.0:3333/ontology/0001/anything/v2#".toJson,
+        "freetest"  -> freetestOntologyIRI.toJson,
+        "rdf"       -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#".toJson,
+        "rdfs"      -> "http://www.w3.org/2000/01/rdf-schema#".toJson,
         "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#".toJson
       ).toJson
     ).toJson.prettyPrint
@@ -131,7 +131,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   "The Standoff v2 Endpoint" should {
     "check if SIPI is available" in {
       val request = Get(s"${settings.internalSipiBaseUrl}/server/test.html")
-      val res = singleAwaitingRequest(request)
+      val res     = singleAwaitingRequest(request)
       assert(res.status == StatusCodes.OK)
     }
 
@@ -152,11 +152,11 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "return XML but no HTML for a resource with standard mapping" in {
-      val valueIRI = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
+      val valueIRI   = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
+      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
       textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
       textValueObject
         .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
@@ -207,8 +207,8 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
         BasicHttpCredentials(anythingUserEmail, password)
       )
       val response = singleAwaitingRequest(request)
-      val status = response.status
-      val text = responseToString(response)
+      val status   = response.status
+      val text     = responseToString(response)
 
       assert(
         status == StatusCodes.OK,
@@ -226,7 +226,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
 
     "create a custom mapping for XML in freetest" in {
       // define custom XML to standoff mapping
-      val mappingResponse = createMapping(pathToFreetestCustomMapping, "FreetestCustomMapping")
+      val mappingResponse         = createMapping(pathToFreetestCustomMapping, "FreetestCustomMapping")
       val mappingResponseDocument = responseToJsonLDDocument(mappingResponse)
       mappingResponse.status should equal(StatusCodes.OK)
       val mappingIRI = mappingResponseDocument.body.requireString("@id")
@@ -251,11 +251,11 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "return XML but no HTML, as there is no transformation provided" in {
-      val valueIRI = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
+      val valueIRI   = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
+      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
       textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
       textValueObject
         .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)
@@ -268,10 +268,10 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     "create a custom mapping with an XSL transformation" in {
       // get authentication token
       val params = Map(
-        "email" -> "root@example.com",
+        "email"    -> "root@example.com",
         "password" -> "test"
       ).toJson.compactPrint
-      val loginRequest = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val loginRequest                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val loginResponse: HttpResponse = singleAwaitingRequest(loginRequest)
       assert(loginResponse.status == StatusCodes.OK, responseToString(loginResponse))
       val loginToken = Await.result(Unmarshal(loginResponse.entity).to[LoginResponse], 1.seconds).token
@@ -284,7 +284,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
           Map("filename" -> freetestXSLTFile)
         )
       )
-      val sipiRequest = Post(s"${settings.internalSipiBaseUrl}/upload?token=$loginToken", sipiFormData)
+      val sipiRequest  = Post(s"${settings.internalSipiBaseUrl}/upload?token=$loginToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
       val uploadedFile = responseToString(sipiResponse).parseJson.asJsObject
         .convertTo[SipiUploadResponse]
@@ -337,12 +337,12 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     }
 
     "return XML and HTML rendering of the standoff" in {
-      val valueIRI = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
-      val xmlContent = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
+      val valueIRI     = URLEncoder.encode(freetestTextValueIRI.get, "UTF-8")
+      val xmlContent   = FileUtil.readTextFile(Paths.get(pathToFreetestXMLTextValue))
       val expectedHTML = Some("<div>\n    <p> This is a <i>sample</i> of standoff text. </p>\n</div>")
 
       val responseDocument = getTextValueAsDocument(valueIRI)
-      val textValueObject = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
+      val textValueObject  = responseDocument.body.requireObject(s"${freetestOntologyIRI}hasText")
       textValueObject.requireString(JsonLDKeywords.TYPE) should equal(OntologyConstants.KnoraApiV2Complex.TextValue)
       textValueObject
         .requireObject(OntologyConstants.KnoraApiV2Complex.TextValueHasMapping)

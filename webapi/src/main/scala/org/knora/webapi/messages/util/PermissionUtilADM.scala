@@ -486,7 +486,7 @@ object PermissionUtilADM extends LazyLogging {
           logger.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")
           permissions.flatMap { permission =>
             val splitPermission = permission.split(' ')
-            val abbreviation = splitPermission(0)
+            val abbreviation    = splitPermission(0)
 
             permissionType match {
               case PermissionType.AP =>
@@ -732,36 +732,38 @@ object PermissionUtilADM extends LazyLogging {
 
     for {
       // Parse the permission literal.
-      parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <- Future(
-        parsePermissions(
-          permissionLiteral = permissionLiteral,
-          errorFun = { literal =>
-            throw BadRequestException(s"Invalid permission literal: $literal")
-          }
+      parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <-
+        Future(
+          parsePermissions(
+            permissionLiteral = permissionLiteral,
+            errorFun = { literal =>
+              throw BadRequestException(s"Invalid permission literal: $literal")
+            }
+          )
         )
-      )
 
       // Get the group IRIs that are mentioned, minus the built-in groups.
       projectSpecificGroupIris: Set[IRI] =
         parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraAdmin.BuiltInGroups
 
-      validatedProjectSpecificGroupIris: Set[IRI] = projectSpecificGroupIris.map(iri =>
-        stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri"))
-      )
+      validatedProjectSpecificGroupIris: Set[IRI] =
+        projectSpecificGroupIris.map(iri =>
+          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri"))
+        )
 
       // Check that those groups exist.
       _ <- (responderManager ? MultipleGroupsGetRequestADM(
-        groupIris = validatedProjectSpecificGroupIris,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )).mapTo[Set[GroupGetResponseADM]]
+             groupIris = validatedProjectSpecificGroupIris,
+             featureFactoryConfig = featureFactoryConfig,
+             requestingUser = KnoraSystemInstances.Users.SystemUser
+           )).mapTo[Set[GroupGetResponseADM]]
 
       // Reformat the permission literal.
       permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>
-        groupIris.map { groupIri =>
-          entityPermission.toPermissionADM(groupIri)
-        }
-      }.toSet
+                                             groupIris.map { groupIri =>
+                                               entityPermission.toPermissionADM(groupIri)
+                                             }
+                                           }.toSet
     } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
   }
 

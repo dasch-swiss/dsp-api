@@ -27,9 +27,9 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
         requestContext =>
           val requestMessage = for {
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            ).map(_.asUserProfileV1)
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           ).map(_.asUserProfileV1)
           } yield ProjectsGetRequestV1(
             featureFactoryConfig = featureFactoryConfig,
             userProfile = Some(userProfile)
@@ -51,9 +51,9 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
             for {
               userProfile <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              ).map(_.asUserProfileV1)
+                               requestContext = requestContext,
+                               featureFactoryConfig = featureFactoryConfig
+                             ).map(_.asUserProfileV1)
             } yield ProjectInfoByShortnameGetRequestV1(
               shortname = shortNameDec,
               featureFactoryConfig = featureFactoryConfig,
@@ -64,9 +64,9 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
               stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
             for {
               userProfile <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              ).map(_.asUserProfileV1)
+                               requestContext = requestContext,
+                               featureFactoryConfig = featureFactoryConfig
+                             ).map(_.asUserProfileV1)
             } yield ProjectInfoByIRIGetRequestV1(
               iri = checkedProjectIri,
               featureFactoryConfig = featureFactoryConfig,

@@ -40,8 +40,8 @@ sealed abstract case class UploadFileRequest private (
     ontologyIRI: Option[String] = None
   ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
-    val fileValueType = FileModelUtil.getFileValueType(fileType)
-    val context = FileModelUtil.getJsonLdContext(ontologyName, ontologyIRI)
+    val fileValueType         = FileModelUtil.getFileValueType(fileType)
+    val context               = FileModelUtil.getJsonLdContext(ontologyName, ontologyIRI)
     val classNameWithDefaults = className match {
       case Some(v) => v
       case None    => FileModelUtil.getDefaultClassName(fileType)
@@ -207,8 +207,8 @@ sealed abstract case class ChangeFileRequest private (
    */
   def toJsonLd: String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
-    val fileValueType = FileModelUtil.getFileValueType(fileType)
-    val context = FileModelUtil.getJsonLdContext(ontologyName)
+    val fileValueType         = FileModelUtil.getFileValueType(fileType)
+    val context               = FileModelUtil.getJsonLdContext(ontologyName)
 
     s"""{
        |  "@id" : "$resourceIRI",

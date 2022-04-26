@@ -31,9 +31,9 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
 
   val parsedPermissionLiteral: Map[EntityPermission, Set[IRI]] = Map(
     RestrictedViewPermission -> Set(OntologyConstants.KnoraAdmin.UnknownUser),
-    ViewPermission -> Set(OntologyConstants.KnoraAdmin.KnownUser),
-    ModifyPermission -> Set(OntologyConstants.KnoraAdmin.ProjectMember),
-    ChangeRightsPermission -> Set(OntologyConstants.KnoraAdmin.Creator)
+    ViewPermission           -> Set(OntologyConstants.KnoraAdmin.KnownUser),
+    ModifyPermission         -> Set(OntologyConstants.KnoraAdmin.ProjectMember),
+    ChangeRightsPermission   -> Set(OntologyConstants.KnoraAdmin.Creator)
   )
 
   "PermissionUtil" should {
@@ -269,7 +269,7 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
       )
 
       val permissionsString = "CR 1,knora-admin:Creator|D 2|M knora-admin:ProjectMember|V knora-admin:KnownUser"
-      val result = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
+      val result            = PermissionUtilADM.formatPermissionADMs(permissions, PermissionType.OAP)
 
       result should equal(permissionsString)
 
