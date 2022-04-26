@@ -45,7 +45,7 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
   "For project Lumieres Lausanne" should {
 
     val gfUserEmail = "gilles.faucherand@unil.ch"
-    val testPass = "test"
+    val testPass    = "test"
 
     "allow user 'gfaucherand' to create a resource using V2 API" in {
 

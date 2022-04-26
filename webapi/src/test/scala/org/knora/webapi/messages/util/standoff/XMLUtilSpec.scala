@@ -89,7 +89,7 @@ class XMLUtilSpec extends CoreSpec {
         FileUtil.readTextFile(Paths.get("..", "test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
       val xslt = FileUtil.readTextFile(Paths.get("..", "test_data/test_route/texts/beol/header.xsl"))
 
-      val transformedXmlWithNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
+      val transformedXmlWithNestedResource: String    = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
       val transformedXmlWithNonNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNonNestedResource, xslt)
 
       val xmlDiff: Diff = DiffBuilder

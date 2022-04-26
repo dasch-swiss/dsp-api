@@ -33,25 +33,37 @@ trait HealthCheck {
       state: AppState <- (applicationActor ? GetAppState()).mapTo[AppState]
 
       result: HealthCheckResult = state match {
-        case AppStates.Stopped                => unhealthy("Stopped. Please retry later.")
-        case AppStates.StartingUp             => unhealthy("Starting up. Please retry later.")
-        case AppStates.WaitingForTriplestore  => unhealthy("Waiting for triplestore. Please retry later.")
-        case AppStates.TriplestoreReady       => unhealthy("Triplestore ready. Please retry later.")
-        case AppStates.UpdatingRepository     => unhealthy("Updating repository. Please retry later.")
-        case AppStates.RepositoryUpToDate     => unhealthy("Repository up to date. Please retry later.")
-        case AppStates.CreatingCaches         => unhealthy("Creating caches. Please retry later.")
-        case AppStates.CachesReady            => unhealthy("Caches ready. Please retry later.")
-        case AppStates.UpdatingSearchIndex    => unhealthy("Updating search index. Please retry later.")
-        case AppStates.SearchIndexReady       => unhealthy("Search index ready. Please retry later.")
-        case AppStates.LoadingOntologies      => unhealthy("Loading ontologies. Please retry later.")
-        case AppStates.OntologiesReady        => unhealthy("Ontologies ready. Please retry later.")
-        case AppStates.WaitingForIIIFService  => unhealthy("Waiting for IIIF service. Please retry later.")
-        case AppStates.IIIFServiceReady       => unhealthy("IIIF service ready. Please retry later.")
-        case AppStates.WaitingForCacheService => unhealthy("Waiting for cache service. Please retry later.")
-        case AppStates.CacheServiceReady      => unhealthy("Cache service ready. Please retry later.")
-        case AppStates.MaintenanceMode        => unhealthy("Application is in maintenance mode. Please retry later.")
-        case AppStates.Running                => healthy()
-      }
+                                    case AppStates.Stopped    => unhealthy("Stopped. Please retry later.")
+                                    case AppStates.StartingUp => unhealthy("Starting up. Please retry later.")
+                                    case AppStates.WaitingForTriplestore =>
+                                      unhealthy("Waiting for triplestore. Please retry later.")
+                                    case AppStates.TriplestoreReady =>
+                                      unhealthy("Triplestore ready. Please retry later.")
+                                    case AppStates.UpdatingRepository =>
+                                      unhealthy("Updating repository. Please retry later.")
+                                    case AppStates.RepositoryUpToDate =>
+                                      unhealthy("Repository up to date. Please retry later.")
+                                    case AppStates.CreatingCaches => unhealthy("Creating caches. Please retry later.")
+                                    case AppStates.CachesReady    => unhealthy("Caches ready. Please retry later.")
+                                    case AppStates.UpdatingSearchIndex =>
+                                      unhealthy("Updating search index. Please retry later.")
+                                    case AppStates.SearchIndexReady =>
+                                      unhealthy("Search index ready. Please retry later.")
+                                    case AppStates.LoadingOntologies =>
+                                      unhealthy("Loading ontologies. Please retry later.")
+                                    case AppStates.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
+                                    case AppStates.WaitingForIIIFService =>
+                                      unhealthy("Waiting for IIIF service. Please retry later.")
+                                    case AppStates.IIIFServiceReady =>
+                                      unhealthy("IIIF service ready. Please retry later.")
+                                    case AppStates.WaitingForCacheService =>
+                                      unhealthy("Waiting for cache service. Please retry later.")
+                                    case AppStates.CacheServiceReady =>
+                                      unhealthy("Cache service ready. Please retry later.")
+                                    case AppStates.MaintenanceMode =>
+                                      unhealthy("Application is in maintenance mode. Please retry later.")
+                                    case AppStates.Running => healthy()
+                                  }
 
       response = createResponse(result)
 
@@ -63,10 +75,10 @@ trait HealthCheck {
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name" -> JsString(result.name),
+          "name"     -> JsString(result.name),
           "severity" -> JsString(result.severity),
-          "status" -> JsString(status(result.status)),
-          "message" -> JsString(result.message)
+          "status"   -> JsString(status(result.status)),
+          "message"  -> JsString(result.message)
         ).compactPrint
       )
     )

@@ -9,11 +9,9 @@
 @**
  * Gets the project an entity (resource or value) is attached to.
  *
- * @param triplestore the name of the triplestore being used.
  * @param entityIri the IRI of the resource/value to be queried.
  *@
-@(triplestore: String,
-  entityIri: IRI)
+@(entityIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

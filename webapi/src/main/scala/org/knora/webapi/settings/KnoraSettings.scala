@@ -5,19 +5,29 @@
 
 package org.knora.webapi.settings
 
-import java.nio.file.{Files, Path, Paths}
-import java.time.Instant
-
 import akka.ConfigurationException
-import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
+import akka.actor.ActorSystem
+import akka.actor.ExtendedActorSystem
+import akka.actor.Extension
+import akka.actor.ExtensionId
+import akka.actor.ExtensionIdProvider
 import akka.event.LoggingAdapter
-import com.typesafe.config.{Config, ConfigObject, ConfigValue}
-import org.knora.webapi.exceptions.{FeatureToggleException, FileWriteException}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigObject
+import com.typesafe.config.ConfigValue
+import org.knora.webapi.exceptions.FeatureToggleException
+import org.knora.webapi.exceptions.FileWriteException
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
-import scala.jdk.CollectionConverters._
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.time.Instant
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
+import scala.jdk.CollectionConverters._
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Reads application settings that come from `application.conf`.
@@ -38,8 +48,8 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   // used for communication between the outside and the knora stack, e.g., browser
   val externalKnoraApiProtocol: String = config.getString("app.knora-api.external-protocol")
-  val externalKnoraApiHost: String = config.getString("app.knora-api.external-host")
-  val externalKnoraApiPort: Int = config.getInt("app.knora-api.external-port")
+  val externalKnoraApiHost: String     = config.getString("app.knora-api.external-host")
+  val externalKnoraApiPort: Int        = config.getInt("app.knora-api.external-port")
   val externalKnoraApiHostPort: String = externalKnoraApiHost + (if (externalKnoraApiPort != 80)
                                                                    ":" + externalKnoraApiPort
                                                                  else "")
@@ -58,11 +68,11 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
       externalKnoraApiHost
     }
 
-  val salsah1BaseUrl: String = config.getString("app.salsah1.base-url")
+  val salsah1BaseUrl: String              = config.getString("app.salsah1.base-url")
   val salsah1ProjectIconsBasePath: String = config.getString("app.salsah1.project-icons-basepath")
 
   val tmpDataDir: String = config.getString("app.tmp-datadir")
-  val dataDir: String = config.getString("app.datadir")
+  val dataDir: String    = config.getString("app.datadir")
 
   // try to create the directories
   if (!Files.exists(Paths.get(tmpDataDir))) {
@@ -139,8 +149,8 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
     .toSet
 
   val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
-  val internalSipiHost: String = config.getString("app.sipi.internal-host")
-  val internalSipiPort: Int = config.getInt("app.sipi.internal-port")
+  val internalSipiHost: String     = config.getString("app.sipi.internal-host")
+  val internalSipiPort: Int        = config.getInt("app.sipi.internal-port")
   val internalSipiBaseUrl: String = internalSipiProtocol + "://" + internalSipiHost + (if (internalSipiPort != 80)
                                                                                          ":" + internalSipiPort
                                                                                        else "")
@@ -148,18 +158,18 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
   val sipiTimeout: FiniteDuration = getFiniteDuration("app.sipi.timeout", config)
 
   val externalSipiProtocol: String = config.getString("app.sipi.external-protocol")
-  val externalSipiHost: String = config.getString("app.sipi.external-host")
-  val externalSipiPort: Int = config.getInt("app.sipi.external-port")
+  val externalSipiHost: String     = config.getString("app.sipi.external-host")
+  val externalSipiPort: Int        = config.getInt("app.sipi.external-port")
   val externalSipiBaseUrl: String = externalSipiProtocol + "://" + externalSipiHost + (if (externalSipiPort != 80)
                                                                                          ":" + externalSipiPort
                                                                                        else "")
-  val sipiFileServerPrefix: String = config.getString("app.sipi.file-server-path")
-  val externalSipiIIIFGetUrl: String = externalSipiBaseUrl
-  val sipiFileMetadataRouteV2: String = config.getString("app.sipi.v2.file-metadata-route")
-  val sipiMoveFileRouteV2: String = config.getString("app.sipi.v2.move-file-route")
+  val sipiFileServerPrefix: String      = config.getString("app.sipi.file-server-path")
+  val externalSipiIIIFGetUrl: String    = externalSipiBaseUrl
+  val sipiFileMetadataRouteV2: String   = config.getString("app.sipi.v2.file-metadata-route")
+  val sipiMoveFileRouteV2: String       = config.getString("app.sipi.v2.move-file-route")
   val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
 
-  val arkResolver: String = config.getString("app.ark.resolver")
+  val arkResolver: String    = config.getString("app.ark.resolver")
   val arkAssignedNumber: Int = config.getInt("app.ark.assigned-number")
 
   val caches: Vector[KnoraCacheConfig] = config
@@ -181,61 +191,46 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
 
-  val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
-  val showInternalErrors: Boolean = config.getBoolean("app.show-internal-errors")
+  val dumpMessages: Boolean              = config.getBoolean("app.dump-messages")
+  val showInternalErrors: Boolean        = config.getBoolean("app.show-internal-errors")
   val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
-  val standoffPerPage: Int = config.getInt("app.standoff-per-page")
-  val defaultIconSizeDimX: Int = config.getInt("app.gui.default-icon-size.dimX")
-  val defaultIconSizeDimY: Int = config.getInt("app.gui.default-icon-size.dimY")
+  val standoffPerPage: Int               = config.getInt("app.standoff-per-page")
+  val defaultIconSizeDimX: Int           = config.getInt("app.gui.default-icon-size.dimX")
+  val defaultIconSizeDimY: Int           = config.getInt("app.gui.default-icon-size.dimY")
 
-  val v2ResultsPerPage: Int = config.getInt("app.v2.resources-sequence.results-per-page")
+  val v2ResultsPerPage: Int     = config.getInt("app.v2.resources-sequence.results-per-page")
   val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
 
   val defaultGraphDepth: Int = config.getInt("app.v2.graph-route.default-graph-depth")
-  val maxGraphDepth: Int = config.getInt("app.v2.graph-route.max-graph-depth")
-  val maxGraphBreadth: Int = config.getInt("app.v2.graph-route.max-graph-breadth")
+  val maxGraphDepth: Int     = config.getInt("app.v2.graph-route.max-graph-depth")
+  val maxGraphBreadth: Int   = config.getInt("app.v2.graph-route.max-graph-breadth")
 
   val triplestoreType: String = config.getString("app.triplestore.dbtype")
   val triplestoreHost: String = config.getString("app.triplestore.host")
 
-  val triplestoreQueryTimeout: FiniteDuration = getFiniteDuration("app.triplestore.query-timeout", config)
+  val triplestoreQueryTimeout: FiniteDuration  = getFiniteDuration("app.triplestore.query-timeout", config)
   val triplestoreUpdateTimeout: FiniteDuration = getFiniteDuration("app.triplestore.update-timeout", config)
 
   val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
   val triplestoreAutoInit: Boolean = config.getBoolean("app.triplestore.auto-init")
 
-  val triplestorePort: Int = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
-    case _                           => 9999
-  }
-
-  val triplestoreDatabaseName: String = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.repository-name")
-    case _                           => ""
-  }
-
-  val triplestoreUsername: String = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.username")
-    case _                           => ""
-  }
-
-  val triplestorePassword: String = triplestoreType match {
-    case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.password")
-    case _                           => ""
-  }
+  val triplestorePort: Int            = config.getInt("app.triplestore.fuseki.port")
+  val triplestoreDatabaseName: String = config.getString("app.triplestore.fuseki.repository-name")
+  val triplestoreUsername: String     = config.getString("app.triplestore.fuseki.username")
+  val triplestorePassword: String     = config.getString("app.triplestore.fuseki.password")
 
   //used in the store package
   val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
   private val fakeTriplestore: String = config.getString("app.triplestore.fake-triplestore")
   val prepareFakeTriplestore: Boolean = fakeTriplestore == "prepare"
-  val useFakeTriplestore: Boolean = fakeTriplestore == "use"
-  val fakeTriplestoreDataDir: Path = Paths.get(config.getString("app.triplestore.fake-triplestore-data-dir"))
+  val useFakeTriplestore: Boolean     = fakeTriplestore == "use"
+  val fakeTriplestoreDataDir: Path    = Paths.get(config.getString("app.triplestore.fake-triplestore-data-dir"))
 
   val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 
-  val jwtSecretKey: String = config.getString("app.jwt-secret-key")
+  val jwtSecretKey: String         = config.getString("app.jwt-secret-key")
   val jwtLongevity: FiniteDuration = getFiniteDuration("app.jwt-longevity", config)
 
   val cookieDomain: String = config.getString("app.cookie-domain")
@@ -312,7 +307,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
           }
 
           val enabledByDefault: Boolean = featureConfig.getBoolean(enabledByDefaultKey)
-          val overrideAllowed: Boolean = featureConfig.getBoolean(overrideAllowedKey)
+          val overrideAllowed: Boolean  = featureConfig.getBoolean(overrideAllowedKey)
 
           val expirationDate: Option[Instant] = if (featureConfig.hasPath(expirationDateKey)) {
             val definedExpirationDate: Instant = Instant.parse(featureConfig.getString(expirationDateKey))
@@ -366,14 +361,14 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
    */
   override def get(system: ActorSystem): KnoraSettingsImpl = super.get(system)
 
-  val featureTogglesPath: String = "app.feature-toggles"
-  val descriptionKey: String = "description"
+  val featureTogglesPath: String   = "app.feature-toggles"
+  val descriptionKey: String       = "description"
   val availableVersionsKey: String = "available-versions"
-  val developerEmailsKey: String = "developer-emails"
-  val expirationDateKey: String = "expiration-date"
-  val enabledByDefaultKey: String = "enabled-by-default"
-  val defaultVersionKey: String = "default-version"
-  val overrideAllowedKey: String = "override-allowed"
+  val developerEmailsKey: String   = "developer-emails"
+  val expirationDateKey: String    = "expiration-date"
+  val enabledByDefaultKey: String  = "enabled-by-default"
+  val defaultVersionKey: String    = "default-version"
+  val overrideAllowedKey: String   = "override-allowed"
 
   /**
    * Represents the base configuration of a feature toggle.

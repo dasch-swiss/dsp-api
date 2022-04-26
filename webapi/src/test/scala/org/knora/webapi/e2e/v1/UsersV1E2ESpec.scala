@@ -48,19 +48,19 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
   private val inactiveUserEmailEnc =
     java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
-  private val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
+  private val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
   private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-  private val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
+  private val multiUserIri    = SharedTestDataV1.multiuserUser.userData.user_id.get
   private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
-  private val wrongEmail = "wrong@example.com"
+  private val wrongEmail    = "wrong@example.com"
   private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
 
-  private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+  private val testPass  = java.net.URLEncoder.encode("test", "utf-8")
   private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-  private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
+  private val imagesProjectIri    = SharedTestDataV1.imagesProjectInfo.id
   private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
   /**

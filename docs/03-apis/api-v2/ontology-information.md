@@ -1197,7 +1197,7 @@ HTTP POST to http://host/v2/ontologies/classes
 }
 ```
 
-Values for `rdfs:label` and `rdfs:comment` must be submitted in at least
+Values for `rdfs:label` must be submitted in at least
 one language, either as an object or as an array of objects.
 
 At least one base class must be provided, which can be
@@ -1262,7 +1262,7 @@ to the supported combinations given in
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
-Values for `rdfs:label` and `rdfs:comment` must be submitted in at least
+Values for `rdfs:label` must be submitted in at least
 one language, either as an object or as an array of objects.
 
 At least one base class must be provided.
@@ -1353,6 +1353,20 @@ Values for `rdfs:comment` must be submitted in at least one language,
 either as an object or as an array of objects. The submitted comments
 will replace the existing ones.
 
+### Deleting the Comments of a Class
+
+This operation is permitted even if the class is used in data.
+
+```
+HTTP DELETE to http://host/v2/ontologies/classes/comment/CLASS_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+```
+
+The class IRI and the ontology's last modification date must be URL-encoded.
+
+All values i.e. all languages for `rdfs:comment` are deleted.
+
+A successful response will be a JSON-LD document providing the class definition.
+
 ### Creating a Property
 
 ```
@@ -1404,7 +1418,7 @@ HTTP POST to http://host/v2/ontologies/properties
 }
 ```
 
-Values for `rdfs:label` and `rdfs:comment` must be submitted in at least
+Values for `rdfs:label` must be submitted in at least
 one language, either as an object or as an array of objects.
 
 At least one base property must be provided, which can be
@@ -1515,6 +1529,22 @@ HTTP PUT to http://host/v2/ontologies/properties
 
 Values for `rdfs:comment` must be submitted in at least one language,
 either as an object or as an array of objects.
+
+### Deleting the Comments of a Property
+
+This operation is permitted even if the property is used in data.
+
+```
+HTTP DELETE to http://host/v2/ontologies/properties/comment/PROPERTY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+```
+
+The property IRI and the ontology's last modification date must be URL-encoded.
+
+All values i.e. all languages for `rdfs:comment` are deleted.
+
+If the property is a link property, the `rdfs:comment` of its corresponding link value property will automatically be deleted.
+
+A successful response will be a JSON-LD document providing the property definition.
 
 ### Changing the GUI Element and GUI Attributes of a Property
 

@@ -26,7 +26,7 @@ class RDF4JShaclValidator(baseDir: Path, rdfFormatUtil: RDF4JFormatUtil, private
 
   override def validateWithShaclGraph(rdfModel: RdfModel, shaclGraph: rdf4j.model.Model): ShaclValidationResult = {
     // Make a SailRepository repository that supports SHACL validation.
-    val shaclSail = new rdf4j.sail.shacl.ShaclSail(new rdf4j.sail.memory.MemoryStore())
+    val shaclSail  = new rdf4j.sail.shacl.ShaclSail(new rdf4j.sail.memory.MemoryStore())
     val repository = new rdf4j.repository.sail.SailRepository(shaclSail)
 
     // Open a connection to the repository and begin a transaction.

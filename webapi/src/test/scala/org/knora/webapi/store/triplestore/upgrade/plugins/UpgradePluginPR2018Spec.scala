@@ -12,7 +12,7 @@ class UpgradePluginPR2018Spec extends UpgradePluginSpec with LazyLogging {
   "Upgrade plugin PR2018" should {
     "add lastModificationDate to ontology not attached to SystemProject" in {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2018.trig")
-      val plugin = new UpgradePluginPR2018(defaultFeatureFactoryConfig, logger)
+      val plugin          = new UpgradePluginPR2018(defaultFeatureFactoryConfig, logger)
       plugin.transform(model)
       val repository: RdfRepository = model.asRepository
 

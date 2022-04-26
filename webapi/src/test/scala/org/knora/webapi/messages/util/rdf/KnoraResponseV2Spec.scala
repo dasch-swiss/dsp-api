@@ -43,24 +43,24 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
   private val hierarchicalJsonLD = JsonLDDocument(
     JsonLDObject(
       value = Map(
-        "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+        "@id"   -> JsonLDString(value = "http://rdfh.ch/foo1"),
         "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
         "http://example.org/foo#hasBar" -> JsonLDObject(
           value = Map(
-            "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+            "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
           )
         ),
         "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
         "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
           Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+            "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo2"),
+            "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-            "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+            "http://example.org/foo#hasIndex"            -> JsonLDInt(value = 3),
             "http://example.org/foo#hasBar" -> JsonLDObject(value =
               Map(
-                "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
                 "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
               )
             )
@@ -77,12 +77,12 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
           Vector(
             JsonLDObject(value =
               Map(
-                "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo1"),
+                "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
                 "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
                 "http://example.org/foo#hasBar" -> JsonLDObject(value =
                   Map(
-                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                    "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
                     "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
                   )
                 ),
@@ -93,14 +93,14 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
             ),
             JsonLDObject(value =
               Map(
-                "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-                "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
                 "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-                "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                "http://example.org/foo#hasIndex"            -> JsonLDInt(value = 3),
                 "http://example.org/foo#hasBar" -> JsonLDObject(value =
                   Map(
                     "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
-                    "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
+                    "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar")
                   )
                 )
               )
@@ -131,7 +131,8 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
   "KnoraResponseV2" should {
     "convert Turtle to JSON-LD" in {
       // Read a Turtle file representing a resource. TODO: Use sample project metadata for this test.
-      val turtle: String = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+      val turtle: String =
+        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
 
       // Wrap it in a KnoraTurtleResponseV2.
       val turtleTestResponse = TurtleTestResponse(turtle)
@@ -159,7 +160,8 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
 
     "convert JSON-LD to Turtle" in {
       // Read a JSON-LD file representing a resource.
-      val jsonLD: String = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+      val jsonLD: String =
+        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
 
       // Wrap it in a KnoraJsonLDResponseV2.
       val jsonLDTestResponse = JsonLDTestResponse(JsonLDUtil.parseJsonLD(jsonLD))

@@ -394,8 +394,8 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
 
   private val ResourceCardinalites = Map(
     OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany,
-    OntologyConstants.KnoraApiV2Simple.ArkUrl -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Simple.VersionArkUrl -> Cardinality.MustHaveOne
+    OntologyConstants.KnoraApiV2Simple.ArkUrl          -> Cardinality.MustHaveOne,
+    OntologyConstants.KnoraApiV2Simple.VersionArkUrl   -> Cardinality.MustHaveOne
   )
 
   /**

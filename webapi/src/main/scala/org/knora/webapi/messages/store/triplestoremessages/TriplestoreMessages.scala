@@ -125,7 +125,7 @@ object SparqlExtendedConstructResponse {
       implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
-      val rdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+      val rdfModel: RdfModel                                              = rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
 
       for (st: Statement <- rdfModel) {
         val subject: SubjectV2 = st.subj match {
@@ -192,7 +192,7 @@ object SparqlExtendedConstructResponse {
           currentStatementsForSubject.getOrElse(predicateIri, Seq.empty[LiteralV2])
 
         val updatedPredicateStatements = currentStatementsForPredicate :+ objectLiteral
-        val updatedSubjectStatements = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
+        val updatedSubjectStatements   = currentStatementsForSubject + (predicateIri -> updatedPredicateStatements)
 
         statementMap += (subject -> updatedSubjectStatements)
       }
@@ -738,7 +738,7 @@ object SparqlResultProtocol extends DefaultJsonProtocol {
   }
 
   implicit val headerFormat: JsonFormat[SparqlSelectResultHeader] = jsonFormat1(SparqlSelectResultHeader)
-  implicit val responseFormat: JsonFormat[SparqlSelectResult] = jsonFormat2(SparqlSelectResult)
+  implicit val responseFormat: JsonFormat[SparqlSelectResult]     = jsonFormat2(SparqlSelectResult)
 }
 
 /**
@@ -759,7 +759,7 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
         // have language tag
         JsObject(
           Map(
-            "value" -> string.value.toJson,
+            "value"    -> string.value.toJson,
             "language" -> string.language.toJson
           )
         )

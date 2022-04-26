@@ -22,7 +22,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
   private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
 
   "The JSON-LD tool" should {
@@ -104,9 +104,9 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                 """.stripMargin
 
       val compactedJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(ontologyJsonLDInputStr)
-      val formattedCompactedDoc = compactedJsonLDDoc.toPrettyString()
-      val receivedOutputAsJsValue: JsValue = JsonParser(formattedCompactedDoc)
-      val expectedOutputAsJsValue: JsValue = JsonParser(ontologyCompactedJsonLDOutputStr)
+      val formattedCompactedDoc              = compactedJsonLDDoc.toPrettyString()
+      val receivedOutputAsJsValue: JsValue   = JsonParser(formattedCompactedDoc)
+      val expectedOutputAsJsValue: JsValue   = JsonParser(ontologyCompactedJsonLDOutputStr)
       receivedOutputAsJsValue should ===(expectedOutputAsJsValue)
     }
 
@@ -134,7 +134,8 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
     "convert an RDF4J Model representing an ontology to JSON-LD" in {
       // Read a Turtle file.
-      val turtle = FileUtil.readTextFile(Paths.get("..", "test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
+      val turtle =
+        FileUtil.readTextFile(Paths.get("..", "test_data/ontologyR2RV2/anythingOntologyWithValueObjects.ttl"))
 
       // Parse it to an RDF4J Model.
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
@@ -177,7 +178,8 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       outputModelAsJsonLDDocument should ===(jsonLDDocument)
 
       // Read an isomorphic Turtle file.
-      val expectedTurtle = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+      val expectedTurtle =
+        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
 
       // Parse it to an RDF4J Model.
       val expectedModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = expectedTurtle, rdfFormat = Turtle)
@@ -203,7 +205,8 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       jsonLDOutputModel should ===(inputModel)
 
       // Read an isomorphic JSON-LD file.
-      val expectedJsonLD = FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+      val expectedJsonLD =
+        FileUtil.readTextFile(Paths.get("..", "test_data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
 
       // Parse it to a JsonLDDocument and compare it with the generated one.
       val expectedJsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(expectedJsonLD)
@@ -241,13 +244,13 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedWithFoo1AtTopLevel = JsonLDObject(
         value = Map(
-          "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-          "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+          "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo1"),
+          "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
             Map(
-              "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-              "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+              "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo2"),
+              "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
               "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
                 value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo1"))
@@ -259,13 +262,13 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedWithFoo2AtTopLevel = JsonLDObject(
         value = Map(
-          "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-          "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+          "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo2"),
+          "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
             Map(
-              "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-              "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+              "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo1"),
+              "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
               "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
                 value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2"))
@@ -313,24 +316,24 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedHierarchicalJsonLD = JsonLDObject(
         value = Map(
-          "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+          "@id"   -> JsonLDString(value = "http://rdfh.ch/foo1"),
           "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://example.org/foo#hasBar" -> JsonLDObject(
             value = Map(
-              "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+              "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
             )
           ),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
             Map(
-              "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-              "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+              "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo2"),
+              "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-              "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+              "http://example.org/foo#hasIndex"            -> JsonLDInt(value = 3),
               "http://example.org/foo#hasBar" -> JsonLDObject(value =
                 Map(
-                  "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                  "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
                   "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
                 )
               )
@@ -350,12 +353,12 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             Vector(
               JsonLDObject(value =
                 Map(
-                  "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-                  "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                  "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo1"),
+                  "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
                   "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
                   "http://example.org/foo#hasBar" -> JsonLDObject(value =
                     Map(
-                      "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                      "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar"),
                       "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
                     )
                   ),
@@ -366,14 +369,14 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
               ),
               JsonLDObject(value =
                 Map(
-                  "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-                  "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                  "@id"                                        -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                  "@type"                                      -> JsonLDString(value = "http://example.org/foo#Foo"),
                   "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-                  "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                  "http://example.org/foo#hasIndex"            -> JsonLDInt(value = 3),
                   "http://example.org/foo#hasBar" -> JsonLDObject(value =
                     Map(
                       "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
-                      "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
+                      "@type"                                      -> JsonLDString(value = "http://example.org/foo#Bar")
                     )
                   )
                 )

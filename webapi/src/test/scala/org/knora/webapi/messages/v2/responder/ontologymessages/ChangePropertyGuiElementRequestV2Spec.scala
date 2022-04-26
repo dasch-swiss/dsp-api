@@ -60,16 +60,16 @@ class ChangePropertyGuiElementRequestV2Spec extends AsyncCoreSpec {
       val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
 
         requestMessage: ChangePropertyGuiElementRequest <- ChangePropertyGuiElementRequest
-          .fromJsonLD(
-            jsonLDDocument = requestDoc,
-            apiRequestID = UUID.randomUUID,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                                             .fromJsonLD(
+                                                               jsonLDDocument = requestDoc,
+                                                               apiRequestID = UUID.randomUUID,
+                                                               requestingUser = requestingUser,
+                                                               responderManager = responderManager,
+                                                               storeManager = storeManager,
+                                                               featureFactoryConfig = featureFactoryConfig,
+                                                               settings = settings,
+                                                               log = log
+                                                             )
       } yield requestMessage
 
       requestMessageFuture map { changePropertyGuiElementRequestMessage =>

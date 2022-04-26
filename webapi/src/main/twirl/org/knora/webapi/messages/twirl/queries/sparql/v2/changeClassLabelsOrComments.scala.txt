@@ -12,7 +12,6 @@
 @*
  * Changes the labels or comments of a class.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  * @param ontologyIri the IRI of the ontology to be modified.
  * @param classIri the IRI of the class to be modified.
@@ -21,8 +20,7 @@
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: SmartIri,
+@(ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   classIri: SmartIri,
   predicateToUpdate: SmartIri,

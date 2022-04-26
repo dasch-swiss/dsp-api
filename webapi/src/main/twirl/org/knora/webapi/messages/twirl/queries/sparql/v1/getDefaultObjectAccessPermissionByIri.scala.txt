@@ -8,11 +8,9 @@
 @**
  * Gets the default object access permission identified by IRI.
  *
- * @param triplestore the name of the triplestore being used.
  * @param defaultObjectAccessPermissionIri the permission's IRI.
  *@
-@(triplestore: String,
-  defaultObjectAccessPermissionIri: IRI)
+@(defaultObjectAccessPermissionIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>

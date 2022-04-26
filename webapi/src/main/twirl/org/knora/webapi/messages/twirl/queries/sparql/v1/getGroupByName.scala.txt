@@ -8,12 +8,10 @@
 @**
  * Gets all information about a single group, given the group's name and project association.
  *
- * @param triplestore the name of the triplestore being used.
  * @param name the group's `<http://www.knora.org/ontology/knora-admin#groupName>`.
  * @param projectIri the group's `<http://www.knora.org/ontology/knora-admin#belongsToProject>` project association.
  *@
-@(triplestore: String,
-  name: String,
+@(name: String,
   projectIri: IRI)
 
 prefix xsd: <http://www.w3.org/2001/XMLSchema#>

@@ -77,9 +77,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListsGetRequestADM] = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield ListsGetRequestADM(
           projectIri = projectIri,
           featureFactoryConfig = featureFactoryConfig,
@@ -115,9 +115,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
       val requestMessage: Future[ListGetRequestADM] = for {
         requestingUser <- getUserADM(
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig
-        )
+                            requestContext = requestContext,
+                            featureFactoryConfig = featureFactoryConfig
+                          )
       } yield ListGetRequestADM(
         iri = listIri,
         featureFactoryConfig = featureFactoryConfig,
@@ -219,27 +219,27 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   private def createListRootNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
+        val maybeId: Validation[Throwable, Option[ListIRI]]    = ListIRI.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIRI]      = ProjectIRI.make(apiRequest.projectIri)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
-        val labels: Validation[Throwable, Labels] = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Comments] = Comments.make(apiRequest.comments)
+        val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
         val validatedListRootNodeCreatePayload: Validation[Throwable, ListRootNodeCreatePayloadADM] =
           Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListRootNodeCreatePayloadADM)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
-          payload <- toFuture(validatedListRootNodeCreatePayload)
+          payload        <- toFuture(validatedListRootNodeCreatePayload)
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
 
           // check if the requesting user is allowed to perform operation
           _ = if (
-            !requestingUser.permissions.isProjectAdmin(
-              projectIri.toOption.get.value
-            ) && !requestingUser.permissions.isSystemAdmin
-          ) {
-            // not project or a system admin
-            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-          }
+                !requestingUser.permissions.isProjectAdmin(
+                  projectIri.toOption.get.value
+                ) && !requestingUser.permissions.isSystemAdmin
+              ) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+              }
         } yield ListRootNodeCreateRequestADM(
           createRootNode = payload,
           featureFactoryConfig = featureFactoryConfig,
@@ -296,11 +296,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
           }
 
-          val id: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.id)
-          val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
-          val name: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
+          val id: Validation[Throwable, Option[ListIRI]]        = ListIRI.make(apiRequest.id)
+          val projectIri: Validation[Throwable, ProjectIRI]     = ProjectIRI.make(apiRequest.projectIri)
+          val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
           val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
-          val labels: Validation[Throwable, Labels] = Labels.make(apiRequest.labels)
+          val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
           val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
           val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
             Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
@@ -308,18 +308,18 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             )
 
           val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-            payload <- toFuture(validatedCreateChildNodePeyload)
+            payload        <- toFuture(validatedCreateChildNodePeyload)
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
 
             // check if the requesting user is allowed to perform operation
             _ = if (
-              !requestingUser.permissions.isProjectAdmin(
-                projectIri.toOption.get.value
-              ) && !requestingUser.permissions.isSystemAdmin
-            ) {
-              // not project or a system admin
-              throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-            }
+                  !requestingUser.permissions.isProjectAdmin(
+                    projectIri.toOption.get.value
+                  ) && !requestingUser.permissions.isSystemAdmin
+                ) {
+                  // not project or a system admin
+                  throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                }
           } yield ListChildNodeCreateRequestADM(
             createChildNodeRequest = payload,
             featureFactoryConfig = featureFactoryConfig,
@@ -375,12 +375,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           Validation.fail(throw BadRequestException("Route and payload listIri mismatch."))
         }
 
-        val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
+        val projectIri: Validation[Throwable, ProjectIRI]       = ProjectIRI.make(apiRequest.projectIri)
         val hasRootNode: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.hasRootNode)
-        val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
-        val name: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
-        val labels: Validation[Throwable, Option[Labels]] = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
+        val position: Validation[Throwable, Option[Position]]   = Position.make(apiRequest.position)
+        val name: Validation[Throwable, Option[ListName]]       = ListName.make(apiRequest.name)
+        val labels: Validation[Throwable, Option[Labels]]       = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Option[Comments]]   = Comments.make(apiRequest.comments)
 
         val validatedChangeNodeInfoPayload: Validation[Throwable, ListNodeChangePayloadADM] =
           Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
@@ -388,17 +388,17 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           )
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
-          payload <- toFuture(validatedChangeNodeInfoPayload)
+          payload        <- toFuture(validatedChangeNodeInfoPayload)
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
           // check if the requesting user is allowed to perform operation
           _ = if (
-            !requestingUser.permissions.isProjectAdmin(
-              projectIri.toOption.get.value
-            ) && !requestingUser.permissions.isSystemAdmin
-          ) {
-            // not project or a system admin
-            throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
-          }
+                !requestingUser.permissions.isProjectAdmin(
+                  projectIri.toOption.get.value
+                ) && !requestingUser.permissions.isSystemAdmin
+              ) {
+                // not project or a system admin
+                throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
+              }
         } yield NodeInfoChangeRequestADM(
           listIri = listIri.toOption.get.value,
           changeNodeRequest = payload,

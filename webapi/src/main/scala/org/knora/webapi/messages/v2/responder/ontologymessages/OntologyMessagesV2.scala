@@ -357,7 +357,7 @@ object OntologyUpdateHelper {
     }
 
     val predicateInfoToUpdate = predicatesWithNewData.values.head
-    val predicateToUpdate = predicateInfoToUpdate.predicateIri
+    val predicateToUpdate     = predicateInfoToUpdate.predicateIri
 
     if (!LabelAndCommentPredicates.contains(predicateToUpdate.toString)) {
       throw BadRequestException(s"Invalid predicate: $predicateToUpdate")
@@ -439,9 +439,9 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
     // Get the property definition and the ontology's last modification date from the JSON-LD.
 
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
     val lastModificationDate = propertyUpdateInfo.lastModificationDate
 
     // Check that the knora-api:subjectType (if provided) and the knora-api:objectType point to valid entity IRIs.
@@ -544,9 +544,9 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
 
     // Get the class definition and the ontology's last modification date from the JSON-LD.
 
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent = classUpdateInfo.classInfoContent
+    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
     // The request must provide an rdfs:label
@@ -626,9 +626,9 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
   ): AddCardinalitiesToClassRequestV2 = {
     // Get the class definition and the ontology's last modification date from the JSON-LD.
 
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent = classUpdateInfo.classInfoContent
+    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
     // The request must provide cardinalities.
@@ -719,9 +719,9 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeCardinalitiesRequestV2 = {
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent = classUpdateInfo.classInfoContent
+    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
     ChangeCardinalitiesRequestV2(
@@ -795,9 +795,9 @@ object CanDeleteCardinalitiesFromClassRequestV2
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): CanDeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent = classUpdateInfo.classInfoContent
+    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
+    val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
     CanDeleteCardinalitiesFromClassRequestV2(
@@ -870,9 +870,9 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntology = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntology)
-    val classInfoContent = classUpdateInfo.classInfoContent
+    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
+    val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
     DeleteCardinalitiesFromClassRequestV2(
@@ -1025,9 +1025,9 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
   ): ChangePropertyGuiElementRequest = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
     val lastModificationDate = propertyUpdateInfo.lastModificationDate
 
     val newGuiElement: Option[SmartIri] =
@@ -1131,10 +1131,10 @@ object ChangePropertyLabelsOrCommentsRequestV2
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangePropertyLabelsOrCommentsRequestV2 = {
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate = propertyUpdateInfo.lastModificationDate
+    val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo    = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+    val propertyInfoContent   = propertyUpdateInfo.propertyInfoContent
+    val lastModificationDate  = propertyUpdateInfo.lastModificationDate
     val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(propertyInfoContent)
 
     ChangePropertyLabelsOrCommentsRequestV2(
@@ -1143,6 +1143,80 @@ object ChangePropertyLabelsOrCommentsRequestV2
       newObjects = predicateInfoToUpdate.objects.collect { case strLiteral: StringLiteralV2 =>
         strLiteral
       },
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
+/**
+ * Deletes the comment from a property. A successful response will be a [[ReadOntologyV2]].
+ *
+ * @param propertyIri          the IRI of the property.
+ * @param lastModificationDate the ontology's last modification date
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class DeletePropertyCommentRequestV2(
+  propertyIri: SmartIri,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends OntologiesResponderRequestV2
+
+/**
+ * Constructs instances of [[DeletePropertyCommentRequestV2]] based on JSON-LD input.
+ */
+object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeletePropertyCommentRequestV2] {
+
+  /**
+   * Converts a JSON-LD request to a [[DeletePropertyCommentRequestV2]].
+   *
+   * @param jsonLDDocument       the JSON-LD input.
+   * @param apiRequestID         the UUID of the API request.
+   * @param requestingUser       the user making the request.
+   * @param responderManager     a reference to the responder manager.
+   * @param storeManager         a reference to the store manager.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param settings             the application settings.
+   * @param log                  a logging adapter.
+   * @return a [[DeletePropertyCommentRequestV2]] representing the input.
+   */
+  override def fromJsonLD(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+
+  private def fromJsonLDSync(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): DeletePropertyCommentRequestV2 = {
+    val inputOntologyV2      = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologyV2)
+    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
+    val lastModificationDate = propertyUpdateInfo.lastModificationDate
+
+    DeletePropertyCommentRequestV2(
+      propertyIri = propertyInfoContent.propertyIri,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
       featureFactoryConfig = featureFactoryConfig,
@@ -1215,10 +1289,10 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeClassLabelsOrCommentsRequestV2 = {
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent = classUpdateInfo.classInfoContent
-    val lastModificationDate = classUpdateInfo.lastModificationDate
+    val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo       = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent      = classUpdateInfo.classInfoContent
+    val lastModificationDate  = classUpdateInfo.lastModificationDate
     val predicateInfoToUpdate = OntologyUpdateHelper.getLabelsOrComments(classInfoContent)
 
     ChangeClassLabelsOrCommentsRequestV2(
@@ -1227,6 +1301,80 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
       newObjects = predicateInfoToUpdate.objects.collect { case strLiteral: StringLiteralV2 =>
         strLiteral
       },
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
+/**
+ * Deletes the comment from a class. A successful response will be a [[ReadOntologyV2]].
+ *
+ * @param classIri             the IRI of the class.
+ * @param lastModificationDate the ontology's last modification date
+ * @param apiRequestID         the ID of the API request.
+ * @param requestingUser       the user making the request.
+ */
+case class DeleteClassCommentRequestV2(
+  classIri: SmartIri,
+  lastModificationDate: Instant,
+  apiRequestID: UUID,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends OntologiesResponderRequestV2
+
+/**
+ * Constructs instances of [[DeleteClassCommentRequestV2]] based on JSON-LD input.
+ */
+object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClassCommentRequestV2] {
+
+  /**
+   * Converts a JSON-LD request to a [[DeleteClassCommentRequestV2]].
+   *
+   * @param jsonLDDocument       the JSON-LD input.
+   * @param apiRequestID         the UUID of the API request.
+   * @param requestingUser       the user making the request.
+   * @param responderManager     a reference to the responder manager.
+   * @param storeManager         a reference to the store manager.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param settings             the application settings.
+   * @param log                  a logging adapter.
+   * @return a [[DeleteClassCommentRequestV2]] representing the input.
+   */
+  override def fromJsonLD(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+
+  private def fromJsonLDSync(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): DeleteClassCommentRequestV2 = {
+    val inputOntologyV2: InputOntologyV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo: ClassUpdateInfo     = OntologyUpdateHelper.getClassDef(inputOntologyV2)
+    val classInfoContent: ClassInfoContentV2 = classUpdateInfo.classInfoContent
+    val lastModificationDate: Instant        = classUpdateInfo.lastModificationDate
+
+    DeleteClassCommentRequestV2(
+      classIri = classInfoContent.classIri,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
       featureFactoryConfig = featureFactoryConfig,
@@ -1271,9 +1419,9 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
   ): ChangeGuiOrderRequestV2 = {
     // Get the class definition and the ontology's last modification date from the JSON-LD.
 
-    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
-    val classInfoContent = classUpdateInfo.classInfoContent
+    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
     // The request must provide cardinalities.
@@ -1355,10 +1503,10 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeOntologyMetadataRequestV2 = {
-    val inputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val inputMetadata = inputOntologyV2.ontologyMetadata
-    val ontologyIri = inputMetadata.ontologyIri
-    val label: Option[String] = inputMetadata.label
+    val inputOntologyV2         = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val inputMetadata           = inputOntologyV2.ontologyMetadata
+    val ontologyIri             = inputMetadata.ontologyIri
+    val label: Option[String]   = inputMetadata.label
     val comment: Option[String] = inputMetadata.comment
     val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(
       throw BadRequestException("No knora-api:lastModificationDate submitted")
@@ -1753,10 +1901,10 @@ case class ReadOntologyV2(
     val context = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion,
-        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "owl" -> OntologyConstants.Owl.OwlPrefixExpansion,
-        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion
+        "rdf"                                            -> OntologyConstants.Rdf.RdfPrefixExpansion,
+        "rdfs"                                           -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "owl"                                            -> OntologyConstants.Owl.OwlPrefixExpansion,
+        "xsd"                                            -> OntologyConstants.Xsd.XsdPrefixExpansion
       ) ++ salsahGuiPrefix,
       knoraOntologiesNeedingPrefixes = otherKnoraOntologiesUsed
     )
@@ -1791,7 +1939,7 @@ case class ReadOntologyV2(
       }
     }.toVector
 
-    val allEntities = jsonClasses ++ jsonProperties ++ jsonIndividuals
+    val allEntities       = jsonClasses ++ jsonProperties ++ jsonIndividuals
     val allEntitiesSorted = allEntities.sortBy(_.value(JsonLDKeywords.ID))
 
     // Assemble the JSON-LD document.
@@ -2033,9 +2181,9 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
     val context = JsonLDObject(
       Map(
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion),
-        "xsd" -> JsonLDString(OntologyConstants.Xsd.XsdPrefixExpansion),
-        "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion),
-        "owl" -> JsonLDString(OntologyConstants.Owl.OwlPrefixExpansion)
+        "xsd"                                            -> JsonLDString(OntologyConstants.Xsd.XsdPrefixExpansion),
+        "rdfs"                                           -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion),
+        "owl"                                            -> JsonLDString(OntologyConstants.Owl.OwlPrefixExpansion)
       )
     )
 
@@ -2191,9 +2339,9 @@ object Cardinality extends Enumeration {
 
   type Cardinality = Value
 
-  val MayHaveOne: Value = Value(0, "0-1")
-  val MayHaveMany: Value = Value(1, "0-n")
-  val MustHaveOne: Value = Value(2, "1")
+  val MayHaveOne: Value   = Value(0, "0-1")
+  val MayHaveMany: Value  = Value(1, "0-n")
+  val MustHaveOne: Value  = Value(2, "1")
   val MustHaveSome: Value = Value(3, "1-n")
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
@@ -2789,7 +2937,7 @@ case class ReadClassInfoV2(
 
     val knoraResourcePropertiesInTargetSchema =
       knoraResourcePropertiesConsideringLinkValueProps.map(_.toOntologySchema(targetSchema))
-    val linkPropertiesInTargetSchema = linkProperties.map(_.toOntologySchema(targetSchema))
+    val linkPropertiesInTargetSchema      = linkProperties.map(_.toOntologySchema(targetSchema))
     val linkValuePropertiesInTargetSchema = linkValuePropsForSchema.map(_.toOntologySchema(targetSchema))
     val fileValuePropertiesInTargetSchema = fileValueProperties.map(_.toOntologySchema(targetSchema))
 
@@ -2835,7 +2983,7 @@ case class ReadClassInfoV2(
       val prop2card: (IRI, JsonLDInt) = cardinalityInfo.cardinality match {
         case Cardinality.MayHaveMany  => OntologyConstants.Owl.MinCardinality -> JsonLDInt(0)
         case Cardinality.MayHaveOne   => OntologyConstants.Owl.MaxCardinality -> JsonLDInt(1)
-        case Cardinality.MustHaveOne  => OntologyConstants.Owl.Cardinality -> JsonLDInt(1)
+        case Cardinality.MustHaveOne  => OntologyConstants.Owl.Cardinality    -> JsonLDInt(1)
         case Cardinality.MustHaveSome => OntologyConstants.Owl.MinCardinality -> JsonLDInt(1)
       }
 
@@ -2858,7 +3006,7 @@ case class ReadClassInfoV2(
 
       JsonLDObject(
         Map(
-          JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Owl.Restriction),
+          JsonLDKeywords.TYPE              -> JsonLDString(OntologyConstants.Owl.Restriction),
           OntologyConstants.Owl.OnProperty -> JsonLDUtil.iriToJsonLDObject(propertyIri.toString),
           prop2card
         ) ++ isInheritedStatement ++ guiOrderStatement
@@ -2928,7 +3076,7 @@ case class ReadClassInfoV2(
     }
 
     Map(
-      JsonLDKeywords.ID -> JsonLDString(entityInfoContent.classIri.toString),
+      JsonLDKeywords.ID   -> JsonLDString(entityInfoContent.classIri.toString),
       JsonLDKeywords.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
     ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
       isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement ++ jsonRestriction
@@ -3066,7 +3214,7 @@ case class ReadPropertyInfoV2(
     }
 
     Map(
-      JsonLDKeywords.ID -> JsonLDString(entityInfoContent.propertyIri.toString),
+      JsonLDKeywords.ID   -> JsonLDString(entityInfoContent.propertyIri.toString),
       JsonLDKeywords.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
     ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++
       isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++
@@ -3461,7 +3609,7 @@ case class PropertyInfoContentV2(
 
         if (sourcePropertyType.toString == OntologyConstants.Owl.ObjectProperty) {
           // Yes. See if we need to change it to a datatype property. Does it have a knora-base:objectClassConstraint?
-          val objectClassConstraintIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
+          val objectClassConstraintIri          = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
           val maybeObjectType: Option[SmartIri] = getPredicateIriObject(objectClassConstraintIri)
 
           maybeObjectType match {
@@ -3823,7 +3971,7 @@ case class OntologyMetadataV2(
     }
 
     Map(
-      JsonLDKeywords.ID -> JsonLDString(ontologyIri.toString),
+      JsonLDKeywords.ID   -> JsonLDString(ontologyIri.toString),
       JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
     ) ++ projectIriStatement ++ labelStatement ++ commentStatement ++ lastModDateStatement ++ isSharedStatement ++ isBuiltInStatement
   }

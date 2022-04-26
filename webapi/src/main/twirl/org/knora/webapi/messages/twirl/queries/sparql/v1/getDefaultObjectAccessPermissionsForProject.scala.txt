@@ -8,11 +8,9 @@
 @**
  * Gets the IRIs of administrative permissions defined inside a project.
  *
- * @param triplestore the name of the triplestore being used.
  * @param projectIri the project's IRI.
  *@
-@(triplestore: String,
-  projectIri: IRI)
+@(projectIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>

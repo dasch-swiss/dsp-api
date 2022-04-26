@@ -9,13 +9,11 @@
  * Given a node in a hierarchical list, returns the nodes in the path from the root node to the specified node,
  * not including the root node.
  *
- * @param triplestore the name of the triplestore being used.
  * @param queryNodeIri the node whose path is to be queried.
  * @param preferredLanguage the language code of the user's preferred language.
  * @param fallbackLanguage the language code of the application's default language.
  *@
-@(triplestore: String,
-  queryNodeIri: IRI,
+@(queryNodeIri: IRI,
   preferredLanguage: String,
   fallbackLanguage: String)
 

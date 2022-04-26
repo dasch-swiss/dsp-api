@@ -8,26 +8,23 @@ package org.knora.webapi.responders.admin
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, NotFoundException}
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectIdentifierADM,
-  ProjectRestrictedViewSettingsADM,
-  ProjectRestrictedViewSettingsGetADM
-}
-import org.knora.webapi.messages.admin.responder.sipimessages.{
-  SipiFileInfoGetRequestADM,
-  SipiFileInfoGetResponseADM,
-  SipiResponderRequestADM
-}
-import org.knora.webapi.messages.store.triplestoremessages.{
-  IriSubjectV2,
-  LiteralV2,
-  SparqlExtendedConstructRequest,
-  SparqlExtendedConstructResponse
-}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsGetADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
+import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData}
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
@@ -66,70 +63,73 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getFileValue(
-            triplestore = settings.triplestoreType,
-            filename = request.filename
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getFileValue(
+                           filename = request.filename
+                         )
+                         .toString()
+                     )
 
       queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparqlQuery,
-        featureFactoryConfig = request.featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                                                          sparql = sparqlQuery,
+                                                          featureFactoryConfig = request.featureFactoryConfig
+                                                        )).mapTo[SparqlExtendedConstructResponse]
 
       _ = if (queryResponse.statements.isEmpty)
-        throw NotFoundException(s"No file value was found for filename ${request.filename}")
+            throw NotFoundException(s"No file value was found for filename ${request.filename}")
       _ = if (queryResponse.statements.size > 1)
-        throw InconsistentRepositoryDataException(s"Filename ${request.filename} is used in more than one file value")
+            throw InconsistentRepositoryDataException(
+              s"Filename ${request.filename} is used in more than one file value"
+            )
 
       fileValueIriSubject: IriSubjectV2 = queryResponse.statements.keys.head match {
-        case iriSubject: IriSubjectV2 => iriSubject
-        case _ =>
-          throw InconsistentRepositoryDataException(
-            s"The subject of the file value with filename ${request.filename} is not an IRI"
-          )
-      }
+                                            case iriSubject: IriSubjectV2 => iriSubject
+                                            case _ =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"The subject of the file value with filename ${request.filename} is not an IRI"
+                                              )
+                                          }
 
       assertions: Seq[(String, String)] = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {
-        case (predicate: SmartIri, values: Seq[LiteralV2]) =>
-          values.map { value =>
-            predicate.toString -> value.toString
-          }
-      }
+                                            case (predicate: SmartIri, values: Seq[LiteralV2]) =>
+                                              values.map { value =>
+                                                predicate.toString -> value.toString
+                                              }
+                                          }
 
       maybeEntityPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromAssertionsADM(
-        entityIri = fileValueIriSubject.toString,
-        assertions = assertions,
-        requestingUser = request.requestingUser
-      )
+                                                          entityIri = fileValueIriSubject.toString,
+                                                          assertions = assertions,
+                                                          requestingUser = request.requestingUser
+                                                        )
 
-      _ = log.debug(
-        s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}"
-      )
+      _ =
+        log.debug(
+          s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}"
+        )
 
       permissionCode: Int = maybeEntityPermission
-        .map(_.toInt)
-        .getOrElse(0) // Sipi expects a permission code from 0 to 8
+                              .map(_.toInt)
+                              .getOrElse(0) // Sipi expects a permission code from 0 to 8
 
       response <- permissionCode match {
-        case 1 =>
-          for {
-            maybeRVSettings <- (
-              responderManager ? ProjectRestrictedViewSettingsGetADM(
-                identifier = ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
-                featureFactoryConfig = request.featureFactoryConfig,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )
-            ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
-          } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
+                    case 1 =>
+                      for {
+                        maybeRVSettings <- (
+                                             responderManager ? ProjectRestrictedViewSettingsGetADM(
+                                               identifier =
+                                                 ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                               featureFactoryConfig = request.featureFactoryConfig,
+                                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                                             )
+                                           ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
+                      } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
 
-        case _ =>
-          FastFuture.successful(
-            SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None)
-          )
-      }
+                    case _ =>
+                      FastFuture.successful(
+                        SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None)
+                      )
+                  }
 
       _ = log.info(s"filename ${request.filename}, permission code: $permissionCode")
     } yield response

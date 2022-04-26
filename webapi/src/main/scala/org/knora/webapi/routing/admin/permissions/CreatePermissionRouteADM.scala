@@ -47,9 +47,9 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
         entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield AdministrativePermissionCreateRequestADM(
             createRequest = apiRequest,
             featureFactoryConfig = featureFactoryConfig,
@@ -79,9 +79,9 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
         entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield DefaultObjectAccessPermissionCreateRequestADM(
             createRequest = apiRequest,
             featureFactoryConfig = featureFactoryConfig,

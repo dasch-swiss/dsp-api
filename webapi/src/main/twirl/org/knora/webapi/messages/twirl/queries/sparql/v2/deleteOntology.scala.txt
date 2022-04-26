@@ -8,11 +8,9 @@
 @*
  * Deletes an ontology.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  *@
-@(triplestore: String,
-  ontologyNamedGraphIri: SmartIri)
+@(ontologyNamedGraphIri: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

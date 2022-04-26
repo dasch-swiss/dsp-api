@@ -23,13 +23,13 @@ object GenerateContributorsFile extends App {
 
   // Configuration
 
-  val contributorsUrl = "https://api.github.com/repos/dasch-swiss/knora-api/contributors"
+  val contributorsUrl   = "https://api.github.com/repos/dasch-swiss/knora-api/contributors"
   val defaultOutputFile = "Contributors.md"
 
   // Command-line args
 
-  private val conf = new GenerateContributorsFileConf(args.toIndexedSeq)
-  private val token = conf.token.toOption
+  private val conf             = new GenerateContributorsFileConf(args.toIndexedSeq)
+  private val token            = conf.token.toOption
   private val outputFile: Path = Paths.get(conf.output())
 
   // Get the list of contributors.

@@ -27,7 +27,7 @@ abstract class GravsearchTypeInspector(
   responderData: ResponderData
 ) {
 
-  protected val system: ActorSystem = responderData.system
+  protected val system: ActorSystem         = responderData.system
   protected val settings: KnoraSettingsImpl = KnoraSettings(system)
   protected implicit val executionContext: ExecutionContext =
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)

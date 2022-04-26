@@ -66,10 +66,10 @@ object StringFormatter {
   val PARAGRAPH_SEPARATOR = '\u2029'
 
   // Control sequences for changing text colour in terminals.
-  val ANSI_RED = "\u001B[31m"
-  val ANSI_GREEN = "\u001B[32m"
+  val ANSI_RED    = "\u001B[31m"
+  val ANSI_GREEN  = "\u001B[32m"
   val ANSI_YELLOW = "\u001B[33m"
-  val ANSI_RESET = "\u001B[0m"
+  val ANSI_RESET  = "\u001B[0m"
 
   /**
    * Separates the calendar name from the rest of a Knora date.
@@ -741,14 +741,14 @@ class StringFormatter private (
   // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
   // EE being the era: one of BC or AD
   private val KnoraDateRegex: Regex = ("""^(GREGORIAN|JULIAN|ISLAMIC)""" +
-    CalendarSeparator + // calendar name
+    CalendarSeparator +          // calendar name
     """(?:[1-9][0-9]{0,3})(""" + // year
     PrecisionSeparator +
     """(?!00)[0-9]{1,2}(""" + // month
     PrecisionSeparator +
     """(?!00)[0-9]{1,2})?)?( BC| AD| BCE| CE)?(""" + // day
-    CalendarSeparator + // separator if a period is given
-    """(?:[1-9][0-9]{0,3})(""" + // year 2
+    CalendarSeparator +                              // separator if a period is given
+    """(?:[1-9][0-9]{0,3})(""" +                     // year 2
     PrecisionSeparator +
     """(?!00)[0-9]{1,2}(""" + // month 2
     PrecisionSeparator +
@@ -918,7 +918,7 @@ class StringFormatter private (
         errorFun
       }
 
-      val lastSegment = segments.last
+      val lastSegment     = segments.last
       val lastTwoSegments = segments.slice(segments.length - 2, segments.length)
 
       if (lastTwoSegments == Vector("simple", "v2")) {
@@ -999,7 +999,7 @@ class StringFormatter private (
           val hashPos = iri.lastIndexOf('#')
 
           val (namespace: String, entityName: Option[String]) = if (hashPos >= 0 && hashPos < iri.length) {
-            val namespace = iri.substring(0, hashPos)
+            val namespace  = iri.substring(0, hashPos)
             val entityName = iri.substring(hashPos + 1)
 
             // Validate the entity name as an NCName.
@@ -1009,7 +1009,7 @@ class StringFormatter private (
           }
 
           // Remove the URL scheme (http://), and split the remainder of the namespace into slash-delimited segments.
-          val body = namespace.substring(namespace.indexOf("//") + 2)
+          val body     = namespace.substring(namespace.indexOf("//") + 2)
           val segments = body.split('/').toVector
 
           // The segments must contain at least a hostname.
@@ -1090,7 +1090,7 @@ class StringFormatter private (
             }
 
             // Extract the ontology name.
-            val ontologyName = ontologyPath.last
+            val ontologyName           = ontologyPath.last
             val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
             if (!hasBuiltInOntologyName) {
@@ -1299,7 +1299,7 @@ class StringFormatter private (
     private def externalToInternalEntityIri: SmartIri = {
       // Construct the string representation of this IRI in the target schema.
       val internalOntologyName = externalToInternalOntologyName(getOntologyName)
-      val entityName = getEntityName
+      val entityName           = getEntityName
 
       val internalOntologyIri = makeInternalOntologyIriStr(
         internalOntologyName = internalOntologyName,
@@ -1328,8 +1328,8 @@ class StringFormatter private (
 
     private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
       //Construct the string representation of this IRI in the target schema.
-      val entityName = getEntityName
-      val convertedOntologyIri = getOntologyFromEntity.toOntologySchema(targetSchema)
+      val entityName            = getEntityName
+      val convertedOntologyIri  = getOntologyFromEntity.toOntologySchema(targetSchema)
       val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName
 
       // Get it from the cache, or construct it and cache it if it's not there.
@@ -1350,7 +1350,7 @@ class StringFormatter private (
     }
 
     private def internalToExternalOntologyIri(targetSchema: ApiV2Schema): SmartIri = {
-      val ontologyName = getOntologyName
+      val ontologyName   = getOntologyName
       val versionSegment = getVersionSegment(targetSchema)
 
       val convertedIriStr: IRI = if (isKnoraBuiltInDefinitionIri) {
@@ -1434,7 +1434,7 @@ class StringFormatter private (
 
       if (entityName.endsWith("Value")) {
         val convertedEntityName = entityName.substring(0, entityName.length - "Value".length)
-        val convertedIriStr = getOntologyFromEntity.makeEntityIri(convertedEntityName).toString
+        val convertedIriStr     = getOntologyFromEntity.makeEntityIri(convertedEntityName).toString
 
         getOrCacheSmartIri(
           iriStr = convertedIriStr,
@@ -1461,9 +1461,9 @@ class StringFormatter private (
         throw DataConversionException(s"IRI $iri is not a Knora entity IRI, so it cannot be a link property IRI")
       }
 
-      val entityName = getEntityName
+      val entityName          = getEntityName
       val convertedEntityName = entityName + "Value"
-      val convertedIriStr = getOntologyFromEntity.makeEntityIri(convertedEntityName).toString
+      val convertedIriStr     = getOntologyFromEntity.makeEntityIri(convertedEntityName).toString
 
       getOrCacheSmartIri(
         iriStr = convertedIriStr,
@@ -1980,12 +1980,12 @@ class StringFormatter private (
   def formatArkTimestamp(timestamp: Instant): String = {
     val offsetDateTime: OffsetDateTime = timestamp.atOffset(ZoneOffset.UTC)
 
-    val year: Int = offsetDateTime.get(ChronoField.YEAR)
-    val month: Int = offsetDateTime.get(ChronoField.MONTH_OF_YEAR)
-    val day: Int = offsetDateTime.get(ChronoField.DAY_OF_MONTH)
-    val hour: Int = offsetDateTime.get(ChronoField.HOUR_OF_DAY)
-    val minute: Int = offsetDateTime.get(ChronoField.MINUTE_OF_HOUR)
-    val second: Int = offsetDateTime.get(ChronoField.SECOND_OF_MINUTE)
+    val year: Int         = offsetDateTime.get(ChronoField.YEAR)
+    val month: Int        = offsetDateTime.get(ChronoField.MONTH_OF_YEAR)
+    val day: Int          = offsetDateTime.get(ChronoField.DAY_OF_MONTH)
+    val hour: Int         = offsetDateTime.get(ChronoField.HOUR_OF_DAY)
+    val minute: Int       = offsetDateTime.get(ChronoField.MINUTE_OF_HOUR)
+    val second: Int       = offsetDateTime.get(ChronoField.SECOND_OF_MINUTE)
     val nanoOfSecond: Int = offsetDateTime.get(ChronoField.NANO_OF_SECOND)
 
     val fractionStr: IRI = if (nanoOfSecond > 0) {
@@ -2823,7 +2823,7 @@ class StringFormatter private (
   ): Future[Boolean] =
     for {
       askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
-      response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      response  <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
     } yield response.result
 
   /**
@@ -2878,7 +2878,7 @@ class StringFormatter private (
    * @return a 22-character string representing the UUID.
    */
   def base64EncodeUuid(uuid: UUID): String = {
-    val bytes = Array.ofDim[Byte](16)
+    val bytes      = Array.ofDim[Byte](16)
     val byteBuffer = ByteBuffer.wrap(bytes)
     byteBuffer.putLong(uuid.getMostSignificantBits)
     byteBuffer.putLong(uuid.getLeastSignificantBits)
@@ -2892,7 +2892,7 @@ class StringFormatter private (
    * @return the equivalent [[UUID]].
    */
   def base64DecodeUuid(base64Uuid: String): UUID = {
-    val bytes = base64Decoder.decode(base64Uuid)
+    val bytes      = base64Decoder.decode(base64Uuid)
     val byteBuffer = ByteBuffer.wrap(bytes)
     new UUID(byteBuffer.getLong, byteBuffer.getLong)
   }

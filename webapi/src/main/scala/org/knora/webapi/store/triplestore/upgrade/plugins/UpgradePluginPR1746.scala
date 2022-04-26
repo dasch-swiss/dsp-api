@@ -21,7 +21,7 @@ class UpgradePluginPR1746(featureFactoryConfig: FeatureFactoryConfig, log: Logge
 
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
-    val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+    val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
     def replaceEmptyStringWithDummy(statement: Statement, languageTag: Option[String]): Unit = {
       val fixMeString: RdfLiteral = languageTag match {

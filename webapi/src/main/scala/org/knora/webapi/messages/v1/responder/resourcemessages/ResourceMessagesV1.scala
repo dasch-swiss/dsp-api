@@ -824,23 +824,23 @@ object SalsahGuiConversions {
    * A [[Map]] of Knora IRIs to SALSAH GUI element names.
    */
   private val iris2SalsahGuiElements: Map[IRI, IRI] = Map(
-    OntologyConstants.SalsahGui.SimpleText -> "text",
-    OntologyConstants.SalsahGui.Textarea -> "textarea",
-    OntologyConstants.SalsahGui.Pulldown -> "pulldown",
-    OntologyConstants.SalsahGui.Slider -> "slider",
-    OntologyConstants.SalsahGui.Spinbox -> "spinbox",
-    OntologyConstants.SalsahGui.Searchbox -> "searchbox",
-    OntologyConstants.SalsahGui.Date -> "date",
-    OntologyConstants.SalsahGui.Geometry -> "geometry",
+    OntologyConstants.SalsahGui.SimpleText  -> "text",
+    OntologyConstants.SalsahGui.Textarea    -> "textarea",
+    OntologyConstants.SalsahGui.Pulldown    -> "pulldown",
+    OntologyConstants.SalsahGui.Slider      -> "slider",
+    OntologyConstants.SalsahGui.Spinbox     -> "spinbox",
+    OntologyConstants.SalsahGui.Searchbox   -> "searchbox",
+    OntologyConstants.SalsahGui.Date        -> "date",
+    OntologyConstants.SalsahGui.Geometry    -> "geometry",
     OntologyConstants.SalsahGui.Colorpicker -> "colorpicker",
-    OntologyConstants.SalsahGui.List -> "hlist",
-    OntologyConstants.SalsahGui.Radio -> "radio",
-    OntologyConstants.SalsahGui.Checkbox -> "checkbox",
-    OntologyConstants.SalsahGui.Richtext -> "richtext",
-    OntologyConstants.SalsahGui.Interval -> "interval",
-    OntologyConstants.SalsahGui.TimeStamp -> "timestamp",
-    OntologyConstants.SalsahGui.Geonames -> "geoname",
-    OntologyConstants.SalsahGui.Fileupload -> "fileupload"
+    OntologyConstants.SalsahGui.List        -> "hlist",
+    OntologyConstants.SalsahGui.Radio       -> "radio",
+    OntologyConstants.SalsahGui.Checkbox    -> "checkbox",
+    OntologyConstants.SalsahGui.Richtext    -> "richtext",
+    OntologyConstants.SalsahGui.Interval    -> "interval",
+    OntologyConstants.SalsahGui.TimeStamp   -> "timestamp",
+    OntologyConstants.SalsahGui.Geonames    -> "geoname",
+    OntologyConstants.SalsahGui.Fileupload  -> "fileupload"
   )
 
   /**
@@ -890,7 +890,7 @@ case class ResourceCreateValueResponseV1(value: ResourceCreateValueObjectRespons
  */
 object LiteralValueType extends Enumeration {
   type ValueType = Value
-  val StringValue: Value = Value(0, "string")
+  val StringValue: Value  = Value(0, "string")
   val IntegerValue: Value = Value(1, "integer")
   val DecimalValue: Value = Value(2, "decimal")
 
@@ -1015,15 +1015,15 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       // Convert each PropertyV1 object into a JsObject.
       val properties: Map[IRI, JsValue] = propsV1.properties.map { propertyV1 =>
         val fields = Map(
-          "pid" -> propertyV1.pid.toJson,
+          "pid"              -> propertyV1.pid.toJson,
           "regular_property" -> propertyV1.regular_property.toJson,
-          "valuetype_id" -> propertyV1.valuetype_id.toJson,
-          "guiorder" -> propertyV1.guiorder.toJson,
-          "guielement" -> propertyV1.guielement.toJson,
-          "is_annotation" -> propertyV1.is_annotation.toJson,
-          "label" -> propertyV1.label.toJson,
-          "attributes" -> propertyV1.attributes.toJson,
-          "occurrence" -> propertyV1.occurrence.toJson
+          "valuetype_id"     -> propertyV1.valuetype_id.toJson,
+          "guiorder"         -> propertyV1.guiorder.toJson,
+          "guielement"       -> propertyV1.guielement.toJson,
+          "is_annotation"    -> propertyV1.is_annotation.toJson,
+          "label"            -> propertyV1.label.toJson,
+          "attributes"       -> propertyV1.attributes.toJson,
+          "occurrence"       -> propertyV1.occurrence.toJson
         ) ++
           // Don't generate JSON for these lists if they're empty.
           list2JsonOption("values", propertyV1.values, () => propertyV1.values.toJson) ++
@@ -1061,13 +1061,13 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       // Convert each PropertyGetV1 object into a JsObject.
       val properties: Map[IRI, JsValue] = propsGetV1.properties.map { (propertyGetV1: PropertyGetV1) =>
         val fields = Map(
-          "pid" -> propertyGetV1.pid.toJson,
-          "label" -> propertyGetV1.label.toJson,
-          "valuetype_id" -> propertyGetV1.valuetype_id.toJson,
-          "valuetype" -> propertyGetV1.valuetype.toJson,
-          "guielement" -> propertyGetV1.guielement.toJson,
+          "pid"           -> propertyGetV1.pid.toJson,
+          "label"         -> propertyGetV1.label.toJson,
+          "valuetype_id"  -> propertyGetV1.valuetype_id.toJson,
+          "valuetype"     -> propertyGetV1.valuetype.toJson,
+          "guielement"    -> propertyGetV1.guielement.toJson,
           "is_annotation" -> propertyGetV1.is_annotation.toJson,
-          "attributes" -> propertyGetV1.attributes.toJson
+          "attributes"    -> propertyGetV1.attributes.toJson
         ) ++
           // Don't generate JSON for these lists if they're empty.
           list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
@@ -1144,13 +1144,13 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       // Convert each PropertyGetV1 object into a JsObject.
       val properties: Map[IRI, JsValue] = propsGetForRegionV1.properties.map { (propertyGetV1: PropertyGetV1) =>
         val fields = Map(
-          "pid" -> propertyGetV1.pid.toJson,
-          "label" -> propertyGetV1.label.toJson,
-          "valuetype_id" -> propertyGetV1.valuetype_id.toJson,
-          "valuetype" -> propertyGetV1.valuetype.toJson,
-          "guielement" -> propertyGetV1.guielement.toJson,
+          "pid"           -> propertyGetV1.pid.toJson,
+          "label"         -> propertyGetV1.label.toJson,
+          "valuetype_id"  -> propertyGetV1.valuetype_id.toJson,
+          "valuetype"     -> propertyGetV1.valuetype.toJson,
+          "guielement"    -> propertyGetV1.guielement.toJson,
           "is_annotation" -> propertyGetV1.is_annotation.toJson,
-          "attributes" -> propertyGetV1.attributes.toJson
+          "attributes"    -> propertyGetV1.attributes.toJson
         ) ++
           // Don't generate JSON for these lists if they're empty.
           list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
@@ -1159,7 +1159,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
       JsObject(
         properties ++ Map(
-          "res_id" -> propsGetForRegionV1.res_id.toJson,
+          "res_id"  -> propsGetForRegionV1.res_id.toJson,
           "iconsrc" -> propsGetForRegionV1.iconsrc.toJson
         )
       ) // add res_id and iconsrc to response
@@ -1190,21 +1190,21 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
       }
 
       val fields = Map(
-        "project_id" -> resInfoV1.project_id.toJson,
-        "person_id" -> resInfoV1.person_id.toJson,
-        "restype_id" -> resInfoV1.restype_id.toJson,
-        "restype_name" -> resInfoV1.restype_name.toJson,
-        "restype_label" -> resInfoV1.restype_label.toJson,
-        "restype_description" -> resInfoV1.restype_description.toJson,
-        "restype_iconsrc" -> resInfoV1.restype_iconsrc.toJson,
-        "preview" -> resInfoV1.preview.toJson,
-        "locations" -> resInfoV1.locations.toJson,
-        "locdata" -> resInfoV1.locdata.toJson,
-        "resclass_name" -> resInfoV1.resclass_name.toJson,
+        "project_id"            -> resInfoV1.project_id.toJson,
+        "person_id"             -> resInfoV1.person_id.toJson,
+        "restype_id"            -> resInfoV1.restype_id.toJson,
+        "restype_name"          -> resInfoV1.restype_name.toJson,
+        "restype_label"         -> resInfoV1.restype_label.toJson,
+        "restype_description"   -> resInfoV1.restype_description.toJson,
+        "restype_iconsrc"       -> resInfoV1.restype_iconsrc.toJson,
+        "preview"               -> resInfoV1.preview.toJson,
+        "locations"             -> resInfoV1.locations.toJson,
+        "locdata"               -> resInfoV1.locdata.toJson,
+        "resclass_name"         -> resInfoV1.resclass_name.toJson,
         "resclass_has_location" -> resInfoV1.resclass_has_location.toJson,
-        "lastmod" -> resInfoV1.lastmod.toJson,
-        "value_of" -> resInfoV1.value_of.toJson,
-        "regions" -> resInfoV1.regions.toJson
+        "lastmod"               -> resInfoV1.lastmod.toJson,
+        "value_of"              -> resInfoV1.value_of.toJson,
+        "regions"               -> resInfoV1.regions.toJson
       ) ++ firstProp
 
       JsObject(fields)
@@ -1238,7 +1238,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
     override def write(obj: ResourceCreateResponseV1): JsValue = {
       val fields = Map(
-        "res_id" -> obj.res_id.toJson,
+        "res_id"  -> obj.res_id.toJson,
         "results" -> obj.results.toJson
       )
 
@@ -1256,9 +1256,9 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val resourceInfoResponseV1Format: RootJsonFormat[ResourceInfoResponseV1] = jsonFormat2(
     ResourceInfoResponseV1
   )
-  implicit val resourceDataV1Format: JsonFormat[ResourceDataV1] = jsonFormat5(ResourceDataV1)
+  implicit val resourceDataV1Format: JsonFormat[ResourceDataV1]             = jsonFormat5(ResourceDataV1)
   implicit val externalResourceIDV1Format: JsonFormat[ExternalResourceIDV1] = jsonFormat2(ExternalResourceIDV1)
-  implicit val incomingV1Format: JsonFormat[IncomingV1] = jsonFormat3(IncomingV1)
+  implicit val incomingV1Format: JsonFormat[IncomingV1]                     = jsonFormat3(IncomingV1)
   implicit val resourceFullResponseV1Format: RootJsonFormat[ResourceFullResponseV1] = jsonFormat5(
     ResourceFullResponseV1
   )

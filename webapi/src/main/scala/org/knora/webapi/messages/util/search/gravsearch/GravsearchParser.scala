@@ -29,7 +29,7 @@ import scala.jdk.CollectionConverters._
  */
 object GravsearchParser {
   // This implementation uses the RDF4J SPARQL parser.
-  private val sparqlParserFactory = new SPARQLParserFactory()
+  private val sparqlParserFactory       = new SPARQLParserFactory()
   private val sparqlParser: QueryParser = sparqlParserFactory.getParser
 
   /**
@@ -252,7 +252,7 @@ object GravsearchParser {
     override def meet(node: algebra.StatementPattern): Unit = {
       val subj: Entity = makeEntityFromVar(node.getSubjectVar)
       val pred: Entity = makeEntityFromVar(node.getPredicateVar)
-      val obj: Entity = makeEntityFromVar(node.getObjectVar)
+      val obj: Entity  = makeEntityFromVar(node.getObjectVar)
 
       if (Option(node.getContextVar).nonEmpty) {
         throw GravsearchException("Named graphs are not supported in search queries")
@@ -355,7 +355,7 @@ object GravsearchParser {
 
       var subj: Option[String] = None
       var pred: Option[String] = None
-      var obj: Option[String] = None
+      var obj: Option[String]  = None
 
       for (projectionElem: algebra.ProjectionElem <- node.getElements.asScala) {
         val sourceName: String = projectionElem.getSourceName
@@ -396,7 +396,7 @@ object GravsearchParser {
     override def meet(node: algebra.Order): Unit = {
       for (orderElem: algebra.OrderElem <- node.getElements.asScala) {
         val expression: algebra.ValueExpr = orderElem.getExpr
-        val ascending = orderElem.isAscending
+        val ascending                     = orderElem.isAscending
 
         val queryVariable: QueryVariable = expression match {
           case objVar: algebra.Var =>
@@ -475,7 +475,7 @@ object GravsearchParser {
             // It's a BIND. Accept it if it refers to a Knora data IRI.
             valueConstant.getValue match {
               case iri: rdf4j.model.IRI =>
-                val variable = makeQueryVariable(node.getName)
+                val variable         = makeQueryVariable(node.getName)
                 val iriValue: IriRef = makeIri(iri)
 
                 if (!iriValue.iri.isKnoraDataIri) {
@@ -580,7 +580,7 @@ object GravsearchParser {
     private def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
       valueExpr match {
         case compare: algebra.Compare =>
-          val leftArg = makeFilterExpression(compare.getLeftArg)
+          val leftArg  = makeFilterExpression(compare.getLeftArg)
           val rightArg = makeFilterExpression(compare.getRightArg)
           val operator = compare.getOperator.getSymbol
 
@@ -594,7 +594,7 @@ object GravsearchParser {
           )
 
         case and: algebra.And =>
-          val leftArg = makeFilterExpression(and.getLeftArg)
+          val leftArg  = makeFilterExpression(and.getLeftArg)
           val rightArg = makeFilterExpression(and.getRightArg)
 
           AndExpression(
@@ -603,7 +603,7 @@ object GravsearchParser {
           )
 
         case or: algebra.Or =>
-          val leftArg = makeFilterExpression(or.getLeftArg)
+          val leftArg  = makeFilterExpression(or.getLeftArg)
           val rightArg = makeFilterExpression(or.getRightArg)
 
           OrExpression(

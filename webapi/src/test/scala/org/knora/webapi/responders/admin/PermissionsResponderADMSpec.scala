@@ -43,7 +43,7 @@ class PermissionsResponderADMSpec
     with PrivateMethodTester {
   private val stringFormatter = StringFormatter.getGeneralInstance
 
-  private val rootUser = SharedTestDataADM.rootUser
+  private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
 
   private val responderUnderTest = new PermissionsResponderADM(responderData)
@@ -1068,7 +1068,7 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         val received: AdministrativePermissionGetResponseADM = expectMsgType[AdministrativePermissionGetResponseADM]
-        val ap = received.administrativePermission
+        val ap                                               = received.administrativePermission
         assert(ap.iri == permissionIri)
         ap.hasPermissions.size should be(1)
         val expectedSetOfPermissions = Set(PermissionADM.ProjectAdminAllPermission)
@@ -1166,8 +1166,8 @@ class PermissionsResponderADMSpec
 
       "not update hasPermissions of a default object access permission, if both name and project code of a permission were missing" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
-        val code = 1
-        val name = OntologyConstants.KnoraBase.DeletePermission
+        val code          = 1
+        val name          = OntologyConstants.KnoraBase.DeletePermission
         val hasPermissions = Set(
           PermissionADM(
             name = name,
@@ -1192,7 +1192,7 @@ class PermissionsResponderADMSpec
 
       "not update hasPermissions of a default object access permission, if an invalid name was given for a permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
-        val name = "invalidName"
+        val name          = "invalidName"
         val hasPermissions = Set(
           PermissionADM(
             name = name,
@@ -1222,7 +1222,7 @@ class PermissionsResponderADMSpec
 
       "not update hasPermissions of a default object access permission, if an invalid code was given for a permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
-        val code = 10
+        val code          = 10
         val hasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
@@ -1280,7 +1280,7 @@ class PermissionsResponderADMSpec
     }
     "ask to update resource class of a permission" should {
       "throw ForbiddenException for PermissionChangeResourceClassRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri    = "http://rdfh.ch/permissions/0803/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -1300,7 +1300,7 @@ class PermissionsResponderADMSpec
         )
       }
       "update resource class of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri    = "http://rdfh.ch/permissions/0803/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -1319,7 +1319,7 @@ class PermissionsResponderADMSpec
       }
 
       "update resource class of a default object access permission, and delete group" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri    = "http://rdfh.ch/permissions/0803/003-d1"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -1339,7 +1339,7 @@ class PermissionsResponderADMSpec
       }
 
       "not update resource class of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
+        val permissionIri    = "http://rdfh.ch/permissions/0803/003-a2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -1363,7 +1363,7 @@ class PermissionsResponderADMSpec
     "ask to update property of a permission" should {
       "not update property of an administrative permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
-        val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+        val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         responderManager ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
@@ -1384,7 +1384,7 @@ class PermissionsResponderADMSpec
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
-        val propertyIri = OntologyConstants.KnoraBase.TextFileValue
+        val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         responderManager ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
@@ -1404,7 +1404,7 @@ class PermissionsResponderADMSpec
       }
       "update property of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
-        val propertyIri = OntologyConstants.KnoraBase.TextFileValue
+        val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
         responderManager ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
@@ -1423,7 +1423,7 @@ class PermissionsResponderADMSpec
 
       "update property of a default object access permission, delete group" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
-        val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+        val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         responderManager ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,

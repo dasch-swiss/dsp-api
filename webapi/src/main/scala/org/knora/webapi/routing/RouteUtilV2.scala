@@ -222,18 +222,20 @@ object RouteUtilV2 {
     val httpResponse: Future[HttpResponse] = for {
       // Make sure the responder sent a reply of type KnoraResponseV2.
       knoraResponse <- (responderManager ? requestMessage).map {
-        case replyMessage: KnoraResponseV2 => replyMessage
+                         case replyMessage: KnoraResponseV2 => replyMessage
 
-        case other =>
-          // The responder returned an unexpected message type (not an exception). This isn't the client's
-          // fault, so log it and return an error message to the client.
-          throw UnexpectedMessageException(s"Responder sent a reply of type ${other.getClass.getCanonicalName}")
-      }
+                         case other =>
+                           // The responder returned an unexpected message type (not an exception). This isn't the client's
+                           // fault, so log it and return an error message to the client.
+                           throw UnexpectedMessageException(
+                             s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
+                           )
+                       }
 
       // Optionally log the reply message. TODO: move this to the testing framework.
       _ = if (settings.dumpMessages) {
-        log.debug(knoraResponse.toString)
-      }
+            log.debug(knoraResponse.toString)
+          }
 
       // Choose a media type for the response.
       responseMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
@@ -246,12 +248,12 @@ object RouteUtilV2 {
 
       // Format the response message.
       formattedResponseContent: String = knoraResponse.format(
-        rdfFormat = RdfFormat.fromMediaType(specificMediaType),
-        targetSchema = targetSchema,
-        settings = settings,
-        featureFactoryConfig = featureFactoryConfig,
-        schemaOptions = schemaOptions
-      )
+                                           rdfFormat = RdfFormat.fromMediaType(specificMediaType),
+                                           targetSchema = targetSchema,
+                                           settings = settings,
+                                           featureFactoryConfig = featureFactoryConfig,
+                                           schemaOptions = schemaOptions
+                                         )
     } yield featureFactoryConfig.addHeaderToHttpResponse(
       HttpResponse(
         status = StatusCodes.OK,
@@ -296,13 +298,15 @@ object RouteUtilV2 {
       requestMessage <- requestMessageF
 
       teiResponse <- (responderManager ? requestMessage).map {
-        case replyMessage: ResourceTEIGetResponseV2 => replyMessage
+                       case replyMessage: ResourceTEIGetResponseV2 => replyMessage
 
-        case other =>
-          // The responder returned an unexpected message type (not an exception). This isn't the client's
-          // fault, so log it and return an error message to the client.
-          throw UnexpectedMessageException(s"Responder sent a reply of type ${other.getClass.getCanonicalName}")
-      }
+                       case other =>
+                         // The responder returned an unexpected message type (not an exception). This isn't the client's
+                         // fault, so log it and return an error message to the client.
+                         throw UnexpectedMessageException(
+                           s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
+                         )
+                     }
 
     } yield featureFactoryConfig.addHeaderToHttpResponse(
       HttpResponse(
@@ -345,15 +349,15 @@ object RouteUtilV2 {
     for {
       requestMessage <- requestMessageF
       routeResult <- runRdfRoute(
-        requestMessage = requestMessage,
-        requestContext = requestContext,
-        featureFactoryConfig = featureFactoryConfig,
-        settings = settings,
-        responderManager = responderManager,
-        log = log,
-        targetSchema = targetSchema,
-        schemaOptions = schemaOptions
-      )
+                       requestMessage = requestMessage,
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig,
+                       settings = settings,
+                       responderManager = responderManager,
+                       log = log,
+                       targetSchema = targetSchema,
+                       schemaOptions = schemaOptions
+                     )
 
     } yield routeResult
 

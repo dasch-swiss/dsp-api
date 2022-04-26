@@ -68,23 +68,26 @@ object RouteUtilV1 {
     val httpResponse: Future[HttpResponse] = for {
       // Make sure the responder sent a reply of type KnoraResponseV1.
       knoraResponse <- (responderManager ? requestMessage).map {
-        case replyMessage: KnoraResponseV1 => replyMessage
+                         case replyMessage: KnoraResponseV1 => replyMessage
 
-        case other =>
-          // The responder returned an unexpected message type (not an exception). This isn't the client's
-          // fault, so log it and return an error message to the client.
-          throw UnexpectedMessageException(s"Responder sent a reply of type ${other.getClass.getCanonicalName}")
-      }
+                         case other =>
+                           // The responder returned an unexpected message type (not an exception). This isn't the client's
+                           // fault, so log it and return an error message to the client.
+                           throw UnexpectedMessageException(
+                             s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
+                           )
+                       }
 
       // Optionally log the reply message. TODO: move this to the testing framework.
       _ = if (settings.dumpMessages) {
-        log.debug(knoraResponse.toString)
-      }
+            log.debug(knoraResponse.toString)
+          }
 
       // The request was successful, so add a status of ApiStatusCodesV1.OK to the response.
-      jsonResponseWithStatus = JsObject(
-        knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id))
-      )
+      jsonResponseWithStatus =
+        JsObject(
+          knoraResponse.toJsValue.asJsObject.fields + ("status" -> JsNumber(ApiStatusCodesV1.OK.id))
+        )
 
     } yield HttpResponse(
       status = StatusCodes.OK,
@@ -119,12 +122,12 @@ object RouteUtilV1 {
     for {
       requestMessage <- requestMessageF
       routeResult <- runJsonRoute(
-        requestMessage = requestMessage,
-        requestContext = requestContext,
-        settings = settings,
-        responderManager = responderManager,
-        log = log
-      )
+                       requestMessage = requestMessage,
+                       requestContext = requestContext,
+                       settings = settings,
+                       responderManager = responderManager,
+                       log = log
+                     )
     } yield routeResult
 
   /**
@@ -156,24 +159,24 @@ object RouteUtilV1 {
 
       // Optionally log the request message. TODO: move this to the testing framework.
       _ = if (settings.dumpMessages) {
-        log.debug(requestMessage.toString)
-      }
+            log.debug(requestMessage.toString)
+          }
 
       // Make sure the responder sent a reply of type ReplyMessageT.
       knoraResponse <- (responderManager ? requestMessage).map {
-        case replyMessage: ReplyMessageT => replyMessage
+                         case replyMessage: ReplyMessageT => replyMessage
 
-        case other =>
-          // The responder returned an unexpected message type. This isn't the client's fault, so
-          // log the error and notify the client.
-          val msg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
-          throw UnexpectedMessageException(msg)
-      }
+                         case other =>
+                           // The responder returned an unexpected message type. This isn't the client's fault, so
+                           // log the error and notify the client.
+                           val msg = s"Responder sent a reply of type ${other.getClass.getCanonicalName}"
+                           throw UnexpectedMessageException(msg)
+                       }
 
       // Optionally log the reply message. TODO: move this to the testing framework.
       _ = if (settings.dumpMessages) {
-        log.debug(knoraResponse.toString)
-      }
+            log.debug(knoraResponse.toString)
+          }
 
     } yield HttpResponse(
       status = StatusCodes.OK,
@@ -217,17 +220,17 @@ object RouteUtilV1 {
 
       // get the mapping directly from v2 responder directly (to avoid useless back and forth conversions between v2 and v1 message formats)
       mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-        mappingIri = mappingIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = userProfile
-      )).mapTo[GetMappingResponseV2]
+                                                 mappingIri = mappingIri,
+                                                 featureFactoryConfig = featureFactoryConfig,
+                                                 requestingUser = userProfile
+                                               )).mapTo[GetMappingResponseV2]
 
       textWithStandoffTagV1 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
-        xml = xml,
-        mapping = mappingResponse,
-        acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
-        log = log
-      )
+                                xml = xml,
+                                mapping = mappingResponse,
+                                acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
+                                log = log
+                              )
 
     } yield textWithStandoffTagV1
 

@@ -15,7 +15,7 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
  * Provides an akka-http-routing function for API routes that deal with lists.
  */
 class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
-  private val oldListRoute: OldListsRouteADMFeature = new OldListsRouteADMFeature(routeData)
+  private val oldListRoute: OldListsRouteADMFeature    = new OldListsRouteADMFeature(routeData)
   private val deleteNodeRoute: DeleteListItemsRouteADM = new DeleteListItemsRouteADM(routeData)
   private val updateNodeRoute: UpdateListItemsRouteADM = new UpdateListItemsRouteADM(routeData)
 

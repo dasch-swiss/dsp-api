@@ -61,35 +61,38 @@
     knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" ;
     knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
-<http://rdfh.ch/0001/book-instance-02/values/has-list-value-01> a knora-base:ListValue;
-                                                                          knora-base:valueHasUUID "list_value"^^xsd:string;
-                                                                          knora-base:isDeleted false;
-                                                                          knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-                                                                          knora-base:valueHasString "http://rdfh.ch/lists/0001/ynm02-03";
-                                                                          knora-base:valueHasOrder 0;
-                                                                          knora-base:valueHasListNode <http://rdfh.ch/lists/0001/ynm02-03>;
-                                                                          knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime;
-                                                                          knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+<http://rdfh.ch/0001/book-instance-02/values/has-list-value-01>
+    a                            knora-base:ListValue ;
+    knora-base:valueHasUUID      "list_value"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:valueHasString    "http://rdfh.ch/lists/0001/ynm02-03" ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasListNode  <http://rdfh.ch/lists/0001/ynm02-03> ;
+    knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
+    knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
-<http://rdfh.ch/0001/book-instance-03/values/has-list-value-02> a knora-base:ListValue;
-                                                                knora-base:valueHasUUID "list_value_fantasy"^^xsd:string;
-                                                                knora-base:isDeleted false;
-                                                                knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-                                                                knora-base:valueHasString "http://rdfh.ch/lists/0001/ynm02-04";
-                                                                knora-base:valueHasOrder 0;
-                                                                knora-base:valueHasListNode <http://rdfh.ch/lists/0001/ynm02-04>;
-                                                                knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime;
-                                                                knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+<http://rdfh.ch/0001/book-instance-03/values/has-list-value-02>
+    a                            knora-base:ListValue ;
+    knora-base:valueHasUUID      "list_value_fantasy"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:valueHasString    "http://rdfh.ch/lists/0001/ynm02-04" ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasListNode  <http://rdfh.ch/lists/0001/ynm02-04> ;
+    knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
+    knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
-<http://rdfh.ch/0001/book-instance-04/values/has-list-value-03> a knora-base:ListValue;
-                                                                knora-base:valueHasUUID "list_value_adventure"^^xsd:string;
-                                                                knora-base:isDeleted false;
-                                                                knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-                                                                knora-base:valueHasString "http://rdfh.ch/lists/0001/ynm02-05";
-                                                                knora-base:valueHasOrder 0;
-                                                                knora-base:valueHasListNode <http://rdfh.ch/lists/0001/ynm02-05>;
-                                                                knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime;
-                                                                knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+<http://rdfh.ch/0001/book-instance-04/values/has-list-value-03>
+    a                            knora-base:ListValue ;
+    knora-base:valueHasUUID      "list_value_adventure"^^xsd:string ;
+    knora-base:isDeleted         false ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+    knora-base:valueHasString    "http://rdfh.ch/lists/0001/ynm02-05" ;
+    knora-base:valueHasOrder     0 ;
+    knora-base:valueHasListNode  <http://rdfh.ch/lists/0001/ynm02-05> ;
+    knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime ;
+    knora-base:hasPermissions    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/0001/book-instance-01>
     a                            books:Book ;
@@ -144,47 +147,56 @@
     rdfs:label                   "instance of a page" ;
     knora-base:isDeleted         false .
 
-<http://rdfh.ch/lists/0001/ynm02> a knora-base:ListNode ;
-                                  knora-base:isRootNode true ;
-                                  rdfs:label "Text category"@en ;
-                                  rdfs:label "Textsorte"@de ;
-                                  rdfs:comment "This list is used to categorize books."@en ;
-                                  rdfs:comment "Diese Liste dient dazu, Bücher zu kategorisieren."@de ;
-                                  knora-base:attachedToProject knora-admin:SystemProject ;
-                                  knora-base:hasSubListNode <http://rdfh.ch/lists/0001/ynm02-01> , <http://rdfh.ch/lists/0001/ynm02-02> , <http://rdfh.ch/lists/0001/ynm02-03> .
+<http://rdfh.ch/lists/0001/ynm02>
+    a                            knora-base:ListNode ;
+    knora-base:isRootNode        true ;
+    rdfs:label                   "Text category"@en ;
+    rdfs:label                   "Textsorte"@de ;
+    rdfs:comment                 "This list is used to categorize books."@en ;
+    rdfs:comment                 "Diese Liste dient dazu, Bücher zu kategorisieren."@de ;
+    knora-base:attachedToProject knora-admin:SystemProject ;
+    knora-base:hasSubListNode    <http://rdfh.ch/lists/0001/ynm02-01>,
+                                 <http://rdfh.ch/lists/0001/ynm02-02>,
+                                 <http://rdfh.ch/lists/0001/ynm02-03> .
 
-<http://rdfh.ch/lists/0001/ynm02-01> a knora-base:ListNode ;
-                                     knora-base:listNodeName "novel" ;
-                                     knora-base:hasRootNode <http://rdfh.ch/lists/0001/ynm02> ;
-                                     knora-base:listNodePosition 0 ;
-                                     rdfs:label "Novel"@en ;
-                                     rdfs:label "Roman"@de ;
-                                     knora-base:hasSubListNode <http://rdfh.ch/lists/0001/ynm02-04> , <http://rdfh.ch/lists/0001/ynm02-05>  .
+<http://rdfh.ch/lists/0001/ynm02-01>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "novel" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/ynm02> ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Novel"@en ;
+    rdfs:label                  "Roman"@de ;
+    knora-base:hasSubListNode   <http://rdfh.ch/lists/0001/ynm02-04>,
+                                <http://rdfh.ch/lists/0001/ynm02-05> .
 
-<http://rdfh.ch/lists/0001/ynm02-04> a knora-base:ListNode ;
-                                     knora-base:listNodeName "fantasy" ;
-                                     knora-base:hasRootNode <http://rdfh.ch/lists/0001/ynm02> ;
-                                     knora-base:listNodePosition 0 ;
-                                     rdfs:label "Fantasy novel"@en ;
-                                     rdfs:label "Fantasyroman"@de .
+<http://rdfh.ch/lists/0001/ynm02-04>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "fantasy" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/ynm02> ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Fantasy novel"@en ;
+    rdfs:label                  "Fantasyroman"@de .
 
-<http://rdfh.ch/lists/0001/ynm02-05> a knora-base:ListNode ;
-                                     knora-base:listNodeName "adventure" ;
-                                     knora-base:hasRootNode <http://rdfh.ch/lists/0001/ynm02> ;
-                                     knora-base:listNodePosition 1 ;
-                                     rdfs:label "Adventure novel"@en ;
-                                     rdfs:label "abenteuerroman"@de .
+<http://rdfh.ch/lists/0001/ynm02-05>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "adventure" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/ynm02> ;
+    knora-base:listNodePosition 1 ;
+    rdfs:label                  "Adventure novel"@en ;
+    rdfs:label                  "abenteuerroman"@de .
 
-<http://rdfh.ch/lists/0001/ynm02-02> a knora-base:ListNode ;
-                                     knora-base:listNodeName "short-story" ;
-                                     knora-base:hasRootNode <http://rdfh.ch/lists/0001/ynm02> ;
-                                     knora-base:listNodePosition 1 ;
-                                     rdfs:label "Short story"@en ;
-                                     rdfs:label "Kurzgeschichte"@de .
+<http://rdfh.ch/lists/0001/ynm02-02>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "short-story" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/ynm02> ;
+    knora-base:listNodePosition 1 ;
+    rdfs:label                  "Short story"@en ;
+    rdfs:label                  "Kurzgeschichte"@de .
 
-<http://rdfh.ch/lists/0001/ynm02-03> a knora-base:ListNode ;
-                                     knora-base:listNodeName "non-fiction" ;
-                                     knora-base:hasRootNode <http://rdfh.ch/lists/0001/ynm02> ;
-                                     knora-base:listNodePosition 2 ;
-                                     rdfs:label "Non fiction"@en ;
-                                     rdfs:label "Sachbuch"@de .
+<http://rdfh.ch/lists/0001/ynm02-03>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "non-fiction" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/ynm02> ;
+    knora-base:listNodePosition 2 ;
+    rdfs:label                  "Non fiction"@en ;
+    rdfs:label                  "Sachbuch"@de .

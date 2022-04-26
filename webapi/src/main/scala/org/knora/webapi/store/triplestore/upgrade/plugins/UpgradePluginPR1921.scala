@@ -21,7 +21,7 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
 
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
-    val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+    val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
     val newPredicateLabel: IriNode =
       nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")

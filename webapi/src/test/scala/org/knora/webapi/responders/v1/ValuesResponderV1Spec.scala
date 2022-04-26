@@ -5,31 +5,32 @@
 
 package org.knora.webapi.responders.v1
 
-import java.time.Instant
-import java.util.UUID
-
-import akka.actor.{ActorRef, Props}
+import akka.actor.ActorRef
+import akka.actor.Props
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v1.responder.resourcemessages.{
-  LocationV1,
-  ResourceFullGetRequestV1,
-  ResourceFullResponseV1
-}
+import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullGetRequestV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.duration._
 
 import zio.ZLayer
@@ -268,7 +269,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
   private def getLastModificationDate(resourceIri: IRI): Option[String] = {
     val lastModSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
       .getLastModificationDate(
-        triplestore = settings.triplestoreType,
         resourceIri = resourceIri
       )
       .toString()
@@ -934,7 +934,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = zeitglöckleinIri
@@ -1034,7 +1033,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = zeitglöckleinIri
@@ -1118,7 +1116,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = zeitglöckleinIri
@@ -1179,7 +1176,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = zeitglöckleinIri
@@ -1244,7 +1240,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = zeitglöckleinIri,
@@ -1333,7 +1328,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = "http://rdfh.ch/0803/21abac2162",
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = zeitglöckleinIri
@@ -1497,7 +1491,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = resourceIri,
           predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
           objectIri = zeitglöckleinIri
@@ -1581,7 +1574,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val oldLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = linkSourceIri,
           predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
           objectIri = zeitglöckleinIri,
@@ -1606,7 +1598,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val newLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = linkSourceIri,
           predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
           objectIri = linkTargetIri
@@ -1649,7 +1640,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = linkSourceIri,
           predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
           objectIri = linkTargetIri,
@@ -1999,7 +1989,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val initialLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = thingWithTextValues,
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = aThingIri
@@ -2071,7 +2060,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val decrementedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = thingWithTextValues,
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = aThingIri
@@ -2132,7 +2120,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .findLinkValueByObject(
-          triplestore = settings.triplestoreType,
           subjectIri = thingWithTextValues,
           predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
           objectIri = aThingIri,

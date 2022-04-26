@@ -5,8 +5,6 @@
 
 package org.knora.webapi.responders.v1
 
-import java.net.URLEncoder
-
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
@@ -15,23 +13,29 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ckanmessages._
-import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{
-  ProjectInfoByShortnameGetRequestV1,
-  ProjectInfoResponseV1,
-  ProjectInfoV1
-}
+import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetRequestV1
+import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByShortnameGetRequestV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
+import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
+import java.net.URLEncoder
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
@@ -90,29 +94,29 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     for {
       projects <- selectedProjectsFuture
       ckanProjects: Seq[Future[CkanProjectV1]] = projects flatMap {
-        case ("dokubib", projectFullInfo) =>
-          Some(
-            getDokubibCkanProject(
-              pinfo = projectFullInfo,
-              limit = limit,
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = userProfile
-            )
-          )
+                                                   case ("dokubib", projectFullInfo) =>
+                                                     Some(
+                                                       getDokubibCkanProject(
+                                                         pinfo = projectFullInfo,
+                                                         limit = limit,
+                                                         featureFactoryConfig = featureFactoryConfig,
+                                                         userProfile = userProfile
+                                                       )
+                                                     )
 
-        case ("incunabula", projectFullInfo) =>
-          Some(
-            getIncunabulaCkanProject(
-              pinfo = projectFullInfo,
-              limit = limit,
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = userProfile
-            )
-          )
+                                                   case ("incunabula", projectFullInfo) =>
+                                                     Some(
+                                                       getIncunabulaCkanProject(
+                                                         pinfo = projectFullInfo,
+                                                         limit = limit,
+                                                         featureFactoryConfig = featureFactoryConfig,
+                                                         userProfile = userProfile
+                                                       )
+                                                     )
 
-        case _ => None
-      }
-      result <- Future.sequence(ckanProjects)
+                                                   case _ => None
+                                                 }
+      result  <- Future.sequence(ckanProjects)
       response = CkanResponseV1(projects = result)
     } yield response
   }
@@ -144,7 +148,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
             - bild 2
      */
 
-    val pIri = pinfo.id
+    val pIri    = pinfo.id
     val resType = "http://www.knora.org/ontology/0804/dokubib#bild"
 
     val ckanPInfo =
@@ -159,35 +163,35 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
       bilder <- getDokubibBilderIRIs(pIri, limit)
 
       bilderMitPropsFuture = getResources(
-        iris = bilder,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                               iris = bilder,
+                               featureFactoryConfig = featureFactoryConfig,
+                               userProfile = userProfile
+                             )
 
       bilderMitProps <- bilderMitPropsFuture
       dataset = bilderMitProps.map { case (iri, info, props) =>
-        val infoMap = flattenInfo(info)
-        val propsMap = flattenProps(props)
-        CkanProjectDatasetV1(
-          ckan_title = propsMap.getOrElse("Description", ""),
-          ckan_tags = propsMap.getOrElse("Title", "").split("/").toIndexedSeq.map(_.trim),
-          files = Vector(
-            CkanProjectDatasetFileV1(
-              ckan_title = propsMap.getOrElse("preview_loc_origname", ""),
-              data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(iri, "UTF-8"),
-              data_mimetype = "",
-              source_url = "http://salsah.org/resources/" + URLEncoder.encode(iri, "UTF-8"),
-              source_mimetype = ""
-            )
-          ),
-          other_props = propsMap
-        )
-      }
+                  val infoMap  = flattenInfo(info)
+                  val propsMap = flattenProps(props)
+                  CkanProjectDatasetV1(
+                    ckan_title = propsMap.getOrElse("Description", ""),
+                    ckan_tags = propsMap.getOrElse("Title", "").split("/").toIndexedSeq.map(_.trim),
+                    files = Vector(
+                      CkanProjectDatasetFileV1(
+                        ckan_title = propsMap.getOrElse("preview_loc_origname", ""),
+                        data_url = "http://localhost:3333/v1/assets/" + URLEncoder.encode(iri, "UTF-8"),
+                        data_mimetype = "",
+                        source_url = "http://salsah.org/resources/" + URLEncoder.encode(iri, "UTF-8"),
+                        source_mimetype = ""
+                      )
+                    ),
+                    other_props = propsMap
+                  )
+                }
     } yield dataset
 
     for {
       datasets <- datasetsFuture
-      result = CkanProjectV1(project_info = ckanPInfo, project_datasets = Some(datasets))
+      result    = CkanProjectV1(project_info = ckanPInfo, project_datasets = Some(datasets))
     } yield result
 
   }
@@ -205,19 +209,19 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .ckanDokubib(settings.triplestoreType, projectIri, limit)
-          .toString()
-      )
-      response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .ckanDokubib(projectIri, limit)
+                         .toString()
+                     )
+      response                             <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       responseRows: Seq[VariableResultsRow] = response.results.bindings
 
       bilder: Seq[String] = responseRows.groupBy(_.rowMap("bild")).keys.toVector
 
       result = limit match {
-        case Some(n) if n > 0 => bilder.take(n)
-        case _                => bilder
-      }
+                 case Some(n) if n > 0 => bilder.take(n)
+                 case _                => bilder
+               }
 
     } yield result
 
@@ -275,7 +279,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         )
 
         bookResourceFuture flatMap { case (bIri, bInfo, bProps) =>
-          val bInfoMap = flattenInfo(bInfo)
+          val bInfoMap  = flattenInfo(bInfo)
           val bPropsMap = flattenProps(bProps)
           val files = pageIris map { pageIri =>
             getResource(
@@ -283,7 +287,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
               featureFactoryConfig = featureFactoryConfig,
               userProfile = userProfile
             ) map { case (pIri, pInfo, pProps) =>
-              val pInfoMap = flattenInfo(pInfo)
+              val pInfoMap  = flattenInfo(pInfo)
               val pPropsMap = flattenProps(pProps)
               CkanProjectDatasetFileV1(
                 ckan_title = pPropsMap.getOrElse("Page identifier", ""),
@@ -311,7 +315,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
     for {
       bookDatasets <- bookDatasetsFuture
-      result = CkanProjectV1(project_info = ckanPInfo, project_datasets = Some(bookDatasets))
+      result        = CkanProjectV1(project_info = ckanPInfo, project_datasets = Some(bookDatasets))
     } yield result
   }
 
@@ -325,27 +329,27 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
   private def getIncunabulaBooksWithPagesIRIs(projectIri: IRI, limit: Option[Int]): Future[Map[IRI, Seq[IRI]]] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .ckanIncunabula(settings.triplestoreType, projectIri, limit)
-          .toString()
-      )
-      response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .ckanIncunabula(projectIri, limit)
+                         .toString()
+                     )
+      response                             <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       responseRows: Seq[VariableResultsRow] = response.results.bindings
 
-      booksWithPages: Map[String, Seq[String]] = responseRows.groupBy(_.rowMap("book")).map {
-        case (bookIri: String, rows: Seq[VariableResultsRow]) =>
+      booksWithPages: Map[String, Seq[String]] =
+        responseRows.groupBy(_.rowMap("book")).map { case (bookIri: String, rows: Seq[VariableResultsRow]) =>
           (
             bookIri,
             rows.map { case row =>
               row.rowMap("page")
             }
           )
-      }
+        }
 
       result = limit match {
-        case Some(n) if n > 0 => booksWithPages.take(n)
-        case _                => booksWithPages
-      }
+                 case Some(n) if n > 0 => booksWithPages.take(n)
+                 case _                => booksWithPages
+               }
 
     } yield result
 
@@ -371,14 +375,14 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         pName <- projectNames
 
         projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(
-          shortname = pName,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfileV1 = Some(userProfile.asUserProfileV1)
-        )).mapTo[ProjectInfoResponseV1]
+                                      shortname = pName,
+                                      featureFactoryConfig = featureFactoryConfig,
+                                      userProfileV1 = Some(userProfile.asUserProfileV1)
+                                    )).mapTo[ProjectInfoResponseV1]
 
         result = projectInfoResponseFuture.map(_.project_info) map { pInfo =>
-          (pName, pInfo)
-        }
+                   (pName, pInfo)
+                 }
       } yield result
     }
 
@@ -399,21 +403,20 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
   ): Future[Seq[IRI]] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getResourcesByProjectAndType(
-            triplestore = settings.triplestoreType,
-            projectIri = projectIri,
-            resType = resType
-          )
-          .toString()
-      )
-      resourcesResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getResourcesByProjectAndType(
+                           projectIri = projectIri,
+                           resType = resType
+                         )
+                         .toString()
+                     )
+      resourcesResponse                             <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       resourcesResponseRows: Seq[VariableResultsRow] = resourcesResponse.results.bindings
-      resIri = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
+      resIri                                         = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
       result = limit match {
-        case Some(n) if n > 0 => resIri.take(n)
-        case _                => resIri
-      }
+                 case Some(n) if n > 0 => resIri.take(n)
+                 case _                => resIri
+               }
     } yield result
 
   /**
@@ -434,10 +437,10 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         iri <- iris
 
         resource = getResource(
-          iri = iri,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userProfile
-        )
+                     iri = iri,
+                     featureFactoryConfig = featureFactoryConfig,
+                     userProfile = userProfile
+                   )
       } yield resource
     }
 
@@ -545,7 +548,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
   private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorRef): String = {
 
     val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
-    val nodePath = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
+    val nodePath     = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
     val labels = nodePath.nodelist map { case element =>
       element.label.getOrElse("")

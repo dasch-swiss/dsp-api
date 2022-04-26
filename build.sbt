@@ -137,7 +137,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
-    fork := true, // run tests in a forked JVM
+    fork := true,                       // run tests in a forked JVM
     Test / testForkedParallel := false, // run forked tests in parallel
     Test / parallelExecution := false,  // run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects

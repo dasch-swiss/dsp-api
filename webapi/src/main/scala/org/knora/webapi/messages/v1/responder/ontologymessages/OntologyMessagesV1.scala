@@ -629,10 +629,10 @@ object ResourceTypeV1JsonProtocol extends SprayJsonSupport with DefaultJsonProto
   implicit val resourceTypeResponseV1Format: RootJsonFormat[ResourceTypeResponseV1] = jsonFormat1(
     ResourceTypeResponseV1
   )
-  implicit val namedGraphV1Format: RootJsonFormat[NamedGraphV1] = jsonFormat7(NamedGraphV1)
+  implicit val namedGraphV1Format: RootJsonFormat[NamedGraphV1]                   = jsonFormat7(NamedGraphV1)
   implicit val namedGraphsResponseV1Format: RootJsonFormat[NamedGraphsResponseV1] = jsonFormat1(NamedGraphsResponseV1)
-  implicit val propertyTypeV1Format: RootJsonFormat[PropertyTypeV1] = jsonFormat2(PropertyTypeV1)
-  implicit val resourceTypeV1Format: RootJsonFormat[ResourceTypeV1] = jsonFormat3(ResourceTypeV1)
+  implicit val propertyTypeV1Format: RootJsonFormat[PropertyTypeV1]               = jsonFormat2(PropertyTypeV1)
+  implicit val resourceTypeV1Format: RootJsonFormat[ResourceTypeV1]               = jsonFormat3(ResourceTypeV1)
   implicit val resourceTypesForNamedGraphResponseV1Format: RootJsonFormat[ResourceTypesForNamedGraphResponseV1] =
     jsonFormat1(ResourceTypesForNamedGraphResponseV1)
   implicit val propertyTypesForNamedGraphResponseV1Format: RootJsonFormat[PropertyTypesForNamedGraphResponseV1] =

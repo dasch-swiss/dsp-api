@@ -37,12 +37,12 @@ class ProjectsV1E2ESpec
 
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-  private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
-  private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-  private val testPass = java.net.URLEncoder.encode("test", "utf-8")
-  private val projectIri = SharedTestDataV1.imagesProjectInfo.id
-  private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-  private val projectShortName = SharedTestDataV1.imagesProjectInfo.shortname
+  private val rootEmail           = SharedTestDataV1.rootUser.userData.email.get
+  private val rootEmailEnc        = java.net.URLEncoder.encode(rootEmail, "utf-8")
+  private val testPass            = java.net.URLEncoder.encode("test", "utf-8")
+  private val projectIri          = SharedTestDataV1.imagesProjectInfo.id
+  private val projectIriEnc       = java.net.URLEncoder.encode(projectIri, "utf-8")
+  private val projectShortName    = SharedTestDataV1.imagesProjectInfo.shortname
   private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
 
   "The Projects Route ('v1/projects')" when {
@@ -50,7 +50,7 @@ class ProjectsV1E2ESpec
     "used to query for project information" should {
 
       "return all projects" in {
-        val request = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+        val request                = Get(baseApiUrl + s"/v1/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         // logger.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)

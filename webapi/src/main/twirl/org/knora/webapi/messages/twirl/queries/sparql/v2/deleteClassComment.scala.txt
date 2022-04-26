@@ -5,15 +5,14 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.messages.SmartIri
-@import org.knora.webapi.messages.v2.responder.ontologymessages._
 @import java.time.Instant
 
 @*
- * Deletes a class.
+ * Delete rdfs:comment from a class
  *
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  * @param ontologyIri the IRI of the ontology containing the class.
- * @param classIri the IRI of the class to be deleted.
+ * @param classIri the IRI of the class to be updated.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
@@ -28,41 +27,25 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+
+@* Delete the existing comments *@
 
 DELETE {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
-        ?class ?classPred ?classObj .
-        ?restriction ?restrictionPred ?restrictionObj .
-    }
-} INSERT {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+    GRAPH <@ontologyNamedGraphIri> {
+        <@classIri> rdfs:comment ?comments.
+        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
     }
 }
-
+INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+    }
+}
 WHERE {
-    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
-    BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@classIri") AS ?class)
-
-    GRAPH ?ontologyNamedGraph {
-        ?ontology rdf:type owl:Ontology ;
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
-
-        ?class rdf:type owl:Class .
-
-        {
-            ?class ?classPred ?classObj .
-        } UNION {
-             ?class rdfs:subClassOf ?restriction .
-             FILTER isBlank(?restriction)
-             ?restriction rdf:type owl:Restriction ;
-                 ?restrictionPred ?restrictionObj .
-        }
-
-        FILTER NOT EXISTS {
-            ?s ?p ?class .
-        }
+        <@classIri> rdfs:comment ?comments.
     }
 }

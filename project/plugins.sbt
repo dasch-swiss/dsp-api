@@ -19,7 +19,12 @@ addSbtPlugin("com.eed3si9n"      % "sbt-buildinfo"       % "0.11.0")
 addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.3")
 
 // ad-hoc plugins - uncomment on demenad and keep it commented out in main branch
+
 // https://github.com/rtimush/sbt-updates
 // addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.1")
+
 // https://github.com/cb372/sbt-explicit-dependencies
 // addSbtPlugin("com.github.cb372" % "sbt-explicit-dependencies" % "0.2.16")
+
+// https://scalameta.org/scalafmt/docs/installation.html#sbt
+// addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.4.6")

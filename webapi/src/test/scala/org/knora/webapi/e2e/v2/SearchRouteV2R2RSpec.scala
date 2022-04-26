@@ -46,25 +46,25 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-  private val searchPath = DSPApiDirectives.handleErrors(system)(new SearchRouteV2(routeData).knoraApiPath)
+  private val searchPath   = DSPApiDirectives.handleErrors(system)(new SearchRouteV2(routeData).knoraApiPath)
   private val resourcePath = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
   private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV2(routeData).knoraApiPath)
-  private val valuesPath = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
+  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  private val anythingUser = SharedTestDataADM.anythingUser1
-  private val anythingUserEmail = anythingUser.email
+  private val anythingUser       = SharedTestDataADM.anythingUser1
+  private val anythingUserEmail  = anythingUser.email
   private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
 
-  private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
+  private val incunabulaUser      = SharedTestDataADM.incunabulaMemberUser
   private val incunabulaUserEmail = incunabulaUser.email
 
   private val password = SharedTestDataADM.testPass
 
-  private val hamletResourceIri = new MutableTestIri
+  private val hamletResourceIri  = new MutableTestIri
   private val timeTagResourceIri = new MutableTestIri
 
   // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.

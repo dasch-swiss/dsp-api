@@ -8,11 +8,9 @@
 @*
  * Gets the predicates and objects of an ontology IRI.
  *
- * @param triplestore the name of the triplestore being used.
  * @param ontologyIri the IRI of the ontology.
  *@
-@(triplestore: String,
-  ontologyIri: SmartIri)
+@(ontologyIri: SmartIri)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

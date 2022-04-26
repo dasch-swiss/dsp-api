@@ -343,9 +343,9 @@ object CalendarDateV2 {
     // Get the year, month, and day from the com.ibm.icu.util.Calendar.
     // Note: in com.ibm.icu.util.Calendar, month is 0-based.
 
-    val year: Int = calendar.get(Calendar.YEAR)
+    val year: Int  = calendar.get(Calendar.YEAR)
     val month: Int = calendar.get(Calendar.MONTH) + 1
-    val day: Int = calendar.get(Calendar.DAY_OF_MONTH)
+    val day: Int   = calendar.get(Calendar.DAY_OF_MONTH)
 
     // Return a CalendarDateV2 in the requested precision.
     precision match {
@@ -490,7 +490,7 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
     } else {
       // It's a date range. Use the start JDN of the start date, and the end JDN of the end date.
       val (startDateStartJDN, _) = startCalendarDate.toJulianDayRange
-      val (_, endDateEndJDN) = endCalendarDate.toJulianDayRange
+      val (_, endDateEndJDN)     = endCalendarDate.toJulianDayRange
       (startDateStartJDN, endDateEndJDN)
     }
 
@@ -515,10 +515,10 @@ object CalendarDateRangeV2 {
   def parse(dateStr: String): CalendarDateRangeV2 = {
     // Validate the date string.
     val stringFormatter = StringFormatter.getGeneralInstance
-    val validDateStr = stringFormatter.validateDate(dateStr, throw BadRequestException(s"Invalid date: $dateStr"))
+    val validDateStr    = stringFormatter.validateDate(dateStr, throw BadRequestException(s"Invalid date: $dateStr"))
 
     // Get the calendar name.
-    val parsedDate = validDateStr.split(StringFormatter.CalendarSeparator)
+    val parsedDate              = validDateStr.split(StringFormatter.CalendarSeparator)
     val calendarNameStr: String = parsedDate(0)
     val calendarName =
       CalendarNameV2.parse(calendarNameStr, throw BadRequestException(s"Invalid calendar: $calendarNameStr"))

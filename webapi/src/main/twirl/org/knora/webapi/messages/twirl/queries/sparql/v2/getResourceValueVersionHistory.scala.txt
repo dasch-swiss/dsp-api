@@ -14,8 +14,7 @@
  * @param maybeStartDate        the start of the time period to return, inclusive.
  * @param maybeEndDate          the end of the time period to return, exclusive.
  *@
-@(triplestore: String,
-  resourceIri: IRI,
+@(resourceIri: IRI,
   withDeletedResource: Boolean = false,
   maybeStartDate: Option[Instant] = None,
   maybeEndDate: Option[Instant] = None)

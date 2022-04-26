@@ -5,56 +5,55 @@
 
 package org.knora.webapi.responders.v1
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForPropertyGetADM,
-  DefaultObjectAccessPermissionsStringForResourceClassGetADM,
-  DefaultObjectAccessPermissionsStringResponseADM,
-  ResourceCreateOperation
-}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForResourceClassGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  Cardinality,
-  OntologyMetadataGetByIriRequestV2,
-  OntologyMetadataV2,
-  ReadOntologyMetadataV2
-}
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
+import java.time.Instant
+import java.util.UUID
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -217,20 +216,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       for {
         // Get the direct links from/to the start node.
         sparql <- Future(
-          org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-            .getGraphData(
-              triplestore = settings.triplestoreType,
-              startNodeIri = startNode.nodeIri,
-              startNodeOnly = false,
-              outbound = outbound // true to query outbound edges, false to query inbound edges
-            )
-            .toString()
-        )
+                    org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                      .getGraphData(
+                        startNodeIri = startNode.nodeIri,
+                        startNodeOnly = false,
+                        outbound = outbound // true to query outbound edges, false to query inbound edges
+                      )
+                      .toString()
+                  )
 
         // _ = println(sparql)
 
         response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
-        rows = response.results.bindings
+        rows                          = response.results.bindings
 
         // Did we get any results?
         recursiveResults: GraphQueryResults <-
@@ -268,7 +266,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Get the edges from the query results.
             val edges: Set[QueryResultEdge] = rows.map { row =>
-              val rowMap = row.rowMap
+              val rowMap  = row.rowMap
               val nodeIri = rowMap("node")
 
               // The SPARQL query takes a start node and returns the other node in the edge.
@@ -314,7 +312,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
             // has permission to see those edges, and we haven't already traversed them).
             val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
-            val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
+            val filteredOtherNodes       = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
 
             // Make a GraphQueryResults containing the resulting nodes and edges, including the start
             // node.
@@ -356,65 +354,64 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     for {
       // Get the start node.
       sparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getGraphData(
-            triplestore = settings.triplestoreType,
-            startNodeIri = graphDataGetRequest.resourceIri,
-            startNodeOnly = true
-          )
-          .toString()
-      )
+                  org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                    .getGraphData(
+                      startNodeIri = graphDataGetRequest.resourceIri,
+                      startNodeOnly = true
+                    )
+                    .toString()
+                )
 
       // _ = println(sparql)
 
       response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
-      rows = response.results.bindings
+      rows                          = response.results.bindings
 
       _ = if (rows.isEmpty) {
-        throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
-      }
+            throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
+          }
 
       firstRowMap = rows.head.rowMap
 
       startNode: QueryResultNode = QueryResultNode(
-        nodeIri = firstRowMap("node"),
-        nodeClass = firstRowMap("nodeClass"),
-        nodeLabel = firstRowMap("nodeLabel"),
-        nodeCreator = firstRowMap("nodeCreator"),
-        nodeProject = firstRowMap("nodeProject"),
-        nodePermissions = firstRowMap("nodePermissions")
-      )
+                                     nodeIri = firstRowMap("node"),
+                                     nodeClass = firstRowMap("nodeClass"),
+                                     nodeLabel = firstRowMap("nodeLabel"),
+                                     nodeCreator = firstRowMap("nodeCreator"),
+                                     nodeProject = firstRowMap("nodeProject"),
+                                     nodePermissions = firstRowMap("nodePermissions")
+                                   )
 
       // Make sure the user has permission to see the start node.
       _ = if (
-        PermissionUtilADM
-          .getUserPermissionV1(
-            entityIri = startNode.nodeIri,
-            entityCreator = startNode.nodeCreator,
-            entityProject = startNode.nodeProject,
-            entityPermissionLiteral = startNode.nodePermissions,
-            userProfile = userProfileV1
-          )
-          .isEmpty
-      ) {
-        throw ForbiddenException(
-          s"User ${graphDataGetRequest.userADM.id} does not have permission to view resource ${graphDataGetRequest.resourceIri}"
-        )
-      }
+            PermissionUtilADM
+              .getUserPermissionV1(
+                entityIri = startNode.nodeIri,
+                entityCreator = startNode.nodeCreator,
+                entityProject = startNode.nodeProject,
+                entityPermissionLiteral = startNode.nodePermissions,
+                userProfile = userProfileV1
+              )
+              .isEmpty
+          ) {
+            throw ForbiddenException(
+              s"User ${graphDataGetRequest.userADM.id} does not have permission to view resource ${graphDataGetRequest.resourceIri}"
+            )
+          }
 
       // Recursively get the graph containing outbound links.
       outboundQueryResults: GraphQueryResults <- traverseGraph(
-        startNode = startNode,
-        outbound = true,
-        depth = graphDataGetRequest.depth
-      )
+                                                   startNode = startNode,
+                                                   outbound = true,
+                                                   depth = graphDataGetRequest.depth
+                                                 )
 
       // Recursively get the graph containing inbound links.
       inboundQueryResults: GraphQueryResults <- traverseGraph(
-        startNode = startNode,
-        outbound = false,
-        depth = graphDataGetRequest.depth
-      )
+                                                  startNode = startNode,
+                                                  outbound = false,
+                                                  depth = graphDataGetRequest.depth
+                                                )
 
       // Combine the outbound and inbound graphs into a single graph.
       nodes: Set[QueryResultNode] = outboundQueryResults.nodes ++ inboundQueryResults.nodes + startNode
@@ -423,53 +420,63 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Get the labels of the resource classes and properties from the ontology responder.
 
       resourceClassIris = nodes.map(_.nodeClass)
-      propertyIris = edges.map(_.linkProp)
+      propertyIris      = edges.map(_.linkProp)
 
       entityInfoRequest = EntityInfoGetRequestV1(
-        resourceClassIris = resourceClassIris,
-        propertyIris = propertyIris,
-        userProfile = graphDataGetRequest.userADM
-      )
+                            resourceClassIris = resourceClassIris,
+                            propertyIris = propertyIris,
+                            userProfile = graphDataGetRequest.userADM
+                          )
       entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? entityInfoRequest)
-        .mapTo[EntityInfoGetResponseV1]
+                                                       .mapTo[EntityInfoGetResponseV1]
 
       // Convert each node to a GraphNodeV1 for the API response message.
       resultNodes: Vector[GraphNodeV1] = nodes.map { node =>
-        // Get the resource class's label from the ontology information.
-        val resourceClassLabel = entityInfoResponse
-          .resourceClassInfoMap(node.nodeClass)
-          .getPredicateObject(
-            predicateIri = OntologyConstants.Rdfs.Label,
-            preferredLangs = Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
-          )
-          .getOrElse(throw InconsistentRepositoryDataException(s"Resource class ${node.nodeClass} has no rdfs:label"))
+                                           // Get the resource class's label from the ontology information.
+                                           val resourceClassLabel = entityInfoResponse
+                                             .resourceClassInfoMap(node.nodeClass)
+                                             .getPredicateObject(
+                                               predicateIri = OntologyConstants.Rdfs.Label,
+                                               preferredLangs =
+                                                 Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
+                                             )
+                                             .getOrElse(
+                                               throw InconsistentRepositoryDataException(
+                                                 s"Resource class ${node.nodeClass} has no rdfs:label"
+                                               )
+                                             )
 
-        GraphNodeV1(
-          resourceIri = node.nodeIri,
-          resourceLabel = node.nodeLabel,
-          resourceClassIri = node.nodeClass,
-          resourceClassLabel = resourceClassLabel
-        )
-      }.toVector
+                                           GraphNodeV1(
+                                             resourceIri = node.nodeIri,
+                                             resourceLabel = node.nodeLabel,
+                                             resourceClassIri = node.nodeClass,
+                                             resourceClassLabel = resourceClassLabel
+                                           )
+                                         }.toVector
 
       // Convert each edge to a GraphEdgeV1 for the API response message.
       resultEdges: Vector[GraphEdgeV1] = edges.map { edge =>
-        // Get the link property's label from the ontology information.
-        val propertyLabel = entityInfoResponse
-          .propertyInfoMap(edge.linkProp)
-          .getPredicateObject(
-            predicateIri = OntologyConstants.Rdfs.Label,
-            preferredLangs = Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
-          )
-          .getOrElse(throw InconsistentRepositoryDataException(s"Property ${edge.linkProp} has no rdfs:label"))
+                                           // Get the link property's label from the ontology information.
+                                           val propertyLabel = entityInfoResponse
+                                             .propertyInfoMap(edge.linkProp)
+                                             .getPredicateObject(
+                                               predicateIri = OntologyConstants.Rdfs.Label,
+                                               preferredLangs =
+                                                 Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
+                                             )
+                                             .getOrElse(
+                                               throw InconsistentRepositoryDataException(
+                                                 s"Property ${edge.linkProp} has no rdfs:label"
+                                               )
+                                             )
 
-        GraphEdgeV1(
-          source = edge.sourceNodeIri,
-          target = edge.targetNodeIri,
-          propertyIri = edge.linkProp,
-          propertyLabel = propertyLabel
-        )
-      }.toVector
+                                           GraphEdgeV1(
+                                             source = edge.sourceNodeIri,
+                                             target = edge.targetNodeIri,
+                                             propertyIri = edge.linkProp,
+                                             propertyLabel = propertyLabel
+                                           )
+                                         }.toVector
 
     } yield GraphDataGetResponseV1(nodes = resultNodes, edges = resultEdges)
   }
@@ -488,11 +495,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   ): Future[ResourceInfoResponseV1] =
     for {
       (userPermissions, resInfo) <- getResourceInfoV1(
-        resourceIri = resourceIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile,
-        queryOntology = true
-      )
+                                      resourceIri = resourceIri,
+                                      featureFactoryConfig = featureFactoryConfig,
+                                      userProfile = userProfile,
+                                      queryOntology = true
+                                    )
     } yield userPermissions match {
       case Some(permissions) =>
         ResourceInfoResponseV1(
@@ -538,13 +545,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     val maybeIncomingRefsFuture: Future[Option[SparqlSelectResult]] = if (getIncoming) {
       for {
         incomingRefsSparql <- Future(
-          org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-            .getIncomingReferences(
-              triplestore = settings.triplestoreType,
-              resourceIri = resourceIri
-            )
-            .toString()
-        )
+                                org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                  .getIncomingReferences(
+                                    resourceIri = resourceIri
+                                  )
+                                  .toString()
+                              )
         response <- (storeManager ? SparqlSelectRequest(incomingRefsSparql)).mapTo[SparqlSelectResult]
       } yield Some(response)
     } else {
@@ -559,145 +565,189 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get the types of all the resources that this resource links to.
       linkedResourceTypes = groupedPropsByType.groupedLinkProperties.groupedProperties.foldLeft(Set.empty[IRI]) {
-        case (acc, (prop, propMap)) =>
-          val targetResourceTypes = propMap.valueObjects.foldLeft(Set.empty[IRI]) {
-            case (resTypeAcc, (obj: IRI, objMap: ValueProps)) =>
-              val resType = objMap.literalData.get(OntologyConstants.Rdf.Type) match {
-                case Some(value: ValueLiterals) => value.literals
-                case None                       => throw InconsistentRepositoryDataException(s"$obj has no rdf:type")
-              }
+                              case (acc, (prop, propMap)) =>
+                                val targetResourceTypes = propMap.valueObjects.foldLeft(Set.empty[IRI]) {
+                                  case (resTypeAcc, (obj: IRI, objMap: ValueProps)) =>
+                                    val resType = objMap.literalData.get(OntologyConstants.Rdf.Type) match {
+                                      case Some(value: ValueLiterals) => value.literals
+                                      case None                       => throw InconsistentRepositoryDataException(s"$obj has no rdf:type")
+                                    }
 
-              resTypeAcc ++ resType
-          }
+                                    resTypeAcc ++ resType
+                                }
 
-          acc ++ targetResourceTypes
-      }
+                                acc ++ targetResourceTypes
+                            }
 
       // Group incoming reference rows by the IRI of the referring resource, and construct an IncomingV1 for each one.
 
       maybeIncomingRefsResponse: Option[SparqlSelectResult] <- maybeIncomingRefsFuture
 
       incomingRefFutures: Vector[Future[Vector[IncomingV1]]] = maybeIncomingRefsResponse match {
-        case Some(incomingRefsResponse) =>
-          val incomingRefsResponseRows = incomingRefsResponse.results.bindings
+                                                                 case Some(incomingRefsResponse) =>
+                                                                   val incomingRefsResponseRows =
+                                                                     incomingRefsResponse.results.bindings
 
-          // Group the incoming reference query results by the IRI of the referring resource.
-          val groupedByIncomingIri: Map[IRI, Seq[VariableResultsRow]] =
-            incomingRefsResponseRows.groupBy(_.rowMap("referringResource"))
+                                                                   // Group the incoming reference query results by the IRI of the referring resource.
+                                                                   val groupedByIncomingIri
+                                                                     : Map[IRI, Seq[VariableResultsRow]] =
+                                                                     incomingRefsResponseRows.groupBy(
+                                                                       _.rowMap("referringResource")
+                                                                     )
 
-          groupedByIncomingIri.map { case (incomingIri: IRI, rows: Seq[VariableResultsRow]) =>
-            // Make a resource info for each referring resource, and check the permissions on the referring resource.
+                                                                   groupedByIncomingIri.map {
+                                                                     case (
+                                                                           incomingIri: IRI,
+                                                                           rows: Seq[VariableResultsRow]
+                                                                         ) =>
+                                                                       // Make a resource info for each referring resource, and check the permissions on the referring resource.
 
-            val rowsForResInfo = rows.filterNot(row =>
-              stringFormatter.optionStringToBoolean(
-                row.rowMap.get("isLinkValue"),
-                throw InconsistentRepositoryDataException(
-                  s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}"
-                )
-              )
-            )
+                                                                       val rowsForResInfo = rows.filterNot(row =>
+                                                                         stringFormatter.optionStringToBoolean(
+                                                                           row.rowMap.get("isLinkValue"),
+                                                                           throw InconsistentRepositoryDataException(
+                                                                             s"Invalid boolean for isLinkValue: ${row.rowMap
+                                                                               .get("isLinkValue")}"
+                                                                           )
+                                                                         )
+                                                                       )
 
-            for {
-              (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(
-                resourceIri = incomingIri,
-                resInfoResponseRows = rowsForResInfo,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfile = userProfile,
-                queryOntology = false
-              )
+                                                                       for {
+                                                                         (incomingResPermission, incomingResInfo) <-
+                                                                           makeResourceInfoV1(
+                                                                             resourceIri = incomingIri,
+                                                                             resInfoResponseRows = rowsForResInfo,
+                                                                             featureFactoryConfig =
+                                                                               featureFactoryConfig,
+                                                                             userProfile = userProfile,
+                                                                             queryOntology = false
+                                                                           )
 
-              // Does the user have permission to see the referring resource?
-              incomingV1s: Vector[IncomingV1] <- incomingResPermission match {
-                case Some(_) =>
-                  // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
+                                                                         // Does the user have permission to see the referring resource?
+                                                                         incomingV1s: Vector[IncomingV1] <-
+                                                                           incomingResPermission match {
+                                                                             case Some(_) =>
+                                                                               // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
 
-                  // Filter to get only the rows representing LinkValues.
-                  val rowsWithLinkValues = rows.filter(row =>
-                    stringFormatter.optionStringToBoolean(
-                      row.rowMap.get("isLinkValue"),
-                      throw InconsistentRepositoryDataException(
-                        s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}"
-                      )
-                    )
-                  )
+                                                                               // Filter to get only the rows representing LinkValues.
+                                                                               val rowsWithLinkValues = rows.filter(row =>
+                                                                                 stringFormatter.optionStringToBoolean(
+                                                                                   row.rowMap.get("isLinkValue"),
+                                                                                   throw InconsistentRepositoryDataException(
+                                                                                     s"Invalid boolean for isLinkValue: ${row.rowMap
+                                                                                       .get("isLinkValue")}"
+                                                                                   )
+                                                                                 )
+                                                                               )
 
-                  // Group them by LinkValue IRI.
-                  val groupedByLinkValue: Map[String, Seq[VariableResultsRow]] =
-                    rowsWithLinkValues.groupBy(_.rowMap("obj"))
+                                                                               // Group them by LinkValue IRI.
+                                                                               val groupedByLinkValue: Map[String, Seq[
+                                                                                 VariableResultsRow
+                                                                               ]] =
+                                                                                 rowsWithLinkValues.groupBy(
+                                                                                   _.rowMap("obj")
+                                                                                 )
 
-                  // For each LinkValue, check whether the user has permission to see the link, and if so, make an IncomingV1.
-                  val maybeIncomingV1sWithFuture: Iterable[Future[Option[IncomingV1]]] = groupedByLinkValue.map {
-                    case (linkValueIri: IRI, linkValueRows: Seq[VariableResultsRow]) =>
-                      // Convert the rows representing the LinkValue to a ValueProps.
-                      val linkValueProps =
-                        valueUtilV1.createValueProps(valueIri = linkValueIri, objRows = linkValueRows)
+                                                                               // For each LinkValue, check whether the user has permission to see the link, and if so, make an IncomingV1.
+                                                                               val maybeIncomingV1sWithFuture: Iterable[
+                                                                                 Future[Option[IncomingV1]]
+                                                                               ] = groupedByLinkValue.map {
+                                                                                 case (
+                                                                                       linkValueIri: IRI,
+                                                                                       linkValueRows: Seq[
+                                                                                         VariableResultsRow
+                                                                                       ]
+                                                                                     ) =>
+                                                                                   // Convert the rows representing the LinkValue to a ValueProps.
+                                                                                   val linkValueProps =
+                                                                                     valueUtilV1.createValueProps(
+                                                                                       valueIri = linkValueIri,
+                                                                                       objRows = linkValueRows
+                                                                                     )
 
-                      // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
+                                                                                   // Convert the resulting ValueProps into a LinkValueV1 so we can check its rdf:predicate.
 
-                      for {
-                        apiValueV1 <- valueUtilV1.makeValueV1(
-                          valueProps = linkValueProps,
-                          projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
-                          responderManager = responderManager,
-                          featureFactoryConfig = featureFactoryConfig,
-                          userProfile = userProfile
-                        )
+                                                                                   for {
+                                                                                     apiValueV1 <-
+                                                                                       valueUtilV1.makeValueV1(
+                                                                                         valueProps = linkValueProps,
+                                                                                         projectShortcode =
+                                                                                           resInfoWithoutQueryingOntology.project_shortcode,
+                                                                                         responderManager =
+                                                                                           responderManager,
+                                                                                         featureFactoryConfig =
+                                                                                           featureFactoryConfig,
+                                                                                         userProfile = userProfile
+                                                                                       )
 
-                        linkValueV1: LinkValueV1 = apiValueV1 match {
-                          case linkValueV1: LinkValueV1 => linkValueV1
-                          case _ =>
-                            throw InconsistentRepositoryDataException(
-                              s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}"
-                            )
-                        }
+                                                                                     linkValueV1: LinkValueV1 =
+                                                                                       apiValueV1 match {
+                                                                                         case linkValueV1: LinkValueV1 =>
+                                                                                           linkValueV1
+                                                                                         case _ =>
+                                                                                           throw InconsistentRepositoryDataException(
+                                                                                             s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}"
+                                                                                           )
+                                                                                       }
 
-                        // Check the permissions on the LinkValue.
-                        linkValuePermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
-                          valueIri = linkValueIri,
-                          valueProps = linkValueProps,
-                          entityProject = Some(incomingResInfo.project_id),
-                          userProfile = userProfileV1
-                        )
-                      } yield linkValuePermission match {
-                        // Does the user have permission to see this link?
-                        case Some(_) =>
-                          // Yes. Make a Some containing an IncomingV1 for the link.
-                          Some(
-                            IncomingV1(
-                              ext_res_id = ExternalResourceIDV1(
-                                id = incomingIri,
-                                pid = linkValueV1.predicateIri
-                              ),
-                              resinfo = incomingResInfo,
-                              value = incomingResInfo.firstproperty
-                            )
-                          )
+                                                                                     // Check the permissions on the LinkValue.
+                                                                                     linkValuePermission =
+                                                                                       PermissionUtilADM
+                                                                                         .getUserPermissionWithValuePropsV1(
+                                                                                           valueIri = linkValueIri,
+                                                                                           valueProps = linkValueProps,
+                                                                                           entityProject = Some(
+                                                                                             incomingResInfo.project_id
+                                                                                           ),
+                                                                                           userProfile = userProfileV1
+                                                                                         )
+                                                                                   } yield linkValuePermission match {
+                                                                                     // Does the user have permission to see this link?
+                                                                                     case Some(_) =>
+                                                                                       // Yes. Make a Some containing an IncomingV1 for the link.
+                                                                                       Some(
+                                                                                         IncomingV1(
+                                                                                           ext_res_id =
+                                                                                             ExternalResourceIDV1(
+                                                                                               id = incomingIri,
+                                                                                               pid =
+                                                                                                 linkValueV1.predicateIri
+                                                                                             ),
+                                                                                           resinfo = incomingResInfo,
+                                                                                           value =
+                                                                                             incomingResInfo.firstproperty
+                                                                                         )
+                                                                                       )
 
-                        case None =>
-                          // No. Make a None.
-                          None
-                      }
+                                                                                     case None =>
+                                                                                       // No. Make a None.
+                                                                                       None
+                                                                                   }
 
-                  }
+                                                                               }
 
-                  for {
+                                                                               for {
 
-                    // turn the Iterable of Futures into a Future of an Iterable
-                    maybeIncomingV1s: Iterable[Option[IncomingV1]] <- Future.sequence(maybeIncomingV1sWithFuture)
+                                                                                 // turn the Iterable of Futures into a Future of an Iterable
+                                                                                 maybeIncomingV1s: Iterable[
+                                                                                   Option[IncomingV1]
+                                                                                 ] <- Future.sequence(
+                                                                                        maybeIncomingV1sWithFuture
+                                                                                      )
 
-                    // Filter out the Nones, which represent incoming links that the user doesn't have permission to see.
-                  } yield maybeIncomingV1s.flatten.toVector
+                                                                                 // Filter out the Nones, which represent incoming links that the user doesn't have permission to see.
+                                                                               } yield maybeIncomingV1s.flatten.toVector
 
-                case None =>
-                  // The user doesn't have permission to see the referring resource.
-                  Future(Vector.empty[IncomingV1])
-              }
-            } yield incomingV1s
+                                                                             case None =>
+                                                                               // The user doesn't have permission to see the referring resource.
+                                                                               Future(Vector.empty[IncomingV1])
+                                                                           }
+                                                                       } yield incomingV1s
 
-          }.toVector
+                                                                   }.toVector
 
-        case None => Vector.empty[Future[Vector[IncomingV1]]]
-      }
+                                                                 case None => Vector.empty[Future[Vector[IncomingV1]]]
+                                                               }
 
       incomingRefsWithoutQueryingOntology <- Future.sequence(incomingRefFutures).map(_.flatten)
 
@@ -706,69 +756,73 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Ask the ontology responder for information about the ontology entities that we need information about.
       entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-        resourceClassIris = incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
-        propertyIris =
-          groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
-        userProfile = userProfile
-      )).mapTo[EntityInfoGetResponseV1]
+                                                       resourceClassIris =
+                                                         incomingTypes ++ linkedResourceTypes + resInfoWithoutQueryingOntology.restype_id,
+                                                       propertyIris =
+                                                         groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet,
+                                                       userProfile = userProfile
+                                                     )).mapTo[EntityInfoGetResponseV1]
 
       // Add ontology-based information to the resource info.
-      resourceTypeIri = resInfoWithoutQueryingOntology.restype_id
+      resourceTypeIri        = resInfoWithoutQueryingOntology.restype_id
       resourceTypeEntityInfo = entityInfoResponse.resourceClassInfoMap(resourceTypeIri)
 
       maybeResourceTypeIconSrc = resourceTypeEntityInfo.getPredicateObject(
-        OntologyConstants.KnoraBase.ResourceIcon
-      ) match {
-        case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resourceTypeIri, resClassIcon))
-        case _                  => None
-      }
+                                   OntologyConstants.KnoraBase.ResourceIcon
+                                 ) match {
+                                   case Some(resClassIcon) =>
+                                     Some(valueUtilV1.makeResourceClassIconURL(resourceTypeIri, resClassIcon))
+                                   case _ => None
+                                 }
 
       resourceClassLabel = resourceTypeEntityInfo.getPredicateObject(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-      )
+                             predicateIri = OntologyConstants.Rdfs.Label,
+                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                           )
 
       resInfo: ResourceInfoV1 = resInfoWithoutQueryingOntology.copy(
-        restype_label = resourceClassLabel,
-        restype_description = resourceTypeEntityInfo.getPredicateObject(
-          predicateIri = OntologyConstants.Rdfs.Comment,
-          preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-        ),
-        restype_iconsrc = maybeResourceTypeIconSrc
-      )
+                                  restype_label = resourceClassLabel,
+                                  restype_description = resourceTypeEntityInfo.getPredicateObject(
+                                    predicateIri = OntologyConstants.Rdfs.Comment,
+                                    preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                  ),
+                                  restype_iconsrc = maybeResourceTypeIconSrc
+                                )
 
       // Construct a ResourceDataV1.
       resData = ResourceDataV1(
-        rights = permissions,
-        restype_label = resourceClassLabel,
-        restype_name = resInfo.restype_id,
-        res_id = resourceIri,
-        iconsrc = maybeResourceTypeIconSrc
-      )
+                  rights = permissions,
+                  restype_label = resourceClassLabel,
+                  restype_name = resInfo.restype_id,
+                  res_id = resourceIri,
+                  iconsrc = maybeResourceTypeIconSrc
+                )
 
       // Add ontology-based information to incoming references.
       incomingRefs = incomingRefsWithoutQueryingOntology.map { incoming =>
-        val incomingResourceTypeEntityInfo = entityInfoResponse.resourceClassInfoMap(incoming.resinfo.restype_id)
+                       val incomingResourceTypeEntityInfo =
+                         entityInfoResponse.resourceClassInfoMap(incoming.resinfo.restype_id)
 
-        incoming.copy(
-          resinfo = incoming.resinfo.copy(
-            restype_label = incomingResourceTypeEntityInfo.getPredicateObject(
-              predicateIri = OntologyConstants.Rdfs.Label,
-              preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-            ),
-            restype_description = incomingResourceTypeEntityInfo.getPredicateObject(
-              predicateIri = OntologyConstants.Rdfs.Comment,
-              preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-            ),
-            restype_iconsrc =
-              incomingResourceTypeEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
-                case Some(resClassIcon) =>
-                  Some(valueUtilV1.makeResourceClassIconURL(incoming.resinfo.restype_id, resClassIcon))
-                case _ => None
-              }
-          )
-        )
-      }
+                       incoming.copy(
+                         resinfo = incoming.resinfo.copy(
+                           restype_label = incomingResourceTypeEntityInfo.getPredicateObject(
+                             predicateIri = OntologyConstants.Rdfs.Label,
+                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                           ),
+                           restype_description = incomingResourceTypeEntityInfo.getPredicateObject(
+                             predicateIri = OntologyConstants.Rdfs.Comment,
+                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                           ),
+                           restype_iconsrc = incomingResourceTypeEntityInfo.getPredicateObject(
+                             OntologyConstants.KnoraBase.ResourceIcon
+                           ) match {
+                             case Some(resClassIcon) =>
+                               Some(valueUtilV1.makeResourceClassIconURL(incoming.resinfo.restype_id, resClassIcon))
+                             case _ => None
+                           }
+                         )
+                       )
+                     }
 
       // Collect all property IRIs and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects or FileValue objects,
       // which are not relevant in this API operation.
@@ -781,15 +835,15 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Construct PropertyV1 objects for the properties that have data for this resource.
       propertiesWithData <- queryResults2PropertyV1s(
-        containingResourceIri = resourceIri,
-        projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
-        groupedPropertiesByType = groupedPropsByType,
-        propertyInfoMap = entityInfoResponse.propertyInfoMap,
-        resourceEntityInfoMap = entityInfoResponse.resourceClassInfoMap,
-        propsAndCardinalities = propsAndCardinalities,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                              containingResourceIri = resourceIri,
+                              projectShortcode = resInfoWithoutQueryingOntology.project_shortcode,
+                              groupedPropertiesByType = groupedPropsByType,
+                              propertyInfoMap = entityInfoResponse.propertyInfoMap,
+                              resourceEntityInfoMap = entityInfoResponse.resourceClassInfoMap,
+                              propsAndCardinalities = propsAndCardinalities,
+                              featureFactoryConfig = featureFactoryConfig,
+                              userProfile = userProfile
+                            )
 
       // Construct PropertyV1 objects representing properties that have no data for this resource, but are possible properties for the resource type.
 
@@ -799,66 +853,76 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get information from the ontology about the properties that have no data for this resource.
       emptyPropsInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-        propertyIris = emptyPropsIris,
-        userProfile = userProfile
-      )).mapTo[EntityInfoGetResponseV1]
+                                                           propertyIris = emptyPropsIris,
+                                                           userProfile = userProfile
+                                                         )).mapTo[EntityInfoGetResponseV1]
 
       // Create a PropertyV1 for each of those properties.
       emptyProps: Set[PropertyV1] = emptyPropsIris.map { propertyIri =>
-        val propertyEntityInfo: PropertyInfoV1 = emptyPropsInfoResponse.propertyInfoMap(propertyIri)
-        val guiOrder = resourceTypeEntityInfo.knoraResourceCardinalities(propertyIri).guiOrder
+                                      val propertyEntityInfo: PropertyInfoV1 =
+                                        emptyPropsInfoResponse.propertyInfoMap(propertyIri)
+                                      val guiOrder =
+                                        resourceTypeEntityInfo.knoraResourceCardinalities(propertyIri).guiOrder
 
-        if (propertyEntityInfo.isLinkProp) {
-          // It is a linking prop: its valuetype_id is knora-base:LinkValue.
-          // It is restricted to the resource class that is given for knora-base:objectClassConstraint
-          // for the given property which goes in the attributes that will be read by the GUI.
+                                      if (propertyEntityInfo.isLinkProp) {
+                                        // It is a linking prop: its valuetype_id is knora-base:LinkValue.
+                                        // It is restricted to the resource class that is given for knora-base:objectClassConstraint
+                                        // for the given property which goes in the attributes that will be read by the GUI.
 
-          PropertyV1(
-            pid = propertyIri,
-            valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
-            guiorder = guiOrder,
-            guielement = propertyEntityInfo
-              .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
-              .map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
-            label = propertyEntityInfo.getPredicateObject(
-              predicateIri = OntologyConstants.Rdfs.Label,
-              preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-            ),
-            occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
-            attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
-              OntologyConstants.SalsahGui.GuiAttribute
-            ) + valueUtilV1.makeAttributeRestype(
-              propertyEntityInfo
-                .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-                .getOrElse(
-                  throw InconsistentRepositoryDataException(
-                    s"Property $propertyIri has no knora-base:objectClassConstraint"
-                  )
-                )
-            )).mkString(";"),
-            value_rights = Nil
-          )
+                                        PropertyV1(
+                                          pid = propertyIri,
+                                          valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
+                                          guiorder = guiOrder,
+                                          guielement = propertyEntityInfo
+                                            .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
+                                            .map(guiElementIri =>
+                                              SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
+                                            ),
+                                          label = propertyEntityInfo.getPredicateObject(
+                                            predicateIri = OntologyConstants.Rdfs.Label,
+                                            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                          ),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                                          attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
+                                            OntologyConstants.SalsahGui.GuiAttribute
+                                          ) + valueUtilV1.makeAttributeRestype(
+                                            propertyEntityInfo
+                                              .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
+                                              .getOrElse(
+                                                throw InconsistentRepositoryDataException(
+                                                  s"Property $propertyIri has no knora-base:objectClassConstraint"
+                                                )
+                                              )
+                                          )).mkString(";"),
+                                          value_rights = Nil
+                                        )
 
-        } else {
-          PropertyV1(
-            pid = propertyIri,
-            valuetype_id = propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint),
-            guiorder = guiOrder,
-            guielement = propertyEntityInfo
-              .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
-              .map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
-            label = propertyEntityInfo.getPredicateObject(
-              predicateIri = OntologyConstants.Rdfs.Label,
-              preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-            ),
-            occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
-            attributes = propertyEntityInfo
-              .getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)
-              .mkString(";"),
-            value_rights = Nil
-          )
-        }
-      }
+                                      } else {
+                                        PropertyV1(
+                                          pid = propertyIri,
+                                          valuetype_id = propertyEntityInfo.getPredicateObject(
+                                            OntologyConstants.KnoraBase.ObjectClassConstraint
+                                          ),
+                                          guiorder = guiOrder,
+                                          guielement = propertyEntityInfo
+                                            .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
+                                            .map(guiElementIri =>
+                                              SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
+                                            ),
+                                          label = propertyEntityInfo.getPredicateObject(
+                                            predicateIri = OntologyConstants.Rdfs.Label,
+                                            preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                                          ),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                                          attributes = propertyEntityInfo
+                                            .getPredicateStringObjectsWithoutLang(
+                                              OntologyConstants.SalsahGui.GuiAttribute
+                                            )
+                                            .mkString(";"),
+                                          value_rights = Nil
+                                        )
+                                      }
+                                    }
 
       // Add a fake property `__location__` if the resource has FileValues.
       properties: Seq[PropertyV1] =
@@ -992,8 +1056,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
      * @return a [[SourceObject]].
      */
     def createSourceObjectFromResultRow(projectShortcode: String, row: VariableResultsRow): SourceObject = {
-      val sourceObjectIri = row.rowMap("sourceObject")
-      val sourceObjectOwner = row.rowMap("sourceObjectAttachedToUser")
+      val sourceObjectIri     = row.rowMap("sourceObject")
+      val sourceObjectOwner   = row.rowMap("sourceObjectAttachedToUser")
       val sourceObjectProject = row.rowMap("sourceObjectAttachedToProject")
       val sourceObjectLiteral = row.rowMap("sourceObjectPermissions")
 
@@ -1005,8 +1069,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         userProfile = userProfileV1
       )
 
-      val linkValueIri = row.rowMap("linkValue")
-      val linkValueCreator = row.rowMap("linkValueCreator")
+      val linkValueIri         = row.rowMap("linkValue")
+      val linkValueCreator     = row.rowMap("linkValueCreator")
       val linkValuePermissions = row.rowMap("linkValuePermissions")
       val linkValuePermissionCode = PermissionUtilADM.getUserPermissionV1(
         entityIri = linkValueIri,
@@ -1034,53 +1098,52 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     for {
       // Get the resource info even if the user didn't ask for it, so we can check its permissions.
       (userPermission, resInfoV1) <- getResourceInfoV1(
-        resourceIri = resourceIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile,
-        queryOntology = true
-      )
+                                       resourceIri = resourceIri,
+                                       featureFactoryConfig = featureFactoryConfig,
+                                       userProfile = userProfile,
+                                       queryOntology = true
+                                     )
 
       _ = if (userPermission.isEmpty) {
-        throw ForbiddenException(
-          s"User $userIri does not have permission to query the context of resource $resourceIri"
-        )
-      }
+            throw ForbiddenException(
+              s"User $userIri does not have permission to query the context of resource $resourceIri"
+            )
+          }
 
       // If this resource is part of another resource, get its parent resource.
       isPartOfSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-        .isPartOf(
-          triplestore = settings.triplestoreType,
-          resourceIri = resourceIri
-        )
-        .toString()
+                              .isPartOf(
+                                resourceIri = resourceIri
+                              )
+                              .toString()
       isPartOfResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isPartOfSparqlQuery))
-        .mapTo[SparqlSelectResult]
+                                                .mapTo[SparqlSelectResult]
 
       (containingResourceIriOption: Option[IRI], containingResInfoV1Option: Option[ResourceInfoV1]) <-
         isPartOfResponse.results.bindings match {
           case rows if rows.nonEmpty =>
-            val rowMap = rows.head.rowMap
-            val containingResourceIri = rowMap("containingResource")
+            val rowMap                    = rows.head.rowMap
+            val containingResourceIri     = rowMap("containingResource")
             val containingResourceProject = rowMap("containingResourceProject")
 
             for {
               (containingResourcePermissionCode, resInfoV1) <- getResourceInfoV1(
-                resourceIri = containingResourceIri,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfile = userProfile,
-                queryOntology = true
-              )
+                                                                 resourceIri = containingResourceIri,
+                                                                 featureFactoryConfig = featureFactoryConfig,
+                                                                 userProfile = userProfile,
+                                                                 queryOntology = true
+                                                               )
 
-              linkValueIri = rowMap("linkValue")
-              linkValueCreator = rowMap("linkValueCreator")
+              linkValueIri         = rowMap("linkValue")
+              linkValueCreator     = rowMap("linkValueCreator")
               linkValuePermissions = rowMap("linkValuePermissions")
               linkValuePermissionCode = PermissionUtilADM.getUserPermissionV1(
-                entityIri = linkValueIri,
-                entityCreator = linkValueCreator,
-                entityProject = containingResourceProject,
-                entityPermissionLiteral = linkValuePermissions,
-                userProfile = userProfileV1
-              )
+                                          entityIri = linkValueIri,
+                                          entityCreator = linkValueCreator,
+                                          entityProject = containingResourceProject,
+                                          entityPermissionLiteral = linkValuePermissions,
+                                          userProfile = userProfileV1
+                                        )
 
               // Allow the user to see the link only if they have permission to see both the containing resource and the link value.
               permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
@@ -1097,55 +1160,67 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           for {
             // Otherwise, do a SPARQL query that returns resources that are part of this resource (as indicated by knora-base:isPartOf).
             contextSparqlQuery <- Future(
-              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                .getContext(
-                  triplestore = settings.triplestoreType,
-                  resourceIri = resourceIri
-                )
-                .toString()
-            )
+                                    org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                      .getContext(
+                                        resourceIri = resourceIri
+                                      )
+                                      .toString()
+                                  )
 
             // _ = println(contextSparqlQuery)
 
             contextQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(contextSparqlQuery))
-              .mapTo[SparqlSelectResult]
+                                                          .mapTo[SparqlSelectResult]
             rows: Seq[VariableResultsRow] = contextQueryResponse.results.bindings
 
             // The results consist of one row per source object.
             sourceObjects: Seq[SourceObject] = rows.map { row: VariableResultsRow =>
-              val sourceObject: IRI = row.rowMap("sourceObject")
-              val projectShortcode: String = sourceObject.toSmartIri.getProjectCode
-                .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $sourceObject"))
-              createSourceObjectFromResultRow(projectShortcode, row)
-            }
+                                                 val sourceObject: IRI = row.rowMap("sourceObject")
+                                                 val projectShortcode: String = sourceObject.toSmartIri.getProjectCode
+                                                   .getOrElse(
+                                                     throw InconsistentRepositoryDataException(
+                                                       s"Invalid resource IRI: $sourceObject"
+                                                     )
+                                                   )
+                                                 createSourceObjectFromResultRow(projectShortcode, row)
+                                               }
 
             // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
             sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissionCode.nonEmpty)
 
             contextItems: Seq[ResourceContextItemV1] = sourceObjectsWithPermissions.map { sourceObj: SourceObject =>
-              // Generate a IIIF preview URL from the full-size image.
-              val (preview: Option[LocationV1], locations: Option[Seq[LocationV1]]): (
-                Option[LocationV1],
-                Option[Seq[LocationV1]]
-              ) =
-                sourceObj.fileValue.find(fileVal => fileVal.permissionCode.nonEmpty) match {
-                  case Some(full: StillImageFileValue) =>
-                    val preview: LocationV1 =
-                      valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(full.image))
-                    val fileVals: Seq[LocationV1] =
-                      createMultipleImageResolutions(full.image).map(valueUtilV1.fileValueV12LocationV1)
-                    (Some(preview), Some(Vector(preview) ++ fileVals))
+                                                         // Generate a IIIF preview URL from the full-size image.
+                                                         val (
+                                                           preview: Option[LocationV1],
+                                                           locations: Option[Seq[LocationV1]]
+                                                         ): (
+                                                           Option[LocationV1],
+                                                           Option[Seq[LocationV1]]
+                                                         ) =
+                                                           sourceObj.fileValue.find(fileVal =>
+                                                             fileVal.permissionCode.nonEmpty
+                                                           ) match {
+                                                             case Some(full: StillImageFileValue) =>
+                                                               val preview: LocationV1 =
+                                                                 valueUtilV1.fileValueV12LocationV1(
+                                                                   fullSizeImageFileValueToPreview(full.image)
+                                                                 )
+                                                               val fileVals: Seq[LocationV1] =
+                                                                 createMultipleImageResolutions(full.image).map(
+                                                                   valueUtilV1.fileValueV12LocationV1
+                                                                 )
+                                                               (Some(preview), Some(Vector(preview) ++ fileVals))
 
-                  case None => (None, None)
-                }
+                                                             case None => (None, None)
+                                                           }
 
-              ResourceContextItemV1(
-                res_id = sourceObj.id,
-                preview = preview,
-                locations = locations,
-                firstprop = sourceObj.firstprop
-              )
-            }
+                                                         ResourceContextItemV1(
+                                                           res_id = sourceObj.id,
+                                                           preview = preview,
+                                                           locations = locations,
+                                                           firstprop = sourceObj.firstprop
+                                                         )
+                                                       }
 
           } yield contextItems
         } else {
@@ -1160,79 +1235,103 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             // check if there are regions pointing to this resource
             //
             regionSparqlQuery <- Future(
-              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                .getRegions(
-                  triplestore = settings.triplestoreType,
-                  resourceIri = resourceIri
-                )
-                .toString()
-            )
+                                   org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                     .getRegions(
+                                       resourceIri = resourceIri
+                                     )
+                                     .toString()
+                                 )
             regionQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(regionSparqlQuery))
-              .mapTo[SparqlSelectResult]
+                                                         .mapTo[SparqlSelectResult]
             regionRows = regionQueryResponse.results.bindings
 
             regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter { regionRow =>
-              val permissionCodeForRegion = PermissionUtilADM.getUserPermissionV1(
-                entityIri = regionRow.rowMap("region"),
-                entityCreator = regionRow.rowMap("owner"),
-                entityProject = regionRow.rowMap("project"),
-                entityPermissionLiteral = regionRow.rowMap("regionObjectPermissions"),
-                userProfile = userProfileV1
-              )
+                                                                                   val permissionCodeForRegion =
+                                                                                     PermissionUtilADM
+                                                                                       .getUserPermissionV1(
+                                                                                         entityIri =
+                                                                                           regionRow.rowMap("region"),
+                                                                                         entityCreator =
+                                                                                           regionRow.rowMap("owner"),
+                                                                                         entityProject =
+                                                                                           regionRow.rowMap("project"),
+                                                                                         entityPermissionLiteral =
+                                                                                           regionRow.rowMap(
+                                                                                             "regionObjectPermissions"
+                                                                                           ),
+                                                                                         userProfile = userProfileV1
+                                                                                       )
 
-              // ignore regions the user has no permissions on
-              permissionCodeForRegion.nonEmpty
-            }.map { regionRow =>
-              val regionIri = regionRow.rowMap("region")
-              val resClass = regionRow.rowMap("resclass") // possibly we deal with a subclass of knora-base:Region
+                                                                                   // ignore regions the user has no permissions on
+                                                                                   permissionCodeForRegion.nonEmpty
+                                                                                 }.map { regionRow =>
+                                                                                   val regionIri =
+                                                                                     regionRow.rowMap("region")
+                                                                                   val resClass = regionRow.rowMap(
+                                                                                     "resclass"
+                                                                                   ) // possibly we deal with a subclass of knora-base:Region
 
-              // get the properties for each region
-              for {
-                propsV1: Seq[PropertyV1] <- getResourceProperties(
-                  resourceIri = regionIri,
-                  maybeResourceTypeIri = Some(resClass),
-                  featureFactoryConfig = featureFactoryConfig,
-                  userProfile = userProfile
-                )
+                                                                                   // get the properties for each region
+                                                                                   for {
+                                                                                     propsV1: Seq[PropertyV1] <-
+                                                                                       getResourceProperties(
+                                                                                         resourceIri = regionIri,
+                                                                                         maybeResourceTypeIri =
+                                                                                           Some(resClass),
+                                                                                         featureFactoryConfig =
+                                                                                           featureFactoryConfig,
+                                                                                         userProfile = userProfile
+                                                                                       )
 
-                propsGetV1 = propsV1.map {
-                  // convert each PropertyV1 in a PropertyGetV1
-                  propV1: PropertyV1 =>
-                    convertPropertyV1toPropertyGetV1(propV1)
-                }
+                                                                                     propsGetV1 = propsV1.map {
+                                                                                                    // convert each PropertyV1 in a PropertyGetV1
+                                                                                                    propV1: PropertyV1 =>
+                                                                                                      convertPropertyV1toPropertyGetV1(
+                                                                                                        propV1
+                                                                                                      )
+                                                                                                  }
 
-                // get the icon for this region's resource class
-                entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                  resourceClassIris = Set(resClass),
-                  userProfile = userProfile
-                )).mapTo[EntityInfoGetResponseV1]
+                                                                                     // get the icon for this region's resource class
+                                                                                     entityInfoResponse: EntityInfoGetResponseV1 <-
+                                                                                       (responderManager ? EntityInfoGetRequestV1(
+                                                                                         resourceClassIris =
+                                                                                           Set(resClass),
+                                                                                         userProfile = userProfile
+                                                                                       )).mapTo[EntityInfoGetResponseV1]
 
-                regionInfo: ClassInfoV1 = entityInfoResponse.resourceClassInfoMap(resClass)
+                                                                                     regionInfo: ClassInfoV1 =
+                                                                                       entityInfoResponse
+                                                                                         .resourceClassInfoMap(resClass)
 
-                resClassIcon: Option[String] = regionInfo.predicates.get(
-                  OntologyConstants.KnoraBase.ResourceIcon
-                ) match {
-                  case Some(predicateInfo: PredicateInfoV1) =>
-                    Some(
-                      valueUtilV1.makeResourceClassIconURL(
-                        resClass,
-                        predicateInfo.objects.headOption.getOrElse(
-                          throw InconsistentRepositoryDataException(
-                            s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"
-                          )
-                        )
-                      )
-                    )
-                  case None => None
-                }
+                                                                                     resClassIcon: Option[String] =
+                                                                                       regionInfo.predicates.get(
+                                                                                         OntologyConstants.KnoraBase.ResourceIcon
+                                                                                       ) match {
+                                                                                         case Some(
+                                                                                               predicateInfo: PredicateInfoV1
+                                                                                             ) =>
+                                                                                           Some(
+                                                                                             valueUtilV1
+                                                                                               .makeResourceClassIconURL(
+                                                                                                 resClass,
+                                                                                                 predicateInfo.objects.headOption
+                                                                                                   .getOrElse(
+                                                                                                     throw InconsistentRepositoryDataException(
+                                                                                                       s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"
+                                                                                                     )
+                                                                                                   )
+                                                                                               )
+                                                                                           )
+                                                                                         case None => None
+                                                                                       }
 
-              } yield PropsGetForRegionV1(
-                properties = propsGetV1,
-                res_id = regionIri,
-                iconsrc = resClassIcon
-              )
+                                                                                   } yield PropsGetForRegionV1(
+                                                                                     properties = propsGetV1,
+                                                                                     res_id = regionIri,
+                                                                                     iconsrc = resClassIcon
+                                                                                   )
 
-            }
+                                                                                 }
 
             // turn sequenced Futures into one Future of a sequence
             regionProperties: Seq[PropsGetForRegionV1] <- Future.sequence(regionPropertiesSequencedFutures)
@@ -1252,39 +1351,39 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
       resourceContextV1 = containingResourceIriOption match {
-        case Some(_) =>
-          // This resource is part of another resource, so return the resource info of the parent.
-          ResourceContextV1(
-            resinfo = resinfoV1WithRegionsOption,
-            parent_res_id = containingResourceIriOption,
-            parent_resinfo = containingResInfoV1Option,
-            context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
-            canonical_res_id = resourceIri
-          )
+                            case Some(_) =>
+                              // This resource is part of another resource, so return the resource info of the parent.
+                              ResourceContextV1(
+                                resinfo = resinfoV1WithRegionsOption,
+                                parent_res_id = containingResourceIriOption,
+                                parent_resinfo = containingResInfoV1Option,
+                                context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
+                                canonical_res_id = resourceIri
+                              )
 
-        case None =>
-          if (resourceContexts.nonEmpty) {
-            // This resource has parts, so return information about the parts.
-            ResourceContextV1(
-              res_id = Some(resourceContexts.map(_.res_id)),
-              preview = Some(resourceContexts.map(_.preview)),
-              locations = Some(resourceContexts.map(_.locations)),
-              firstprop = Some(resourceContexts.map(_.firstprop)),
-              region = Some(resourceContexts.map(_ => None)),
-              canonical_res_id = resourceIri,
-              resinfo = resinfoV1WithRegionsOption,
-              resclass_name = Some("image"),
-              context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_COMPOUND
-            )
-          } else {
-            // Indicate that neither of the above is true.
-            ResourceContextV1(
-              resinfo = resinfoV1WithRegionsOption,
-              canonical_res_id = resourceIri,
-              context = ResourceContextCodeV1.RESOURCE_CONTEXT_NONE
-            )
-          }
-      }
+                            case None =>
+                              if (resourceContexts.nonEmpty) {
+                                // This resource has parts, so return information about the parts.
+                                ResourceContextV1(
+                                  res_id = Some(resourceContexts.map(_.res_id)),
+                                  preview = Some(resourceContexts.map(_.preview)),
+                                  locations = Some(resourceContexts.map(_.locations)),
+                                  firstprop = Some(resourceContexts.map(_.firstprop)),
+                                  region = Some(resourceContexts.map(_ => None)),
+                                  canonical_res_id = resourceIri,
+                                  resinfo = resinfoV1WithRegionsOption,
+                                  resclass_name = Some("image"),
+                                  context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_COMPOUND
+                                )
+                              } else {
+                                // Indicate that neither of the above is true.
+                                ResourceContextV1(
+                                  resinfo = resinfoV1WithRegionsOption,
+                                  canonical_res_id = resourceIri,
+                                  context = ResourceContextCodeV1.RESOURCE_CONTEXT_NONE
+                                )
+                              }
+                          }
     } yield ResourceContextResponseV1(resource_context = resourceContextV1)
 
   }
@@ -1303,11 +1402,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   ): Future[ResourceRightsResponseV1] =
     for {
       (userPermission, _) <- getResourceInfoV1(
-        resourceIri = resourceIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile,
-        queryOntology = false
-      )
+                               resourceIri = resourceIri,
+                               featureFactoryConfig = featureFactoryConfig,
+                               userProfile = userProfile,
+                               queryOntology = false
+                             )
 
       // Construct an API response.
       rightsResponse = ResourceRightsResponseV1(rights = userPermission)
@@ -1331,34 +1430,33 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     userProfile: UserADM
   ): Future[ResourceSearchResponseV1] = {
     val userProfileV1 = userProfile.asUserProfileV1
-    val searchPhrase = MatchStringWhileTyping(searchString)
+    val searchPhrase  = MatchStringWhileTyping(searchString)
 
     for {
 
       searchResourcesSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getResourceSearchResult(
-            triplestore = settings.triplestoreType,
-            searchPhrase = searchPhrase,
-            restypeIriOption = resourceTypeIri,
-            numberOfProps = numberOfProps,
-            limitOfResults = limitOfResults,
-            separator = StringFormatter.INFORMATION_SEPARATOR_ONE
-          )
-          .toString()
-      )
+                                 org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                   .getResourceSearchResult(
+                                     searchPhrase = searchPhrase,
+                                     restypeIriOption = resourceTypeIri,
+                                     numberOfProps = numberOfProps,
+                                     limitOfResults = limitOfResults,
+                                     separator = StringFormatter.INFORMATION_SEPARATOR_ONE
+                                   )
+                                   .toString()
+                               )
 
       // _ = println(searchResourcesSparql)
 
       searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResult]
 
-      resultFutures: Seq[Future[ResourceSearchResultRowV1]] = searchResponse.results.bindings.map {
-        row: VariableResultsRow =>
-          val resourceIri = row.rowMap("resourceIri")
-          val resourceClass = row.rowMap("resourceClass")
-          val firstProp = row.rowMap("firstProp")
-          val attachedToUser = row.rowMap("attachedToUser")
-          val attachedToProject = row.rowMap("attachedToProject")
+      resultFutures: Seq[Future[ResourceSearchResultRowV1]] =
+        searchResponse.results.bindings.map { row: VariableResultsRow =>
+          val resourceIri         = row.rowMap("resourceIri")
+          val resourceClass       = row.rowMap("resourceClass")
+          val firstProp           = row.rowMap("firstProp")
+          val attachedToUser      = row.rowMap("attachedToUser")
+          val attachedToProject   = row.rowMap("attachedToProject")
           val resourcePermissions = row.rowMap("resourcePermissions")
 
           val permissionCode = PermissionUtilADM.getUserPermissionV1(
@@ -1371,13 +1469,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
           for {
             resourceClassInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
-              resourceClassIris = Set(resourceClass),
-              userProfile = userProfile
-            )).mapTo[EntityInfoGetResponseV1]
+                                           resourceClassIris = Set(resourceClass),
+                                           userProfile = userProfile
+                                         )).mapTo[EntityInfoGetResponseV1]
 
             cardinalities: Map[IRI, KnoraCardinalityInfo] = resourceClassInfoResponse
-              .resourceClassInfoMap(resourceClass)
-              .knoraResourceCardinalities
+                                                              .resourceClassInfoMap(resourceClass)
+                                                              .knoraResourceCardinalities
 
             searchResultRow: ResourceSearchResultRowV1 =
               if (numberOfProps > 1) {
@@ -1387,7 +1485,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 maybeValues match {
                   case Some(valuesReturned) =>
                     val valueStrings = valuesReturned.split(StringFormatter.INFORMATION_SEPARATOR_ONE)
-                    val properties = row.rowMap("properties").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
+                    val properties   = row.rowMap("properties").split(StringFormatter.INFORMATION_SEPARATOR_ONE)
                     val valueOrders =
                       row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
 
@@ -1444,12 +1542,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
           } yield searchResultRow
 
-      }
+        }
 
       resources: Seq[ResourceSearchResultRowV1] <- Future.sequence(resultFutures)
       filteredResources = resources.filter(
-        _.rights.nonEmpty
-      ) // user must have permissions to see resource (must not be None)
+                            _.rights.nonEmpty
+                          ) // user must have permissions to see resource (must not be None)
 
     } yield ResourceSearchResponseV1(resources = filteredResources)
   }
@@ -1480,12 +1578,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     val updateFuture: Future[MultipleResourceCreateResponseV1] = for {
       // Get user's IRI and don't allow anonymous users to create resources.
       userIri: IRI <- Future {
-        if (requestingUser.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to create resources")
-        } else {
-          requestingUser.id
-        }
-      }
+                        if (requestingUser.isAnonymousUser) {
+                          throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                        } else {
+                          requestingUser.id
+                        }
+                      }
 
       // Get information about the project in which the resources will be created.
       projectInfoResponse <- {
@@ -1502,39 +1600,44 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       resourceProjectIri: IRI = projectADM.id
 
-      _ = if (
-        resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-      ) {
-        throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
-      }
+      _ =
+        if (
+          resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+        ) {
+          throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
+        }
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
       namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectADM)
 
       // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
-      clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-        toWrap = resourcesToCreate
-          .map(resRequest => resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode))
-          .toMap,
-        errorTemplateFun = { key =>
-          s"Resource $key is the target of a link, but was not provided in the request"
-        },
-        errorFun = { errorMsg =>
-          throw BadRequestException(errorMsg)
-        }
-      )
+      clientResourceIDsToResourceIris: Map[String, IRI] =
+        new ErrorHandlingMap(
+          toWrap = resourcesToCreate
+            .map(resRequest =>
+              resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode)
+            )
+            .toMap,
+          errorTemplateFun = { key =>
+            s"Resource $key is the target of a link, but was not provided in the request"
+          },
+          errorFun = { errorMsg =>
+            throw BadRequestException(errorMsg)
+          }
+        )
 
       // Map each clientResourceID to its resource class IRI
-      clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap(
-        toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> resRequest.resourceTypeIri).toMap,
-        errorTemplateFun = { key =>
-          s"Resource $key is the target of a link, but was not provided in the request"
-        },
-        errorFun = { errorMsg =>
-          throw BadRequestException(errorMsg)
-        }
-      )
+      clientResourceIDsToResourceClasses: Map[String, IRI] =
+        new ErrorHandlingMap(
+          toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> resRequest.resourceTypeIri).toMap,
+          errorTemplateFun = { key =>
+            s"Resource $key is the target of a link, but was not provided in the request"
+          },
+          errorFun = { errorMsg =>
+            throw BadRequestException(errorMsg)
+          }
+        )
 
       // Get ontology information about all the resource classes and properties used in the request.
 
@@ -1544,42 +1647,42 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       resourceClassOntologyIris: Set[SmartIri] = resourceClasses.map(_.toSmartIri.getOntologyFromEntity)
       readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(
-        resourceClassOntologyIris,
-        requestingUser
-      )).mapTo[ReadOntologyMetadataV2]
+                                                          resourceClassOntologyIris,
+                                                          requestingUser
+                                                        )).mapTo[ReadOntologyMetadataV2]
 
       _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
-        val ontologyProjectIri: IRI = ontologyMetadata.projectIri
-          .getOrElse(
-            throw InconsistentRepositoryDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")
-          )
-          .toString
+            val ontologyProjectIri: IRI = ontologyMetadata.projectIri
+              .getOrElse(
+                throw InconsistentRepositoryDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")
+              )
+              .toString
 
-        if (
-          resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
-        ) {
-          throw BadRequestException(
-            s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared"
-          )
-        }
-      }
+            if (
+              resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
+            ) {
+              throw BadRequestException(
+                s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared"
+              )
+            }
+          }
 
       resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-        resourceClassIris = resourceClasses,
-        propertyIris = Set.empty[IRI],
-        userProfile = requestingUser
-      )).mapTo[EntityInfoGetResponseV1]
+                                                                      resourceClassIris = resourceClasses,
+                                                                      propertyIris = Set.empty[IRI],
+                                                                      userProfile = requestingUser
+                                                                    )).mapTo[EntityInfoGetResponseV1]
 
       allPropertyIris: Set[IRI] = resourceClassesEntityInfoResponse.resourceClassInfoMap.flatMap {
-        case (_, resourceEntityInfo) =>
-          resourceEntityInfo.knoraResourceCardinalities.keySet
-      }.toSet
+                                    case (_, resourceEntityInfo) =>
+                                      resourceEntityInfo.knoraResourceCardinalities.keySet
+                                  }.toSet
 
       propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-        resourceClassIris = Set.empty[IRI],
-        propertyIris = allPropertyIris,
-        userProfile = requestingUser
-      )).mapTo[EntityInfoGetResponseV1]
+                                                               resourceClassIris = Set.empty[IRI],
+                                                               propertyIris = allPropertyIris,
+                                                               userProfile = requestingUser
+                                                             )).mapTo[EntityInfoGetResponseV1]
 
       propertyEntityInfoMapsPerResource: Map[IRI, Map[IRI, PropertyInfoV1]] =
         resourceClassesEntityInfoResponse.resourceClassInfoMap.map { case (resourceClassIri, resourceEntityInfo) =>
@@ -1593,8 +1696,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get the default object access permissions for all the resource classes and properties used in the request.
 
-      defaultResourceClassAccessPermissionsFutures: Vector[Future[(IRI, String)]] = resourceClasses.toVector.map {
-        resourceClassIri =>
+      defaultResourceClassAccessPermissionsFutures: Vector[Future[(IRI, String)]] =
+        resourceClasses.toVector.map { resourceClassIri =>
           for {
             defaultObjectAccessPermissions <- {
               responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
@@ -1605,17 +1708,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               )
             }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
           } yield (resourceClassIri, defaultObjectAccessPermissions.permissionLiteral)
-      }
+        }
 
       defaultResourceClassAccessPermissionsSeq: Vector[(IRI, String)] <- Future.sequence(
-        defaultResourceClassAccessPermissionsFutures
-      )
-      defaultResourceClassAccessPermissionsMap = new ErrorHandlingMap(
-        defaultResourceClassAccessPermissionsSeq.toMap,
-        { key: IRI =>
-          s"No default resource class access permissions found for resource class $key"
-        }
-      )
+                                                                           defaultResourceClassAccessPermissionsFutures
+                                                                         )
+      defaultResourceClassAccessPermissionsMap =
+        new ErrorHandlingMap(
+          defaultResourceClassAccessPermissionsSeq.toMap,
+          { key: IRI =>
+            s"No default resource class access permissions found for resource class $key"
+          }
+        )
 
       defaultPropertyAccessPermissionsFutures: Map[IRI, Future[Map[IRI, String]]] =
         propertyEntityInfoMapsPerResource.map { case (resourceClassIri, propertyInfoMap) =>
@@ -1638,9 +1742,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           (resourceClassIri, propertyPermissionsFuture)
         }
 
-      defaultPropertyAccessPermissionsMapContents: Map[IRI, Map[IRI, String]] <- ActorUtil.sequenceFuturesInMap(
-        defaultPropertyAccessPermissionsFutures
-      )
+      defaultPropertyAccessPermissionsMapContents: Map[IRI, Map[IRI, String]] <-
+        ActorUtil.sequenceFuturesInMap(
+          defaultPropertyAccessPermissionsFutures
+        )
 
       defaultPropertyAccessPermissionsMapToWrap: Map[IRI, Map[IRI, String]] =
         defaultPropertyAccessPermissionsMapContents.map {
@@ -1653,47 +1758,50 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             )
         }
 
-      defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] = new ErrorHandlingMap(
-        defaultPropertyAccessPermissionsMapToWrap.toMap,
-        { key: IRI =>
-          s"No default property access permissions found for resource class $key"
-        }
-      )
+      defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] =
+        new ErrorHandlingMap(
+          defaultPropertyAccessPermissionsMapToWrap.toMap,
+          { key: IRI =>
+            s"No default property access permissions found for resource class $key"
+          }
+        )
 
-      resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] = resourcesToCreate.map {
-        resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
+      resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] =
+        resourcesToCreate.map { resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
           val creationDate: Instant = resourceCreateRequest.creationDate.getOrElse(Instant.now)
 
           for {
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
-            defaultObjectAccessPermissions: String <- FastFuture(
-              Try(defaultResourceClassAccessPermissionsMap(resourceCreateRequest.resourceTypeIri))
-            )
+            defaultObjectAccessPermissions: String <-
+              FastFuture(
+                Try(defaultResourceClassAccessPermissionsMap(resourceCreateRequest.resourceTypeIri))
+              )
 
             // _ = log.debug(s"createNewResource - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
             _ = if (resourceCreateRequest.resourceTypeIri == OntologyConstants.KnoraBase.Resource) {
-              throw BadRequestException(
-                s"Instances of knora-base:Resource cannot be created, only instances of subclasses"
-              )
-            }
+                  throw BadRequestException(
+                    s"Instances of knora-base:Resource cannot be created, only instances of subclasses"
+                  )
+                }
 
             resourceIri = clientResourceIDsToResourceIris(resourceCreateRequest.clientResourceID)
 
             // Check every resource to be created with respect of ontology and cardinalities. Links are still
             // represented by LinkToClientIDUpdateV1 instances here.
             fileValues <- checkResource(
-              resourceClassIri = resourceCreateRequest.resourceTypeIri,
-              resourceClassInfo =
-                resourceClassesEntityInfoResponse.resourceClassInfoMap(resourceCreateRequest.resourceTypeIri),
-              propertyInfoMap = propertyEntityInfoMapsPerResource(resourceCreateRequest.resourceTypeIri),
-              values = resourceCreateRequest.values,
-              convertedFile = resourceCreateRequest.file,
-              clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = requestingUser
-            )
+                            resourceClassIri = resourceCreateRequest.resourceTypeIri,
+                            resourceClassInfo = resourceClassesEntityInfoResponse.resourceClassInfoMap(
+                              resourceCreateRequest.resourceTypeIri
+                            ),
+                            propertyInfoMap = propertyEntityInfoMapsPerResource(resourceCreateRequest.resourceTypeIri),
+                            values = resourceCreateRequest.values,
+                            convertedFile = resourceCreateRequest.file,
+                            clientResourceIDsToResourceClasses = clientResourceIDsToResourceClasses,
+                            featureFactoryConfig = featureFactoryConfig,
+                            userProfile = requestingUser
+                          )
 
             // Convert each LinkToClientIDUpdateV1 into a LinkUpdateV1.
             resourceValuesWithLinkTargetIris: Map[IRI, Seq[CreateValueV1WithComment]] =
@@ -1739,35 +1847,35 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             resourceLabel = resourceCreateRequest.label,
             resourceCreationDate = creationDate
           )
-      }
+        }
 
       // change sequence of futures to future of sequences
       sparqlTemplateResourcesToCreate: Seq[SparqlTemplateResourceToCreate] <- Future.sequence(resourceCreationFutures)
 
       //create a sparql query for all the resources to be created
       createMultipleResourcesSparql: String = generateSparqlForNewResources(
-        resourcesToCreate = sparqlTemplateResourcesToCreate,
-        projectIri = projectIri,
-        namedGraph = namedGraph,
-        creatorIri = userIri
-      )
+                                                resourcesToCreate = sparqlTemplateResourcesToCreate,
+                                                projectIri = projectIri,
+                                                namedGraph = namedGraph,
+                                                creatorIri = userIri
+                                              )
 
       // Do the update.
       createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql))
-        .mapTo[SparqlUpdateResponse]
+                                  .mapTo[SparqlUpdateResponse]
 
       // We don't query the newly created resources to verify that they and their values were actually created,
       // because this would be too expensive. In any case, since the update is done with INSERT DATA, i.e. there is no WHERE clause,
       // any failure should result in an HTTP error from the triplestore (SPARQL 1.1 Protocol §2.2.5, "Failure Responses").
 
-      responses: Seq[OneOfMultipleResourcesCreateResponseV1] = resourcesToCreate.map {
-        resourceToCreate: OneOfMultipleResourceCreateRequestV1 =>
+      responses: Seq[OneOfMultipleResourcesCreateResponseV1] =
+        resourcesToCreate.map { resourceToCreate: OneOfMultipleResourceCreateRequestV1 =>
           OneOfMultipleResourcesCreateResponseV1(
             clientResourceID = resourceToCreate.clientResourceID,
             resourceIri = clientResourceIDsToResourceIris(resourceToCreate.clientResourceID),
             label = resourceToCreate.label
           )
-      }
+        }
     } yield MultipleResourceCreateResponseV1(responses, projectADM)
 
     doSipiPostUpdateForResources(
@@ -1845,103 +1953,122 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
       // point to it.
       propertyObjectClassConstraintChecks: Seq[Unit] <- Future.sequence {
-        values.foldLeft(Vector.empty[Future[Unit]]) { case (acc, (propertyIri, valuesWithComments)) =>
-          val propertyInfo =
-            propertyInfoMap.getOrElse(propertyIri, throw NotFoundException(s"Property not found: $propertyIri"))
-          val propertyObjectClassConstraint =
-            propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-              throw InconsistentRepositoryDataException(
-                s"Property $propertyIri has no knora-base:objectClassConstraint"
-              )
-            }
+                                                          values.foldLeft(Vector.empty[Future[Unit]]) {
+                                                            case (acc, (propertyIri, valuesWithComments)) =>
+                                                              val propertyInfo =
+                                                                propertyInfoMap.getOrElse(
+                                                                  propertyIri,
+                                                                  throw NotFoundException(
+                                                                    s"Property not found: $propertyIri"
+                                                                  )
+                                                                )
+                                                              val propertyObjectClassConstraint =
+                                                                propertyInfo
+                                                                  .getPredicateObject(
+                                                                    OntologyConstants.KnoraBase.ObjectClassConstraint
+                                                                  )
+                                                                  .getOrElse {
+                                                                    throw InconsistentRepositoryDataException(
+                                                                      s"Property $propertyIri has no knora-base:objectClassConstraint"
+                                                                    )
+                                                                  }
 
-          acc ++ valuesWithComments.map { valueV1WithComment: CreateValueV1WithComment =>
-            valueV1WithComment.updateValueV1 match {
-              case LinkToClientIDUpdateV1(targetClientID) =>
-                // We're creating a link to a resource that doesn't exist yet, because it
-                // will be created in the same transaction. Check that it will belong to a
-                // suitable class.
-                val checkSubClassRequest = CheckSubClassRequestV1(
-                  subClassIri = clientResourceIDsToResourceClasses(targetClientID),
-                  superClassIri = propertyObjectClassConstraint,
-                  userProfile = userProfile
-                )
+                                                              acc ++ valuesWithComments.map {
+                                                                valueV1WithComment: CreateValueV1WithComment =>
+                                                                  valueV1WithComment.updateValueV1 match {
+                                                                    case LinkToClientIDUpdateV1(targetClientID) =>
+                                                                      // We're creating a link to a resource that doesn't exist yet, because it
+                                                                      // will be created in the same transaction. Check that it will belong to a
+                                                                      // suitable class.
+                                                                      val checkSubClassRequest = CheckSubClassRequestV1(
+                                                                        subClassIri =
+                                                                          clientResourceIDsToResourceClasses(
+                                                                            targetClientID
+                                                                          ),
+                                                                        superClassIri = propertyObjectClassConstraint,
+                                                                        userProfile = userProfile
+                                                                      )
 
-                for {
-                  subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
+                                                                      for {
+                                                                        subClassResponse <-
+                                                                          (responderManager ? checkSubClassRequest)
+                                                                            .mapTo[CheckSubClassResponseV1]
 
-                  _ = if (!subClassResponse.isSubClass) {
-                    throw OntologyConstraintException(
-                      s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-                    )
-                  }
-                } yield ()
+                                                                        _ = if (!subClassResponse.isSubClass) {
+                                                                              throw OntologyConstraintException(
+                                                                                s"Resource $targetClientID cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                                                                              )
+                                                                            }
+                                                                      } yield ()
 
-              case linkUpdate: LinkUpdateV1 =>
-                // We're creating a link to an existing resource. Check that it belongs to a
-                // suitable class.
-                for {
-                  checkTargetClassResponse <- checkResourceClass(
-                    resourceIri = linkUpdate.targetResourceIri,
-                    owlClass = propertyObjectClassConstraint,
-                    featureFactoryConfig = featureFactoryConfig,
-                    userProfile = userProfile
-                  ).mapTo[ResourceCheckClassResponseV1]
+                                                                    case linkUpdate: LinkUpdateV1 =>
+                                                                      // We're creating a link to an existing resource. Check that it belongs to a
+                                                                      // suitable class.
+                                                                      for {
+                                                                        checkTargetClassResponse <-
+                                                                          checkResourceClass(
+                                                                            resourceIri = linkUpdate.targetResourceIri,
+                                                                            owlClass = propertyObjectClassConstraint,
+                                                                            featureFactoryConfig = featureFactoryConfig,
+                                                                            userProfile = userProfile
+                                                                          ).mapTo[ResourceCheckClassResponseV1]
 
-                  _ = if (!checkTargetClassResponse.isInClass) {
-                    throw OntologyConstraintException(
-                      s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-                    )
-                  }
-                } yield ()
+                                                                        _ = if (!checkTargetClassResponse.isInClass) {
+                                                                              throw OntologyConstraintException(
+                                                                                s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                                                                              )
+                                                                            }
+                                                                      } yield ()
 
-              case otherValue =>
-                // We're creating an ordinary value. Check that its type is valid for the property's
-                // knora-base:objectClassConstraint.
-                valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-                  propertyIri = propertyIri,
-                  propertyObjectClassConstraint = propertyObjectClassConstraint,
-                  valueType = otherValue.valueTypeIri,
-                  responderManager = responderManager,
-                  userProfile = userProfile
-                )
-            }
-          }
-        }
-      }
+                                                                    case otherValue =>
+                                                                      // We're creating an ordinary value. Check that its type is valid for the property's
+                                                                      // knora-base:objectClassConstraint.
+                                                                      valueUtilV1
+                                                                        .checkValueTypeForPropertyObjectClassConstraint(
+                                                                          propertyIri = propertyIri,
+                                                                          propertyObjectClassConstraint =
+                                                                            propertyObjectClassConstraint,
+                                                                          valueType = otherValue.valueTypeIri,
+                                                                          responderManager = responderManager,
+                                                                          userProfile = userProfile
+                                                                        )
+                                                                  }
+                                                              }
+                                                          }
+                                                        }
 
       // Check that the resource class has a suitable cardinality for each submitted value.
 
       _ = values.foreach { case (propertyIri, valuesForProperty) =>
-        val cardinalityInfo = resourceClassInfo.knoraResourceCardinalities.getOrElse(
-          propertyIri,
-          throw OntologyConstraintException(
-            s"Resource class $resourceClassIri has no cardinality for property $propertyIri"
-          )
-        )
+            val cardinalityInfo = resourceClassInfo.knoraResourceCardinalities.getOrElse(
+              propertyIri,
+              throw OntologyConstraintException(
+                s"Resource class $resourceClassIri has no cardinality for property $propertyIri"
+              )
+            )
 
-        if (
-          (cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1
-        ) {
-          throw OntologyConstraintException(
-            s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
-          )
-        }
-      }
+            if (
+              (cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1
+            ) {
+              throw OntologyConstraintException(
+                s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
+              )
+            }
+          }
 
       // Check that no required values are missing.
       requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter { case (_, cardinalityInfo) =>
-        cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
-      }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
+                                  cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
+                                }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
       submittedPropertyIris = values.keySet
 
       _ = if (!requiredProps.subsetOf(submittedPropertyIris)) {
-        val missingProps = (requiredProps -- submittedPropertyIris).mkString(", ")
-        throw OntologyConstraintException(
-          s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps"
-        )
-      }
+            val missingProps = (requiredProps -- submittedPropertyIris).mkString(", ")
+            throw OntologyConstraintException(
+              s"Values were not submitted for the following property or properties, which are required by resource class $resourceClassIri: $missingProps"
+            )
+          }
 
       // check if a file value is required by the ontology
       fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] =
@@ -1999,19 +2126,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     for {
       // Ask the values responder for the SPARQL statements that are needed to create the values.
       generateSparqlForValuesRequest <- Future(
-        GenerateSparqlToCreateMultipleValuesRequestV1(
-          projectIri = projectIri,
-          resourceIri = resourceIri,
-          resourceClassIri = resourceClassIri,
-          defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
-          values = values ++ fileValues,
-          clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
-          creationDate = creationDate,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userProfile,
-          apiRequestID = apiRequestID
-        )
-      )
+                                          GenerateSparqlToCreateMultipleValuesRequestV1(
+                                            projectIri = projectIri,
+                                            resourceIri = resourceIri,
+                                            resourceClassIri = resourceClassIri,
+                                            defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
+                                            values = values ++ fileValues,
+                                            clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
+                                            creationDate = creationDate,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            userProfile = userProfile,
+                                            apiRequestID = apiRequestID
+                                          )
+                                        )
 
       generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <-
         (responderManager ? generateSparqlForValuesRequest)
@@ -2037,7 +2164,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     org.knora.webapi.messages.twirl.queries.sparql.v1.txt
       .createNewResources(
         dataNamedGraph = namedGraph,
-        triplestore = settings.triplestoreType,
         resourcesToCreate = resourcesToCreate,
         projectIri = projectIri,
         creatorIri = creatorIri
@@ -2068,32 +2194,31 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     // Verify that the resource was created.
     for {
       createdResourcesSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getCreatedResource(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri
-          )
-          .toString()
-      )
+                                  org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                    .getCreatedResource(
+                                      resourceIri = resourceIri
+                                    )
+                                    .toString()
+                                )
 
       createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResult]
 
       _ = if (createdResourceResponse.results.bindings.isEmpty) {
-        log.error(
-          s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql"
-        )
-        throw UpdateNotPerformedException(
-          s"Resource $resourceIri was not created. Please report this as a possible bug."
-        )
-      }
+            log.error(
+              s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql"
+            )
+            throw UpdateNotPerformedException(
+              s"Resource $resourceIri was not created. Please report this as a possible bug."
+            )
+          }
 
       // Verify that all the requested values were created.
       verifyCreateValuesRequest = VerifyMultipleValueCreationRequestV1(
-        resourceIri = resourceIri,
-        unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                    resourceIri = resourceIri,
+                                    unverifiedValues = generateSparqlForValuesResponse.unverifiedValues,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    userProfile = userProfile
+                                  )
 
       verifyMultipleValueCreationResponse: VerifyMultipleValueCreationResponseV1 <-
         (responderManager ? verifyCreateValuesRequest)
@@ -2117,10 +2242,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
       apiResponse: ResourceCreateResponseV1 = ResourceCreateResponseV1(
-        results = resourceCreateValueResponses,
-        res_id = resourceIri,
-        projectADM = projectADM
-      )
+                                                results = resourceCreateValueResponses,
+                                                res_id = resourceIri,
+                                                projectADM = projectADM
+                                              )
     } yield apiResponse
 
   /**
@@ -2157,18 +2282,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     val updateFuture = for {
       // Get ontology information about the resource class and its properties.
       resourceClassEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-        resourceClassIris = Set(resourceClassIri),
-        propertyIris = Set.empty[IRI],
-        userProfile = requestingUser
-      )).mapTo[EntityInfoGetResponseV1]
+                                                                    resourceClassIris = Set(resourceClassIri),
+                                                                    propertyIris = Set.empty[IRI],
+                                                                    userProfile = requestingUser
+                                                                  )).mapTo[EntityInfoGetResponseV1]
 
       resourceClassInfo = resourceClassEntityInfoResponse.resourceClassInfoMap(resourceClassIri)
 
-      propertyEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-        resourceClassIris = Set.empty[IRI],
-        propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
-        userProfile = requestingUser
-      )).mapTo[EntityInfoGetResponseV1]
+      propertyEntityInfoResponse: EntityInfoGetResponseV1 <-
+        (responderManager ? EntityInfoGetRequestV1(
+          resourceClassIris = Set.empty[IRI],
+          propertyIris = resourceClassInfo.knoraResourceCardinalities.keySet,
+          userProfile = requestingUser
+        )).mapTo[EntityInfoGetResponseV1]
 
       propertyInfoMap = propertyEntityInfoResponse.propertyInfoMap
 
@@ -2201,19 +2327,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
       defaultPropertyAccessPermissionsIterable: Iterable[(IRI, String)] <- Future.sequence(
-        defaultPropertyAccessPermissionsFutures
-      )
+                                                                             defaultPropertyAccessPermissionsFutures
+                                                                           )
       defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsIterable.toMap
 
       fileValues <- checkResource(
-        resourceClassIri = resourceClassIri,
-        resourceClassInfo = resourceClassInfo,
-        propertyInfoMap = propertyInfoMap,
-        values = values,
-        convertedFile = file,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = requestingUser
-      )
+                      resourceClassIri = resourceClassIri,
+                      resourceClassInfo = resourceClassInfo,
+                      propertyInfoMap = propertyInfoMap,
+                      values = values,
+                      convertedFile = file,
+                      featureFactoryConfig = featureFactoryConfig,
+                      userProfile = requestingUser
+                    )
 
       // Everything looks OK, so we can create the resource and its values.
 
@@ -2236,36 +2362,37 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         )
 
       resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(
-        SparqlTemplateResourceToCreate(
-          resourceIri = resourceIri,
-          permissions = defaultResourceClassAccessPermissions,
-          sparqlForValues = generateSparqlForValuesResponse.insertSparql,
-          resourceClassIri = resourceClassIri,
-          resourceLabel = label,
-          resourceCreationDate = creationDate
-        )
-      )
+                                                                 SparqlTemplateResourceToCreate(
+                                                                   resourceIri = resourceIri,
+                                                                   permissions = defaultResourceClassAccessPermissions,
+                                                                   sparqlForValues =
+                                                                     generateSparqlForValuesResponse.insertSparql,
+                                                                   resourceClassIri = resourceClassIri,
+                                                                   resourceLabel = label,
+                                                                   resourceCreationDate = creationDate
+                                                                 )
+                                                               )
 
       createNewResourceSparql = generateSparqlForNewResources(
-        resourcesToCreate = resourcesToCreate,
-        projectIri = projectADM.id,
-        namedGraph = namedGraph,
-        creatorIri = creatorIri
-      )
+                                  resourcesToCreate = resourcesToCreate,
+                                  projectIri = projectADM.id,
+                                  namedGraph = namedGraph,
+                                  creatorIri = creatorIri
+                                )
 
       // Do the update.
       createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql))
-        .mapTo[SparqlUpdateResponse]
+                                  .mapTo[SparqlUpdateResponse]
 
       apiResponse <- verifyResourceCreated(
-        resourceIri = resourceIri,
-        creatorIri = creatorIri,
-        createNewResourceSparql = createNewResourceSparql,
-        generateSparqlForValuesResponse = generateSparqlForValuesResponse,
-        projectADM = projectADM,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = requestingUser
-      )
+                       resourceIri = resourceIri,
+                       creatorIri = creatorIri,
+                       createNewResourceSparql = createNewResourceSparql,
+                       generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                       projectADM = projectADM,
+                       featureFactoryConfig = featureFactoryConfig,
+                       userProfile = requestingUser
+                     )
     } yield apiResponse
 
     doSipiPostUpdateForResources(
@@ -2301,16 +2428,18 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get user's IRI and don't allow anonymous users to create resources.
       userIri: IRI <- Future {
-        if (userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to create resources")
-        } else {
-          userProfile.id
-        }
-      }
+                        if (userProfile.isAnonymousUser) {
+                          throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                        } else {
+                          userProfile.id
+                        }
+                      }
 
       _ = if (resourceClassIri == OntologyConstants.KnoraBase.Resource) {
-        throw BadRequestException(s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
-      }
+            throw BadRequestException(
+              s"Instances of knora-base:Resource cannot be created, only instances of subclasses"
+            )
+          }
 
       // Get project info
       projectResponse <- {
@@ -2325,64 +2454,69 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       resourceProjectIri: IRI = projectResponse.project.id
 
-      _ = if (
-        resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
-      ) {
-        throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
-      }
+      _ =
+        if (
+          resourceProjectIri == OntologyConstants.KnoraAdmin.SystemProject || resourceProjectIri == OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
+        ) {
+          throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
+        }
 
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
       resourceClassOntologyIri: SmartIri = resourceClassIri.toSmartIri.getOntologyFromEntity
       readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(
-        Set(resourceClassOntologyIri),
-        userProfile
-      )).mapTo[ReadOntologyMetadataV2]
-      ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption
-        .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-      ontologyProjectIri: IRI = ontologyMetadata.projectIri
-        .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
-        .toString
+                                                          Set(resourceClassOntologyIri),
+                                                          userProfile
+                                                        )).mapTo[ReadOntologyMetadataV2]
+      ontologyMetadata: OntologyMetadataV2 =
+        readOntologyMetadataV2.ontologies.headOption
+          .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+      ontologyProjectIri: IRI =
+        ontologyMetadata.projectIri
+          .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project"))
+          .toString
 
-      _ = if (
-        resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
-      ) {
-        throw BadRequestException(
-          s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project"
-        )
-      }
+      _ =
+        if (
+          resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)
+        ) {
+          throw BadRequestException(
+            s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project"
+          )
+        }
 
-      namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
+      namedGraph       = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
       resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.shortcode)
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
       // create a new resource in the given project.
-      _ = if (
-        !userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), resourceProjectIri, None)
-      ) {
-        throw ForbiddenException(
-          s"User $userIri does not have permissions to create a resource in project $resourceProjectIri"
-        )
-      }
+      _ =
+        if (
+          !userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), resourceProjectIri, None)
+        ) {
+          throw ForbiddenException(
+            s"User $userIri does not have permissions to create a resource in project $resourceProjectIri"
+          )
+        }
 
       result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
-        apiRequestID,
-        resourceIri,
-        () =>
-          createResourceAndCheck(
-            resourceClassIri = resourceClassIri,
-            projectADM = projectResponse.project,
-            label = label,
-            resourceIri = resourceIri,
-            values = values,
-            file = file,
-            creatorIri = userIri,
-            namedGraph = namedGraph,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = userProfile,
-            apiRequestID = apiRequestID
-          )
-      )
+                                            apiRequestID,
+                                            resourceIri,
+                                            () =>
+                                              createResourceAndCheck(
+                                                resourceClassIri = resourceClassIri,
+                                                projectADM = projectResponse.project,
+                                                label = label,
+                                                resourceIri = resourceIri,
+                                                values = values,
+                                                file = file,
+                                                creatorIri = userIri,
+                                                namedGraph = namedGraph,
+                                                featureFactoryConfig = featureFactoryConfig,
+                                                requestingUser = userProfile,
+                                                apiRequestID = apiRequestID
+                                              )
+                                          )
     } yield result
 
   /**
@@ -2397,22 +2531,22 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       for {
         // Check that the user has permission to delete the resource.
         (permissionCode, resourceInfo) <- getResourceInfoV1(
-          resourceIri = resourceDeleteRequest.resourceIri,
-          featureFactoryConfig = resourceDeleteRequest.featureFactoryConfig,
-          userProfile = resourceDeleteRequest.userADM,
-          queryOntology = false
-        )
+                                            resourceIri = resourceDeleteRequest.resourceIri,
+                                            featureFactoryConfig = resourceDeleteRequest.featureFactoryConfig,
+                                            userProfile = resourceDeleteRequest.userADM,
+                                            queryOntology = false
+                                          )
 
         _ = if (
-          !PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = permissionCode,
-            userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission
-          )
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted"
-          )
-        }
+              !PermissionUtilADM.impliesPermissionCodeV1(
+                userHasPermissionCode = permissionCode,
+                userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission
+              )
+            ) {
+              throw ForbiddenException(
+                s"User $userIri does not have permission to mark resource ${resourceDeleteRequest.resourceIri} as deleted"
+              )
+            }
 
         projectInfoResponse <- {
           responderManager ? ProjectInfoByIRIGetRequestV1(
@@ -2427,60 +2561,58 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         // Create update sparql string
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .deleteResource(
-            dataNamedGraph =
-              StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfoResponse.project_info),
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceDeleteRequest.resourceIri,
-            maybeDeleteComment = resourceDeleteRequest.deleteComment,
-            currentTime = currentTime,
-            requestingUser = resourceDeleteRequest.userADM.id
-          )
-          .toString()
+                         .deleteResource(
+                           dataNamedGraph = StringFormatter.getGeneralInstance
+                             .projectDataNamedGraphV1(projectInfoResponse.project_info),
+                           resourceIri = resourceDeleteRequest.resourceIri,
+                           maybeDeleteComment = resourceDeleteRequest.deleteComment,
+                           currentTime = currentTime,
+                           requestingUser = resourceDeleteRequest.userADM.id
+                         )
+                         .toString()
 
         // Do the update.
         sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .checkResourceDeletion(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceDeleteRequest.resourceIri
-          )
-          .toString()
+                        .checkResourceDeletion(
+                          resourceIri = resourceDeleteRequest.resourceIri
+                        )
+                        .toString()
         sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
-        rows = sparqlSelectResponse.results.bindings
+        rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
-          rows.isEmpty || !stringFormatter.optionStringToBoolean(
-            rows.head.rowMap.get("isDeleted"),
-            throw InconsistentRepositoryDataException(
-              s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
-            )
-          )
-        ) {
-          throw UpdateNotPerformedException(
-            s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug."
-          )
-        }
+              rows.isEmpty || !stringFormatter.optionStringToBoolean(
+                rows.head.rowMap.get("isDeleted"),
+                throw InconsistentRepositoryDataException(
+                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+                )
+              )
+            ) {
+              throw UpdateNotPerformedException(
+                s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug."
+              )
+            }
       } yield ResourceDeleteResponseV1(id = resourceDeleteRequest.resourceIri)
 
     for {
       // Don't allow anonymous users to delete resources.
       userIri <- Future {
-        if (resourceDeleteRequest.userADM.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to mark resources as deleted")
-        } else {
-          resourceDeleteRequest.userADM.id
-        }
-      }
+                   if (resourceDeleteRequest.userADM.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to mark resources as deleted")
+                   } else {
+                     resourceDeleteRequest.userADM.id
+                   }
+                 }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        resourceDeleteRequest.apiRequestID,
-        resourceDeleteRequest.resourceIri,
-        () => makeTaskFuture(userIri)
-      )
+                      resourceDeleteRequest.apiRequestID,
+                      resourceDeleteRequest.resourceIri,
+                      () => makeTaskFuture(userIri)
+                    )
     } yield taskResult
   }
 
@@ -2502,26 +2634,26 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     for {
       // Check that the user has permission to view the resource.
       (permissionCode, resourceInfo) <- getResourceInfoV1(
-        resourceIri = resourceIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile,
-        queryOntology = false
-      )
+                                          resourceIri = resourceIri,
+                                          featureFactoryConfig = featureFactoryConfig,
+                                          userProfile = userProfile,
+                                          queryOntology = false
+                                        )
 
       _ = if (
-        !PermissionUtilADM.impliesPermissionCodeV1(
-          userHasPermissionCode = permissionCode,
-          userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission
-        )
-      ) {
-        throw ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri")
-      }
+            !PermissionUtilADM.impliesPermissionCodeV1(
+              userHasPermissionCode = permissionCode,
+              userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission
+            )
+          ) {
+            throw ForbiddenException(s"User ${userProfile.id} does not have permission to view resource $resourceIri")
+          }
 
       checkSubClassRequest = CheckSubClassRequestV1(
-        subClassIri = resourceInfo.restype_id,
-        superClassIri = owlClass,
-        userProfile = userProfile
-      )
+                               subClassIri = resourceInfo.restype_id,
+                               superClassIri = owlClass,
+                               userProfile = userProfile
+                             )
 
       subClassResponse <- (responderManager ? checkSubClassRequest).mapTo[CheckSubClassResponseV1]
 
@@ -2548,23 +2680,23 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       for {
         // get the resource's permissions
         (permissionCode, resourceInfo) <- getResourceInfoV1(
-          resourceIri = resourceIri,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userProfile,
-          queryOntology = false
-        )
+                                            resourceIri = resourceIri,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            userProfile = userProfile,
+                                            queryOntology = false
+                                          )
 
         // check if the given user may change its label
         _ = if (
-          !PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = permissionCode,
-            userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
-          )
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permission to change the label of resource $resourceIri"
-          )
-        }
+              !PermissionUtilADM.impliesPermissionCodeV1(
+                userHasPermissionCode = permissionCode,
+                userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
+              )
+            ) {
+              throw ForbiddenException(
+                s"User $userIri does not have permission to change the label of resource $resourceIri"
+              )
+            }
 
         projectInfoResponse <- {
           responderManager ? ProjectInfoByIRIGetRequestV1(
@@ -2582,14 +2714,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         // the user has sufficient permissions to change the resource's label
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .changeResourceLabel(
-            dataNamedGraph = namedGraph,
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri,
-            label = label,
-            currentTime = currentTime
-          )
-          .toString()
+                         .changeResourceLabel(
+                           dataNamedGraph = namedGraph,
+                           resourceIri = resourceIri,
+                           label = label,
+                           currentTime = currentTime
+                         )
+                         .toString()
 
         //_ = print(sparqlUpdate)
 
@@ -2598,41 +2729,40 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .checkResourceLabelChange(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri,
-            label = label
-          )
-          .toString()
+                        .checkResourceLabelChange(
+                          resourceIri = resourceIri,
+                          label = label
+                        )
+                        .toString()
 
         sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
-        rows = sparqlSelectResponse.results.bindings
+        rows                  = sparqlSelectResponse.results.bindings
 
         // we expect exactly one row to be returned if the label was updated correctly in the data.
         _ = if (rows.length != 1) {
-          throw UpdateNotPerformedException(
-            s"The label of the resource $resourceIri was not updated correctly. Please report this as a possible bug."
-          )
-        }
+              throw UpdateNotPerformedException(
+                s"The label of the resource $resourceIri was not updated correctly. Please report this as a possible bug."
+              )
+            }
 
       } yield ChangeResourceLabelResponseV1(res_id = resourceIri, label = label)
 
     for {
       // Don't allow anonymous users to change a resource's label.
       userIri <- Future {
-        if (userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to change a resource's label")
-        } else {
-          userProfile.id
-        }
-      }
+                   if (userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to change a resource's label")
+                   } else {
+                     userProfile.id
+                   }
+                 }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        resourceIri,
-        () => makeTaskFuture(userIri)
-      )
+                      apiRequestID,
+                      resourceIri,
+                      () => makeTaskFuture(userIri)
+                    )
     } yield taskResult
 
   }
@@ -2659,23 +2789,22 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   ): Future[(Option[Int], ResourceInfoV1)] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getResourceInfo(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri
-          )
-          .toString()
-      )
-      resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getResourceInfo(
+                           resourceIri = resourceIri
+                         )
+                         .toString()
+                     )
+      resInfoResponse    <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       resInfoResponseRows = resInfoResponse.results.bindings
 
       resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(
-        resourceIri = resourceIri,
-        resInfoResponseRows = resInfoResponseRows,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile,
-        queryOntology = queryOntology
-      )
+                                                  resourceIri = resourceIri,
+                                                  resInfoResponseRows = resInfoResponseRows,
+                                                  featureFactoryConfig = featureFactoryConfig,
+                                                  userProfile = userProfile,
+                                                  queryOntology = queryOntology
+                                                )
     } yield resInfo
 
   /**
@@ -2694,29 +2823,28 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
     for {
       // get resource class of the specified resource
       resclassSparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getResourceClass(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri
-          )
-          .toString()
-      )
+                               org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                 .getResourceClass(
+                                   resourceIri = resourceIri
+                                 )
+                                 .toString()
+                             )
 
       resclassQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery))
-        .mapTo[SparqlSelectResult]
+                                                     .mapTo[SparqlSelectResult]
       resclass = resclassQueryResponse.results.bindings.headOption
-        .getOrElse(throw InconsistentRepositoryDataException(s"No resource class given for $resourceIri"))
+                   .getOrElse(throw InconsistentRepositoryDataException(s"No resource class given for $resourceIri"))
 
       properties: Seq[PropertyV1] <- getResourceProperties(
-        resourceIri = resourceIri,
-        maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")),
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                       resourceIri = resourceIri,
+                                       maybeResourceTypeIri = Some(resclass.rowMap("resourceClass")),
+                                       featureFactoryConfig = featureFactoryConfig,
+                                       userProfile = userProfile
+                                     )
 
       propertiesGetV1: Seq[PropertyGetV1] = properties.map { prop =>
-        convertPropertyV1toPropertyGetV1(prop)
-      }
+                                              convertPropertyV1toPropertyGetV1(prop)
+                                            }
 
     } yield PropertiesGetResponseV1(PropsGetV1(propertiesGetV1))
 
@@ -2748,47 +2876,49 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         resourceEntityInfoMap: Map[IRI, ClassInfoV1],
         propsAndCardinalities: Map[IRI, KnoraCardinalityInfo]
       ) <- maybeResourceTypeIri match {
-        case Some(resourceTypeIri) =>
-          val propertyEntityIris: Set[IRI] =
-            groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
-          val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
+             case Some(resourceTypeIri) =>
+               val propertyEntityIris: Set[IRI] =
+                 groupedPropsByType.groupedOrdinaryValueProperties.groupedProperties.keySet ++ groupedPropsByType.groupedLinkProperties.groupedProperties.keySet
+               val resourceEntityIris: Set[IRI] = Set(resourceTypeIri)
 
-          for {
-            entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
-              resourceClassIris = resourceEntityIris,
-              propertyIris = propertyEntityIris,
-              userProfile = userProfile
-            ))
-              .mapTo[EntityInfoGetResponseV1]
-            resourceEntityInfoMap: Map[IRI, ClassInfoV1] = entityInfoResponse.resourceClassInfoMap
-            propertyInfoMap: Map[IRI, PropertyInfoV1] = entityInfoResponse.propertyInfoMap
+               for {
+                 entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
+                                         resourceClassIris = resourceEntityIris,
+                                         propertyIris = propertyEntityIris,
+                                         userProfile = userProfile
+                                       ))
+                                         .mapTo[EntityInfoGetResponseV1]
+                 resourceEntityInfoMap: Map[IRI, ClassInfoV1] = entityInfoResponse.resourceClassInfoMap
+                 propertyInfoMap: Map[IRI, PropertyInfoV1]    = entityInfoResponse.propertyInfoMap
 
-            resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
+                 resourceTypeEntityInfo = resourceEntityInfoMap(resourceTypeIri)
 
-            // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
-            propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] =
-              resourceTypeEntityInfo.knoraResourceCardinalities.filterNot { case (propertyIri, _) =>
-                resourceTypeEntityInfo.linkValueProperties(propertyIri)
-              }
-          } yield (propertyInfoMap, resourceEntityInfoMap, propsAndCardinalities)
+                 // all properties and their cardinalities for the queried resource's type, except the ones that point to LinkValue objects
+                 propsAndCardinalities: Map[IRI, KnoraCardinalityInfo] =
+                   resourceTypeEntityInfo.knoraResourceCardinalities.filterNot { case (propertyIri, _) =>
+                     resourceTypeEntityInfo.linkValueProperties(propertyIri)
+                   }
+               } yield (propertyInfoMap, resourceEntityInfoMap, propsAndCardinalities)
 
-        case None =>
-          Future((Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo]))
-      }
+             case None =>
+               Future(
+                 (Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo])
+               )
+           }
 
       projectShortcode = resourceIri.toSmartIri.getProjectCode
-        .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
+                           .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
 
       queryResult <- queryResults2PropertyV1s(
-        containingResourceIri = resourceIri,
-        projectShortcode = projectShortcode,
-        groupedPropertiesByType = groupedPropsByType,
-        propertyInfoMap = propertyInfoMap,
-        resourceEntityInfoMap = resourceEntityInfoMap,
-        propsAndCardinalities = propsAndCardinalities,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                       containingResourceIri = resourceIri,
+                       projectShortcode = projectShortcode,
+                       groupedPropertiesByType = groupedPropsByType,
+                       propertyInfoMap = propertyInfoMap,
+                       resourceEntityInfoMap = resourceEntityInfoMap,
+                       propsAndCardinalities = propsAndCardinalities,
+                       featureFactoryConfig = featureFactoryConfig,
+                       userProfile = userProfile
+                     )
     } yield queryResult
 
   /**
@@ -2819,115 +2949,129 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       for {
 
         // Extract the permission-relevant assertions from the query results.
-        permissionRelevantAssertions: Seq[(IRI, IRI)] <- Future(
-          PermissionUtilADM.filterPermissionRelevantAssertions(
-            resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))
-          )
-        )
-
-        maybeResourceProjectStatement: Option[(IRI, IRI)] = permissionRelevantAssertions.find {
-          case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
-        }
-
-        resourceProject = maybeResourceProjectStatement
-          .getOrElse(
-            throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
-          )
-          ._2
-        projectShortcode: String = resourceIri.toSmartIri.getProjectCode
-          .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI $resourceIri"))
-
-        // Get the rows describing file values from the query results, grouped by file value IRI.
-        fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows
-          .filter(row =>
-            stringFormatter.optionStringToBoolean(
-              row.rowMap.get("isFileValue"),
-              throw InconsistentRepositoryDataException(
-                s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"
-              )
+        permissionRelevantAssertions: Seq[(IRI, IRI)] <-
+          Future(
+            PermissionUtilADM.filterPermissionRelevantAssertions(
+              resInfoResponseRows.map(row => (row.rowMap("prop"), row.rowMap("obj")))
             )
           )
-          .groupBy(row => row.rowMap("obj"))
-          .toVector
+
+        maybeResourceProjectStatement: Option[(IRI, IRI)] =
+          permissionRelevantAssertions.find { case (subject, predicate) =>
+            subject == OntologyConstants.KnoraBase.AttachedToProject
+          }
+
+        resourceProject =
+          maybeResourceProjectStatement
+            .getOrElse(
+              throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject")
+            )
+            ._2
+        projectShortcode: String =
+          resourceIri.toSmartIri.getProjectCode
+            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI $resourceIri"))
+
+        // Get the rows describing file values from the query results, grouped by file value IRI.
+        fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] =
+          resInfoResponseRows
+            .filter(row =>
+              stringFormatter.optionStringToBoolean(
+                row.rowMap.get("isFileValue"),
+                throw InconsistentRepositoryDataException(
+                  s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"
+                )
+              )
+            )
+            .groupBy(row => row.rowMap("obj"))
+            .toVector
 
         // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
         valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
-          case (fileValueIri, fileValueRows) =>
-            (fileValueIri, valueUtilV1.createValueProps(fileValueIri, fileValueRows))
-        }.filter { case (fileValueIri, fileValueProps) =>
-          val permissionCode = PermissionUtilADM.getUserPermissionWithValuePropsV1(
-            valueIri = fileValueIri,
-            valueProps = fileValueProps,
-            entityProject = Some(resourceProject),
-            userProfile = userProfileV1
-          )
-          PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = permissionCode,
-            userNeedsPermission = OntologyConstants.KnoraBase.RestrictedViewPermission
-          )
-        }
+                                                            case (fileValueIri, fileValueRows) =>
+                                                              (
+                                                                fileValueIri,
+                                                                valueUtilV1.createValueProps(
+                                                                  fileValueIri,
+                                                                  fileValueRows
+                                                                )
+                                                              )
+                                                          }.filter { case (fileValueIri, fileValueProps) =>
+                                                            val permissionCode =
+                                                              PermissionUtilADM.getUserPermissionWithValuePropsV1(
+                                                                valueIri = fileValueIri,
+                                                                valueProps = fileValueProps,
+                                                                entityProject = Some(resourceProject),
+                                                                userProfile = userProfileV1
+                                                              )
+                                                            PermissionUtilADM.impliesPermissionCodeV1(
+                                                              userHasPermissionCode = permissionCode,
+                                                              userNeedsPermission =
+                                                                OntologyConstants.KnoraBase.RestrictedViewPermission
+                                                            )
+                                                          }
 
         // Convert the ValueProps objects into FileValueV1 objects
         fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
-          case (fileValueIri, fileValueProps) =>
-            for {
-              valueV1 <- valueUtilV1.makeValueV1(
-                valueProps = fileValueProps,
-                projectShortcode = projectShortcode,
-                responderManager = responderManager,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfile = userProfile
-              )
+                                                           case (fileValueIri, fileValueProps) =>
+                                                             for {
+                                                               valueV1 <- valueUtilV1.makeValueV1(
+                                                                            valueProps = fileValueProps,
+                                                                            projectShortcode = projectShortcode,
+                                                                            responderManager = responderManager,
+                                                                            featureFactoryConfig = featureFactoryConfig,
+                                                                            userProfile = userProfile
+                                                                          )
 
-            } yield valueV1 match {
-              case fileValueV1: FileValueV1 => fileValueV1
-              case otherValueV1 =>
-                throw InconsistentRepositoryDataException(
-                  s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}"
-                )
-            }
-        }
+                                                             } yield valueV1 match {
+                                                               case fileValueV1: FileValueV1 => fileValueV1
+                                                               case otherValueV1 =>
+                                                                 throw InconsistentRepositoryDataException(
+                                                                   s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}"
+                                                                 )
+                                                             }
+                                                         }
 
         fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
 
         // Generate a IIIF preview URL from the full-size image.
 
         fullSizeImageFileValues: Seq[StillImageFileValueV1] = fileValues.collect {
-          case fileValue: StillImageFileValueV1 => fileValue
-        }
+                                                                case fileValue: StillImageFileValueV1 => fileValue
+                                                              }
 
-        preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
-          fullSizeImageFileValue: StillImageFileValueV1 =>
+        preview: Option[LocationV1] =
+          fullSizeImageFileValues.headOption.map { fullSizeImageFileValue: StillImageFileValueV1 =>
             valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
-        }
+          }
 
         // Convert the file values into LocationV1 objects as required by Knora API v1.
         locations: Seq[LocationV1] = preview.toVector ++ fileValues.flatMap { fileValueV1 =>
-          createMultipleImageResolutions(fileValueV1).map(oneResolution =>
-            valueUtilV1.fileValueV12LocationV1(oneResolution)
-          )
-        }
+                                       createMultipleImageResolutions(fileValueV1).map(oneResolution =>
+                                         valueUtilV1.fileValueV12LocationV1(oneResolution)
+                                       )
+                                     }
 
         // Get the user's permission on the resource.
         userPermission = PermissionUtilADM.getUserPermissionFromAssertionsV1(
-          entityIri = resourceIri,
-          assertions = permissionRelevantAssertions,
-          userProfile = userProfileV1
-        )
+                           entityIri = resourceIri,
+                           assertions = permissionRelevantAssertions,
+                           userProfile = userProfileV1
+                         )
 
         // group the SPARQL results by the predicate "prop" and map each row to a Seq of objects "obj", etc. (getting rid of VariableResultsRow).
-        groupedByPredicateToWrap: Map[IRI, Seq[Map[String, String]]] = resInfoResponseRows
-          .groupBy(row => row.rowMap("prop"))
-          .map { case (predicate: IRI, rows: Seq[VariableResultsRow]) =>
-            (predicate, rows.map(_.rowMap - "prop"))
-          }
+        groupedByPredicateToWrap: Map[IRI, Seq[Map[String, String]]] =
+          resInfoResponseRows
+            .groupBy(row => row.rowMap("prop"))
+            .map { case (predicate: IRI, rows: Seq[VariableResultsRow]) =>
+              (predicate, rows.map(_.rowMap - "prop"))
+            }
 
         groupedByPredicate = new ErrorHandlingMap(
-          groupedByPredicateToWrap,
-          { key: IRI =>
-            s"Resource $resourceIri has no $key"
-          }
-        )
+                               groupedByPredicateToWrap,
+                               { key: IRI =>
+                                 s"Resource $resourceIri has no $key"
+                               }
+                             )
 
         // Query the ontology about the resource's OWL class.
         (restype_label, restype_description, restype_iconsrc) <-
@@ -2936,43 +3080,44 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             for {
               entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
-                resourceClassIris = Set(resTypeIri),
-                userProfile = userProfile
-              ))
-                .mapTo[EntityInfoGetResponseV1]
+                                      resourceClassIris = Set(resTypeIri),
+                                      userProfile = userProfile
+                                    ))
+                                      .mapTo[EntityInfoGetResponseV1]
               entityInfo = entityInfoResponse.resourceClassInfoMap(resTypeIri)
               label = entityInfo.getPredicateObject(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-              )
+                        predicateIri = OntologyConstants.Rdfs.Label,
+                        preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                      )
               description = entityInfo.getPredicateObject(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
-              )
+                              predicateIri = OntologyConstants.Rdfs.Comment,
+                              preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
+                            )
               iconsrc = entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ResourceIcon) match {
-                case Some(resClassIcon) => Some(valueUtilV1.makeResourceClassIconURL(resTypeIri, resClassIcon))
-                case _                  => None
-              }
+                          case Some(resClassIcon) =>
+                            Some(valueUtilV1.makeResourceClassIconURL(resTypeIri, resClassIcon))
+                          case _ => None
+                        }
             } yield (label, description, iconsrc)
           } else {
             Future(None, None, None)
           }
 
         resourceInfo = ResourceInfoV1(
-          restype_id = groupedByPredicate(OntologyConstants.Rdf.Type).head("obj"),
-          firstproperty = Some(groupedByPredicate(OntologyConstants.Rdfs.Label).head("obj")),
-          preview = preview, // The first element of the list, or None if the list is empty
-          locations = if (locations.nonEmpty) Some(locations) else None,
-          locdata = locations.lastOption,
-          person_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToUser).head("obj"),
-          project_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToProject).head("obj"),
-          project_shortcode = projectShortcode,
-          restype_label = restype_label,
-          restype_name = Some(groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")),
-          restype_description = restype_description,
-          restype_iconsrc = restype_iconsrc,
-          resclass_has_location = locations.nonEmpty
-        )
+                         restype_id = groupedByPredicate(OntologyConstants.Rdf.Type).head("obj"),
+                         firstproperty = Some(groupedByPredicate(OntologyConstants.Rdfs.Label).head("obj")),
+                         preview = preview, // The first element of the list, or None if the list is empty
+                         locations = if (locations.nonEmpty) Some(locations) else None,
+                         locdata = locations.lastOption,
+                         person_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToUser).head("obj"),
+                         project_id = groupedByPredicate(OntologyConstants.KnoraBase.AttachedToProject).head("obj"),
+                         project_shortcode = projectShortcode,
+                         restype_label = restype_label,
+                         restype_name = Some(groupedByPredicate(OntologyConstants.Rdf.Type).head("obj")),
+                         restype_description = restype_description,
+                         restype_iconsrc = restype_iconsrc,
+                         resclass_has_location = locations.nonEmpty
+                       )
       } yield (userPermission, resourceInfo)
     }
   }
@@ -2989,13 +3134,12 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
   private def getGroupedProperties(resourceIri: IRI): Future[GroupedPropertiesByType] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getResourcePropertiesAndValues(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getResourcePropertiesAndValues(
+                           resourceIri = resourceIri
+                         )
+                         .toString()
+                     )
       // _ = println(sparqlQuery)
       resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
@@ -3005,8 +3149,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           .partition(_.rowMap.get("isLinkProp").exists(_.toBoolean))
 
       // Partition the rows with values into rows with ordinary values and rows with link values (reifications).
-      (rowsWithLinkValues: Seq[VariableResultsRow], rowsWithOrdinaryValues: Seq[VariableResultsRow]) = rowsWithValues
-        .partition(_.rowMap.get("isLinkValueProp").exists(_.toBoolean))
+      (rowsWithLinkValues: Seq[VariableResultsRow], rowsWithOrdinaryValues: Seq[VariableResultsRow]) =
+        rowsWithValues
+          .partition(_.rowMap.get("isLinkValueProp").exists(_.toBoolean))
 
     } yield valueUtilV1.createGroupedPropsByType(
       rowsWithOrdinaryValues = rowsWithOrdinaryValues,
@@ -3136,19 +3281,20 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               for {
                 // Convert the SPARQL query results to a ValueV1.
                 valueV1 <- valueUtilV1.makeValueV1(
-                  valueProps = valueProps,
-                  projectShortcode = projectShortcode,
-                  responderManager = responderManager,
-                  featureFactoryConfig = featureFactoryConfig,
-                  userProfile = userProfile
-                )
+                             valueProps = valueProps,
+                             projectShortcode = projectShortcode,
+                             responderManager = responderManager,
+                             featureFactoryConfig = featureFactoryConfig,
+                             userProfile = userProfile
+                           )
 
                 valPermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
-                  valueIri = valObjIri,
-                  valueProps = valueProps,
-                  entityProject = None, // We don't need to specify this here, because it's in valueProps
-                  userProfile = userProfileV1
-                )
+                                  valueIri = valObjIri,
+                                  valueProps = valueProps,
+                                  entityProject =
+                                    None, // We don't need to specify this here, because it's in valueProps
+                                  userProfile = userProfileV1
+                                )
 
                 predicates = valueProps.literalData
 
@@ -3168,9 +3314,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           for {
             valueObjectsV1 <- Future.sequence(valueObjectsV1WithFuture)
 
-            valueObjectsV1Sorted = valueObjectsV1.toVector.sortBy(
-              _.order
-            ) // sort the values by their order given in the triplestore [[OntologyConstants.KnoraBase.ValueHasOrder]]
+            valueObjectsV1Sorted =
+              valueObjectsV1.toVector.sortBy(
+                _.order
+              ) // sort the values by their order given in the triplestore [[OntologyConstants.KnoraBase.ValueHasOrder]]
 
             // get all the values the user has at least viewing permissions on
             valueObjectListFiltered = valueObjectsV1Sorted.filter(_.valuePermission.nonEmpty)
@@ -3180,11 +3327,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Make a PropertyV1 for the property.
             propertyV1 = makePropertyV1(
-              propertyIri = propertyIri,
-              propertyCardinality = propsAndCardinalities.get(propertyIri),
-              propertyEntityInfo = propertyEntityInfo,
-              valueObjects = valueObjectListFiltered
-            )
+                           propertyIri = propertyIri,
+                           propertyCardinality = propsAndCardinalities.get(propertyIri),
+                           propertyEntityInfo = propertyEntityInfo,
+                           valueObjects = valueObjectListFiltered
+                         )
           } yield
           // If the property has a value that the user isn't allowed to see, and its cardinality
           // is MustHaveOne or MayHaveOne, don't return any information about the property.
@@ -3198,8 +3345,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
     for {
       valuePropertiesWithDataWithOption: Iterable[Option[PropertyV1]] <- Future.sequence(
-        valuePropertiesWithDataWithFuture
-      )
+                                                                           valuePropertiesWithDataWithFuture
+                                                                         )
 
       valuePropertiesWithData = valuePropertiesWithDataWithOption.toVector.flatten
 
@@ -3287,44 +3434,46 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 for {
                   apiValueV1ForLinkValue <- valueUtilV1.makeValueV1(
-                    valueProps = linkValueProps,
-                    projectShortcode = projectShortcode,
-                    responderManager = responderManager,
-                    featureFactoryConfig = featureFactoryConfig,
-                    userProfile = userProfile
-                  )
+                                              valueProps = linkValueProps,
+                                              projectShortcode = projectShortcode,
+                                              responderManager = responderManager,
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              userProfile = userProfile
+                                            )
 
                   linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
-                    case linkValueV1: LinkValueV1 => linkValueV1
-                    case _ =>
-                      throw InconsistentRepositoryDataException(
-                        s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}"
-                      )
-                  }
+                                               case linkValueV1: LinkValueV1 => linkValueV1
+                                               case _ =>
+                                                 throw InconsistentRepositoryDataException(
+                                                   s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}"
+                                                 )
+                                             }
 
                   // Check the permissions on the LinkValue.
                   linkValuePermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
-                    valueIri = linkValueIri,
-                    valueProps = linkValueProps,
-                    entityProject = None, // We don't need to specify this here, because it's in linkValueProps
-                    userProfile = userProfileV1
-                  )
+                                          valueIri = linkValueIri,
+                                          valueProps = linkValueProps,
+                                          entityProject =
+                                            None, // We don't need to specify this here, because it's in linkValueProps
+                                          userProfile = userProfileV1
+                                        )
 
                   // We only allow the user to see information about the link if they have at least view permission on both the link value
                   // and on the target resource.
 
                   targetResourcePermission = PermissionUtilADM.getUserPermissionWithValuePropsV1(
-                    valueIri = targetResourceIri,
-                    valueProps = valueProps,
-                    entityProject = None, // We don't need to specify this here, because it's in valueProps
-                    userProfile = userProfileV1
-                  )
+                                               valueIri = targetResourceIri,
+                                               valueProps = valueProps,
+                                               entityProject =
+                                                 None, // We don't need to specify this here, because it's in valueProps
+                                               userProfile = userProfileV1
+                                             )
 
                   linkPermission = (targetResourcePermission, linkValuePermission) match {
-                    case (Some(targetResourcePermissionCode), Some(linkValuePermissionCode)) =>
-                      Some(scala.math.min(targetResourcePermissionCode, linkValuePermissionCode))
-                    case _ => None
-                  }
+                                     case (Some(targetResourcePermissionCode), Some(linkValuePermissionCode)) =>
+                                       Some(scala.math.min(targetResourcePermissionCode, linkValuePermissionCode))
+                                     case _ => None
+                                   }
 
                 } yield ValueObjectV1(
                   valueObjectIri = linkValueIri,
@@ -3348,11 +3497,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
               // Make a PropertyV1 for the property.
               propertyV1 = makePropertyV1(
-                propertyIri = propertyIri,
-                propertyCardinality = propsAndCardinalities.get(propertyIri),
-                propertyEntityInfo = propertyEntityInfo,
-                valueObjects = valueObjectListFiltered
-              )
+                             propertyIri = propertyIri,
+                             propertyCardinality = propsAndCardinalities.get(propertyIri),
+                             propertyEntityInfo = propertyEntityInfo,
+                             valueObjects = valueObjectListFiltered
+                           )
 
               // If the property has a value that the user isn't allowed to see, and its cardinality
               // is MustHaveOne or MayHaveOne, don't return any information about the property.
@@ -3365,8 +3514,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
       linkPropertiesWithDataWithOption: Iterable[Option[PropertyV1]] <- Future.sequence(
-        linkPropertiesWithDataWithFuture
-      )
+                                                                          linkPropertiesWithDataWithFuture
+                                                                        )
 
       linkPropertiesWithData: Vector[PropertyV1] = linkPropertiesWithDataWithOption.toVector.flatten
 
@@ -3447,9 +3596,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
    * @return a corresponding preview image.
    */
   private def fullSizeImageFileValueToPreview(fullSizeImageFileValue: StillImageFileValueV1): StillImageFileValueV1 = {
-    val proportion = fullSizeImageFileValue.dimY.toDouble / 128.0
+    val proportion    = fullSizeImageFileValue.dimY.toDouble / 128.0
     val previewHeight = 128
-    val previewWidth = (fullSizeImageFileValue.dimX.toDouble / proportion).round.toInt
+    val previewWidth  = (fullSizeImageFileValue.dimX.toDouble / proportion).round.toInt
 
     fullSizeImageFileValue.copy(
       dimX = previewWidth,

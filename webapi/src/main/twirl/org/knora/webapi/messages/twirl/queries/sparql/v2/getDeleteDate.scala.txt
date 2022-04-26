@@ -8,11 +8,9 @@
 @*
  * Gets the delete date of a resource or value.
  *
- * @param triplestore the name of the triplestore being used.
  * @param entityIri the IRI of the resource or value.
  *@
-@(triplestore: String,
-  entityIri: IRI)
+@(entityIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

@@ -5,44 +5,49 @@
 
 package org.knora.webapi.responders.v1
 
-import java.time.Instant
-
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForPropertyGetADM,
-  DefaultObjectAccessPermissionsStringResponseADM,
-  PermissionADM,
-  PermissionType
-}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM, ResponderData, ValueUtilV1}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.ValueUtilV1
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetRequestV1
+import org.knora.webapi.messages.v1.responder.ontologymessages.EntityInfoGetResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByIRIGetV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileByIRIGetV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
-import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 
+import java.time.Instant
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -93,37 +98,40 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[ValueGetResponseV1] =
     for {
       maybeValueQueryResult <- findValue(
-        valueIri = valueIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                 valueIri = valueIri,
+                                 featureFactoryConfig = featureFactoryConfig,
+                                 userProfile = userProfile
+                               )
 
       response <- maybeValueQueryResult match {
-        case Some(valueQueryResult) =>
-          for {
-            maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
-              userIri = valueQueryResult.creatorIri,
-              userProfileType = UserProfileTypeV1.RESTRICTED,
-              featureFactoryConfig = featureFactoryConfig
-            )).mapTo[Option[UserProfileV1]]
+                    case Some(valueQueryResult) =>
+                      for {
+                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
+                                                      userIri = valueQueryResult.creatorIri,
+                                                      userProfileType = UserProfileTypeV1.RESTRICTED,
+                                                      featureFactoryConfig = featureFactoryConfig
+                                                    )).mapTo[Option[UserProfileV1]]
 
-            valueCreatorProfile = maybeValueCreatorProfile match {
-              case Some(up) => up
-              case None     => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
-            }
-          } yield ValueGetResponseV1(
-            valuetype = valueQueryResult.value.valueTypeIri,
-            rights = valueQueryResult.permissionCode,
-            value = valueQueryResult.value,
-            valuecreator = valueCreatorProfile.userData.email.get,
-            valuecreatorname = valueCreatorProfile.userData.fullname.get,
-            valuecreationdate = valueQueryResult.creationDate,
-            comment = valueQueryResult.comment
-          )
+                        valueCreatorProfile = maybeValueCreatorProfile match {
+                                                case Some(up) => up
+                                                case None =>
+                                                  throw NotFoundException(
+                                                    s"User ${valueQueryResult.creatorIri} not found"
+                                                  )
+                                              }
+                      } yield ValueGetResponseV1(
+                        valuetype = valueQueryResult.value.valueTypeIri,
+                        rights = valueQueryResult.permissionCode,
+                        value = valueQueryResult.value,
+                        valuecreator = valueCreatorProfile.userData.email.get,
+                        valuecreatorname = valueCreatorProfile.userData.fullname.get,
+                        valuecreationdate = valueQueryResult.creationDate,
+                        comment = valueQueryResult.comment
+                      )
 
-        case None =>
-          throw NotFoundException(s"Value $valueIri not found (it may have been deleted)")
-      }
+                    case None =>
+                      throw NotFoundException(s"Value $valueIri not found (it may have been deleted)")
+                  }
     } yield response
 
   /**
@@ -145,51 +153,51 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       for {
         // Check that the submitted value has the correct type for the property.
         entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-          propertyIris = Set(createValueRequest.propertyIri),
-          userProfile = createValueRequest.userProfile
-        )).mapTo[EntityInfoGetResponseV1]
+                                                         propertyIris = Set(createValueRequest.propertyIri),
+                                                         userProfile = createValueRequest.userProfile
+                                                       )).mapTo[EntityInfoGetResponseV1]
 
         propertyInfo = entityInfoResponse.propertyInfoMap(createValueRequest.propertyIri)
         propertyObjectClassConstraint = propertyInfo
-          .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-          .getOrElse {
-            throw InconsistentRepositoryDataException(
-              s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint"
-            )
-          }
+                                          .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
+                                          .getOrElse {
+                                            throw InconsistentRepositoryDataException(
+                                              s"Property ${createValueRequest.propertyIri} has no knora-base:objectClassConstraint"
+                                            )
+                                          }
 
         // Check that the object of the property (the value to be created, or the target of the link to be created) will have
         // the correct type for the property's knora-base:objectClassConstraint.
         _ <- checkPropertyObjectClassConstraintForValue(
-          propertyIri = createValueRequest.propertyIri,
-          propertyObjectClassConstraint = propertyObjectClassConstraint,
-          updateValueV1 = createValueRequest.value,
-          featureFactoryConfig = createValueRequest.featureFactoryConfig,
-          userProfile = createValueRequest.userProfile
-        )
+               propertyIri = createValueRequest.propertyIri,
+               propertyObjectClassConstraint = propertyObjectClassConstraint,
+               updateValueV1 = createValueRequest.value,
+               featureFactoryConfig = createValueRequest.featureFactoryConfig,
+               userProfile = createValueRequest.userProfile
+             )
 
         // Check that the user has permission to modify the resource. (We do this as late as possible because it's
         // slower than the other checks, and there's no point in doing it if the other checks fail.)
 
         resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
-          iri = createValueRequest.resourceIri,
-          featureFactoryConfig = createValueRequest.featureFactoryConfig,
-          userADM = createValueRequest.userProfile,
-          getIncoming = false
-        )).mapTo[ResourceFullResponseV1]
+                                  iri = createValueRequest.resourceIri,
+                                  featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                                  userADM = createValueRequest.userProfile,
+                                  getIncoming = false
+                                )).mapTo[ResourceFullResponseV1]
 
         resourcePermissionCode: Option[Int] = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
 
         _ = if (
-          !PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = resourcePermissionCode,
-            userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
-          )
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permission to modify resource ${createValueRequest.resourceIri}"
-          )
-        }
+              !PermissionUtilADM.impliesPermissionCodeV1(
+                userHasPermissionCode = resourcePermissionCode,
+                userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
+              )
+            ) {
+              throw ForbiddenException(
+                s"User $userIri does not have permission to modify resource ${createValueRequest.resourceIri}"
+              )
+            }
 
         // Ensure that creating the value would not violate the resource's cardinality restrictions or create a duplicate value.
         // This works in API v1 because a ResourceFullResponseV1 contains the resource's current property values (but only the
@@ -199,43 +207,46 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // cardinality of MustHaveOne or MayHaveOne, and already has a value that the user isn't allowed to see. We'll have to
         // implement this in a different way in API v2.
         cardinalityOK = resourceFullResponse.props.flatMap(
-          _.properties.find(_.pid == createValueRequest.propertyIri)
-        ) match {
-          case Some(prop: PropertyV1) =>
-            if (prop.values.exists(apiValueV1 => createValueRequest.value.isDuplicateOfOtherValue(apiValueV1))) {
-              throw DuplicateValueException()
-            }
+                          _.properties.find(_.pid == createValueRequest.propertyIri)
+                        ) match {
+                          case Some(prop: PropertyV1) =>
+                            if (
+                              prop.values
+                                .exists(apiValueV1 => createValueRequest.value.isDuplicateOfOtherValue(apiValueV1))
+                            ) {
+                              throw DuplicateValueException()
+                            }
 
-            val propCardinality = Cardinality.lookup(prop.occurrence.get)
-            !((propCardinality == Cardinality.MayHaveOne || propCardinality == Cardinality.MustHaveOne) && prop.values.nonEmpty)
+                            val propCardinality = Cardinality.lookup(prop.occurrence.get)
+                            !((propCardinality == Cardinality.MayHaveOne || propCardinality == Cardinality.MustHaveOne) && prop.values.nonEmpty)
 
-          case None =>
-            false
-        }
+                          case None =>
+                            false
+                        }
 
         _ = if (!cardinalityOK) {
-          throw OntologyConstraintException(
-            s"Cardinality restrictions do not allow a value to be added for property ${createValueRequest.propertyIri} of resource ${createValueRequest.resourceIri}"
-          )
-        }
+              throw OntologyConstraintException(
+                s"Cardinality restrictions do not allow a value to be added for property ${createValueRequest.propertyIri} of resource ${createValueRequest.resourceIri}"
+              )
+            }
 
         // Get the IRI of project of the containing resource.
         projectIri: IRI = resourceFullResponse.resinfo
-          .getOrElse(
-            throw InconsistentRepositoryDataException(
-              s"Did not find resource info for resource ${createValueRequest.resourceIri}"
-            )
-          )
-          .project_id
+                            .getOrElse(
+                              throw InconsistentRepositoryDataException(
+                                s"Did not find resource info for resource ${createValueRequest.resourceIri}"
+                              )
+                            )
+                            .project_id
 
         // Get the resource class of the containing resource
         resourceClassIri: IRI = resourceFullResponse.resinfo
-          .getOrElse(
-            throw InconsistentRepositoryDataException(
-              s"Did not find resource info for resource ${createValueRequest.resourceIri}"
-            )
-          )
-          .restype_id
+                                  .getOrElse(
+                                    throw InconsistentRepositoryDataException(
+                                      s"Did not find resource info for resource ${createValueRequest.resourceIri}"
+                                    )
+                                  )
+                                  .restype_id
 
         defaultObjectAccessPermissions <- {
           responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
@@ -258,51 +269,51 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         }.mapTo[Option[ProjectInfoV1]]
 
         projectInfo = maybeProjectInfo match {
-          case Some(pi) => pi
-          case None     => throw NotFoundException(s"Project '$projectIri' not found.")
-        }
+                        case Some(pi) => pi
+                        case None     => throw NotFoundException(s"Project '$projectIri' not found.")
+                      }
 
         // Everything seems OK, so create the value.
 
         unverifiedValue <- createValueV1AfterChecks(
-          dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-          projectIri = resourceFullResponse.resinfo.get.project_id,
-          resourceIri = createValueRequest.resourceIri,
-          propertyIri = createValueRequest.propertyIri,
-          value = createValueRequest.value,
-          comment = createValueRequest.comment,
-          valueCreator = userIri,
-          valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
-          featureFactoryConfig = createValueRequest.featureFactoryConfig,
-          userProfile = createValueRequest.userProfile
-        )
+                             dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
+                             projectIri = resourceFullResponse.resinfo.get.project_id,
+                             resourceIri = createValueRequest.resourceIri,
+                             propertyIri = createValueRequest.propertyIri,
+                             value = createValueRequest.value,
+                             comment = createValueRequest.comment,
+                             valueCreator = userIri,
+                             valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
+                             featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                             userProfile = createValueRequest.userProfile
+                           )
 
         // Verify that it was created.
         apiResponse <- verifyValueCreation(
-          resourceIri = createValueRequest.resourceIri,
-          propertyIri = createValueRequest.propertyIri,
-          unverifiedValue = unverifiedValue,
-          featureFactoryConfig = createValueRequest.featureFactoryConfig,
-          userProfile = createValueRequest.userProfile
-        )
+                         resourceIri = createValueRequest.resourceIri,
+                         propertyIri = createValueRequest.propertyIri,
+                         unverifiedValue = unverifiedValue,
+                         featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                         userProfile = createValueRequest.userProfile
+                       )
       } yield apiResponse
 
     for {
       // Don't allow anonymous users to create values.
       userIri <- Future {
-        if (createValueRequest.userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to create values")
-        } else {
-          createValueRequest.userProfile.id
-        }
-      }
+                   if (createValueRequest.userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to create values")
+                   } else {
+                     createValueRequest.userProfile.id
+                   }
+                 }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        createValueRequest.apiRequestID,
-        createValueRequest.resourceIri,
-        () => makeTaskFuture(userIri)
-      )
+                      createValueRequest.apiRequestID,
+                      createValueRequest.resourceIri,
+                      () => makeTaskFuture(userIri)
+                    )
     } yield taskResult
   }
 
@@ -370,20 +381,20 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // that have standoff references to a particular target resource.
 
         // First, make a single list of all the values to be created.
-        valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]] <- Future(createMultipleValuesRequest.values)
+        valuesToCreatePerProperty: Map[IRI, Seq[CreateValueV1WithComment]]     <- Future(createMultipleValuesRequest.values)
         valuesToCreateForAllProperties: Iterable[Seq[CreateValueV1WithComment]] = valuesToCreatePerProperty.values
-        allValuesToCreate: Iterable[CreateValueV1WithComment] = valuesToCreateForAllProperties.flatten
+        allValuesToCreate: Iterable[CreateValueV1WithComment]                   = valuesToCreateForAllProperties.flatten
 
         // Then, get the standoff resource references from all the text values to be created.
         // The 'collect' method builds a new list by applying a partial function to all elements of the list
         // on which the function is defined.
-        resourceReferencesForAllTextValues: Iterable[Set[IRI]] = allValuesToCreate.collect {
-          case CreateValueV1WithComment(textValueV1: TextValueWithStandoffV1, _) =>
+        resourceReferencesForAllTextValues: Iterable[Set[IRI]] =
+          allValuesToCreate.collect { case CreateValueV1WithComment(textValueV1: TextValueWithStandoffV1, _) =>
             // check that resource references are consistent in `resource_reference` and linking standoff tags
             checkTextValueResourceRefs(textValueV1)
 
             textValueV1.resource_reference
-        }
+          }
 
         // Combine those resource references into a single list, so if there are n text values with a reference to
         // some IRI, the list will contain that IRI n times.
@@ -413,81 +424,101 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         //
         // So now we can get the set of standoff link targets that are ordinary IRIs, and check that each of
         // them exists in the triplestore and is a knora-base:Resource.
-        targetIrisThatAlreadyExist: Set[IRI] = targetIris.keySet.filterNot(iri =>
-          stringFormatter.isStandoffLinkReferenceToClientIDForResource(iri)
-        )
+        targetIrisThatAlreadyExist: Set[IRI] =
+          targetIris.keySet.filterNot(iri => stringFormatter.isStandoffLinkReferenceToClientIDForResource(iri))
 
         targetIriCheckResult <- checkStandoffResourceReferenceTargets(
-          targetIris = targetIrisThatAlreadyExist,
-          featureFactoryConfig = createMultipleValuesRequest.featureFactoryConfig,
-          userProfile = createMultipleValuesRequest.userProfile
-        )
+                                  targetIris = targetIrisThatAlreadyExist,
+                                  featureFactoryConfig = createMultipleValuesRequest.featureFactoryConfig,
+                                  userProfile = createMultipleValuesRequest.userProfile
+                                )
 
         // For each target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property and one LinkValue,
         // with the associated count as the LinkValue's initial reference count.
         standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.toSeq.map {
-          case (targetIri, initialReferenceCount) =>
-            // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
-            val realTargetIri = stringFormatter.toRealStandoffLinkTargetResourceIri(
-              iri = targetIri,
-              clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris
-            )
+                                                               case (targetIri, initialReferenceCount) =>
+                                                                 // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
+                                                                 val realTargetIri =
+                                                                   stringFormatter.toRealStandoffLinkTargetResourceIri(
+                                                                     iri = targetIri,
+                                                                     clientResourceIDsToResourceIris =
+                                                                       createMultipleValuesRequest.clientResourceIDsToResourceIris
+                                                                   )
 
-            SparqlTemplateLinkUpdate(
-              linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-              directLinkExists = false,
-              insertDirectLink = true,
-              deleteDirectLink = false,
-              linkValueExists = false,
-              linkTargetExists =
-                true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-              newLinkValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
-              linkTargetIri = realTargetIri,
-              currentReferenceCount = 0,
-              newReferenceCount = initialReferenceCount,
-              newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-              newLinkValuePermissions = standoffLinkValuePermissions
-            )
-        }
+                                                                 SparqlTemplateLinkUpdate(
+                                                                   linkPropertyIri =
+                                                                     OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                                                                   directLinkExists = false,
+                                                                   insertDirectLink = true,
+                                                                   deleteDirectLink = false,
+                                                                   linkValueExists = false,
+                                                                   linkTargetExists =
+                                                                     true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+                                                                   newLinkValueIri = stringFormatter.makeRandomValueIri(
+                                                                     createMultipleValuesRequest.resourceIri
+                                                                   ),
+                                                                   linkTargetIri = realTargetIri,
+                                                                   currentReferenceCount = 0,
+                                                                   newReferenceCount = initialReferenceCount,
+                                                                   newLinkValueCreator =
+                                                                     OntologyConstants.KnoraAdmin.SystemUser,
+                                                                   newLinkValuePermissions =
+                                                                     standoffLinkValuePermissions
+                                                                 )
+                                                             }
 
         // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
         standoffLinkInsertSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .generateInsertStatementsForStandoffLinks(
-            resourceIri = createMultipleValuesRequest.resourceIri,
-            linkUpdates = standoffLinkUpdates,
-            creationDate = createMultipleValuesRequest.creationDate,
-            stringFormatter = stringFormatter
-          )
-          .toString()
+                                             .generateInsertStatementsForStandoffLinks(
+                                               resourceIri = createMultipleValuesRequest.resourceIri,
+                                               linkUpdates = standoffLinkUpdates,
+                                               creationDate = createMultipleValuesRequest.creationDate,
+                                               stringFormatter = stringFormatter
+                                             )
+                                             .toString()
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Number each value to be created, and give it a valueHasOrder
 
         // Ungroup the values to be created so we can number them as a single sequence (to create unique SPARQL variable names for each value).
-        ungroupedValues: Seq[(IRI, CreateValueV1WithComment)] = createMultipleValuesRequest.values.toSeq.flatMap {
-          case (propertyIri, values) => values.map(value => (propertyIri, value))
-        }
+        ungroupedValues: Seq[(IRI, CreateValueV1WithComment)] =
+          createMultipleValuesRequest.values.toSeq.flatMap { case (propertyIri, values) =>
+            values.map(value => (propertyIri, value))
+          }
 
         // Number them all as a single sequence. Give each one a knora-base:valueHasOrder of 0 for now; we'll take care of that in a moment.
-        numberedValues: Seq[(IRI, NumberedValueToCreate)] = ungroupedValues.zipWithIndex.map {
-          case ((propertyIri: IRI, valueWithComment: CreateValueV1WithComment), valueIndex) =>
-            (propertyIri, NumberedValueToCreate(valueWithComment, valueIndex, 0))
-        }
+        numberedValues: Seq[(IRI, NumberedValueToCreate)] =
+          ungroupedValues.zipWithIndex.map {
+            case ((propertyIri: IRI, valueWithComment: CreateValueV1WithComment), valueIndex) =>
+              (propertyIri, NumberedValueToCreate(valueWithComment, valueIndex, 0))
+          }
 
         // Group them again by property so we generate knora-base:valueHasOrder for the values of each property.
-        groupedNumberedValues: Map[IRI, Seq[NumberedValueToCreate]] = numberedValues.groupBy(_._1).map {
-          case (propertyIri, propertyIriAndValueTuples) => (propertyIri, propertyIriAndValueTuples.map(_._2))
-        }
+        groupedNumberedValues: Map[IRI, Seq[NumberedValueToCreate]] =
+          numberedValues.groupBy(_._1).map { case (propertyIri, propertyIriAndValueTuples) =>
+            (propertyIri, propertyIriAndValueTuples.map(_._2))
+          }
 
         // Generate knora-base:valueHasOrder for the values of each property.
         groupedNumberedValuesWithValueHasOrder: Map[IRI, Seq[NumberedValueToCreate]] = groupedNumberedValues.map {
-          case (propertyIri, values) =>
-            val valuesWithValueHasOrder = values.zipWithIndex.map { case (numberedValueToCreate, valueHasOrder) =>
-              numberedValueToCreate.copy(valueHasOrder = valueHasOrder)
-            }
+                                                                                         case (propertyIri, values) =>
+                                                                                           val valuesWithValueHasOrder =
+                                                                                             values.zipWithIndex.map {
+                                                                                               case (
+                                                                                                     numberedValueToCreate,
+                                                                                                     valueHasOrder
+                                                                                                   ) =>
+                                                                                                 numberedValueToCreate
+                                                                                                   .copy(valueHasOrder =
+                                                                                                     valueHasOrder
+                                                                                                   )
+                                                                                             }
 
-            (propertyIri, valuesWithValueHasOrder)
-        }
+                                                                                           (
+                                                                                             propertyIri,
+                                                                                             valuesWithValueHasOrder
+                                                                                           )
+                                                                                       }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Generate SPARQL for each value of each property
@@ -506,7 +537,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
                   case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
                     val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                    val newValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+                    val newValueIri   = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
 
                     // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
                     val insertSparql: String = valueToCreate.createValueV1WithComment.updateValueV1 match {
@@ -618,16 +649,17 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         // The SPARQL for the INSERT clause also contains the SPARQL that was generated to insert standoff links.
         allInsertSparql: String = resultsForAllProperties
-          .flatMap(result => result.insertSparql.zip(result.valueIndexes))
-          .toSeq
-          .sortBy(_._2)
-          .map(_._1)
-          .mkString("\n\n") + standoffLinkInsertSparql
+                                    .flatMap(result => result.insertSparql.zip(result.valueIndexes))
+                                    .toSeq
+                                    .sortBy(_._2)
+                                    .map(_._1)
+                                    .mkString("\n\n") + standoffLinkInsertSparql
 
         // Collect all the UnverifiedValueV1s for each property.
-        allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] = sparqlGenerationResults.map {
-          case (propertyIri, results) => propertyIri -> results.valuesToVerify
-        }
+        allUnverifiedValues: Map[IRI, Seq[UnverifiedValueV1]] =
+          sparqlGenerationResults.map { case (propertyIri, results) =>
+            propertyIri -> results.valuesToVerify
+          }
 
       } yield GenerateSparqlToCreateMultipleValuesResponseV1(
         insertSparql = allInsertSparql,
@@ -638,19 +670,19 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Don't allow anonymous users to create resources.
       userIri <- Future {
-        if (createMultipleValuesRequest.userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to create resources")
-        } else {
-          createMultipleValuesRequest.userProfile.id
-        }
-      }
+                   if (createMultipleValuesRequest.userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                   } else {
+                     createMultipleValuesRequest.userProfile.id
+                   }
+                 }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        createMultipleValuesRequest.apiRequestID,
-        createMultipleValuesRequest.resourceIri,
-        () => makeTaskFuture(userIri)
-      )
+                      createMultipleValuesRequest.apiRequestID,
+                      createMultipleValuesRequest.resourceIri,
+                      () => makeTaskFuture(userIri)
+                    )
     } yield taskResult
   }
 
@@ -685,8 +717,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     // when they're available.
     for {
       valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFutureSeqsInMap(
-        valueVerificationFutures
-      )
+                                                                            valueVerificationFutures
+                                                                          )
     } yield VerifyMultipleValueCreationResponseV1(verifiedValues = valueVerificationResponses)
   }
 
@@ -726,53 +758,53 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         resourceIri <- Future(changeFileValueRequest.resourceIri)
 
         getFileValuesSparql = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getFileValuesForResource(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri
-          )
-          .toString()
+                                .getFileValuesForResource(
+                                  resourceIri = resourceIri
+                                )
+                                .toString()
         //_ = print(getFileValuesSparql)
         getFileValuesResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(getFileValuesSparql))
-          .mapTo[SparqlSelectResult]
+                                                       .mapTo[SparqlSelectResult]
         // _ <- Future(println(getFileValuesResponse))
 
         // check that the resource to be updated exists and it is a subclass of knora-base:Representation
-        _ = if (getFileValuesResponse.results.bindings.isEmpty)
-          throw NotFoundException(
-            s"Value ${changeFileValueRequest.resourceIri} not found (it may have been deleted) or it is not a knora-base:Representation"
-          )
+        _ =
+          if (getFileValuesResponse.results.bindings.isEmpty)
+            throw NotFoundException(
+              s"Value ${changeFileValueRequest.resourceIri} not found (it may have been deleted) or it is not a knora-base:Representation"
+            )
 
         // get the property Iris, file value Iris and qualities attached to the resource
         fileValues: Seq[CurrentFileValue] = getFileValuesResponse.results.bindings.map { row: VariableResultsRow =>
-          CurrentFileValue(
-            property = row.rowMap("p"),
-            valueObjectIri = row.rowMap("fileValueIri"),
-            quality = row.rowMap.get("quality") match {
-              case Some(quality: String) => Some(quality.toInt)
-              case None                  => None
-            }
-          )
-        }
+                                              CurrentFileValue(
+                                                property = row.rowMap("p"),
+                                                valueObjectIri = row.rowMap("fileValueIri"),
+                                                quality = row.rowMap.get("quality") match {
+                                                  case Some(quality: String) => Some(quality.toInt)
+                                                  case None                  => None
+                                                }
+                                              )
+                                            }
 
         // TODO: check if the file type returned by Sipi corresponds to the already existing file value type
 
         response: ChangeValueResponseV1 <- changeValueV1(
-          ChangeValueRequestV1(
-            valueIri = fileValues.head.valueObjectIri,
-            value = changeFileValueRequest.file,
-            featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
-            userProfile = changeFileValueRequest.userProfile,
-            apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
-          )
-        )
+                                             ChangeValueRequestV1(
+                                               valueIri = fileValues.head.valueObjectIri,
+                                               value = changeFileValueRequest.file,
+                                               featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
+                                               userProfile = changeFileValueRequest.userProfile,
+                                               apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
+                                             )
+                                           )
 
         changedLocation = response.value match {
-          case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
-          case other =>
-            throw AssertionException(
-              s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}"
-            )
-        }
+                            case fileValueV1: FileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1)
+                            case other =>
+                              throw AssertionException(
+                                s"Expected Sipi to change a file value, but it changed one of these: ${other.valueTypeIri}"
+                              )
+                          }
       } yield ChangeFileValueResponseV1(
         locations = Vector(changedLocation),
         projectADM = projectADM
@@ -790,10 +822,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
     for {
       resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
-        iri = changeFileValueRequest.resourceIri,
-        featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
-        userProfile = changeFileValueRequest.userProfile
-      )).mapTo[ResourceInfoResponseV1]
+                                iri = changeFileValueRequest.resourceIri,
+                                featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
+                                userProfile = changeFileValueRequest.userProfile
+                              )).mapTo[ResourceInfoResponseV1]
 
       // Get project info
       projectResponse <- {
@@ -810,10 +842,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       //
       // The method `changeValueV1` will be called using the same lock.
       taskResult <- IriLocker.runWithIriLock(
-        changeFileValueRequest.apiRequestID,
-        changeFileValueRequest.resourceIri,
-        () => makeTaskFuture(changeFileValueRequest, projectResponse.project)
-      )
+                      changeFileValueRequest.apiRequestID,
+                      changeFileValueRequest.resourceIri,
+                      () => makeTaskFuture(changeFileValueRequest, projectResponse.project)
+                    )
     } yield taskResult
 
   }
@@ -854,125 +886,135 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       for {
         // Ensure that the user has permission to modify the value.
         maybeCurrentValueQueryResult: Option[ValueQueryResult] <- changeValueRequest.value match {
-          case linkUpdateV1: LinkUpdateV1 =>
-            // We're being asked to update a link. We expect the current value version IRI to point to a
-            // knora-base:LinkValue. Get all necessary information about the LinkValue and the corresponding
-            // direct link.
-            findLinkValueByIri(
-              subjectIri = findResourceWithValueResult.resourceIri,
-              predicateIri = propertyIri,
-              objectIri = None,
-              linkValueIri = changeValueRequest.valueIri,
-              featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-              userProfile = changeValueRequest.userProfile
-            )
+                                                                    case linkUpdateV1: LinkUpdateV1 =>
+                                                                      // We're being asked to update a link. We expect the current value version IRI to point to a
+                                                                      // knora-base:LinkValue. Get all necessary information about the LinkValue and the corresponding
+                                                                      // direct link.
+                                                                      findLinkValueByIri(
+                                                                        subjectIri =
+                                                                          findResourceWithValueResult.resourceIri,
+                                                                        predicateIri = propertyIri,
+                                                                        objectIri = None,
+                                                                        linkValueIri = changeValueRequest.valueIri,
+                                                                        featureFactoryConfig =
+                                                                          changeValueRequest.featureFactoryConfig,
+                                                                        userProfile = changeValueRequest.userProfile
+                                                                      )
 
-          case otherValueV1 =>
-            // We're being asked to update an ordinary value.
-            findValue(
-              valueIri = changeValueRequest.valueIri,
-              featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-              userProfile = changeValueRequest.userProfile
-            )
-        }
+                                                                    case otherValueV1 =>
+                                                                      // We're being asked to update an ordinary value.
+                                                                      findValue(
+                                                                        valueIri = changeValueRequest.valueIri,
+                                                                        featureFactoryConfig =
+                                                                          changeValueRequest.featureFactoryConfig,
+                                                                        userProfile = changeValueRequest.userProfile
+                                                                      )
+                                                                  }
 
-        currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(
-          throw NotFoundException(s"Value ${changeValueRequest.valueIri} not found (it may have been deleted)")
-        )
+        currentValueQueryResult =
+          maybeCurrentValueQueryResult.getOrElse(
+            throw NotFoundException(s"Value ${changeValueRequest.valueIri} not found (it may have been deleted)")
+          )
 
         _ = if (
-          !PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = Some(currentValueQueryResult.permissionCode),
-            userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
-          )
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permission to add a new version to value ${changeValueRequest.valueIri}"
-          )
-        }
+              !PermissionUtilADM.impliesPermissionCodeV1(
+                userHasPermissionCode = Some(currentValueQueryResult.permissionCode),
+                userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
+              )
+            ) {
+              throw ForbiddenException(
+                s"User $userIri does not have permission to add a new version to value ${changeValueRequest.valueIri}"
+              )
+            }
 
         // Check that the submitted value has the correct type for the property.
 
         entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
-          propertyIris = Set(propertyIri),
-          userProfile = changeValueRequest.userProfile
-        )).mapTo[EntityInfoGetResponseV1]
+                                propertyIris = Set(propertyIri),
+                                userProfile = changeValueRequest.userProfile
+                              )).mapTo[EntityInfoGetResponseV1]
 
         propertyInfo = entityInfoResponse.propertyInfoMap(propertyIri)
         propertyObjectClassConstraint = propertyInfo
-          .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-          .getOrElse {
-            throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
-          }
+                                          .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
+                                          .getOrElse {
+                                            throw InconsistentRepositoryDataException(
+                                              s"Property $propertyIri has no knora-base:objectClassConstraint"
+                                            )
+                                          }
 
         // Check that the object of the property (the value to be updated, or the target of the link to be updated) will have
         // the correct type for the property's knora-base:objectClassConstraint.
         _ <- checkPropertyObjectClassConstraintForValue(
-          propertyIri = propertyIri,
-          propertyObjectClassConstraint = propertyObjectClassConstraint,
-          updateValueV1 = changeValueRequest.value,
-          featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-          userProfile = changeValueRequest.userProfile
-        )
+               propertyIri = propertyIri,
+               propertyObjectClassConstraint = propertyObjectClassConstraint,
+               updateValueV1 = changeValueRequest.value,
+               featureFactoryConfig = changeValueRequest.featureFactoryConfig,
+               userProfile = changeValueRequest.userProfile
+             )
 
         // Check that the current value and the submitted value have the same type.
         _ = if (currentValueQueryResult.value.valueTypeIri != changeValueRequest.value.valueTypeIri) {
-          throw BadRequestException(
-            s"Value ${changeValueRequest.valueIri} has type ${currentValueQueryResult.value.valueTypeIri}, but the submitted new version has type ${changeValueRequest.value.valueTypeIri}"
-          )
-        }
+              throw BadRequestException(
+                s"Value ${changeValueRequest.valueIri} has type ${currentValueQueryResult.value.valueTypeIri}, but the submitted new version has type ${changeValueRequest.value.valueTypeIri}"
+              )
+            }
 
         // Make sure the new version would not be redundant, given the current version.
         _ = if (changeValueRequest.value.isRedundant(currentValueQueryResult.value)) {
-          throw DuplicateValueException("The submitted value is the same as the current version")
-        }
+              throw DuplicateValueException("The submitted value is the same as the current version")
+            }
 
         // Get details of the resource.  (We do this as late as possible because it's slower than the other checks,
         // and there's no point in doing it if the other checks fail.)
         resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
-          iri = findResourceWithValueResult.resourceIri,
-          featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-          userADM = changeValueRequest.userProfile,
-          getIncoming = false
-        )).mapTo[ResourceFullResponseV1]
+                                  iri = findResourceWithValueResult.resourceIri,
+                                  featureFactoryConfig = changeValueRequest.featureFactoryConfig,
+                                  userADM = changeValueRequest.userProfile,
+                                  getIncoming = false
+                                )).mapTo[ResourceFullResponseV1]
 
         _ = changeValueRequest.value match {
-          case _: FileValueV1 => () // It is a file value, do not check for duplicates.
-          case _              => // It is not a file value.
-            // Ensure that adding the new value version would not create a duplicate value. This works in API v1 because a
-            // ResourceFullResponseV1 contains only the values that the user is allowed to see, otherwise checking for
-            // duplicate values would be a security risk. We'll have to implement this in a different way in API v2.
-            resourceFullResponse.props.flatMap(_.properties.find(_.pid == propertyIri)) match {
-              case Some(prop: PropertyV1) =>
-                // Don't consider the current value version when looking for duplicates.
-                val filteredValues =
-                  prop.value_ids.zip(prop.values).filter(_._1 != changeValueRequest.valueIri).map(_._2)
+              case _: FileValueV1 => () // It is a file value, do not check for duplicates.
+              case _              =>    // It is not a file value.
+                // Ensure that adding the new value version would not create a duplicate value. This works in API v1 because a
+                // ResourceFullResponseV1 contains only the values that the user is allowed to see, otherwise checking for
+                // duplicate values would be a security risk. We'll have to implement this in a different way in API v2.
+                resourceFullResponse.props.flatMap(_.properties.find(_.pid == propertyIri)) match {
+                  case Some(prop: PropertyV1) =>
+                    // Don't consider the current value version when looking for duplicates.
+                    val filteredValues =
+                      prop.value_ids.zip(prop.values).filter(_._1 != changeValueRequest.valueIri).map(_._2)
 
-                if (filteredValues.exists(apiValueV1 => changeValueRequest.value.isDuplicateOfOtherValue(apiValueV1))) {
-                  throw DuplicateValueException()
+                    if (
+                      filteredValues.exists(apiValueV1 => changeValueRequest.value.isDuplicateOfOtherValue(apiValueV1))
+                    ) {
+                      throw DuplicateValueException()
+                    }
+
+                  case None =>
+                    // This shouldn't happen unless someone just changed the ontology.
+                    throw NotFoundException(
+                      s"No information found about property $propertyIri for resource ${findResourceWithValueResult.resourceIri}"
+                    )
                 }
 
-              case None =>
-                // This shouldn't happen unless someone just changed the ontology.
-                throw NotFoundException(
-                  s"No information found about property $propertyIri for resource ${findResourceWithValueResult.resourceIri}"
-                )
             }
 
-        }
-
         // Get the resource class of the containing resource
-        resourceClassIri: IRI = resourceFullResponse.resinfo
-          .getOrElse(
-            throw InconsistentRepositoryDataException(
-              s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}"
+        resourceClassIri: IRI =
+          resourceFullResponse.resinfo
+            .getOrElse(
+              throw InconsistentRepositoryDataException(
+                s"Did not find resource info for resource ${findResourceWithValueResult.resourceIri}"
+              )
             )
-          )
-          .restype_id
+            .restype_id
 
-        _ = log.debug(
-          s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissions: ${changeValueRequest.userProfile.permissions} "
-        )
+        _ =
+          log.debug(
+            s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissions: ${changeValueRequest.userProfile.permissions} "
+          )
         defaultObjectAccessPermissions <- {
           responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
             projectIri = findResourceWithValueResult.projectIri,
@@ -994,94 +1036,100 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         }.mapTo[Option[ProjectInfoV1]]
 
         projectInfo = maybeProjectInfo match {
-          case Some(pi) => pi
-          case None     => throw NotFoundException(s"Project '${resourceFullResponse.resinfo.get.project_id}' not found.")
-        }
+                        case Some(pi) => pi
+                        case None =>
+                          throw NotFoundException(
+                            s"Project '${resourceFullResponse.resinfo.get.project_id}' not found."
+                          )
+                      }
 
         // The rest of the preparation for the update depends on whether we're changing a link or an ordinary value.
         apiResponse <- (changeValueRequest.value, currentValueQueryResult) match {
-          case (linkUpdateV1: LinkUpdateV1, currentLinkValueQueryResult: LinkValueQueryResult) =>
-            // We're updating a link. This means deleting an existing link and creating a new one, so
-            // check that the user has permission to modify the resource.
-            val resourcePermissionCode = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
-            if (
-              !PermissionUtilADM.impliesPermissionCodeV1(
-                userHasPermissionCode = resourcePermissionCode,
-                userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
-              )
-            ) {
-              throw ForbiddenException(
-                s"User $userIri does not have permission to modify resource ${findResourceWithValueResult.resourceIri}"
-              )
-            }
+                         case (linkUpdateV1: LinkUpdateV1, currentLinkValueQueryResult: LinkValueQueryResult) =>
+                           // We're updating a link. This means deleting an existing link and creating a new one, so
+                           // check that the user has permission to modify the resource.
+                           val resourcePermissionCode = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
+                           if (
+                             !PermissionUtilADM.impliesPermissionCodeV1(
+                               userHasPermissionCode = resourcePermissionCode,
+                               userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
+                             )
+                           ) {
+                             throw ForbiddenException(
+                               s"User $userIri does not have permission to modify resource ${findResourceWithValueResult.resourceIri}"
+                             )
+                           }
 
-            // We'll need to create a new LinkValue.
+                           // We'll need to create a new LinkValue.
 
-            changeLinkValueV1AfterChecks(
-              projectIri = currentValueQueryResult.projectIri,
-              dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-              resourceIri = findResourceWithValueResult.resourceIri,
-              propertyIri = propertyIri,
-              currentLinkValueV1 = currentLinkValueQueryResult.value,
-              linkUpdateV1 = linkUpdateV1,
-              comment = changeValueRequest.comment,
-              valueCreator = userIri,
-              valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
-              featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-              userProfile = changeValueRequest.userProfile
-            )
+                           changeLinkValueV1AfterChecks(
+                             projectIri = currentValueQueryResult.projectIri,
+                             dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
+                             resourceIri = findResourceWithValueResult.resourceIri,
+                             propertyIri = propertyIri,
+                             currentLinkValueV1 = currentLinkValueQueryResult.value,
+                             linkUpdateV1 = linkUpdateV1,
+                             comment = changeValueRequest.comment,
+                             valueCreator = userIri,
+                             valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
+                             featureFactoryConfig = changeValueRequest.featureFactoryConfig,
+                             userProfile = changeValueRequest.userProfile
+                           )
 
-          case _ =>
-            // We're updating an ordinary value. Generate an IRI for the new version of the value.
-            val newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+                         case _ =>
+                           // We're updating an ordinary value. Generate an IRI for the new version of the value.
+                           val newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
-            // Give the new version the same permissions as the previous version.
+                           // Give the new version the same permissions as the previous version.
 
-            val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find { case (p, o) =>
-              p == OntologyConstants.KnoraBase.HasPermissions
-            }
-              .map(_._2)
-              .getOrElse(
-                throw InconsistentRepositoryDataException(s"Value ${changeValueRequest.valueIri} has no permissions")
-              )
+                           val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
+                             case (p, o) =>
+                               p == OntologyConstants.KnoraBase.HasPermissions
+                           }
+                             .map(_._2)
+                             .getOrElse(
+                               throw InconsistentRepositoryDataException(
+                                 s"Value ${changeValueRequest.valueIri} has no permissions"
+                               )
+                             )
 
-            changeOrdinaryValueV1AfterChecks(
-              projectIri = currentValueQueryResult.projectIri,
-              resourceIri = findResourceWithValueResult.resourceIri,
-              propertyIri = propertyIri,
-              currentValueIri = changeValueRequest.valueIri,
-              currentValueV1 = currentValueQueryResult.value,
-              newValueIri = newValueIri,
-              updateValueV1 = changeValueRequest.value,
-              comment = changeValueRequest.comment,
-              valueCreator = userIri,
-              valuePermissions = valuePermissions,
-              featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-              userProfile = changeValueRequest.userProfile
-            )
-        }
+                           changeOrdinaryValueV1AfterChecks(
+                             projectIri = currentValueQueryResult.projectIri,
+                             resourceIri = findResourceWithValueResult.resourceIri,
+                             propertyIri = propertyIri,
+                             currentValueIri = changeValueRequest.valueIri,
+                             currentValueV1 = currentValueQueryResult.value,
+                             newValueIri = newValueIri,
+                             updateValueV1 = changeValueRequest.value,
+                             comment = changeValueRequest.comment,
+                             valueCreator = userIri,
+                             valuePermissions = valuePermissions,
+                             featureFactoryConfig = changeValueRequest.featureFactoryConfig,
+                             userProfile = changeValueRequest.userProfile
+                           )
+                       }
       } yield apiResponse
     }
 
     for {
       // Don't allow anonymous users to update values.
       userIri <- Future {
-        if (changeValueRequest.userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to update values")
-        } else {
-          changeValueRequest.userProfile.id
-        }
-      }
+                   if (changeValueRequest.userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to update values")
+                   } else {
+                     changeValueRequest.userProfile.id
+                   }
+                 }
 
       // Find the resource containing the value.
       findResourceWithValueResult <- findResourceWithValue(changeValueRequest.valueIri)
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        changeValueRequest.apiRequestID,
-        findResourceWithValueResult.resourceIri,
-        () => makeTaskFuture(userIri, findResourceWithValueResult)
-      )
+                      changeValueRequest.apiRequestID,
+                      findResourceWithValueResult.resourceIri,
+                      () => makeTaskFuture(userIri, findResourceWithValueResult)
+                    )
     } yield taskResult
   }
 
@@ -1101,29 +1149,31 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       for {
         // Ensure that the user has permission to modify the value.
         maybeCurrentValueQueryResult: Option[ValueQueryResult] <- findValue(
-          valueIri = changeCommentRequest.valueIri,
-          featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
-          userProfile = changeCommentRequest.userProfile
-        )
+                                                                    valueIri = changeCommentRequest.valueIri,
+                                                                    featureFactoryConfig =
+                                                                      changeCommentRequest.featureFactoryConfig,
+                                                                    userProfile = changeCommentRequest.userProfile
+                                                                  )
 
-        currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(
-          throw NotFoundException(s"Value ${changeCommentRequest.valueIri} not found (it may have been deleted)")
-        )
+        currentValueQueryResult =
+          maybeCurrentValueQueryResult.getOrElse(
+            throw NotFoundException(s"Value ${changeCommentRequest.valueIri} not found (it may have been deleted)")
+          )
 
         _ = if (
-          !PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = Some(currentValueQueryResult.permissionCode),
-            userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
-          )
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permission to add a new version to value ${changeCommentRequest.valueIri}"
-          )
-        }
+              !PermissionUtilADM.impliesPermissionCodeV1(
+                userHasPermissionCode = Some(currentValueQueryResult.permissionCode),
+                userNeedsPermission = OntologyConstants.KnoraBase.ModifyPermission
+              )
+            ) {
+              throw ForbiddenException(
+                s"User $userIri does not have permission to add a new version to value ${changeCommentRequest.valueIri}"
+              )
+            }
 
         // currentValueQueryResult.comment is an Option[String]
         _ = if (currentValueQueryResult.comment == changeCommentRequest.comment)
-          throw DuplicateValueException("The submitted comment is the same as the current comment")
+              throw DuplicateValueException("The submitted comment is the same as the current comment")
 
         // Everything looks OK, so update the comment.
 
@@ -1140,38 +1190,38 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         }.mapTo[Option[ProjectInfoV1]]
 
         projectInfo = maybeProjectInfo match {
-          case Some(pi) => pi
-          case None     => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
-        }
+                        case Some(pi) => pi
+                        case None =>
+                          throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
+                      }
 
         // Make a timestamp to indicate when the value was updated.
         currentTime: String = Instant.now.toString
 
         // Generate a SPARQL update.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .changeComment(
-            dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-            triplestore = settings.triplestoreType,
-            resourceIri = findResourceWithValueResult.resourceIri,
-            propertyIri = findResourceWithValueResult.propertyIri,
-            currentValueIri = changeCommentRequest.valueIri,
-            newValueIri = newValueIri,
-            maybeComment = changeCommentRequest.comment,
-            currentTime = currentTime
-          )
-          .toString()
+                         .changeComment(
+                           dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
+                           resourceIri = findResourceWithValueResult.resourceIri,
+                           propertyIri = findResourceWithValueResult.propertyIri,
+                           currentValueIri = changeCommentRequest.valueIri,
+                           newValueIri = newValueIri,
+                           maybeComment = changeCommentRequest.comment,
+                           currentTime = currentTime
+                         )
+                         .toString()
 
         // Do the update.
         sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // To find out whether the update succeeded, look for the new value in the triplestore.
         verifyUpdateResult <- verifyOrdinaryValueUpdate(
-          resourceIri = findResourceWithValueResult.resourceIri,
-          propertyIri = findResourceWithValueResult.propertyIri,
-          searchValueIri = newValueIri,
-          featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
-          userProfile = changeCommentRequest.userProfile
-        )
+                                resourceIri = findResourceWithValueResult.resourceIri,
+                                propertyIri = findResourceWithValueResult.propertyIri,
+                                searchValueIri = newValueIri,
+                                featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
+                                userProfile = changeCommentRequest.userProfile
+                              )
       } yield ChangeValueResponseV1(
         value = verifyUpdateResult.value,
         comment = verifyUpdateResult.comment,
@@ -1182,22 +1232,22 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Don't allow anonymous users to update values.
       userIri <- Future {
-        if (changeCommentRequest.userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to update values")
-        } else {
-          changeCommentRequest.userProfile.id
-        }
-      }
+                   if (changeCommentRequest.userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to update values")
+                   } else {
+                     changeCommentRequest.userProfile.id
+                   }
+                 }
 
       // Find the resource containing the value.
       findResourceWithValueResult <- findResourceWithValue(changeCommentRequest.valueIri)
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        changeCommentRequest.apiRequestID,
-        findResourceWithValueResult.resourceIri,
-        () => makeTaskFuture(userIri, findResourceWithValueResult)
-      )
+                      changeCommentRequest.apiRequestID,
+                      findResourceWithValueResult.resourceIri,
+                      () => makeTaskFuture(userIri, findResourceWithValueResult)
+                    )
     } yield taskResult
 
   }
@@ -1226,25 +1276,26 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       for {
         // Ensure that the user has permission to mark the value as deleted.
         maybeCurrentValueQueryResult <- findValue(
-          valueIri = deleteValueRequest.valueIri,
-          featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-          userProfile = deleteValueRequest.userProfile
-        )
+                                          valueIri = deleteValueRequest.valueIri,
+                                          featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
+                                          userProfile = deleteValueRequest.userProfile
+                                        )
 
-        currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(
-          throw NotFoundException(s"Value ${deleteValueRequest.valueIri} not found (it may have been deleted)")
-        )
+        currentValueQueryResult =
+          maybeCurrentValueQueryResult.getOrElse(
+            throw NotFoundException(s"Value ${deleteValueRequest.valueIri} not found (it may have been deleted)")
+          )
 
         _ = if (
-          !PermissionUtilADM.impliesPermissionCodeV1(
-            userHasPermissionCode = Some(currentValueQueryResult.permissionCode),
-            userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission
-          )
-        ) {
-          throw ForbiddenException(
-            s"User $userIri does not have permission to delete value ${deleteValueRequest.valueIri}"
-          )
-        }
+              !PermissionUtilADM.impliesPermissionCodeV1(
+                userHasPermissionCode = Some(currentValueQueryResult.permissionCode),
+                userNeedsPermission = OntologyConstants.KnoraBase.DeletePermission
+              )
+            ) {
+              throw ForbiddenException(
+                s"User $userIri does not have permission to delete value ${deleteValueRequest.valueIri}"
+              )
+            }
 
         // Make a timestamp to indicate when the value was marked as deleted.
         currentTime: String = Instant.now.toString
@@ -1252,165 +1303,187 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // The way we delete the value depends on whether it's a link value or an ordinary value.
 
         (sparqlUpdate, deletedValueIri) <- currentValueQueryResult.value match {
-          case linkValue: LinkValueV1 =>
-            // It's a LinkValue. Make a new version of it with a reference count of 0, and mark the new
-            // version as deleted.
+                                             case linkValue: LinkValueV1 =>
+                                               // It's a LinkValue. Make a new version of it with a reference count of 0, and mark the new
+                                               // version as deleted.
 
-            // Give the new version the same permissions as the previous version.
+                                               // Give the new version the same permissions as the previous version.
 
-            val valuePermissions: String = currentValueQueryResult.permissionRelevantAssertions.find { case (p, o) =>
-              p == OntologyConstants.KnoraBase.HasPermissions
-            }
-              .map(_._2)
-              .getOrElse(
-                throw InconsistentRepositoryDataException(s"Value ${deleteValueRequest.valueIri} has no permissions")
-              )
+                                               val valuePermissions: String =
+                                                 currentValueQueryResult.permissionRelevantAssertions.find {
+                                                   case (p, o) =>
+                                                     p == OntologyConstants.KnoraBase.HasPermissions
+                                                 }
+                                                   .map(_._2)
+                                                   .getOrElse(
+                                                     throw InconsistentRepositoryDataException(
+                                                       s"Value ${deleteValueRequest.valueIri} has no permissions"
+                                                     )
+                                                   )
 
-            val linkPropertyIri =
-              stringFormatter.linkValuePropertyIriToLinkPropertyIri(findResourceWithValueResult.propertyIri)
+                                               val linkPropertyIri =
+                                                 stringFormatter.linkValuePropertyIriToLinkPropertyIri(
+                                                   findResourceWithValueResult.propertyIri
+                                                 )
 
-            for {
-              // Get project info
-              maybeProjectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
-                  iri = findResourceWithValueResult.projectIri,
-                  featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-                  userProfileV1 = None
-                )
-              }.mapTo[Option[ProjectInfoV1]]
+                                               for {
+                                                 // Get project info
+                                                 maybeProjectInfo <- {
+                                                   responderManager ? ProjectInfoByIRIGetV1(
+                                                     iri = findResourceWithValueResult.projectIri,
+                                                     featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
+                                                     userProfileV1 = None
+                                                   )
+                                                 }.mapTo[Option[ProjectInfoV1]]
 
-              projectInfo = maybeProjectInfo match {
-                case Some(pi) => pi
-                case None     => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
-              }
+                                                 projectInfo = maybeProjectInfo match {
+                                                                 case Some(pi) => pi
+                                                                 case None =>
+                                                                   throw NotFoundException(
+                                                                     s"Project '${findResourceWithValueResult.projectIri}' not found."
+                                                                   )
+                                                               }
 
-              sparqlTemplateLinkUpdate <- decrementLinkValue(
-                sourceResourceIri = findResourceWithValueResult.resourceIri,
-                linkPropertyIri = linkPropertyIri,
-                targetResourceIri = linkValue.objectIri,
-                valueCreator = userIri,
-                valuePermissions = valuePermissions,
-                featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-                userProfile = deleteValueRequest.userProfile
-              )
+                                                 sparqlTemplateLinkUpdate <- decrementLinkValue(
+                                                                               sourceResourceIri =
+                                                                                 findResourceWithValueResult.resourceIri,
+                                                                               linkPropertyIri = linkPropertyIri,
+                                                                               targetResourceIri = linkValue.objectIri,
+                                                                               valueCreator = userIri,
+                                                                               valuePermissions = valuePermissions,
+                                                                               featureFactoryConfig =
+                                                                                 deleteValueRequest.featureFactoryConfig,
+                                                                               userProfile =
+                                                                                 deleteValueRequest.userProfile
+                                                                             )
 
-              sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                .deleteLink(
-                  dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-                  triplestore = settings.triplestoreType,
-                  linkSourceIri = findResourceWithValueResult.resourceIri,
-                  linkUpdate = sparqlTemplateLinkUpdate,
-                  maybeComment = deleteValueRequest.deleteComment,
-                  currentTime = currentTime,
-                  requestingUser = userIri
-                )
-                .toString()
-            } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
+                                                 sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                                                  .deleteLink(
+                                                                    dataNamedGraph = StringFormatter.getGeneralInstance
+                                                                      .projectDataNamedGraphV1(projectInfo),
+                                                                    linkSourceIri =
+                                                                      findResourceWithValueResult.resourceIri,
+                                                                    linkUpdate = sparqlTemplateLinkUpdate,
+                                                                    maybeComment = deleteValueRequest.deleteComment,
+                                                                    currentTime = currentTime,
+                                                                    requestingUser = userIri
+                                                                  )
+                                                                  .toString()
+                                               } yield (sparqlUpdate, sparqlTemplateLinkUpdate.newLinkValueIri)
 
-          case other =>
-            // It's not a LinkValue. Mark the existing version as deleted.
+                                             case other =>
+                                               // It's not a LinkValue. Mark the existing version as deleted.
 
-            // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
-            // links in standoff markup.
-            val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] = other match {
-              case textValue: TextValueWithStandoffV1 =>
-                val linkUpdateFutures = textValue.resource_reference.map { targetResourceIri =>
-                  decrementLinkValue(
-                    sourceResourceIri = findResourceWithValueResult.resourceIri,
-                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                    targetResourceIri = targetResourceIri,
-                    valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                    valuePermissions = standoffLinkValuePermissions,
-                    featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-                    userProfile = deleteValueRequest.userProfile
-                  )
-                }.toVector
+                                               // If it's a TextValue, make SparqlTemplateLinkUpdates for updating LinkValues representing
+                                               // links in standoff markup.
+                                               val linkUpdatesFuture: Future[Seq[SparqlTemplateLinkUpdate]] =
+                                                 other match {
+                                                   case textValue: TextValueWithStandoffV1 =>
+                                                     val linkUpdateFutures = textValue.resource_reference.map {
+                                                       targetResourceIri =>
+                                                         decrementLinkValue(
+                                                           sourceResourceIri = findResourceWithValueResult.resourceIri,
+                                                           linkPropertyIri =
+                                                             OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                                           targetResourceIri = targetResourceIri,
+                                                           valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                                                           valuePermissions = standoffLinkValuePermissions,
+                                                           featureFactoryConfig =
+                                                             deleteValueRequest.featureFactoryConfig,
+                                                           userProfile = deleteValueRequest.userProfile
+                                                         )
+                                                     }.toVector
 
-                Future.sequence(linkUpdateFutures)
+                                                     Future.sequence(linkUpdateFutures)
 
-              case _ => Future(Seq.empty[SparqlTemplateLinkUpdate])
-            }
+                                                   case _ => Future(Seq.empty[SparqlTemplateLinkUpdate])
+                                                 }
 
-            for {
-              linkUpdates <- linkUpdatesFuture
+                                               for {
+                                                 linkUpdates <- linkUpdatesFuture
 
-              // Get project info
-              maybeProjectInfo <- {
-                responderManager ? ProjectInfoByIRIGetV1(
-                  iri = findResourceWithValueResult.projectIri,
-                  featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-                  userProfileV1 = None
-                )
-              }.mapTo[Option[ProjectInfoV1]]
+                                                 // Get project info
+                                                 maybeProjectInfo <- {
+                                                   responderManager ? ProjectInfoByIRIGetV1(
+                                                     iri = findResourceWithValueResult.projectIri,
+                                                     featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
+                                                     userProfileV1 = None
+                                                   )
+                                                 }.mapTo[Option[ProjectInfoV1]]
 
-              projectInfo = maybeProjectInfo match {
-                case Some(pi) => pi
-                case None     => throw NotFoundException(s"Project '${findResourceWithValueResult.projectIri}' not found.")
-              }
+                                                 projectInfo = maybeProjectInfo match {
+                                                                 case Some(pi) => pi
+                                                                 case None =>
+                                                                   throw NotFoundException(
+                                                                     s"Project '${findResourceWithValueResult.projectIri}' not found."
+                                                                   )
+                                                               }
 
-              sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                .deleteValue(
-                  dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-                  triplestore = settings.triplestoreType,
-                  resourceIri = findResourceWithValueResult.resourceIri,
-                  propertyIri = findResourceWithValueResult.propertyIri,
-                  valueIri = deleteValueRequest.valueIri,
-                  maybeDeleteComment = deleteValueRequest.deleteComment,
-                  linkUpdates = linkUpdates,
-                  currentTime = currentTime,
-                  requestingUser = userIri,
-                  stringFormatter = stringFormatter
-                )
-                .toString()
-            } yield (sparqlUpdate, deleteValueRequest.valueIri)
-        }
+                                                 sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                                                  .deleteValue(
+                                                                    dataNamedGraph = StringFormatter.getGeneralInstance
+                                                                      .projectDataNamedGraphV1(projectInfo),
+                                                                    resourceIri =
+                                                                      findResourceWithValueResult.resourceIri,
+                                                                    propertyIri =
+                                                                      findResourceWithValueResult.propertyIri,
+                                                                    valueIri = deleteValueRequest.valueIri,
+                                                                    maybeDeleteComment =
+                                                                      deleteValueRequest.deleteComment,
+                                                                    linkUpdates = linkUpdates,
+                                                                    currentTime = currentTime,
+                                                                    requestingUser = userIri,
+                                                                    stringFormatter = stringFormatter
+                                                                  )
+                                                                  .toString()
+                                               } yield (sparqlUpdate, deleteValueRequest.valueIri)
+                                           }
 
         // Do the update.
         sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .checkValueDeletion(
-            triplestore = settings.triplestoreType,
-            valueIri = deletedValueIri
-          )
-          .toString()
+                        .checkValueDeletion(
+                          valueIri = deletedValueIri
+                        )
+                        .toString()
         sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
-        rows = sparqlSelectResponse.results.bindings
+        rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
-          rows.isEmpty || !stringFormatter.optionStringToBoolean(
-            rows.head.rowMap.get("isDeleted"),
-            throw InconsistentRepositoryDataException(
-              s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
-            )
-          )
-        ) {
-          throw UpdateNotPerformedException(
-            s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
-          )
-        }
+              rows.isEmpty || !stringFormatter.optionStringToBoolean(
+                rows.head.rowMap.get("isDeleted"),
+                throw InconsistentRepositoryDataException(
+                  s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"
+                )
+              )
+            ) {
+              throw UpdateNotPerformedException(
+                s"The request to mark value ${deleteValueRequest.valueIri} (or a new version of that value) as deleted did not succeed. Please report this as a possible bug."
+              )
+            }
       } yield DeleteValueResponseV1(id = deletedValueIri)
 
     for {
       // Don't allow anonymous users to update values.
       userIri <- Future {
-        if (deleteValueRequest.userProfile.isAnonymousUser) {
-          throw ForbiddenException("Anonymous users aren't allowed to mark values as deleted")
-        } else {
-          deleteValueRequest.userProfile.id
-        }
-      }
+                   if (deleteValueRequest.userProfile.isAnonymousUser) {
+                     throw ForbiddenException("Anonymous users aren't allowed to mark values as deleted")
+                   } else {
+                     deleteValueRequest.userProfile.id
+                   }
+                 }
 
       // Find the resource containing the value.
       findResourceWithValueResult <- findResourceWithValue(deleteValueRequest.valueIri)
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
-        deleteValueRequest.apiRequestID,
-        findResourceWithValueResult.resourceIri,
-        () => makeTaskFuture(userIri, findResourceWithValueResult)
-      )
+                      deleteValueRequest.apiRequestID,
+                      findResourceWithValueResult.resourceIri,
+                      () => makeTaskFuture(userIri, findResourceWithValueResult)
+                    )
     } yield taskResult
   }
 
@@ -1440,7 +1513,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       startAtVersion: IRI,
       versionRowsVector: Vector[Map[String, String]]
     ): Vector[Map[String, String]] = {
-      val startValue = versionMap(startAtVersion)
+      val startValue       = versionMap(startAtVersion)
       val newVersionVector = versionRowsVector :+ startValue
 
       startValue.get("previousValue") match {
@@ -1452,90 +1525,90 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Do a SPARQL query to get the versions of the value.
       sparqlQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getVersionHistory(
-            triplestore = settings.triplestoreType,
-            resourceIri = versionHistoryRequest.resourceIri,
-            propertyIri = versionHistoryRequest.propertyIri,
-            currentValueIri = versionHistoryRequest.currentValueIri
-          )
-          .toString()
-      }
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getVersionHistory(
+                           resourceIri = versionHistoryRequest.resourceIri,
+                           propertyIri = versionHistoryRequest.propertyIri,
+                           currentValueIri = versionHistoryRequest.currentValueIri
+                         )
+                         .toString()
+                     }
       selectResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
-      rows = selectResponse.results.bindings
+      rows                                = selectResponse.results.bindings
 
       _ = if (rows.isEmpty) {
-        throw NotFoundException(
-          s"Value ${versionHistoryRequest.currentValueIri} is not the most recent version of an object of property ${versionHistoryRequest.propertyIri} for resource ${versionHistoryRequest.resourceIri}"
-        )
-      }
-
-      // Convert the result rows to a map of value IRIs to result rows.
-      versionMap: Map[IRI, Map[String, String]] = rows.map { row =>
-        val valueIri = row.rowMap("value")
-        valueIri -> row.rowMap
-      }.toMap
-
-      // Order the result rows from most recent to oldest.
-      versionRowsVector = versionMap2Vector(
-        versionMap,
-        versionHistoryRequest.currentValueIri,
-        Vector.empty[Map[String, String]]
-      )
-
-      // Filter out the versions that the user doesn't have permission to see.
-      filteredVersionRowsVector = versionRowsVector.filter { rowMap =>
-        val valueIri = rowMap("value")
-        val valueCreator = rowMap("valueCreator")
-        val project = rowMap("project")
-        val valuePermissions = rowMap("valuePermissions")
-
-        // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
-        val valuePermissionCode =
-          if (
-            stringFormatter.optionStringToBoolean(
-              rowMap.get("isLinkValue"),
-              throw InconsistentRepositoryDataException(
-                s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"
-              )
-            )
-          ) {
-            // It's a LinkValue.
-            PermissionUtilADM.getUserPermissionV1(
-              entityIri = valueIri,
-              entityCreator = valueCreator,
-              entityProject = project,
-              entityPermissionLiteral = valuePermissions,
-              userProfile = userProfileV1
-            )
-          } else {
-            // It's not a LinkValue.
-            PermissionUtilADM.getUserPermissionV1(
-              entityIri = valueIri,
-              entityCreator = valueCreator,
-              entityProject = project,
-              entityPermissionLiteral = valuePermissions,
-              userProfile = userProfileV1
+            throw NotFoundException(
+              s"Value ${versionHistoryRequest.currentValueIri} is not the most recent version of an object of property ${versionHistoryRequest.propertyIri} for resource ${versionHistoryRequest.resourceIri}"
             )
           }
 
-        valuePermissionCode.nonEmpty
-      }
+      // Convert the result rows to a map of value IRIs to result rows.
+      versionMap: Map[IRI, Map[String, String]] = rows.map { row =>
+                                                    val valueIri = row.rowMap("value")
+                                                    valueIri -> row.rowMap
+                                                  }.toMap
+
+      // Order the result rows from most recent to oldest.
+      versionRowsVector = versionMap2Vector(
+                            versionMap,
+                            versionHistoryRequest.currentValueIri,
+                            Vector.empty[Map[String, String]]
+                          )
+
+      // Filter out the versions that the user doesn't have permission to see.
+      filteredVersionRowsVector = versionRowsVector.filter { rowMap =>
+                                    val valueIri         = rowMap("value")
+                                    val valueCreator     = rowMap("valueCreator")
+                                    val project          = rowMap("project")
+                                    val valuePermissions = rowMap("valuePermissions")
+
+                                    // Permission-checking on LinkValues is special, because they can be system-created rather than user-created.
+                                    val valuePermissionCode =
+                                      if (
+                                        stringFormatter.optionStringToBoolean(
+                                          rowMap.get("isLinkValue"),
+                                          throw InconsistentRepositoryDataException(
+                                            s"Invalid boolean for isLinkValue: ${rowMap.get("isLinkValue")}"
+                                          )
+                                        )
+                                      ) {
+                                        // It's a LinkValue.
+                                        PermissionUtilADM.getUserPermissionV1(
+                                          entityIri = valueIri,
+                                          entityCreator = valueCreator,
+                                          entityProject = project,
+                                          entityPermissionLiteral = valuePermissions,
+                                          userProfile = userProfileV1
+                                        )
+                                      } else {
+                                        // It's not a LinkValue.
+                                        PermissionUtilADM.getUserPermissionV1(
+                                          entityIri = valueIri,
+                                          entityCreator = valueCreator,
+                                          entityProject = project,
+                                          entityPermissionLiteral = valuePermissions,
+                                          userProfile = userProfileV1
+                                        )
+                                      }
+
+                                    valuePermissionCode.nonEmpty
+                                  }
 
       // Make a set of the IRIs of the versions that the user has permission to see.
       visibleVersionIris = filteredVersionRowsVector.map(_("value")).toSet
 
       versionV1Vector = filteredVersionRowsVector.map { rowMap =>
-        ValueVersionV1(
-          valueObjectIri = rowMap("value"),
-          valueCreationDate = rowMap.get("valueCreationDate"),
-          previousValue = rowMap.get("previousValue") match {
-            // Don't refer to a previous value that the user doesn't have permission to see.
-            case Some(previousValueIri) if visibleVersionIris.contains(previousValueIri) => Some(previousValueIri)
-            case _                                                                       => None
-          }
-        )
-      }
+                          ValueVersionV1(
+                            valueObjectIri = rowMap("value"),
+                            valueCreationDate = rowMap.get("valueCreationDate"),
+                            previousValue = rowMap.get("previousValue") match {
+                              // Don't refer to a previous value that the user doesn't have permission to see.
+                              case Some(previousValueIri) if visibleVersionIris.contains(previousValueIri) =>
+                                Some(previousValueIri)
+                              case _ => None
+                            }
+                          )
+                        }
     } yield ValueVersionHistoryGetResponseV1(valueVersions = versionV1Vector)
   }
 
@@ -1561,41 +1634,44 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[ValueGetResponseV1] =
     for {
       maybeValueQueryResult <- findLinkValueByLinkTriple(
-        subjectIri = subjectIri,
-        predicateIri = predicateIri,
-        objectIri = objectIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                 subjectIri = subjectIri,
+                                 predicateIri = predicateIri,
+                                 objectIri = objectIri,
+                                 featureFactoryConfig = featureFactoryConfig,
+                                 userProfile = userProfile
+                               )
 
       linkValueResponse <- maybeValueQueryResult match {
-        case Some(valueQueryResult) =>
-          for {
-            maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
-              userIri = valueQueryResult.creatorIri,
-              userProfileType = UserProfileTypeV1.RESTRICTED,
-              featureFactoryConfig = featureFactoryConfig
-            )).mapTo[Option[UserProfileV1]]
+                             case Some(valueQueryResult) =>
+                               for {
+                                 maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
+                                                               userIri = valueQueryResult.creatorIri,
+                                                               userProfileType = UserProfileTypeV1.RESTRICTED,
+                                                               featureFactoryConfig = featureFactoryConfig
+                                                             )).mapTo[Option[UserProfileV1]]
 
-            valueCreatorProfile = maybeValueCreatorProfile match {
-              case Some(up) => up
-              case None     => throw NotFoundException(s"User ${valueQueryResult.creatorIri} not found")
-            }
-          } yield ValueGetResponseV1(
-            valuetype = valueQueryResult.value.valueTypeIri,
-            rights = valueQueryResult.permissionCode,
-            value = valueQueryResult.value,
-            valuecreator = valueCreatorProfile.userData.email.get,
-            valuecreatorname = valueCreatorProfile.userData.fullname.get,
-            valuecreationdate = valueQueryResult.creationDate,
-            comment = valueQueryResult.comment
-          )
+                                 valueCreatorProfile = maybeValueCreatorProfile match {
+                                                         case Some(up) => up
+                                                         case None =>
+                                                           throw NotFoundException(
+                                                             s"User ${valueQueryResult.creatorIri} not found"
+                                                           )
+                                                       }
+                               } yield ValueGetResponseV1(
+                                 valuetype = valueQueryResult.value.valueTypeIri,
+                                 rights = valueQueryResult.permissionCode,
+                                 value = valueQueryResult.value,
+                                 valuecreator = valueCreatorProfile.userData.email.get,
+                                 valuecreatorname = valueCreatorProfile.userData.fullname.get,
+                                 valuecreationdate = valueQueryResult.creationDate,
+                                 comment = valueQueryResult.comment
+                               )
 
-        case None =>
-          throw NotFoundException(
-            s"No knora-base:LinkValue found describing a link from resource $subjectIri with predicate $predicateIri to resource $objectIri (it may have been deleted)"
-          )
-      }
+                             case None =>
+                               throw NotFoundException(
+                                 s"No knora-base:LinkValue found describing a link from resource $subjectIri with predicate $predicateIri to resource $objectIri (it may have been deleted)"
+                               )
+                           }
     } yield linkValueResponse
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1690,34 +1766,33 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Option[ValueQueryResult]] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getValue(
-            triplestore = settings.triplestoreType,
-            valueIri = valueIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getValue(
+                           valueIri = valueIri
+                         )
+                         .toString()
+                     )
 
-      response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                     <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       maybeValueQueryResult <- sparqlQueryResults2ValueQueryResult(
-        valueIri = valueIri,
-        rows = rows,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                 valueIri = valueIri,
+                                 rows = rows,
+                                 featureFactoryConfig = featureFactoryConfig,
+                                 userProfile = userProfile
+                               )
 
       // If it's a link value, check that the user has permission to see the source and target resources.
       _ = maybeValueQueryResult match {
-        case Some(valueQueryResult) =>
-          valueQueryResult.value match {
-            case _: LinkValueV1 => checkLinkValueSubjectAndObjectPermissions(valueIri, userProfile)
-            case _              => ()
-          }
+            case Some(valueQueryResult) =>
+              valueQueryResult.value match {
+                case _: LinkValueV1 => checkLinkValueSubjectAndObjectPermissions(valueIri, userProfile)
+                case _              => ()
+              }
 
-        case None => ()
-      }
+            case None => ()
+          }
     } yield maybeValueQueryResult
 
   /**
@@ -1732,42 +1807,43 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getLinkSourceAndTargetPermissions(
-            triplestore = settings.triplestoreType,
-            linkValueIri = linkValueIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .getLinkSourceAndTargetPermissions(
+                           linkValueIri = linkValueIri
+                         )
+                         .toString()
+                     )
 
       response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
-      rows = response.results.bindings
+      rows      = response.results.bindings
 
       _ = if (rows.isEmpty) {
-        throw NotFoundException(s"Link value $linkValueIri, or its source or target resource, was not found.")
-      }
+            throw NotFoundException(s"Link value $linkValueIri, or its source or target resource, was not found.")
+          }
 
       rowMap = rows.head.rowMap
 
       maybeSourcePermissionCode = PermissionUtilADM.getUserPermissionV1(
-        entityIri = rowMap("source"),
-        entityCreator = rowMap("sourceCreator"),
-        entityProject = rowMap("sourceProject"),
-        entityPermissionLiteral = rowMap("sourcePermissions"),
-        userProfile = userProfileV1
-      )
+                                    entityIri = rowMap("source"),
+                                    entityCreator = rowMap("sourceCreator"),
+                                    entityProject = rowMap("sourceProject"),
+                                    entityPermissionLiteral = rowMap("sourcePermissions"),
+                                    userProfile = userProfileV1
+                                  )
 
       maybeTargetPermissionCode = PermissionUtilADM.getUserPermissionV1(
-        entityIri = rowMap("target"),
-        entityCreator = rowMap("targetCreator"),
-        entityProject = rowMap("targetProject"),
-        entityPermissionLiteral = rowMap("targetPermissions"),
-        userProfile = userProfileV1
-      )
+                                    entityIri = rowMap("target"),
+                                    entityCreator = rowMap("targetCreator"),
+                                    entityProject = rowMap("targetProject"),
+                                    entityPermissionLiteral = rowMap("targetPermissions"),
+                                    userProfile = userProfileV1
+                                  )
 
       _ = if (maybeSourcePermissionCode.isEmpty || maybeTargetPermissionCode.isEmpty) {
-        throw ForbiddenException(s"User ${userProfile.id} does not have permission to view link value $linkValueIri")
-      }
+            throw ForbiddenException(
+              s"User ${userProfile.id} does not have permission to view link value $linkValueIri"
+            )
+          }
     } yield ()
   }
 
@@ -1793,30 +1869,29 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Option[LinkValueQueryResult]] =
     for {
       sparqlQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .findLinkValueByIri(
-            triplestore = settings.triplestoreType,
-            subjectIri = subjectIri,
-            predicateIri = predicateIri,
-            maybeObjectIri = objectIri,
-            linkValueIri = linkValueIri
-          )
-          .toString()
-      }
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .findLinkValueByIri(
+                           subjectIri = subjectIri,
+                           predicateIri = predicateIri,
+                           maybeObjectIri = objectIri,
+                           linkValueIri = linkValueIri
+                         )
+                         .toString()
+                     }
 
-      response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                     <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
-        rows = rows,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                     rows = rows,
+                                     featureFactoryConfig = featureFactoryConfig,
+                                     userProfile = userProfile
+                                   )
 
       // Check that the user has permission to see the source and target resources.
       _ = if (maybeLinkValueQueryResult.nonEmpty) {
-        checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
-      }
+            checkLinkValueSubjectAndObjectPermissions(linkValueIri, userProfile)
+          }
     } yield maybeLinkValueQueryResult
 
   /**
@@ -1840,31 +1915,30 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Option[LinkValueQueryResult]] =
     for {
       sparqlQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .findLinkValueByObject(
-            triplestore = settings.triplestoreType,
-            subjectIri = subjectIri,
-            predicateIri = predicateIri,
-            objectIri = objectIri
-          )
-          .toString()
-      }
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .findLinkValueByObject(
+                           subjectIri = subjectIri,
+                           predicateIri = predicateIri,
+                           objectIri = objectIri
+                         )
+                         .toString()
+                     }
 
-      response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                     <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
-        rows = rows,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                     rows = rows,
+                                     featureFactoryConfig = featureFactoryConfig,
+                                     userProfile = userProfile
+                                   )
 
       // Check that the user has permission to see the source and target resources.
       _ = maybeLinkValueQueryResult match {
-        case Some(linkValueQueryResult) =>
-          checkLinkValueSubjectAndObjectPermissions(linkValueQueryResult.linkValueIri, userProfile)
-        case _ => ()
-      }
+            case Some(linkValueQueryResult) =>
+              checkLinkValueSubjectAndObjectPermissions(linkValueQueryResult.linkValueIri, userProfile)
+            case _ => ()
+          }
     } yield maybeLinkValueQueryResult
 
   /**
@@ -1892,40 +1966,43 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       val valueProps = valueUtilV1.createValueProps(valueIri, rows)
 
       for {
-        projectShortcode: String <- Future(
-          valueIri.toSmartIri.getProjectCode
-            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $valueIri"))
-        )
+        projectShortcode: String <-
+          Future(
+            valueIri.toSmartIri.getProjectCode
+              .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $valueIri"))
+          )
 
         value <- valueUtilV1.makeValueV1(
-          valueProps = valueProps,
-          projectShortcode = projectShortcode,
-          responderManager = responderManager,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userProfile
-        )
+                   valueProps = valueProps,
+                   projectShortcode = projectShortcode,
+                   responderManager = responderManager,
+                   featureFactoryConfig = featureFactoryConfig,
+                   userProfile = userProfile
+                 )
 
         // Get the value's class IRI.
         valueClassIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Type, rows = rows)
-          .getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no rdf:type"))
+                          .getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no rdf:type"))
 
         // Get the IRI of the value's creator.
-        creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows)
-          .getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no knora-base:attachedToUser"))
+        creatorIri =
+          getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows)
+            .getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no knora-base:attachedToUser"))
 
         // Get the value's project IRI.
         projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows)
-          .getOrElse(
-            throw InconsistentRepositoryDataException(
-              s"The resource containing value $valueIri has no knora-base:attachedToProject"
-            )
-          )
+                       .getOrElse(
+                         throw InconsistentRepositoryDataException(
+                           s"The resource containing value $valueIri has no knora-base:attachedToProject"
+                         )
+                       )
 
         // Get the value's creation date.
-        creationDate = getValuePredicateObject(
-          predicateIri = OntologyConstants.KnoraBase.ValueCreationDate,
-          rows = rows
-        ).getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no valueCreationDate"))
+        creationDate =
+          getValuePredicateObject(
+            predicateIri = OntologyConstants.KnoraBase.ValueCreationDate,
+            rows = rows
+          ).getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no valueCreationDate"))
 
         // Get the optional comment on the value.
         comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
@@ -1941,28 +2018,35 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // for checking the permissions on the source and target resources.
 
         maybePermissionCode = valueClassIri match {
-          case OntologyConstants.KnoraBase.LinkValue =>
-            val linkPredicateIri = getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows)
-              .getOrElse(throw InconsistentRepositoryDataException(s"Link value $valueIri has no rdf:predicate"))
+                                case OntologyConstants.KnoraBase.LinkValue =>
+                                  val linkPredicateIri =
+                                    getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows)
+                                      .getOrElse(
+                                        throw InconsistentRepositoryDataException(
+                                          s"Link value $valueIri has no rdf:predicate"
+                                        )
+                                      )
 
-            PermissionUtilADM.getUserPermissionWithValuePropsV1(
-              valueIri = valueIri,
-              valueProps = valueProps,
-              entityProject = None, // no need to specify this here, because it's in valueProps
-              userProfile = userProfileV1
-            )
+                                  PermissionUtilADM.getUserPermissionWithValuePropsV1(
+                                    valueIri = valueIri,
+                                    valueProps = valueProps,
+                                    entityProject = None, // no need to specify this here, because it's in valueProps
+                                    userProfile = userProfileV1
+                                  )
 
-          case _ =>
-            PermissionUtilADM.getUserPermissionFromAssertionsV1(
-              entityIri = valueIri,
-              assertions = assertions,
-              userProfile = userProfileV1
-            )
-        }
+                                case _ =>
+                                  PermissionUtilADM.getUserPermissionFromAssertionsV1(
+                                    entityIri = valueIri,
+                                    assertions = assertions,
+                                    userProfile = userProfileV1
+                                  )
+                              }
 
         permissionCode = maybePermissionCode.getOrElse {
-          throw ForbiddenException(s"User ${userProfile.id} does not have permission to see value $valueIri")
-        }
+                           throw ForbiddenException(
+                             s"User ${userProfile.id} does not have permission to see value $valueIri"
+                           )
+                         }
 
       } yield Some(
         BasicValueQueryResult(
@@ -1996,52 +2080,57 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     val userProfileV1 = userProfile.asUserProfileV1
 
     if (rows.nonEmpty) {
-      val firstRowMap = rows.head.rowMap
+      val firstRowMap  = rows.head.rowMap
       val linkValueIri = firstRowMap("linkValue")
 
       // Convert the query results into a LinkValueV1.
       val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
 
       for {
-        projectShortcode: String <- Future(
-          linkValueIri.toSmartIri.getProjectCode
-            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $linkValueIri"))
-        )
+        projectShortcode: String <-
+          Future(
+            linkValueIri.toSmartIri.getProjectCode
+              .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $linkValueIri"))
+          )
 
         linkValueMaybe <- valueUtilV1.makeValueV1(
-          valueProps = valueProps,
-          projectShortcode = projectShortcode,
-          responderManager = responderManager,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userProfile
-        )
+                            valueProps = valueProps,
+                            projectShortcode = projectShortcode,
+                            responderManager = responderManager,
+                            featureFactoryConfig = featureFactoryConfig,
+                            userProfile = userProfile
+                          )
 
         linkValueV1: LinkValueV1 = linkValueMaybe match {
-          case linkValue: LinkValueV1 => linkValue
-          case other =>
-            throw InconsistentRepositoryDataException(
-              s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}"
-            )
-        }
+                                     case linkValue: LinkValueV1 => linkValue
+                                     case other =>
+                                       throw InconsistentRepositoryDataException(
+                                         s"Expected value $linkValueIri to be of type ${OntologyConstants.KnoraBase.LinkValue}, but it was read with type ${other.valueTypeIri}"
+                                       )
+                                   }
 
         // Get the IRI of the value's owner.
-        creatorIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows)
-          .getOrElse(throw InconsistentRepositoryDataException(s"Value $linkValueIri has no knora-base:attachedToUser"))
+        creatorIri =
+          getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToUser, rows = rows)
+            .getOrElse(
+              throw InconsistentRepositoryDataException(s"Value $linkValueIri has no knora-base:attachedToUser")
+            )
 
         // Get the value's project IRI.
         projectIri = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.AttachedToProject, rows = rows)
-          .getOrElse(
-            throw InconsistentRepositoryDataException(
-              s"The resource containing value $linkValueIri has no knora-base:attachedToProject"
-            )
-          )
+                       .getOrElse(
+                         throw InconsistentRepositoryDataException(
+                           s"The resource containing value $linkValueIri has no knora-base:attachedToProject"
+                         )
+                       )
 
         // Get the value's creation date.
-        creationDate = getValuePredicateObject(
-          predicateIri = OntologyConstants.KnoraBase.ValueCreationDate,
-          rows = rows
-        )
-          .getOrElse(throw InconsistentRepositoryDataException(s"Value $linkValueIri has no valueCreationDate"))
+        creationDate =
+          getValuePredicateObject(
+            predicateIri = OntologyConstants.KnoraBase.ValueCreationDate,
+            rows = rows
+          )
+            .getOrElse(throw InconsistentRepositoryDataException(s"Value $linkValueIri has no valueCreationDate"))
 
         // Get the optional comment on the value.
         comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
@@ -2051,17 +2140,19 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         // Get the permission code representing the user's permissions on the value.
         permissionCode = PermissionUtilADM
-          .getUserPermissionWithValuePropsV1(
-            valueIri = linkValueIri,
-            valueProps = valueProps,
-            entityProject = None, // no need to specify this here, because it's in valueProps
-            userProfile = userProfileV1
-          )
-          .getOrElse {
-            throw ForbiddenException(s"User ${userProfile.id} does not have permission to see value $linkValueIri")
-          }
+                           .getUserPermissionWithValuePropsV1(
+                             valueIri = linkValueIri,
+                             valueProps = valueProps,
+                             entityProject = None, // no need to specify this here, because it's in valueProps
+                             userProfile = userProfileV1
+                           )
+                           .getOrElse {
+                             throw ForbiddenException(
+                               s"User ${userProfile.id} does not have permission to see value $linkValueIri"
+                             )
+                           }
 
-        directLinkExists = firstRowMap.get("directLinkExists").exists(_.toBoolean)
+        directLinkExists    = firstRowMap.get("directLinkExists").exists(_.toBoolean)
         targetResourceClass = firstRowMap.get("targetResourceClass")
 
       } yield Some(
@@ -2105,18 +2196,18 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       case linkUpdateV1: LinkUpdateV1 =>
         for {
           linkValueQueryResult <- verifyLinkUpdate(
-            linkSourceIri = resourceIri,
-            linkPropertyIri = propertyIri,
-            linkTargetIri = linkUpdateV1.targetResourceIri,
-            linkValueIri = unverifiedValue.newValueIri,
-            featureFactoryConfig = featureFactoryConfig,
-            userProfile = userProfile
-          )
+                                    linkSourceIri = resourceIri,
+                                    linkPropertyIri = propertyIri,
+                                    linkTargetIri = linkUpdateV1.targetResourceIri,
+                                    linkValueIri = unverifiedValue.newValueIri,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    userProfile = userProfile
+                                  )
 
           apiResponseValue = LinkV1(
-            targetResourceIri = linkUpdateV1.targetResourceIri,
-            valueResourceClass = linkValueQueryResult.targetResourceClass
-          )
+                               targetResourceIri = linkUpdateV1.targetResourceIri,
+                               valueResourceClass = linkValueQueryResult.targetResourceClass
+                             )
         } yield CreateValueResponseV1(
           value = apiResponseValue,
           comment = linkValueQueryResult.comment,
@@ -2127,12 +2218,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       case ordinaryUpdateValueV1 =>
         for {
           verifyUpdateResult <- verifyOrdinaryValueUpdate(
-            resourceIri = resourceIri,
-            propertyIri = propertyIri,
-            searchValueIri = unverifiedValue.newValueIri,
-            featureFactoryConfig = featureFactoryConfig,
-            userProfile = userProfile
-          )
+                                  resourceIri = resourceIri,
+                                  propertyIri = propertyIri,
+                                  searchValueIri = unverifiedValue.newValueIri,
+                                  featureFactoryConfig = featureFactoryConfig,
+                                  userProfile = userProfile
+                                )
 
         } yield CreateValueResponseV1(
           value = verifyUpdateResult.value,
@@ -2165,27 +2256,26 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Do a SPARQL query to look for the value in the resource's version history.
       sparqlQuery <- Future {
-        // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .findValueInVersions(
-            triplestore = settings.triplestoreType,
-            resourceIri = resourceIri,
-            propertyIri = propertyIri,
-            searchValueIri = searchValueIri
-          )
-          .toString()
-      }
+                       // Run the template function in a Future to handle exceptions (see http://git.iml.unibas.ch/salsah-suite/knora/wikis/futures-with-akka#handling-errors-with-futures)
+                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                         .findValueInVersions(
+                           resourceIri = resourceIri,
+                           propertyIri = propertyIri,
+                           searchValueIri = searchValueIri
+                         )
+                         .toString()
+                     }
 
       updateVerificationResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery))
-        .mapTo[SparqlSelectResult]
+                                                          .mapTo[SparqlSelectResult]
       rows = updateVerificationResponse.results.bindings
 
       resultOption <- sparqlQueryResults2ValueQueryResult(
-        valueIri = searchValueIri,
-        rows = rows,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                        valueIri = searchValueIri,
+                        rows = rows,
+                        featureFactoryConfig = featureFactoryConfig,
+                        userProfile = userProfile
+                      )
 
     } yield resultOption.getOrElse(
       throw UpdateNotPerformedException(
@@ -2217,27 +2307,27 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[LinkValueQueryResult] =
     for {
       maybeLinkValueQueryResult <- findLinkValueByIri(
-        subjectIri = linkSourceIri,
-        predicateIri = linkPropertyIri,
-        objectIri = Some(linkTargetIri),
-        linkValueIri = linkValueIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                     subjectIri = linkSourceIri,
+                                     predicateIri = linkPropertyIri,
+                                     objectIri = Some(linkTargetIri),
+                                     linkValueIri = linkValueIri,
+                                     featureFactoryConfig = featureFactoryConfig,
+                                     userProfile = userProfile
+                                   )
 
       result = maybeLinkValueQueryResult match {
-        case Some(linkValueQueryResult) =>
-          if (!linkValueQueryResult.directLinkExists || linkValueQueryResult.targetResourceClass.isEmpty) {
-            throw UpdateNotPerformedException()
-          } else {
-            linkValueQueryResult
-          }
+                 case Some(linkValueQueryResult) =>
+                   if (!linkValueQueryResult.directLinkExists || linkValueQueryResult.targetResourceClass.isEmpty) {
+                     throw UpdateNotPerformedException()
+                   } else {
+                     linkValueQueryResult
+                   }
 
-        case None =>
-          throw UpdateNotPerformedException(
-            s"The update to link value $linkValueIri with source IRI $linkSourceIri, link property $linkPropertyIri, and target $linkTargetIri was not performed. Please report this as a possible bug."
-          )
-      }
+                 case None =>
+                   throw UpdateNotPerformedException(
+                     s"The update to link value $linkValueIri with source IRI $linkSourceIri, link property $linkPropertyIri, and target $linkTargetIri was not performed. Please report this as a possible bug."
+                   )
+               }
     } yield result
 
   /**
@@ -2268,23 +2358,22 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   private def findResourceWithValue(valueIri: IRI): Future[FindResourceWithValueResult] =
     for {
       findResourceSparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .findResourceWithValue(
-            triplestore = settings.triplestoreType,
-            searchValueIri = valueIri
-          )
-          .toString()
-      )
+                                   org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                     .findResourceWithValue(
+                                       searchValueIri = valueIri
+                                     )
+                                     .toString()
+                                 )
       findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResult]
 
       _ = if (findResourceResponse.results.bindings.isEmpty) {
-        throw NotFoundException(s"No resource found containing value $valueIri")
-      }
+            throw NotFoundException(s"No resource found containing value $valueIri")
+          }
 
       resultRowMap = findResourceResponse.getFirstRow.rowMap
 
       resourceIri = resultRowMap("resource")
-      projectIri = resultRowMap("project")
+      projectIri  = resultRowMap("project")
       propertyIri = resultRowMap("property")
     } yield FindResourceWithValueResult(
       resourceIri = resourceIri,
@@ -2373,29 +2462,28 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[UnverifiedValueV1] =
     for {
       sparqlTemplateLinkUpdate <- incrementLinkValue(
-        sourceResourceIri = resourceIri,
-        linkPropertyIri = propertyIri,
-        targetResourceIri = linkUpdateV1.targetResourceIri,
-        valueCreator = valueCreator,
-        valuePermissions = valuePermissions,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                    sourceResourceIri = resourceIri,
+                                    linkPropertyIri = propertyIri,
+                                    targetResourceIri = linkUpdateV1.targetResourceIri,
+                                    valueCreator = valueCreator,
+                                    valuePermissions = valuePermissions,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    userProfile = userProfile
+                                  )
 
       currentTime: Instant = Instant.now
 
       // Generate a SPARQL update string.
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-        .createLink(
-          dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
-          resourceIri = resourceIri,
-          linkUpdate = sparqlTemplateLinkUpdate,
-          creationDate = currentTime,
-          maybeComment = comment,
-          stringFormatter = stringFormatter
-        )
-        .toString()
+                       .createLink(
+                         dataNamedGraph = dataNamedGraph,
+                         resourceIri = resourceIri,
+                         linkUpdate = sparqlTemplateLinkUpdate,
+                         creationDate = currentTime,
+                         maybeComment = comment,
+                         stringFormatter = stringFormatter
+                       )
+                       .toString()
 
       /*
             _ = println("================ Create link ===============")
@@ -2434,53 +2522,56 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     userProfile: UserADM
   ): Future[UnverifiedValueV1] = {
     // Generate an IRI for the new value.
-    val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
+    val newValueIri           = stringFormatter.makeRandomValueIri(resourceIri)
     val creationDate: Instant = Instant.now
 
     for {
       // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
-        case textValueV1: TextValueWithStandoffV1 =>
-          // Make sure the text value's list of resource references is correct.
-          checkTextValueResourceRefs(textValueV1)
+                                                              case textValueV1: TextValueWithStandoffV1 =>
+                                                                // Make sure the text value's list of resource references is correct.
+                                                                checkTextValueResourceRefs(textValueV1)
 
-          // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-          val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-            textValueV1.resource_reference.map { targetResourceIri =>
-              incrementLinkValue(
-                sourceResourceIri = resourceIri,
-                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                targetResourceIri = targetResourceIri,
-                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                valuePermissions = standoffLinkValuePermissions,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfile = userProfile
-              )
-            }.toVector
+                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+                                                                val standoffLinkUpdatesForAddedResourceRefs
+                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
+                                                                  textValueV1.resource_reference.map {
+                                                                    targetResourceIri =>
+                                                                      incrementLinkValue(
+                                                                        sourceResourceIri = resourceIri,
+                                                                        linkPropertyIri =
+                                                                          OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                                                        targetResourceIri = targetResourceIri,
+                                                                        valueCreator =
+                                                                          OntologyConstants.KnoraAdmin.SystemUser,
+                                                                        valuePermissions = standoffLinkValuePermissions,
+                                                                        featureFactoryConfig = featureFactoryConfig,
+                                                                        userProfile = userProfile
+                                                                      )
+                                                                  }.toVector
 
-          Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
+                                                                Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
-        case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
-      }
+                                                              case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
+                                                            }
 
       // Generate a SPARQL update string.
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-        .createValue(
-          dataNamedGraph = dataNamedGraph,
-          triplestore = settings.triplestoreType,
-          resourceIri = resourceIri,
-          propertyIri = propertyIri,
-          newValueIri = newValueIri,
-          valueTypeIri = value.valueTypeIri,
-          value = value,
-          linkUpdates = standoffLinkUpdates,
-          maybeComment = comment,
-          valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          creationDate = creationDate,
-          stringFormatter = stringFormatter
-        )
-        .toString()
+                       .createValue(
+                         dataNamedGraph = dataNamedGraph,
+                         resourceIri = resourceIri,
+                         propertyIri = propertyIri,
+                         newValueIri = newValueIri,
+                         valueTypeIri = value.valueTypeIri,
+                         value = value,
+                         linkUpdates = standoffLinkUpdates,
+                         maybeComment = comment,
+                         valueCreator = valueCreator,
+                         valuePermissions = valuePermissions,
+                         creationDate = creationDate,
+                         stringFormatter = stringFormatter
+                       )
+                       .toString()
 
       /*
             _ = println("================ Create value ================")
@@ -2528,25 +2619,25 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Delete the existing link and decrement its LinkValue's reference count.
       sparqlTemplateLinkUpdateForCurrentLink <- decrementLinkValue(
-        sourceResourceIri = resourceIri,
-        linkPropertyIri = propertyIri,
-        targetResourceIri = currentLinkValueV1.objectIri,
-        valueCreator = valueCreator,
-        valuePermissions = valuePermissions,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                                  sourceResourceIri = resourceIri,
+                                                  linkPropertyIri = propertyIri,
+                                                  targetResourceIri = currentLinkValueV1.objectIri,
+                                                  valueCreator = valueCreator,
+                                                  valuePermissions = valuePermissions,
+                                                  featureFactoryConfig = featureFactoryConfig,
+                                                  userProfile = userProfile
+                                                )
 
       // Create a new link, and create a new LinkValue for it.
       sparqlTemplateLinkUpdateForNewLink <- incrementLinkValue(
-        sourceResourceIri = resourceIri,
-        linkPropertyIri = propertyIri,
-        targetResourceIri = linkUpdateV1.targetResourceIri,
-        valueCreator = valueCreator,
-        valuePermissions = valuePermissions,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                              sourceResourceIri = resourceIri,
+                                              linkPropertyIri = propertyIri,
+                                              targetResourceIri = linkUpdateV1.targetResourceIri,
+                                              valueCreator = valueCreator,
+                                              valuePermissions = valuePermissions,
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              userProfile = userProfile
+                                            )
 
       // Get project info
       maybeProjectInfo <- {
@@ -2558,27 +2649,26 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       }.mapTo[Option[ProjectInfoV1]]
 
       projectInfo = maybeProjectInfo match {
-        case Some(pi) => pi
-        case None     => throw NotFoundException(s"Project '$projectIri' not found.")
-      }
+                      case Some(pi) => pi
+                      case None     => throw NotFoundException(s"Project '$projectIri' not found.")
+                    }
 
       // Make a timestamp to indicate when the link value was updated.
       currentTime: String = Instant.now.toString
 
       // Generate a SPARQL update string.
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-        .changeLink(
-          dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-          triplestore = settings.triplestoreType,
-          linkSourceIri = resourceIri,
-          linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
-          linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
-          maybeComment = comment,
-          currentTime = currentTime,
-          requestingUser = userProfile.id,
-          stringFormatter = stringFormatter
-        )
-        .toString()
+                       .changeLink(
+                         dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
+                         linkSourceIri = resourceIri,
+                         linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
+                         linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
+                         maybeComment = comment,
+                         currentTime = currentTime,
+                         requestingUser = userProfile.id,
+                         stringFormatter = stringFormatter
+                       )
+                       .toString()
 
       /*
             _ = println("================ Update link ================")
@@ -2591,18 +2681,18 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
       // To find out whether the update succeeded, check that the new link is in the triplestore.
       linkValueQueryResult <- verifyLinkUpdate(
-        linkSourceIri = resourceIri,
-        linkPropertyIri = propertyIri,
-        linkTargetIri = linkUpdateV1.targetResourceIri,
-        linkValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                linkSourceIri = resourceIri,
+                                linkPropertyIri = propertyIri,
+                                linkTargetIri = linkUpdateV1.targetResourceIri,
+                                linkValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfile = userProfile
+                              )
 
       apiResponseValue = LinkV1(
-        targetResourceIri = linkUpdateV1.targetResourceIri,
-        valueResourceClass = linkValueQueryResult.targetResourceClass
-      )
+                           targetResourceIri = linkUpdateV1.targetResourceIri,
+                           valueResourceClass = linkValueQueryResult.targetResourceClass
+                         )
 
     } yield ChangeValueResponseV1(
       value = apiResponseValue,
@@ -2644,63 +2734,79 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
-        case (currentTextValue: TextValueV1, newTextValue: TextValueV1) =>
-          // Make sure the new text value's list of resource references is correct.
+                                                              case (
+                                                                    currentTextValue: TextValueV1,
+                                                                    newTextValue: TextValueV1
+                                                                  ) =>
+                                                                // Make sure the new text value's list of resource references is correct.
 
-          newTextValue match {
-            case newTextWithStandoff: TextValueWithStandoffV1 =>
-              checkTextValueResourceRefs(newTextWithStandoff)
-            case textValueSimple: TextValueSimpleV1 => ()
-          }
+                                                                newTextValue match {
+                                                                  case newTextWithStandoff: TextValueWithStandoffV1 =>
+                                                                    checkTextValueResourceRefs(newTextWithStandoff)
+                                                                  case textValueSimple: TextValueSimpleV1 => ()
+                                                                }
 
-          // Identify the resource references that have been added or removed in the new version of
-          // the value.
-          val currentResourceRefs = currentTextValue match {
-            case textValueWithStandoff: TextValueWithStandoffV1 =>
-              textValueWithStandoff.resource_reference
-            case textValueSimple: TextValueSimpleV1 => Set.empty[IRI]
-          }
+                                                                // Identify the resource references that have been added or removed in the new version of
+                                                                // the value.
+                                                                val currentResourceRefs = currentTextValue match {
+                                                                  case textValueWithStandoff: TextValueWithStandoffV1 =>
+                                                                    textValueWithStandoff.resource_reference
+                                                                  case textValueSimple: TextValueSimpleV1 =>
+                                                                    Set.empty[IRI]
+                                                                }
 
-          val newResourceRefs = newTextValue match {
-            case textValueWithStandoff: TextValueWithStandoffV1 =>
-              textValueWithStandoff.resource_reference
-            case textValueSimple: TextValueSimpleV1 => Set.empty[IRI]
-          }
-          val addedResourceRefs = newResourceRefs -- currentResourceRefs
-          val removedResourceRefs = currentResourceRefs -- newResourceRefs
+                                                                val newResourceRefs = newTextValue match {
+                                                                  case textValueWithStandoff: TextValueWithStandoffV1 =>
+                                                                    textValueWithStandoff.resource_reference
+                                                                  case textValueSimple: TextValueSimpleV1 =>
+                                                                    Set.empty[IRI]
+                                                                }
+                                                                val addedResourceRefs =
+                                                                  newResourceRefs -- currentResourceRefs
+                                                                val removedResourceRefs =
+                                                                  currentResourceRefs -- newResourceRefs
 
-          // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-          val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-            addedResourceRefs.toVector.map { targetResourceIri =>
-              incrementLinkValue(
-                sourceResourceIri = resourceIri,
-                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                targetResourceIri = targetResourceIri,
-                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                valuePermissions = standoffLinkValuePermissions,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfile = userProfile
-              )
-            }
+                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+                                                                val standoffLinkUpdatesForAddedResourceRefs
+                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
+                                                                  addedResourceRefs.toVector.map { targetResourceIri =>
+                                                                    incrementLinkValue(
+                                                                      sourceResourceIri = resourceIri,
+                                                                      linkPropertyIri =
+                                                                        OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                                                      targetResourceIri = targetResourceIri,
+                                                                      valueCreator =
+                                                                        OntologyConstants.KnoraAdmin.SystemUser,
+                                                                      valuePermissions = standoffLinkValuePermissions,
+                                                                      featureFactoryConfig = featureFactoryConfig,
+                                                                      userProfile = userProfile
+                                                                    )
+                                                                  }
 
-          // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-          val standoffLinkUpdatesForRemovedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
-            removedResourceRefs.toVector.map { removedTargetResource =>
-              decrementLinkValue(
-                sourceResourceIri = resourceIri,
-                linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                targetResourceIri = removedTargetResource,
-                valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
-                valuePermissions = standoffLinkValuePermissions,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfile = userProfile
-              )
-            }
+                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
+                                                                val standoffLinkUpdatesForRemovedResourceRefs
+                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
+                                                                  removedResourceRefs.toVector.map {
+                                                                    removedTargetResource =>
+                                                                      decrementLinkValue(
+                                                                        sourceResourceIri = resourceIri,
+                                                                        linkPropertyIri =
+                                                                          OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                                                                        targetResourceIri = removedTargetResource,
+                                                                        valueCreator =
+                                                                          OntologyConstants.KnoraAdmin.SystemUser,
+                                                                        valuePermissions = standoffLinkValuePermissions,
+                                                                        featureFactoryConfig = featureFactoryConfig,
+                                                                        userProfile = userProfile
+                                                                      )
+                                                                  }
 
-          Future.sequence(standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs)
+                                                                Future.sequence(
+                                                                  standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
+                                                                )
 
-        case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
-      }
+                                                              case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
+                                                            }
 
       // Get project info
       maybeProjectInfo <- {
@@ -2712,33 +2818,32 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       }.mapTo[Option[ProjectInfoV1]]
 
       projectInfo = maybeProjectInfo match {
-        case Some(pi) => pi
-        case None     => throw NotFoundException(s"Project '$projectIri' not found.")
-      }
+                      case Some(pi) => pi
+                      case None     => throw NotFoundException(s"Project '$projectIri' not found.")
+                    }
 
       // Make a timestamp to indicate when the value was updated.
       currentTime: String = Instant.now.toString
 
       // Generate a SPARQL update.
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-        .addValueVersion(
-          dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
-          triplestore = settings.triplestoreType,
-          resourceIri = resourceIri,
-          propertyIri = propertyIri,
-          currentValueIri = currentValueIri,
-          newValueIri = newValueIri,
-          valueTypeIri = updateValueV1.valueTypeIri,
-          value = updateValueV1,
-          valueCreator = valueCreator,
-          valuePermissions = valuePermissions,
-          maybeComment = comment,
-          linkUpdates = standoffLinkUpdates,
-          currentTime = currentTime,
-          requestingUser = userProfile.id,
-          stringFormatter = stringFormatter
-        )
-        .toString()
+                       .addValueVersion(
+                         dataNamedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV1(projectInfo),
+                         resourceIri = resourceIri,
+                         propertyIri = propertyIri,
+                         currentValueIri = currentValueIri,
+                         newValueIri = newValueIri,
+                         valueTypeIri = updateValueV1.valueTypeIri,
+                         value = updateValueV1,
+                         valueCreator = valueCreator,
+                         valuePermissions = valuePermissions,
+                         maybeComment = comment,
+                         linkUpdates = standoffLinkUpdates,
+                         currentTime = currentTime,
+                         requestingUser = userProfile.id,
+                         stringFormatter = stringFormatter
+                       )
+                       .toString()
 
       /*
             _ = println("================ Update value ================")
@@ -2751,12 +2856,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
       // To find out whether the update succeeded, look for the new value in the triplestore.
       verifyUpdateResult <- verifyOrdinaryValueUpdate(
-        resourceIri = resourceIri,
-        propertyIri = propertyIri,
-        searchValueIri = newValueIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                              resourceIri = resourceIri,
+                              propertyIri = propertyIri,
+                              searchValueIri = newValueIri,
+                              featureFactoryConfig = featureFactoryConfig,
+                              userProfile = userProfile
+                            )
     } yield ChangeValueResponseV1(
       value = verifyUpdateResult.value,
       comment = verifyUpdateResult.comment,
@@ -2800,64 +2905,64 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Check whether a LinkValue already exists for this link.
       maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
-        subjectIri = sourceResourceIri,
-        predicateIri = linkPropertyIri,
-        objectIri = targetResourceIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                     subjectIri = sourceResourceIri,
+                                     predicateIri = linkPropertyIri,
+                                     objectIri = targetResourceIri,
+                                     featureFactoryConfig = featureFactoryConfig,
+                                     userProfile = userProfile
+                                   )
 
       // Check that the target resource actually exists and is a knora-base:Resource.
       targetIriCheckResult <- checkStandoffResourceReferenceTargets(
-        targetIris = Set(targetResourceIri),
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                targetIris = Set(targetResourceIri),
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfile = userProfile
+                              )
 
       // Generate an IRI for the new LinkValue.
       newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
 
       linkUpdate = maybeLinkValueQueryResult match {
-        case Some(linkValueQueryResult) =>
-          // There's already a LinkValue for links between these two resources. Increment
-          // its reference count.
-          val currentReferenceCount = linkValueQueryResult.value.referenceCount
-          val newReferenceCount = currentReferenceCount + 1
-          val insertDirectLink = !linkValueQueryResult.directLinkExists
+                     case Some(linkValueQueryResult) =>
+                       // There's already a LinkValue for links between these two resources. Increment
+                       // its reference count.
+                       val currentReferenceCount = linkValueQueryResult.value.referenceCount
+                       val newReferenceCount     = currentReferenceCount + 1
+                       val insertDirectLink      = !linkValueQueryResult.directLinkExists
 
-          SparqlTemplateLinkUpdate(
-            linkPropertyIri = linkPropertyIri.toSmartIri,
-            directLinkExists = linkValueQueryResult.directLinkExists,
-            insertDirectLink = insertDirectLink,
-            deleteDirectLink = false,
-            linkValueExists = true,
-            linkTargetExists = true,
-            newLinkValueIri = newLinkValueIri,
-            linkTargetIri = targetResourceIri,
-            currentReferenceCount = currentReferenceCount,
-            newReferenceCount = newReferenceCount,
-            newLinkValueCreator = valueCreator,
-            newLinkValuePermissions = valuePermissions
-          )
+                       SparqlTemplateLinkUpdate(
+                         linkPropertyIri = linkPropertyIri.toSmartIri,
+                         directLinkExists = linkValueQueryResult.directLinkExists,
+                         insertDirectLink = insertDirectLink,
+                         deleteDirectLink = false,
+                         linkValueExists = true,
+                         linkTargetExists = true,
+                         newLinkValueIri = newLinkValueIri,
+                         linkTargetIri = targetResourceIri,
+                         currentReferenceCount = currentReferenceCount,
+                         newReferenceCount = newReferenceCount,
+                         newLinkValueCreator = valueCreator,
+                         newLinkValuePermissions = valuePermissions
+                       )
 
-        case None =>
-          // There's no LinkValue for links between these two resources, so create one, and give it
-          // a reference count of 1.
-          SparqlTemplateLinkUpdate(
-            linkPropertyIri = linkPropertyIri.toSmartIri,
-            directLinkExists = false,
-            insertDirectLink = true,
-            deleteDirectLink = false,
-            linkValueExists = false,
-            linkTargetExists = true,
-            newLinkValueIri = newLinkValueIri,
-            linkTargetIri = targetResourceIri,
-            currentReferenceCount = 0,
-            newReferenceCount = 1,
-            newLinkValueCreator = valueCreator,
-            newLinkValuePermissions = valuePermissions
-          )
-      }
+                     case None =>
+                       // There's no LinkValue for links between these two resources, so create one, and give it
+                       // a reference count of 1.
+                       SparqlTemplateLinkUpdate(
+                         linkPropertyIri = linkPropertyIri.toSmartIri,
+                         directLinkExists = false,
+                         insertDirectLink = true,
+                         deleteDirectLink = false,
+                         linkValueExists = false,
+                         linkTargetExists = true,
+                         newLinkValueIri = newLinkValueIri,
+                         linkTargetIri = targetResourceIri,
+                         currentReferenceCount = 0,
+                         newReferenceCount = 1,
+                         newLinkValueCreator = valueCreator,
+                         newLinkValuePermissions = valuePermissions
+                       )
+                   }
     } yield linkUpdate
 
   /**
@@ -2893,50 +2998,50 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // Query the LinkValue to ensure that it exists and to get its contents.
       maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
-        subjectIri = sourceResourceIri,
-        predicateIri = linkPropertyIri,
-        objectIri = targetResourceIri,
-        featureFactoryConfig = featureFactoryConfig,
-        userProfile = userProfile
-      )
+                                     subjectIri = sourceResourceIri,
+                                     predicateIri = linkPropertyIri,
+                                     objectIri = targetResourceIri,
+                                     featureFactoryConfig = featureFactoryConfig,
+                                     userProfile = userProfile
+                                   )
 
       // Did we find it?
       linkUpdate = maybeLinkValueQueryResult match {
-        case Some(linkValueQueryResult) =>
-          // Yes. Make a SparqlTemplateLinkUpdate.
+                     case Some(linkValueQueryResult) =>
+                       // Yes. Make a SparqlTemplateLinkUpdate.
 
-          // Decrement the LinkValue's reference count.
-          val currentReferenceCount = linkValueQueryResult.value.referenceCount
-          val newReferenceCount = currentReferenceCount - 1
+                       // Decrement the LinkValue's reference count.
+                       val currentReferenceCount = linkValueQueryResult.value.referenceCount
+                       val newReferenceCount     = currentReferenceCount - 1
 
-          // If the new reference count is 0, specify that the direct link between the source and target
-          // resources should be removed.
-          val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
+                       // If the new reference count is 0, specify that the direct link between the source and target
+                       // resources should be removed.
+                       val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
-          // Generate an IRI for the new LinkValue.
-          val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
+                       // Generate an IRI for the new LinkValue.
+                       val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
 
-          SparqlTemplateLinkUpdate(
-            linkPropertyIri = linkPropertyIri.toSmartIri,
-            directLinkExists = linkValueQueryResult.directLinkExists,
-            insertDirectLink = false,
-            deleteDirectLink = deleteDirectLink,
-            linkValueExists = true,
-            linkTargetExists = true,
-            newLinkValueIri = newLinkValueIri,
-            linkTargetIri = targetResourceIri,
-            currentReferenceCount = currentReferenceCount,
-            newReferenceCount = newReferenceCount,
-            newLinkValueCreator = valueCreator,
-            newLinkValuePermissions = valuePermissions
-          )
+                       SparqlTemplateLinkUpdate(
+                         linkPropertyIri = linkPropertyIri.toSmartIri,
+                         directLinkExists = linkValueQueryResult.directLinkExists,
+                         insertDirectLink = false,
+                         deleteDirectLink = deleteDirectLink,
+                         linkValueExists = true,
+                         linkTargetExists = true,
+                         newLinkValueIri = newLinkValueIri,
+                         linkTargetIri = targetResourceIri,
+                         currentReferenceCount = currentReferenceCount,
+                         newReferenceCount = newReferenceCount,
+                         newLinkValueCreator = valueCreator,
+                         newLinkValuePermissions = valuePermissions
+                       )
 
-        case None =>
-          // We didn't find the LinkValue. This shouldn't happen.
-          throw InconsistentRepositoryDataException(
-            s"There should be a knora-base:LinkValue describing a direct link from resource $sourceResourceIri to resource $targetResourceIri using property $linkPropertyIri, but it seems to be missing"
-          )
-      }
+                     case None =>
+                       // We didn't find the LinkValue. This shouldn't happen.
+                       throw InconsistentRepositoryDataException(
+                         s"There should be a knora-base:LinkValue describing a direct link from resource $sourceResourceIri to resource $targetResourceIri using property $linkPropertyIri, but it seems to be missing"
+                       )
+                   }
     } yield linkUpdate
 
   /**
@@ -2992,16 +3097,17 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       val targetIriCheckFutures: Set[Future[Unit]] = targetIris.map { targetIri =>
         for {
           checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
-            resourceIri = targetIri,
-            owlClass = OntologyConstants.KnoraBase.Resource,
-            featureFactoryConfig = featureFactoryConfig,
-            userProfile = userProfile
-          )).mapTo[ResourceCheckClassResponseV1]
+                                        resourceIri = targetIri,
+                                        owlClass = OntologyConstants.KnoraBase.Resource,
+                                        featureFactoryConfig = featureFactoryConfig,
+                                        userProfile = userProfile
+                                      )).mapTo[ResourceCheckClassResponseV1]
 
-          _ = if (!checkTargetClassResponse.isInClass)
-            throw BadRequestException(
-              s"$targetIri cannot be the object of a standoff resource reference, because it is not a knora-base:Resource"
-            )
+          _ =
+            if (!checkTargetClassResponse.isInClass)
+              throw BadRequestException(
+                s"$targetIri cannot be the object of a standoff resource reference, because it is not a knora-base:Resource"
+              )
         } yield ()
       }
 
@@ -3030,33 +3136,33 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   ): Future[Unit] =
     for {
       result <- updateValueV1 match {
-        case linkUpdate: LinkUpdateV1 =>
-          // We're creating a link. Ask the resources responder to check the OWL class of the target resource.
-          for {
-            checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
-              resourceIri = linkUpdate.targetResourceIri,
-              owlClass = propertyObjectClassConstraint,
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = userProfile
-            )).mapTo[ResourceCheckClassResponseV1]
+                  case linkUpdate: LinkUpdateV1 =>
+                    // We're creating a link. Ask the resources responder to check the OWL class of the target resource.
+                    for {
+                      checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
+                                                    resourceIri = linkUpdate.targetResourceIri,
+                                                    owlClass = propertyObjectClassConstraint,
+                                                    featureFactoryConfig = featureFactoryConfig,
+                                                    userProfile = userProfile
+                                                  )).mapTo[ResourceCheckClassResponseV1]
 
-            _ = if (!checkTargetClassResponse.isInClass) {
-              throw OntologyConstraintException(
-                s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
-              )
-            }
-          } yield ()
+                      _ = if (!checkTargetClassResponse.isInClass) {
+                            throw OntologyConstraintException(
+                              s"Resource ${linkUpdate.targetResourceIri} cannot be the target of property $propertyIri, because it is not a member of OWL class $propertyObjectClassConstraint"
+                            )
+                          }
+                    } yield ()
 
-        case otherValue =>
-          // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
-          valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
-            propertyIri = propertyIri,
-            propertyObjectClassConstraint = propertyObjectClassConstraint,
-            valueType = otherValue.valueTypeIri,
-            responderManager = responderManager,
-            userProfile = userProfile
-          )
-      }
+                  case otherValue =>
+                    // We're creating an ordinary value. Check that its type is valid for the property's knora-base:objectClassConstraint.
+                    valueUtilV1.checkValueTypeForPropertyObjectClassConstraint(
+                      propertyIri = propertyIri,
+                      propertyObjectClassConstraint = propertyObjectClassConstraint,
+                      valueType = otherValue.valueTypeIri,
+                      responderManager = responderManager,
+                      userProfile = userProfile
+                    )
+                }
     } yield result
 
   /**

@@ -434,7 +434,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
   )
 
   private def checkResourceTypeResponseV1(received: ResourceTypeResponseV1, expected: ResourceTypeResponseV1): Unit = {
-    val sortedReceivedProperties = received.restype_info.properties.toList.sortBy(_.id)
+    val sortedReceivedProperties                            = received.restype_info.properties.toList.sortBy(_.id)
     val sortedExpectedProperties: Seq[PropertyDefinitionV1] = expected.restype_info.properties.toList.sortBy(_.id)
 
     assert(

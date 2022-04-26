@@ -42,7 +42,7 @@ class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             tmpImage
           } else {
             /* make dummy images with the image name as content */
-            val tmpImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+            val tmpImage    = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
             val g: Graphics = tmpImage.getGraphics
             //g.setColor(new Color(0,0,0)) //background color
             g.setColor(new Color(255, 125, 65)) //background color

@@ -27,14 +27,14 @@ object TestContainersAll {
     .getOrElse(throw new UnknownHostException("No suitable network interface found"))
 
   val FusekiImageName: DockerImageName = DockerImageName.parse(BuildInfo.fuseki)
-  val FusekiContainer = new GenericContainer(FusekiImageName)
+  val FusekiContainer                  = new GenericContainer(FusekiImageName)
   FusekiContainer.withExposedPorts(3030)
   FusekiContainer.withEnv("ADMIN_PASSWORD", "test")
   FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
   FusekiContainer.start()
 
   val SipiImageName: DockerImageName = DockerImageName.parse(s"daschswiss/knora-sipi:${BuildInfo.version}")
-  val SipiContainer = new GenericContainer(SipiImageName)
+  val SipiContainer                  = new GenericContainer(SipiImageName)
   SipiContainer.withExposedPorts(1024)
   SipiContainer.withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST", "0.0.0.0")
   SipiContainer.withEnv("KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT", "3333")
@@ -57,7 +57,7 @@ object TestContainersAll {
 
   // Container needs to be started to get the random IP
   val sipiIp: String = SipiContainer.getHost
-  val sipiPort: Int = SipiContainer.getFirstMappedPort
+  val sipiPort: Int  = SipiContainer.getFirstMappedPort
 
   // The new default is the inmem cache implementation, so no need
   // for a container
@@ -69,8 +69,8 @@ object TestContainersAll {
 
   private val portMap = Map(
     "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
-    "app.sipi.internal-host" -> sipiIp,
-    "app.sipi.internal-port" -> sipiPort
+    "app.sipi.internal-host"      -> sipiIp,
+    "app.sipi.internal-port"      -> sipiPort
     // "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
   ).asJava
 

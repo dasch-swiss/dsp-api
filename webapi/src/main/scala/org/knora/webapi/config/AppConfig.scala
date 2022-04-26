@@ -1,16 +1,16 @@
 package org.knora.webapi.config
 
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.store.cacheservice.config.CacheServiceConfig
+import zio._
 import zio.config.ConfigDescriptor
 import zio.config._
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration._
+
 import typesafe._
 import magnolia._
-
-import zio._
-import com.typesafe.config.ConfigFactory
-import scala.concurrent.duration._
-import java.util.concurrent.TimeUnit
 
 /**
  * Represents the complete configuration as defined in application.conf.

@@ -74,10 +74,10 @@ abstract class IntegrationSpec(_config: Config)
     implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     val checkTriplestore: Task[Unit] = for {
       checkResult <- ZIO.attemptBlocking {
-                         Await
-                           .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
-                           .asInstanceOf[CheckTriplestoreResponse]
-      }
+                       Await
+                         .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
+                         .asInstanceOf[CheckTriplestoreResponse]
+                     }
 
       value <-
         if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
@@ -94,8 +94,8 @@ abstract class IntegrationSpec(_config: Config)
     Runtime.default.unsafeRun(
       (checkTriplestore
         .retry(ScheduleUtil.schedule)
-        .foldZIO(ex => printLine("Exception Failed"), v => printLine(s"Succeeded with $v"))
-      ).provide(Console.live)
+        .foldZIO(ex => printLine("Exception Failed"), v => printLine(s"Succeeded with $v")))
+        .provide(Console.live)
     )
   }
 

@@ -7,10 +7,7 @@
 
 @**
  * Gets all information about a all user.
- *
- * @param triplestore the name of the triplestore being used.
  *@
-@(triplestore: String)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix knora-admin: <http://www.knora.org/ontology/knora-admin#>

@@ -8,15 +8,13 @@
 @*
  * Checks whether a property is used (i.e., is the property of any statements).
  *
- * @param triplestore the name of the triplestore being used.
  * @param propertyIri the IRI of the property.
  * @param ignoreKnoraConstraints if true, knora-base:subjectClassConstraint and knora-base:objectClassConstraint will be ignored.
  * This is necessary when modifying the cardinalities of a class.
  * @param ignoreRdfSubjectAndObject if true, rdf:subject and rdf:object will be ignored. This is necessary when checking
  * for references to a resource that is to be erased.
  *@
-@(triplestore: String,
-  internalPropertyIri: IRI,
+@(internalPropertyIri: IRI,
   internalClassIri: IRI,
   ignoreKnoraConstraints: Boolean = false,
   ignoreRdfSubjectAndObject: Boolean = false)

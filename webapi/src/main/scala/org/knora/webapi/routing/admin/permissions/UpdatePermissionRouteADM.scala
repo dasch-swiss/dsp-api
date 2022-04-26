@@ -50,9 +50,9 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield PermissionChangeGroupRequestADM(
             permissionIri = permissionIri,
             changePermissionGroupRequest = apiRequest,
@@ -84,9 +84,9 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield PermissionChangeHasPermissionsRequestADM(
             permissionIri = permissionIri,
             changePermissionHasPermissionsRequest = apiRequest,
@@ -118,9 +118,9 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield PermissionChangeResourceClassRequestADM(
             permissionIri = permissionIri,
             changePermissionResourceClassRequest = apiRequest,
@@ -152,9 +152,9 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
           } yield PermissionChangePropertyRequestADM(
             permissionIri = permissionIri,
             changePermissionPropertyRequest = apiRequest,

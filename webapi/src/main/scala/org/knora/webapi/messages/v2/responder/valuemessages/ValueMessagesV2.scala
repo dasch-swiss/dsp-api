@@ -90,69 +90,79 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
       resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
       _ = if (!resourceIri.isKnoraResourceIri) {
-        throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
-      }
+            throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+          }
 
       // Get the resource class.
       resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
       // Get the resource property and the value to be created.
       createValue: CreateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
-        case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-          for {
-            valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-              jsonLDObject = jsonLDObject,
-              requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
-              featureFactoryConfig = featureFactoryConfig,
-              settings = settings,
-              log = log
-            )
+                                      case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                                        for {
+                                          valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
+                                                                            jsonLDObject = jsonLDObject,
+                                                                            requestingUser = requestingUser,
+                                                                            responderManager = responderManager,
+                                                                            storeManager = storeManager,
+                                                                            featureFactoryConfig = featureFactoryConfig,
+                                                                            settings = settings,
+                                                                            log = log
+                                                                          )
 
-            // Get and validate the custom value IRI if provided.
-            maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
-              stringFormatter.validateCustomValueIri(
-                customValueIri = definedNewIri,
-                projectCode = resourceIri.getProjectCode.get,
-                resourceID = resourceIri.getResourceID.get
-              )
-            }
+                                          // Get and validate the custom value IRI if provided.
+                                          maybeCustomValueIri: Option[SmartIri] =
+                                            jsonLDObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
+                                              stringFormatter.validateCustomValueIri(
+                                                customValueIri = definedNewIri,
+                                                projectCode = resourceIri.getProjectCode.get,
+                                                resourceID = resourceIri.getResourceID.get
+                                              )
+                                            }
 
-            // Get the custom value UUID if provided.
-            maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+                                          // Get the custom value UUID if provided.
+                                          maybeCustomUUID: Option[UUID] =
+                                            jsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
 
-            // Get the value's creation date.
-            // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-            maybeCreationDate: Option[Instant] = jsonLDObject
-              .maybeDatatypeValueInObject(
-                key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                validationFun = stringFormatter.xsdDateTimeStampToInstant
-              )
-              .orElse(
-                jsonLDObject.maybeDatatypeValueInObject(
-                  key = OntologyConstants.KnoraApiV2Complex.CreationDate,
-                  expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                  validationFun = stringFormatter.xsdDateTimeStampToInstant
-                )
-              )
+                                          // Get the value's creation date.
+                                          // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
+                                          maybeCreationDate: Option[Instant] = jsonLDObject
+                                                                                 .maybeDatatypeValueInObject(
+                                                                                   key =
+                                                                                     OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                                                                   expectedDatatype =
+                                                                                     OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                                                                   validationFun =
+                                                                                     stringFormatter.xsdDateTimeStampToInstant
+                                                                                 )
+                                                                                 .orElse(
+                                                                                   jsonLDObject
+                                                                                     .maybeDatatypeValueInObject(
+                                                                                       key =
+                                                                                         OntologyConstants.KnoraApiV2Complex.CreationDate,
+                                                                                       expectedDatatype =
+                                                                                         OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                                                                       validationFun =
+                                                                                         stringFormatter.xsdDateTimeStampToInstant
+                                                                                     )
+                                                                                 )
 
-            maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(
-              OntologyConstants.KnoraApiV2Complex.HasPermissions,
-              stringFormatter.toSparqlEncodedString
-            )
-          } yield CreateValueV2(
-            resourceIri = resourceIri.toString,
-            resourceClassIri = resourceClassIri,
-            propertyIri = propertyIri,
-            valueContent = valueContent,
-            valueIri = maybeCustomValueIri,
-            valueUUID = maybeCustomUUID,
-            valueCreationDate = maybeCreationDate,
-            permissions = maybePermissions
-          )
-      }
+                                          maybePermissions: Option[String] =
+                                            jsonLDObject.maybeStringWithValidation(
+                                              OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                                              stringFormatter.toSparqlEncodedString
+                                            )
+                                        } yield CreateValueV2(
+                                          resourceIri = resourceIri.toString,
+                                          resourceClassIri = resourceClassIri,
+                                          propertyIri = propertyIri,
+                                          valueContent = valueContent,
+                                          valueIri = maybeCustomValueIri,
+                                          valueUUID = maybeCustomUUID,
+                                          valueCreationDate = maybeCreationDate,
+                                          permissions = maybePermissions
+                                        )
+                                    }
     } yield CreateValueRequestV2(
       createValue = createValue,
       featureFactoryConfig = featureFactoryConfig,
@@ -193,8 +203,8 @@ case class CreateValueResponseV2(
     JsonLDDocument(
       body = JsonLDObject(
         Map(
-          JsonLDKeywords.ID -> JsonLDString(valueIri),
-          JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+          JsonLDKeywords.ID                                -> JsonLDString(valueIri),
+          JsonLDKeywords.TYPE                              -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
           OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
           OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
@@ -262,107 +272,116 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
       resourceIri: SmartIri <- Future(jsonLDDocument.requireIDAsKnoraDataIri)
 
       _ = if (!resourceIri.isKnoraResourceIri) {
-        throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
-      }
+            throw BadRequestException(s"Invalid resource IRI: <$resourceIri>")
+          }
 
       // Get the resource class.
       resourceClassIri: SmartIri = jsonLDDocument.requireTypeAsKnoraTypeIri
 
       // Get the resource property and the new value version.
       updateValue: UpdateValueV2 <- jsonLDDocument.requireResourcePropertyValue match {
-        case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
-          val valueIri: SmartIri = jsonLDObject.requireIDAsKnoraDataIri
+                                      case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                                        val valueIri: SmartIri = jsonLDObject.requireIDAsKnoraDataIri
 
-          // Get the custom value creation date, if provided.
-          val maybeValueCreationDate: Option[Instant] = jsonLDObject.maybeDatatypeValueInObject(
-            key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-            validationFun = stringFormatter.xsdDateTimeStampToInstant
-          )
+                                        // Get the custom value creation date, if provided.
+                                        val maybeValueCreationDate: Option[Instant] =
+                                          jsonLDObject.maybeDatatypeValueInObject(
+                                            key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                                            validationFun = stringFormatter.xsdDateTimeStampToInstant
+                                          )
 
-          // Get and validate the custom new value version IRI, if provided.
+                                        // Get and validate the custom new value version IRI, if provided.
 
-          val maybeNewIri: Option[SmartIri] = jsonLDObject
-            .maybeIriInObject(
-              OntologyConstants.KnoraApiV2Complex.NewValueVersionIri,
-              stringFormatter.toSmartIriWithErr
-            )
-            .map { definedNewIri =>
-              if (definedNewIri == valueIri) {
-                throw BadRequestException(
-                  s"The IRI of a new value version cannot be the same as the IRI of the current version"
-                )
-              }
+                                        val maybeNewIri: Option[SmartIri] = jsonLDObject
+                                          .maybeIriInObject(
+                                            OntologyConstants.KnoraApiV2Complex.NewValueVersionIri,
+                                            stringFormatter.toSmartIriWithErr
+                                          )
+                                          .map { definedNewIri =>
+                                            if (definedNewIri == valueIri) {
+                                              throw BadRequestException(
+                                                s"The IRI of a new value version cannot be the same as the IRI of the current version"
+                                              )
+                                            }
 
-              stringFormatter.validateCustomValueIri(
-                customValueIri = definedNewIri,
-                projectCode = valueIri.getProjectCode.get,
-                resourceID = valueIri.getResourceID.get
-              )
-            }
+                                            stringFormatter.validateCustomValueIri(
+                                              customValueIri = definedNewIri,
+                                              projectCode = valueIri.getProjectCode.get,
+                                              resourceID = valueIri.getResourceID.get
+                                            )
+                                          }
 
-          // Aside from the value's ID and type and the optional predicates above, does the value object just
-          // contain knora-api:hasPermissions?
+                                        // Aside from the value's ID and type and the optional predicates above, does the value object just
+                                        // contain knora-api:hasPermissions?
 
-          val otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
-            JsonLDKeywords.ID,
-            JsonLDKeywords.TYPE,
-            OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-            OntologyConstants.KnoraApiV2Complex.NewValueVersionIri
-          )
+                                        val otherValuePredicates: Set[IRI] = jsonLDObject.value.keySet -- Set(
+                                          JsonLDKeywords.ID,
+                                          JsonLDKeywords.TYPE,
+                                          OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                                          OntologyConstants.KnoraApiV2Complex.NewValueVersionIri
+                                        )
 
-          if (otherValuePredicates == Set(OntologyConstants.KnoraApiV2Complex.HasPermissions)) {
-            // Yes. This is a request to change the value's permissions.
+                                        if (
+                                          otherValuePredicates == Set(
+                                            OntologyConstants.KnoraApiV2Complex.HasPermissions
+                                          )
+                                        ) {
+                                          // Yes. This is a request to change the value's permissions.
 
-            val valueType: SmartIri =
-              jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-            val permissions = jsonLDObject.requireStringWithValidation(
-              OntologyConstants.KnoraApiV2Complex.HasPermissions,
-              stringFormatter.toSparqlEncodedString
-            )
+                                          val valueType: SmartIri =
+                                            jsonLDObject.requireStringWithValidation(
+                                              JsonLDKeywords.TYPE,
+                                              stringFormatter.toSmartIriWithErr
+                                            )
+                                          val permissions = jsonLDObject.requireStringWithValidation(
+                                            OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                                            stringFormatter.toSparqlEncodedString
+                                          )
 
-            FastFuture.successful(
-              UpdateValuePermissionsV2(
-                resourceIri = resourceIri.toString,
-                resourceClassIri = resourceClassIri,
-                propertyIri = propertyIri,
-                valueIri = valueIri.toString,
-                valueType = valueType,
-                permissions = permissions,
-                valueCreationDate = maybeValueCreationDate,
-                newValueVersionIri = maybeNewIri
-              )
-            )
-          } else {
-            // No. This is a request to change the value content.
+                                          FastFuture.successful(
+                                            UpdateValuePermissionsV2(
+                                              resourceIri = resourceIri.toString,
+                                              resourceClassIri = resourceClassIri,
+                                              propertyIri = propertyIri,
+                                              valueIri = valueIri.toString,
+                                              valueType = valueType,
+                                              permissions = permissions,
+                                              valueCreationDate = maybeValueCreationDate,
+                                              newValueVersionIri = maybeNewIri
+                                            )
+                                          )
+                                        } else {
+                                          // No. This is a request to change the value content.
 
-            for {
-              valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                jsonLDObject = jsonLDObject,
-                requestingUser = requestingUser,
-                responderManager = responderManager,
-                storeManager = storeManager,
-                featureFactoryConfig: FeatureFactoryConfig,
-                settings = settings,
-                log = log
-              )
+                                          for {
+                                            valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
+                                                                              jsonLDObject = jsonLDObject,
+                                                                              requestingUser = requestingUser,
+                                                                              responderManager = responderManager,
+                                                                              storeManager = storeManager,
+                                                                              featureFactoryConfig: FeatureFactoryConfig,
+                                                                              settings = settings,
+                                                                              log = log
+                                                                            )
 
-              maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(
-                OntologyConstants.KnoraApiV2Complex.HasPermissions,
-                stringFormatter.toSparqlEncodedString
-              )
-            } yield UpdateValueContentV2(
-              resourceIri = resourceIri.toString,
-              resourceClassIri = resourceClassIri,
-              propertyIri = propertyIri,
-              valueIri = valueIri.toString,
-              valueContent = valueContent,
-              permissions = maybePermissions,
-              valueCreationDate = maybeValueCreationDate,
-              newValueVersionIri = maybeNewIri
-            )
-          }
-      }
+                                            maybePermissions: Option[String] =
+                                              jsonLDObject.maybeStringWithValidation(
+                                                OntologyConstants.KnoraApiV2Complex.HasPermissions,
+                                                stringFormatter.toSparqlEncodedString
+                                              )
+                                          } yield UpdateValueContentV2(
+                                            resourceIri = resourceIri.toString,
+                                            resourceClassIri = resourceClassIri,
+                                            propertyIri = propertyIri,
+                                            valueIri = valueIri.toString,
+                                            valueContent = valueContent,
+                                            permissions = maybePermissions,
+                                            valueCreationDate = maybeValueCreationDate,
+                                            newValueVersionIri = maybeNewIri
+                                          )
+                                        }
+                                    }
     } yield UpdateValueRequestV2(
       updateValue = updateValue,
       featureFactoryConfig = featureFactoryConfig,
@@ -397,8 +416,8 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
     JsonLDDocument(
       body = JsonLDObject(
         Map(
-          JsonLDKeywords.ID -> JsonLDString(valueIri),
-          JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
+          JsonLDKeywords.ID                                -> JsonLDString(valueIri),
+          JsonLDKeywords.TYPE                              -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
           OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
         )
       ),
@@ -620,7 +639,7 @@ case class DeletionInfo(deleteDate: Instant, maybeDeleteComment: Option[String])
       OntologyConstants.KnoraApiV2Complex.IsDeleted -> JsonLDBoolean(true),
       OntologyConstants.KnoraApiV2Complex.DeleteDate -> JsonLDObject(
         Map(
-          JsonLDKeywords.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+          JsonLDKeywords.TYPE  -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
           JsonLDKeywords.VALUE -> JsonLDString(deleteDate.toString)
         )
       )
@@ -719,10 +738,10 @@ sealed trait ReadValueV2 extends IOValueV2 {
             val valueSmartIri = valueIri.toSmartIri
 
             val requiredMetadata = Map(
-              JsonLDKeywords.ID -> JsonLDString(valueIri),
-              JsonLDKeywords.TYPE -> JsonLDString(valueContent.valueType.toString),
-              OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-              OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
+              JsonLDKeywords.ID                                     -> JsonLDString(valueIri),
+              JsonLDKeywords.TYPE                                   -> JsonLDString(valueContent.valueType.toString),
+              OntologyConstants.KnoraApiV2Complex.AttachedToUser    -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
+              OntologyConstants.KnoraApiV2Complex.HasPermissions    -> JsonLDString(permissions),
               OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
               OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
                 value = valueCreationDate.toString,
@@ -855,7 +874,7 @@ case class ReadTextValueV2(
 
               JsonLDObject(
                 valueAsJsonLDObject.value ++ Map(
-                  OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup -> JsonLDBoolean(true),
+                  OntologyConstants.KnoraApiV2Complex.TextValueHasMarkup                -> JsonLDBoolean(true),
                   OntologyConstants.KnoraApiV2Complex.TextValueHasMaxStandoffStartIndex -> JsonLDInt(maxStartIndex)
                 )
               )
@@ -1206,222 +1225,226 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     for {
-      valueType: SmartIri <- Future(
-        jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
-      )
+      valueType: SmartIri <-
+        Future(
+          jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
+        )
 
       valueContent: ValueContentV2 <- valueType.toString match {
-        case OntologyConstants.KnoraApiV2Complex.TextValue =>
-          TextValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.TextValue =>
+                                          TextValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.IntValue =>
-          IntegerValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.IntValue =>
+                                          IntegerValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.DecimalValue =>
-          DecimalValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.DecimalValue =>
+                                          DecimalValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.BooleanValue =>
-          BooleanValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.BooleanValue =>
+                                          BooleanValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.DateValue =>
-          DateValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.DateValue =>
+                                          DateValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.GeomValue =>
-          GeomValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.GeomValue =>
+                                          GeomValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.IntervalValue =>
-          IntervalValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.IntervalValue =>
+                                          IntervalValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.TimeValue =>
-          TimeValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.TimeValue =>
+                                          TimeValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.LinkValue =>
-          LinkValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.LinkValue =>
+                                          LinkValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.ListValue =>
-          HierarchicalListValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.ListValue =>
+                                          HierarchicalListValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.UriValue =>
-          UriValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.UriValue =>
+                                          UriValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.GeonameValue =>
-          GeonameValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.GeonameValue =>
+                                          GeonameValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.ColorValue =>
-          ColorValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.ColorValue =>
+                                          ColorValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.StillImageFileValue =>
-          StillImageFileValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.StillImageFileValue =>
+                                          StillImageFileValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.DocumentFileValue =>
-          DocumentFileValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.DocumentFileValue =>
+                                          DocumentFileValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.TextFileValue =>
-          TextFileValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.TextFileValue =>
+                                          TextFileValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.AudioFileValue =>
-          AudioFileValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.AudioFileValue =>
+                                          AudioFileValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.MovingImageFileValue =>
-          MovingImageFileValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.MovingImageFileValue =>
+                                          MovingImageFileValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case OntologyConstants.KnoraApiV2Complex.ArchiveFileValue =>
-          ArchiveFileValueContentV2.fromJsonLDObject(
-            jsonLDObject = jsonLDObject,
-            requestingUser = requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            log = log
-          )
+                                        case OntologyConstants.KnoraApiV2Complex.ArchiveFileValue =>
+                                          ArchiveFileValueContentV2.fromJsonLDObject(
+                                            jsonLDObject = jsonLDObject,
+                                            requestingUser = requestingUser,
+                                            responderManager = responderManager,
+                                            storeManager = storeManager,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            settings = settings,
+                                            log = log
+                                          )
 
-        case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
-      }
+                                        case other =>
+                                          throw NotImplementedException(
+                                            s"Parsing of JSON-LD value type not implemented: $other"
+                                          )
+                                      }
 
     } yield valueContent
   }
@@ -1491,7 +1514,7 @@ case class DateValueContentV2(
 
       case ApiV2Complex =>
         val startCalendarDate: CalendarDateV2 = asCalendarDateRange.startCalendarDate
-        val endCalendarDate: CalendarDateV2 = asCalendarDateRange.endCalendarDate
+        val endCalendarDate: CalendarDateV2   = asCalendarDateRange.endCalendarDate
 
         val startDateAssertions =
           Map(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear -> JsonLDInt(startCalendarDate.year)) ++
@@ -1519,7 +1542,7 @@ case class DateValueContentV2(
 
         JsonLDObject(
           Map(
-            OntologyConstants.KnoraApiV2Complex.ValueAsString -> JsonLDString(valueHasString),
+            OntologyConstants.KnoraApiV2Complex.ValueAsString        -> JsonLDString(valueHasString),
             OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
           ) ++ startDateAssertions ++ endDateAssertions
         )
@@ -1567,7 +1590,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
    */
   def parse(dateStr: String): DateValueContentV2 = {
     val dateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse(dateStr)
-    val (startJDN: Int, endJDN: Int) = dateRange.toJulianDayRange
+    val (startJDN: Int, endJDN: Int)   = dateRange.toJulianDayRange
 
     DateValueContentV2(
       ontologySchema = ApiV2Simple,
@@ -1827,7 +1850,7 @@ case class TextValueContentV2(
               // the xml was converted to HTML
               Map(
                 OntologyConstants.KnoraApiV2Complex.TextValueAsHtml -> JsonLDString(xmlTransformed),
-                OntologyConstants.KnoraApiV2Complex.TextValueAsXml -> JsonLDString(xmlFromStandoff),
+                OntologyConstants.KnoraApiV2Complex.TextValueAsXml  -> JsonLDString(xmlFromStandoff),
                 OntologyConstants.KnoraApiV2Complex.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(
                   definedMappingIri
                 )
@@ -1910,7 +1933,7 @@ case class TextValueContentV2(
             }
 
           val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
-          val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+          val endParentIndex: Option[Int]   = standoffTag.standoffNode.endParentIndex
 
           // return standoff tag with updated attributes
           standoffTag.copy(
@@ -2007,75 +2030,77 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
 
     for {
       maybeValueAsString: Option[String] <- Future(
-        jsonLDObject.maybeStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.ValueAsString,
-          stringFormatter.toSparqlEncodedString
-        )
-      )
+                                              jsonLDObject.maybeStringWithValidation(
+                                                OntologyConstants.KnoraApiV2Complex.ValueAsString,
+                                                stringFormatter.toSparqlEncodedString
+                                              )
+                                            )
       maybeValueHasLanguage: Option[String] = jsonLDObject.maybeStringWithValidation(
-        OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage,
-        stringFormatter.toSparqlEncodedString
-      )
+                                                OntologyConstants.KnoraApiV2Complex.TextValueHasLanguage,
+                                                stringFormatter.toSparqlEncodedString
+                                              )
       maybeTextValueAsXml: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2Complex.TextValueAsXml)
       maybeMappingIri: Option[IRI] = jsonLDObject.maybeIriInObject(
-        OntologyConstants.KnoraApiV2Complex.TextValueHasMapping,
-        stringFormatter.validateAndEscapeIri
-      )
+                                       OntologyConstants.KnoraApiV2Complex.TextValueHasMapping,
+                                       stringFormatter.validateAndEscapeIri
+                                     )
 
       // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
 
       maybeMappingFuture: Option[Future[GetMappingResponseV2]] = maybeMappingIri.map { mappingIri =>
-        for {
-          mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-            mappingIri = mappingIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser
-          )).mapTo[GetMappingResponseV2]
-        } yield mappingResponse
-      }
+                                                                   for {
+                                                                     mappingResponse: GetMappingResponseV2 <-
+                                                                       (responderManager ? GetMappingRequestV2(
+                                                                         mappingIri = mappingIri,
+                                                                         featureFactoryConfig = featureFactoryConfig,
+                                                                         requestingUser = requestingUser
+                                                                       )).mapTo[GetMappingResponseV2]
+                                                                   } yield mappingResponse
+                                                                 }
 
       maybeMappingResponse: Option[GetMappingResponseV2] <- ActorUtil.optionFuture2FutureOption(maybeMappingFuture)
 
       // Did the client submit text with or without standoff markup?
       textValue: TextValueContentV2 = (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
-        case (Some(valueAsString), None, None) =>
-          // Text without standoff.
-          TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(valueAsString),
-            comment = getComment(jsonLDObject)
-          )
+                                        case (Some(valueAsString), None, None) =>
+                                          // Text without standoff.
+                                          TextValueContentV2(
+                                            ontologySchema = ApiV2Complex,
+                                            maybeValueHasString = Some(valueAsString),
+                                            comment = getComment(jsonLDObject)
+                                          )
 
-        case (None, Some(textValueAsXml), Some(mappingResponse)) =>
-          // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
+                                        case (None, Some(textValueAsXml), Some(mappingResponse)) =>
+                                          // Text with standoff. TODO: support submitting text with standoff as JSON-LD rather than as XML.
 
-          val textWithStandoffTags: TextWithStandoffTagsV2 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
-            xml = textValueAsXml,
-            mapping = mappingResponse,
-            acceptStandoffLinksToClientIDs = false,
-            log = log
-          )
+                                          val textWithStandoffTags: TextWithStandoffTagsV2 =
+                                            StandoffTagUtilV2.convertXMLtoStandoffTagV2(
+                                              xml = textValueAsXml,
+                                              mapping = mappingResponse,
+                                              acceptStandoffLinksToClientIDs = false,
+                                              log = log
+                                            )
 
-          TextValueContentV2(
-            ontologySchema = ApiV2Complex,
-            maybeValueHasString = Some(
-              stringFormatter.toSparqlEncodedString(
-                textWithStandoffTags.text,
-                throw BadRequestException("Text value contains invalid characters")
-              )
-            ),
-            valueHasLanguage = maybeValueHasLanguage,
-            standoff = textWithStandoffTags.standoffTagV2,
-            mappingIri = Some(mappingResponse.mappingIri),
-            mapping = Some(mappingResponse.mapping),
-            comment = getComment(jsonLDObject)
-          )
+                                          TextValueContentV2(
+                                            ontologySchema = ApiV2Complex,
+                                            maybeValueHasString = Some(
+                                              stringFormatter.toSparqlEncodedString(
+                                                textWithStandoffTags.text,
+                                                throw BadRequestException("Text value contains invalid characters")
+                                              )
+                                            ),
+                                            valueHasLanguage = maybeValueHasLanguage,
+                                            standoff = textWithStandoffTags.standoffTagV2,
+                                            mappingIri = Some(mappingResponse.mappingIri),
+                                            mapping = Some(mappingResponse.mapping),
+                                            comment = getComment(jsonLDObject)
+                                          )
 
-        case _ =>
-          throw BadRequestException(
-            s"Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping"
-          )
-      }
+                                        case _ =>
+                                          throw BadRequestException(
+                                            s"Invalid combination of knora-api:valueHasString, knora-api:textValueAsXml, and/or knora-api:textValueHasMapping"
+                                          )
+                                      }
 
     } yield textValue
   }
@@ -3173,11 +3198,11 @@ object FileValueWithSipiMetadata {
     for {
       // The submitted value provides only Sipi's internal filename for the file.
       internalFilename <- Future(
-        jsonLDObject.requireStringWithValidation(
-          OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
-          stringFormatter.toSparqlEncodedString
-        )
-      )
+                            jsonLDObject.requireStringWithValidation(
+                              OntologyConstants.KnoraApiV2Complex.FileValueHasFilename,
+                              stringFormatter.toSparqlEncodedString
+                            )
+                          )
 
       // Ask Sipi about the rest of the file's metadata.
       tempFilePath = stringFormatter.makeSipiTempFilePath(settings, internalFilename)
@@ -3187,11 +3212,11 @@ object FileValueWithSipiMetadata {
       )).mapTo[GetFileMetadataResponse]
 
       fileValue = FileValueV2(
-        internalFilename = internalFilename,
-        internalMimeType = fileMetadataResponse.internalMimeType,
-        originalFilename = fileMetadataResponse.originalFilename,
-        originalMimeType = fileMetadataResponse.originalMimeType
-      )
+                    internalFilename = internalFilename,
+                    internalMimeType = fileMetadataResponse.internalMimeType,
+                    originalFilename = fileMetadataResponse.originalFilename,
+                    originalMimeType = fileMetadataResponse.originalMimeType
+                  )
     } yield FileValueWithSipiMetadata(fileValue, fileMetadataResponse)
   }
 }
@@ -3317,19 +3342,19 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
 
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
-        jsonLDObject = jsonLDObject,
-        requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
-        settings = settings,
-        log = log
-      )
+                                     jsonLDObject = jsonLDObject,
+                                     requestingUser = requestingUser,
+                                     responderManager = responderManager,
+                                     storeManager = storeManager,
+                                     settings = settings,
+                                     log = log
+                                   )
 
       _ = if (!settings.imageMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
-        throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for still image files"
-        )
-      }
+            throw BadRequestException(
+              s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for still image files"
+            )
+          }
     } yield StillImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -3498,19 +3523,19 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
 
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
-        jsonLDObject = jsonLDObject,
-        requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
-        settings = settings,
-        log = log
-      )
+                                     jsonLDObject = jsonLDObject,
+                                     requestingUser = requestingUser,
+                                     responderManager = responderManager,
+                                     storeManager = storeManager,
+                                     settings = settings,
+                                     log = log
+                                   )
 
       _ = if (!settings.documentMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
-        throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for document files"
-        )
-      }
+            throw BadRequestException(
+              s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for document files"
+            )
+          }
     } yield DocumentFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -3539,19 +3564,19 @@ object ArchiveFileValueContentV2 extends ValueContentReaderV2[ArchiveFileValueCo
 
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
-        jsonLDObject = jsonLDObject,
-        requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
-        settings = settings,
-        log = log
-      )
+                                     jsonLDObject = jsonLDObject,
+                                     requestingUser = requestingUser,
+                                     responderManager = responderManager,
+                                     storeManager = storeManager,
+                                     settings = settings,
+                                     log = log
+                                   )
 
       _ = if (!settings.archiveMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
-        throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for archive files"
-        )
-      }
+            throw BadRequestException(
+              s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for archive files"
+            )
+          }
     } yield ArchiveFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -3635,19 +3660,19 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
 
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
-        jsonLDObject = jsonLDObject,
-        requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
-        settings = settings,
-        log = log
-      )
+                                     jsonLDObject = jsonLDObject,
+                                     requestingUser = requestingUser,
+                                     responderManager = responderManager,
+                                     storeManager = storeManager,
+                                     settings = settings,
+                                     log = log
+                                   )
 
       _ = if (!settings.textMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
-        throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for text files"
-        )
-      }
+            throw BadRequestException(
+              s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for text files"
+            )
+          }
     } yield TextFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -3733,19 +3758,19 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
 
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
-        jsonLDObject = jsonLDObject,
-        requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
-        settings = settings,
-        log = log
-      )
+                                     jsonLDObject = jsonLDObject,
+                                     requestingUser = requestingUser,
+                                     responderManager = responderManager,
+                                     storeManager = storeManager,
+                                     settings = settings,
+                                     log = log
+                                   )
 
       _ = if (!settings.audioMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
-        throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for audio files"
-        )
-      }
+            throw BadRequestException(
+              s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for audio files"
+            )
+          }
     } yield AudioFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
@@ -3836,19 +3861,19 @@ object MovingImageFileValueContentV2 extends ValueContentReaderV2[MovingImageFil
 
     for {
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
-        jsonLDObject = jsonLDObject,
-        requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
-        settings = settings,
-        log = log
-      )
+                                     jsonLDObject = jsonLDObject,
+                                     requestingUser = requestingUser,
+                                     responderManager = responderManager,
+                                     storeManager = storeManager,
+                                     settings = settings,
+                                     log = log
+                                   )
 
       _ = if (!settings.videoMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
-        throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for video files"
-        )
-      }
+            throw BadRequestException(
+              s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for video files"
+            )
+          }
     } yield MovingImageFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,

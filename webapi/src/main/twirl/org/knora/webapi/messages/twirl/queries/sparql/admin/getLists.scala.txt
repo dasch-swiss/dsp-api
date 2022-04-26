@@ -9,11 +9,9 @@
  * Gets basic information about all lists. If the IRI of a project is supplied,
  * then only lists belonging to this project are returned.
  *
- * @param triplestore the name of the triplestore being used.
  * @param maybeProjectIri the IRI of the project the list belongs to.
  *@
-@(triplestore: String,
-  maybeProjectIri: Option[IRI])
+@(maybeProjectIri: Option[IRI])
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

@@ -8,11 +8,9 @@
 @**
  * Returns the permission-relevant assertions on the subject and object of a link value.
  *
- * @param triplestore the name of the triplestore being used.
  * @param linkValueIri the IRI of the link value.
  *@
-@(triplestore: String,
-  linkValueIri: IRI)
+@(linkValueIri: IRI)
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
