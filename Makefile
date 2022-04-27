@@ -280,12 +280,15 @@ clean-local-tmp:
 	@rm -rf .tmp
 	@mkdir .tmp
 
-clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
+clean: docs-clean clean-local-tmp clean-docker clean-sipi-tmp ## clean build artifacts
 	@rm -rf .env
 
 .PHONY: clean-sipi-tmp
 clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
-	@rm -rf sipi/images/tmp/*
+	@mkdir empty_folder_for_clean_sipi_tmp
+	@cp sipi/images/tmp/.gitignore empty_folder_for_clean_sipi_tmp/.gitignore
+	@rsync -a --delete empty_folder_for_clean_sipi_tmp/ sipi/images/tmp/ # use rsync because it can handle large number of files
+	@rm -r empty_folder_for_clean_sipi_tmp
 
 .PHONY: clean-sipi-projects
 clean-sipi-projects: ## deletes all files uploaded within a project
