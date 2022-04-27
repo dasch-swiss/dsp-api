@@ -67,6 +67,7 @@
 ```json
     {
       "shortname": "newproject",
+      "shortcode": "3333",
       "longname": "project longname",
       "description": [{"value": "project description", "language": "en"}],
       "keywords": ["test project"],
