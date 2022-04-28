@@ -19,7 +19,7 @@
     rdf:type           owl:Ontology ;
     rdfs:label         "The Knora base ontology"@en ;
     :attachedToProject knora-admin:SystemProject ;
-    :ontologyVersion   "knora-base v20" .
+    :ontologyVersion   "knora-base v21" .
 
 
 #################################################################
@@ -567,6 +567,29 @@
 ###  http://www.knora.org/ontology/knora-base#isPartOfValue
 
 :isPartOfValue
+    rdf:type                owl:ObjectProperty ;
+    :objectClassConstraint  :LinkValue ;
+    :subjectClassConstraint :Resource ;
+    rdfs:subPropertyOf      :hasLinkToValue .
+
+
+###  http://www.knora.org/ontology/knora-base#isSequenceOf
+
+:isSequenceOf
+    rdf:type                owl:ObjectProperty ;
+    rdfs:label              "ist Sequenz von"@de,
+                            "is sequence of"@en,
+                            "fait partie de"@fr,
+                            "fa parte di"@it ;
+    rdfs:comment            "Indicates that this resource is a sequence of a video or audio resource"@en ;
+    :subjectClassConstraint :Resource ;
+    :objectClassConstraint  :Resource ;
+    rdfs:subPropertyOf      :hasLinkTo .
+
+
+###  http://www.knora.org/ontology/knora-base#isSequenceOfValue
+
+:isSequenceOfValue
     rdf:type                owl:ObjectProperty ;
     :objectClassConstraint  :LinkValue ;
     :subjectClassConstraint :Resource ;
