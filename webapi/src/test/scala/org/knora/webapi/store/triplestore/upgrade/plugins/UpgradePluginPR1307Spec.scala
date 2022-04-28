@@ -37,7 +37,7 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
       val expectedResult1: SparqlSelectResultBody = expectedResult(
         Seq(
           Map(
-            "s" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ",
+            "s"             -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ",
             "maxStartIndex" -> "7"
           )
         )
@@ -96,42 +96,42 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         Seq(
           Map(
             "startIndex" -> "0",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/0"
+            "tag"        -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/0"
           ),
           Map(
-            "startIndex" -> "1",
+            "startIndex"  -> "1",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/0",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1"
           ),
           Map(
-            "startIndex" -> "2",
+            "startIndex"  -> "2",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/2"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/2"
           ),
           Map(
-            "startIndex" -> "3",
+            "startIndex"  -> "3",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/3"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/3"
           ),
           Map(
-            "startIndex" -> "4",
+            "startIndex"  -> "4",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/4"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/4"
           ),
           Map(
-            "startIndex" -> "5",
+            "startIndex"  -> "5",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/5"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/5"
           ),
           Map(
-            "startIndex" -> "6",
+            "startIndex"  -> "6",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/6"
           ),
           Map(
-            "startIndex" -> "7",
+            "startIndex"  -> "7",
             "startParent" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/1",
-            "tag" -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/7"
+            "tag"         -> "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ/standoff/7"
           )
         )
       )

@@ -17,10 +17,9 @@ import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 
 object VersionRouteITSpec {
-  val config: Config = ConfigFactory.parseString(
-  """
-    |akka.loglevel = "DEBUG"
-    |akka.stdout-loglevel = "DEBUG"
+  val config: Config = ConfigFactory.parseString("""
+                                                   |akka.loglevel = "DEBUG"
+                                                   |akka.stdout-loglevel = "DEBUG"
   """.stripMargin)
 }
 
@@ -30,7 +29,7 @@ object VersionRouteITSpec {
 class VersionRouteITSpec extends ITKnoraLiveSpec(VersionRouteITSpec.config) {
 
   private def getJsonResponse: JsObject = {
-    val request = Get(baseApiUrl + s"/version")
+    val request                = Get(baseApiUrl + s"/version")
     val response: HttpResponse = singleAwaitingRequest(request)
     val responseBody: String =
       Await.result(response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8")), 10.seconds)
@@ -40,7 +39,7 @@ class VersionRouteITSpec extends ITKnoraLiveSpec(VersionRouteITSpec.config) {
 
   private def checkNonEmpty(field: String): Boolean = {
     val responseBodyJson = getJsonResponse
-    var result = false
+    var result           = false
     try {
       val value = responseBodyJson.fields(field).toString().replaceAll("\"", "")
       result = !value.equals("")
@@ -53,14 +52,14 @@ class VersionRouteITSpec extends ITKnoraLiveSpec(VersionRouteITSpec.config) {
   "The Version Route" should {
 
     "return 'OK'" in {
-      val request = Get(baseApiUrl + s"/version")
+      val request                = Get(baseApiUrl + s"/version")
       val response: HttpResponse = singleAwaitingRequest(request)
       response.status should be(StatusCodes.OK)
     }
 
     "return 'version' as name" in {
       val responseBodyJson = getJsonResponse
-      val value = responseBodyJson.fields("name").toString().replaceAll("\"", "")
+      val value            = responseBodyJson.fields("name").toString().replaceAll("\"", "")
       assert(value.equals("version"))
     }
 

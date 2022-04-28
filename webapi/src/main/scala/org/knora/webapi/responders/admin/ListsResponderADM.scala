@@ -113,17 +113,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     // log.debug("listsGetRequestV2")
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getLists(
-            maybeProjectIri = projectIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getLists(
+                           maybeProjectIri = projectIri
+                         )
+                         .toString()
+                     )
 
       listsResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparqlQuery,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                         sparql = sparqlQuery,
+                         featureFactoryConfig = featureFactoryConfig
+                       )).mapTo[SparqlExtendedConstructResponse]
 
       // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
 
@@ -131,32 +131,40 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       statements = listsResponse.statements.toList
 
       lists: Seq[ListNodeInfoADM] = statements.map {
-        case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-          val name: Option[String] = propsMap
-            .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-          val labels: Seq[StringLiteralV2] = propsMap
-            .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
-            .map(_.asInstanceOf[StringLiteralV2])
-          val comments: Seq[StringLiteralV2] = propsMap
-            .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
-            .map(_.asInstanceOf[StringLiteralV2])
+                                      case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+                                        val name: Option[String] = propsMap
+                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .map(_.head.asInstanceOf[StringLiteralV2].value)
+                                        val labels: Seq[StringLiteralV2] = propsMap
+                                          .getOrElse(
+                                            OntologyConstants.Rdfs.Label.toSmartIri,
+                                            Seq.empty[StringLiteralV2]
+                                          )
+                                          .map(_.asInstanceOf[StringLiteralV2])
+                                        val comments: Seq[StringLiteralV2] = propsMap
+                                          .getOrElse(
+                                            OntologyConstants.Rdfs.Comment.toSmartIri,
+                                            Seq.empty[StringLiteralV2]
+                                          )
+                                          .map(_.asInstanceOf[StringLiteralV2])
 
-          ListRootNodeInfoADM(
-            id = listIri.toString,
-            projectIri = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                throw InconsistentRepositoryDataException("The required property 'attachedToProject' not found.")
-              )
-              .head
-              .asInstanceOf[IriLiteralV2]
-              .value,
-            name = name,
-            labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-            comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
-          ).unescape
-      }
+                                        ListRootNodeInfoADM(
+                                          id = listIri.toString,
+                                          projectIri = propsMap
+                                            .getOrElse(
+                                              OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
+                                              throw InconsistentRepositoryDataException(
+                                                "The required property 'attachedToProject' not found."
+                                              )
+                                            )
+                                            .head
+                                            .asInstanceOf[IriLiteralV2]
+                                            .value,
+                                          name = name,
+                                          labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                          comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
+                                        ).unescape
+                                    }
 
       // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
@@ -186,31 +194,31 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           for {
             // here we know that the list exists and it is fine if children is an empty list
             children: Seq[ListChildNodeADM] <- getChildren(
-              ofNodeIri = rootNodeIri,
-              shallow = false,
-              featureFactoryConfig = featureFactoryConfig,
-              KnoraSystemInstances.Users.SystemUser
-            )
+                                                 ofNodeIri = rootNodeIri,
+                                                 shallow = false,
+                                                 featureFactoryConfig = featureFactoryConfig,
+                                                 KnoraSystemInstances.Users.SystemUser
+                                               )
 
             maybeRootNodeInfo <- listNodeInfoGetADM(
-              nodeIri = rootNodeIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = KnoraSystemInstances.Users.SystemUser
-            )
+                                   nodeIri = rootNodeIri,
+                                   featureFactoryConfig = featureFactoryConfig,
+                                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                                 )
 
             // _ = log.debug(s"listGetADM - maybeRootNodeInfo: {}", maybeRootNodeInfo)
 
             rootNodeInfo = maybeRootNodeInfo match {
-              case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
-              case Some(_: ListChildNodeInfoADM) =>
-                throw InconsistentRepositoryDataException(
-                  "A child node info was found, although we are expecting a root node info. Please report this as a possible bug."
-                )
-              case Some(_) | None =>
-                throw InconsistentRepositoryDataException(
-                  "No info about list node found, although list node should exist. Please report this as a possible bug."
-                )
-            }
+                             case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
+                             case Some(_: ListChildNodeInfoADM) =>
+                               throw InconsistentRepositoryDataException(
+                                 "A child node info was found, although we are expecting a root node info. Please report this as a possible bug."
+                               )
+                             case Some(_) | None =>
+                               throw InconsistentRepositoryDataException(
+                                 "No info about list node found, although list node should exist. Please report this as a possible bug."
+                               )
+                           }
 
             list = ListADM(listinfo = rootNodeInfo, children = children)
           } yield Some(list)
@@ -241,23 +249,23 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     ): Future[ListNodeGetResponseADM] =
       for {
         maybeNodeInfo <- listNodeInfoGetADM(
-          nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )
+                           nodeIri = nodeIri,
+                           featureFactoryConfig = featureFactoryConfig,
+                           requestingUser = requestingUser
+                         )
 
         nodeinfo = maybeNodeInfo match {
-          case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
-          case _                                         => throw NotFoundException(s"Information not found for node '$nodeIri'")
-        }
+                     case Some(childNodeInfo: ListChildNodeInfoADM) => childNodeInfo
+                     case _                                         => throw NotFoundException(s"Information not found for node '$nodeIri'")
+                   }
 
         // make a NodeADM instance
         entirenode = ListNodeGetResponseADM(
-          node = NodeADM(
-            nodeinfo = nodeinfo,
-            children = childNode.children
-          )
-        )
+                       node = NodeADM(
+                         nodeinfo = nodeinfo,
+                         children = childNode.children
+                       )
+                     )
       } yield entirenode
 
     for {
@@ -268,35 +276,35 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           for {
             // Yes. Get the entire list
             maybeList <- listGetADM(
-              rootNodeIri = nodeIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+                           rootNodeIri = nodeIri,
+                           featureFactoryConfig = featureFactoryConfig,
+                           requestingUser = requestingUser
+                         )
 
             entireList = maybeList match {
-              case Some(list) => ListGetResponseADM(list = list)
-              case None       => throw NotFoundException(s"List '$nodeIri' not found")
-            }
+                           case Some(list) => ListGetResponseADM(list = list)
+                           case None       => throw NotFoundException(s"List '$nodeIri' not found")
+                         }
           } yield entireList
         } else {
           for {
             // No. Get the node and all its sublist children.
             // First, get node itself and all children.
             maybeNode <- listNodeGetADM(
-              nodeIri = nodeIri,
-              shallow = true,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+                           nodeIri = nodeIri,
+                           shallow = true,
+                           featureFactoryConfig = featureFactoryConfig,
+                           requestingUser = requestingUser
+                         )
 
             entireNode <- maybeNode match {
-              // make sure that it is a child node
-              case Some(childNode: ListChildNodeADM) =>
-                // get the info of the child node
-                getNodeADM(childNode, featureFactoryConfig)
+                            // make sure that it is a child node
+                            case Some(childNode: ListChildNodeADM) =>
+                              // get the info of the child node
+                              getNodeADM(childNode, featureFactoryConfig)
 
-              case _ => throw NotFoundException(s"Node '$nodeIri' not found")
-            }
+                            case _ => throw NotFoundException(s"Node '$nodeIri' not found")
+                          }
           } yield entireNode
         }
     } yield result
@@ -318,19 +326,19 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   ): Future[Option[ListNodeInfoADM]] = {
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getListNode(
-            nodeIri = nodeIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getListNode(
+                           nodeIri = nodeIri
+                         )
+                         .toString()
+                     )
 
       // _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
 
       listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparqlQuery,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                            sparql = sparqlQuery,
+                            featureFactoryConfig = featureFactoryConfig
+                          )).mapTo[SparqlExtendedConstructResponse]
 
       statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
 
@@ -456,16 +464,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   ): Future[NodeInfoGetResponseADM] =
     for {
       maybeListNodeInfoADM <- listNodeInfoGetADM(
-        nodeIri = nodeIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = requestingUser
-      )
+                                nodeIri = nodeIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = requestingUser
+                              )
 
       result = maybeListNodeInfoADM match {
-        case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
-        case Some(rootInfo: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(rootInfo)
-        case _                                     => throw NotFoundException(s"List node '$nodeIri' not found")
-      }
+                 case Some(childInfo: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(childInfo)
+                 case Some(rootInfo: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(rootInfo)
+                 case _                                     => throw NotFoundException(s"List node '$nodeIri' not found")
+               }
     } yield result
 
   /**
@@ -486,17 +494,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // this query will give us only the information about the root node.
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getListNode(
-            nodeIri = nodeIri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getListNode(
+                           nodeIri = nodeIri
+                         )
+                         .toString()
+                     )
 
       listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparqlQuery,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                            sparql = sparqlQuery,
+                            featureFactoryConfig = featureFactoryConfig
+                          )).mapTo[SparqlExtendedConstructResponse]
 
       // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
 
@@ -505,11 +513,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           for {
             // here we know that the list exists and it is fine if children is an empty list
             children: Seq[ListChildNodeADM] <- getChildren(
-              ofNodeIri = nodeIri,
-              shallow = shallow,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+                                                 ofNodeIri = nodeIri,
+                                                 shallow = shallow,
+                                                 featureFactoryConfig = featureFactoryConfig,
+                                                 requestingUser = requestingUser
+                                               )
 
             // _ = log.debug(s"listGetADM - children count: {}", children.size)
 
@@ -517,97 +525,98 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             statements = listInfoResponse.statements
 
             node: ListNodeADM = statements.head match {
-              case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                val labels: Seq[StringLiteralV2] = propsMap
-                  .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
-                  .map(_.asInstanceOf[StringLiteralV2])
-                val comments: Seq[StringLiteralV2] = propsMap
-                  .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
-                  .map(_.asInstanceOf[StringLiteralV2])
+                                  case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+                                    val labels: Seq[StringLiteralV2] = propsMap
+                                      .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
+                                      .map(_.asInstanceOf[StringLiteralV2])
+                                    val comments: Seq[StringLiteralV2] = propsMap
+                                      .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
+                                      .map(_.asInstanceOf[StringLiteralV2])
 
-                val attachedToProjectOption: Option[IRI] =
-                  propsMap.get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri) match {
-                    case Some(iris: Seq[LiteralV2]) =>
-                      iris.headOption match {
-                        case Some(iri: IriLiteralV2) => Some(iri.value)
-                        case other =>
-                          throw InconsistentRepositoryDataException(
-                            s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
-                          )
-                      }
+                                    val attachedToProjectOption: Option[IRI] =
+                                      propsMap.get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri) match {
+                                        case Some(iris: Seq[LiteralV2]) =>
+                                          iris.headOption match {
+                                            case Some(iri: IriLiteralV2) => Some(iri.value)
+                                            case other =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                                              )
+                                          }
 
-                    case None => None
-                  }
+                                        case None => None
+                                      }
 
-                val hasRootNodeOption: Option[IRI] =
-                  propsMap.get(OntologyConstants.KnoraBase.HasRootNode.toSmartIri) match {
-                    case Some(iris: Seq[LiteralV2]) =>
-                      iris.headOption match {
-                        case Some(iri: IriLiteralV2) => Some(iri.value)
-                        case other =>
-                          throw InconsistentRepositoryDataException(
-                            s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
-                          )
-                      }
+                                    val hasRootNodeOption: Option[IRI] =
+                                      propsMap.get(OntologyConstants.KnoraBase.HasRootNode.toSmartIri) match {
+                                        case Some(iris: Seq[LiteralV2]) =>
+                                          iris.headOption match {
+                                            case Some(iri: IriLiteralV2) => Some(iri.value)
+                                            case other =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                                              )
+                                          }
 
-                    case None => None
-                  }
+                                        case None => None
+                                      }
 
-                val isRootNode: Boolean = propsMap.get(OntologyConstants.KnoraBase.IsRootNode.toSmartIri) match {
-                  case Some(values: Seq[LiteralV2]) =>
-                    values.headOption match {
-                      case Some(value: BooleanLiteralV2) => value.value
-                      case Some(other) =>
-                        throw InconsistentRepositoryDataException(
-                          s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other"
-                        )
-                      case None => false
-                    }
+                                    val isRootNode: Boolean =
+                                      propsMap.get(OntologyConstants.KnoraBase.IsRootNode.toSmartIri) match {
+                                        case Some(values: Seq[LiteralV2]) =>
+                                          values.headOption match {
+                                            case Some(value: BooleanLiteralV2) => value.value
+                                            case Some(other) =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other"
+                                              )
+                                            case None => false
+                                          }
 
-                  case None => false
-                }
+                                        case None => false
+                                      }
 
-                val positionOption: Option[Int] = propsMap
-                  .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
-                  .map(_.head.asInstanceOf[IntLiteralV2].value)
+                                    val positionOption: Option[Int] = propsMap
+                                      .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
+                                      .map(_.head.asInstanceOf[IntLiteralV2].value)
 
-                if (isRootNode) {
-                  ListRootNodeADM(
-                    id = nodeIri.toString,
-                    projectIri = attachedToProjectOption.getOrElse(
-                      throw InconsistentRepositoryDataException(
-                        s"Required attachedToProject property missing for list node $nodeIri."
-                      )
-                    ),
-                    name = propsMap
-                      .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-                      .map(_.head.asInstanceOf[StringLiteralV2].value),
-                    labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                    comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
-                    children = children
-                  )
-                } else {
-                  ListChildNodeADM(
-                    id = nodeIri.toString,
-                    name = propsMap
-                      .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-                      .map(_.head.asInstanceOf[StringLiteralV2].value),
-                    labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                    comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
-                    position = positionOption.getOrElse(
-                      throw InconsistentRepositoryDataException(
-                        s"Required position property missing for list node $nodeIri."
-                      )
-                    ),
-                    hasRootNode = hasRootNodeOption.getOrElse(
-                      throw InconsistentRepositoryDataException(
-                        s"Required hasRootNode property missing for list node $nodeIri."
-                      )
-                    ),
-                    children = children
-                  )
-                }
-            }
+                                    if (isRootNode) {
+                                      ListRootNodeADM(
+                                        id = nodeIri.toString,
+                                        projectIri = attachedToProjectOption.getOrElse(
+                                          throw InconsistentRepositoryDataException(
+                                            s"Required attachedToProject property missing for list node $nodeIri."
+                                          )
+                                        ),
+                                        name = propsMap
+                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .map(_.head.asInstanceOf[StringLiteralV2].value),
+                                        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                        comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+                                        children = children
+                                      )
+                                    } else {
+                                      ListChildNodeADM(
+                                        id = nodeIri.toString,
+                                        name = propsMap
+                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .map(_.head.asInstanceOf[StringLiteralV2].value),
+                                        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                        comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
+                                        position = positionOption.getOrElse(
+                                          throw InconsistentRepositoryDataException(
+                                            s"Required position property missing for list node $nodeIri."
+                                          )
+                                        ),
+                                        hasRootNode = hasRootNodeOption.getOrElse(
+                                          throw InconsistentRepositoryDataException(
+                                            s"Required hasRootNode property missing for list node $nodeIri."
+                                          )
+                                        ),
+                                        children = children
+                                      )
+                                    }
+                                }
 
             // _ = log.debug(s"listGetADM - list: {}", MessageUtil.toSource(list))
           } yield Some(node)
@@ -700,32 +709,32 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     for {
       nodeChildrenQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getListNodeWithChildren(
-            startNodeIri = ofNodeIri
-          )
-          .toString()
-      }
+                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                               .getListNodeWithChildren(
+                                 startNodeIri = ofNodeIri
+                               )
+                               .toString()
+                           }
 
       nodeWithChildrenResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = nodeChildrenQuery,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                                    sparql = nodeChildrenQuery,
+                                    featureFactoryConfig = featureFactoryConfig
+                                  )).mapTo[SparqlExtendedConstructResponse]
 
       statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
       startNodePropsMap: Map[SmartIri, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
 
       children: Seq[ListChildNodeADM] = startNodePropsMap.get(
-        OntologyConstants.KnoraBase.HasSubListNode.toSmartIri
-      ) match {
-        case Some(iris: Seq[LiteralV2]) =>
-          iris.map { iri =>
-            createChildNode(iri.toString, statements)
-          }
+                                          OntologyConstants.KnoraBase.HasSubListNode.toSmartIri
+                                        ) match {
+                                          case Some(iris: Seq[LiteralV2]) =>
+                                            iris.map { iri =>
+                                              createChildNode(iri.toString, statements)
+                                            }
 
-        case None => Seq.empty[ListChildNodeADM]
-      }
+                                          case None => Seq.empty[ListChildNodeADM]
+                                        }
 
       sortedChildren = children.sortBy(_.position) map (_.sorted)
 
@@ -789,17 +798,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     // TODO: Rewrite using a construct sparql query
     for {
       nodePathQuery <- Future {
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getNodePath(
-            queryNodeIri = queryNodeIri,
-            preferredLanguage = requestingUser.lang,
-            fallbackLanguage = settings.fallbackLanguage
-          )
-          .toString()
-      }
+                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                           .getNodePath(
+                             queryNodeIri = queryNodeIri,
+                             preferredLanguage = requestingUser.lang,
+                             fallbackLanguage = settings.fallbackLanguage
+                           )
+                           .toString()
+                       }
 
       nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery))
-        .mapTo[SparqlSelectResult]
+                                                .mapTo[SparqlSelectResult]
 
       /*
 
@@ -817,16 +826,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       // A Map of node IRIs to query result rows.
       nodeMap: Map[IRI, Map[String, String]] = nodePathResponse.results.bindings.map { row =>
-        row.rowMap("node") -> row.rowMap
-      }.toMap
+                                                 row.rowMap("node") -> row.rowMap
+                                               }.toMap
 
       // A Map of child node IRIs to parent node IRIs.
       parentMap: Map[IRI, IRI] = nodePathResponse.results.bindings.foldLeft(Map.empty[IRI, IRI]) { case (acc, row) =>
-        row.rowMap.get("child") match {
-          case Some(child) => acc + (child -> row.rowMap("node"))
-          case None        => acc
-        }
-      }
+                                   row.rowMap.get("child") match {
+                                     case Some(child) => acc + (child -> row.rowMap("node"))
+                                     case None        => acc
+                                   }
+                                 }
     } yield NodePathGetResponseADM(elements = makePath(queryNodeIri, nodeMap, parentMap, Nil))
   }
 
@@ -886,17 +895,28 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         maybeParentListNode <- listNodeGetADM(
-          nodeIri = parentNodeIri,
-          shallow = true,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                                 nodeIri = parentNodeIri,
+                                 shallow = true,
+                                 featureFactoryConfig = featureFactoryConfig,
+                                 requestingUser = KnoraSystemInstances.Users.SystemUser
+                               )
 
         (parentListNode: ListNodeADM, children: Seq[ListChildNodeADM]) = maybeParentListNode match {
-          case Some(node: ListRootNodeADM)  => (node.asInstanceOf[ListRootNodeADM], node.children)
-          case Some(node: ListChildNodeADM) => (node.asInstanceOf[ListChildNodeADM], node.children)
-          case Some(_) | None               => throw BadRequestException(s"List node '$parentNodeIri' not found.")
-        }
+                                                                           case Some(node: ListRootNodeADM) =>
+                                                                             (
+                                                                               node.asInstanceOf[ListRootNodeADM],
+                                                                               node.children
+                                                                             )
+                                                                           case Some(node: ListChildNodeADM) =>
+                                                                             (
+                                                                               node.asInstanceOf[ListChildNodeADM],
+                                                                               node.children
+                                                                             )
+                                                                           case Some(_) | None =>
+                                                                             throw BadRequestException(
+                                                                               s"List node '$parentNodeIri' not found."
+                                                                             )
+                                                                         }
 
         // get position of the new child
         position = getPositionOfNewChild(children)
@@ -908,13 +928,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             for {
               // shift siblings that are after given position to right
               updatedSiblings <- shiftNodes(
-                startPos = position,
-                endPos = children.size - 1,
-                nodes = children,
-                shiftToLeft = false,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                   startPos = position,
+                                   endPos = children.size - 1,
+                                   nodes = children,
+                                   shiftToLeft = false,
+                                   dataNamedGraph = dataNamedGraph,
+                                   featureFactoryConfig = featureFactoryConfig
+                                 )
             } yield updatedSiblings
           } else {
             // No. new node will be appended to the end, no shifting is necessary.
@@ -929,28 +949,28 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
       maybeProject <- (responderManager ? ProjectGetADM(
-        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
-        featureFactoryConfig = featureFactoryConfig,
-        KnoraSystemInstances.Users.SystemUser
-      )).mapTo[Option[ProjectADM]]
+                        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
+                        featureFactoryConfig = featureFactoryConfig,
+                        KnoraSystemInstances.Users.SystemUser
+                      )).mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
-        case Some(project: ProjectADM) => project
-        case None                      => throw BadRequestException(s"Project '${projectIri}' not found.")
-      }
+                              case Some(project: ProjectADM) => project
+                              case None                      => throw BadRequestException(s"Project '${projectIri}' not found.")
+                            }
 
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
-        projectIri.value,
-        name
-      )
+                                 projectIri.value,
+                                 name
+                               )
       _ = if (!projectUniqueNodeName) {
-        val escapedName = name.get.value
-        val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
-        throw BadRequestException(
-          s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
-        )
-      }
+            val escapedName   = name.get.value
+            val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
+            throw BadRequestException(
+              s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
+            )
+          }
 
       // calculate the data named graph
       dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
@@ -969,56 +989,56 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri: Option[SmartIri] = id.map(_.value).map(_.toSmartIri)
-      maybeShortcode: String = project.shortcode
-      newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+      maybeShortcode: String          = project.shortcode
+      newListNodeIri: IRI            <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 
       // Create the new list node depending on type
       createNewListSparqlString: String = createNodeRequest match {
-        case ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM(
-              _,
-              projectIri,
-              name,
-              labels,
-              comments
-            ) =>
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .createNewListNode(
-              dataNamedGraph = dataNamedGraph,
-              listClassIri = OntologyConstants.KnoraBase.ListNode,
-              projectIri = projectIri.value,
-              nodeIri = newListNodeIri,
-              parentNodeIri = None,
-              rootNodeIri = rootNodeIri,
-              position = None,
-              maybeName = name.map(_.value),
-              maybeLabels = labels.value,
-              maybeComments = Some(comments.value)
-            )
-            .toString
-        case ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM(
-              _,
-              parentNodeIri,
-              projectIri,
-              name,
-              position,
-              labels,
-              comments
-            ) =>
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .createNewListNode(
-              dataNamedGraph = dataNamedGraph,
-              listClassIri = OntologyConstants.KnoraBase.ListNode,
-              projectIri = projectIri.value,
-              nodeIri = newListNodeIri,
-              parentNodeIri = Some(parentNodeIri.value),
-              rootNodeIri = rootNodeIri,
-              position = newPosition,
-              maybeName = name.map(_.value),
-              maybeLabels = labels.value,
-              maybeComments = comments.map(_.value)
-            )
-            .toString
-      }
+                                            case ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM(
+                                                  _,
+                                                  projectIri,
+                                                  name,
+                                                  labels,
+                                                  comments
+                                                ) =>
+                                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                                .createNewListNode(
+                                                  dataNamedGraph = dataNamedGraph,
+                                                  listClassIri = OntologyConstants.KnoraBase.ListNode,
+                                                  projectIri = projectIri.value,
+                                                  nodeIri = newListNodeIri,
+                                                  parentNodeIri = None,
+                                                  rootNodeIri = rootNodeIri,
+                                                  position = None,
+                                                  maybeName = name.map(_.value),
+                                                  maybeLabels = labels.value,
+                                                  maybeComments = Some(comments.value)
+                                                )
+                                                .toString
+                                            case ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM(
+                                                  _,
+                                                  parentNodeIri,
+                                                  projectIri,
+                                                  name,
+                                                  position,
+                                                  labels,
+                                                  comments
+                                                ) =>
+                                              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                                .createNewListNode(
+                                                  dataNamedGraph = dataNamedGraph,
+                                                  listClassIri = OntologyConstants.KnoraBase.ListNode,
+                                                  projectIri = projectIri.value,
+                                                  nodeIri = newListNodeIri,
+                                                  parentNodeIri = Some(parentNodeIri.value),
+                                                  rootNodeIri = rootNodeIri,
+                                                  position = newPosition,
+                                                  maybeName = name.map(_.value),
+                                                  maybeLabels = labels.value,
+                                                  maybeComments = comments.map(_.value)
+                                                )
+                                                .toString
+                                          }
 
       _ <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
     } yield newListNodeIri
@@ -1053,14 +1073,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // Verify that the list was created.
         maybeNewListADM <- listGetADM(
-          rootNodeIri = listRootIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                             rootNodeIri = listRootIri,
+                             featureFactoryConfig = featureFactoryConfig,
+                             requestingUser = KnoraSystemInstances.Users.SystemUser
+                           )
 
         newListADM = maybeNewListADM.getOrElse(
-          throw UpdateNotPerformedException(s"List $listRootIri was not created. Please report this as a possible bug.")
-        )
+                       throw UpdateNotPerformedException(
+                         s"List $listRootIri was not created. Please report this as a possible bug."
+                       )
+                     )
 
         // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
 
@@ -1069,10 +1091,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // run list creation with an global IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        LISTS_GLOBAL_LOCK_IRI,
-        () => listCreateTask(createRootRequest, featureFactoryConfig, apiRequestID)
-      )
+                      apiRequestID,
+                      LISTS_GLOBAL_LOCK_IRI,
+                      () => listCreateTask(createRootRequest, featureFactoryConfig, apiRequestID)
+                    )
     } yield taskResult
   }
 
@@ -1108,39 +1130,41 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 //        _ <- Future(println("77777", nodeIri, changeNodeRequest.listIri))
         // check if nodeIRI in path and payload match
         _ <- Future(
-          if (!nodeIri.equals(changeNodeRequest.listIri.value))
-            throw BadRequestException("IRI in path and payload don't match.")
-        )
+               if (!nodeIri.equals(changeNodeRequest.listIri.value))
+                 throw BadRequestException("IRI in path and payload don't match.")
+             )
 
         changeNodeInfoSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeRequest, featureFactoryConfig)
         changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeInfoSparqlString))
-          .mapTo[SparqlUpdateResponse]
+                                    .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
-          nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                          nodeIri = nodeIri,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )
 
         response = maybeNodeADM match {
-          case Some(rootNode: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(listinfo = rootNode)
+                     case Some(rootNode: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(listinfo = rootNode)
 
-          case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
 
-          case _ =>
-            throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
-        }
+                     case _ =>
+                       throw UpdateNotPerformedException(
+                         s"Node $nodeIri was not updated. Please report this as a possible bug."
+                       )
+                   }
 
       } yield response
 
     for {
       // run list info update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        nodeIri,
-        () => nodeInfoChangeTask(nodeIri, changeNodeRequest, featureFactoryConfig, apiRequestID)
-      )
+                      apiRequestID,
+                      nodeIri,
+                      () => nodeInfoChangeTask(nodeIri, changeNodeRequest, featureFactoryConfig, apiRequestID)
+                    )
     } yield taskResult
   }
 
@@ -1170,31 +1194,31 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         newListNodeIri <- createNode(createChildNodeRequest, featureFactoryConfig)
         // Verify that the list node was created.
         maybeNewListNode <- listNodeInfoGetADM(
-          nodeIri = newListNodeIri,
-          featureFactoryConfig = featureFactoryConfig,
-          KnoraSystemInstances.Users.SystemUser
-        )
+                              nodeIri = newListNodeIri,
+                              featureFactoryConfig = featureFactoryConfig,
+                              KnoraSystemInstances.Users.SystemUser
+                            )
         newListNode = maybeNewListNode match {
-          case Some(childNode: ListChildNodeInfoADM) => childNode
-          case Some(_: ListRootNodeInfoADM) =>
-            throw UpdateNotPerformedException(
-              s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload."
-            )
-          case _ =>
-            throw UpdateNotPerformedException(
-              s"List node $newListNodeIri was not created. Please report this as a possible bug."
-            )
-        }
+                        case Some(childNode: ListChildNodeInfoADM) => childNode
+                        case Some(_: ListRootNodeInfoADM) =>
+                          throw UpdateNotPerformedException(
+                            s"Child node ${createChildNodeRequest.name} could not be created. Probably parent node Iri is missing in payload."
+                          )
+                        case _ =>
+                          throw UpdateNotPerformedException(
+                            s"List node $newListNodeIri was not created. Please report this as a possible bug."
+                          )
+                      }
 
       } yield ChildNodeInfoGetResponseADM(nodeinfo = newListNode)
 
     for {
       // run list node creation with an global IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        LISTS_GLOBAL_LOCK_IRI,
-        () => listChildNodeCreateTask(createChildNodeRequest, featureFactoryConfig, apiRequestID)
-      )
+                      apiRequestID,
+                      LISTS_GLOBAL_LOCK_IRI,
+                      () => listChildNodeCreateTask(createChildNodeRequest, featureFactoryConfig, apiRequestID)
+                    )
     } yield taskResult
 
   }
@@ -1232,44 +1256,47 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         projectIri <- getProjectIriFromNode(nodeIri, featureFactoryConfig)
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not project or a system admin
-          throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-        }
+              // not project or a system admin
+              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
-            name = Some(changeNodeNameRequest.name)
-          ),
-          featureFactoryConfig = featureFactoryConfig
-        )
+                                        changeNodeInfoRequest = ListNodeChangePayloadADM(
+                                          listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
+                                          projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                          name = Some(changeNodeNameRequest.name)
+                                        ),
+                                        featureFactoryConfig = featureFactoryConfig
+                                      )
 
         changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeNameSparqlString))
-          .mapTo[SparqlUpdateResponse]
+                                    .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
-          nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                          nodeIri = nodeIri,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )
 
         response = maybeNodeADM match {
-          case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
-          case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-          case _ =>
-            throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
-        }
+                     case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
+                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                     case _ =>
+                       throw UpdateNotPerformedException(
+                         s"Node $nodeIri was not updated. Please report this as a possible bug."
+                       )
+                   }
       } yield response
 
     for {
       // run list info update with an local IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        nodeIri,
-        () => nodeNameChangeTask(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID)
-      )
+      taskResult <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          nodeIri,
+          () => nodeNameChangeTask(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        )
     } yield taskResult
   }
 
@@ -1308,42 +1335,46 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not project or a system admin
-          throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-        }
+              // not project or a system admin
+              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
-            labels = Some(changeNodeLabelsRequest.labels)
-          ),
-          featureFactoryConfig = featureFactoryConfig
-        )
+                                          changeNodeInfoRequest = ListNodeChangePayloadADM(
+                                            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
+                                            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                            labels = Some(changeNodeLabelsRequest.labels)
+                                          ),
+                                          featureFactoryConfig = featureFactoryConfig
+                                        )
         changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeLabelsSparqlString))
-          .mapTo[SparqlUpdateResponse]
+                                    .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
-          nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                          nodeIri = nodeIri,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )
 
         response = maybeNodeADM match {
-          case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
-          case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-          case _ =>
-            throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
-        }
+                     case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
+                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                     case _ =>
+                       throw UpdateNotPerformedException(
+                         s"Node $nodeIri was not updated. Please report this as a possible bug."
+                       )
+                   }
       } yield response
 
     for {
       // run list info update with an local IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        nodeIri,
-        () => nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID)
-      )
+      taskResult <-
+        IriLocker.runWithIriLock(
+          apiRequestID,
+          nodeIri,
+          () =>
+            nodeLabelsChangeTask(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        )
     } yield taskResult
   }
 
@@ -1382,43 +1413,51 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not project or a system admin
-          throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-        }
+              // not project or a system admin
+              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
-            comments = Some(changeNodeCommentsRequest.comments)
-          ),
-          featureFactoryConfig = featureFactoryConfig
-        )
+                                            changeNodeInfoRequest = ListNodeChangePayloadADM(
+                                              listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
+                                              projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                              comments = Some(changeNodeCommentsRequest.comments)
+                                            ),
+                                            featureFactoryConfig = featureFactoryConfig
+                                          )
         _ <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
-          nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                          nodeIri = nodeIri,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )
 
         response = maybeNodeADM match {
-          case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
-          case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-          case _ =>
-            throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
-        }
+                     case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
+                     case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+                     case _ =>
+                       throw UpdateNotPerformedException(
+                         s"Node $nodeIri was not updated. Please report this as a possible bug."
+                       )
+                   }
       } yield response
 
     for {
       // run list info update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        nodeIri,
-        () =>
-          nodeCommentsChangeTask(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID)
-      )
+                      apiRequestID,
+                      nodeIri,
+                      () =>
+                        nodeCommentsChangeTask(
+                          nodeIri,
+                          changeNodeCommentsRequest,
+                          featureFactoryConfig,
+                          requestingUser,
+                          apiRequestID
+                        )
+                    )
     } yield taskResult
   }
 
@@ -1486,37 +1525,36 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     def verifyParentChildrenUpdate(newPosition: Int): Future[ListNodeADM] =
       for {
         maybeParentNode <- listNodeGetADM(
-          nodeIri = changeNodePositionRequest.parentIri,
-          shallow = false,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        updatedParent = maybeParentNode.get
+                             nodeIri = changeNodePositionRequest.parentIri,
+                             shallow = false,
+                             featureFactoryConfig = featureFactoryConfig,
+                             requestingUser = KnoraSystemInstances.Users.SystemUser
+                           )
+        updatedParent                          = maybeParentNode.get
         updatedChildren: Seq[ListChildNodeADM] = updatedParent.getChildren
-        (siblingsPositionedBefore: Seq[ListChildNodeADM], rest: Seq[ListChildNodeADM]) = updatedChildren.partition(
-          node => node.position < newPosition
-        )
+        (siblingsPositionedBefore: Seq[ListChildNodeADM], rest: Seq[ListChildNodeADM]) =
+          updatedChildren.partition(node => node.position < newPosition)
 
         // verify that node is among children of specified parent in correct position
         updatedNode = rest.head
         _ = if (updatedNode.id != nodeIri || updatedNode.position != newPosition) {
-          throw UpdateNotPerformedException(
-            s"Node is not repositioned correctly in specified parent node. Please report this as a bug."
-          )
-        }
+              throw UpdateNotPerformedException(
+                s"Node is not repositioned correctly in specified parent node. Please report this as a bug."
+              )
+            }
         leftPositions: Seq[Int] = siblingsPositionedBefore.map(child => child.position)
         _ = if (leftPositions != leftPositions.sorted) {
-          throw UpdateNotPerformedException(
-            s"Something has gone wrong with shifting nodes. Please report this as a bug."
-          )
-        }
+              throw UpdateNotPerformedException(
+                s"Something has gone wrong with shifting nodes. Please report this as a bug."
+              )
+            }
         siblingsPositionedAfter = rest.slice(1, rest.length)
         rightSiblings: Seq[Int] = siblingsPositionedAfter.map(child => child.position)
         _ = if (rightSiblings != rightSiblings.sorted) {
-          throw UpdateNotPerformedException(
-            s"Something has gone wrong with shifting nodes. Please report this as a bug."
-          )
-        }
+              throw UpdateNotPerformedException(
+                s"Something has gone wrong with shifting nodes. Please report this as a bug."
+              )
+            }
 
       } yield updatedParent
 
@@ -1539,17 +1577,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       for {
         // get parent node with its immediate children
         maybeParentNode <- listNodeGetADM(
-          nodeIri = parentIri,
-          shallow = true,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        parentNode = maybeParentNode.getOrElse(
-          throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug.")
-        )
-        _ = isNewPositionValid(parentNode, false)
+                             nodeIri = parentIri,
+                             shallow = true,
+                             featureFactoryConfig = featureFactoryConfig,
+                             requestingUser = KnoraSystemInstances.Users.SystemUser
+                           )
+        parentNode =
+          maybeParentNode.getOrElse(
+            throw BadRequestException(s"The parent node ${parentIri} could node be found, report this as a bug.")
+          )
+        _              = isNewPositionValid(parentNode, false)
         parentChildren = parentNode.getChildren
-        currPosition = node.position
+        currPosition   = node.position
 
         // if givenPosition is -1, append the child to the end of the list of children
         newPosition =
@@ -1559,11 +1598,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // update the position of the node itself
         _ <- updatePositionOfNode(
-          nodeIri = node.id,
-          newPosition = newPosition,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
-        )
+               nodeIri = node.id,
+               newPosition = newPosition,
+               dataNamedGraph = dataNamedGraph,
+               featureFactoryConfig = featureFactoryConfig
+             )
 
         // update position of siblings
         _ <-
@@ -1571,25 +1610,25 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             for {
               // shift siblings to left
               updatedSiblings <- shiftNodes(
-                startPos = currPosition + 1,
-                endPos = newPosition,
-                nodes = parentChildren,
-                shiftToLeft = true,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                   startPos = currPosition + 1,
+                                   endPos = newPosition,
+                                   nodes = parentChildren,
+                                   shiftToLeft = true,
+                                   dataNamedGraph = dataNamedGraph,
+                                   featureFactoryConfig = featureFactoryConfig
+                                 )
             } yield updatedSiblings
           } else if (currPosition > newPosition) {
             for {
               // shift siblings to right
               updatedSiblings <- shiftNodes(
-                startPos = newPosition,
-                endPos = currPosition - 1,
-                nodes = parentChildren,
-                shiftToLeft = false,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                   startPos = newPosition,
+                                   endPos = currPosition - 1,
+                                   nodes = parentChildren,
+                                   shiftToLeft = false,
+                                   dataNamedGraph = dataNamedGraph,
+                                   featureFactoryConfig = featureFactoryConfig
+                                 )
             } yield updatedSiblings
           } else {
             throw UpdateNotPerformedException(s"The given position is the same as node's current position.")
@@ -1618,21 +1657,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       for {
         // get current parent node with its immediate children
         maybeCurrentParentNode <- listNodeGetADM(
-          nodeIri = currParentIri,
-          shallow = true,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                                    nodeIri = currParentIri,
+                                    shallow = true,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                                  )
         currentSiblings = maybeCurrentParentNode.get.getChildren
         // get new parent node with its immediate children
         maybeNewParentNode <- listNodeGetADM(
-          nodeIri = newParentIri,
-          shallow = true,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        newParent = maybeNewParentNode.get
-        _ = isNewPositionValid(newParent, true)
+                                nodeIri = newParentIri,
+                                shallow = true,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                              )
+        newParent   = maybeNewParentNode.get
+        _           = isNewPositionValid(newParent, true)
         newSiblings = newParent.getChildren
 
         currentNodePosition = node.position
@@ -1645,21 +1684,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // update the position of the node itself
         _ <- updatePositionOfNode(
-          nodeIri = node.id,
-          newPosition = newPosition,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
-        )
+               nodeIri = node.id,
+               newPosition = newPosition,
+               dataNamedGraph = dataNamedGraph,
+               featureFactoryConfig = featureFactoryConfig
+             )
 
         // shift current siblings with a higher position to left as if the node is deleted
         _ <- shiftNodes(
-          startPos = currentNodePosition + 1,
-          endPos = currentSiblings.last.position,
-          nodes = currentSiblings,
-          shiftToLeft = true,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
-        )
+               startPos = currentNodePosition + 1,
+               endPos = currentSiblings.last.position,
+               nodes = currentSiblings,
+               shiftToLeft = true,
+               dataNamedGraph = dataNamedGraph,
+               featureFactoryConfig = featureFactoryConfig
+             )
 
         // Is node supposed to be added to the end of new parent's children list?
         _ <-
@@ -1671,24 +1710,24 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // to right, as if the node is inserted in the given position
             for {
               updatedSiblings <- shiftNodes(
-                startPos = newPosition,
-                endPos = newSiblings.last.position,
-                nodes = newSiblings,
-                shiftToLeft = false,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                   startPos = newPosition,
+                                   endPos = newSiblings.last.position,
+                                   nodes = newSiblings,
+                                   shiftToLeft = false,
+                                   dataNamedGraph = dataNamedGraph,
+                                   featureFactoryConfig = featureFactoryConfig
+                                 )
             } yield updatedSiblings
           }
 
         /* update the sublists of parent nodes */
         _ <- changeParentNode(
-          nodeIri = node.id,
-          oldParentIri = currParentIri,
-          newParentIri = newParentIri,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
-        )
+               nodeIri = node.id,
+               oldParentIri = currParentIri,
+               newParentIri = newParentIri,
+               dataNamedGraph = dataNamedGraph,
+               featureFactoryConfig = featureFactoryConfig
+             )
 
       } yield newPosition
 
@@ -1710,22 +1749,22 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not project or a system admin
-          throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-        }
+              // not project or a system admin
+              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
 
         // get node in its current position
         maybeNode <- listNodeGetADM(
-          nodeIri = nodeIri,
-          shallow = true,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                       nodeIri = nodeIri,
+                       shallow = true,
+                       featureFactoryConfig = featureFactoryConfig,
+                       requestingUser = KnoraSystemInstances.Users.SystemUser
+                     )
         node = maybeNode match {
-          case Some(node: ListChildNodeADM) => node
-          case _ =>
-            throw BadRequestException(s"Update of position is only allowed for child nodes!")
-        }
+                 case Some(node: ListChildNodeADM) => node
+                 case _ =>
+                   throw BadRequestException(s"Update of position is only allowed for child nodes!")
+               }
 
         // get node's current parent
         currentParentNodeIri: IRI <- getParentNodeIRI(nodeIri, featureFactoryConfig)
@@ -1753,11 +1792,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // run list info update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        nodeIri,
-        () =>
-          nodePositionChangeTask(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID)
-      )
+                      apiRequestID,
+                      nodeIri,
+                      () =>
+                        nodePositionChangeTask(
+                          nodeIri,
+                          changeNodePositionRequest,
+                          featureFactoryConfig,
+                          requestingUser,
+                          apiRequestID
+                        )
+                    )
     } yield taskResult
   }
 
@@ -1769,15 +1814,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   ): Future[CanDeleteListResponseADM] =
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .canDeleteList(
-            listIri = iri
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .canDeleteList(
+                           listIri = iri
+                         )
+                         .toString()
+                     )
 
       response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery))
-        .mapTo[SparqlSelectResult]
+                                        .mapTo[SparqlSelectResult]
 
       canDelete =
         if (response.results.bindings.isEmpty) true
@@ -1815,17 +1860,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       for {
         // Is node itself in use?
         _ <- isNodeUsed(
-          nodeIri = nodeIri,
-          errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use.")
-        )
+               nodeIri = nodeIri,
+               errorFun = throw BadRequestException(s"Node $nodeIri cannot be deleted, because it is in use.")
+             )
 
         errorCheckFutures: Seq[Future[Unit]] = nodeChildren.map { child =>
-          isNodeUsed(
-            nodeIri = child.id,
-            errorFun =
-              throw BadRequestException(s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use.")
-          )
-        }
+                                                 isNodeUsed(
+                                                   nodeIri = child.id,
+                                                   errorFun = throw BadRequestException(
+                                                     s"Node $nodeIri cannot be deleted, because its child ${child.id} is in use."
+                                                   )
+                                                 )
+                                               }
 
         _ <- Future.sequence(errorCheckFutures)
 
@@ -1853,9 +1899,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         dataNamedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
 
         // delete the children
-        errorCheckFutures: Seq[Future[Unit]] = children.map(child =>
-          deleteNode(dataNamedGraph, child.id, isRootNode = false)
-        )
+        errorCheckFutures: Seq[Future[Unit]] =
+          children.map(child => deleteNode(dataNamedGraph, child.id, isRootNode = false))
         _ <- Future.sequence(errorCheckFutures)
 
         // delete the node itself
@@ -1884,34 +1929,35 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     ): Future[ListNodeADM] =
       for {
         maybeNode <- listNodeGetADM(
-          nodeIri = parentNodeIri,
-          shallow = false,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                       nodeIri = parentNodeIri,
+                       shallow = false,
+                       featureFactoryConfig = featureFactoryConfig,
+                       requestingUser = KnoraSystemInstances.Users.SystemUser
+                     )
 
-        parentNode: ListNodeADM = maybeNode.getOrElse(
-          throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug.")
-        )
+        parentNode: ListNodeADM =
+          maybeNode.getOrElse(
+            throw BadRequestException(s"The parent node of $deletedNodeIri not found, report this as a bug.")
+          )
 
         remainingChildren = parentNode.getChildren
 
         _ = if (remainingChildren.exists(child => child.id == deletedNodeIri)) {
-          throw UpdateNotPerformedException(s"Node $deletedNodeIri is not deleted properly, report this as a bug.")
-        }
+              throw UpdateNotPerformedException(s"Node $deletedNodeIri is not deleted properly, report this as a bug.")
+            }
 
         // shift the siblings that were positioned after the deleted node, one place to left.
         updatedChildren <-
           if (remainingChildren.size > 0) {
             for {
               shiftedChildren <- shiftNodes(
-                startPos = positionOfDeletedNode + 1,
-                endPos = remainingChildren.last.position,
-                nodes = remainingChildren,
-                shiftToLeft = true,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                   startPos = positionOfDeletedNode + 1,
+                                   endPos = remainingChildren.last.position,
+                                   nodes = remainingChildren,
+                                   shiftToLeft = true,
+                                   dataNamedGraph = dataNamedGraph,
+                                   featureFactoryConfig = featureFactoryConfig
+                                 )
             } yield shiftedChildren
           } else {
             Future.successful(remainingChildren)
@@ -1919,27 +1965,27 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // return updated parent node with shifted children.
         updatedParentNode = parentNode match {
-          case rootNode: ListRootNodeADM =>
-            ListRootNodeADM(
-              id = rootNode.id,
-              projectIri = rootNode.projectIri,
-              name = rootNode.name,
-              labels = rootNode.labels,
-              comments = rootNode.comments,
-              children = updatedChildren
-            )
+                              case rootNode: ListRootNodeADM =>
+                                ListRootNodeADM(
+                                  id = rootNode.id,
+                                  projectIri = rootNode.projectIri,
+                                  name = rootNode.name,
+                                  labels = rootNode.labels,
+                                  comments = rootNode.comments,
+                                  children = updatedChildren
+                                )
 
-          case childNode: ListChildNodeADM =>
-            ListChildNodeADM(
-              id = childNode.id,
-              name = childNode.name,
-              labels = childNode.labels,
-              comments = childNode.comments,
-              position = childNode.position,
-              hasRootNode = childNode.hasRootNode,
-              children = updatedChildren
-            )
-        }
+                              case childNode: ListChildNodeADM =>
+                                ListChildNodeADM(
+                                  id = childNode.id,
+                                  name = childNode.name,
+                                  labels = childNode.labels,
+                                  comments = childNode.comments,
+                                  position = childNode.position,
+                                  hasRootNode = childNode.hasRootNode,
+                                  children = updatedChildren
+                                )
+                            }
       } yield updatedParentNode
 
     /**
@@ -1956,67 +2002,70 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not project or a system admin
-          throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-        }
+              // not project or a system admin
+              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+            }
 
         maybeNode: Option[ListNodeADM] <- listNodeGetADM(
-          nodeIri = nodeIri,
-          shallow = false,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+                                            nodeIri = nodeIri,
+                                            shallow = false,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            requestingUser = KnoraSystemInstances.Users.SystemUser
+                                          )
 
         response: ListItemDeleteResponseADM <- maybeNode match {
-          case Some(rootNode: ListRootNodeADM) =>
-            for {
-              _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
+                                                 case Some(rootNode: ListRootNodeADM) =>
+                                                   for {
+                                                     _ <- isNodeOrItsChildrenUsed(rootNode.id, rootNode.children)
 
-              _ <- deleteListItem(
-                nodeIri = rootNode.id,
-                projectIri = projectIri,
-                children = rootNode.children,
-                isRootNode = true
-              )
-            } yield ListDeleteResponseADM(rootNode.id, deleted = true)
+                                                     _ <- deleteListItem(
+                                                            nodeIri = rootNode.id,
+                                                            projectIri = projectIri,
+                                                            children = rootNode.children,
+                                                            isRootNode = true
+                                                          )
+                                                   } yield ListDeleteResponseADM(rootNode.id, deleted = true)
 
-          case Some(childNode: ListChildNodeADM) =>
-            for {
-              _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
+                                                 case Some(childNode: ListChildNodeADM) =>
+                                                   for {
+                                                     _ <- isNodeOrItsChildrenUsed(childNode.id, childNode.children)
 
-              // get parent node IRI before deleting the node
-              parentNodeIri <- getParentNodeIRI(nodeIri, featureFactoryConfig)
+                                                     // get parent node IRI before deleting the node
+                                                     parentNodeIri <- getParentNodeIRI(nodeIri, featureFactoryConfig)
 
-              // delete the node
-              dataNamedGraph <- deleteListItem(
-                nodeIri = childNode.id,
-                projectIri = projectIri,
-                children = childNode.children,
-                isRootNode = false
-              )
+                                                     // delete the node
+                                                     dataNamedGraph <- deleteListItem(
+                                                                         nodeIri = childNode.id,
+                                                                         projectIri = projectIri,
+                                                                         children = childNode.children,
+                                                                         isRootNode = false
+                                                                       )
 
-              // update the parent node
-              updatedParentNode <- updateParentNode(
-                deletedNodeIri = nodeIri,
-                positionOfDeletedNode = childNode.position,
-                parentNodeIri = parentNodeIri,
-                dataNamedGraph = dataNamedGraph,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                                                     // update the parent node
+                                                     updatedParentNode <- updateParentNode(
+                                                                            deletedNodeIri = nodeIri,
+                                                                            positionOfDeletedNode = childNode.position,
+                                                                            parentNodeIri = parentNodeIri,
+                                                                            dataNamedGraph = dataNamedGraph,
+                                                                            featureFactoryConfig = featureFactoryConfig
+                                                                          )
 
-            } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
+                                                   } yield ChildNodeDeleteResponseADM(node = updatedParentNode)
 
-          case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
-        }
+                                                 case _ =>
+                                                   throw BadRequestException(
+                                                     s"Node $nodeIri was not found. Please verify the given IRI."
+                                                   )
+                                               }
       } yield response
 
     for {
       // run list info update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        nodeIri,
-        () => nodeDeleteTask(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
-      )
+                      apiRequestID,
+                      nodeIri,
+                      () => nodeDeleteTask(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
+                    )
     } yield taskResult
   }
 
@@ -2032,13 +2081,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def projectByIriExists(projectIri: IRI): Future[Boolean] =
     for {
-      askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString
-      )
+      askString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString
+        )
       //_ = log.debug("projectByIriExists - query: {}", askString)
 
       askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = askResponse.result
+      result       = askResponse.result
 
     } yield result
 
@@ -2050,13 +2100,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def rootNodeByIriExists(rootNodeIri: IRI): Future[Boolean] =
     for {
-      askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString
-      )
+      askString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString
+        )
       // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
       askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = askResponse.result
+      result       = askResponse.result
 
     } yield result
 
@@ -2069,12 +2120,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   private def nodeByIriExists(nodeIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString
+                   )
       // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
       askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = askResponse.result
+      result       = askResponse.result
 
     } yield result
 
@@ -2091,17 +2142,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       case Some(name) =>
         for {
           askString <- Future(
-            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-              .checkListNodeNameIsProjectUnique(
-                projectIri,
-                listNodeName = name.value
-              )
-              .toString
-          )
+                         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                           .checkListNodeNameIsProjectUnique(
+                             projectIri,
+                             listNodeName = name.value
+                           )
+                           .toString
+                       )
           //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
 
           askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-          result = askResponse.result
+          result       = askResponse.result
 
         } yield !result
 
@@ -2125,49 +2176,49 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       /* verify that the list name is unique for the project */
       nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(
-        changeNodeInfoRequest.projectIri.value,
-        changeNodeInfoRequest.name
-      )
+                                   changeNodeInfoRequest.projectIri.value,
+                                   changeNodeInfoRequest.name
+                                 )
       _ = if (!nodeNameUnique) {
-        throw DuplicateValueException(
-          s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
-        )
-      }
+            throw DuplicateValueException(
+              s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
+            )
+          }
 
       /* Verify that the node with Iri exists. */
       maybeNode <- listNodeGetADM(
-        nodeIri = changeNodeInfoRequest.listIri.value,
-        shallow = true,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
+                     nodeIri = changeNodeInfoRequest.listIri.value,
+                     shallow = true,
+                     featureFactoryConfig = featureFactoryConfig,
+                     requestingUser = KnoraSystemInstances.Users.SystemUser
+                   )
 
       node = maybeNode.getOrElse(
-        throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found.")
-      )
+               throw BadRequestException(s"List item with '${changeNodeInfoRequest.listIri}' not found.")
+             )
 
       isRootNode = maybeNode match {
-        case Some(_: ListRootNodeADM)  => true
-        case Some(_: ListChildNodeADM) => false
-        case _                         => false
-      }
+                     case Some(_: ListRootNodeADM)  => true
+                     case Some(_: ListChildNodeADM) => false
+                     case _                         => false
+                   }
 
       hasOldName: Boolean = node.getName.nonEmpty
 
       // Update the list
       changeNodeInfoSparqlString: String = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-        .updateListInfo(
-          dataNamedGraph = dataNamedGraph,
-          nodeIri = changeNodeInfoRequest.listIri.value,
-          hasOldName = hasOldName,
-          isRootNode = isRootNode,
-          maybeName = changeNodeInfoRequest.name.map(_.value),
-          projectIri = changeNodeInfoRequest.projectIri.value,
-          listClassIri = OntologyConstants.KnoraBase.ListNode,
-          maybeLabels = changeNodeInfoRequest.labels.map(_.value),
-          maybeComments = changeNodeInfoRequest.comments.map(_.value)
-        )
-        .toString
+                                             .updateListInfo(
+                                               dataNamedGraph = dataNamedGraph,
+                                               nodeIri = changeNodeInfoRequest.listIri.value,
+                                               hasOldName = hasOldName,
+                                               isRootNode = isRootNode,
+                                               maybeName = changeNodeInfoRequest.name.map(_.value),
+                                               projectIri = changeNodeInfoRequest.projectIri.value,
+                                               listClassIri = OntologyConstants.KnoraBase.ListNode,
+                                               maybeLabels = changeNodeInfoRequest.labels.map(_.value),
+                                               maybeComments = changeNodeInfoRequest.comments.map(_.value)
+                                             )
+                                             .toString
     } yield changeNodeInfoSparqlString
 
   /**
@@ -2180,31 +2231,34 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   private def getProjectIriFromNode(nodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[IRI] =
     for {
       maybeNode <- listNodeGetADM(
-        nodeIri = nodeIri,
-        shallow = true,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
+                     nodeIri = nodeIri,
+                     shallow = true,
+                     featureFactoryConfig = featureFactoryConfig,
+                     requestingUser = KnoraSystemInstances.Users.SystemUser
+                   )
 
       projectIri <- maybeNode match {
-        case Some(rootNode: ListRootNodeADM) => Future(rootNode.projectIri)
+                      case Some(rootNode: ListRootNodeADM) => Future(rootNode.projectIri)
 
-        case Some(childNode: ListChildNodeADM) =>
-          for {
-            maybeRoot <- listNodeGetADM(
-              nodeIri = childNode.hasRootNode,
-              shallow = true,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = KnoraSystemInstances.Users.SystemUser
-            )
-            rootProjectIri = maybeRoot match {
-              case Some(rootNode: ListRootNodeADM) => rootNode.projectIri
-              case _                               => throw BadRequestException(s"Root node of $nodeIri was not found. Please verify the given IRI.")
-            }
-          } yield rootProjectIri
+                      case Some(childNode: ListChildNodeADM) =>
+                        for {
+                          maybeRoot <- listNodeGetADM(
+                                         nodeIri = childNode.hasRootNode,
+                                         shallow = true,
+                                         featureFactoryConfig = featureFactoryConfig,
+                                         requestingUser = KnoraSystemInstances.Users.SystemUser
+                                       )
+                          rootProjectIri = maybeRoot match {
+                                             case Some(rootNode: ListRootNodeADM) => rootNode.projectIri
+                                             case _ =>
+                                               throw BadRequestException(
+                                                 s"Root node of $nodeIri was not found. Please verify the given IRI."
+                                               )
+                                           }
+                        } yield rootProjectIri
 
-        case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
-      }
+                      case _ => throw BadRequestException(s"Node $nodeIri was not found. Please verify the given IRI.")
+                    }
     } yield projectIri
 
   /**
@@ -2217,19 +2271,19 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   protected def isNodeUsed(nodeIri: IRI, errorFun: => Nothing): Future[Unit] =
     for {
       isNodeUsedSparql <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .isNodeUsed(
-            nodeIri = nodeIri
-          )
-          .toString()
-      )
+                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                              .isNodeUsed(
+                                nodeIri = nodeIri
+                              )
+                              .toString()
+                          )
 
       isNodeUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isNodeUsedSparql))
-        .mapTo[SparqlSelectResult]
+                                                  .mapTo[SparqlSelectResult]
 
       _ = if (isNodeUsedResponse.results.bindings.nonEmpty) {
-        errorFun
-      }
+            errorFun
+          }
     } yield ()
 
   /**
@@ -2243,17 +2297,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       /* Get the project information */
       maybeProject <- (responderManager ? ProjectGetADM(
-        ProjectIdentifierADM(
-          maybeIri = Some(projectIri)
-        ),
-        featureFactoryConfig = featureFactoryConfig,
-        KnoraSystemInstances.Users.SystemUser
-      )).mapTo[Option[ProjectADM]]
+                        ProjectIdentifierADM(
+                          maybeIri = Some(projectIri)
+                        ),
+                        featureFactoryConfig = featureFactoryConfig,
+                        KnoraSystemInstances.Users.SystemUser
+                      )).mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
-        case Some(project: ProjectADM) => project
-        case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
-      }
+                              case Some(project: ProjectADM) => project
+                              case None                      => throw BadRequestException(s"Project '$projectIri' not found.")
+                            }
 
       // Get the IRI of the named graph from which the resource will be erased.
       dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
@@ -2270,21 +2324,21 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // query statement
       getParentNodeSparqlString: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getParentNode(
-            nodeIri = nodeIri
-          )
-          .toString
-      )
+                                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                               .getParentNode(
+                                                 nodeIri = nodeIri
+                                               )
+                                               .toString
+                                           )
 
       parentNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = getParentNodeSparqlString,
-        featureFactoryConfig = featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                              sparql = getParentNodeSparqlString,
+                              featureFactoryConfig = featureFactoryConfig
+                            )).mapTo[SparqlExtendedConstructResponse]
 
       parentStatements = parentNodeResponse.statements.headOption.getOrElse(
-        throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug.")
-      )
+                           throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug.")
+                         )
 
       parentNodeIri = parentStatements._1.toString
     } yield parentNodeIri
@@ -2302,14 +2356,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // Generate SPARQL for erasing a node.
       sparqlDeleteNode: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .deleteNode(
-            dataNamedGraph = dataNamedGraph,
-            nodeIri = nodeIri,
-            isRootNode = isRootNode
-          )
-          .toString()
-      )
+                                    org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                      .deleteNode(
+                                        dataNamedGraph = dataNamedGraph,
+                                        nodeIri = nodeIri,
+                                        isRootNode = isRootNode
+                                      )
+                                      .toString()
+                                  )
 
       // Do the update.
       _ <- (storeManager ? SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
@@ -2318,8 +2372,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
 
       _ = if (nodeStillExists) {
-        throw UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug.")
-      }
+            throw UpdateNotPerformedException(s"Node <$nodeIri> was not erased. Please report this as a possible bug.")
+          }
     } yield ()
 
   /**
@@ -2341,34 +2395,35 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // Generate SPARQL for erasing a node.
       sparqlUpdateNodePosition: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .updateNodePosition(
-            dataNamedGraph = dataNamedGraph,
-            nodeIri = nodeIri,
-            newPosition = newPosition
-          )
-          .toString()
-      )
+                                            org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                              .updateNodePosition(
+                                                dataNamedGraph = dataNamedGraph,
+                                                nodeIri = nodeIri,
+                                                newPosition = newPosition
+                                              )
+                                              .toString()
+                                          )
 
       _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdateNodePosition)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the node info was updated */
       maybeNode <- listNodeGetADM(
-        nodeIri = nodeIri,
-        shallow = false,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
+                     nodeIri = nodeIri,
+                     shallow = false,
+                     featureFactoryConfig = featureFactoryConfig,
+                     requestingUser = KnoraSystemInstances.Users.SystemUser
+                   )
 
-      childNode: ListChildNodeADM = maybeNode
-        .getOrElse(throw BadRequestException(s"Node with $nodeIri could not be found to update its position."))
-        .asInstanceOf[ListChildNodeADM]
+      childNode: ListChildNodeADM =
+        maybeNode
+          .getOrElse(throw BadRequestException(s"Node with $nodeIri could not be found to update its position."))
+          .asInstanceOf[ListChildNodeADM]
 
       _ = if (!childNode.position.equals(newPosition)) {
-        throw UpdateNotPerformedException(
-          s"The position of the node $nodeIri could not be updated, report this as a possible bug."
-        )
-      }
+            throw UpdateNotPerformedException(
+              s"The position of the node $nodeIri could not be updated, report this as a possible bug."
+            )
+          }
 
     } yield childNode
 
@@ -2394,24 +2449,25 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[Seq[ListChildNodeADM]] =
     for {
-      nodesTobeUpdated: Seq[ListChildNodeADM] <- Future(
-        nodes.filter(node => node.position >= startPos && node.position <= endPos)
-      )
-      staticStartNodes = nodes.filter(node => node.position < startPos)
-      staticEndNotes = nodes.filter(node => node.position > endPos)
-      updatePositionFutures = nodesTobeUpdated.map { child =>
-        val currPos = child.position
-        val newPos = if (shiftToLeft) {
-          currPos - 1
-        } else currPos + 1
-
-        updatePositionOfNode(
-          nodeIri = child.id,
-          newPosition = newPos,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
+      nodesTobeUpdated: Seq[ListChildNodeADM] <-
+        Future(
+          nodes.filter(node => node.position >= startPos && node.position <= endPos)
         )
-      }
+      staticStartNodes = nodes.filter(node => node.position < startPos)
+      staticEndNotes   = nodes.filter(node => node.position > endPos)
+      updatePositionFutures = nodesTobeUpdated.map { child =>
+                                val currPos = child.position
+                                val newPos = if (shiftToLeft) {
+                                  currPos - 1
+                                } else currPos + 1
+
+                                updatePositionOfNode(
+                                  nodeIri = child.id,
+                                  newPosition = newPos,
+                                  dataNamedGraph = dataNamedGraph,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )
+                              }
       updatedNodes: Seq[ListChildNodeADM] <- Future.sequence(updatePositionFutures)
     } yield staticStartNodes ++ updatedNodes ++ staticEndNotes
 
@@ -2435,41 +2491,43 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       // Generate SPARQL for changing the parent node of the node.
       sparqlChangeParentNode: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .changeParentNode(
-            dataNamedGraph = dataNamedGraph,
-            nodeIri = nodeIri,
-            currentParentIri = oldParentIri,
-            newParentIri = newParentIri
-          )
-          .toString()
-      )
+                                          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                            .changeParentNode(
+                                              dataNamedGraph = dataNamedGraph,
+                                              nodeIri = nodeIri,
+                                              currentParentIri = oldParentIri,
+                                              newParentIri = newParentIri
+                                            )
+                                            .toString()
+                                        )
 
       _ <- (storeManager ? SparqlUpdateRequest(sparqlChangeParentNode)).mapTo[SparqlUpdateResponse]
 
       /* verify that parents were updated */
       // get old parent node with its immediate children
       maybeOldParent <- listNodeGetADM(
-        nodeIri = oldParentIri,
-        shallow = true,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
+                          nodeIri = oldParentIri,
+                          shallow = true,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                        )
       childrenOfOldParent = maybeOldParent.get.getChildren
       _ = if (childrenOfOldParent.exists(node => node.id == nodeIri)) {
-        throw UpdateNotPerformedException(s"Node ${nodeIri} is still a child of ${oldParentIri}. Report this as a bug.")
-      }
+            throw UpdateNotPerformedException(
+              s"Node ${nodeIri} is still a child of ${oldParentIri}. Report this as a bug."
+            )
+          }
       // get new parent node with its immediate children
       maybeNewParentNode <- listNodeGetADM(
-        nodeIri = newParentIri,
-        shallow = true,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      )
+                              nodeIri = newParentIri,
+                              shallow = true,
+                              featureFactoryConfig = featureFactoryConfig,
+                              requestingUser = KnoraSystemInstances.Users.SystemUser
+                            )
       childrenOfNewParent = maybeNewParentNode.get.getChildren
       _ = if (!childrenOfNewParent.exists(node => node.id == nodeIri)) {
-        throw UpdateNotPerformedException(s"Node ${nodeIri} is not added to parent node ${newParentIri}. ")
-      }
+            throw UpdateNotPerformedException(s"Node ${nodeIri} is not added to parent node ${newParentIri}. ")
+          }
 
     } yield ()
 }

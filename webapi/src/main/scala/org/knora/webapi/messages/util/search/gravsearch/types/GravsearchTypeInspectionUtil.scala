@@ -40,8 +40,8 @@ object GravsearchTypeInspectionUtil {
     case object ObjectType extends TypeAnnotationProperty
 
     private val valueMap = Map(
-      OntologyConstants.Rdf.Type -> RdfType,
-      OntologyConstants.KnoraApiV2Simple.ObjectType -> ObjectType,
+      OntologyConstants.Rdf.Type                     -> RdfType,
+      OntologyConstants.KnoraApiV2Simple.ObjectType  -> ObjectType,
       OntologyConstants.KnoraApiV2Complex.ObjectType -> ObjectType
     )
 

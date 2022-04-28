@@ -25,8 +25,8 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  private val model: RdfModel = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig).makeEmptyModel
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+  private val model: RdfModel              = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig).makeEmptyModel
+  private val nodeFactory: RdfNodeFactory  = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
   /**
@@ -50,8 +50,8 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
   "An RdfModel" should {
     "add a triple with a datatype literal object, without first creating a Statement" in {
-      val subj: IriNode = nodeFactory.makeIriNode("http://example.org/1")
-      val pred: IriNode = nodeFactory.makeIriNode("http://example.org/int_prop")
+      val subj: IriNode        = nodeFactory.makeIriNode("http://example.org/1")
+      val pred: IriNode        = nodeFactory.makeIriNode("http://example.org/int_prop")
       val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "5", datatype = OntologyConstants.Xsd.Integer)
 
       model.add(subj = subj, pred = pred, obj = obj)
@@ -157,9 +157,9 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
     }
 
     "add, find, and remove quads" in {
-      val labelPred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val labelPred: IriNode   = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val commentPred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Comment)
-      val context1 = "http://example.org/graph1"
+      val context1             = "http://example.org/graph1"
 
       val graph1LabelStatement = nodeFactory.makeStatement(
         subj = nodeFactory.makeIriNode("http://example.org/6"),
@@ -232,8 +232,8 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
     }
 
     "Remove a statement from the default graph, rather than an otherwise identical statement in a named graph" in {
-      val subj: IriNode = nodeFactory.makeIriNode("http://example.org/foo")
-      val pred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val subj: IriNode        = nodeFactory.makeIriNode("http://example.org/foo")
+      val pred: IriNode        = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "Foo", datatype = OntologyConstants.Xsd.String)
 
       val statementInDefaultGraph: Statement = nodeFactory.makeStatement(
@@ -265,8 +265,8 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
     }
 
     "Remove a statement from the default graph, and an otherwise identical statement in a named graph" in {
-      val subj: IriNode = nodeFactory.makeIriNode("http://example.org/bar")
-      val pred: IriNode = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
+      val subj: IriNode        = nodeFactory.makeIriNode("http://example.org/bar")
+      val pred: IriNode        = nodeFactory.makeIriNode(OntologyConstants.Rdfs.Label)
       val obj: DatatypeLiteral = nodeFactory.makeDatatypeLiteral(value = "Bar", datatype = OntologyConstants.Xsd.String)
 
       val statementInDefaultGraph: Statement = nodeFactory.makeStatement(
@@ -326,13 +326,13 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedResults = Seq(
         Map(
-          "resource" -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
-          "value" -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
+          "resource"     -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+          "value"        -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
           "decimalValue" -> "1.5"
         ),
         Map(
-          "resource" -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
-          "value" -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
+          "resource"     -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
+          "value"        -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
           "decimalValue" -> "2.1"
         )
       )

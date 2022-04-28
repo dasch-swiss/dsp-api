@@ -42,9 +42,9 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
         RouteUtilADM.runJsonRoute(
@@ -63,9 +63,9 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield AdministrativePermissionsForProjectGetRequestADM(
           projectIri = projectIri,
           requestingUser = requestingUser,
@@ -88,9 +88,9 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield DefaultObjectAccessPermissionsForProjectGetRequestADM(
           projectIri = projectIri,
           requestingUser = requestingUser,
@@ -113,9 +113,9 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield PermissionsForProjectGetRequestADM(
           projectIri = projectIri,
           featureFactoryConfig = featureFactoryConfig,

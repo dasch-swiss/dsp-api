@@ -21,7 +21,7 @@ import scala.concurrent.duration._
  * Tests [[StandoffTagUtilV2]].
  */
 class StandoffTagUtilV2Spec extends CoreSpec {
-  private implicit val timeout: Timeout = 10.seconds
+  private implicit val timeout: Timeout                 = 10.seconds
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val standoff1: Vector[StandoffTagV2] = Vector(
@@ -106,76 +106,76 @@ class StandoffTagUtilV2Spec extends CoreSpec {
 
   val sparqlResultsV1 = Map(
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/3" -> Map(
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "3",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "247",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "235",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "JPyErhf2RVmq0QYTIAKwYw",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"       -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"        -> "3",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"               -> "247",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"             -> "235",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"              -> "JPyErhf2RVmq0QYTIAKwYw",
       "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                          -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0" -> Map(
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "297",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "PQ2Xgu4mTSywsqHM8um1Tg",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"     -> "0",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"            -> "297",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"          -> "0",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"           -> "PQ2Xgu4mTSywsqHM8um1Tg",
       "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType" -> "letter",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/standoff#StandoffRootTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                       -> "http://www.knora.org/ontology/standoff#StandoffRootTag"
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "2",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "295",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "75",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "ysmmZTLdQEGP6dWtGOmZlg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"  -> "2",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"         -> "295",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"       -> "75",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"        -> "ysmmZTLdQEGP6dWtGOmZlg",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                    -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID" -> "first",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "1",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "69",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "5",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "98NJtln8QtaS5u7ahxeUfg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"   -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"    -> "1",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"           -> "69",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"         -> "5",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"          -> "98NJtln8QtaS5u7ahxeUfg",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                      -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
     )
   )
 
   val sparqlResultsV2 = Map(
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "2",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "295",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "75",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "ysmmZTLdQEGP6dWtGOmZlg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"  -> "2",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"         -> "295",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"       -> "75",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"        -> "ysmmZTLdQEGP6dWtGOmZlg",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                    -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1" -> Map(
       "http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID" -> "first",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "1",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "69",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "5",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "98NJtln8QtaS5u7ahxeUfg",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"   -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"    -> "1",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"           -> "69",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"         -> "5",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"          -> "98NJtln8QtaS5u7ahxeUfg",
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                      -> "http://www.knora.org/ontology/standoff#StandoffParagraphTag"
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/0" -> Map(
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "297",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "0",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "PQ2Xgu4mTSywsqHM8um1Tg",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"     -> "0",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"            -> "297",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"          -> "0",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"           -> "PQ2Xgu4mTSywsqHM8um1Tg",
       "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType" -> "letter",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/standoff#StandoffRootTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                       -> "http://www.knora.org/ontology/standoff#StandoffRootTag"
     ),
     "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/3" -> Map(
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex" -> "3",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd" -> "247",
-      "http://www.knora.org/ontology/knora-base#targetHasOriginalXMLID" -> "first",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasStart" -> "235",
-      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID" -> "JPyErhf2RVmq0QYTIAKwYw",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartParent"       -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/2",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStartIndex"        -> "3",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasEnd"               -> "247",
+      "http://www.knora.org/ontology/knora-base#targetHasOriginalXMLID"          -> "first",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasStart"             -> "235",
+      "http://www.knora.org/ontology/knora-base#standoffTagHasUUID"              -> "JPyErhf2RVmq0QYTIAKwYw",
       "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference" -> "http://rdfh.ch/0001/a-thing/values/QJ0z7WgkTziowCAi-aGyWg/standoff/1",
-      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
+      "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"                          -> "http://www.knora.org/ontology/knora-base#StandoffInternalReferenceTag"
     )
   )
 

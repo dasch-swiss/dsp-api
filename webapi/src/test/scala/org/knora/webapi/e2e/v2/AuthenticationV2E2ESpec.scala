@@ -40,24 +40,24 @@ class AuthenticationV2E2ESpec
   private implicit def default(implicit system: ActorSystem): RouteTestTimeout =
     RouteTestTimeout(settings.defaultTimeout)
 
-  private val rootIri = SharedTestDataADM.rootUser.id
-  private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
-  private val rootUsername = SharedTestDataADM.rootUser.username
-  private val rootUsernameEnc = java.net.URLEncoder.encode(rootUsername, "utf-8")
-  private val rootEmail = SharedTestDataADM.rootUser.email
-  private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-  private val inactiveUserEmail = SharedTestDataADM.inactiveUser.email
+  private val rootIri              = SharedTestDataADM.rootUser.id
+  private val rootIriEnc           = java.net.URLEncoder.encode(rootIri, "utf-8")
+  private val rootUsername         = SharedTestDataADM.rootUser.username
+  private val rootUsernameEnc      = java.net.URLEncoder.encode(rootUsername, "utf-8")
+  private val rootEmail            = SharedTestDataADM.rootUser.email
+  private val rootEmailEnc         = java.net.URLEncoder.encode(rootEmail, "utf-8")
+  private val inactiveUserEmail    = SharedTestDataADM.inactiveUser.email
   private val inactiveUserEmailEnc = java.net.URLEncoder.encode(inactiveUserEmail, "utf-8")
-  private val wrongEmail = "wrong@example.com"
-  private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
-  private val testPass = java.net.URLEncoder.encode("test", "utf-8")
-  private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
+  private val wrongEmail           = "wrong@example.com"
+  private val wrongEmailEnc        = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+  private val testPass             = java.net.URLEncoder.encode("test", "utf-8")
+  private val wrongPass            = java.net.URLEncoder.encode("wrong", "utf-8")
 
   "The Authentication Route ('v2/authentication') with credentials supplied via URL parameters" should {
 
     "authenticate with correct user IRI and password" in {
       /* Correct username and password */
-      val request = Get(baseApiUrl + s"/v2/authentication?iri=$rootIriEnc&password=$testPass")
+      val request                = Get(baseApiUrl + s"/v2/authentication?iri=$rootIriEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
       logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.OK)
@@ -65,7 +65,7 @@ class AuthenticationV2E2ESpec
 
     "authenticate with correct email and password" in {
       /* Correct username and password */
-      val request = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
+      val request                = Get(baseApiUrl + s"/v2/authentication?email=$rootEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
       logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.OK)
@@ -73,7 +73,7 @@ class AuthenticationV2E2ESpec
 
     "authenticate with correct username and password" in {
       /* Correct username and password */
-      val request = Get(baseApiUrl + s"/v2/authentication?username=$rootUsernameEnc&password=$testPass")
+      val request                = Get(baseApiUrl + s"/v2/authentication?username=$rootUsernameEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
       logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.OK)
@@ -81,14 +81,14 @@ class AuthenticationV2E2ESpec
 
     "fail authentication with correct email and wrong password" in {
       /* Correct email / wrong password */
-      val request = Get(baseApiUrl + s"/v2/authentication?email=$rootEmail&password=$wrongPass")
+      val request                = Get(baseApiUrl + s"/v2/authentication?email=$rootEmail&password=$wrongPass")
       val response: HttpResponse = singleAwaitingRequest(request)
       logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.Unauthorized)
     }
     "fail authentication with the user set as 'not active' " in {
       /* User not active */
-      val request = Get(baseApiUrl + s"/v2/authentication?email=$inactiveUserEmailEnc&password=$testPass")
+      val request                = Get(baseApiUrl + s"/v2/authentication?email=$inactiveUserEmailEnc&password=$testPass")
       val response: HttpResponse = singleAwaitingRequest(request)
       logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.Unauthorized)
@@ -99,14 +99,14 @@ class AuthenticationV2E2ESpec
 
     "authenticate with correct email and password" in {
       /* Correct email / correct password */
-      val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+      val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
     }
 
     "fail authentication with correct email and wrong password" in {
       /* Correct username / wrong password */
-      val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
+      val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.Unauthorized)
     }
@@ -135,7 +135,7 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -159,7 +159,7 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -181,7 +181,7 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -204,7 +204,7 @@ class AuthenticationV2E2ESpec
 
     "authenticate with token in request parameter" in {
       // authenticate by calling '/v2/authenticate' with parameters providing the token (from earlier login)
-      val request = Get(baseApiUrl + s"/v2/authentication?token=${token.get}")
+      val request  = Get(baseApiUrl + s"/v2/authentication?token=${token.get}")
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
@@ -229,12 +229,12 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request1 = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request1                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response1: HttpResponse = singleAwaitingRequest(request1)
       assert(response1.status == StatusCodes.OK)
       val token = Await.result(Unmarshal(response1.entity).to[LoginResponse], 1.seconds).token
 
-      val request2 = Delete(baseApiUrl + s"/v2/authentication?token=$token")
+      val request2  = Delete(baseApiUrl + s"/v2/authentication?token=$token")
       val response2 = singleAwaitingRequest(request2)
       // logger.debug("==>> " + responseAs[String])
       assert(response2.status === StatusCodes.OK)
@@ -259,7 +259,7 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
       //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
@@ -275,21 +275,21 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
       //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong token in header" in {
-      val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
+      val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
       //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong token as parameter" in {
-      val request = Get(baseApiUrl + "/v2/authentication?token=123456")
+      val request  = Get(baseApiUrl + "/v2/authentication?token=123456")
       val response = singleAwaitingRequest(request)
       //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
@@ -311,7 +311,7 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -327,7 +327,7 @@ class AuthenticationV2E2ESpec
 
     "allow access using URL parameters and token from v2" in {
       /* Correct email / correct password */
-      val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
+      val request  = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
@@ -361,7 +361,7 @@ class AuthenticationV2E2ESpec
     }
 
     "not return sensitive information (token, password) in the response " in {
-      val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
+      val request  = Get(baseApiUrl + s"/v1/users/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       // assert(status === StatusCodes.OK)
@@ -388,7 +388,7 @@ class AuthenticationV2E2ESpec
            |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -404,7 +404,7 @@ class AuthenticationV2E2ESpec
 
     "allow access using URL parameters with token from v2" in {
       /* Correct token */
-      val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
+      val request  = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
       // logger.debug(response.toString())
       assert(response.status === StatusCodes.OK)
@@ -438,7 +438,7 @@ class AuthenticationV2E2ESpec
     }
 
     "not return sensitive information (token, password) in the response " in {
-      val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
+      val request  = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc?token=${token.get}")
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       // assert(status === StatusCodes.OK)

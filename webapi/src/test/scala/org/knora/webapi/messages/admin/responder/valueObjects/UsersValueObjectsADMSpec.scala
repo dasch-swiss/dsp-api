@@ -16,7 +16,7 @@ import zio.prelude.Validation
  */
 class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "UserIRI value object" when {
-    val validUserIRI = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
+    val validUserIRI            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
     val userIRIWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
     "created using empty value" should {
@@ -41,7 +41,7 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Username value object" when {
-    val validUsername = "user008"
+    val validUsername   = "user008"
     val invalidUsername = "user!@#$%^&*()_+"
 
     "created using empty value" should {
@@ -107,7 +107,7 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Email value object" when {
-    val validEmailAddress = "address@ch"
+    val validEmailAddress   = "address@ch"
     val invalidEmailAddress = "invalid_email_address"
 
     "created using empty value" should {

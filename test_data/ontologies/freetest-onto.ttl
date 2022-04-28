@@ -111,9 +111,9 @@
                             [ rdf:type            owl:Restriction ;
                               owl:onProperty      :hasIntegerProperty ;
                               owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger ] ,
+                              salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger ],
                             [ rdf:type            owl:Restriction ;
-                              owl:onProperty      :hasTextWithStandoff  ;
+                              owl:onProperty      :hasTextWithStandoff ;
                               owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
                               salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger ] ;
     knora-base:resourceIcon "thing.png" ;
@@ -304,24 +304,55 @@
     rdfs:comment    """A comment for CULP."""@de .
 
 :hasTextWithStandoff
-    rdf:type               owl:ObjectProperty ;
-    rdfs:comment           "the text with standoff markup"@en ;
-    rdfs:label             "the text with standoff markup"@en ;
-    rdfs:subPropertyOf     knora-base:hasValue ;
-    knora-base:objectClassConstraint
-                           knora-base:TextValue ;
-    salsah-gui:guiElement  salsah-gui:Richtext .
+    rdf:type                         owl:ObjectProperty ;
+    rdfs:comment                     "the text with standoff markup"@en ;
+    rdfs:label                       "the text with standoff markup"@en ;
+    rdfs:subPropertyOf               knora-base:hasValue ;
+    knora-base:objectClassConstraint knora-base:TextValue ;
+    salsah-gui:guiElement            salsah-gui:Richtext .
+
+:BookWithComment
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch mit Kommentar"@de,
+                    "Book with comment"@en ;
+    rdfs:comment    """A comment for book"""@en .
+
+:BookWithoutComment
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch ohne Kommentar"@de,
+                    "Book without comment"@en .
+
+:BookWithComment2
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasName ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Buch 2 mit Kommentar"@de,
+                    "Book 2 with comment"@en ;
+    rdfs:comment    """A comment for book"""@en .
 
 :hasFoafName
-    rdf:type                         owl:ObjectProperty ;
-    rdfs:subPropertyOf               knora-base:hasValue,
-                                     foaf:name ;
-    rdfs:label                       "FoafName"@en ;
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue,
+                                      foaf:name ;
+    rdfs:label                        "FoafName"@en ;
     knora-base:subjectClassConstraint :FreeTestSubClassOfFoafPerson ;
-    knora-base:objectClassConstraint knora-base:TextValue ;
-    salsah-gui:guiElement            salsah-gui:SimpleText ;
-    salsah-gui:guiAttribute          "size=80",
-                                     "maxlength=255" .
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
 
 :hasPropertyWithComment
     rdf:type                         owl:ObjectProperty ;
@@ -348,8 +379,8 @@
 :hasPropertyWithComment2
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
-    rdfs:label                       "Property mit einem Kommentar"@de,
-                                     "Property with a comment"@en ;
+    rdfs:label                       "Property mit einem Kommentar 2"@de,
+                                     "Property with a comment 2"@en ;
     rdfs:comment                     "Dies ist der Kommentar"@de,
                                      "This is the comment"@en ;
     knora-base:objectClassConstraint knora-base:TextValue ;
@@ -359,9 +390,9 @@
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
     rdfs:label                        "Link Property mit Kommentar"@de,
-                                      "Link property with comment"@en;
-    rdfs:comment                     "Dies ist der Kommentar"@de,
-                                     "This is the comment"@en ;
+                                      "Link property with comment"@en ;
+    rdfs:comment                      "Dies ist der Kommentar"@de,
+                                      "This is the comment"@en ;
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  :Author ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
@@ -370,9 +401,9 @@
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkToValue ;
     rdfs:label                        "Link Property mit Kommentar"@de,
-                                      "Link property with comment"@en;
-    rdfs:comment                     "Dies ist der Kommentar"@de,
-                                     "This is the comment"@en ;
+                                      "Link property with comment"@en ;
+    rdfs:comment                      "Dies ist der Kommentar"@de,
+                                      "This is the comment"@en ;
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
     salsah-gui:guiElement             salsah-gui:Searchbox .

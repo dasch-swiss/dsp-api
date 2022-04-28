@@ -56,22 +56,22 @@ class GravsearchTypeInspectionRunner(responderData: ResponderData, inferTypes: B
     for {
       // Get the set of typeable entities in the Gravsearch query.
       typeableEntities: Set[TypeableEntity] <- Future {
-        QueryTraverser.visitWherePatterns(
-          patterns = whereClause.patterns,
-          whereVisitor = new TypeableEntityCollectingWhereVisitor,
-          initialAcc = Set.empty[TypeableEntity]
-        )
-      }
+                                                 QueryTraverser.visitWherePatterns(
+                                                   patterns = whereClause.patterns,
+                                                   whereVisitor = new TypeableEntityCollectingWhereVisitor,
+                                                   initialAcc = Set.empty[TypeableEntity]
+                                                 )
+                                               }
 
       // In the initial intermediate result, none of the entities have types yet.
       initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
 
       // Run the pipeline and get its result.
       lastResult: IntermediateTypeInspectionResult <- typeInspectionPipeline.inspectTypes(
-        previousResult = initialResult,
-        whereClause = whereClause,
-        requestingUser = requestingUser
-      )
+                                                        previousResult = initialResult,
+                                                        whereClause = whereClause,
+                                                        requestingUser = requestingUser
+                                                      )
 
       // Are any entities still untyped?
       untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities

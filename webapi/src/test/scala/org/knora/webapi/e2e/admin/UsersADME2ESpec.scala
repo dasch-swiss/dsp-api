@@ -64,22 +64,22 @@ class UsersADME2ESpec
     "test"
   )
 
-  private val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
+  private val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
   private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-  private val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
+  private val multiUserIri    = SharedTestDataV1.multiuserUser.userData.user_id.get
   private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
-  private val imagesProjectIri = SharedTestDataADM.imagesProject.id
+  private val imagesProjectIri    = SharedTestDataADM.imagesProject.id
   private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-  private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+  private val imagesReviewerGroupIri    = SharedTestDataADM.imagesReviewerGroup.id
   private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
-  private val customUserIri = "http://rdfh.ch/users/14pxW-LAQIaGcCRiNCPJcQ"
+  private val customUserIri      = "http://rdfh.ch/users/14pxW-LAQIaGcCRiNCPJcQ"
   private val otherCustomUserIri = "http://rdfh.ch/users/v8_12VcJRlGNFCjYzqJ5cA"
 
-  private val donaldIri = new MutableTestIri
+  private val donaldIri            = new MutableTestIri
   private val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
 
   // Directory path for generated client test data
@@ -257,7 +257,7 @@ class UsersADME2ESpec
       }
 
       "return only public information for single user with anonymous access" in {
-        val request = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc")
+        val request                = Get(baseApiUrl + s"/admin/users/iri/$normalUserIriEnc")
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
@@ -387,7 +387,7 @@ class UsersADME2ESpec
              |    "systemAdmin": false
              |}""".stripMargin
 
-        val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
+        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, params))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
 
@@ -493,7 +493,7 @@ class UsersADME2ESpec
             text = createUserRequest
           )
         )
-        val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -543,7 +543,7 @@ class UsersADME2ESpec
             text = createUserRequest
           )
         )
-        val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
@@ -583,7 +583,7 @@ class UsersADME2ESpec
             text = createUserRequest
           )
         )
-        val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val request                = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
@@ -618,7 +618,7 @@ class UsersADME2ESpec
                     }
                     """.stripMargin
 
-        val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+        val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)

@@ -1,0 +1,51 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.messages.SmartIri
+@import java.time.Instant
+
+@*
+ * Delete rdfs:comment from a class
+ *
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology containing the class.
+ * @param classIri the IRI of the class to be updated.
+ * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ *@
+@(ontologyNamedGraphIri: SmartIri,
+  ontologyIri: SmartIri,
+  classIri: SmartIri,
+  lastModificationDate: Instant,
+  currentTime: Instant)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+
+@* Delete the existing comments *@
+
+DELETE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@classIri> rdfs:comment ?comments.
+        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+}
+INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+    }
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+        <@classIri> rdfs:comment ?comments.
+    }
+}

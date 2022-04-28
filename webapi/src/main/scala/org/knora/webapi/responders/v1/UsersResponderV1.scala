@@ -74,39 +74,39 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     //log.debug("usersGetV1")
     for {
       _ <- Future(
-        if (!userProfileV1.permissionData.isSystemAdmin) {
-          throw ForbiddenException("SystemAdmin permissions are required.")
-        }
-      )
+             if (!userProfileV1.permissionData.isSystemAdmin) {
+               throw ForbiddenException("SystemAdmin permissions are required.")
+             }
+           )
 
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUsers()
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getUsers()
+                               .toString()
+                           )
 
       usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       usersResponseRows: Seq[VariableResultsRow] = usersResponse.results.bindings
 
-      usersWithProperties: Map[String, Map[String, String]] = usersResponseRows.groupBy(_.rowMap("s")).map {
-        case (userIri: IRI, rows: Seq[VariableResultsRow]) =>
+      usersWithProperties: Map[String, Map[String, String]] =
+        usersResponseRows.groupBy(_.rowMap("s")).map { case (userIri: IRI, rows: Seq[VariableResultsRow]) =>
           (userIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
-      }
+        }
 
       users = usersWithProperties.map { case (userIri: IRI, propsMap: Map[String, String]) =>
-        UserDataV1(
-          lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
-            case Some(langList) => langList
-            case None           => settings.fallbackLanguage
-          },
-          user_id = Some(userIri),
-          email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
-          firstname = propsMap.get(OntologyConstants.KnoraAdmin.GivenName),
-          lastname = propsMap.get(OntologyConstants.KnoraAdmin.FamilyName),
-          status = propsMap.get(OntologyConstants.KnoraAdmin.Status).map(_.toBoolean)
-        )
-      }.toSeq
+                UserDataV1(
+                  lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
+                    case Some(langList) => langList
+                    case None           => settings.fallbackLanguage
+                  },
+                  user_id = Some(userIri),
+                  email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
+                  firstname = propsMap.get(OntologyConstants.KnoraAdmin.GivenName),
+                  lastname = propsMap.get(OntologyConstants.KnoraAdmin.FamilyName),
+                  status = propsMap.get(OntologyConstants.KnoraAdmin.Status).map(_.toBoolean)
+                )
+              }.toSeq
 
     } yield users
 
@@ -120,9 +120,9 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     for {
       maybeUsersListToReturn <- usersGetV1(userProfileV1)
       result = maybeUsersListToReturn match {
-        case users: Seq[UserDataV1] if users.nonEmpty => UsersGetResponseV1(users = users)
-        case _                                        => throw NotFoundException(s"No users found")
-      }
+                 case users: Seq[UserDataV1] if users.nonEmpty => UsersGetResponseV1(users = users)
+                 case _                                        => throw NotFoundException(s"No users found")
+               }
     } yield result
 
   /**
@@ -135,12 +135,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     //log.debug("userDataByIriGetV1 - userIri: {}", userIri)
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUserByIri(
-            userIri = userIri
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getUserByIri(
+                                 userIri = userIri
+                               )
+                               .toString()
+                           )
 
       // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
@@ -176,25 +176,25 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       case None =>
         for {
           sparqlQueryString <- Future(
-            org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-              .getUserByIri(
-                userIri = userIri
-              )
-              .toString()
-          )
+                                 org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                   .getUserByIri(
+                                     userIri = userIri
+                                   )
+                                   .toString()
+                               )
 
           // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
           userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
-            userDataQueryResponse = userDataQueryResponse,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                                  userDataQueryResponse = userDataQueryResponse,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )
 
           _ = if (maybeUserProfileV1.nonEmpty) {
-            writeUserProfileV1ToCache(maybeUserProfileV1.get)
-          }
+                writeUserProfileV1ToCache(maybeUserProfileV1.get)
+              }
 
           result = maybeUserProfileV1.map(_.ofType(profileType))
 
@@ -219,20 +219,20 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserProfileResponseV1] =
     for {
       _ <- Future(
-        if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
-          throw ForbiddenException("SystemAdmin permissions are required.")
-        }
-      )
+             if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
+               throw ForbiddenException("SystemAdmin permissions are required.")
+             }
+           )
       maybeUserProfileToReturn <- userProfileByIRIGetV1(
-        userIri = userIRI,
-        profileType = profileType,
-        featureFactoryConfig = featureFactoryConfig
-      )
+                                    userIri = userIRI,
+                                    profileType = profileType,
+                                    featureFactoryConfig = featureFactoryConfig
+                                  )
 
       result = maybeUserProfileToReturn match {
-        case Some(up) => UserProfileResponseV1(up)
-        case None     => throw NotFoundException(s"User '$userIRI' not found")
-      }
+                 case Some(up) => UserProfileResponseV1(up)
+                 case None     => throw NotFoundException(s"User '$userIRI' not found")
+               }
     } yield result
 
   /**
@@ -259,25 +259,25 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       case None =>
         for {
           sparqlQueryString <- Future(
-            org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-              .getUserByEmail(
-                email = email
-              )
-              .toString()
-          )
+                                 org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                                   .getUserByEmail(
+                                     email = email
+                                   )
+                                   .toString()
+                               )
           //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
           userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
           //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
-            userDataQueryResponse = userDataQueryResponse,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                                  userDataQueryResponse = userDataQueryResponse,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )
 
           _ = if (maybeUserProfileV1.nonEmpty) {
-            writeUserProfileV1ToCache(maybeUserProfileV1.get)
-          }
+                writeUserProfileV1ToCache(maybeUserProfileV1.get)
+              }
 
           result = maybeUserProfileV1.map(_.ofType(profileType))
 
@@ -304,15 +304,15 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserProfileResponseV1] =
     for {
       maybeUserProfileToReturn <- userProfileByEmailGetV1(
-        email = email,
-        profileType = profileType,
-        featureFactoryConfig = featureFactoryConfig
-      )
+                                    email = email,
+                                    profileType = profileType,
+                                    featureFactoryConfig = featureFactoryConfig
+                                  )
 
       result = maybeUserProfileToReturn match {
-        case Some(up: UserProfileV1) => UserProfileResponseV1(up)
-        case None                    => throw NotFoundException(s"User '$email' not found")
-      }
+                 case Some(up: UserProfileV1) => UserProfileResponseV1(up)
+                 case None                    => throw NotFoundException(s"User '$email' not found")
+               }
     } yield result
 
   /**
@@ -330,26 +330,26 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserProjectMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUserByIri(
-            userIri = userIri
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getUserByIri(
+                                 userIri = userIri
+                               )
+                               .toString()
+                           )
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
       userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-        case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-      }
+                                                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                                                  }
 
       /* the projects the user is member of */
       projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProject) match {
-        case Some(projects) => projects
-        case None           => Seq.empty[IRI]
-      }
+                                case Some(projects) => projects
+                                case None           => Seq.empty[IRI]
+                              }
 
       // _ = log.debug("userProjectMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield UserProjectMembershipsGetResponseV1(projects = projectIris)
@@ -370,26 +370,26 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserProjectAdminMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUserByIri(
-            userIri = userIri
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getUserByIri(
+                                 userIri = userIri
+                               )
+                               .toString()
+                           )
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
       userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-        case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-      }
+                                                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                                                  }
 
       /* the projects the user is member of */
       projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-        case Some(projects) => projects
-        case None           => Seq.empty[IRI]
-      }
+                                case Some(projects) => projects
+                                case None           => Seq.empty[IRI]
+                              }
 
       // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield UserProjectAdminMembershipsGetResponseV1(projects = projectIris)
@@ -409,26 +409,26 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   ): Future[UserGroupMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUserByIri(
-            userIri = userIri
-          )
-          .toString()
-      )
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getUserByIri(
+                                 userIri = userIri
+                               )
+                               .toString()
+                           )
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
       userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-        case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-      }
+                                                    case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+                                                  }
 
       /* the groups the user is member of */
       groupIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInGroup) match {
-        case Some(projects) => projects
-        case None           => Seq.empty[IRI]
-      }
+                              case Some(projects) => projects
+                              case None           => Seq.empty[IRI]
+                            }
       //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
     } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
@@ -543,34 +543,34 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       for {
         /* get the user's permission profile from the permissions responder */
         permissionData <- (responderManager ? PermissionDataGetADM(
-          projectIris = projectIris,
-          groupIris = groupIris,
-          isInProjectAdminGroups = isInProjectAdminGroups,
-          isInSystemAdminGroup = isInSystemAdminGroup,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[PermissionsDataADM]
+                            projectIris = projectIris,
+                            groupIris = groupIris,
+                            isInProjectAdminGroups = isInProjectAdminGroups,
+                            isInSystemAdminGroup = isInSystemAdminGroup,
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = KnoraSystemInstances.Users.SystemUser
+                          )).mapTo[PermissionsDataADM]
 
         maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map { projectIri =>
-          (responderManager ? ProjectInfoByIRIGetV1(
-            iri = projectIri,
-            featureFactoryConfig = featureFactoryConfig,
-            userProfileV1 = None
-          )).mapTo[Option[ProjectInfoV1]]
-        }
+                                                                        (responderManager ? ProjectInfoByIRIGetV1(
+                                                                          iri = projectIri,
+                                                                          featureFactoryConfig = featureFactoryConfig,
+                                                                          userProfileV1 = None
+                                                                        )).mapTo[Option[ProjectInfoV1]]
+                                                                      }
 
         maybeProjectInfos: Seq[Option[ProjectInfoV1]] <- Future.sequence(maybeProjectInfoFutures)
-        projectInfos = maybeProjectInfos.flatten
-        projectInfoMap: Map[IRI, ProjectInfoV1] = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
+        projectInfos                                   = maybeProjectInfos.flatten
+        projectInfoMap: Map[IRI, ProjectInfoV1]        = projectInfos.map(projectInfo => projectInfo.id -> projectInfo).toMap
 
         /* construct the user profile from the different parts */
         up = UserProfileV1(
-          userData = userDataV1,
-          groups = groupIris,
-          projects_info = projectInfoMap,
-          sessionId = None,
-          permissionData = permissionData
-        )
+               userData = userDataV1,
+               groups = groupIris,
+               projects_info = projectInfoMap,
+               sessionId = None,
+               permissionData = permissionData
+             )
         // _ = log.debug("Retrieved UserProfileV1: {}", up.toString)
 
         result: Option[UserProfileV1] = Some(up)
@@ -589,12 +589,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   def userExists(userIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString
+                   )
       // _ = log.debug("userExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = checkUserExistsResponse.result
+      result                   = checkUserExistsResponse.result
 
     } yield result
 
@@ -607,14 +607,14 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   def projectExists(projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkProjectExistsByIri(projectIri = projectIri)
-          .toString
-      )
+                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                       .checkProjectExistsByIri(projectIri = projectIri)
+                       .toString
+                   )
       // _ = log.debug("projectExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = checkUserExistsResponse.result
+      result                   = checkUserExistsResponse.result
 
     } yield result
 
@@ -626,13 +626,14 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    */
   def groupExists(groupIri: IRI): Future[Boolean] =
     for {
-      askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
-      )
+      askString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
+        )
       // _ = log.debug("groupExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result = checkUserExistsResponse.result
+      result                   = checkUserExistsResponse.result
 
     } yield result
 

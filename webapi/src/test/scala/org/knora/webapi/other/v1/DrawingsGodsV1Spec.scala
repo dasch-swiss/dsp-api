@@ -62,14 +62,14 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
    */
   "Using the DrawingsGods project data" should {
 
-    val drawingsGodsProjectIri = "http://rdfh.ch/projects/0105"
+    val drawingsGodsProjectIri  = "http://rdfh.ch/projects/0105"
     val drawingsGodsOntologyIri = "http://www.knora.org/ontology/0105/drawings-gods"
-    val rootUserIri = "http://rdfh.ch/users/root"
-    val rootUser = new MutableUserADM
-    val ddd1UserIri = "http://rdfh.ch/users/drawings-gods-test-ddd1"
-    val ddd1 = new MutableUserADM
-    val ddd2UserIri = "http://rdfh.ch/users/drawings-gods-test-ddd2"
-    val ddd2 = new MutableUserADM
+    val rootUserIri             = "http://rdfh.ch/users/root"
+    val rootUser                = new MutableUserADM
+    val ddd1UserIri             = "http://rdfh.ch/users/drawings-gods-test-ddd1"
+    val ddd1                    = new MutableUserADM
+    val ddd2UserIri             = "http://rdfh.ch/users/drawings-gods-test-ddd2"
+    val ddd2                    = new MutableUserADM
 
     "retrieve the drawings gods user's profile" in {
       responderManager ! UserGetADM(
@@ -149,7 +149,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
     "return correct drawings-gods:DrawingPublic / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
       val drawingPublicResourceClass = s"$drawingsGodsOntologyIri#DrawingPublic"
-      val hasStillImageFileValue = OntologyConstants.KnoraBase.HasStillImageFileValue
+      val hasStillImageFileValue     = OntologyConstants.KnoraBase.HasStillImageFileValue
       responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
         drawingsGodsProjectIri,
         drawingPublicResourceClass,
@@ -166,7 +166,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
     "return correct drawings-gods:DrawingPrivate / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
       val drawingPrivateResourceClass = s"$drawingsGodsOntologyIri#DrawingPrivate"
-      val hasStillImageFileValue = OntologyConstants.KnoraBase.HasStillImageFileValue
+      val hasStillImageFileValue      = OntologyConstants.KnoraBase.HasStillImageFileValue
       responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
         drawingsGodsProjectIri,
         drawingPrivateResourceClass,
@@ -208,7 +208,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
       )
 
       val createResponse = expectMsgType[ResourceCreateResponseV1](timeout)
-      val resourceIri = createResponse.res_id
+      val resourceIri    = createResponse.res_id
 
       responderManager ! ResourceFullGetRequestV1(
         iri = resourceIri,

@@ -254,8 +254,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
     "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
       val paragraphID = UUID.randomUUID
-      val strikeID = UUID.randomUUID
-      val blueID = UUID.randomUUID
+      val strikeID    = UUID.randomUUID
+      val blueID      = UUID.randomUUID
 
       val documentSpecificIDs = Map(
         "1" -> paragraphID,
@@ -368,7 +368,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
 
       addedTags should be(Set(blueTag)) // Just the <blue> tag was added.
-      removedTags should be(Set()) // No tags were removed.
+      removedTags should be(Set())      // No tags were removed.
 
       // The editor now corrects the editorial text to take into account the change from 'Bus' to 'Bahn'. This
       // means that the abbreviation 'd' in the transcription now has to be expanded as 'die' rather than 'der'.

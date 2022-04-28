@@ -18,17 +18,17 @@ import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
  */
 class UserMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
-  private val lang = SharedTestDataV1.rootUser.userData.lang
-  private val user_id = SharedTestDataV1.rootUser.userData.user_id
-  private val token = SharedTestDataV1.rootUser.userData.token
-  private val firstname = SharedTestDataV1.rootUser.userData.firstname
-  private val lastname = SharedTestDataV1.rootUser.userData.lastname
-  private val email = SharedTestDataV1.rootUser.userData.email
-  private val password = SharedTestDataV1.rootUser.userData.password
-  private val groups = SharedTestDataV1.rootUser.groups
-  private val projects_info = SharedTestDataV1.rootUser.projects_info
+  private val lang           = SharedTestDataV1.rootUser.userData.lang
+  private val user_id        = SharedTestDataV1.rootUser.userData.user_id
+  private val token          = SharedTestDataV1.rootUser.userData.token
+  private val firstname      = SharedTestDataV1.rootUser.userData.firstname
+  private val lastname       = SharedTestDataV1.rootUser.userData.lastname
+  private val email          = SharedTestDataV1.rootUser.userData.email
+  private val password       = SharedTestDataV1.rootUser.userData.password
+  private val groups         = SharedTestDataV1.rootUser.groups
+  private val projects_info  = SharedTestDataV1.rootUser.projects_info
   private val permissionData = SharedTestDataV1.rootUser.permissionData
-  private val sessionId = SharedTestDataV1.rootUser.sessionId
+  private val sessionId      = SharedTestDataV1.rootUser.sessionId
 
   "The UserProfileV1 case class " should {
     "return a safe UserProfileV1 when requested " in {
@@ -69,7 +69,7 @@ class UserMessagesV1Spec extends AnyWordSpecLike with Matchers {
     "allow checking SCrypt passwords" in {
       //hashedPassword =  encoder.encode(createRequest.password);
       val encoder = new SCryptPasswordEncoder
-      val hp = encoder.encode("123456")
+      val hp      = encoder.encode("123456")
       val up = UserProfileV1(
         userData = UserDataV1(
           password = Some(hp),
@@ -88,7 +88,7 @@ class UserMessagesV1Spec extends AnyWordSpecLike with Matchers {
     "allow checking BCrypt passwords" in {
       //hashedPassword =  encoder.encode(createRequest.password);
       val encoder = new BCryptPasswordEncoder
-      val hp = encoder.encode("123456")
+      val hp      = encoder.encode("123456")
       val up = UserProfileV1(
         userData = UserDataV1(
           password = Some(hp),

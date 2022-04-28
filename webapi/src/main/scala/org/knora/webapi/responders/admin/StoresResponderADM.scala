@@ -69,23 +69,23 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
     for {
       value: Boolean <- (appActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
       _ = if (!value) {
-        throw ForbiddenException(
-          "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"
-        )
-      }
+            throw ForbiddenException(
+              "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"
+            )
+          }
 
       resetResponse <- (storeManager ? ResetRepositoryContent(rdfDataObjects, prependDefaults))
-        .mapTo[ResetRepositoryContentACK]
+                         .mapTo[ResetRepositoryContentACK]
       _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
       loadOntologiesResponse <- (responderManager ? LoadOntologiesRequestV2(
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = systemUser
-      )).mapTo[SuccessResponseV2]
+                                  featureFactoryConfig = featureFactoryConfig,
+                                  requestingUser = systemUser
+                                )).mapTo[SuccessResponseV2]
       _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
       _ <- (storeManager ? CacheServiceFlushDB(systemUser))
-      _ = log.debug(s"resetTriplestoreContent - flushing Redis store done.")
+      _  = log.debug(s"resetTriplestoreContent - flushing Redis store done.")
 
       result = ResetTriplestoreContentResponseADM(message = "success")
 

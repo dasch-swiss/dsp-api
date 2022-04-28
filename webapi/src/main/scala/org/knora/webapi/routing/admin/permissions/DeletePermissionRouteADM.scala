@@ -43,9 +43,9 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
       delete { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield PermissionDeleteRequestADM(
           permissionIri = iri,
           requestingUser = requestingUser,

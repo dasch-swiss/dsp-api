@@ -7,7 +7,6 @@ import zio.config._
 import typesafe._
 import magnolia._
 
-
 final case class AppConfig(cacheService: CacheServiceConfig)
 
 object AppConfig {

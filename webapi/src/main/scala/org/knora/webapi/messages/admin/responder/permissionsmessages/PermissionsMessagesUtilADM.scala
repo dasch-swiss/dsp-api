@@ -27,10 +27,10 @@ object PermissionsMessagesUtilADM {
 
   val PermissionTypeAndCodes: Map[String, Int] = Map(
     RestrictedViewPermission -> 1,
-    ViewPermission -> 2,
-    ModifyPermission -> 6,
-    DeletePermission -> 7,
-    ChangeRightsPermission -> 8
+    ViewPermission           -> 2,
+    ModifyPermission         -> 6,
+    DeletePermission         -> 7,
+    ChangeRightsPermission   -> 8
   )
 
   ////////////////////

@@ -41,7 +41,7 @@ sealed abstract case class DefineStandoffMapping private (
       ).toJson,
       "rdfs:label" -> label.toJson,
       JsonLDKeywords.CONTEXT -> Map(
-        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "rdfs"      -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
         "knora-api" -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
       ).toJson
     ).toJson.prettyPrint

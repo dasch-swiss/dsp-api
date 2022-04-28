@@ -97,7 +97,7 @@ object FileUtil {
    */
   def createZipFileBytes(contents: Map[String, Array[Byte]]): Array[Byte] = {
     val byteArrayOutputStream = new ByteArrayOutputStream()
-    val zipOutputStream = new ZipOutputStream(byteArrayOutputStream)
+    val zipOutputStream       = new ZipOutputStream(byteArrayOutputStream)
 
     val bytesTry = Try {
       contents.foreach { case (filename: String, content: Array[Byte]) =>

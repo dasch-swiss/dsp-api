@@ -53,7 +53,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
   private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
-  private val password = SharedTestDataADM.testPass
+  private val password          = SharedTestDataADM.testPass
 
   private val stillImageFileValueIri = new MutableTestIri
 

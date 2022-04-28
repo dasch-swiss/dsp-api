@@ -46,19 +46,19 @@ case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
  * @param routeData a [[KnoraRouteData]] providing access to the application.
  */
 abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
-  implicit protected val system: ActorSystem = routeData.system
+  implicit protected val system: ActorSystem         = routeData.system
   implicit protected val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit protected val timeout: Timeout = settings.defaultTimeout
+  implicit protected val timeout: Timeout            = settings.defaultTimeout
   implicit protected val executionContext: ExecutionContext =
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-  implicit protected val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit protected val materializer: Materializer       = Materializer.matFromSystem(system)
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  protected val applicationActor: ActorRef = routeData.appActor
+  protected val applicationActor: ActorRef          = routeData.appActor
   implicit protected val responderManager: ActorRef = routeData.appActor
-  protected val storeManager: ActorRef = routeData.appActor
-  protected val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val storeManager: ActorRef              = routeData.appActor
+  protected val log: LoggingAdapter                 = akka.event.Logging(system, this.getClass)
+  protected val baseApiUrl: String                  = settings.internalKnoraApiBaseUrl
 
   /**
    * Constructs a route. This can be done:
@@ -139,11 +139,12 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
     }
 
     for {
-      projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-        identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = requestingUser
-      )).mapTo[ProjectGetResponseADM]
+      projectInfoResponse: ProjectGetResponseADM <-
+        (responderManager ? ProjectGetRequestADM(
+          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )).mapTo[ProjectGetResponseADM]
     } yield projectInfoResponse.project
   }
 

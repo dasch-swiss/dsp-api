@@ -63,69 +63,73 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
     for {
       sparqlQuery <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .getFileValue(
-            filename = request.filename
-          )
-          .toString()
-      )
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getFileValue(
+                           filename = request.filename
+                         )
+                         .toString()
+                     )
 
       queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-        sparql = sparqlQuery,
-        featureFactoryConfig = request.featureFactoryConfig
-      )).mapTo[SparqlExtendedConstructResponse]
+                                                          sparql = sparqlQuery,
+                                                          featureFactoryConfig = request.featureFactoryConfig
+                                                        )).mapTo[SparqlExtendedConstructResponse]
 
       _ = if (queryResponse.statements.isEmpty)
-        throw NotFoundException(s"No file value was found for filename ${request.filename}")
+            throw NotFoundException(s"No file value was found for filename ${request.filename}")
       _ = if (queryResponse.statements.size > 1)
-        throw InconsistentRepositoryDataException(s"Filename ${request.filename} is used in more than one file value")
+            throw InconsistentRepositoryDataException(
+              s"Filename ${request.filename} is used in more than one file value"
+            )
 
       fileValueIriSubject: IriSubjectV2 = queryResponse.statements.keys.head match {
-        case iriSubject: IriSubjectV2 => iriSubject
-        case _ =>
-          throw InconsistentRepositoryDataException(
-            s"The subject of the file value with filename ${request.filename} is not an IRI"
-          )
-      }
+                                            case iriSubject: IriSubjectV2 => iriSubject
+                                            case _ =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"The subject of the file value with filename ${request.filename} is not an IRI"
+                                              )
+                                          }
 
       assertions: Seq[(String, String)] = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {
-        case (predicate: SmartIri, values: Seq[LiteralV2]) =>
-          values.map { value =>
-            predicate.toString -> value.toString
-          }
-      }
+                                            case (predicate: SmartIri, values: Seq[LiteralV2]) =>
+                                              values.map { value =>
+                                                predicate.toString -> value.toString
+                                              }
+                                          }
 
       maybeEntityPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionFromAssertionsADM(
-        entityIri = fileValueIriSubject.toString,
-        assertions = assertions,
-        requestingUser = request.requestingUser
-      )
+                                                          entityIri = fileValueIriSubject.toString,
+                                                          assertions = assertions,
+                                                          requestingUser = request.requestingUser
+                                                        )
 
-      _ = log.debug(
-        s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}"
-      )
+      _ =
+        log.debug(
+          s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}"
+        )
 
       permissionCode: Int = maybeEntityPermission
-        .map(_.toInt)
-        .getOrElse(0) // Sipi expects a permission code from 0 to 8
+                              .map(_.toInt)
+                              .getOrElse(0) // Sipi expects a permission code from 0 to 8
 
       response <- permissionCode match {
-        case 1 =>
-          for {
-            maybeRVSettings <- (
-              responderManager ? ProjectRestrictedViewSettingsGetADM(
-                identifier = ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
-                featureFactoryConfig = request.featureFactoryConfig,
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )
-            ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
-          } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
+                    case 1 =>
+                      for {
+                        maybeRVSettings <- (
+                                             responderManager ? ProjectRestrictedViewSettingsGetADM(
+                                               identifier =
+                                                 ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                               featureFactoryConfig = request.featureFactoryConfig,
+                                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                                             )
+                                           ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
+                      } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
 
-        case _ =>
-          FastFuture.successful(
-            SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None)
-          )
-      }
+                    case _ =>
+                      FastFuture.successful(
+                        SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None)
+                      )
+                  }
 
       _ = log.info(s"filename ${request.filename}, permission code: $permissionCode")
     } yield response

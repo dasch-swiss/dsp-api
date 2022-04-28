@@ -45,7 +45,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
   )
 
   val countTriplesQuery: String =
-      """
+    """
         SELECT (COUNT(*) AS ?no)
         WHERE
             {
@@ -147,8 +147,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
     """
 
-  var afterLoadCount: Int = -1
-  var afterChangeCount: Int = -1
+  var afterLoadCount: Int         = -1
+  var afterChangeCount: Int       = -1
   var afterChangeRevertCount: Int = -1
 
   /*

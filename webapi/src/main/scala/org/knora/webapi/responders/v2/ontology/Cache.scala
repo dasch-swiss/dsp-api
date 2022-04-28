@@ -115,75 +115,87 @@ object Cache extends LazyLogging {
   )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {
     val loadOntologiesFuture: Future[SuccessResponseV2] = for {
       _ <- Future {
-        if (
-          !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
-        ) {
-          throw ForbiddenException(s"Only a system administrator can reload ontologies")
-        }
-      }
+             if (
+               !(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)
+             ) {
+               throw ForbiddenException(s"Only a system administrator can reload ontologies")
+             }
+           }
 
       // Get all ontology metadata.
       allOntologyMetadataSparql <- FastFuture.successful(
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getAllOntologyMetadata()
-          .toString()
-      )
+                                     org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                       .getAllOntologyMetadata()
+                                       .toString()
+                                   )
       allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
-        .mapTo[SparqlSelectResult]
+                                                           .mapTo[SparqlSelectResult]
       allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = OntologyHelpers.buildOntologyMetadata(
-        allOntologyMetadataResponse
-      )
+                                                                 allOntologyMetadataResponse
+                                                               )
 
-      knoraBaseOntologyMetadata: OntologyMetadataV2 = allOntologyMetadata.getOrElse(
-        OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
-        throw InconsistentRepositoryDataException(s"No knora-base ontology found")
-      )
-      knoraBaseOntologyVersion: String = knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
-        throw InconsistentRepositoryDataException(
-          "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
+      knoraBaseOntologyMetadata: OntologyMetadataV2 =
+        allOntologyMetadata.getOrElse(
+          OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
+          throw InconsistentRepositoryDataException(s"No knora-base ontology found")
         )
-      )
+      knoraBaseOntologyVersion: String =
+        knoraBaseOntologyMetadata.ontologyVersion.getOrElse(
+          throw InconsistentRepositoryDataException(
+            "The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."
+          )
+        )
 
       _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
-        throw InconsistentRepositoryDataException(
-          s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
-        )
-      }
+            throw InconsistentRepositoryDataException(
+              s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates."
+            )
+          }
 
       // Get the contents of each named graph containing an ontology.
       ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] = allOntologyMetadata.keys.map { ontologyIri =>
-        val ontology: OntologyMetadataV2 = allOntologyMetadata.get(ontologyIri).get
-        val lastModificationDate: Option[Instant] = ontology.lastModificationDate
-        val attachedToProject: Option[SmartIri] = ontology.projectIri
+                                                                        val ontology: OntologyMetadataV2 =
+                                                                          allOntologyMetadata.get(ontologyIri).get
+                                                                        val lastModificationDate: Option[Instant] =
+                                                                          ontology.lastModificationDate
+                                                                        val attachedToProject: Option[SmartIri] =
+                                                                          ontology.projectIri
 
-        // throw an expception if ontology doesn't have lastModificationDate property and isn't attached to system project
-        lastModificationDate match {
-          case None =>
-            attachedToProject match {
-              case Some(iri: SmartIri) =>
-                if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
-                  throw MissingLastModificationDateOntologyException(
-                    s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
-                  )
-                }
-              case _ => ()
-            }
-          case _ => ()
-        }
+                                                                        // throw an expception if ontology doesn't have lastModificationDate property and isn't attached to system project
+                                                                        lastModificationDate match {
+                                                                          case None =>
+                                                                            attachedToProject match {
+                                                                              case Some(iri: SmartIri) =>
+                                                                                if (
+                                                                                  iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri
+                                                                                ) {
+                                                                                  throw MissingLastModificationDateOntologyException(
+                                                                                    s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
+                                                                                  )
+                                                                                }
+                                                                              case _ => ()
+                                                                            }
+                                                                          case _ => ()
+                                                                        }
 
-        val ontologyGraphConstructQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getOntologyGraph(
-            ontologyGraph = ontologyIri
-          )
-          .toString
+                                                                        val ontologyGraphConstructQuery =
+                                                                          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                                                                            .getOntologyGraph(
+                                                                              ontologyGraph = ontologyIri
+                                                                            )
+                                                                            .toString
 
-        (storeManager ? SparqlExtendedConstructRequest(
-          sparql = ontologyGraphConstructQuery,
-          featureFactoryConfig = featureFactoryConfig
-        )).mapTo[SparqlExtendedConstructResponse].map { response =>
-          OntologyGraph(ontologyIri = ontologyIri, constructResponse = response)
-        }
-      }
+                                                                        (storeManager ? SparqlExtendedConstructRequest(
+                                                                          sparql = ontologyGraphConstructQuery,
+                                                                          featureFactoryConfig = featureFactoryConfig
+                                                                        )).mapTo[SparqlExtendedConstructResponse].map {
+                                                                          response =>
+                                                                            OntologyGraph(
+                                                                              ontologyIri = ontologyIri,
+                                                                              constructResponse = response
+                                                                            )
+                                                                        }
+                                                                      }
 
       ontologyGraphs: Iterable[OntologyGraph] <- Future.sequence(ontologyGraphResponseFutures)
 
@@ -280,7 +292,7 @@ object Cache extends LazyLogging {
       case (propertyIri, propertyDef) => propertyIri -> propertyDef.subPropertyOf
     }
 
-    val allClassIris = allClassDefs.keySet
+    val allClassIris    = allClassDefs.keySet
     val allPropertyIris = allPropertyDefs.keySet
 
     // A map in which each class IRI points to the full sequence of its base classes.
@@ -637,10 +649,10 @@ object Cache extends LazyLogging {
     errorFun: String => Nothing
   ): Unit =
     if (targetEntityIri.isKnoraDefinitionIri) {
-      val sourceOntologyIri = sourceEntityIri.getOntologyFromEntity
+      val sourceOntologyIri      = sourceEntityIri.getOntologyFromEntity
       val sourceOntologyMetadata = ontologyCacheData.ontologies(sourceOntologyIri).ontologyMetadata
 
-      val targetOntologyIri = targetEntityIri.getOntologyFromEntity
+      val targetOntologyIri      = targetEntityIri.getOntologyFromEntity
       val targetOntologyMetadata = ontologyCacheData.ontologies(targetOntologyIri).ontologyMetadata
 
       if (sourceOntologyMetadata.projectIri != targetOntologyMetadata.projectIri) {
@@ -837,7 +849,7 @@ object Cache extends LazyLogging {
 
         // Update the cache.
 
-        val ontologyIri = directSubClass.entityInfoContent.classIri.getOntologyFromEntity
+        val ontologyIri              = directSubClass.entityInfoContent.classIri.getOntologyFromEntity
         val ontology: ReadOntologyV2 = cacheDataAcc.ontologies(ontologyIri)
 
         val updatedOntology = ontology.copy(

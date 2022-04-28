@@ -75,8 +75,8 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
   /* needed by the core trait (represents the KnoraTestCore trait)*/
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -91,7 +91,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   lazy val appActor: ActorRef =
     system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
   protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
   protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
@@ -122,7 +122,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   protected def checkIfSipiIsRunning(): Unit = {
     // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-    val request = Get(baseInternalSipiUrl + "/server/test.html")
+    val request  = Get(baseInternalSipiUrl + "/server/test.html")
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
     if (response.status.isSuccess()) logger.info("Sipi is running.")

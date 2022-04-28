@@ -26,15 +26,15 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userProfile <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                           requestContext = requestContext,
+                           featureFactoryConfig = featureFactoryConfig
+                         )
 
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceTypeIri = stringFormatter.validateAndEscapeIri(
-            iri,
-            throw BadRequestException(s"Invalid resource class IRI: $iri")
-          )
+                              iri,
+                              throw BadRequestException(s"Invalid resource class IRI: $iri")
+                            )
 
         } yield ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
@@ -50,26 +50,26 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
           params = requestContext.request.uri.query().toMap
 
           vocabularyId = params.getOrElse(
-            "vocabulary",
-            throw BadRequestException("Required param vocabulary is missing")
-          )
+                           "vocabulary",
+                           throw BadRequestException("Required param vocabulary is missing")
+                         )
 
           namedGraphIri = vocabularyId match {
-            case "0" => None // if param vocabulary is set to 0, query all named graphs
-            case other =>
-              Some(
-                stringFormatter.validateAndEscapeIri(
-                  vocabularyId,
-                  throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")
-                )
-              )
-          }
+                            case "0" => None // if param vocabulary is set to 0, query all named graphs
+                            case other =>
+                              Some(
+                                stringFormatter.validateAndEscapeIri(
+                                  vocabularyId,
+                                  throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")
+                                )
+                              )
+                          }
 
         } yield ResourceTypesForNamedGraphGetRequestV1(
           namedGraph = namedGraphIri,
@@ -90,17 +90,17 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
           params = requestContext.request.uri.query().toMap
 
-          vocabularyId: Option[String] = params.get("vocabulary")
+          vocabularyId: Option[String]   = params.get("vocabulary")
           resourcetypeId: Option[String] = params.get("restype")
 
           // either the vocabulary or the restype param is set, but not both
           _ = if (vocabularyId.nonEmpty && resourcetypeId.nonEmpty)
-            throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
+                throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
         } yield vocabularyId match {
           case Some("0") => // 0 means that all named graphs should be queried
             PropertyTypesForNamedGraphGetRequestV1(
@@ -150,9 +150,9 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
         } yield NamedGraphsGetRequestV1(
           featureFactoryConfig = featureFactoryConfig,
           userADM = userADM
@@ -171,9 +171,9 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
         } yield LoadOntologiesRequestV1(
           featureFactoryConfig = featureFactoryConfig,
           userADM = userADM
@@ -191,15 +191,15 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
 
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceClassIri = stringFormatter.validateAndEscapeIri(
-            iri,
-            throw BadRequestException(s"Invalid resource class IRI: $iri")
-          )
+                               iri,
+                               throw BadRequestException(s"Invalid resource class IRI: $iri")
+                             )
         } yield SubClassesGetRequestV1(resourceClassIri, userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(

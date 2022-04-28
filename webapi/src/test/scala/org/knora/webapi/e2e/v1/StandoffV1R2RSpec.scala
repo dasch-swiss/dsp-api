@@ -41,9 +41,9 @@ class StandoffV1R2RSpec extends R2RSpec {
         """.stripMargin
 
   private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV1(routeData).knoraApiPath)
-  private val valuesPath = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
+  private val valuesPath   = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
 
-  private val anythingUser = SharedTestDataV1.anythingUser1
+  private val anythingUser      = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
 
   private val password = SharedTestDataADM.testPass
@@ -59,9 +59,9 @@ class StandoffV1R2RSpec extends R2RSpec {
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
   )
 
-  private val firstTextValueIri = new MutableTestIri
+  private val firstTextValueIri  = new MutableTestIri
   private val secondTextValueIri = new MutableTestIri
-  private val thirdTextValueIri = new MutableTestIri
+  private val thirdTextValueIri  = new MutableTestIri
   private val fourthTextValueIri = new MutableTestIri
 
   object ResponseUtils {
@@ -708,7 +708,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "read the XML TextValue back to XML and compare it to the XML that was originally sent" in {
 
       val xmlFile = Paths.get("..", RequestParams.pathToLetterXML)
-      val xmlStr = FileUtil.readTextFile(xmlFile)
+      val xmlStr  = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
@@ -737,7 +737,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "change a text value from XML representing a letter" in {
 
       val xmlFileToSend = Paths.get("..", RequestParams.pathToLetter2XML)
-      val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
+      val xmlStrToSend  = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
         s"""
@@ -770,7 +770,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "read the changed TextValue back to XML and compare it to the XML that was originally sent" in {
 
       val xmlFile = Paths.get("..", RequestParams.pathToLetter2XML)
-      val xmlStr = FileUtil.readTextFile(xmlFile)
+      val xmlStr  = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
@@ -799,7 +799,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "create a TextValue from complex XML representing a letter" in {
 
       val xmlFileToSend = Paths.get("..", RequestParams.pathToLetter3XML)
-      val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
+      val xmlStrToSend  = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
         s"""
@@ -833,7 +833,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "read the complex TextValue back to XML and compare it to the XML that was originally sent" in {
 
       val xmlFile = Paths.get("..", RequestParams.pathToLetter3XML)
-      val xmlStr = FileUtil.readTextFile(xmlFile)
+      val xmlStr  = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
@@ -897,7 +897,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "create a TextValue from StandardXML representing HTML (in strict XML notation)" in {
 
       val xmlFileToSend = Paths.get("..", RequestParams.pathToStandardHTML)
-      val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
+      val xmlStrToSend  = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
         s"""
@@ -931,7 +931,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "read the TextValue back to XML and compare it to the (Standard) HTML that was originally sent" in {
 
       val htmlFile = Paths.get("..", RequestParams.pathToStandardHTML)
-      val htmlStr = FileUtil.readTextFile(htmlFile)
+      val htmlStr  = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
@@ -960,7 +960,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "create a TextValue from StandardXML representing HTML with internal anchor link" in {
 
       val xmlFileToSend = Paths.get("..", RequestParams.pathToStandardHTMLInternalLink)
-      val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
+      val xmlStrToSend  = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
         s"""
@@ -994,7 +994,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "read the TextValue back to XML and compare it to the (Standard) HTML with internal anchor link that was originally sent" in {
 
       val htmlFile = Paths.get("..", RequestParams.pathToStandardHTMLInternalLink)
-      val htmlStr = FileUtil.readTextFile(htmlFile)
+      val htmlStr  = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(fourthTextValueIri.get, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)
@@ -1023,7 +1023,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "create a TextValue from XML representing HTML (in strict XML notation)" in {
 
       val xmlFileToSend = Paths.get("..", RequestParams.pathToHTML)
-      val xmlStrToSend = FileUtil.readTextFile(xmlFileToSend)
+      val xmlStrToSend  = FileUtil.readTextFile(xmlFileToSend)
 
       val newValueParams =
         s"""
@@ -1057,7 +1057,7 @@ class StandoffV1R2RSpec extends R2RSpec {
     "read the TextValue back to XML and compare it to the HTML that was originally sent" in {
 
       val htmlFile = Paths.get("..", RequestParams.pathToHTML)
-      val htmlStr = FileUtil.readTextFile(htmlFile)
+      val htmlStr  = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password)

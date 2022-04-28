@@ -24,13 +24,13 @@ object PermissionsHandlingV1E2ESpec {
  */
 class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.config) with TriplestoreJsonProtocol {
 
-  private val rootUser = SharedTestDataV1.rootUser
+  private val rootUser      = SharedTestDataV1.rootUser
   private val rootUserEmail = rootUser.userData.email.get
 
-  private val imagesUser = SharedTestDataV1.imagesUser01
+  private val imagesUser      = SharedTestDataV1.imagesUser01
   private val imagesUserEmail = imagesUser.userData.email.get
 
-  private val incunabulaUser = SharedTestDataV1.incunabulaProjectAdminUser
+  private val incunabulaUser      = SharedTestDataV1.incunabulaProjectAdminUser
   private val incunabulaUserEmail = incunabulaUser.userData.email.get
 
   private val password = SharedTestDataADM.testPass

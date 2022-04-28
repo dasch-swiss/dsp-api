@@ -167,20 +167,21 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                   for {
 
                     textWithStandoffTags: TextWithStandoffTagsV2 <- RouteUtilV1.convertXMLtoStandoffTagV1(
-                      xml = richtext.xml.get,
-                      mappingIri = mappingIri,
-                      acceptStandoffLinksToClientIDs = acceptStandoffLinksToClientIDs,
-                      userProfile = userProfile,
-                      featureFactoryConfig = featureFactoryConfig,
-                      settings = settings,
-                      responderManager = responderManager,
-                      log = log
-                    )
+                                                                      xml = richtext.xml.get,
+                                                                      mappingIri = mappingIri,
+                                                                      acceptStandoffLinksToClientIDs =
+                                                                        acceptStandoffLinksToClientIDs,
+                                                                      userProfile = userProfile,
+                                                                      featureFactoryConfig = featureFactoryConfig,
+                                                                      settings = settings,
+                                                                      responderManager = responderManager,
+                                                                      log = log
+                                                                    )
 
                     // collect the resource references from the linking standoff nodes
                     resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(
-                      textWithStandoffTags.standoffTagV2
-                    )
+                                                     textWithStandoffTags.standoffTagV2
+                                                   )
 
                   } yield CreateValueV1WithComment(
                     TextValueWithStandoffV1(
@@ -312,44 +313,47 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       for {
         projectShortcode: String <- for {
-          projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-            ProjectIdentifierADM(maybeIri = Some(projectIri)),
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = userADM
-          )).mapTo[ProjectGetResponseADM]
-        } yield projectResponse.project.shortcode
+                                      projectResponse: ProjectGetResponseADM <-
+                                        (responderManager ? ProjectGetRequestADM(
+                                          ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                                          featureFactoryConfig = featureFactoryConfig,
+                                          requestingUser = userADM
+                                        )).mapTo[ProjectGetResponseADM]
+                                    } yield projectResponse.project.shortcode
 
         file: Option[FileValueV1] <- apiRequest.file match {
-          case Some(filename) =>
-            // Ask Sipi about the file's metadata.
-            val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+                                       case Some(filename) =>
+                                         // Ask Sipi about the file's metadata.
+                                         val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
-            for {
-              fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                fileUrl = tempFileUrl,
-                requestingUser = userADM
-              )).mapTo[GetFileMetadataResponse]
-            } yield Some(
-              RouteUtilV1.makeFileValue(
-                filename = filename,
-                fileMetadataResponse = fileMetadataResponse,
-                projectShortcode = projectShortcode
-              )
-            )
+                                         for {
+                                           fileMetadataResponse: GetFileMetadataResponse <-
+                                             (storeManager ? GetFileMetadataRequest(
+                                               fileUrl = tempFileUrl,
+                                               requestingUser = userADM
+                                             )).mapTo[GetFileMetadataResponse]
+                                         } yield Some(
+                                           RouteUtilV1.makeFileValue(
+                                             filename = filename,
+                                             fileMetadataResponse = fileMetadataResponse,
+                                             projectShortcode = projectShortcode
+                                           )
+                                         )
 
-          case None => FastFuture.successful(None)
-        }
+                                       case None => FastFuture.successful(None)
+                                     }
 
-        valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] = valuesToCreate(
-          properties = apiRequest.properties,
-          acceptStandoffLinksToClientIDs = false,
-          userProfile = userADM
-        )
+        valuesToBeCreatedWithFuture: Map[IRI, Future[Seq[CreateValueV1WithComment]]] =
+          valuesToCreate(
+            properties = apiRequest.properties,
+            acceptStandoffLinksToClientIDs = false,
+            userProfile = userADM
+          )
 
         // make the whole Map a Future
         valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] <- ActorUtil.sequenceFutureSeqsInMap(
-          valuesToBeCreatedWithFuture
-        )
+                                                                        valuesToBeCreatedWithFuture
+                                                                      )
       } yield ResourceCreateRequestV1(
         resourceTypeIri = resourceTypeIri,
         label = label,
@@ -379,25 +383,25 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] <- ActorUtil.sequenceFutureSeqsInMap(values)
 
         convertedFile <- resourceRequest.file match {
-          case Some(filename) =>
-            // Ask Sipi about the file's metadata.
-            val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+                           case Some(filename) =>
+                             // Ask Sipi about the file's metadata.
+                             val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
 
-            for {
-              fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                fileUrl = tempFileUrl,
-                requestingUser = userProfile
-              )).mapTo[GetFileMetadataResponse]
-            } yield Some(
-              RouteUtilV1.makeFileValue(
-                filename = filename,
-                fileMetadataResponse = fileMetadataResponse,
-                projectShortcode = projectShortcode
-              )
-            )
+                             for {
+                               fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
+                                                                                  fileUrl = tempFileUrl,
+                                                                                  requestingUser = userProfile
+                                                                                )).mapTo[GetFileMetadataResponse]
+                             } yield Some(
+                               RouteUtilV1.makeFileValue(
+                                 filename = filename,
+                                 fileMetadataResponse = fileMetadataResponse,
+                                 projectShortcode = projectShortcode
+                               )
+                             )
 
-          case None => FastFuture.successful(None)
-        }
+                           case None => FastFuture.successful(None)
+                         }
       } yield OneOfMultipleResourceCreateRequestV1(
         resourceTypeIri = resourceRequest.restype_id,
         clientResourceID = resourceRequest.client_id,
@@ -432,21 +436,22 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       for {
         projectShortcode: String <- for {
-          projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-            identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = userProfile
-          )).mapTo[ProjectGetResponseADM]
-        } yield projectResponse.project.shortcode
+                                      projectResponse: ProjectGetResponseADM <-
+                                        (responderManager ? ProjectGetRequestADM(
+                                          identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
+                                          featureFactoryConfig = featureFactoryConfig,
+                                          requestingUser = userProfile
+                                        )).mapTo[ProjectGetResponseADM]
+                                    } yield projectResponse.project.shortcode
 
-        resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] = resourceRequest.map {
-          createResourceRequest =>
+        resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
+          resourceRequest.map { createResourceRequest =>
             createOneResourceRequestFromXmlImport(
               resourceRequest = createResourceRequest,
               projectShortcode = projectShortcode,
               userProfile = userProfile
             )
-        }
+          }
 
         resToCreateCollection: Seq[OneOfMultipleResourceCreateRequestV1] <- Future.sequence(resourcesToCreate)
       } yield MultipleResourceCreateRequestV1(
@@ -516,98 +521,106 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         for {
           // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
           initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(
-            initialOntologyIri,
-            userProfile
-          )).mapTo[NamedGraphEntityInfoV1]
+                                                             initialOntologyIri,
+                                                             userProfile
+                                                           )).mapTo[NamedGraphEntityInfoV1]
 
           // Get details about those classes and properties.
           entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-            resourceClassIris = initialNamedGraphInfo.resourceClasses,
-            propertyIris = initialNamedGraphInfo.propertyIris,
-            userProfile = userProfile
-          )).mapTo[EntityInfoGetResponseV1]
+                                                           resourceClassIris = initialNamedGraphInfo.resourceClasses,
+                                                           propertyIris = initialNamedGraphInfo.propertyIris,
+                                                           userProfile = userProfile
+                                                         )).mapTo[EntityInfoGetResponseV1]
 
           // Look at the base classes of all the resource classes in the initial ontology. Make a set of
           // the ontologies containing the definitions of those classes, not including including the initial ontology itself
           // or any other ontologies we've already looked at.
           ontologyIrisFromBaseClasses: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
-            case (acc, (resourceClassIri, resourceClassInfo)) =>
-              val subClassOfOntologies: Set[IRI] = resourceClassInfo.subClassOf
-                .map(_.toSmartIri)
-                .filter(_.isKnoraDefinitionIri)
-                .map(_.getOntologyFromEntity.toString)
-              acc ++ subClassOfOntologies
-          } -- intermediateResults.keySet - initialOntologyIri
+                                                    case (acc, (resourceClassIri, resourceClassInfo)) =>
+                                                      val subClassOfOntologies: Set[IRI] = resourceClassInfo.subClassOf
+                                                        .map(_.toSmartIri)
+                                                        .filter(_.isKnoraDefinitionIri)
+                                                        .map(_.getOntologyFromEntity.toString)
+                                                      acc ++ subClassOfOntologies
+                                                  } -- intermediateResults.keySet - initialOntologyIri
 
           // Look at the properties that have cardinalities in the resource classes in the initial ontology.
           // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
           // or any other ontologies we've already looked at.
           ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
-            case (acc, (resourceClassIri, resourceClassInfo)) =>
-              val resourceCardinalityOntologies: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.map {
-                case (propertyIri, _) => propertyIri.toSmartIri.getOntologyFromEntity.toString
-              }.toSet
+                                                      case (acc, (resourceClassIri, resourceClassInfo)) =>
+                                                        val resourceCardinalityOntologies: Set[IRI] =
+                                                          resourceClassInfo.knoraResourceCardinalities.map {
+                                                            case (propertyIri, _) =>
+                                                              propertyIri.toSmartIri.getOntologyFromEntity.toString
+                                                          }.toSet
 
-              acc ++ resourceCardinalityOntologies
-          } -- intermediateResults.keySet - initialOntologyIri
+                                                        acc ++ resourceCardinalityOntologies
+                                                    } -- intermediateResults.keySet - initialOntologyIri
 
           // Look at the object class constraints of the properties in the initial ontology. Make a set of the ontologies containing those classes,
           // not including the initial ontology itself or any other ontologies we've already looked at.
           ontologyIrisFromObjectClassConstraints: Set[IRI] = entityInfoResponse.propertyInfoMap.map {
-            case (propertyIri, propertyInfo) =>
-              val propertyObjectClassConstraint =
-                propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                  throw InconsistentRepositoryDataException(
-                    s"Property $propertyIri has no knora-base:objectClassConstraint"
-                  )
-                }
+                                                               case (propertyIri, propertyInfo) =>
+                                                                 val propertyObjectClassConstraint =
+                                                                   propertyInfo
+                                                                     .getPredicateObject(
+                                                                       OntologyConstants.KnoraBase.ObjectClassConstraint
+                                                                     )
+                                                                     .getOrElse {
+                                                                       throw InconsistentRepositoryDataException(
+                                                                         s"Property $propertyIri has no knora-base:objectClassConstraint"
+                                                                       )
+                                                                     }
 
-              propertyObjectClassConstraint.toSmartIri.getOntologyFromEntity.toString
-          }.toSet -- intermediateResults.keySet - initialOntologyIri
+                                                                 propertyObjectClassConstraint.toSmartIri.getOntologyFromEntity.toString
+                                                             }.toSet -- intermediateResults.keySet - initialOntologyIri
 
           // Make a set of all the ontologies referenced by the initial ontology.
           referencedOntologies: Set[IRI] =
             ontologyIrisFromBaseClasses ++ ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
 
           // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
-          lastResults: Map[IRI, NamedGraphEntityInfoV1] <- referencedOntologies.foldLeft(
-            FastFuture.successful(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))
-          ) { case (accFuture, ontologyIri) =>
-            for {
-              acc: Map[IRI, NamedGraphEntityInfoV1] <- accFuture
+          lastResults: Map[IRI, NamedGraphEntityInfoV1] <-
+            referencedOntologies.foldLeft(
+              FastFuture.successful(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))
+            ) { case (accFuture, ontologyIri) =>
+              for {
+                acc: Map[IRI, NamedGraphEntityInfoV1] <- accFuture
 
-              // Has a previous recursion already dealt with this ontology?
-              nextResults: Map[IRI, NamedGraphEntityInfoV1] <-
-                if (acc.contains(ontologyIri)) {
-                  // Yes, so there's no need to get it again.
-                  FastFuture.successful(acc)
-                } else {
-                  // No. Recursively get it and the ontologies it depends on.
-                  getNamedGraphInfosRec(
-                    initialOntologyIri = ontologyIri,
-                    intermediateResults = acc,
-                    userProfile = userProfile
-                  )
-                }
-            } yield acc ++ nextResults
-          }
+                // Has a previous recursion already dealt with this ontology?
+                nextResults: Map[IRI, NamedGraphEntityInfoV1] <-
+                  if (acc.contains(ontologyIri)) {
+                    // Yes, so there's no need to get it again.
+                    FastFuture.successful(acc)
+                  } else {
+                    // No. Recursively get it and the ontologies it depends on.
+                    getNamedGraphInfosRec(
+                      initialOntologyIri = ontologyIri,
+                      intermediateResults = acc,
+                      userProfile = userProfile
+                    )
+                  }
+              } yield acc ++ nextResults
+            }
         } yield lastResults
       }
 
       for {
         // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
         knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(
-          OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
-          userProfile
-        )).mapTo[NamedGraphEntityInfoV1]
+                                      OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
+                                      userProfile
+                                    )).mapTo[NamedGraphEntityInfoV1]
 
         // Recursively get NamedGraphEntityInfoV1 instances for the main ontology to be used in the XML import,
         // as well as any other project-specific ontologies it depends on.
         graphInfos <- getNamedGraphInfosRec(
-          initialOntologyIri = mainOntologyIri,
-          intermediateResults = Map(OntologyConstants.KnoraBase.KnoraBaseOntologyIri -> knoraBaseGraphEntityInfo),
-          userProfile = userProfile
-        )
+                        initialOntologyIri = mainOntologyIri,
+                        intermediateResults =
+                          Map(OntologyConstants.KnoraBase.KnoraBaseOntologyIri -> knoraBaseGraphEntityInfo),
+                        userProfile = userProfile
+                      )
       } yield graphInfos
     }
 
@@ -658,26 +671,26 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       for {
         // Get a NamedGraphEntityInfoV1 for each ontology that we need to generate an XML schema for.
         namedGraphInfos: Map[IRI, NamedGraphEntityInfoV1] <- getNamedGraphInfos(
-          mainOntologyIri = internalOntologyIri,
-          userProfile = userProfile
-        )
+                                                               mainOntologyIri = internalOntologyIri,
+                                                               userProfile = userProfile
+                                                             )
 
         // Get information about the resource classes and properties in each ontology.
-        entityInfoResponseFutures: immutable.Iterable[Future[(IRI, EntityInfoGetResponseV1)]] = namedGraphInfos.map {
-          case (ontologyIri: IRI, namedGraphInfo: NamedGraphEntityInfoV1) =>
+        entityInfoResponseFutures: immutable.Iterable[Future[(IRI, EntityInfoGetResponseV1)]] =
+          namedGraphInfos.map { case (ontologyIri: IRI, namedGraphInfo: NamedGraphEntityInfoV1) =>
             for {
               entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                resourceClassIris = namedGraphInfo.resourceClasses,
-                propertyIris = namedGraphInfo.propertyIris,
-                userProfile = userProfile
-              )).mapTo[EntityInfoGetResponseV1]
+                                                               resourceClassIris = namedGraphInfo.resourceClasses,
+                                                               propertyIris = namedGraphInfo.propertyIris,
+                                                               userProfile = userProfile
+                                                             )).mapTo[EntityInfoGetResponseV1]
             } yield ontologyIri -> entityInfoResponse
-        }
+          }
 
         // Sequence the futures of entity info responses.
         entityInfoResponses: immutable.Iterable[(IRI, EntityInfoGetResponseV1)] <- Future.sequence(
-          entityInfoResponseFutures
-        )
+                                                                                     entityInfoResponseFutures
+                                                                                   )
 
         // Make a Map of internal ontology IRIs to EntityInfoGetResponseV1 objects.
         entityInfoResponsesMap: Map[IRI, EntityInfoGetResponseV1] = entityInfoResponses.toMap
@@ -696,69 +709,79 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         // Make an XmlImportNamespaceInfoV1 for the standard Knora XML import v1 schema's namespace.
         knoraXmlImportSchemaNamespaceInfo: XmlImportNamespaceInfoV1 = XmlImportNamespaceInfoV1(
-          namespace = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespaceV1,
-          prefixLabel = OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel
-        )
+                                                                        namespace =
+                                                                          OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespaceV1,
+                                                                        prefixLabel =
+                                                                          OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel
+                                                                      )
 
         // Read the standard Knora XML import v1 schema from a file.
-        knoraXmlImportSchemaXml: String = FileUtil.readTextResource(
-          OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd"
-        )
+        knoraXmlImportSchemaXml: String =
+          FileUtil.readTextResource(
+            OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd"
+          )
 
         // Construct an XmlImportSchemaV1 for the standard Knora XML import v1 schema.
         knoraXmlImportSchema: XmlImportSchemaV1 = XmlImportSchemaV1(
-          namespaceInfo = knoraXmlImportSchemaNamespaceInfo,
-          schemaXml = knoraXmlImportSchemaXml
-        )
+                                                    namespaceInfo = knoraXmlImportSchemaNamespaceInfo,
+                                                    schemaXml = knoraXmlImportSchemaXml
+                                                  )
 
         // Generate a schema for each project-specific ontology.
         generatedSchemas: Map[IRI, XmlImportSchemaV1] = schemasToGenerate.map { case (ontologyIri, namespaceInfo) =>
-          // Each schema imports all the other generated schemas, plus the standard Knora XML import v1 schema.
-          // Sort the imports to make schema generation deterministic.
-          val importedNamespaceInfos: Seq[XmlImportNamespaceInfoV1] =
-            (schemasToGenerate - ontologyIri).values.toVector.sortBy { importedNamespaceInfo =>
-              importedNamespaceInfo.prefixLabel
-            } :+ knoraXmlImportSchemaNamespaceInfo
+                                                          // Each schema imports all the other generated schemas, plus the standard Knora XML import v1 schema.
+                                                          // Sort the imports to make schema generation deterministic.
+                                                          val importedNamespaceInfos: Seq[XmlImportNamespaceInfoV1] =
+                                                            (schemasToGenerate - ontologyIri).values.toVector.sortBy {
+                                                              importedNamespaceInfo =>
+                                                                importedNamespaceInfo.prefixLabel
+                                                            } :+ knoraXmlImportSchemaNamespaceInfo
 
-          // Generate the schema using a Twirl template.
-          val unformattedSchemaXml = org.knora.webapi.messages.twirl.xsd.v1.xml
-            .xmlImport(
-              targetNamespaceInfo = namespaceInfo,
-              importedNamespaces = importedNamespaceInfos,
-              knoraXmlImportNamespacePrefixLabel =
-                OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
-              resourceClassInfoMap = entityInfoResponsesMap(ontologyIri).resourceClassInfoMap,
-              propertyInfoMap = propertyInfoMap,
-              getNamespacePrefixLabel = internalEntityIri => getNamespacePrefixLabel(internalEntityIri),
-              getEntityName = internalEntityIri => getEntityName(internalEntityIri)
-            )
-            .toString()
-            .trim
+                                                          // Generate the schema using a Twirl template.
+                                                          val unformattedSchemaXml =
+                                                            org.knora.webapi.messages.twirl.xsd.v1.xml
+                                                              .xmlImport(
+                                                                targetNamespaceInfo = namespaceInfo,
+                                                                importedNamespaces = importedNamespaceInfos,
+                                                                knoraXmlImportNamespacePrefixLabel =
+                                                                  OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel,
+                                                                resourceClassInfoMap = entityInfoResponsesMap(
+                                                                  ontologyIri
+                                                                ).resourceClassInfoMap,
+                                                                propertyInfoMap = propertyInfoMap,
+                                                                getNamespacePrefixLabel = internalEntityIri =>
+                                                                  getNamespacePrefixLabel(internalEntityIri),
+                                                                getEntityName =
+                                                                  internalEntityIri => getEntityName(internalEntityIri)
+                                                              )
+                                                              .toString()
+                                                              .trim
 
-          // Parse the generated XML schema.
-          val parsedSchemaXml =
-            try {
-              XML.loadString(unformattedSchemaXml)
-            } catch {
-              case parseEx: org.xml.sax.SAXParseException =>
-                throw AssertionException(
-                  s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.",
-                  parseEx,
-                  log
-                )
-            }
+                                                          // Parse the generated XML schema.
+                                                          val parsedSchemaXml =
+                                                            try {
+                                                              XML.loadString(unformattedSchemaXml)
+                                                            } catch {
+                                                              case parseEx: org.xml.sax.SAXParseException =>
+                                                                throw AssertionException(
+                                                                  s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.",
+                                                                  parseEx,
+                                                                  log
+                                                                )
+                                                            }
 
-          // Format the generated XML schema nicely.
-          val formattedSchemaXml = xmlPrettyPrinter.format(parsedSchemaXml)
+                                                          // Format the generated XML schema nicely.
+                                                          val formattedSchemaXml =
+                                                            xmlPrettyPrinter.format(parsedSchemaXml)
 
-          // Wrap it in an XmlImportSchemaV1 object along with its XML namespace information.
-          val schema = XmlImportSchemaV1(
-            namespaceInfo = namespaceInfo,
-            schemaXml = formattedSchemaXml
-          )
+                                                          // Wrap it in an XmlImportSchemaV1 object along with its XML namespace information.
+                                                          val schema = XmlImportSchemaV1(
+                                                            namespaceInfo = namespaceInfo,
+                                                            schemaXml = formattedSchemaXml
+                                                          )
 
-          namespaceInfo.namespace -> schema
-        }
+                                                          namespaceInfo.namespace -> schema
+                                                        }
 
         // The schema bundle to be returned contains the generated schemas plus the standard Knora XML import v1 schema.
         allSchemasForBundle: Map[IRI, XmlImportSchemaV1] =
@@ -780,16 +803,18 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       for {
         // Generate a bundle of XML schemas.
         schemaBundle: XmlImportSchemaBundleV1 <- generateSchemasFromOntologies(
-          internalOntologyIri = internalOntologyIri,
-          userProfile = userProfile
-        )
+                                                   internalOntologyIri = internalOntologyIri,
+                                                   userProfile = userProfile
+                                                 )
 
         // Generate the contents of the Zip file: a Map of file names to file contents (byte arrays).
         zipFileContents: Map[String, Array[Byte]] = schemaBundle.schemas.values.map { schema: XmlImportSchemaV1 =>
-          val schemaFilename: String = schema.namespaceInfo.prefixLabel + ".xsd"
-          val schemaXmlBytes: Array[Byte] = schema.schemaXml.getBytes(StandardCharsets.UTF_8)
-          schemaFilename -> schemaXmlBytes
-        }.toMap
+                                                      val schemaFilename: String =
+                                                        schema.namespaceInfo.prefixLabel + ".xsd"
+                                                      val schemaXmlBytes: Array[Byte] =
+                                                        schema.schemaXml.getBytes(StandardCharsets.UTF_8)
+                                                      schemaFilename -> schemaXmlBytes
+                                                    }.toMap
       } yield FileUtil.createZipFileBytes(zipFileContents)
 
     /**
@@ -823,12 +848,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         // Use the SchemaFactory to instantiate a javax.xml.validation.Schema representing the main schema in
         // the bundle.
-        mainSchemaXml: String = schemaBundle.schemas(schemaBundle.mainNamespace).schemaXml
+        mainSchemaXml: String  = schemaBundle.schemas(schemaBundle.mainNamespace).schemaXml
         schemaInstance: Schema = schemaFactory.newSchema(new StreamSource(new StringReader(mainSchemaXml)))
 
         // Validate the submitted XML using a validator based on the main schema.
         schemaValidator: Validator = schemaInstance.newValidator()
-        _ = schemaValidator.validate(new StreamSource(new StringReader(xml)))
+        _                          = schemaValidator.validate(new StreamSource(new StringReader(xml)))
       } yield ()
 
       // If the XML fails schema validation, return a failed Future containing a BadRequestException.
@@ -990,7 +1015,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                 if (childElements.nonEmpty) {
                   val embeddedXmlRootNode = childElements.head
-                  val embeddedXmlDoc = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
+                  val embeddedXmlDoc      = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
                   CreateResourceValueV1(
                     richtext_value = Some(
                       CreateRichtextV1(
@@ -1165,47 +1190,48 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         requestContext =>
           val requestMessage = for {
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-            params = requestContext.request.uri.query().toMap
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+            params    = requestContext.request.uri.query().toMap
             searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
 
             // default -1 means: no restriction at all
             restype = params.getOrElse("restype_id", "-1")
 
             numprops = params.getOrElse("numprops", "1")
-            limit = params.getOrElse("limit", "11")
+            limit    = params.getOrElse("limit", "11")
 
             // input validation
 
             searchString = stringFormatter.toSparqlEncodedString(
-              searchstr,
-              throw BadRequestException(s"Invalid search string: '$searchstr'")
-            )
+                             searchstr,
+                             throw BadRequestException(s"Invalid search string: '$searchstr'")
+                           )
 
             resourceTypeIri: Option[IRI] = restype match {
-              case "-1" => None
-              case restype: IRI =>
-                Some(
-                  stringFormatter.validateAndEscapeIri(
-                    restype,
-                    throw BadRequestException(s"Invalid param restype: $restype")
-                  )
-                )
-            }
+                                             case "-1" => None
+                                             case restype: IRI =>
+                                               Some(
+                                                 stringFormatter.validateAndEscapeIri(
+                                                   restype,
+                                                   throw BadRequestException(s"Invalid param restype: $restype")
+                                                 )
+                                               )
+                                           }
 
             numberOfProps: Int = stringFormatter.validateInt(
-              numprops,
-              throw BadRequestException(s"Invalid param numprops: $numprops")
-            ) match {
-              case number: Int => if (number < 1) 1 else number // numberOfProps must not be smaller than 1
-            }
+                                   numprops,
+                                   throw BadRequestException(s"Invalid param numprops: $numprops")
+                                 ) match {
+                                   case number: Int =>
+                                     if (number < 1) 1 else number // numberOfProps must not be smaller than 1
+                                 }
 
             limitOfResults = stringFormatter.validateInt(
-              limit,
-              throw BadRequestException(s"Invalid param limit: $limit")
-            )
+                               limit,
+                               throw BadRequestException(s"Invalid param limit: $limit")
+                             )
 
           } yield makeResourceSearchRequestMessage(
             searchString = searchString,
@@ -1229,14 +1255,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entity(as[CreateResourceApiRequestV1]) { apiRequest => requestContext =>
           val requestMessageFuture = for {
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
             request <- makeCreateResourceRequestMessage(
-              apiRequest = apiRequest,
-              featureFactoryConfig = featureFactoryConfig,
-              userADM = userProfile
-            )
+                         apiRequest = apiRequest,
+                         featureFactoryConfig = featureFactoryConfig,
+                         userADM = userProfile
+                       )
           } yield request
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -1254,11 +1280,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           val requestMessage =
             for {
               userADM <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                           requestContext = requestContext,
+                           featureFactoryConfig = featureFactoryConfig
+                         )
               requestType = reqtypeParam.getOrElse("")
-              resinfo = resinfoParam.getOrElse(false)
+              resinfo     = resinfoParam.getOrElse(false)
             } yield makeResourceRequestMessage(
               resIri = resIri,
               resinfo = resinfo,
@@ -1278,9 +1304,9 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         parameters("deleteComment".?) { deleteCommentParam => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                         requestContext = requestContext,
+                         featureFactoryConfig = featureFactoryConfig
+                       )
           } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -1294,20 +1320,20 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     } ~ path("v1" / "resources.html" / Segment) { iri =>
       get { requestContext =>
-        val params = requestContext.request.uri.query().toMap
+        val params      = requestContext.request.uri.query().toMap
         val requestType = params.getOrElse("reqtype", "")
 
         val requestMessage = requestType match {
           case "properties" =>
             for {
               userADM <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              )
+                           requestContext = requestContext,
+                           featureFactoryConfig = featureFactoryConfig
+                         )
               resIri = stringFormatter.validateAndEscapeIri(
-                iri,
-                throw BadRequestException(s"Invalid param resource IRI: $iri")
-              )
+                         iri,
+                         throw BadRequestException(s"Invalid param resource IRI: $iri")
+                       )
             } yield ResourceFullGetRequestV1(
               iri = resIri,
               featureFactoryConfig = featureFactoryConfig,
@@ -1329,13 +1355,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
           resIri = stringFormatter.validateAndEscapeIri(
-            iri,
-            throw BadRequestException(s"Invalid param resource IRI: $iri")
-          )
+                     iri,
+                     throw BadRequestException(s"Invalid param resource IRI: $iri")
+                   )
         } yield makeGetPropertiesRequestMessage(resIri, userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
@@ -1352,17 +1378,17 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                         requestContext = requestContext,
+                         featureFactoryConfig = featureFactoryConfig
+                       )
             resIri = stringFormatter.validateAndEscapeIri(
-              iri,
-              throw BadRequestException(s"Invalid param resource IRI: $iri")
-            )
+                       iri,
+                       throw BadRequestException(s"Invalid param resource IRI: $iri")
+                     )
             label = stringFormatter.toSparqlEncodedString(
-              apiRequest.label,
-              throw BadRequestException(s"Invalid label: '${apiRequest.label}'")
-            )
+                      apiRequest.label,
+                      throw BadRequestException(s"Invalid label: '${apiRequest.label}'")
+                    )
           } yield ChangeResourceLabelRequestV1(
             resourceIri = resIri,
             label = label,
@@ -1385,13 +1411,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         parameters("depth".as[Int].?) { depth => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                         requestContext = requestContext,
+                         featureFactoryConfig = featureFactoryConfig
+                       )
             resourceIri = stringFormatter.validateAndEscapeIri(
-              iri,
-              throw BadRequestException(s"Invalid param resource IRI: $iri")
-            )
+                            iri,
+                            throw BadRequestException(s"Invalid param resource IRI: $iri")
+                          )
           } yield GraphDataGetRequestV1(resourceIri, depth.getOrElse(4), userADM)
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -1427,29 +1453,29 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entity(as[String]) { xml => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                         requestContext = requestContext,
+                         featureFactoryConfig = featureFactoryConfig
+                       )
 
             _ = if (userADM.isAnonymousUser) {
-              throw ForbiddenException(
-                "You are not logged in, and only a system administrator or project administrator can perform a bulk import"
-              )
-            }
+                  throw ForbiddenException(
+                    "You are not logged in, and only a system administrator or project administrator can perform a bulk import"
+                  )
+                }
 
             _ = if (!(userADM.permissions.isSystemAdmin || userADM.permissions.isProjectAdmin(projectId))) {
-              throw ForbiddenException(
-                s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import"
-              )
-            }
+                  throw ForbiddenException(
+                    s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import"
+                  )
+                }
 
             // Parse the submitted XML.
             rootElement: Elem = XML.loadString(xml)
 
             // Make sure that the root element is knoraXmlImport:resources.
             _ = if (rootElement.namespace + rootElement.label != OntologyConstants.KnoraXmlImportV1.Resources) {
-              throw BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}")
-            }
+                  throw BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}")
+                }
 
             // Get the default namespace of the submitted XML. This should be the Knora XML import
             // namespace corresponding to the main internal ontology used in the import.
@@ -1457,26 +1483,26 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
             // Validate the XML using XML schemas.
             _ <- validateImportXml(
-              xml = xml,
-              defaultNamespace = defaultNamespace,
-              userADM = userADM
-            )
+                   xml = xml,
+                   defaultNamespace = defaultNamespace,
+                   userADM = userADM
+                 )
 
             // Make a CreateResourceFromXmlImportRequestV1 for each resource to be created.
             resourcesToCreate: Seq[CreateResourceFromXmlImportRequestV1] = importXmlToCreateResourceRequests(
-              rootElement
-            )
+                                                                             rootElement
+                                                                           )
 
             // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
             apiRequestID: UUID = UUID.randomUUID
 
             updateRequest: MultipleResourceCreateRequestV1 <- makeMultiResourcesRequestMessage(
-              resourceRequest = resourcesToCreate,
-              projectId = projectId,
-              apiRequestID = apiRequestID,
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = userADM
-            )
+                                                                resourceRequest = resourcesToCreate,
+                                                                projectId = projectId,
+                                                                apiRequestID = apiRequestID,
+                                                                featureFactoryConfig = featureFactoryConfig,
+                                                                userProfile = userADM
+                                                              )
           } yield updateRequest
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -1510,13 +1536,13 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         ) { requestContext =>
           val httpResponseFuture: Future[HttpResponse] = for {
             userProfile <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                             requestContext = requestContext,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
             schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(
-              internalOntologyIri = internalOntologyIri,
-              userProfile = userProfile
-            )
+                                                 internalOntologyIri = internalOntologyIri,
+                                                 userProfile = userProfile
+                                               )
           } yield HttpResponse(
             status = StatusCodes.OK,
             entity = HttpEntity(bytes = schemaZipFileBytes)

@@ -73,14 +73,14 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
         }
 
-        val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+        val targetSchema: ApiV2Schema        = RouteUtilV2.getOntologySchema(requestContext)
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
         val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield ResourcesGetRequestV2(
           resourceIris = Seq(resourceIri.toString),
           valueUuid = Some(valueUuid),
@@ -111,19 +111,19 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[CreateValueRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
             requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
-              requestDoc,
-              apiRequestID = UUID.randomUUID,
-              requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
-              featureFactoryConfig = featureFactoryConfig,
-              settings = settings,
-              log = log
-            )
+                                                      requestDoc,
+                                                      apiRequestID = UUID.randomUUID,
+                                                      requestingUser = requestingUser,
+                                                      responderManager = responderManager,
+                                                      storeManager = storeManager,
+                                                      featureFactoryConfig = featureFactoryConfig,
+                                                      settings = settings,
+                                                      log = log
+                                                    )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(
@@ -149,19 +149,19 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[UpdateValueRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
             requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
-              requestDoc,
-              apiRequestID = UUID.randomUUID,
-              requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
-              featureFactoryConfig = featureFactoryConfig,
-              settings = settings,
-              log = log
-            )
+                                                      requestDoc,
+                                                      apiRequestID = UUID.randomUUID,
+                                                      requestingUser = requestingUser,
+                                                      responderManager = responderManager,
+                                                      storeManager = storeManager,
+                                                      featureFactoryConfig = featureFactoryConfig,
+                                                      settings = settings,
+                                                      log = log
+                                                    )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(
@@ -187,19 +187,19 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[DeleteValueRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
             requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
-              requestDoc,
-              apiRequestID = UUID.randomUUID,
-              requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
-              featureFactoryConfig = featureFactoryConfig,
-              settings = settings,
-              log = log
-            )
+                                                      requestDoc,
+                                                      apiRequestID = UUID.randomUUID,
+                                                      requestingUser = requestingUser,
+                                                      responderManager = responderManager,
+                                                      storeManager = storeManager,
+                                                      featureFactoryConfig = featureFactoryConfig,
+                                                      settings = settings,
+                                                      log = log
+                                                    )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(

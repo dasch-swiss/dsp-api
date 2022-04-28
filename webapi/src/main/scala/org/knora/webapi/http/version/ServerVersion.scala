@@ -15,9 +15,9 @@ import akka.http.scaladsl.server.Route
  */
 object ServerVersion {
 
-  private val ApiNameAndVersion = s"${BuildInfo.name}/${BuildInfo.version}"
+  private val ApiNameAndVersion  = s"${BuildInfo.name}/${BuildInfo.version}"
   private val AkkaNameAndVersion = s"akka-http/${BuildInfo.akkaHttp}"
-  private val AllProducts = ApiNameAndVersion + " " + AkkaNameAndVersion
+  private val AllProducts        = ApiNameAndVersion + " " + AkkaNameAndVersion
 
   def serverVersionHeader: Server = Server(products = AllProducts)
 

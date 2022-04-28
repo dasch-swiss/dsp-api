@@ -121,12 +121,12 @@ class StringFormatterSpec extends CoreSpec() {
 
     "recognize the url of the dhlab site as a valid IRI" in {
       val testUrl: String = "http://dhlab.unibas.ch/"
-      val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
+      val validIri        = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
 
     "recognize the url of the DaSCH site as a valid IRI" in {
-      val testUrl = "http://dasch.swiss"
+      val testUrl  = "http://dasch.swiss"
       val validIri = stringFormatter.validateAndEscapeIri(testUrl, throw AssertionException(s"Invalid IRI $testUrl"))
       validIri should be(testUrl)
     }
@@ -1015,11 +1015,11 @@ class StringFormatterSpec extends CoreSpec() {
 
       for (i <- 1 to totalIris) {
         val iriStr = s"http://0.0.0.0:3333/ontology/00FF/images/v2#class$i"
-        val iri = iriStr.toSmartIri.toOntologySchema(InternalSchema)
+        val iri    = iriStr.toSmartIri.toOntologySchema(InternalSchema)
       }
 
-      val parseEnd = System.currentTimeMillis
-      val parseDuration = (parseEnd - parseStart).toDouble
+      val parseEnd            = System.currentTimeMillis
+      val parseDuration       = (parseEnd - parseStart).toDouble
       val parseDurationPerIri = parseDuration / totalIris.toDouble
       println(f"Parse and store $totalIris IRIs, $parseDuration ms, time per IRI $parseDurationPerIri%1.5f ms")
 
@@ -1027,11 +1027,11 @@ class StringFormatterSpec extends CoreSpec() {
 
       for (i <- 1 to totalIris) {
         val iriStr = s"http://0.0.0.0:3333/ontology/00FF/images/v2#class$i"
-        val iri = iriStr.toSmartIri.toOntologySchema(InternalSchema)
+        val iri    = iriStr.toSmartIri.toOntologySchema(InternalSchema)
       }
 
-      val retrieveEnd = System.currentTimeMillis
-      val retrieveDuration = (retrieveEnd - retrieveStart).toDouble
+      val retrieveEnd            = System.currentTimeMillis
+      val retrieveDuration       = (retrieveEnd - retrieveStart).toDouble
       val retrieveDurationPerIri = retrieveDuration / totalIris.toDouble
 
       println(f"Retrieve time $retrieveDuration ms, time per IRI $retrieveDurationPerIri%1.5f ms")
@@ -1040,8 +1040,8 @@ class StringFormatterSpec extends CoreSpec() {
     "return the data named graph of a project with short code" in {
       val shortcode = SharedTestDataV1.imagesProjectInfo.shortcode
       val shortname = SharedTestDataV1.imagesProjectInfo.shortname
-      val expected = s"http://www.knora.org/data/$shortcode/$shortname"
-      val result = stringFormatter.projectDataNamedGraphV1(SharedTestDataV1.imagesProjectInfo)
+      val expected  = s"http://www.knora.org/data/$shortcode/$shortname"
+      val result    = stringFormatter.projectDataNamedGraphV1(SharedTestDataV1.imagesProjectInfo)
       result should be(expected)
 
       // check consistency of our test data
@@ -1166,28 +1166,28 @@ class StringFormatterSpec extends CoreSpec() {
 
     "generate an ARK URL for a resource IRI without a timestamp" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+      val arkUrl           = resourceIri.toSmartIri.fromResourceIriToArkUrl()
       assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
     }
 
     "generate an ARK URL for a resource IRI with a timestamp with a fractional part" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      val timestamp = Instant.parse("2018-06-04T08:56:22.9876543Z")
-      val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
+      val timestamp        = Instant.parse("2018-06-04T08:56:22.9876543Z")
+      val arkUrl           = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
       assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T0856229876543Z")
     }
 
     "generate an ARK URL for a resource IRI with a timestamp with a leading zero" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      val timestamp = Instant.parse("2018-06-04T08:56:22.098Z")
-      val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
+      val timestamp        = Instant.parse("2018-06-04T08:56:22.098Z")
+      val arkUrl           = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
       assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622098Z")
     }
 
     "generate an ARK URL for a resource IRI with a timestamp without a fractional part" in {
       val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-      val timestamp = Instant.parse("2018-06-04T08:56:22Z")
-      val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
+      val timestamp        = Instant.parse("2018-06-04T08:56:22Z")
+      val arkUrl           = resourceIri.toSmartIri.fromResourceIriToArkUrl(maybeTimestamp = Some(timestamp))
       assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20180604T085622Z")
     }
 
@@ -1352,9 +1352,9 @@ class StringFormatterSpec extends CoreSpec() {
     }
 
     "convert a UUID to Base-64 encoding and back again" in {
-      val uuid = UUID.randomUUID
+      val uuid              = UUID.randomUUID
       val base64EncodedUuid = stringFormatter.base64EncodeUuid(uuid)
-      val base4DecodedUuid = stringFormatter.base64DecodeUuid(base64EncodedUuid)
+      val base4DecodedUuid  = stringFormatter.base64DecodeUuid(base64EncodedUuid)
       uuid should be(base4DecodedUuid)
     }
 

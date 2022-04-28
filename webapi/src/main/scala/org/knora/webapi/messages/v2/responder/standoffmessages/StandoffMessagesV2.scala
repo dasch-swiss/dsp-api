@@ -112,9 +112,9 @@ case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2], ne
 
     val context: JsonLDObject = JsonLDUtil.makeContext(
       fixedPrefixes = Map(
-        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+        "rdf"                                            -> OntologyConstants.Rdf.RdfPrefixExpansion,
+        "rdfs"                                           -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "xsd"                                            -> OntologyConstants.Xsd.XsdPrefixExpansion,
         OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
       ),
       knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
@@ -241,9 +241,9 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
     val context = JsonLDObject(
       Map(
         "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-        "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-        "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-        "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
+        "rdf"  -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+        "owl"  -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+        "xsd"  -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
       )
     )
 
@@ -689,10 +689,10 @@ case class StandoffTagV2(
     val attributesAsJsonLD: Map[IRI, JsonLDValue] = attributes.map(_.toJsonLD).toMap
 
     val contentMap: Map[IRI, JsonLDValue] = Map(
-      JsonLDKeywords.TYPE -> JsonLDString(standoffTagClassIri.toString),
-      OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
-      OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart -> JsonLDInt(startPosition),
-      OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd -> JsonLDInt(endPosition),
+      JsonLDKeywords.TYPE                                          -> JsonLDString(standoffTagClassIri.toString),
+      OntologyConstants.KnoraApiV2Complex.StandoffTagHasUUID       -> JsonLDString(stringFormatter.base64EncodeUuid(uuid)),
+      OntologyConstants.KnoraApiV2Complex.StandoffTagHasStart      -> JsonLDInt(startPosition),
+      OntologyConstants.KnoraApiV2Complex.StandoffTagHasEnd        -> JsonLDInt(endPosition),
       OntologyConstants.KnoraApiV2Complex.StandoffTagHasStartIndex -> JsonLDInt(startIndex)
     )
 
