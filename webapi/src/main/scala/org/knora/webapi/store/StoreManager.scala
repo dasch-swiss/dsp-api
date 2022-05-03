@@ -32,7 +32,7 @@ import org.knora.webapi.config.AppConfig
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, csm: CacheServiceManager, iiifsm: IIIFServiceManager, appConfig: AppConfig)
+class StoreManager(appActor: ActorRef, cacheServiceManager: CacheServiceManager, iiifsm: IIIFServiceManager, appConfig: AppConfig)
     extends Actor
     with ActorLogging {
   this: ActorMaker =>
@@ -73,7 +73,7 @@ class StoreManager(appActor: ActorRef, csm: CacheServiceManager, iiifsm: IIIFSer
   )
 
   def receive: Receive = LoggingReceive {
-    case req: CacheServiceRequest => ActorUtil.zio2Message(sender(), csm.receive(req), log, appConfig)
+    case req: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(req), log, appConfig)
     case req: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifsm.receive(req), log, appConfig)
     case req: TriplestoreRequest  => triplestoreManager forward req
     case other =>

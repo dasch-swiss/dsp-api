@@ -25,8 +25,7 @@ import zio._
 case class IIIFServiceMockSipiImpl(str: String) extends IIIFService {
 
   /**
-   * A request to [[MockSipiConnector]] with this filename will always cause the responder to simulate a Sipi
-   * error.
+   * A request with this filename will always cause a Sipi error.
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 

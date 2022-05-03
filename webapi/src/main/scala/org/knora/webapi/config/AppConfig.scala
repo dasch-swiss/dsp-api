@@ -13,7 +13,7 @@ import typesafe._
 import magnolia._
 
 /**
- * Represents the complete configuration as defined in application.conf.
+ * Represents (eventually) the complete configuration as defined in application.conf.
  */
 final case class AppConfig(
   testing: Boolean = false,
