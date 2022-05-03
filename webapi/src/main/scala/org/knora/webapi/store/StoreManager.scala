@@ -32,8 +32,12 @@ import org.knora.webapi.config.AppConfig
  *
  * @param appActor a reference to the main application actor.
  */
-class StoreManager(appActor: ActorRef, cacheServiceManager: CacheServiceManager, iiifsm: IIIFServiceManager, appConfig: AppConfig)
-    extends Actor
+class StoreManager(
+  appActor: ActorRef,
+  cacheServiceManager: CacheServiceManager,
+  iiifsm: IIIFServiceManager,
+  appConfig: AppConfig
+) extends Actor
     with ActorLogging {
   this: ActorMaker =>
 
