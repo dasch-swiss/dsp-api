@@ -112,7 +112,7 @@ object AppConfig {
     TypesafeConfigSource.fromTypesafeConfig(ZIO.attempt(ConfigFactory.load().getConfig("app").resolve))
 
   /**
-   * Intantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
+   * Instantiates our config class hierarchy using the data from the 'app' configuration from 'application.conf'.
    */
   private val config: IO[ReadError[String], AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source)
 
