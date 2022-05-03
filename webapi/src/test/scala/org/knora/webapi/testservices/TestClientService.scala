@@ -312,7 +312,7 @@ object TestClientService extends Accessible[TestClientService] {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def aquire(config: AppConfig) = ZIO.attemptBlocking {
+  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
 
     // timeout from config
     val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
