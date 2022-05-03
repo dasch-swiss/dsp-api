@@ -353,7 +353,7 @@ object TestClientService extends Accessible[TestClientService] {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.logDebug(">>> Aquire Test Client Service <<<")).orDie
+  }.tap(_ => ZIO.logDebug(">>> Acquire Test Client Service <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
