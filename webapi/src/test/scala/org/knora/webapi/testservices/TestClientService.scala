@@ -312,7 +312,7 @@ object TestClientService extends Accessible[TestClientService] {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def aquire(config: AppConfig) = ZIO.attemptBlocking {
+  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
 
     // timeout from config
     val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
@@ -353,7 +353,7 @@ object TestClientService extends Accessible[TestClientService] {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.logDebug(">>> Aquire Test Client Service <<<")).orDie
+  }.tap(_ => ZIO.logDebug(">>> Acquire Test Client Service <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
@@ -369,9 +369,9 @@ object TestClientService extends Accessible[TestClientService] {
     ZLayer.scoped {
       for {
         // _          <- ZIO.debug(config.sipi)
-        httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TestClientService(config, httpClient, actorSystem)
-    }.tap(_ => ZIO.logDebug(">>> Test Client Service Initialized <<<"))
+    }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
   }
 
 }
