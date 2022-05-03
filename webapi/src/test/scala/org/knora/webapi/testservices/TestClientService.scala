@@ -48,7 +48,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import akka.http.scaladsl.client.RequestBuilding
 
 /**
- * Represents a file to be uploaded to Sipi.
+ * Represents a file to be uploaded to the IIF Service.
  *
  * @param path     the path of the file.
  * @param mimeType the MIME type of the file.
@@ -56,7 +56,7 @@ import akka.http.scaladsl.client.RequestBuilding
 final case class FileToUpload(path: Path, mimeType: ContentType)
 
 /**
- * Represents an image file to be uploaded to Sipi.
+ * Represents an image file to be uploaded to the IIF Service.
  *
  * @param fileToUpload the file to be uploaded.
  * @param width        the image's width in pixels.
@@ -165,7 +165,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     } yield json
 
   /**
-   * Uploads a file to Sipi and returns the information in Sipi's response.
+   * Uploads a file to the IIF Service and returns the information in Sipi's response.
    * The upload creates a multipart/form-data request which can contain multiple files.
    *
    * @param loginToken    the login token to be included in the request to Sipi.
