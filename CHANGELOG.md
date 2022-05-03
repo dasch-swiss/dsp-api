@@ -1,5 +1,26 @@
 # Changelog
 
+## [20.2.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.1.1...v20.2.0) (2022-04-28)
+
+
+### Bug Fixes
+
+* Cleaning sipi tmp folder results in an error when there are lots of files (DEV-316) ([#2052](https://www.github.com/dasch-swiss/dsp-api/issues/2052)) ([33e6896](https://www.github.com/dasch-swiss/dsp-api/commit/33e689645a899e39b7f9d6e3a0c56fd1d99cc1f2))
+
+
+### Enhancements
+
+* **error-handling:** return status 504 instead of 500 for triplestore timeout exception (DEV-749) ([#2046](https://www.github.com/dasch-swiss/dsp-api/issues/2046)) ([a47096e](https://www.github.com/dasch-swiss/dsp-api/commit/a47096ebebcc458e01063fac6a01827eeb5312c1))
+* **ontology:** allow deleting comments of classes (DEV-804) ([#2048](https://www.github.com/dasch-swiss/dsp-api/issues/2048)) ([eca9206](https://www.github.com/dasch-swiss/dsp-api/commit/eca92066bdb6d48033f9f4590f45dba774bc4be2))
+* **ontology:** allow deleting comments of properties (DEV-696) ([#2042](https://www.github.com/dasch-swiss/dsp-api/issues/2042)) ([985c5fd](https://www.github.com/dasch-swiss/dsp-api/commit/985c5fd45dcf2b1c9d4a6d47040165a56b7dfe33))
+
+
+### Maintenance
+
+* **formatting-logging:** reformat scala code and change logging policy (DEV-839) ([#2051](https://www.github.com/dasch-swiss/dsp-api/issues/2051)) ([5e4e914](https://www.github.com/dasch-swiss/dsp-api/commit/5e4e91499347f4b118b84fa06cb7b0499e4cfecf))
+* **formatting:** reformat turtle files (DEV-430) ([#2050](https://www.github.com/dasch-swiss/dsp-api/issues/2050)) ([0389e52](https://www.github.com/dasch-swiss/dsp-api/commit/0389e52fa120d1ee46e40509e5e29c91d0fb17f5))
+* **triplestore:** remove embedded-jena-tdb related code ([#2043](https://www.github.com/dasch-swiss/dsp-api/issues/2043)) ([a5ea62e](https://www.github.com/dasch-swiss/dsp-api/commit/a5ea62eeaaadb97caa456e7dc9e6946c44abcf5b))
+
 ### [20.1.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.1.0...v20.1.1) (2022-04-14)
 
 
