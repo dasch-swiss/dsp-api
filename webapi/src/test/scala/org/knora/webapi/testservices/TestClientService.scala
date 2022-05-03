@@ -371,7 +371,7 @@ object TestClientService extends Accessible[TestClientService] {
         // _          <- ZIO.debug(config.sipi)
         httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
       } yield TestClientService(config, httpClient, actorSystem)
-    }.tap(_ => ZIO.logDebug(">>> Test Client Service Initialized <<<"))
+    }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
   }
 
 }
