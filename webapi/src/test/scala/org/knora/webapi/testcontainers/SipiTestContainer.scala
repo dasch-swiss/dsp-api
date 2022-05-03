@@ -59,6 +59,6 @@ object SipiTestContainer {
         // tc <- ZIO.acquireRelease(aquire)(release(_)).orDie
         tc <- aquire.orDie
       } yield SipiTestContainer(tc)
-    }.tap(_ => ZIO.debug(">>> Sipi Test Container Initialized <<<"))
+    }.tap(_ => ZIO.debug(">>> Sipi TestContainer initialized <<<"))
   }
 }
