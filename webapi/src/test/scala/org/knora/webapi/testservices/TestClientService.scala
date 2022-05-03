@@ -369,7 +369,7 @@ object TestClientService extends Accessible[TestClientService] {
     ZLayer.scoped {
       for {
         // _          <- ZIO.debug(config.sipi)
-        httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TestClientService(config, httpClient, actorSystem)
     }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
   }
