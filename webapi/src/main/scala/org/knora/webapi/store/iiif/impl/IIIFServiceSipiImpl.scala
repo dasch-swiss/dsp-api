@@ -37,6 +37,7 @@ import spray.json._
 import zio._
 
 import java.util
+import org.knora.webapi.exceptions.KnoraException
 
 /**
  * Makes requests to Sipi.
@@ -146,9 +147,10 @@ case class IIIFServiceSipiImpl(
       )
     )
 
-    def deleteUrl(token: String) = ZIO.succeed(
-      s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
-    )
+    def deleteUrl(token: String): ZIO[Any, Nothing, String] =
+      ZIO.succeed(
+        s"${config.sipi.internalBaseUrl}/${config.sipi.v2.deleteTempFileRoute}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+      )
 
     for {
       token   <- jwtToken
@@ -166,7 +168,7 @@ case class IIIFServiceSipiImpl(
   def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = {
 
     // helper method to handle errors
-    def handleErrors(ex: Throwable) = ex match {
+    def handleErrors(ex: Throwable): ZIO[Any, Exception with KnoraException with Product, Nothing] = ex match {
       case notFoundException: NotFoundException =>
         ZIO.fail(
           NotFoundException(
@@ -281,7 +283,7 @@ object IIIFServiceSipiImpl {
   private def acquire(config: AppConfig) = ZIO.attemptBlocking {
 
     // timeout from config
-    val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
+    val sipiTimeoutMillis: Int = config.sipi.timeoutInSeconds.toMillis.toInt
 
     // Create a connection manager with custom configuration.
     val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
@@ -324,9 +326,10 @@ object IIIFServiceSipiImpl {
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient) = ZIO.attemptBlocking {
-    httpClient.close()
-  }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
+  private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] =
+    ZIO.attemptBlocking {
+      httpClient.close()
+    }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
 
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
     ZLayer {
