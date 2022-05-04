@@ -31,7 +31,7 @@ final case class IIIFServiceManager(iiifs: IIIFService) {
    * incoming Akka messages to calls to ZIO based implementations. Each ZIO response
    * is then translated back to Akka through [[ActorUtil.zio2Message]].
    */
-  def receive(msg: IIIFRequest) = msg match {
+  def receive(message: IIIFRequest) = message match {
     case req: GetFileMetadataRequest                     => iiifs.getFileMetadata(req)
     case req: MoveTemporaryFileToPermanentStorageRequest => iiifs.moveTemporaryFileToPermanentStorage(req)
     case req: DeleteTemporaryFileRequest                 => iiifs.deleteTemporaryFile(req)
