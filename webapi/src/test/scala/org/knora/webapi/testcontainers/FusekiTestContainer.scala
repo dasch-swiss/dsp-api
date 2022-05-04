@@ -16,7 +16,7 @@ object FusekiTestContainer {
   /**
    * A functional effect that initiates a Fuseki Testcontainer
    */
-  val aquire: Task[GenericContainer[Nothing]] = ZIO.attemptBlocking {
+  val acquire: Task[GenericContainer[Nothing]] = ZIO.attemptBlocking {
     // get local IP address, which we need for SIPI
     val localIpAddress: String = NetworkInterface.getNetworkInterfaces.asScala.toSeq
       .filter(!_.isLoopback)
@@ -31,7 +31,7 @@ object FusekiTestContainer {
     fusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
     fusekiContainer.start()
     fusekiContainer
-  }.orDie.tap(_ => ZIO.debug(">>> Aquire Fuseki TestContainer executed <<<"))
+  }.orDie.tap(_ => ZIO.debug(">>> Acquire Fuseki TestContainer executed <<<"))
 
   def release(container: GenericContainer[Nothing]): URIO[Any, Unit] = ZIO.attemptBlocking {
     container.stop()
@@ -40,8 +40,8 @@ object FusekiTestContainer {
   val layer: ZLayer[Any, Nothing, FusekiTestContainer] = {
     ZLayer {
       for {
-        // tc <- ZIO.acquireRelease(aquire)(release(_)).orDie
-        tc <- aquire.orDie
+        // tc <- ZIO.acquireRelease(acquire)(release(_)).orDie
+        tc <- acquire.orDie
       } yield FusekiTestContainer(tc)
     }.tap(_ => ZIO.debug(">>> Fuseki Test Container Initialized <<<"))
   }

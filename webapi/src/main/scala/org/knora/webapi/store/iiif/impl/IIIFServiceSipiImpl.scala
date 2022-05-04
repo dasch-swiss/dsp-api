@@ -319,7 +319,7 @@ object IIIFServiceSipiImpl {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.debug(">>> Aquire Sipi IIIF Service <<<")).orDie
+  }.tap(_ => ZIO.debug(">>> Acquire Sipi IIIF Service <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
@@ -336,7 +336,7 @@ object IIIFServiceSipiImpl {
         jwtService <- ZIO.service[JWTService]
         // HINT: Scope does not work when used together with unsafeRun to
         // bridge over to Akka. Need to change this as soon Akka is removed
-        // httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
+        // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
         httpClient <- acquire(config)
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }.tap(_ => ZIO.debug(">>> Sipi IIIF Service Initialized <<<"))

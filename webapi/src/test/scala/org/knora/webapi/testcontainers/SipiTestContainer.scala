@@ -17,7 +17,7 @@ object SipiTestContainer {
   /**
    * A functional effect that initiates a Sipi Testcontainer
    */
-  val aquire: Task[GenericContainer[Nothing]] = ZIO.attemptBlocking {
+  val acquire: Task[GenericContainer[Nothing]] = ZIO.attemptBlocking {
     // get local IP address, which we need for SIPI
     val localIpAddress: String = NetworkInterface.getNetworkInterfaces.asScala.toSeq
       .filter(!_.isLoopback)
@@ -47,7 +47,7 @@ object SipiTestContainer {
     )
     sipiContainer.start()
     sipiContainer
-  }.tap(_ => ZIO.debug(">>> Aquire Sipi TestContainer executed <<<"))
+  }.tap(_ => ZIO.debug(">>> Acquire Sipi TestContainer executed <<<"))
 
   def release(container: GenericContainer[Nothing]): Task[Unit] = ZIO.attemptBlocking {
     container.stop()
@@ -56,8 +56,8 @@ object SipiTestContainer {
   val layer: ZLayer[Any, Nothing, SipiTestContainer] = {
     ZLayer {
       for {
-        // tc <- ZIO.acquireRelease(aquire)(release(_)).orDie
-        tc <- aquire.orDie
+        // tc <- ZIO.acquireRelease(acquire)(release(_)).orDie
+        tc <- acquire.orDie
       } yield SipiTestContainer(tc)
     }.tap(_ => ZIO.debug(">>> Sipi TestContainer initialized <<<"))
   }
