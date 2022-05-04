@@ -30,7 +30,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util._
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
@@ -412,7 +412,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      IIIFServiceMockSipiImpl.layer,
+      IIIFServiceMockImpl.layer,
       AppConfig.live
     )
 

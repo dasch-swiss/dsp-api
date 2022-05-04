@@ -15,7 +15,7 @@ import zio._
  * Can be used in place of [[IIIFServiceSipiImpl]] for tests without an actual Sipi server, by returning hard-coded
  * responses simulating responses from Sipi.
  */
-case class IIIFServiceMockSipiImpl(str: String) extends IIIFService {
+case class IIIFServiceMockImpl(str: String) extends IIIFService {
 
   /**
    * A request with this filename will always cause a Sipi error.
@@ -57,13 +57,13 @@ case class IIIFServiceMockSipiImpl(str: String) extends IIIFService {
   override def getStatus(): Task[IIIFServiceStatusResponse] = ZIO.succeed(IIIFServiceStatusOK)
 }
 
-object IIIFServiceMockSipiImpl {
+object IIIFServiceMockImpl {
 
   val layer: ZLayer[Any, Nothing, IIIFService] = {
     ZLayer {
       for {
         _ <- ZIO.debug("blub")
-      } yield IIIFServiceMockSipiImpl("blub")
+      } yield IIIFServiceMockImpl("blub")
     }.tap(_ => ZIO.debug(">>> Mock Sipi IIIF Service Initialized <<<"))
   }
 

@@ -31,7 +31,6 @@ object AppConfigForTestContainers {
   val testcontainers: ZLayer[SipiTestContainer, Nothing, AppConfig] =
     ZLayer {
       for {
-        // _         <- ZIO.debug("start of app config")
         appConfig <- config // .tapBoth(ZIO.debug(_), ZIO.debug(_))
         // fusekiContainer   <- ZIO.service[FusekiTestContainer]
         sipiContainer     <- ZIO.service[SipiTestContainer]

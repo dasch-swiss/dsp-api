@@ -32,7 +32,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
 import zio.ZLayer
@@ -68,7 +68,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
-      IIIFServiceMockSipiImpl.layer,
+      IIIFServiceMockImpl.layer,
       AppConfig.live
     )
 
@@ -4250,7 +4250,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val valueContent = StillImageFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
-          internalFilename = "failura.jp2", // tells the mock Sipi responder to simulate failure
+          internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
           internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
           originalMimeType = Some(mimeTypeTIFF)

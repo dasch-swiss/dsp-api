@@ -775,7 +775,6 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       val uploadedPdfFile: SipiUploadResponseEntry = pdfUploadResponse.uploadedFiles.head
-      println(uploadedPdfFile)
       uploadedPdfFile.originalFilename should ===(minimalPdfOriginalFilename)
 
       // Create a resource for the PDF file.
@@ -816,13 +815,11 @@ class KnoraSipiIntegrationV1ITSpec
       val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       val pdfUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
-      println(pdfUrl)
       assert(nx == minimalPdfWidth)
       assert(ny == minimalPdfHeight)
 
       // Request the file from Sipi.
-      val sipiGetRequest = Get(pdfUrl) // ~> addCredentials(BasicHttpCredentials(userEmail, password))
-      println(">>> " + sipiGetRequest.toString)
+      val sipiGetRequest = Get(pdfUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(sipiGetRequest)
     }
 
