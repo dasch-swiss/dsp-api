@@ -13,8 +13,8 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.JavaUtil._
 
-import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.jdk.CollectionConverters._
 
 sealed trait RDF4JNode extends RdfNode {
   def rdf4jValue: rdf4j.model.Value

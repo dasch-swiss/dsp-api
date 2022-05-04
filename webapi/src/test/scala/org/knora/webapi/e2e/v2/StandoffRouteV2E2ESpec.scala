@@ -37,7 +37,6 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import org.knora.webapi.testservices.FileToUpload
 
 /**
  * End-to-end test specification for the standoff endpoint.

@@ -5,15 +5,14 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.StatusCodes
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import spray.json._
-
 import zio._
 
 object StoreADME2ESpec {

@@ -11,9 +11,12 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.DuplicateValueException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.valueObjects._

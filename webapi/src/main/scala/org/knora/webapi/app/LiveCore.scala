@@ -10,13 +10,12 @@ import akka.stream.Materializer
 import org.knora.webapi.core.Core
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.settings._
 
 import scala.concurrent.ExecutionContext
-import scala.language.postfixOps
-import scala.languageFeature.postfixOps
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.cacheservice.CacheServiceManager
 
 /**
  * The applications actor system.

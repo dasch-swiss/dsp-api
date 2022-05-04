@@ -7,11 +7,14 @@ package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{UpdateValueContentV2, UpdateValueRequestV2}
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueRequestV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import java.time.Instant

@@ -5,24 +5,16 @@
 
 package org.knora.webapi.store.cacheservice
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
-import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.instrumentation.InstrumentationSupport
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.util.ActorUtil.zio2Message
 import org.knora.webapi.store.cacheservice.api.CacheService
-
-import scala.concurrent.{ExecutionContext, Future}
 import zio._
-import zio.metrics._
 import zio.metrics.Metric
-import zio.metrics.MetricLabel
+
 import java.time.temporal.ChronoUnit
-import zio.metrics.MetricClient
 
 case class CacheServiceManager(cs: CacheService) {
 

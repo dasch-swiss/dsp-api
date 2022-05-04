@@ -1,9 +1,9 @@
 package org.knora.webapi.core
 
-import zio.logging._
 import zio.LogLevel
 import zio.RuntimeConfigAspect
 import zio.logging.LogFormat._
+import zio.logging._
 
 object Logging {
   val logFormat             = "[correlation-id = %s] %s"

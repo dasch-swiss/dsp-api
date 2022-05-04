@@ -5,10 +5,10 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.nio.file.Paths
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.util.FileUtil
+
+import java.nio.file.Paths
 
 /**
  * Tests [[ResponseCheckerV2]].

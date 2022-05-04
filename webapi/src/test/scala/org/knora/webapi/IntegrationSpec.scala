@@ -1,24 +1,32 @@
 package org.knora.webapi
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import akka.dispatch.MessageDispatcher
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpecLike
 import zio.Console.printLine
-import zio.Schedule.{Decision, WithState}
-import zio.{Schedule, _}
+import zio.Schedule
+import zio.Schedule.Decision
+import zio.Schedule.WithState
+import zio._
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object IntegrationSpec {
 

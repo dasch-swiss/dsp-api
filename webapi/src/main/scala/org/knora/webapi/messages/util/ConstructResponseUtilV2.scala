@@ -5,42 +5,44 @@
 
 package org.knora.webapi.messages.util
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, InconsistentRepositoryDataException, NotImplementedException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.NotImplementedException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
-import org.knora.webapi.messages.v2.responder.listsmessages.{NodeGetRequestV2, NodeGetResponseV2}
+import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
+import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
-import org.knora.webapi.messages.v2.responder.standoffmessages.{
-  GetRemainingStandoffFromTextValueRequestV2,
-  GetStandoffResponseV2,
-  MappingXMLtoStandoff,
-  StandoffTagV2
-}
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetRemainingStandoffFromTextValueRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.ActorUtil
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 object ConstructResponseUtilV2 {
 

@@ -3,7 +3,6 @@ package org.knora.webapi.e2e.v1
 import akka.http.scaladsl.model.StatusCodes
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-
 import zio._
 
 /**

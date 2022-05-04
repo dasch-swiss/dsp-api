@@ -10,7 +10,10 @@ import akka.http.scaladsl.server.Route
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 
 /**
  * Provides a routing function for the API that Sipi connects to.

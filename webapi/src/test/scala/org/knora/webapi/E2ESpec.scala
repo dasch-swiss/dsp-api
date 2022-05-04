@@ -9,12 +9,9 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
-import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -22,14 +19,29 @@ import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
 import org.knora.webapi.exceptions.FileWriteException
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import org.knora.webapi.feature.TestFeatureFactoryConfig
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.app.appmessages.AppStart
+import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.settings._
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.concurrent.ScalaFutures
@@ -52,22 +64,8 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import scala.languageFeature.postfixOps
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 import app.ApplicationActor
-import org.knora.webapi.core.Core
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings._
-import org.knora.webapi.util.{FileUtil, StartupUtils}
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()

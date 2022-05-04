@@ -10,7 +10,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions.FileWriteException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -20,7 +19,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.ChangeFileValueApiRe
 import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl

@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import akka.actor.Status
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
@@ -15,7 +14,6 @@ import org.knora.webapi.core.Logging
 import org.knora.webapi.exceptions.ExceptionUtil
 import org.knora.webapi.exceptions.RequestRejectedException
 import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.exceptions.WrapperException
 import zio._
 
 import scala.concurrent.ExecutionContext

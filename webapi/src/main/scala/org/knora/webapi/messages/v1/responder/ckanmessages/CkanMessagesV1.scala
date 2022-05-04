@@ -8,7 +8,8 @@ package org.knora.webapi.messages.v1.responder.ckanmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

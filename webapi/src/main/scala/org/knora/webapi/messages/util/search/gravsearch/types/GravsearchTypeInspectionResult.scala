@@ -6,7 +6,9 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.util.search.{Entity, IriRef, QueryVariable}
+import org.knora.webapi.messages.util.search.Entity
+import org.knora.webapi.messages.util.search.IriRef
+import org.knora.webapi.messages.util.search.QueryVariable
 
 /**
  * Represents the type information that was found concerning a Gravsearch entity.

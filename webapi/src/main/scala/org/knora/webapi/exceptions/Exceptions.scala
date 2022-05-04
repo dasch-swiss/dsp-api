@@ -6,7 +6,8 @@
 package org.knora.webapi.exceptions
 
 import akka.event.LoggingAdapter
-import org.apache.commons.lang3.{SerializationException, SerializationUtils}
+import org.apache.commons.lang3.SerializationException
+import org.apache.commons.lang3.SerializationUtils
 
 /*
 

@@ -7,22 +7,25 @@ package org.knora.webapi.store
 
 import akka.actor._
 import akka.event.LoggingReceive
-import org.knora.webapi.core.{LiveActorMaker, _}
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.core._
 import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.settings._
 import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.api.CacheService
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
+import org.knora.webapi.util.ActorUtil
 
 import scala.concurrent.ExecutionContext
-import zio._
-import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.config.AppConfig
 
 /**
  * This actor receives messages for different stores, and forwards them to the corresponding store manager.

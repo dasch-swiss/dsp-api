@@ -5,14 +5,14 @@
 
 package org.knora.webapi.util.rdf
 
-import java.nio.file.Paths
-
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
+
+import java.nio.file.Paths
 
 object ShaclValidatorSpec {
   val config: String =

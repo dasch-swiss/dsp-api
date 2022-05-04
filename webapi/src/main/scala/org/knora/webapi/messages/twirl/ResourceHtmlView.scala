@@ -11,13 +11,18 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v1.responder.listmessages.{NodePathGetRequestV1, NodePathGetResponseV1}
+import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetRequestV1
+import org.knora.webapi.messages.v1.responder.listmessages.NodePathGetResponseV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
-import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
+import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
-import scala.concurrent.duration.{Duration, SECONDS}
+import scala.concurrent.duration.Duration
+import scala.concurrent.duration.SECONDS
 
 /**
  * Provides an HTML view of a resource.

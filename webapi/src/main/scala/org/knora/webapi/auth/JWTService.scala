@@ -1,14 +1,10 @@
 package org.knora.webapi.auth
 
-import zio._
-import org.knora.webapi.config._
 import org.knora.webapi._
-import spray.json.JsValue
+import org.knora.webapi.config._
 import org.knora.webapi.routing.JWTHelper
-import spray.json.JsObject
-import spray.json.JsString
-import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
+import spray.json.JsValue
+import zio._
 
 final case class JWTService(config: AppConfig) {
 

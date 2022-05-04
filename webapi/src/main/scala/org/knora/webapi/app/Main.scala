@@ -6,7 +6,6 @@
 package org.knora.webapi.app
 
 import akka.actor.Terminated
-import com.typesafe.config.ConfigFactory
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Logging
@@ -16,7 +15,6 @@ import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import zio._
-import zio.config.typesafe.TypesafeConfig
 
 import java.util.concurrent.TimeUnit
 

@@ -6,16 +6,22 @@
 package org.knora.webapi.e2e
 
 import akka.actor.ActorSystem
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.Directives.{get, path}
+import akka.http.scaladsl.server.Directives.get
+import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.R2RSpec
 import org.knora.webapi.feature._
 import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData, KnoraRouteFactory}
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.KnoraRouteFactory
 
 import scala.concurrent.ExecutionContextExecutor
 

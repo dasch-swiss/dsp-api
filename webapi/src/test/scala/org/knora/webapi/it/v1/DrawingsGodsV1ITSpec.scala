@@ -5,25 +5,25 @@
 
 package org.knora.webapi.it.v1
 
-import java.net.URLEncoder
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.ITKnoraLiveSpec
 import org.knora.webapi.exceptions.InvalidApiJsonException
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
+import org.knora.webapi.testservices.FileToUpload
 import spray.json._
 
+import java.net.URLEncoder
+import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import java.nio.file.Paths
-
-import org.knora.webapi.testservices.FileToUpload
 
 object DrawingsGodsV1ITSpec {
   val config: Config = ConfigFactory.parseString("""

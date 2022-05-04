@@ -5,30 +5,32 @@
 
 package org.knora.webapi.it.v2
 
-import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
 
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.exceptions.BadRequestException
 
 object KnoraSipiIntegrationV2ITSpec {
   val config: Config = ConfigFactory.parseString("""

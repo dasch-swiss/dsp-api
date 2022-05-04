@@ -5,14 +5,19 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import java.util.UUID
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
+import org.knora.webapi.feature.Feature
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 
+import java.util.UUID
 import scala.concurrent.Future
 
 object DeleteListItemsRouteADM {

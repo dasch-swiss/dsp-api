@@ -5,31 +5,33 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.server.{RequestContext, Route, RouteResult}
+import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.{
-  FeatureFactoryConfig,
-  KnoraSettingsFeatureFactoryConfig,
-  RequestContextFeatureFactoryConfig
-}
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import org.knora.webapi.feature.RequestContextFeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
 import zio.prelude.Validation
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * Data needed to be passed to each route.

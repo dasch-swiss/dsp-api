@@ -20,9 +20,8 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import kamon.Kamon
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
@@ -34,8 +33,6 @@ import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
@@ -62,29 +59,16 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
 import org.knora.webapi.store.StoreManager
 import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
-import zio.Runtime
-import zio.ZIO
-import zio.config.typesafe.TypesafeConfig
-import zio.stm.TRef
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
-import org.knora.webapi.store.cacheservice.config.RedisConfig
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import zio.ZEnvironment
-import zio.RuntimeConfig
-import org.knora.webapi.core.Logging
-import org.knora.webapi.auth.JWTService
-import zio.ZLayer
-import org.knora.webapi.config.AppConfig
 
 /**
  * This is the first actor in the application. All other actors are children

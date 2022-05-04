@@ -5,11 +5,49 @@
 
 package org.knora.webapi
 
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.event.LoggingAdapter
+import akka.pattern.ask
+import akka.stream.Materializer
+import akka.testkit.ImplicitSender
+import akka.testkit.TestKit
+import akka.util.Timeout
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.core.Logging
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.testcontainers.SipiTestContainer
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import zio.&
+import zio.Runtime
+import zio.RuntimeConfig
+import zio.ZEnvironment
+import zio.ZIO
+import zio.ZLayer
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
 import app.ApplicationActor
 import core.Core
 import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import messages.StringFormatter
-import messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
+import messages.app.appmessages.{AppStart, SetAllowReloadOverHTTPState}
 import messages.store.cacheservicemessages.CacheServiceFlushDB
 import messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import messages.util.rdf.RdfFeatureFactory
@@ -18,38 +56,6 @@ import messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import store.cacheservice.settings.CacheServiceSettings
 import util.StartupUtils
-
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.event.LoggingAdapter
-import akka.pattern.ask
-import akka.stream.Materializer
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
-import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
-
-import zio.Runtime
-import zio.&
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.core.Logging
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.testcontainers.SipiTestContainer
-import zio.ZEnvironment
-import zio.RuntimeConfig
-import zio.ZIO
-import zio.ZLayer
 
 object CoreSpec {
 

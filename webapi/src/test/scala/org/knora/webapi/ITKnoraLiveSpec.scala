@@ -9,12 +9,9 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
-import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -25,24 +22,19 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
-import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.AppStart
-import org.knora.webapi.messages.app.appmessages.AppStop
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.settings._
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
@@ -60,13 +52,7 @@ import zio.ZIO
 import zio.ZLayer
 import zio._
 
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
   val defaultConfig: Config = ConfigFactory.load()

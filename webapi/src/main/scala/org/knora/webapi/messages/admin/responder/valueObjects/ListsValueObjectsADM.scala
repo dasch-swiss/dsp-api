@@ -9,7 +9,6 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.valueObjects.GroupIRI.sf
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 

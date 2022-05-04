@@ -5,26 +5,32 @@
 
 package org.knora.webapi.routing.v1
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException, NotFoundException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceInfoGetRequestV1, ResourceInfoResponseV1}
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceInfoGetRequestV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceInfoResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV1
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.Future
 
 /**

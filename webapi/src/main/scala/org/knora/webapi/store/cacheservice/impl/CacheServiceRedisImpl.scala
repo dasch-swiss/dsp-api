@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.cacheservice.impl
 
-import com.typesafe.scalalogging.LazyLogging
-import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -22,7 +20,6 @@ import org.knora.webapi.store.cacheservice.api.EmptyKey
 import org.knora.webapi.store.cacheservice.api.EmptyValue
 import org.knora.webapi.store.cacheservice.config.RedisConfig
 import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig

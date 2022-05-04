@@ -5,39 +5,47 @@
 
 package org.knora.webapi.it.v1
 
-import java.net.URLEncoder
-import java.nio.file.{Files, Paths, StandardCopyOption}
-
+import akka.http.scaladsl.model.ContentType
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpCharsets
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpRequest
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.MediaTypes
+import akka.http.scaladsl.model.Multipart
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, InvalidApiJsonException}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.InvalidApiJsonException
 import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MutableTestIri
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
-import scala.xml._
-import scala.xml.transform.{RewriteRule, RuleTransformer}
+import java.net.URLEncoder
+import java.nio.file.Files
 import java.nio.file.Path
-import org.knora.webapi.testservices.FileToUpload
-import akka.http.scaladsl.model.ContentTypes
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.HttpRequest
-import akka.http.scaladsl.model.HttpCharsets
-import akka.http.scaladsl.model.MediaTypes
-import akka.http.scaladsl.model.ContentType
-import akka.http.scaladsl.model.Multipart
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.xml._
+import scala.xml.transform.RewriteRule
+import scala.xml.transform.RuleTransformer
 
 object KnoraSipiIntegrationV1ITSpec {
   val config: Config = ConfigFactory.parseString("""

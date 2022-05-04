@@ -5,10 +5,12 @@
 
 package org.knora.webapi.store.cacheservice.api
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import zio._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceStatusResponse}
 
 /**
  * Cache Service Interface

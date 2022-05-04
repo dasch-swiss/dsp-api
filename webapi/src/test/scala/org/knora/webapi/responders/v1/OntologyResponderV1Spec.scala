@@ -11,7 +11,9 @@ import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.MessageUtil
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
 

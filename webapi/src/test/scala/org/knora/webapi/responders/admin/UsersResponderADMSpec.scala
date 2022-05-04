@@ -5,31 +5,34 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.DuplicateValueException
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Username,
-  Email,
-  GivenName,
-  FamilyName,
-  Password,
-  LanguageCode,
-  SystemAdmin,
-  UserStatus
-}
+import org.knora.webapi.messages.admin.responder.valueObjects.Email
+import org.knora.webapi.messages.admin.responder.valueObjects.FamilyName
+import org.knora.webapi.messages.admin.responder.valueObjects.GivenName
+import org.knora.webapi.messages.admin.responder.valueObjects.LanguageCode
+import org.knora.webapi.messages.admin.responder.valueObjects.Password
+import org.knora.webapi.messages.admin.responder.valueObjects.SystemAdmin
+import org.knora.webapi.messages.admin.responder.valueObjects.UserStatus
+import org.knora.webapi.messages.admin.responder.valueObjects.Username
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 object UsersResponderADMSpec {

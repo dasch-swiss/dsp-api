@@ -5,34 +5,46 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.net.URLEncoder
-import java.nio.file.Paths
-import java.time.Instant
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.MediaRange
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.InstanceChecker
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
-import org.knora.webapi.e2e.{ClientTestDataCollector, InstanceChecker, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
-import spray.json.{JsValue, JsonParser}
+import spray.json.JsValue
+import spray.json.JsonParser
 
+import java.net.URLEncoder
+import java.nio.file.Paths
+import java.time.Instant
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
  * Tests the API v2 resources route.

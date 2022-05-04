@@ -5,10 +5,10 @@
 
 package org.knora.webapi.messages.store.sipimessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 /**

@@ -5,12 +5,14 @@
 
 package org.knora.webapi.util.search.gravsearch
 
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.ApiV2Simple
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.{ApiV2Complex, ApiV2Simple, CoreSpec}
 
 /**
  * Tests [[GravsearchParser]].

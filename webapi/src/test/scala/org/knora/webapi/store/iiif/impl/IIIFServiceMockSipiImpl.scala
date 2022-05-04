@@ -5,16 +5,9 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import akka.actor.{Actor, ActorLogging, ActorSystem}
-import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.exceptions.SipiException
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.util.ActorUtil._
-
-import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Try}
 import org.knora.webapi.store.iiif.api.IIIFService
 import zio._
 

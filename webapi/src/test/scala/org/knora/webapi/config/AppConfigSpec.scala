@@ -1,10 +1,8 @@
 package org.knora.webapi.config
 
-import zio.test.Assertion._
-import zio.test.TestAspect.ignore
-import zio.test.TestAspect.timeout
-import zio.test._
 import zio._
+import zio.test._
+
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 

@@ -9,13 +9,17 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoContentV2, ReadClassInfoV2, _}
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@ lazy val root: Project = Project(id = "root", file("."))
   .aggregate(webapi, apiMain)
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
+    scalacOptions ++= Seq("-Ywarn-unused"),
     // values set for all sub-projects
     // These are normal sbt settings to configure for release, skip if already defined
     Global / onChangedBuildSource := ReloadOnSourceChanges,
@@ -51,6 +52,10 @@ lazy val root: Project = Project(id = "root", file("."))
 
 addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll")
 addCommandAlias("check", "all root/scalafmtSbtCheck root/scalafmtCheckAll")
+addCommandAlias(
+  "organizeImports",
+  "Test / scalafix dependency:OrganizeImports@com.github.liancheng:organize-imports:0.6.0"
+)
 
 //////////////////////////////////////
 // DSP's custom SIPI
@@ -59,6 +64,7 @@ addCommandAlias("check", "all root/scalafmtSbtCheck root/scalafmtCheckAll")
 lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
   .enablePlugins(DockerPlugin)
   .settings(
+    scalacOptions ++= Seq("-Wunused"),
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
     Docker / dockerRepository := Some("daschswiss"),
@@ -133,7 +139,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / exportJars := true
   )
   .settings(
-    scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
+    scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package", "-Wunused"),
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
@@ -146,7 +152,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
     Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
     // add test framework for running zio-tests
-    Test / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    Test / testFrameworks ++= Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    // scalafix settings
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
   )
   .settings(
     // prepare for publishing
@@ -229,7 +238,11 @@ lazy val apiMain = project
   .settings(
     name := "dsp-api-main",
     libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    scalacOptions ++= Seq("-Wunused"),
+    // scalafix settings
+    semanticdbEnabled := true,
+    semanticdbVersion := scalafixSemanticdb.revision
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
 
@@ -238,7 +251,8 @@ lazy val schemaApi = project
   .settings(
     name := "schemaApi",
     libraryDependencies ++= Dependencies.schemaApiLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    scalacOptions ++= Seq("-Wunused")
   )
   .dependsOn(schemaCore)
 
@@ -247,7 +261,8 @@ lazy val schemaCore = project
   .settings(
     name := "schemaCore",
     libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    scalacOptions ++= Seq("-Wunused")
   )
 
 lazy val schemaRepo = project
@@ -255,7 +270,8 @@ lazy val schemaRepo = project
   .settings(
     name := "schemaRepo",
     libraryDependencies ++= Dependencies.schemaRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    scalacOptions ++= Seq("-Wunused")
   )
   .dependsOn(schemaCore)
 
@@ -264,7 +280,8 @@ lazy val schemaRepoEventStoreService = project
   .settings(
     name := "schemaRepoEventstoreService",
     libraryDependencies ++= Dependencies.schemaRepoEventStoreServiceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    scalacOptions ++= Seq("-Wunused")
   )
   .dependsOn(schemaRepo)
 
@@ -273,6 +290,7 @@ lazy val schemaRepoSearchService = project
   .settings(
     name := "dsp-schema-repo-search-service",
     libraryDependencies ++= Dependencies.schemaRepoSearchServiceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+    scalacOptions ++= Seq("-Wunused")
   )
   .dependsOn(schemaRepo)

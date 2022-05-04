@@ -18,30 +18,34 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.SalsahGui
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.{
-  SparqlAskRequest,
-  SparqlAskResponse,
-  StringLiteralSequenceV2,
-  StringLiteralV2
-}
+import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.util.{Base64UrlCheckDigit, JavaUtil}
+import org.knora.webapi.util.Base64UrlCheckDigit
+import org.knora.webapi.util.JavaUtil
 import spray.json._
 
 import java.nio.ByteBuffer
 import java.text.ParseException
 import java.time._
 import java.time.format.DateTimeFormatter
-import java.time.temporal.{ChronoField, TemporalAccessor}
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalAccessor
+import java.util.Base64
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.{Base64, UUID}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 import scala.util.control.Exception._
 import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.

@@ -1,21 +1,12 @@
 package org.knora.webapi.config
 
-import zio._
-import org.knora.webapi.testcontainers.FusekiTestContainer
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.testcontainers.SipiTestContainer
-import zio.config.typesafe.TypesafeConfigSource
-import com.typesafe.config.ConfigFactory
-import zio.config.ReadError
-import zio.config.ConfigDescriptor
-import zio.config._
-
-import typesafe._
-import magnolia._
-
 import zio._
-import com.typesafe.config.ConfigFactory
-import scala.concurrent.duration._
-import java.util.concurrent.TimeUnit
+import zio.config._
+import zio.config.typesafe.TypesafeConfigSource
+
+import magnolia._
 
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.

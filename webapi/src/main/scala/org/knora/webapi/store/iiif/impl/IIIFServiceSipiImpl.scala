@@ -5,39 +5,38 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import akka.actor.{Actor, ActorLogging, ActorSystem}
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.apache.http.Consts
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest
+import org.apache.http.NameValuePair
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpDelete
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.config.SocketConfig
-import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
-import org.apache.http.protocol.HttpContext
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair, NoHttpResponseException}
-import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, SipiException}
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.NotFoundException
+import org.knora.webapi.exceptions.SipiException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.routing.JWTHelper
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings}
-import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
+import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.store.iiif.domain._
 import org.knora.webapi.util.SipiUtil
 import spray.json._
-
-import java.io.IOException
-import java.util
-import scala.concurrent.ExecutionContext
-import scala.util.Try
-import org.knora.webapi.store.iiif.api.IIIFService
 import zio._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.store.iiif.domain._
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
+
+import java.util
 
 /**
  * Makes requests to Sipi.

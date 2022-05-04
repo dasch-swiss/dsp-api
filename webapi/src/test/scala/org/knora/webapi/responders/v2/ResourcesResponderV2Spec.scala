@@ -5,11 +5,9 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.ActorRef
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -28,26 +26,22 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
 import org.knora.webapi.util._
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.&
+import zio.ZLayer
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.duration._
-
-import zio.ZLayer
-import zio.&
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
-import org.knora.webapi.config.AppConfig
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser

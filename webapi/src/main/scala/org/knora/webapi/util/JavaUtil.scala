@@ -5,9 +5,8 @@
 
 package org.knora.webapi.util
 
-import java.util.function.{BiFunction, Function}
-
-import scala.language.implicitConversions
+import java.util.function.BiFunction
+import java.util.function.Function
 
 /**
  * Utility functions for working with Java libraries.

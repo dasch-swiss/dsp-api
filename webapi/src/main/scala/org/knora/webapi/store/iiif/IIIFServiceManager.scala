@@ -5,21 +5,14 @@
 
 package org.knora.webapi.store.iiif
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
-import akka.event.LoggingReceive
-import akka.routing.FromConfig
-import org.knora.webapi.core.ActorMaker
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
-import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
+import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
+import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.store.iiif.api.IIIFService
 import zio._
-import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
-import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
-import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
-import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
 
 /**
  * Makes requests to IIIF servers.

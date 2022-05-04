@@ -5,13 +5,11 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.ActorRef
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.exceptions.OntologyConstraintException
@@ -30,22 +28,19 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.util._
-import spray.json.JsValue
-
-import java.util.UUID
-import scala.concurrent.duration._
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockSipiImpl
-import zio.ZLayer
+import org.knora.webapi.util._
+import spray.json.JsValue
 import zio.&
-import org.knora.webapi.config.AppConfig
+import zio.ZLayer
+
+import java.util.UUID
+import scala.concurrent.duration._
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
