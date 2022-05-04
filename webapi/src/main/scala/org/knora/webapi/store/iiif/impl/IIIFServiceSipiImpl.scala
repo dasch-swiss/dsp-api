@@ -278,7 +278,7 @@ object IIIFServiceSipiImpl {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def aquire(config: AppConfig) = ZIO.attemptBlocking {
+  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
 
     // timeout from config
     val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
@@ -337,7 +337,7 @@ object IIIFServiceSipiImpl {
         // HINT: Scope does not work when used together with unsafeRun to
         // bridge over to Akka. Need to change this as soon Akka is removed
         // httpClient <- ZIO.acquireRelease(aquire(config))(release(_))
-        httpClient <- aquire(config)
+        httpClient <- acquire(config)
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }.tap(_ => ZIO.debug(">>> Sipi IIIF Service Initialized <<<"))
   }

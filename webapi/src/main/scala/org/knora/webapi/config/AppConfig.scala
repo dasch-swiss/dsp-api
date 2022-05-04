@@ -4,6 +4,8 @@ import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
 
+import scala.concurrent.duration
+
 import typesafe._
 import magnolia._
 
@@ -67,13 +69,13 @@ final case class Sipi(
   audioMimeTypes: List[String],
   archiveMimeTypes: List[String]
 ) {
-  def internalBaseUrl = "http://" + internalHost + (if (internalPort != 80)
-                                                      ":" + internalPort
-                                                    else "")
-  def externalBaseUrl = "http://" + externalHost + (if (externalPort != 80)
-                                                      ":" + externalPort
-                                                    else "")
-  val timeoutInSeconds = scala.concurrent.duration.Duration(timeout)
+  def internalBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
+                                                              ":" + internalPort
+                                                            else "")
+  def externalBaseUrl: String = "http://" + externalHost + (if (externalPort != 80)
+                                                              ":" + externalPort
+                                                            else "")
+  val timeoutInSeconds: duration.Duration = scala.concurrent.duration.Duration(timeout)
 }
 
 final case class V2(

@@ -417,7 +417,7 @@ class ApplicationActor(
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {
-        case MissingLastModificationDateOntologyException(message, _) =>
+        case MissingLastModificationDateOntologyException(_, _) =>
           logger.info("Application stopped because of loading ontology into the cache failed.")
           appStop()
         case _ => throw ex

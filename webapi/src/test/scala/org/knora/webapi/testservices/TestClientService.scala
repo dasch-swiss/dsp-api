@@ -136,7 +136,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   def checkResponseOK(request: akka.http.scaladsl.model.HttpRequest): Task[Unit] =
     for {
       // _        <- ZIO.debug(request)
-      response <- getResponseString(request)
+      _ <- getResponseString(request)
     } yield ()
 
   /**
