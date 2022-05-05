@@ -11,11 +11,14 @@ import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
+import org.knora.webapi.messages.app.appmessages.AppState
+import org.knora.webapi.messages.app.appmessages.AppStates
+import org.knora.webapi.messages.app.appmessages.GetAppState
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.Failure
+import scala.util.Success
 
 /**
  * Provides AppState actor access logic

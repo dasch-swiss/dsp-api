@@ -5,7 +5,8 @@
 
 package org.knora.webapi.util.rdf.rdf4jimpl
 
-import org.knora.webapi.feature.{FeatureToggle, ToggleStateOff}
+import org.knora.webapi.feature.FeatureToggle
+import org.knora.webapi.feature.ToggleStateOff
 import org.knora.webapi.util.rdf.KnoraResponseV2Spec
 
 /**

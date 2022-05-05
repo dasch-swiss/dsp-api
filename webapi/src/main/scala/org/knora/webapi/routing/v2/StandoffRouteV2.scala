@@ -5,8 +5,6 @@
 
 package org.knora.webapi.routing.v2
 
-import java.util.UUID
-
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
@@ -17,14 +15,16 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.standoffmessages.{
-  CreateMappingRequestMetadataV2,
-  CreateMappingRequestV2,
-  CreateMappingRequestXMLV2,
-  GetStandoffPageRequestV2
-}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestMetadataV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.CreateMappingRequestXMLV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffPageRequestV2
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV2
 
+import java.util.UUID
 import scala.concurrent.Future
 import scala.concurrent.duration._
 

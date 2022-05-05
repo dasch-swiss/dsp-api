@@ -5,8 +5,10 @@
 
 package org.knora.webapi.messages.store.cacheservicemessages
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.StoreRequest
 
 sealed trait CacheServiceRequest extends StoreRequest

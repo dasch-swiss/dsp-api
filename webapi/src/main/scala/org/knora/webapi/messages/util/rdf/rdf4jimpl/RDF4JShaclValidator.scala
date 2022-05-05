@@ -5,12 +5,13 @@
 
 package org.knora.webapi.messages.util.rdf.rdf4jimpl
 
-import java.nio.file.Path
-
 import org.eclipse.rdf4j
 import org.knora.webapi.messages.util.rdf._
 
-import scala.util.{Failure, Success, Try}
+import java.nio.file.Path
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Performs SHACL validation using RDF4J.

@@ -5,11 +5,12 @@
 
 package org.knora.webapi.messages.util
 
-import java.util.Date
-
 import com.ibm.icu.util._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+
+import java.util.Date
 
 /**
  * Indicates the era (CE or BCE) in Gregorian and Julian calendar dates.

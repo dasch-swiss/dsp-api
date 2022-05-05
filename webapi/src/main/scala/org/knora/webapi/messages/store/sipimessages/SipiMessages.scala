@@ -5,10 +5,10 @@
 
 package org.knora.webapi.messages.store.sipimessages
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.traits.RequestWithSender
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import spray.json._
 
 /**
@@ -26,10 +26,10 @@ sealed trait SipiRequest extends IIIFRequest {
 /**
  * Requests file metadata from Sipi. A successful response is a [[GetFileMetadataResponse]].
  *
- * @param fileUrl        the URL at which Sipi can serve the file.
+ * @param filePath       the path at which Sipi can serve the file.
  * @param requestingUser the user making the request.
  */
-case class GetFileMetadataRequest(fileUrl: String, requestingUser: UserADM) extends SipiRequest
+case class GetFileMetadataRequest(filePath: String, requestingUser: UserADM) extends SipiRequest
 
 /**
  * Represents file metadata returned by Sipi.

@@ -2,25 +2,35 @@ package org.knora.webapi.e2e.v2
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
+import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models._
-import org.knora.webapi.routing.v2.{OntologiesRouteV2, ResourcesRouteV2}
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
+import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.routing.v2.ResourcesRouteV2
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import spray.json._
 
 import java.net.URLEncoder
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
 

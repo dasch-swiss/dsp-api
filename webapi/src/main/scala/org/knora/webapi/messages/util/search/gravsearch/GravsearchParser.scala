@@ -6,14 +6,17 @@
 package org.knora.webapi.messages.util.search.gravsearch
 
 import org.eclipse.rdf4j
+import org.eclipse.rdf4j.query.MalformedQueryException
+import org.eclipse.rdf4j.query.algebra
+import org.eclipse.rdf4j.query.parser.QueryParser
 import org.eclipse.rdf4j.query.parser.sparql._
-import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
-import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
 import scala.jdk.CollectionConverters._
 

@@ -36,7 +36,6 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.util._
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 /**

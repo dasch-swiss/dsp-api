@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException

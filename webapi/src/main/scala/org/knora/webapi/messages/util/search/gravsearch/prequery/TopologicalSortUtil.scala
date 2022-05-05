@@ -8,8 +8,6 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
-import scala.collection.mutable
-
 /**
  * A utility for finding all topological orders of a graph.
  * Based on [[https://github.com/scala-graph/scala-graph/issues/129#issuecomment-485398400]].

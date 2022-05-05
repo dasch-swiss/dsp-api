@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.v1.responder.sessionmessages
 
-import spray.json.{DefaultJsonProtocol, RootJsonFormat}
+import spray.json.DefaultJsonProtocol
+import spray.json.RootJsonFormat
 
 /**
  * Represents a response Knora returns when communicating with the 'v1/session' route during the 'login' operation.

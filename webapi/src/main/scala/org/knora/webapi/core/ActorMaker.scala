@@ -5,7 +5,9 @@
 
 package org.knora.webapi.core
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.Actor
+import akka.actor.ActorRef
+import akka.actor.Props
 
 /**
  * This trait is part of the cake pattern used in the creation of actors. Here we only define the method, and with

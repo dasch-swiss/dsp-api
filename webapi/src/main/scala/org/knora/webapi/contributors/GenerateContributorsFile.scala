@@ -5,15 +5,23 @@
 
 package org.knora.webapi.contributors
 
-import java.net.{URL, URLConnection}
-import java.nio.file.{Path, Paths}
-
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.twirl.Contributor
 import org.knora.webapi.util.FileUtil
-import org.rogach.scallop.{ScallopConf, ScallopOption}
-import spray.json.{JsArray, JsNull, JsNumber, JsObject, JsString, JsValue, JsonParser}
+import org.rogach.scallop.ScallopConf
+import org.rogach.scallop.ScallopOption
+import spray.json.JsArray
+import spray.json.JsNull
+import spray.json.JsNumber
+import spray.json.JsObject
+import spray.json.JsString
+import spray.json.JsValue
+import spray.json.JsonParser
 
+import java.net.URL
+import java.net.URLConnection
+import java.nio.file.Path
+import java.nio.file.Paths
 import scala.io.Source
 
 /**

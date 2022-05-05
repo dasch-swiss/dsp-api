@@ -429,10 +429,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
                                                       inputQuery = inputQuery.copy(
                                                         whereClause = whereClauseWithoutAnnotations,
-                                                        orderBy =
-                                                          Seq.empty[
-                                                            OrderCriterion
-                                                          ] // count queries do not need any sorting criteria
+                                                        orderBy = Seq.empty[
+                                                          OrderCriterion
+                                                        ] // count queries do not need any sorting criteria
                                                       ),
                                                       transformer = nonTriplestoreSpecificConstructToSelectTransformer
                                                     )

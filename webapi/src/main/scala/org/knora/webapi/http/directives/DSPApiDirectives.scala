@@ -7,8 +7,10 @@ package org.knora.webapi.http.directives
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.server
-import akka.http.scaladsl.server.Directives.{handleExceptions, handleRejections}
-import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
+import akka.http.scaladsl.server.Directives.handleExceptions
+import akka.http.scaladsl.server.Directives.handleRejections
+import akka.http.scaladsl.server.ExceptionHandler
+import akka.http.scaladsl.server.RejectionHandler
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import org.knora.webapi.http.handler.KnoraExceptionHandler
 import org.knora.webapi.settings.KnoraSettings

@@ -5,12 +5,13 @@
 
 package org.knora.webapi
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.http.version.BuildInfo
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
 import scala.jdk.CollectionConverters._
-import org.knora.webapi.http.version.BuildInfo
 
 /**
  * Provides the Fuseki container necessary for running tests.

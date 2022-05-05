@@ -1,25 +1,29 @@
 package org.knora.webapi.store.triplestore.upgrade
 
-import java.nio.file.{Files, Path, Paths}
-import java.io.File
-import scala.reflect.io.Directory
-
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import com.typesafe.scalalogging.{LazyLogging, Logger}
+import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettingsImpl}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.reflect.io.Directory
 
 /**
  * Updates a Knora repository to work with the current version of Knora.

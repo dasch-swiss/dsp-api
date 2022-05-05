@@ -5,15 +5,19 @@
 
 package org.knora.webapi.routing.admin.permissions
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
-import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
+
+import java.util.UUID
+import javax.ws.rs.Path
 
 object GetPermissionsRouteADM {
   val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")

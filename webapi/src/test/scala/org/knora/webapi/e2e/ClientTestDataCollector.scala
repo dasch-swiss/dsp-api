@@ -5,16 +5,12 @@
 
 package org.knora.webapi.e2e
 
-import org.knora.webapi.exceptions.TestConfigurationException
-import org.knora.webapi.settings.KnoraSettingsImpl
-import java.io.File
-import java.io.BufferedWriter
-import java.io.FileWriter
-import java.nio.file.Paths
-import java.nio.file.Path
 import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.settings.KnoraSettingsImpl
+
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Collects E2E test requests and responses for use as client test data.

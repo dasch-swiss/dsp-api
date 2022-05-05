@@ -5,25 +5,30 @@
 
 package org.knora.webapi.it.v2
 
-import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
 
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -417,7 +422,8 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiUploadResponse: SipiUploadResponse =
         uploadToSipi(
           loginToken = loginToken,
-          filesToUpload = Seq(FileToUpload(path = pathToMarbles, mimeType = MediaTypes.`image/tiff`))
+          filesToUpload =
+            Seq(FileToUpload(path = pathToMarbles, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF))
         )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -476,10 +482,15 @@ class KnoraSipiIntegrationV2ITSpec
     }
 
     "reject an image file with the wrong file extension" in {
-      val exception = intercept[AssertionException] {
+      val exception = intercept[BadRequestException] {
         uploadToSipi(
           loginToken = loginToken,
-          filesToUpload = Seq(FileToUpload(path = pathToMarblesWithWrongExtension, mimeType = MediaTypes.`image/tiff`))
+          filesToUpload = Seq(
+            FileToUpload(
+              path = pathToMarblesWithWrongExtension,
+              mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF
+            )
+          )
         )
       }
 
@@ -491,7 +502,8 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiUploadResponse: SipiUploadResponse =
         uploadToSipi(
           loginToken = loginToken,
-          filesToUpload = Seq(FileToUpload(path = pathToTrp88, mimeType = MediaTypes.`image/tiff`))
+          filesToUpload =
+            Seq(FileToUpload(path = pathToTrp88, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF))
         )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -542,7 +554,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the image to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMarbles, mimeType = MediaTypes.`image/tiff`))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToMarbles, mimeType = org.apache.http.entity.ContentType.IMAGE_TIFF))
       )
 
       val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
@@ -580,7 +593,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMinimalPdf, mimeType = MediaTypes.`application/pdf`))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToMinimalPdf, mimeType = org.apache.http.entity.ContentType.create("application/pdf"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -646,7 +661,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestPdf, mimeType = MediaTypes.`application/pdf`))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToTestPdf, mimeType = org.apache.http.entity.ContentType.create("application/pdf"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -697,7 +714,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMinimalZip, mimeType = MediaTypes.`application/zip`))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -729,7 +748,7 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload =
-          Seq(FileToUpload(path = pathToCsv1, mimeType = MediaTypes.`text/csv`.toContentType(HttpCharsets.`UTF-8`)))
+          Seq(FileToUpload(path = pathToCsv1, mimeType = org.apache.http.entity.ContentType.create("text/csv")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -790,7 +809,7 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload =
-          Seq(FileToUpload(path = pathToCsv2, mimeType = MediaTypes.`text/csv`.toContentType(HttpCharsets.`UTF-8`)))
+          Seq(FileToUpload(path = pathToCsv2, mimeType = org.apache.http.entity.ContentType.create("text/csv")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -837,7 +856,7 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload =
-          Seq(FileToUpload(path = pathToCsv1, mimeType = MediaTypes.`text/csv`.toContentType(HttpCharsets.`UTF-8`)))
+          Seq(FileToUpload(path = pathToCsv1, mimeType = org.apache.http.entity.ContentType.create("text/csv")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -861,8 +880,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToXml1, mimeType = MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`)))
+        filesToUpload = Seq(FileToUpload(path = pathToXml1, mimeType = org.apache.http.entity.ContentType.TEXT_XML))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -919,8 +937,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload =
-          Seq(FileToUpload(path = pathToXml2, mimeType = MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`)))
+        filesToUpload = Seq(FileToUpload(path = pathToXml2, mimeType = org.apache.http.entity.ContentType.TEXT_XML))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -967,7 +984,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMinimalZip, mimeType = MediaTypes.`application/zip`))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -991,7 +1010,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMinimalZip, mimeType = MediaTypes.`application/zip`))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToMinimalZip, mimeType = org.apache.http.entity.ContentType.create("application/zip"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1051,7 +1072,9 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestZip, mimeType = MediaTypes.`application/zip`))
+        filesToUpload = Seq(
+          FileToUpload(path = pathToTestZip, mimeType = org.apache.http.entity.ContentType.create("application/zip"))
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1099,7 +1122,12 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTest7z, mimeType = MediaTypes.`application/x-7z-compressed`))
+        filesToUpload = Seq(
+          FileToUpload(
+            path = pathToTest7z,
+            mimeType = org.apache.http.entity.ContentType.create("application/x-7z-compressed")
+          )
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1159,7 +1187,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToMinimalWav, mimeType = MediaTypes.`audio/wav`))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToMinimalWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1217,7 +1246,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestWav, mimeType = MediaTypes.`audio/wav`))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToTestWav, mimeType = org.apache.http.entity.ContentType.create("audio/wav")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1264,7 +1294,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestVideo, mimeType = MediaTypes.`video/mp4`))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToTestVideo, mimeType = org.apache.http.entity.ContentType.create("video/mp4")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -1321,7 +1352,8 @@ class KnoraSipiIntegrationV2ITSpec
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = pathToTestVideo2, mimeType = MediaTypes.`video/mp4`))
+        filesToUpload =
+          Seq(FileToUpload(path = pathToTestVideo2, mimeType = org.apache.http.entity.ContentType.create("video/mp4")))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
