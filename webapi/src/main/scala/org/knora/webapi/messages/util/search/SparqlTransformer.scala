@@ -251,7 +251,7 @@ object SparqlTransformer {
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val ontoCache: Cache.OntologyCacheData = Await.result(Cache.getCacheData, 1.second)
+    val ontoCache: Cache.OntologyCacheData        = Await.result(Cache.getCacheData, 1.second)
 
     statementPattern.pred match {
       case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.KnoraBase.StandoffTagHasStartAncestor =>
@@ -277,7 +277,7 @@ object SparqlTransformer {
               statementPattern.pred match {
                 case iriRef: IriRef =>
                   // Yes.
-                  val predIri = iriRef.iri
+                  val predIri     = iriRef.iri
                   val propertyIri = predIri.toString
 
                   // Is the property rdf:type?

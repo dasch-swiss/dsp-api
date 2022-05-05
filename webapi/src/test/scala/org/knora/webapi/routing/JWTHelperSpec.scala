@@ -6,7 +6,8 @@
 package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import spray.json.JsString

@@ -5,11 +5,49 @@
 
 package org.knora.webapi
 
-import app.{ApplicationActor, LiveManagers}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
+import akka.event.LoggingAdapter
+import akka.pattern.ask
+import akka.stream.Materializer
+import akka.testkit.ImplicitSender
+import akka.testkit.TestKit
+import akka.util.Timeout
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.core.Logging
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.testcontainers.SipiTestContainer
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import zio.&
+import zio.Runtime
+import zio.RuntimeConfig
+import zio.ZEnvironment
+import zio.ZIO
+import zio.ZLayer
+
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import app.ApplicationActor
 import core.Core
 import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import messages.StringFormatter
-import messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
+import messages.app.appmessages.{AppStart, SetAllowReloadOverHTTPState}
 import messages.store.cacheservicemessages.CacheServiceFlushDB
 import messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
 import messages.util.rdf.RdfFeatureFactory
@@ -18,22 +56,6 @@ import messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import store.cacheservice.settings.CacheServiceSettings
 import util.StartupUtils
-
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.event.LoggingAdapter
-import akka.pattern.ask
-import akka.stream.Materializer
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
-import scala.language.postfixOps
-import scala.util.{Failure, Success, Try}
 
 object CoreSpec {
 
@@ -71,7 +93,7 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         name,
-        TestContainersAll.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
       )
     )
 
@@ -79,17 +101,17 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainersAll.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
       )
     )
 
-  def this(name: String) = this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(ConfigFactory.load())))
+  def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load())))
 
   def this() =
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainersAll.PortConfig.withFallback(ConfigFactory.load())
+        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load())
       )
     )
 
@@ -107,8 +129,50 @@ abstract class CoreSpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+
+  // The effect for building a cache service manager and a IIIF service manager.
+  val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
+
+  /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
+    )
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
   lazy val appActor: ActorRef =
-    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+    system.actorOf(
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor

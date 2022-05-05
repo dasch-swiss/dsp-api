@@ -5,11 +5,11 @@
 
 package org.knora.webapi.messages.util.rdf.jenaimpl
 
-import java.nio.file.Path
-
 import org.apache.jena
 import org.apache.jena.query.DatasetFactory
 import org.knora.webapi.messages.util.rdf._
+
+import java.nio.file.Path
 
 /**
  * Performs SHACL validation using Jena.

@@ -5,13 +5,11 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.ActorRef
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -23,11 +21,15 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullGetRe
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceFullResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
+import zio.&
+import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
@@ -61,11 +63,15 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
   import ValuesResponderV1Spec._
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceMockImpl.layer,
+      AppConfig.live
+    )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

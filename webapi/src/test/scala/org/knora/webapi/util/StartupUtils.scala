@@ -10,11 +10,14 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.core.Core
-import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
+import org.knora.webapi.messages.app.appmessages.AppState
+import org.knora.webapi.messages.app.appmessages.AppStates
+import org.knora.webapi.messages.app.appmessages.GetAppState
 import org.knora.webapi.settings.KnoraDispatchers
 
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
  * This trait is only used for testing. It is necessary so that E2E tests will only start

@@ -7,7 +7,9 @@ package org.knora.webapi.util
 
 import spray.json._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Utility functions for communicating with Sipi.

@@ -5,30 +5,36 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.nio.file.Paths
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDKeywords
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
+import org.knora.webapi.models.filemodels.FileType
+import org.knora.webapi.models.filemodels.UploadFileRequest
+import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.models.filemodels.{FileType, UploadFileRequest}
-import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MutableTestIri
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import spray.json._
 
 import java.net.URLEncoder
+import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -36,6 +42,7 @@ import scala.concurrent.duration._
  * End-to-end test specification for the standoff endpoint.
  */
 class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
+
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val anythingUser      = SharedTestDataADM.anythingUser1
@@ -43,10 +50,8 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
   private val password          = SharedTestDataADM.testPass
 
   private val pathToXMLWithStandardMapping = "../test_data/test_route/texts/StandardHTML.xml"
-
-  private val pathToLetterMapping = "../test_data/test_route/texts/mappingForLetter.xml"
-
-  private val pathToFreetestCustomMapping = "../test_data/test_route/texts/freetestCustomMapping.xml"
+  private val pathToLetterMapping          = "../test_data/test_route/texts/mappingForLetter.xml"
+  private val pathToFreetestCustomMapping  = "../test_data/test_route/texts/freetestCustomMapping.xml"
   private val pathToFreetestCustomMappingWithTransformation =
     "../test_data/test_route/texts/freetestCustomMappingWithTransformation.xml"
   private val pathToFreetestXMLTextValue = "../test_data/test_route/texts/freetestXMLTextValue.xml"
@@ -124,16 +129,10 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
     val request = Get(
       s"$baseApiUrl/v2/resources/$iri"
     ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
-    val response: HttpResponse = singleAwaitingRequest(request)
-    responseToJsonLDDocument(response)
+    getResponseAsJsonLD(request)
   }
 
   "The Standoff v2 Endpoint" should {
-    "check if SIPI is available" in {
-      val request = Get(s"${settings.internalSipiBaseUrl}/server/test.html")
-      val res     = singleAwaitingRequest(request)
-      assert(res.status == StatusCodes.OK)
-    }
 
     "create a text value with standard mapping" in {
       val xmlContent = FileUtil.readTextFile(Paths.get(pathToXMLWithStandardMapping))
@@ -284,7 +283,7 @@ class StandoffRouteV2E2ESpec extends E2ESpec with AuthenticationV2JsonProtocol {
           Map("filename" -> freetestXSLTFile)
         )
       )
-      val sipiRequest  = Post(s"${settings.internalSipiBaseUrl}/upload?token=$loginToken", sipiFormData)
+      val sipiRequest  = Post(s"${appConfig.sipi.internalBaseUrl}/upload?token=$loginToken", sipiFormData)
       val sipiResponse = singleAwaitingRequest(sipiRequest)
       val uploadedFile = responseToString(sipiResponse).parseJson.asJsObject
         .convertTo[SipiUploadResponse]

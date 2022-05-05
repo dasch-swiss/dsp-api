@@ -6,6 +6,16 @@
 package org.knora.webapi
 package messages.v2.responder.ontologymessages
 
+import akka.actor.ActorRef
+import akka.event.LoggingAdapter
+import akka.util.Timeout
+import org.apache.commons.lang3.builder.HashCodeBuilder
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import exceptions.{
   AssertionException,
   BadRequestException,
@@ -22,15 +32,6 @@ import messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo,
 import messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import messages.{OntologyConstants, SmartIri, StringFormatter}
 import settings.KnoraSettingsImpl
-
-import akka.actor.ActorRef
-import akka.event.LoggingAdapter
-import akka.util.Timeout
-import org.apache.commons.lang3.builder.HashCodeBuilder
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

@@ -5,13 +5,15 @@
 
 package org.knora.webapi.responders.v1
 
-import java.nio.file.Paths
-
 import akka.actor.ActorSystem
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.settings.{KnoraSettings, KnoraSettingsImpl}
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.FileUtil
-import spray.json.{JsValue, JsonParser}
+import spray.json.JsValue
+import spray.json.JsonParser
+
+import java.nio.file.Paths
 
 object ResourcesResponderV1SpecContextData {
 

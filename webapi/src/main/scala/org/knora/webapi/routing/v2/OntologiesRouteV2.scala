@@ -6,6 +6,13 @@
 package org.knora.webapi
 package routing.v2
 
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.Route
+
+import java.util.UUID
+import scala.concurrent.Future
+
 import exceptions.BadRequestException
 import feature.FeatureFactoryConfig
 import messages.IriConversions._
@@ -13,12 +20,6 @@ import messages.util.rdf.{JsonLDDocument, JsonLDUtil}
 import messages.v2.responder.ontologymessages._
 import messages.{OntologyConstants, SmartIri}
 import routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
-
-import java.util.UUID
-import scala.concurrent.Future
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")

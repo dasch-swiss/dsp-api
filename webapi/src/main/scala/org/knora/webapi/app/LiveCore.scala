@@ -10,11 +10,12 @@ import akka.stream.Materializer
 import org.knora.webapi.core.Core
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.settings._
 
 import scala.concurrent.ExecutionContext
-import scala.language.postfixOps
-import scala.languageFeature.postfixOps
 
 /**
  * The applications actor system.
@@ -53,7 +54,7 @@ trait LiveCore extends Core {
    * sequences.
    */
   lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with LiveManagers)
+    Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig))
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = APPLICATION_MANAGER_ACTOR_NAME
   )

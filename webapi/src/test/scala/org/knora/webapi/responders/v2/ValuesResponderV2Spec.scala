@@ -5,36 +5,40 @@
 
 package org.knora.webapi.responders.v2
 
-import java.time.Instant
-import java.util.UUID
-import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.CalendarNameGregorian
+import org.knora.webapi.messages.util.DatePrecisionYear
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.messages.util.{
-  CalendarNameGregorian,
-  DatePrecisionYear,
-  KnoraSystemInstances,
-  PermissionUtilADM
-}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
-import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.models.filemodels.ChangeFileRequest
+import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.iiif.MockSipiConnector
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
+import zio.&
+import zio.ZLayer
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.duration._
 
 /**
@@ -58,11 +62,15 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val mimeTypeTIFF = "image/tiff"
   private val mimeTypeJP2  = "image/jp2"
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceMockImpl.layer,
+      AppConfig.live
+    )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -4203,8 +4211,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
       responderManager ! changeFileMessage
 
-      println(changeFileMessage)
-
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
         stillImageFileValueIri.set(updateValueResponse.valueIri)
       }
@@ -4244,7 +4250,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val valueContent = StillImageFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
-          internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+          internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
           internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
           originalMimeType = Some(mimeTypeTIFF)
@@ -4279,7 +4285,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val valueContent = StillImageFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
-          internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+          internalFilename = "failure.jp2", // tells the mock Sipi responder to simulate failure
           internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
           originalMimeType = Some(mimeTypeTIFF)

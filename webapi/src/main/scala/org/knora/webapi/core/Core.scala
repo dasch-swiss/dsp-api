@@ -5,9 +5,13 @@
 
 package org.knora.webapi.core
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import akka.stream.Materializer
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
 
 import scala.concurrent.ExecutionContext
 
@@ -22,6 +26,12 @@ trait Core {
   implicit val materializer: Materializer
 
   implicit val executionContext: ExecutionContext
+
+  val iiifServiceManager: IIIFServiceManager
+
+  val cacheServiceManager: CacheServiceManager
+
+  val appConfig: AppConfig
 
   val appActor: ActorRef
 }

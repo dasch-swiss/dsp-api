@@ -6,21 +6,19 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.SchemaOptions
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.{
-  HierarchicalListValueContentV2,
-  ReadValueV2,
-  StillImageFileValueContentV2
-}
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.{ApiV2Complex, CoreSpec, IRI, SchemaOptions}
 
-import java.util.UUID
 import scala.concurrent.duration._
 
 /**

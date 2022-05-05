@@ -307,6 +307,10 @@ info: ## print out all variables
 	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
 	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
 
+.PHONY: check
+check: # Run code formating check 
+	@sbt "check"
+
 .PHONY: help
 help: ## this help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort

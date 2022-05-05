@@ -5,9 +5,6 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import java.nio.file.Path
-import java.time.Instant
-
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
@@ -15,15 +12,21 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import spray.json._
 
+import java.nio.file.Path
+import java.time.Instant
 import scala.collection.mutable
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages

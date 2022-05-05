@@ -15,7 +15,6 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.OntologySchema
-import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions.ApplicationCacheException
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.ForbiddenException

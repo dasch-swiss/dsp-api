@@ -8,17 +8,18 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{NotFoundException, SipiException}
+import org.knora.webapi.exceptions.NotFoundException
+import org.knora.webapi.exceptions.SipiException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
-import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ResponderData}
-import org.knora.webapi.messages.v2.responder.standoffmessages.{
-  GetMappingRequestV2,
-  GetMappingResponseV2,
-  GetXSLTransformationRequestV2,
-  GetXSLTransformationResponseV2
-}
+import org.knora.webapi.messages.util.ConstructResponseUtilV2
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.responders.Responder
 
 import scala.concurrent.Future

@@ -9,12 +9,12 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{
-  AuthenticationV2JsonProtocol,
-  LoginApiRequestPayloadV2
-}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginApiRequestPayloadV2
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
 
 /**
  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.

@@ -46,7 +46,7 @@ sipi/images/originals/1111/*
 
 .idea/
 .metals/
-metals.sbt
+**/metals.sbt
 
 .tmp/
 

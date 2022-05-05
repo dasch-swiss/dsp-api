@@ -5,7 +5,8 @@
 
 package org.knora.webapi.http.status
 
-import akka.http.scaladsl.model.{StatusCode, StatusCodes}
+import akka.http.scaladsl.model.StatusCode
+import akka.http.scaladsl.model.StatusCodes
 import org.knora.webapi.exceptions._
 
 /**

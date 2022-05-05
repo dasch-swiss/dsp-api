@@ -5,39 +5,49 @@
 
 package org.knora.webapi.routing
 
-import java.util.{Base64, UUID}
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
-import akka.http.scaladsl.model.{headers, _}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers
+import akka.http.scaladsl.model.headers.HttpCookie
+import akka.http.scaladsl.model.headers.HttpCookiePair
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import akka.util.{ByteString, Timeout}
+import akka.util.ByteString
+import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{AuthenticationException, BadCredentialsException, BadRequestException}
+import org.knora.webapi.exceptions.AuthenticationException
+import org.knora.webapi.exceptions.BadCredentialsException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.{
-  KnoraJWTTokenCredentialsV2,
-  KnoraPasswordCredentialsV2,
-  KnoraSessionCredentialsV2
-}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.util.cache.CacheUtil
 import org.slf4j.LoggerFactory
-import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}
+import pdi.jwt.JwtAlgorithm
+import pdi.jwt.JwtClaim
+import pdi.jwt.JwtHeader
+import pdi.jwt.JwtSprayJson
 import spray.json._
 
+import java.util.Base64
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
-import org.knora.webapi.settings.KnoraSettingsImpl
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -874,7 +884,7 @@ object JWTHelper {
   def createToken(
     userIri: IRI,
     secret: String,
-    longevity: FiniteDuration,
+    longevity: Duration,
     issuer: String,
     content: Map[String, JsValue] = Map.empty
   ): String = {

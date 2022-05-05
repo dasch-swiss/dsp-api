@@ -5,17 +5,20 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, RdfFeatureFactory, RdfModel, Turtle}
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.messages.util.rdf.RdfModel
+import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.settings.KnoraSettingsImpl
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * A tagging trait for messages that can be sent to Knora API v2 responders.

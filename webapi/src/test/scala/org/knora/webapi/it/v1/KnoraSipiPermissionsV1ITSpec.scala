@@ -6,7 +6,8 @@
 package org.knora.webapi.it.v1
 
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 
 /**
  * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file

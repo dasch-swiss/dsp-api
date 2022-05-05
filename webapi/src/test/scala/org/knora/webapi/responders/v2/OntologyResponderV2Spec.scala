@@ -9,20 +9,21 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{
-  CreateResourceRequestV2,
-  CreateResourceV2,
-  CreateValueInNewResourceV2,
-  ReadResourcesSequenceV2
-}
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
-import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
@@ -30,7 +31,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import akka.japi.Predicate
 
 /**
  * Tests [[OntologyResponderV2]].

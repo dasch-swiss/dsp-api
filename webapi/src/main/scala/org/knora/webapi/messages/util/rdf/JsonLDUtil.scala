@@ -13,10 +13,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
-import java.io.{StringReader, StringWriter}
+import java.io.StringReader
+import java.io.StringWriter
 import java.util
 import java.util.UUID
 import scala.jdk.CollectionConverters._
