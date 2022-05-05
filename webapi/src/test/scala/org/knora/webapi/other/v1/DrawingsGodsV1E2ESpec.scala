@@ -5,14 +5,20 @@
 
 package org.knora.webapi.other.v1
 
-import java.net.URLEncoder
-
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{MutableTestIri, ResourceResponseExtractorMethods, ValuesResponseExtractorMethods}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.ResourceResponseExtractorMethods
+import org.knora.webapi.util.ValuesResponseExtractorMethods
+
+import java.net.URLEncoder
 
 object DrawingsGodsV1E2ESpec {
   val config = ConfigFactory.parseString("""

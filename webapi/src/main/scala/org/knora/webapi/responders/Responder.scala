@@ -18,14 +18,13 @@ import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.language.postfixOps
 
 import exceptions.{BadRequestException, DuplicateValueException, UnexpectedMessageException}
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult
 import messages.{SmartIri, StringFormatter}
-import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import settings.{KnoraDispatchers, KnoraSettingsImpl}
 
 /**
  * Responder helper methods.

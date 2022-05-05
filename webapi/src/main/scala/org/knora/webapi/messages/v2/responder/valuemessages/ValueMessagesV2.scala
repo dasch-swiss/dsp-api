@@ -5,34 +5,42 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
-import java.time.Instant
-import java.util.UUID
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException, NotImplementedException, SipiException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.NotImplementedException
+import org.knora.webapi.exceptions.SipiException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -3205,9 +3213,9 @@ object FileValueWithSipiMetadata {
                           )
 
       // Ask Sipi about the rest of the file's metadata.
-      tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, internalFilename)
+      tempFilePath = stringFormatter.makeSipiTempFilePath(settings, internalFilename)
       fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                                                         fileUrl = tempFileUrl,
+                                                         filePath = tempFilePath,
                                                          requestingUser = requestingUser
                                                        )).mapTo[GetFileMetadataResponse]
 

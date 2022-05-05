@@ -7,13 +7,15 @@ package org.knora.webapi.messages.admin.responder.sipimessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectRestrictedViewSettingsADM,
-  ProjectsADMJsonProtocol
-}
+import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
-import spray.json.{DefaultJsonProtocol, JsValue, NullOptions, RootJsonFormat}
+import spray.json.DefaultJsonProtocol
+import spray.json.JsValue
+import spray.json.NullOptions
+import spray.json.RootJsonFormat
 
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `SipiResponderV2`.

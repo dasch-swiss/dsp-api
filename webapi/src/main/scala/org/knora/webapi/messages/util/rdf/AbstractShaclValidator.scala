@@ -5,10 +5,10 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import org.knora.webapi.exceptions.AssertionException
+
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
-
-import org.knora.webapi.exceptions.AssertionException
 
 /**
  * An abstract base class for classes that validate RDF models using SHACL shapes.

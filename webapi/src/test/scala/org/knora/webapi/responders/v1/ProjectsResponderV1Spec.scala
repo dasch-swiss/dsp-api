@@ -11,7 +11,8 @@ package org.knora.webapi.responders.v1
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.v1.responder.projectmessages._

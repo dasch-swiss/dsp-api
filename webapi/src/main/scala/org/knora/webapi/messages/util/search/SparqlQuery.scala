@@ -5,11 +5,15 @@
 
 package org.knora.webapi.messages.util.search
 
-import akka.http.scaladsl.model.{HttpCharsets, MediaType}
+import akka.http.scaladsl.model.HttpCharsets
+import akka.http.scaladsl.model.MediaType
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**

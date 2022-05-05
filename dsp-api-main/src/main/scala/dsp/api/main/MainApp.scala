@@ -1,6 +1,7 @@
 package dsp.api.main
 
-import dsp.schema.repo.{SchemaRepo, SchemaRepoLive}
+import dsp.schema.repo.SchemaRepo
+import dsp.schema.repo.SchemaRepoLive
 import zio.Console.printLine
 import zio._
 

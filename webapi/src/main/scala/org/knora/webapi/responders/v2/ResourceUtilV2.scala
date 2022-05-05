@@ -10,26 +10,30 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{ForbiddenException, NotFoundException}
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  DefaultObjectAccessPermissionsStringForPropertyGetADM,
-  DefaultObjectAccessPermissionsStringResponseADM
-}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{
-  DeleteTemporaryFileRequest,
-  MoveTemporaryFileToPermanentStorageRequest
-}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
+import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
-import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
 
 /**
  * Utility functions for working with Knora resources and their values.

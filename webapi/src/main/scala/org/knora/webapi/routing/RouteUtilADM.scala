@@ -8,15 +8,18 @@ package org.knora.webapi.routing
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.{RequestContext, RouteResult}
+import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.settings.KnoraSettingsImpl
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * Convenience methods for Knora Admin routes.

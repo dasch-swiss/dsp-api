@@ -5,7 +5,8 @@
 
 package org.knora.webapi.util
 
-import org.apache.commons.validator.routines.checkdigit.{CheckDigitException, ModulusCheckDigit}
+import org.apache.commons.validator.routines.checkdigit.CheckDigitException
+import org.apache.commons.validator.routines.checkdigit.ModulusCheckDigit
 
 /**
  * Calculates and validates check digits for base64url-encoded strings.

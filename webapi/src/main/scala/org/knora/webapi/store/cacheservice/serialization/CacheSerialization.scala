@@ -6,15 +6,12 @@
 package org.knora.webapi.store.cacheservice.serialization
 
 import org.knora.webapi.exceptions.CacheServiceException
-import org.knora.webapi.instrumentation.InstrumentationSupport
-
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
-import scala.concurrent.{ExecutionContext, Future}
-
 import zio._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
 
 case class EmptyByteArray(message: String) extends CacheServiceException(message)
 

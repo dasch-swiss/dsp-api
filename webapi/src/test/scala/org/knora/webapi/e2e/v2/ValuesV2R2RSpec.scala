@@ -5,23 +5,34 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
-import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.e2e.ClientTestDataCollector
+import org.knora.webapi.e2e.TestDataFileContent
+import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.util.search.SparqlQueryConstants
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
-import org.knora.webapi.settings._
+import org.knora.webapi.routing.v2.SearchRouteV2
+import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
+import zio.&
+import zio.ZLayer
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -44,11 +55,15 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceMockImpl.layer,
+      AppConfig.live
+    )
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 

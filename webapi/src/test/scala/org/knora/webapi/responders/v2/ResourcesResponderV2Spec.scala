@@ -5,11 +5,9 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.ActorRef
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -28,13 +26,17 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util._
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+import zio.&
+import zio.ZLayer
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -404,11 +406,15 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private val graphTestData = new GraphTestData
 
-  /* we need to run our app with the mocked sipi actor */
-  override lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  /* we need to run our app with the mocked sipi implementation */
+  override lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceMockImpl.layer,
+      AppConfig.live
+    )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

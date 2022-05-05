@@ -6,15 +6,14 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import akka.actor.Status
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Logging
 import org.knora.webapi.exceptions.ExceptionUtil
 import org.knora.webapi.exceptions.RequestRejectedException
 import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.exceptions.WrapperException
 import zio._
 
 import scala.concurrent.ExecutionContext
@@ -31,39 +30,52 @@ object ActorUtil {
    * phase, to be able to return ZIO inside an Actor.
    *
    * It performs the same functionality as [[future2Message]] does, rewritten completely uzing ZIOs.
+   *
+   * BEST PRACTICE:
+   * Do not log in the middle, only log at the edge. Trust the ZIO error model to propagate errors losslessly.
+   *
+   * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter): Unit =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun(
-        zioTask.fold(ex => handleExeption(ex, sender), success => sender ! success)
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
+    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+      .unsafeRunTask(
+        zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
       )
 
   /**
-   * The "throwable" handling part of `zio2Message`. It analyses the kind of throwable
-   * and sends the actor, that made the request in the `ask` pattern, the failure response.
+   * The "cause" handling part of `zio2Message`. It analyses the kind of failures and defects
+   * that where accumulated and sends the actor, that made the request in the `ask` pattern,
+   * the failure response.
    *
-   * @param ex the throwable that needs to be handled.
+   * @param cause the failures and defects that need to be handled.
    * @param sender the actor that made the request in the `ask` pattern.
    */
-  def handleExeption(ex: Throwable, sender: ActorRef): ZIO[Any, Nothing, Unit] =
-    ex match {
-      case rejectedEx: RequestRejectedException =>
+  def handleCause(cause: Cause[Throwable], sender: ActorRef): ZIO[Any, Nothing, Unit] =
+    cause.failureOrCause match {
+      case Left(rejectedEx: RequestRejectedException) => {
         // The error was the client's fault. Log the exception, and also
         // let the client know.
-        ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx") *> ZIO.succeed(
-          sender ! akka.actor.Status.Failure(rejectedEx)
-        )
+        ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx") *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(rejectedEx))
+      }
 
-      case otherEx: Exception =>
+      case Left(otherEx: Exception) => {
         // The error wasn't the client's fault. Log the exception, and also
         // let the client know.
-        ZIO.logDebug(s"This error is presumably NOT the clients fault: $otherEx") *> ZIO.succeed(
-          sender ! akka.actor.Status.Failure(otherEx)
-        ) *> ZIO.fail(throw otherEx)
+        ZIO.logError(s"This error is presumably NOT the clients fault: $otherEx") *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(otherEx))
+      }
 
-      case otherThrowable: Throwable =>
+      case Left(otherThrowable: Throwable) =>
         // Don't try to recover from a Throwable that isn't an Exception.
-        ZIO.logDebug(s"Presumably something realy bad has happened: $otherThrowable") *> ZIO.fail(throw otherThrowable)
+        ZIO.logError(s"Presumably something realy bad has happened: $otherThrowable") *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(otherThrowable))
+
+      case Right(otherCauses: Cause[Nothing]) =>
+        // Now we are getting all non-recoverable defects, which we need to squash before
+        // sending it back to the requesting actor.
+        ZIO.logErrorCause(otherCauses) *>
+          ZIO.succeed(sender ! akka.actor.Status.Failure(otherCauses.squashTrace))
     }
 
   /**

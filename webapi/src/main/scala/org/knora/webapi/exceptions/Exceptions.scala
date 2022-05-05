@@ -6,7 +6,8 @@
 package org.knora.webapi.exceptions
 
 import akka.event.LoggingAdapter
-import org.apache.commons.lang3.{SerializationException, SerializationUtils}
+import org.apache.commons.lang3.SerializationException
+import org.apache.commons.lang3.SerializationUtils
 
 /*
 
@@ -448,6 +449,9 @@ case class SipiException(message: String, cause: Option[Throwable] = None)
 object SipiException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): SipiException =
     SipiException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+
+  def apply(message: String, e: Throwable): SipiException =
+    SipiException(message, Some(e))
 }
 
 /**

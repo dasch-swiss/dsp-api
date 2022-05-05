@@ -5,15 +5,14 @@
 
 package org.knora.webapi
 
-import messages.StringFormatter
-
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import scala.language.postfixOps
+import messages.StringFormatter
 
 object UnitSpec {
 

@@ -26,9 +26,9 @@ function get_knora_token()
     end
     
     token_issuer = webapi_hostname .. ':' .. webapi_port
-    server.log("token_issuer:" .. token_issuer, server.loglevel.LOG_DEBUG)
+    server.log("token_issuer: " .. token_issuer, server.loglevel.LOG_DEBUG)
     if token["iss"] ~= token_issuer then
-        server.log(token_issuer, server.loglevel.LOG_DEBUG)
+        server.log("Invalid token issuer: " .. token_issuer .. " . Expected: " .. token["iss"], server.loglevel.LOG_DEBUG)
         send_error(401, "Invalid token. The token was not issued by the same server that sent the request.")
         return nil
     end

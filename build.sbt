@@ -49,6 +49,9 @@ lazy val root: Project = Project(id = "root", file("."))
     publish / skip := true
   )
 
+addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll")
+addCommandAlias("check", "all root/scalafmtSbtCheck root/scalafmtCheckAll")
+
 //////////////////////////////////////
 // DSP's custom SIPI
 //////////////////////////////////////
@@ -98,7 +101,7 @@ lazy val webApiCommonSettings = Seq(
 
 lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(buildSettings)
-  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
+  .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, BuildInfoPlugin)
   .settings(
     name := "webapi",
     resolvers ++= Seq(
@@ -133,10 +136,6 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
-    reStart / javaOptions ++= resolvedJavaAgents.value map { resolved =>
-      "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
-    }, // allows sbt-javaagent to work with sbt-revolver
-    reStart / javaOptions ++= webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
     fork := true,                       // run tests in a forked JVM
     Test / testForkedParallel := false, // run forked tests in parallel

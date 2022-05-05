@@ -10,7 +10,10 @@ import akka.http.scaladsl.server.Route
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetRequestADM
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 
 /**
  * Provides a routing function for the API that Sipi connects to.
@@ -39,7 +42,7 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                        projectIDAndFile(1),
                        throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'")
                      )
-          _ = log.info(s"/admin/files route called for filename $filename")
+          _ = log.info(s"/admin/files route called for filename $filename by user: $requestingUser")
         } yield SipiFileInfoGetRequestADM(
           projectID = projectID,
           filename = filename,

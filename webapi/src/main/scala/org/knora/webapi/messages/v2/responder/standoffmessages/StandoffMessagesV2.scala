@@ -5,9 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.standoffmessages
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
@@ -15,20 +12,23 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder.KnoraContentV2
+import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
+import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
+import org.knora.webapi.messages.v2.responder.KnoraRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.messages.v2.responder.{
-  KnoraContentV2,
-  KnoraJsonLDRequestReaderV2,
-  KnoraJsonLDResponseV2,
-  KnoraRequestV2
-}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
+import java.time.Instant
+import java.util.UUID
 import scala.collection.immutable.SortedSet
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.

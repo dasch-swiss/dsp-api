@@ -11,13 +11,13 @@ object RedisTestContainer {
   /**
    * A functional effect that initiates a Redis Testcontainer
    */
-  val aquireRedisTestContainer: Task[GenericContainer[Nothing]] = ZIO.attemptBlocking {
+  val acquireRedisTestContainer: Task[GenericContainer[Nothing]] = ZIO.attemptBlocking {
     val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
     val container                       = new GenericContainer(RedisImageName)
     container.withExposedPorts(6379)
     container.start()
     container
-  }.orDie.tap(_ => ZIO.debug(">>> aquireRedisTestContainer executed <<<"))
+  }.orDie.tap(_ => ZIO.debug(">>> acquireRedisTestContainer executed <<<"))
 
   def releaseRedisTestContainer(container: GenericContainer[Nothing]): URIO[Any, Unit] = ZIO.attemptBlocking {
     container.stop()
@@ -26,7 +26,7 @@ object RedisTestContainer {
   val layer: ZLayer[Any, Nothing, RedisTestContainer] = {
     ZLayer.scoped {
       for {
-        tc <- ZIO.acquireRelease(aquireRedisTestContainer)(releaseRedisTestContainer(_)).orDie
+        tc <- ZIO.acquireRelease(acquireRedisTestContainer)(releaseRedisTestContainer(_)).orDie
       } yield RedisTestContainer(tc)
     }.tap(_ => ZIO.debug(">>> Redis Test Container Initialized <<<"))
   }

@@ -5,37 +5,63 @@
 
 package org.knora.webapi
 
-import java.nio.file.{Files, Path, Paths}
-
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
+import akka.actor.Props
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.app.{ApplicationActor, LiveManagers}
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
+import org.knora.webapi.core.Logging
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import org.knora.webapi.feature.TestFeatureFactoryConfig
 import org.knora.webapi.http.handler
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.app.appmessages.AppStart
+import org.knora.webapi.messages.app.appmessages.AppStop
+import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import org.knora.webapi.util.{FileUtil, StartupUtils}
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.settings._
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.testcontainers.SipiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.StartupUtils
+import org.scalatest.BeforeAndAfterAll
+import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.{BeforeAndAfterAll, Suite}
+import zio.&
+import zio.Runtime
+import zio.RuntimeConfig
+import zio.ZEnvironment
+import zio.ZIO
+import zio.ZLayer
 
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.language.postfixOps
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -53,7 +79,7 @@ class R2RSpec
   /* needed by the core trait */
   implicit lazy val _system: ActorSystem = ActorSystem(
     actorSystemNameFrom(getClass),
-    TestContainersAll.PortConfig.withFallback(
+    TestContainerFuseki.PortConfig.withFallback(
       ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())
     )
   )
@@ -79,10 +105,50 @@ class R2RSpec
 
   implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-  lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME
-  )
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+
+  // The effect for building a cache service manager and a IIIF service manager.
+  lazy val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
+
+  /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      AppConfigForTestContainers.testcontainers,
+      JWTService.layer,
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
+    )
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
+
+  // start the Application Actor
+  lazy val appActor: ActorRef =
+    system.actorOf(
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      name = APPLICATION_MANAGER_ACTOR_NAME
+    )
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
@@ -114,6 +180,14 @@ class R2RSpec
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
 
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
+    runtime.unsafeRunTask(
+      (for {
+        testClient <- ZIO.service[TestClientService]
+        result     <- testClient.loadTestData(rdfDataObjects)
+      } yield result).provide(TestClientService.layer(appConfig, system))
+    )
+
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
     val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
@@ -128,19 +202,6 @@ class R2RSpec
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-  }
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
-
-    Await.result(
-      appActor ? LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser
-      ),
-      30 seconds
-    )
   }
 
   /**

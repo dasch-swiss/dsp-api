@@ -6,12 +6,14 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.{get, path}
+import akka.http.scaladsl.server.Directives.get
+import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.http.version.BuildInfo
-import spray.json.{JsObject, JsString}
+import spray.json.JsObject
+import spray.json.JsString
 
 import scala.concurrent.duration._
 

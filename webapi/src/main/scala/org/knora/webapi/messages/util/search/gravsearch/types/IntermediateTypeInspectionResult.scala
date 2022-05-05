@@ -8,7 +8,8 @@ package org.knora.webapi.messages.util.search.gravsearch.types
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 
 /**
  * Represents an intermediate result during type inspection. This is different from [[GravsearchTypeInspectionResult]]

@@ -1,12 +1,11 @@
 package org.knora.webapi.sharedtestdata
 
-import org.knora.webapi.messages.admin.responder.listsmessages.{
-  ListChildNodeADM,
-  ListChildNodeInfoADM,
-  ListRootNodeInfoADM,
-  NodePathElementADM
-}
-import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
+import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeInfoADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
+import org.knora.webapi.messages.admin.responder.listsmessages.NodePathElementADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 object SharedListsTestDataADM {
 

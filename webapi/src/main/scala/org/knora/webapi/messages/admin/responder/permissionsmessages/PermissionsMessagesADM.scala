@@ -7,15 +7,17 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 
 import java.util.UUID

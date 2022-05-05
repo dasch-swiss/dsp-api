@@ -5,17 +5,18 @@
 
 package org.knora.webapi.messages.util
 
-import java.util.{Calendar, Date, GregorianCalendar}
-
 import jodd.datetime.JDateTime
-import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.v1.responder.valuemessages.{
-  DateValueV1,
-  JulianDayNumberValueV1,
-  KnoraCalendarV1,
-  KnoraPrecisionV1
-}
+import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
+
+import java.util.Calendar
+import java.util.Date
+import java.util.GregorianCalendar
 
 /**
  * Utility functions for converting dates.
