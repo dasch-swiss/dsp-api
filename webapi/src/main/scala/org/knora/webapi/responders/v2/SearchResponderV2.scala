@@ -181,21 +181,22 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
     for {
-      countSparql <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .searchFulltext(
-                           searchTerms = searchTerms,
-                           limitToProject = limitToProject,
-                           limitToResourceClass = limitToResourceClass.map(_.toString),
-                           limitToStandoffClass = limitToStandoffClass.map(_.toString),
-                           returnFiles = false, // not relevant for a count query
-                           separator = None,    // no separator needed for count query
-                           limit = 1,
-                           offset = 0,
-                           countQuery = true // do  not get the resources themselves, but the sum of results
-                         )
-                         .toString()
-                     )
+      countSparql <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .searchFulltext(
+              searchTerms = searchTerms,
+              limitToProject = limitToProject,
+              limitToResourceClass = limitToResourceClass.map(_.toString),
+              limitToStandoffClass = limitToStandoffClass.map(_.toString),
+              returnFiles = false, // not relevant for a count query
+              separator = None,    // no separator needed for count query
+              limit = 1,
+              offset = 0,
+              countQuery = true // do  not get the resources themselves, but the sum of results
+            )
+            .toString()
+        )
 
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
@@ -244,21 +245,22 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     val searchTerms: LuceneQueryString = LuceneQueryString(searchValue)
 
     for {
-      searchSparql <- Future(
-                        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                          .searchFulltext(
-                            searchTerms = searchTerms,
-                            limitToProject = limitToProject,
-                            limitToResourceClass = limitToResourceClass.map(_.toString),
-                            limitToStandoffClass = limitToStandoffClass.map(_.toString),
-                            returnFiles = returnFiles,
-                            separator = Some(groupConcatSeparator),
-                            limit = settings.v2ResultsPerPage,
-                            offset = offset * settings.v2ResultsPerPage, // determine the actual offset
-                            countQuery = false
-                          )
-                          .toString()
-                      )
+      searchSparql <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .searchFulltext(
+              searchTerms = searchTerms,
+              limitToProject = limitToProject,
+              limitToResourceClass = limitToResourceClass.map(_.toString),
+              limitToStandoffClass = limitToStandoffClass.map(_.toString),
+              returnFiles = returnFiles,
+              separator = Some(groupConcatSeparator),
+              limit = settings.v2ResultsPerPage,
+              offset = offset * settings.v2ResultsPerPage, // determine the actual offset
+              countQuery = false
+            )
+            .toString()
+        )
 
       prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql))
                                                          .mapTo[SparqlSelectResult]
@@ -315,10 +317,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           )
 
           for {
-            searchResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                                 sparql = triplestoreSpecificQuery.toSparql,
-                                                                 featureFactoryConfig = featureFactoryConfig
-                                                               )).mapTo[SparqlExtendedConstructResponse]
+            searchResponse: SparqlExtendedConstructResponse <-
+              (storeManager ? SparqlExtendedConstructRequest(
+                sparql = triplestoreSpecificQuery.toSparql,
+                featureFactoryConfig = featureFactoryConfig
+              )).mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and value objects
             queryResultsSep: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -355,20 +358,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                orderByResourceIri = resourceIris,
-                                                pageSizeBeforeFiltering = resourceIris.size,
-                                                mappings = mappingsAsMap,
-                                                queryStandoff = queryStandoff,
-                                                calculateMayHaveMoreResults = true,
-                                                versionDate = None,
-                                                responderManager = responderManager,
-                                                settings = settings,
-                                                targetSchema = targetSchema,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                requestingUser = requestingUser
-                                              )
+      apiResponse: ReadResourcesSequenceV2 <-
+        ConstructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = resourceIris,
+          pageSizeBeforeFiltering = resourceIris.size,
+          mappings = mappingsAsMap,
+          queryStandoff = queryStandoff,
+          calculateMayHaveMoreResults = true,
+          versionDate = None,
+          responderManager = responderManager,
+          settings = settings,
+          targetSchema = targetSchema,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
 
     } yield apiResponse
   }
@@ -394,14 +398,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     for {
 
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(
-                                                                inputQuery.whereClause,
-                                                                requestingUser
-                                                              )
+      typeInspectionResult: GravsearchTypeInspectionResult <-
+        gravsearchTypeInspectionRunner.inspectTypes(
+          inputQuery.whereClause,
+          requestingUser
+        )
 
-      whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(
-                                                     inputQuery.whereClause
-                                                   )
+      whereClauseWithoutAnnotations: WhereClause =
+        GravsearchTypeInspectionUtil.removeTypeAnnotations(
+          inputQuery.whereClause
+        )
 
       // Validate schemas and predicates in the CONSTRUCT clause.
       _ = GravsearchQueryChecker.checkConstructClause(
@@ -419,15 +425,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           featureFactoryConfig = featureFactoryConfig
         )
 
-      nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
-                                                      inputQuery = inputQuery.copy(
-                                                        whereClause = whereClauseWithoutAnnotations,
-                                                        orderBy = Seq.empty[
-                                                          OrderCriterion
-                                                        ] // count queries do not need any sorting criteria
-                                                      ),
-                                                      transformer = nonTriplestoreSpecificConstructToSelectTransformer
-                                                    )
+      nonTriplestoreSpecificPrequery: SelectQuery =
+        QueryTraverser.transformConstructToSelect(
+          inputQuery = inputQuery.copy(
+            whereClause = whereClauseWithoutAnnotations,
+            orderBy = Seq.empty[
+              OrderCriterion
+            ] // count queries do not need any sorting criteria
+          ),
+          transformer = nonTriplestoreSpecificConstructToSelectTransformer
+        )
 
       // Convert the non-triplestore-specific query to a triplestore-specific one.
 
@@ -436,19 +443,22 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           simulateInference = nonTriplestoreSpecificConstructToSelectTransformer.useInference
         )
 
-      ontologiesForInferenceMaybe <- QueryTraverser.getOntologiesRelevantForInference(
-                                       inputQuery.whereClause,
-                                       storeManager
-                                     )
+      ontologiesForInferenceMaybe <-
+        QueryTraverser.getOntologiesRelevantForInference(
+          inputQuery.whereClause,
+          storeManager
+        )
 
-      triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
-                                        inputQuery = nonTriplestoreSpecificPrequery,
-                                        transformer = triplestoreSpecificQueryPatternTransformerSelect,
-                                        ontologiesForInferenceMaybe
-                                      )
+      triplestoreSpecificCountQuery =
+        QueryTraverser.transformSelectToSelect(
+          inputQuery = nonTriplestoreSpecificPrequery,
+          transformer = triplestoreSpecificQueryPatternTransformerSelect,
+          ontologiesForInferenceMaybe
+        )
 
-      countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
-                                             .mapTo[SparqlSelectResult]
+      countResponse: SparqlSelectResult <-
+        (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
+          .mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
       _ = if (countResponse.results.bindings.length != 1) {
@@ -484,13 +494,15 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       // Do type inspection and remove type annotations from the WHERE clause.
-      typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(
-                                                                inputQuery.whereClause,
-                                                                requestingUser
-                                                              )
-      whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(
-                                                     inputQuery.whereClause
-                                                   )
+      typeInspectionResult: GravsearchTypeInspectionResult <-
+        gravsearchTypeInspectionRunner.inspectTypes(
+          inputQuery.whereClause,
+          requestingUser
+        )
+      whereClauseWithoutAnnotations: WhereClause =
+        GravsearchTypeInspectionUtil.removeTypeAnnotations(
+          inputQuery.whereClause
+        )
 
       // Validate schemas and predicates in the CONSTRUCT clause.
       _ = GravsearchQueryChecker.checkConstructClause(
@@ -512,15 +524,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // TODO-old: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
       // TODO-old: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
-      ontologiesForInferenceMaybe <- QueryTraverser.getOntologiesRelevantForInference(
-                                       inputQuery.whereClause,
-                                       storeManager
-                                     )
-      nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
-                                                      inputQuery =
-                                                        inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
-                                                      transformer = nonTriplestoreSpecificConstructToSelectTransformer
-                                                    )
+      ontologiesForInferenceMaybe <-
+        QueryTraverser.getOntologiesRelevantForInference(
+          inputQuery.whereClause,
+          storeManager
+        )
+      nonTriplestoreSpecificPrequery: SelectQuery =
+        QueryTraverser.transformConstructToSelect(
+          inputQuery = inputQuery.copy(whereClause = whereClauseWithoutAnnotations),
+          transformer = nonTriplestoreSpecificConstructToSelectTransformer
+        )
 
       // variable representing the main resources
       mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.mainResourceVariable
@@ -533,27 +546,29 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       // Convert the preprocessed query to a non-triplestore-specific query.
 
-      triplestoreSpecificPrequery = QueryTraverser.transformSelectToSelect(
-                                      inputQuery = nonTriplestoreSpecificPrequery,
-                                      transformer = triplestoreSpecificQueryPatternTransformerSelect,
-                                      limitInferenceToOntologies = ontologiesForInferenceMaybe
-                                    )
+      triplestoreSpecificPrequery =
+        QueryTraverser.transformSelectToSelect(
+          inputQuery = nonTriplestoreSpecificPrequery,
+          transformer = triplestoreSpecificQueryPatternTransformerSelect,
+          limitInferenceToOntologies = ontologiesForInferenceMaybe
+        )
 
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
       _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
       start                        = System.currentTimeMillis()
       tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
-      prequeryResponseNotMerged <- (tryPrequeryResponseNotMerged match {
-                                     case Failure(exception) => {
-                                       exception match {
-                                         case timeoutException: TriplestoreTimeoutException =>
-                                           log.error(s"Gravsearch timed out for query: $inputQuery")
-                                       }
-                                       throw exception
-                                     }
-                                     case Success(value) => value
-                                   }).mapTo[SparqlSelectResult]
+      prequeryResponseNotMerged <-
+        (tryPrequeryResponseNotMerged match {
+          case Failure(exception) => {
+            exception match {
+              case timeoutException: TriplestoreTimeoutException =>
+                log.error(s"Gravsearch timed out for query: $inputQuery")
+            }
+            throw exception
+          }
+          case Success(value) => value
+        }).mapTo[SparqlSelectResult]
       duration = (System.currentTimeMillis() - start) / 1000.0
       _ =
         if (duration < 3) { // TODO-BL: figure out a sensible duration
@@ -564,16 +579,18 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       pageSizeBeforeFiltering: Int = prequeryResponseNotMerged.results.bindings.size
 
       // Merge rows with the same main resource IRI. This could happen if there are unbound variables in a UNION.
-      prequeryResponse = mergePrequeryResults(
-                           prequeryResponseNotMerged = prequeryResponseNotMerged,
-                           mainResourceVar = mainResourceVar
-                         )
+      prequeryResponse =
+        mergePrequeryResults(
+          prequeryResponseNotMerged = prequeryResponseNotMerged,
+          mainResourceVar = mainResourceVar
+        )
 
       // a sequence of resource IRIs that match the search criteria
       // attention: no permission checking has been done so far
-      mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map { resultRow: VariableResultsRow =>
-                                     resultRow.rowMap(mainResourceVar.variableName)
-                                   }
+      mainResourceIris: Seq[IRI] =
+        prequeryResponse.results.bindings.map { resultRow: VariableResultsRow =>
+          resultRow.rowMap(mainResourceVar.variableName)
+        }
 
       mainQueryResults: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
         if (mainResourceIris.nonEmpty) {
@@ -647,10 +664,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           log.debug(triplestoreSpecificMainQuerySparql)
 
           for {
-            mainQueryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                                    sparql = triplestoreSpecificMainQuerySparql,
-                                                                    featureFactoryConfig = featureFactoryConfig
-                                                                  )).mapTo[SparqlExtendedConstructResponse]
+            mainQueryResponse: SparqlExtendedConstructResponse <-
+              (storeManager ? SparqlExtendedConstructRequest(
+                sparql = triplestoreSpecificMainQuerySparql,
+                featureFactoryConfig = featureFactoryConfig
+              )).mapTo[SparqlExtendedConstructResponse]
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -849,21 +867,22 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           for {
             // Yes. Do a CONSTRUCT query to get the contents of those resources. If we're querying standoff, get
             // at most one page of standoff per text value.
-            resourceRequestSparql <- Future(
-                                       org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                         .getResourcePropertiesAndValues(
-                                           resourceIris = mainResourceIris,
-                                           preview = false,
-                                           withDeleted = false,
-                                           queryAllNonStandoff = true,
-                                           maybePropertyIri = None,
-                                           maybeVersionDate = None,
-                                           maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
-                                           maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
-                                           stringFormatter = stringFormatter
-                                         )
-                                         .toString()
-                                     )
+            resourceRequestSparql <-
+              Future(
+                org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                  .getResourcePropertiesAndValues(
+                    resourceIris = mainResourceIris,
+                    preview = false,
+                    withDeleted = false,
+                    queryAllNonStandoff = true,
+                    maybePropertyIri = None,
+                    maybeVersionDate = None,
+                    maybeStandoffMinStartIndex = maybeStandoffMinStartIndex,
+                    maybeStandoffMaxStartIndex = maybeStandoffMaxStartIndex,
+                    stringFormatter = stringFormatter
+                  )
+                  .toString()
+              )
 
             resourceRequestResponse: SparqlExtendedConstructResponse <-
               (storeManager ? SparqlExtendedConstructRequest(
@@ -892,24 +911,21 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               }
 
             // Construct a ReadResourceV2 for each resource that the user has permission to see.
-            readResourcesSequence: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                                mainResourcesAndValueRdfData =
-                                                                  mainResourcesAndValueRdfData,
-                                                                orderByResourceIri = mainResourceIris,
-                                                                pageSizeBeforeFiltering = mainResourceIris.size,
-                                                                mappings = mappings,
-                                                                queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
-                                                                versionDate = None,
-                                                                calculateMayHaveMoreResults = true,
-                                                                responderManager = responderManager,
-                                                                targetSchema =
-                                                                  resourcesInProjectGetRequestV2.targetSchema,
-                                                                settings = settings,
-                                                                featureFactoryConfig =
-                                                                  resourcesInProjectGetRequestV2.featureFactoryConfig,
-                                                                requestingUser =
-                                                                  resourcesInProjectGetRequestV2.requestingUser
-                                                              )
+            readResourcesSequence: ReadResourcesSequenceV2 <-
+              ConstructResponseUtilV2.createApiResponse(
+                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+                orderByResourceIri = mainResourceIris,
+                pageSizeBeforeFiltering = mainResourceIris.size,
+                mappings = mappings,
+                queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
+                versionDate = None,
+                calculateMayHaveMoreResults = true,
+                responderManager = responderManager,
+                targetSchema = resourcesInProjectGetRequestV2.targetSchema,
+                settings = settings,
+                featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig,
+                requestingUser = resourcesInProjectGetRequestV2.requestingUser
+              )
           } yield readResourcesSequence
         } else {
           FastFuture.successful(ReadResourcesSequenceV2(Vector.empty[ReadResourceV2]))
@@ -937,18 +953,19 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
-      countSparql <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .searchResourceByLabel(
-                           searchTerm = searchPhrase,
-                           limitToProject = limitToProject,
-                           limitToResourceClass = limitToResourceClass.map(_.toString),
-                           limit = 1,
-                           offset = 0,
-                           countQuery = true
-                         )
-                         .toString()
-                     )
+      countSparql <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .searchResourceByLabel(
+              searchTerm = searchPhrase,
+              limitToProject = limitToProject,
+              limitToResourceClass = limitToResourceClass.map(_.toString),
+              limit = 1,
+              offset = 0,
+              countQuery = true
+            )
+            .toString()
+        )
 
       countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
@@ -992,23 +1009,25 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
 
     for {
-      searchResourceByLabelSparql <- Future(
-                                       org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                         .searchResourceByLabel(
-                                           searchTerm = searchPhrase,
-                                           limitToProject = limitToProject,
-                                           limitToResourceClass = limitToResourceClass.map(_.toString),
-                                           limit = settings.v2ResultsPerPage,
-                                           offset = offset * settings.v2ResultsPerPage,
-                                           countQuery = false
-                                         )
-                                         .toString()
-                                     )
+      searchResourceByLabelSparql <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .searchResourceByLabel(
+              searchTerm = searchPhrase,
+              limitToProject = limitToProject,
+              limitToResourceClass = limitToResourceClass.map(_.toString),
+              limit = settings.v2ResultsPerPage,
+              offset = offset * settings.v2ResultsPerPage,
+              countQuery = false
+            )
+            .toString()
+        )
 
-      searchResourceByLabelResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                                          sparql = searchResourceByLabelSparql,
-                                                                          featureFactoryConfig = featureFactoryConfig
-                                                                        )).mapTo[SparqlExtendedConstructResponse]
+      searchResourceByLabelResponse: SparqlExtendedConstructResponse <-
+        (storeManager ? SparqlExtendedConstructRequest(
+          sparql = searchResourceByLabelSparql,
+          featureFactoryConfig = featureFactoryConfig
+        )).mapTo[SparqlExtendedConstructResponse]
 
       // collect the IRIs of main resources returned
       mainResourceIris: Set[IRI] =
@@ -1034,24 +1053,26 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         }
 
       // separate resources and value objects
-      mainResourcesAndValueRdfData = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
-                                       constructQueryResults = searchResourceByLabelResponse,
-                                       requestingUser = requestingUser
-                                     )
+      mainResourcesAndValueRdfData =
+        ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(
+          constructQueryResults = searchResourceByLabelResponse,
+          requestingUser = requestingUser
+        )
 
-      apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                orderByResourceIri = mainResourceIris.toSeq.sorted,
-                                                pageSizeBeforeFiltering = mainResourceIris.size,
-                                                queryStandoff = false,
-                                                versionDate = None,
-                                                calculateMayHaveMoreResults = true,
-                                                responderManager = responderManager,
-                                                targetSchema = targetSchema,
-                                                settings = settings,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                requestingUser = requestingUser
-                                              )
+      apiResponse: ReadResourcesSequenceV2 <-
+        ConstructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = mainResourceIris.toSeq.sorted,
+          pageSizeBeforeFiltering = mainResourceIris.size,
+          queryStandoff = false,
+          versionDate = None,
+          calculateMayHaveMoreResults = true,
+          responderManager = responderManager,
+          targetSchema = targetSchema,
+          settings = settings,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
 
     } yield apiResponse
   }

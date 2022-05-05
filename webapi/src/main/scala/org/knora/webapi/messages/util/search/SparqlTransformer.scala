@@ -241,7 +241,7 @@ object SparqlTransformer {
    * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
    *
    * @param statementPattern           the statement pattern.
-   * @param simulateInference          `true` if RDFS inference should be simulated using property path syntax.
+   * @param simulateInference          `true` if RDFS inference should be simulated on basis of the ontology cache.
    * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the statement pattern as expanded to work without inference.
    */
@@ -250,6 +250,7 @@ object SparqlTransformer {
     simulateInference: Boolean,
     limitInferenceToOntologies: Option[Set[SmartIri]] = None
   )(implicit executionContext: ExecutionContext): Seq[QueryPattern] = {
+
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val ontoCache: Cache.OntologyCacheData        = Await.result(Cache.getCacheData, 1.second)
 
@@ -264,6 +265,7 @@ object SparqlTransformer {
 
       case _ =>
         // Is the statement in KnoraExplicitNamedGraph?
+        // TODO-BL: see if explicit named graph is still needed, now that we don't support GraphDB anymore.
         statementPattern.namedGraph match {
           case Some(graphIri: IriRef)
               if graphIri.iri.toString == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph =>
@@ -290,9 +292,9 @@ object SparqlTransformer {
                         throw GravsearchException(s"The object of rdf:type must be an IRI, but $other was used")
                     }
 
-                    // look up child classes from ontology cache
+                    // look up subclasses from ontology cache
                     val superClasses = ontoCache.superClassOfRelations
-                    val knownChildClasses = superClasses
+                    val knownSubClasses = superClasses
                       .get(baseClassIri.iri)
                       .getOrElse({
                         Set(baseClassIri.iri)
@@ -300,27 +302,27 @@ object SparqlTransformer {
                       .toSeq
 
                     // if provided, limit the child classes to those that belong to relevant ontologies
-                    val relevantChildClasses = limitInferenceToOntologies match {
-                      case None => knownChildClasses
-                      case Some(ontologyIris) => {
-                        val ontoMap = ontoCache.classDefinedInOntology
-                        knownChildClasses.filter { child =>
-                          val childOntologyIriMaybe = ontoMap.get(child)
-                          childOntologyIriMaybe match {
-                            case Some(childOntologyIri) => ontologyIris.contains(childOntologyIri)
-                            case None                   => false
+                    val relevantSubClasses = limitInferenceToOntologies match {
+                      case None                       => knownSubClasses
+                      case Some(relevantOntologyIris) =>
+                        // filter the known subclasses against the relevant ontologies
+                        knownSubClasses.filter { subClass =>
+                          ontoCache.classDefinedInOntology.get(subClass) match {
+                            case Some(ontologyOfSubclass) =>
+                              // return true, if the ontology of the subclass is contained in the set of relevant ontologies; false otherwise
+                              relevantOntologyIris.contains(ontologyOfSubclass)
+                            case None => false // should never happen
                           }
                         }
-                      }
                     }
 
                     // if subclasses are available, create a union statement that searches for either the provided triple (`?v a <classIRI>`)
                     // or triples where the object is a subclass of the provided object (`?v a <subClassIRI>`)
                     // i.e. `{?v a <classIRI>} UNION {?v a <subClassIRI>}`
-                    if (relevantChildClasses.length > 1) {
+                    if (relevantSubClasses.length > 1) {
                       Seq(
                         UnionPattern(
-                          relevantChildClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
+                          relevantSubClasses.map(newObject => Seq(statementPattern.copy(obj = IriRef(newObject))))
                         )
                       )
                     } else {
@@ -330,9 +332,9 @@ object SparqlTransformer {
                   } else {
                     // No. Expand using rdfs:subPropertyOf*.
 
-                    // look up child properties from ontology cache
+                    // look up subproperties from ontology cache
                     val superProps = ontoCache.superPropertyOfRelations
-                    val knownChildProps = superProps
+                    val knownSubProps = superProps
                       .get(predIri)
                       .getOrElse({
                         Set(predIri)
@@ -340,29 +342,27 @@ object SparqlTransformer {
                       .toSeq
 
                     // if provided, limit the child properties to those that belong to relevant ontologies
-                    val relevantChildProps = limitInferenceToOntologies match {
-                      case None => knownChildProps
-                      case Some(ontologyIris) => {
-                        val ontoMap = ontoCache.propertyDefinedInOntology
-                        knownChildProps.filter { child =>
-                          val childOntologyIriMaybe = ontoMap.get(child)
-                          childOntologyIriMaybe match {
-                            case Some(childOntologyIri) => ontologyIris.contains(childOntologyIri)
-                            case None                   => false
+                    val relevantSubProps = limitInferenceToOntologies match {
+                      case None => knownSubProps
+                      case Some(ontologyIris) =>
+                        knownSubProps.filter { subProperty =>
+                          // filter the known subproperties against the relevant ontologies
+                          ontoCache.propertyDefinedInOntology.get(subProperty) match {
+                            case Some(childOntologyIri) =>
+                              // return true, if the ontology of the subproperty is contained in the set of relevant ontologies; false otherwise
+                              ontologyIris.contains(childOntologyIri)
+                            case None => false // should never happen
                           }
                         }
-                      }
                     }
 
                     // if subproperties are available, create a union statement that searches for either the provided triple (`?a <propertyIRI> ?b`)
                     // or triples where the predicate is a subproperty of the provided object (`?a <subPropertyIRI> ?b`)
                     // i.e. `{?a <propertyIRI> ?b} UNION {?a <subPropertyIRI> ?b}`
-                    if (relevantChildProps.length > 1) {
+                    if (relevantSubProps.length > 1) {
                       Seq(
                         UnionPattern(
-                          relevantChildProps.map(newPredicate =>
-                            Seq(statementPattern.copy(pred = IriRef(newPredicate)))
-                          )
+                          relevantSubProps.map(newPredicate => Seq(statementPattern.copy(pred = IriRef(newPredicate))))
                         )
                       )
                     } else {
