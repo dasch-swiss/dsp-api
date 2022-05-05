@@ -6,14 +6,15 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.feature.{Feature, FeatureFactory, FeatureFactoryConfig}
+import org.knora.webapi.feature.Feature
+import org.knora.webapi.feature.FeatureFactory
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.util.search.gravsearch.types.{
-  GravsearchTypeInspectionResult,
-  GravsearchTypeInspectionUtil,
-  TypeableEntity
-}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
+import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 

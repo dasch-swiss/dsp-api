@@ -13,8 +13,8 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 
-import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
+import scala.jdk.CollectionConverters._
 
 sealed trait JenaNode extends RdfNode {
   def node: jena.graph.Node

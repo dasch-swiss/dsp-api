@@ -6,10 +6,12 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import akka.util.Timeout
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.AsyncCoreSpec
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import java.util.UUID

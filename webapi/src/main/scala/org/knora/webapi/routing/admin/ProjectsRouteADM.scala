@@ -6,13 +6,17 @@
 package org.knora.webapi.routing.admin
 
 import akka.Done
-import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.headers.ContentDispositionTypes
+import akka.http.scaladsl.model.headers.`Content-Disposition`
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.IOResult
-import akka.stream.scaladsl.{FileIO, Source}
+import akka.stream.scaladsl.FileIO
+import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import io.swagger.annotations._
 import org.knora.webapi.IRI
@@ -21,7 +25,10 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 import zio.prelude.Validation
 
 import java.nio.file.Files

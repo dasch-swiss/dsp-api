@@ -5,16 +5,17 @@
 
 package org.knora.webapi.messages.v1.responder.standoffmessages
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import spray.json._
+
+import java.util.UUID
 
 /**
  * An abstract trait representing a Knora v1 API request message that can be sent to `StandoffResponderV1`.

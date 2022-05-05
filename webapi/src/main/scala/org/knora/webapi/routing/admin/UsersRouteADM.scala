@@ -6,7 +6,8 @@
 package org.knora.webapi.routing.admin
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{PathMatcher, Route}
+import akka.http.scaladsl.server.PathMatcher
+import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
@@ -15,7 +16,10 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProto
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 import zio.prelude.Validation
 
 import java.util.UUID

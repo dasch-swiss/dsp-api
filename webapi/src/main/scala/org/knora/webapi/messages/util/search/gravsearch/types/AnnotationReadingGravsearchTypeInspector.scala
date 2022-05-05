@@ -6,15 +6,15 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.GravsearchException
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
-import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.{
-  TypeAnnotationProperties,
-  TypeAnnotationProperty
-}
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperties
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil.TypeAnnotationProperty
 
 import scala.concurrent.Future
 

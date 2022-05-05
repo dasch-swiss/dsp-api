@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import java.time.Instant
-import java.util.UUID
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
@@ -15,26 +13,29 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectADM,
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

@@ -5,25 +5,28 @@
 
 package org.knora.webapi.messages.v1.responder.valuemessages
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException, NotImplementedException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.traits.Jsonable
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
+
+import java.time.Instant
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

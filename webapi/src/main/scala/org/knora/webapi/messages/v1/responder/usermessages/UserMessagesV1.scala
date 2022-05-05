@@ -5,17 +5,21 @@
 
 package org.knora.webapi.messages.v1.responder.usermessages
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

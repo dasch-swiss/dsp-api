@@ -49,7 +49,6 @@ import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 import java.time.Instant
 import java.util.UUID
-import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success

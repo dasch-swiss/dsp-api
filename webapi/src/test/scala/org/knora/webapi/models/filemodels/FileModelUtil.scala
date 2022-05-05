@@ -6,18 +6,18 @@
 package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.v2.responder.valuemessages.{
-  ArchiveFileValueContentV2,
-  AudioFileValueContentV2,
-  DocumentFileValueContentV2,
-  FileValueContentV2,
-  FileValueV2,
-  MovingImageFileValueContentV2,
-  StillImageFileValueContentV2,
-  TextFileValueContentV2
-}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.v2.responder.valuemessages.ArchiveFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.AudioFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
+import org.knora.webapi.messages.v2.responder.valuemessages.MovingImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
+import org.knora.webapi.messages.v2.responder.valuemessages.TextFileValueContentV2
 
 object FileModelUtil {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

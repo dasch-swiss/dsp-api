@@ -6,14 +6,16 @@
 package org.knora.webapi.app
 
 import akka.actor.Terminated
-import org.knora.webapi.messages.app.appmessages.AppStart
-
-import zio.config.typesafe.TypesafeConfig
-import com.typesafe.config.ConfigFactory
+import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-
-import zio._
 import org.knora.webapi.core.Logging
+import org.knora.webapi.messages.app.appmessages.AppStart
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import zio._
+
 import java.util.concurrent.TimeUnit
 
 /**
@@ -23,11 +25,32 @@ import java.util.concurrent.TimeUnit
  */
 object Main extends scala.App with LiveCore {
 
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+
+  // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
+  val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
+
   /**
-   * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable to load
-   * the Typesafe-Config format.
+   * Create both managers by unsafe running them.
    */
-  val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.config)
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            CacheServiceInMemImpl.layer,
+            CacheServiceManager.layer,
+            AppConfig.live,
+            IIIFServiceManager.layer,
+            IIIFServiceSipiImpl.layer,
+            JWTService.layer
+          )
+      )
 
   /**
    * Start server initialisation

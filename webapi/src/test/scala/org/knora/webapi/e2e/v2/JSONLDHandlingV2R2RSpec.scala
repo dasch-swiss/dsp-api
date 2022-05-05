@@ -5,9 +5,6 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.net.URLEncoder
-import java.nio.file.Paths
-
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
@@ -18,6 +15,8 @@ import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import spray.json._
 
+import java.net.URLEncoder
+import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
 
 /**

@@ -9,12 +9,10 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v2.responder.listsmessages.{
-  ListGetRequestV2,
-  ListGetResponseV2,
-  NodeGetRequestV2,
-  NodeGetResponseV2
-}
+import org.knora.webapi.messages.v2.responder.listsmessages.ListGetRequestV2
+import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
+import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
+import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._

@@ -6,12 +6,15 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.Props
+import org.knora.webapi.IntegrationSpec
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.TestContainerFuseki
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
-import org.knora.webapi.{IntegrationSpec, InternalSchema, TestContainerFuseki}
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].

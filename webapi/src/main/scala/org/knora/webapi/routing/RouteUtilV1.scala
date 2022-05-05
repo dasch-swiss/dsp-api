@@ -8,32 +8,37 @@ package org.knora.webapi.routing
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.{RequestContext, RouteResult}
+import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{BadRequestException, SipiException, UnexpectedMessageException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.SipiException
+import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.v1.responder.valuemessages.{
-  ArchiveFileValueV1,
-  AudioFileValueV1,
-  DocumentFileValueV1,
-  FileValueV1,
-  MovingImageFileValueV1,
-  StillImageFileValueV1,
-  TextFileValueV1
-}
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
+import org.knora.webapi.messages.v1.responder.valuemessages.ArchiveFileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.AudioFileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.DocumentFileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.FileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.MovingImageFileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.TextFileValueV1
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.settings.KnoraSettingsImpl
-import spray.json.{JsNumber, JsObject}
+import spray.json.JsNumber
+import spray.json.JsObject
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 /**

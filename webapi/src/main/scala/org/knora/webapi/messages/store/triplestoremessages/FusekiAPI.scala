@@ -6,7 +6,9 @@
 package org.knora.webapi.messages.store.triplestoremessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
+import spray.json.DefaultJsonProtocol
+import spray.json.JsonFormat
+import spray.json.RootJsonFormat
 
 /**
  * Represents a response from Fuseki about the state of the Fuseki server.

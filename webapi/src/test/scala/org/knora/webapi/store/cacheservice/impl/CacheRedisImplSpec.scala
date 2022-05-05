@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.cacheservice.impl
 
-import org.knora.webapi.TestContainerRedis
-import org.knora.webapi.UnitSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -15,7 +13,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cacheservice.api.CacheService
 import org.knora.webapi.store.cacheservice.config.RedisTestConfig
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.testcontainers.RedisTestContainer
 import zio._
 import zio.test.Assertion._

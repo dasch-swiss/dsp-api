@@ -10,12 +10,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.{E2ESpec, IRI}
 
 import scala.concurrent.duration._
 

@@ -1,8 +1,8 @@
 package org.knora.webapi.store.cacheservice.config
 
-import zio._
 import org.knora.webapi.store.cacheservice.config.RedisConfig
 import org.knora.webapi.testcontainers.RedisTestContainer
+import zio._
 
 object RedisTestConfig {
   val hardcoded: ULayer[RedisConfig] = ZLayer.succeed(RedisConfig("localhost", 6379))

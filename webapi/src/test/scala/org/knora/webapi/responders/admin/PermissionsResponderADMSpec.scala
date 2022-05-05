@@ -5,26 +5,35 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.DuplicateValueException
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.NotFoundException
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.PermissionUtilADM
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
-import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.cache.CacheUtil
 import org.scalatest.PrivateMethodTester
 
+import java.util.UUID
 import scala.collection.Map
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 object PermissionsResponderADMSpec {
 

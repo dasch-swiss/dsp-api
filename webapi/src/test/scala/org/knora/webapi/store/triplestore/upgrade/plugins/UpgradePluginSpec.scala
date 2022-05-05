@@ -5,11 +5,12 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import java.io.{BufferedInputStream, FileInputStream}
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
+
+import java.io.BufferedInputStream
+import java.io.FileInputStream
 
 /**
  * Provides helper methods for specs that test upgrade plugins.

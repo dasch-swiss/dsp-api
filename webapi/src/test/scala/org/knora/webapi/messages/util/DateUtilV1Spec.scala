@@ -5,19 +5,18 @@
 
 package org.knora.webapi.util
 
-import java.util.{Calendar, GregorianCalendar}
-
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.DateUtilV1.DateRange
-import org.knora.webapi.messages.v1.responder.valuemessages.{
-  DateValueV1,
-  JulianDayNumberValueV1,
-  KnoraCalendarV1,
-  KnoraPrecisionV1
-}
+import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+
+import java.util.Calendar
+import java.util.GregorianCalendar
 
 /**
  * Tests [[DateUtilV1]].

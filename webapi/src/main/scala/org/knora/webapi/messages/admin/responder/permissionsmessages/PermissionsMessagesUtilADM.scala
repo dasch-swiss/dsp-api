@@ -6,16 +6,15 @@
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{ApplicationCacheException, BadRequestException}
+import org.knora.webapi.exceptions.ApplicationCacheException
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.{
-  ChangeRightsPermission,
-  DeletePermission,
-  EntityPermissionAbbreviations,
-  ModifyPermission,
-  RestrictedViewPermission,
-  ViewPermission
-}
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.ChangeRightsPermission
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.DeletePermission
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.ModifyPermission
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.RestrictedViewPermission
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.ViewPermission
 import org.knora.webapi.util.cache.CacheUtil
 
 /**

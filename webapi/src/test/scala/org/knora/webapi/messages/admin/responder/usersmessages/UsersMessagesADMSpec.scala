@@ -5,11 +5,13 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionProfileType, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
