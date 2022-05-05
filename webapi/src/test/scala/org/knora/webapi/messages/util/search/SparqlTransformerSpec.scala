@@ -19,10 +19,10 @@ class SparqlTransformerSpec extends CoreSpec() {
 
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val thingIRI = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri
-  private val blueThingIRI = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
+  private val thingIRI         = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri
+  private val blueThingIRI     = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
   private val hasOtherThingIRI = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
-  private val hasTextIRI = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri
+  private val hasTextIRI       = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri
 
   "SparqlTransformer" should {
 
