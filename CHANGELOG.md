@@ -1,5 +1,17 @@
 # Changelog
 
+### [20.2.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.2.0...v20.2.1) (2022-05-05)
+
+
+### Bug Fixes
+
+* **projectsADM:** fix cache issue in getSingleProjectADM ([#2054](https://www.github.com/dasch-swiss/dsp-api/issues/2054)) ([77bfadc](https://www.github.com/dasch-swiss/dsp-api/commit/77bfadc8b3cc9e92bc5bde10155104043cd979e2))
+
+
+### Maintenance
+
+* **IIIFService:** zio-fying iiif service (DEV-801) ([#2044](https://www.github.com/dasch-swiss/dsp-api/issues/2044)) ([224b664](https://www.github.com/dasch-swiss/dsp-api/commit/224b6649aa68379bca7531679f5d1b824500b02c))
+
 ## [20.2.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.1.1...v20.2.0) (2022-04-28)
 
 
