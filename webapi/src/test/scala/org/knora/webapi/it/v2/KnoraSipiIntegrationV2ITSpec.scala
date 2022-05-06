@@ -413,8 +413,6 @@ class KnoraSipiIntegrationV2ITSpec
       loginToken = lr.token
 
       loginToken.nonEmpty should be(true)
-
-      logger.debug("token: {}", loginToken)
     }
 
     "create a resource with a still image file" in {
