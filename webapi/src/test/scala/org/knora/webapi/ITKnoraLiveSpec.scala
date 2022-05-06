@@ -46,7 +46,6 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 import zio.&
 import zio.Runtime
-import zio.RuntimeConfig
 import zio.ZEnvironment
 import zio.ZIO
 import zio.ZLayer
@@ -106,7 +105,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
   // The ZIO runtime used to run functional effects
-  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   /**
    * The effect for building a cache service manager, a IIIF service manager,

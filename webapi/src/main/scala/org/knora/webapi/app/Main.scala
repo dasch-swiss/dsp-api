@@ -25,8 +25,12 @@ import java.util.concurrent.TimeUnit
  */
 object Main extends scala.App with LiveCore {
 
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+  /**
+   * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be
+   * allocated immediately, and not released until the `Runtime` is shut down or
+   * the end of the application.
+   */
+  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
   val managers = for {
