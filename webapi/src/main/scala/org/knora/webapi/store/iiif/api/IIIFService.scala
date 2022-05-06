@@ -9,7 +9,9 @@ import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import zio._
+import zio.macros.accessible
 
+@accessible
 trait IIIFService {
 
   /**
@@ -50,5 +52,3 @@ trait IIIFService {
    */
   def getStatus(): Task[IIIFServiceStatusResponse]
 }
-
-object IIIFService extends Accessible[IIIFService]

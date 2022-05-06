@@ -300,7 +300,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
   }
 }
 
-object TestClientService extends Accessible[TestClientService] {
+object TestClientService {
 
   /**
    * Acquires a configured httpClient, backed by a connection pool,

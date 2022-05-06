@@ -52,7 +52,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AsyncWordSpecLike
 import zio.&
 import zio.Runtime
-import zio.RuntimeConfig
 import zio.ZEnvironment
 import zio.ZIO
 import zio.ZLayer
@@ -117,7 +116,7 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
   // The ZIO runtime used to run functional effects
-  val runtime = Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.fromInfo)
+  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   // The effect for building a cache service manager and a IIIF service manager.
   val managers = for {

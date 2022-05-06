@@ -133,7 +133,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / exportJars := true
   )
   .settings(
-    scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
+    scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package", "-Ymacro-annotations"),
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
