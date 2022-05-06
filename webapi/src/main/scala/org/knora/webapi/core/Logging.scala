@@ -12,14 +12,14 @@ object Logging {
   val textFormat: LogFormat =
     timestamp.fixed(32).color(LogColor.BLUE) |-| level.highlight.fixed(14) |-| line.highlight
 
-  val fromDebug: ZLayer[Any,Nothing,Unit] = {
+  val fromDebug: ZLayer[Any, Nothing, Unit] = {
     console(
       logLevel = LogLevel.Debug,
       format = textFormat
     )
   }
 
-  val fromInfo: ZLayer[Any,Nothing,Unit] = {
+  val fromInfo: ZLayer[Any, Nothing, Unit] = {
     console(
       logLevel = LogLevel.Info,
       format = textFormat
