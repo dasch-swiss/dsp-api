@@ -8,7 +8,7 @@ import scala.concurrent.duration.FiniteDuration
 
 object AppConfigSpec extends ZIOSpec[AppConfig] {
 
-  val layer = ZLayer.make[AppConfig](AppConfig.live)
+  val bootstrap = ZLayer.make[AppConfig](AppConfig.live)
 
   def spec = suite("ApplicationConfigSpec")(
     test("successfully provide the application configuration") {
