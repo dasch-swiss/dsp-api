@@ -194,7 +194,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
     case HelloTriplestore(msg: String) if msg == settings.triplestoreType =>
       sender() ! HelloTriplestore(settings.triplestoreType)
-    case CheckTriplestoreRequest() => try2Message(sender(), checkTriplestore(), log)
+    case CheckTriplestoreRequest() => try2Message(sender(), checkFusekiTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
       try2Message(sender(), Success(SparqlUpdateResponse()), log)
     case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
@@ -564,12 +564,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   }
 
   /**
-   * Checks connection to the triplestore.
-   */
-  private def checkTriplestore(): Try[CheckTriplestoreResponse] = checkFusekiTriplestore()
-
-  /**
-   * Checks the Fuseki triplestore if it is available and configured correctly. If the it is not
+   * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure (initialize) the required dataset.
    */
   private def checkFusekiTriplestore(afterAutoInit: Boolean = false): Try[CheckTriplestoreResponse] = {
