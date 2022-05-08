@@ -26,9 +26,11 @@ import java.util.concurrent.TimeUnit
 object Main extends scala.App with LiveCore {
 
   /**
-   * Creates a default `Runtime`.
+   * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be
+   * allocated immediately, and not released until the `Runtime` is shut down or
+   * the end of the application.
    */
-  val runtime = Runtime.default
+  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
   val managers = for {
@@ -38,7 +40,7 @@ object Main extends scala.App with LiveCore {
   } yield (csm, iiifsm, appConfig)
 
   /**
-   * Create all managers and the config by unsafe running them.
+   * Create both managers by unsafe running them.
    */
   val (cacheServiceManager, iiifServiceManager, appConfig) =
     runtime
@@ -50,8 +52,7 @@ object Main extends scala.App with LiveCore {
             AppConfig.live,
             IIIFServiceManager.layer,
             IIIFServiceSipiImpl.layer,
-            JWTService.layer,
-            Logging.fromInfo
+            JWTService.layer
           )
       )
 

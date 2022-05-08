@@ -26,9 +26,11 @@ import scala.util.Try
 object ActorUtil {
 
   /**
-   * Creates a default `Runtime`.
+   * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be
+   * allocated immediately, and not released until the `Runtime` is shut down or
+   * the end of the application.
    */
-  private val runtime = Runtime.default
+  private val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
@@ -44,9 +46,7 @@ object ActorUtil {
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
     runtime
       .unsafeRunTask(
-        zioTask
-          .foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
-          .provide(Logging.fromInfo)
+        zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
       )
 
   /**
