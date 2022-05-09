@@ -5,8 +5,6 @@
 
 package org.knora.webapi.util
 
-import java.nio.file.Paths
-
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.knora.webapi._
@@ -15,11 +13,14 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
-import org.knora.webapi.responders.v2.{ResourcesResponderV2SpecFullData, ResourcesResponseCheckerV2}
+import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
+import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
+import java.nio.file.Paths
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
  * Tests [[ConstructResponseUtilV2]].

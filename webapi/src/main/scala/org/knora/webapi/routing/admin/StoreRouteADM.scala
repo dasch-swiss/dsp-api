@@ -8,15 +8,16 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
-import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.storesmessages.{
-  ResetTriplestoreContentRequestADM,
-  StoresADMJsonProtocol
-}
+import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
+import org.knora.webapi.messages.admin.responder.storesmessages.StoresADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 
+import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.concurrent.duration._
 

@@ -28,7 +28,6 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByProjectRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.responders.IriLocker
@@ -248,6 +247,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           } else {
             log.debug("getSingleProjectADM - could not retrieve project: {}", identifier.value)
           }
+
+        _ = storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser)
 
       } yield maybeProjectADM
     }

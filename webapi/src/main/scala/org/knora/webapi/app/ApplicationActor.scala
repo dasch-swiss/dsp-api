@@ -20,9 +20,7 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import kamon.Kamon
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
@@ -35,8 +33,6 @@ import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
@@ -63,73 +59,16 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
 import org.knora.webapi.store.StoreManager
 import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
-import zio.Runtime
-import zio.ZIO
-import zio.config.typesafe.TypesafeConfig
-import zio.stm.TRef
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
-import org.knora.webapi.store.cacheservice.config.RedisConfig
-import zio.ZEnvironment
-import zio.RuntimeConfig
-import org.knora.webapi.core.Logging
-
-trait Managers {
-  implicit val system: ActorSystem
-  val responderManager: ActorRef
-  val storeManager: ActorRef
-}
-
-trait LiveManagers extends Managers {
-  this: Actor =>
-
-  /**
-   * Initializing the cache service manager, which is a ZLayer,
-   * by unsafe running it.
-   */
-  lazy val cacheServiceManager: CacheServiceManager =
-    Runtime(ZEnvironment.empty, RuntimeConfig.default @@ Logging.live)
-      .unsafeRun(
-        (for (manager <- ZIO.service[CacheServiceManager])
-          yield manager).provide(CacheServiceInMemImpl.layer, CacheServiceManager.layer)
-      )
-
-  /**
-   * The actor that forwards messages to actors that deal with persistent storage.
-   */
-  lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, csm = cacheServiceManager) with LiveActorMaker)
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = StoreManagerActorName
-  )
-
-  /**
-   * The actor that forwards messages to responder actors to handle API requests.
-   */
-  lazy val responderManager: ActorRef = context.actorOf(
-    Props(
-      new ResponderManager(
-        appActor = self,
-        responderData = ResponderData(
-          system = context.system,
-          appActor = self,
-          knoraSettings = KnoraSettings(system),
-          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
-        )
-      ) with LiveActorMaker
-    )
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = RESPONDER_MANAGER_ACTOR_NAME
-  )
-}
 
 /**
  * This is the first actor in the application. All other actors are children
@@ -139,8 +78,15 @@ trait LiveManagers extends Managers {
  * the startup and shutdown sequence. Further, it forwards any messages meant
  * for responders or the store to the respective actor.
  */
-class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
-  this: Managers =>
+class ApplicationActor(
+  cacheServiceManager: CacheServiceManager,
+  iiifServiceManager: IIIFServiceManager,
+  appConfig: AppConfig
+) extends Actor
+    with Stash
+    with LazyLogging
+    with AroundDirectives
+    with Timers {
 
   logger.debug("entered the ApplicationManager constructor")
 
@@ -182,6 +128,34 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   private val routeData = KnoraRouteData(
     system = system,
     appActor = self
+  )
+
+  /**
+   * The actor that forwards messages to responder actors to handle API requests.
+   */
+  lazy val responderManager: ActorRef = context.actorOf(
+    Props(
+      new ResponderManager(
+        appActor = self,
+        responderData = ResponderData(
+          system = context.system,
+          appActor = self,
+          knoraSettings = KnoraSettings(system),
+          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+        )
+      ) with LiveActorMaker
+    )
+      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = RESPONDER_MANAGER_ACTOR_NAME
+  )
+
+  /**
+   * The actor that forwards messages to actors that deal with persistent storage.
+   */
+  lazy val storeManager: ActorRef = context.actorOf(
+    Props(new StoreManager(self, cacheServiceManager, iiifServiceManager, appConfig) with LiveActorMaker)
+      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = StoreManagerActorName
   )
 
   /**
@@ -443,7 +417,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {
-        case MissingLastModificationDateOntologyException(message, _) =>
+        case MissingLastModificationDateOntologyException(_, _) =>
           logger.info("Application stopped because of loading ontology into the cache failed.")
           appStop()
         case _ => throw ex

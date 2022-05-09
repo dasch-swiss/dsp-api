@@ -12,7 +12,6 @@ import akka.actor.Props
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.core.ActorMaker
-import org.knora.webapi.exceptions.UnsupportedTriplestoreException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
 import org.knora.webapi.messages.util.FakeTriplestore

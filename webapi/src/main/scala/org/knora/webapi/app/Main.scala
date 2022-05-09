@@ -6,14 +6,16 @@
 package org.knora.webapi.app
 
 import akka.actor.Terminated
-import org.knora.webapi.messages.app.appmessages.AppStart
-
-import zio.config.typesafe.TypesafeConfig
-import com.typesafe.config.ConfigFactory
+import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-
-import zio._
 import org.knora.webapi.core.Logging
+import org.knora.webapi.messages.app.appmessages.AppStart
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import zio._
+
 import java.util.concurrent.TimeUnit
 
 /**
@@ -24,10 +26,35 @@ import java.util.concurrent.TimeUnit
 object Main extends scala.App with LiveCore {
 
   /**
-   * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable to load
-   * the Typesafe-Config format.
+   * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be
+   * allocated immediately, and not released until the `Runtime` is shut down or
+   * the end of the application.
    */
-  val config = TypesafeConfig.fromTypesafeConfig(ConfigFactory.load().getConfig("app"), AppConfig.config)
+  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
+
+  // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
+  val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, appConfig)
+
+  /**
+   * Create both managers by unsafe running them.
+   */
+  val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            CacheServiceInMemImpl.layer,
+            CacheServiceManager.layer,
+            AppConfig.live,
+            IIIFServiceManager.layer,
+            IIIFServiceSipiImpl.layer,
+            JWTService.layer
+          )
+      )
 
   /**
    * Start server initialisation

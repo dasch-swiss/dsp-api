@@ -5,12 +5,12 @@
 
 package org.knora.webapi.messages.util
 
-import java.nio.file.{Files, Path}
-
 import akka.event.LoggingAdapter
 import org.apache.commons.io.FileUtils
 import org.knora.webapi.util.FileUtil
 
+import java.nio.file.Files
+import java.nio.file.Path
 import scala.jdk.CollectionConverters._
 
 /**

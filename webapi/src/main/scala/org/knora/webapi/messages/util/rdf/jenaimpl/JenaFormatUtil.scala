@@ -5,14 +5,18 @@
 
 package org.knora.webapi.messages.util.rdf.jenaimpl
 
-import java.io.{InputStream, OutputStream, StringReader, StringWriter}
-
 import org.apache.jena
 import org.knora.webapi.IRI
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
-import scala.util.{Failure, Success, Try}
+import java.io.InputStream
+import java.io.OutputStream
+import java.io.StringReader
+import java.io.StringWriter
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].

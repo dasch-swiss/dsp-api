@@ -5,14 +5,18 @@
 
 package org.knora.webapi.store.cacheservice.api
 
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
 import zio._
-import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
-import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceStatusResponse}
+import zio.macros.accessible
 
 /**
  * Cache Service Interface
  */
+@accessible
 trait CacheService {
   def putUserADM(value: UserADM): Task[Unit]
   def getUserADM(identifier: UserIdentifierADM): Task[Option[UserADM]]
@@ -44,4 +48,3 @@ trait CacheService {
  *     } yield ()
  * }}}
  */
-object CacheService extends Accessible[CacheService]

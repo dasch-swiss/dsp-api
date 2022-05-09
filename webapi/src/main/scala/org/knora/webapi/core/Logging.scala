@@ -1,27 +1,28 @@
 package org.knora.webapi.core
 
-import zio.logging._
-import zio.logging.backend.SLF4J._
-import zio.logging.backend.SLF4J
 import zio.LogLevel
-import zio.RuntimeConfigAspect
+import zio.logging.LogFormat._
+import zio.logging._
+import zio.ZLayer
 
 object Logging {
   val logFormat             = "[correlation-id = %s] %s"
   def generateCorrelationId = Some(java.util.UUID.randomUUID())
 
-  val live: RuntimeConfigAspect = {
-    SLF4J.slf4j(
+  val textFormat: LogFormat =
+    timestamp.fixed(32).color(LogColor.BLUE) |-| level.highlight.fixed(14) |-| line.highlight
+
+  val fromDebug: ZLayer[Any, Nothing, Unit] = {
+    console(
       logLevel = LogLevel.Debug,
-      format = LogFormat.default,
-      _ => "dsp"
+      format = textFormat
     )
   }
 
-  val console: RuntimeConfigAspect = {
-    zio.logging.console(
+  val fromInfo: ZLayer[Any, Nothing, Unit] = {
+    console(
       logLevel = LogLevel.Info,
-      format = LogFormat.default
+      format = textFormat
     )
   }
 

@@ -5,11 +5,12 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import java.io.{StringReader, StringWriter}
-
-import javax.xml.transform.stream.StreamSource
 import net.sf.saxon.s9api.XsltExecutable
 import org.knora.webapi.exceptions.StandoffConversionException
+
+import java.io.StringReader
+import java.io.StringWriter
+import javax.xml.transform.stream.StreamSource
 
 object XMLUtil {
 

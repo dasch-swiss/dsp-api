@@ -5,37 +5,28 @@
 
 package org.knora.webapi.routing.v1
 
-import java.io._
-import java.nio.charset.StandardCharsets
-import java.time.Instant
-import java.util.UUID
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{
-  AssertionException,
-  BadRequestException,
-  ForbiddenException,
-  InconsistentRepositoryDataException
-}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.ForbiddenException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.sipimessages.{GetFileMetadataRequest, GetFileMetadataResponse}
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
+import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.twirl.ResourceHtmlView
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
@@ -43,15 +34,30 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.{ActorUtil, FileUtil}
-import org.w3c.dom.ls.{LSInput, LSResourceResolver}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV1
+import org.knora.webapi.util.ActorUtil
+import org.knora.webapi.util.FileUtil
+import org.w3c.dom.ls.LSInput
+import org.w3c.dom.ls.LSResourceResolver
 import org.xml.sax.SAXException
 
+import java.io._
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.UUID
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.Schema
+import javax.xml.validation.SchemaFactory
+import javax.xml.validation.Validator
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 import scala.xml._
 
 /**
@@ -324,12 +330,12 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         file: Option[FileValueV1] <- apiRequest.file match {
                                        case Some(filename) =>
                                          // Ask Sipi about the file's metadata.
-                                         val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+                                         val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, filename)
 
                                          for {
                                            fileMetadataResponse: GetFileMetadataResponse <-
                                              (storeManager ? GetFileMetadataRequest(
-                                               fileUrl = tempFileUrl,
+                                               filePath = tempFilePath,
                                                requestingUser = userADM
                                              )).mapTo[GetFileMetadataResponse]
                                          } yield Some(
@@ -385,11 +391,11 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         convertedFile <- resourceRequest.file match {
                            case Some(filename) =>
                              // Ask Sipi about the file's metadata.
-                             val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, filename)
+                             val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, filename)
 
                              for {
                                fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                                                                                  fileUrl = tempFileUrl,
+                                                                                  filePath = tempFilePath,
                                                                                   requestingUser = userProfile
                                                                                 )).mapTo[GetFileMetadataResponse]
                              } yield Some(

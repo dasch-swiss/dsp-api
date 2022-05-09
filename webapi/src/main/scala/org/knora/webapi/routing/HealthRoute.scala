@@ -6,13 +6,17 @@
 package org.knora.webapi.routing
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.{get, path}
+import akka.http.scaladsl.server.Directives.get
+import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.app.appmessages.{AppState, AppStates, GetAppState}
-import spray.json.{JsObject, JsString}
+import org.knora.webapi.messages.app.appmessages.AppState
+import org.knora.webapi.messages.app.appmessages.AppStates
+import org.knora.webapi.messages.app.appmessages.GetAppState
+import spray.json.JsObject
+import spray.json.JsString
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

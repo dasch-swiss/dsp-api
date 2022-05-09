@@ -10,7 +10,6 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.valueObjects.GroupIRI.sf
 import zio.prelude.Validation
 
 import scala.util.matching.Regex

@@ -10,8 +10,9 @@ import sbt.{Def, _}
 
 object Dependencies {
 
-  val fusekiImage = "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml
-  val sipiImage   = "daschswiss/sipi:3.5.0"               // base image the knora-sipi image is created from
+  val fusekiImage =
+    "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
+  val sipiImage = "daschswiss/sipi:3.5.0" // base image the knora-sipi image is created from
 
   // versions
   val akkaHttpVersion   = "10.2.9"
@@ -19,21 +20,22 @@ object Dependencies {
   val jenaVersion       = "4.4.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
-  val ZioVersion        = "2.0.0-RC5"
+  val ZioVersion        = "2.0.0-RC6"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
-  val ZioConfigVersion  = "3.0.0-RC8"
+  val ZioConfigVersion  = "3.0.0-RC9"
   val ZioSchemaVersion  = "0.2.0-RC5"
-  val ZioLoggingVersion = "2.0.0-RC8"
+  val ZioLoggingVersion = "2.0.0-RC9"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC13"
 
   // ZIO - all Scala 3 compatible
   val zio               = "dev.zio" %% "zio"                 % ZioVersion
+  val zioMacros         = "dev.zio" %% "zio-macros"          % ZioVersion
   val zioHttp           = "io.d11"  %% "zhttp"               % ZioHttpVersion
   val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
   val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
-  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
+  val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
@@ -143,14 +145,16 @@ object Dependencies {
     zioConfigTypesafe,
     zioHttp,
     zioJson,
-    zioLoggingSlf4j,
+    zioLogging,
+    zioMacros,
     zioPrelude,
     zioTest    % Test,
     zioTestSbt % Test
   )
 
   val dspApiMainLibraryDependencies = Seq(
-    zio
+    zio,
+    zioMacros
   )
 
   val schemaApiLibraryDependencies = Seq(

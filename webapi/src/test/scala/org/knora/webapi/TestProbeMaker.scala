@@ -5,7 +5,9 @@
 
 package org.knora.webapi
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.Actor
+import akka.actor.ActorLogging
+import akka.actor.Props
 import akka.testkit.TestProbe
 import org.knora.webapi.core.ActorMaker
 

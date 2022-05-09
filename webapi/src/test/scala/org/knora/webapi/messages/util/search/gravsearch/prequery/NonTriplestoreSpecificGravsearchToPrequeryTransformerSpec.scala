@@ -8,12 +8,11 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
-import org.knora.webapi.messages.util.search.gravsearch.types.{
-  GravsearchTypeInspectionRunner,
-  GravsearchTypeInspectionUtil
-}
-import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString

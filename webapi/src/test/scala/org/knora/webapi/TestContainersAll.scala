@@ -5,14 +5,16 @@
 
 package org.knora.webapi
 
-import java.net.{NetworkInterface, UnknownHostException}
-
-import com.typesafe.config.{Config, ConfigFactory}
-import org.testcontainers.containers.{BindMode, GenericContainer}
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.http.version.BuildInfo
+import org.testcontainers.containers.BindMode
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
+import java.net.NetworkInterface
+import java.net.UnknownHostException
 import scala.jdk.CollectionConverters._
-import org.knora.webapi.http.version.BuildInfo
 
 /**
  * Provides all containers necessary for running tests.

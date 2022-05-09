@@ -6,7 +6,9 @@
 package org.knora.webapi.e2e
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives.{get, path, _}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Directives.get
+import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.exceptions._

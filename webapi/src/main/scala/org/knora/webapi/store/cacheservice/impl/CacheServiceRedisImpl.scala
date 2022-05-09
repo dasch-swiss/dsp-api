@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.cacheservice.impl
 
-import com.typesafe.scalalogging.LazyLogging
-import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -22,7 +20,6 @@ import org.knora.webapi.store.cacheservice.api.EmptyKey
 import org.knora.webapi.store.cacheservice.api.EmptyValue
 import org.knora.webapi.store.cacheservice.config.RedisConfig
 import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
@@ -150,7 +147,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @param key   the key.
    * @param value the value.
    */
-  def putStringValue(key: String, value: String): Task[Unit] = Task.attempt {
+  def putStringValue(key: String, value: String): Task[Unit] = ZIO.attempt {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -179,18 +176,18 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
       conn  <- ZIO.attempt(pool.getResource)
       value <- ZIO.attemptBlocking(conn.get(key))
       res <-
-        if (value == "nil".getBytes) Task.succeed(None)
-        else Task.succeed(Some(value))
+        if (value == "nil".getBytes) ZIO.succeed(None)
+        else ZIO.succeed(Some(value))
       _ = conn.close()
     } yield res
-  }.catchAll(ex => ZIO.logError(s"Reading string from Redis failed: ${ex.getMessage}") *> Task.succeed(None))
+  }.catchAll(ex => ZIO.logError(s"Reading string from Redis failed: ${ex.getMessage}") *> ZIO.succeed(None))
 
   /**
    * Removes values for the provided keys. Any invalid keys are ignored.
    *
    * @param keys the keys.
    */
-  def removeValues(keys: Set[String]): Task[Unit] = Task.attemptBlocking {
+  def removeValues(keys: Set[String]): Task[Unit] = ZIO.attemptBlocking {
 
     // del takes a vararg so I nee to convert the set to a swq and then to vararg
     val conn: Jedis = pool.getResource
@@ -209,7 +206,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
    * @param key   the key.
    * @param value the value.
    */
-  private def putBytesValue(key: String, value: Array[Byte]): Task[Unit] = Task.attemptBlocking {
+  private def putBytesValue(key: String, value: Array[Byte]): Task[Unit] = ZIO.attemptBlocking {
 
     if (key.isEmpty)
       throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
@@ -239,15 +236,15 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
       conn  <- ZIO.attempt(pool.getResource).onError(ZIO.logErrorCause(_)).orDie
       value <- ZIO.attemptBlocking(conn.get(key.getBytes))
       res <-
-        if (value == "nil".getBytes) Task.succeed(None)
-        else Task.succeed(Some(value))
+        if (value == "nil".getBytes) ZIO.succeed(None)
+        else ZIO.succeed(Some(value))
       _ = conn.close()
     } yield res
 
   /**
    * Flushes (removes) all stored content from the Redis store.
    */
-  def flushDB(requestingUser: UserADM): Task[Unit] = Task.attemptBlocking {
+  def flushDB(requestingUser: UserADM): Task[Unit] = ZIO.attemptBlocking {
 
     if (!requestingUser.isSystemUser) {
       throw ForbiddenException("Only the system user is allowed to perform this operation.")
@@ -268,7 +265,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   /**
    * Pings the Redis store to see if it is available.
    */
-  def ping(): Task[CacheServiceStatusResponse] = Task.attemptBlocking {
+  def ping(): Task[CacheServiceStatusResponse] = ZIO.attemptBlocking {
 
     val conn: Jedis = pool.getResource
     try {
@@ -277,7 +274,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
     } finally {
       conn.close()
     }
-  }.catchAll(ex => ZIO.logError(s"Ping failed: ${ex.getMessage}") *> Task.succeed(CacheServiceStatusNOK))
+  }.catchAll(ex => ZIO.logError(s"Ping failed: ${ex.getMessage}") *> ZIO.succeed(CacheServiceStatusNOK))
 }
 
 object CacheServiceRedisImpl {

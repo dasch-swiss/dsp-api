@@ -8,19 +8,16 @@ package org.knora.webapi.responders.admin
 import akka.pattern._
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.storesmessages.{
-  ResetTriplestoreContentRequestADM,
-  ResetTriplestoreContentResponseADM,
-  StoreResponderRequestADM
-}
+import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
+import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
+import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
-import org.knora.webapi.messages.store.triplestoremessages.{
-  RdfDataObject,
-  ResetRepositoryContent,
-  ResetRepositoryContentACK
-}
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
+import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.Responder

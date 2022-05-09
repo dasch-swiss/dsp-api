@@ -9,7 +9,8 @@ import com.typesafe.scalalogging.Logger
 import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.trace
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.util.Success
 
 /**
