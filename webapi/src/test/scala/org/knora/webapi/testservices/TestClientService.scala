@@ -95,7 +95,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    duration: zio.Duration = 120.seconds
+    duration: zio.Duration = 666.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[akka.http.scaladsl.model.HttpResponse](executionContext =>
