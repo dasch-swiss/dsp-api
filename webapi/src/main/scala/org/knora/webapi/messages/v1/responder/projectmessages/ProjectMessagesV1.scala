@@ -8,9 +8,14 @@ package org.knora.webapi.messages.v1.responder.projectmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, NullOptions, RootJsonFormat}
+import spray.json.DefaultJsonProtocol
+import spray.json.JsValue
+import spray.json.JsonFormat
+import spray.json.NullOptions
+import spray.json.RootJsonFormat
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

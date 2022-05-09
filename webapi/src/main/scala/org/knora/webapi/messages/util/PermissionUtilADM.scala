@@ -10,18 +10,25 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupGetResponseADM
+import org.knora.webapi.messages.admin.responder.groupsmessages.MultipleGroupsGetRequestADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionADM
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
-import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlExtendedConstructResponse}
-import org.knora.webapi.messages.util.GroupedProps.{ValueLiterals, ValueProps}
+import org.knora.webapi.messages.util.GroupedProps.ValueLiterals
+import org.knora.webapi.messages.util.GroupedProps.ValueProps
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.

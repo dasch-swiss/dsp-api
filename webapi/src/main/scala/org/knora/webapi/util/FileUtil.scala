@@ -5,17 +5,24 @@
 
 package org.knora.webapi.util
 
-import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
-import java.util.zip.{ZipEntry, ZipOutputStream}
-
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.exceptions.{FileWriteException, NotFoundException}
+import org.knora.webapi.exceptions.FileWriteException
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.settings.KnoraSettingsImpl
 
-import scala.io.{BufferedSource, Codec, Source}
-import scala.util.{Failure, Success, Try}
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
+import scala.io.BufferedSource
+import scala.io.Codec
+import scala.io.Source
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Functions for reading and writing files.

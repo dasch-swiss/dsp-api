@@ -8,17 +8,16 @@ package org.knora.webapi.messages.util.search
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.ConstructResponseUtilV2.{
-  RdfPropertyValues,
-  RdfResources,
-  ResourceWithValueRdfData,
-  ValueRdfData
-}
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfPropertyValues
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.RdfResources
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.ResourceWithValueRdfData
+import org.knora.webapi.messages.util.ConstructResponseUtilV2.ValueRdfData
 import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator.ValueObjectVariablesAndValueObjectIris
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
 
 object MainQueryResultProcessor {
 

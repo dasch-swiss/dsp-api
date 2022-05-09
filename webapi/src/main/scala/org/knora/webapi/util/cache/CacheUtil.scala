@@ -6,8 +6,11 @@
 package org.knora.webapi.util.cache
 
 import com.typesafe.scalalogging.Logger
+import net.sf.ehcache.Cache
+import net.sf.ehcache.CacheManager
+import net.sf.ehcache.Ehcache
+import net.sf.ehcache.Element
 import net.sf.ehcache.event.CacheEventListener
-import net.sf.ehcache.{Cache, CacheManager, Ehcache, Element}
 import org.knora.webapi.exceptions.ApplicationCacheException
 import org.slf4j.LoggerFactory
 

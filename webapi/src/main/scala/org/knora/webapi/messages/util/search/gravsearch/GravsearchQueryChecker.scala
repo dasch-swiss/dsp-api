@@ -6,15 +6,14 @@
 package org.knora.webapi.messages.util.search.gravsearch
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.search.gravsearch.types.{
-  GravsearchEntityTypeInfo,
-  GravsearchTypeInspectionResult,
-  NonPropertyTypeInfo,
-  PropertyTypeInfo
-}
 import org.knora.webapi.messages.util.search._
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchEntityTypeInfo
+import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
+import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
+import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
 
 object GravsearchQueryChecker {
 

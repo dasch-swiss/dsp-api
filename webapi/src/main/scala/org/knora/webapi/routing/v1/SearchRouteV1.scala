@@ -12,12 +12,13 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.searchmessages.{
-  ExtendedSearchGetRequestV1,
-  FulltextSearchGetRequestV1,
-  SearchComparisonOperatorV1
-}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
+import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
+import org.knora.webapi.messages.v1.responder.searchmessages.FulltextSearchGetRequestV1
+import org.knora.webapi.messages.v1.responder.searchmessages.SearchComparisonOperatorV1
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV1
 
 import scala.language.postfixOps
 

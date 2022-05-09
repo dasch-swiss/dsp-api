@@ -15,8 +15,9 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
+import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 
 /**
  * Tests Gravsearch type inspection.

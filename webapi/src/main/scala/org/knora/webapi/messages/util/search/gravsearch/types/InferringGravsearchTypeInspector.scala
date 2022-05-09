@@ -5,22 +5,24 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import akka.event.{LogSource, LoggingAdapter}
+import akka.event.LogSource
+import akka.event.LoggingAdapter
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  EntityInfoGetRequestV2,
-  EntityInfoGetResponseV2,
-  ReadClassInfoV2,
-  ReadPropertyInfoV2
-}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 
 import scala.annotation.tailrec
 import scala.concurrent.Future

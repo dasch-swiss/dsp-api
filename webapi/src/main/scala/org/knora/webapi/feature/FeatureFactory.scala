@@ -5,16 +5,20 @@
 
 package org.knora.webapi.feature
 
+import akka.http.scaladsl.model.HttpHeader
+import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.model.{HttpHeader, HttpResponse}
 import akka.http.scaladsl.server.RequestContext
-import org.knora.webapi.exceptions.{BadRequestException, FeatureToggleException}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.FeatureToggleException
 import org.knora.webapi.settings.KnoraSettings.FeatureToggleBaseConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.annotation.tailrec
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 import scala.util.control.Exception._
-import scala.util.{Failure, Success, Try}
 
 /**
  * A tagging trait for module-specific factories that produce implementations of features.

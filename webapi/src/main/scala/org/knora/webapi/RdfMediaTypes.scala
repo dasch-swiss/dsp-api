@@ -5,7 +5,10 @@
 
 package org.knora.webapi
 
-import akka.http.scaladsl.model.{ContentType, HttpCharsets, MediaType, MediaTypes}
+import akka.http.scaladsl.model.ContentType
+import akka.http.scaladsl.model.HttpCharsets
+import akka.http.scaladsl.model.MediaType
+import akka.http.scaladsl.model.MediaTypes
 
 /**
  * Represents media types supported by the Knora API server for representing RDF data, and provides

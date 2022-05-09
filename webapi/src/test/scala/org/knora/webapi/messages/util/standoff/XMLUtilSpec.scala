@@ -5,14 +5,15 @@
 
 package org.knora.webapi.util.standoff
 
-import java.nio.file.Paths
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.StandoffConversionException
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.util.FileUtil
-import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.builder.DiffBuilder
+import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
+
+import java.nio.file.Paths
 
 /**
  * Tests [[org.knora.webapi.messages.util.standoff.XMLToStandoffUtil]].

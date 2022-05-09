@@ -5,14 +5,15 @@
 
 package org.knora.webapi.util.rdf
 
-import java.nio.file.Paths
-
 import org.knora.webapi._
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraTurtleResponseV2}
+import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
+import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.FileUtil
+
+import java.nio.file.Paths
 
 /**
  * Tests the formatting of Knora API v2 responses.

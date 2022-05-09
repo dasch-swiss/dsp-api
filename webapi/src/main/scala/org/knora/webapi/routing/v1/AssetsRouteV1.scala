@@ -5,17 +5,23 @@
 
 package org.knora.webapi.routing.v1
 
-import java.awt.image.BufferedImage
-import java.awt.{Color, Font, Graphics}
-import java.io.ByteArrayOutputStream
-import java.nio.file.Paths
-
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.MediaTypes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import javax.imageio.ImageIO
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+
+import java.awt.Color
+import java.awt.Font
+import java.awt.Graphics
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
+import java.nio.file.Paths
+import javax.imageio.ImageIO
 
 /**
  * A route used for faking the image server.

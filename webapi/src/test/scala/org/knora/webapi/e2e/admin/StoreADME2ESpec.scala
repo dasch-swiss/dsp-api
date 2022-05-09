@@ -5,16 +5,15 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
-import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.http.scaladsl.model.ContentTypes
+import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.StatusCodes
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import spray.json._
-
-import scala.concurrent.duration._
+import zio._
 
 object StoreADME2ESpec {
   val config = ConfigFactory.parseString("""
@@ -29,8 +28,6 @@ object StoreADME2ESpec {
  * This spec tests the 'v1/store' route.
  */
 class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJsonProtocol {
-
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
 
   /**
    * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.
