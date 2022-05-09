@@ -646,7 +646,18 @@
                            "Sequence number"@en,
                            "Numéro de séquence"@fr,
                            "Numero di sequenza"@it ;
-    rdfs:comment           "Indicates the position of a resource within a sequence"@en .
+    rdfs:comment           "Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource."@en .
+
+
+###  http://www.knora.org/ontology/knora-base#hasSequenceBounds
+
+:hasSequenceBounds
+    rdf:type               owl:ObjectProperty ;
+    :objectClassConstraint :IntervalValue ;
+    rdfs:subPropertyOf     :hasValue ;
+    rdfs:label             "Sequenz-Grenzen"@de,
+                           "Sequence Bounds"@en;
+    rdfs:comment           "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource."@en .
 
 
 ###  http://www.knora.org/ontology/knora-base#standoffTagHasOriginalXMLID
