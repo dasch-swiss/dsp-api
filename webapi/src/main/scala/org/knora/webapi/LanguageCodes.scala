@@ -13,11 +13,13 @@ object LanguageCodes {
   val EN: String = "en"
   val FR: String = "fr"
   val IT: String = "it"
+  val RM: String = "rm"
 
   val SupportedLanguageCodes: Set[String] = Set(
     DE,
     EN,
     FR,
-    IT
+    IT,
+    RM
   )
 }
