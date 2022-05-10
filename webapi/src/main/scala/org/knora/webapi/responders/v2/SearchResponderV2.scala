@@ -571,7 +571,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         }).mapTo[SparqlSelectResult]
       duration = (System.currentTimeMillis() - start) / 1000.0
       _ =
-        if (duration < 3) { // TODO-BL: figure out a sensible duration
+        if (duration < 3) {
           log.debug(s"Prequery took: ${duration}s")
         } else {
           log.warn(s"Slow Prequery ($duration):\n$triplestoreSpecificPrequerySparql\nInitial Query:\n$inputQuery")

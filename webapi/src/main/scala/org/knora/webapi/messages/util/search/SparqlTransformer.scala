@@ -265,7 +265,6 @@ object SparqlTransformer {
 
       case _ =>
         // Is the statement in KnoraExplicitNamedGraph?
-        // TODO-BL: see if explicit named graph is still needed, now that we don't support GraphDB anymore.
         statementPattern.namedGraph match {
           case Some(graphIri: IriRef)
               if graphIri.iri.toString == OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph =>
