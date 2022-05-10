@@ -39,7 +39,6 @@ trait KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl
   ): String
 }
@@ -53,7 +52,6 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl
   ): String = {
     val targetApiV2Schema = targetSchema match {
@@ -76,7 +74,7 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
 
       case nonJsonLD: NonJsonLD =>
         // Some other format. Convert the JSON-LD document to an RDF model.
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
         val rdfModel: RdfModel           = jsonLDDocument.toRdfModel(rdfFormatUtil.getRdfModelFactory)
 
         // Convert the model to the requested format.
@@ -116,7 +114,6 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
     rdfFormat: RdfFormat,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl
   ): String = {
     if (targetSchema != InternalSchema) {
@@ -131,7 +128,7 @@ trait KnoraTurtleResponseV2 extends KnoraResponseV2 {
 
       case _ =>
         // Some other format. Parse the Turtle to an RdfModel.
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
         val rdfModel: RdfModel           = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
 
         // Return the model in the requested format.

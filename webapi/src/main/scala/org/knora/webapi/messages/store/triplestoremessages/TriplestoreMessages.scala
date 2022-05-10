@@ -28,6 +28,8 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import com.typesafe.config.Config
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
@@ -425,6 +427,13 @@ object TriplestoreStatus extends Enumeration {
  * @param name of the named graph the data will be load into.
  */
 case class RdfDataObject(path: String, name: String)
+object RdfDataObject {
+  def fromConfig(conf: Config): RdfDataObject = {
+    val path = conf.getString("path")
+    val name = conf.getString("name")
+    new RdfDataObject(path, name)
+  }
+}
 
 /**
  * Represents the subject of a statement read from the triplestore.

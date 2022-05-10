@@ -22,15 +22,17 @@ import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.ExecutionContext
 
+import zio._
+
 /**
- * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
- * triple stores.
+ * This service receives akka messages and translates them to calls to ZIO besed service implementations.
+ * This will be removed when Akka-Actors are removed.
  *
  * @param appActor                    a reference to the main application actor.
  * @param settings                    the application settings.
  * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
  */
-class TriplestoreManager(
+final case class TriplestoreManager(
   appActor: ActorRef,
   settings: KnoraSettingsImpl,
   defaultFeatureFactoryConfig: FeatureFactoryConfig
@@ -79,8 +81,18 @@ class TriplestoreManager(
     log.debug("TriplestoreManagerActor: finished with preStart")
   }
 
-  def receive: Receive = LoggingReceive {
+  def receive(message: TriplestoreRequest) = message match {
     case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, log)
     case other                     => storeActorRef.forward(other)
+  }
+}
+
+object TriplestoreManager {
+  val layer: ZLayer[TriplestoreService, Nothing, TriplestoreManager] = {
+    ZLayer {
+      for {
+        ts <- ZIO.service[TriplestoreService]
+      } yield TriplestoreManager(iiif)
+    }
   }
 }

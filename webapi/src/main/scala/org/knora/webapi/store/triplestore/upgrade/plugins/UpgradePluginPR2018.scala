@@ -21,8 +21,8 @@ import java.time.Instant
 /**
  * Transforms a repository for DSP-API PR 2018.
  */
-class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   private val newModificationDate         = Instant.now.toString
   private val ontologyType: IriNode       = nodeFactory.makeIriNode(Ontology)
 

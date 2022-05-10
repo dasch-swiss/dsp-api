@@ -488,7 +488,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
   private def projectDataGetRequestADM(
     projectIdentifier: ProjectIdentifierADM,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ProjectDataGetResponseADM] = {
 
@@ -540,7 +539,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
      * @param resultFile          the output file.
      */
     def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Unit = {
-      val rdfFormatUtil: RdfFormatUtil                                = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+      val rdfFormatUtil: RdfFormatUtil                                = RdfFeatureFactory.getRdfFormatUtil()
       var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
       val trigFileTry: Try[Unit] = Try {

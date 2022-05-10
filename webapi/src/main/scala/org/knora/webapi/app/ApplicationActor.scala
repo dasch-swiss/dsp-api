@@ -69,6 +69,10 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
+import org.knora.webapi.messages.store.sipimessages.IIIFRequest
+import org.knora.webapi.util.ActorUtil
+import org.knora.webapi.store.triplestore.TriplestoreManager
 
 /**
  * This is the first actor in the application. All other actors are children
@@ -81,6 +85,7 @@ import scala.util.Success
 class ApplicationActor(
   cacheServiceManager: CacheServiceManager,
   iiifServiceManager: IIIFServiceManager,
+  triplestoreManager: TriplestoreManager,
   appConfig: AppConfig
 ) extends Actor
     with Stash
@@ -147,15 +152,6 @@ class ApplicationActor(
     )
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = RESPONDER_MANAGER_ACTOR_NAME
-  )
-
-  /**
-   * The actor that forwards messages to actors that deal with persistent storage.
-   */
-  lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(self, cacheServiceManager, iiifServiceManager, appConfig) with LiveActorMaker)
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = StoreManagerActorName
   )
 
   /**
@@ -343,7 +339,7 @@ class ApplicationActor(
 
     /* check repository request */
     case CheckTriplestore() =>
-      storeManager ! CheckTriplestoreRequest()
+      self ! CheckTriplestoreRequest()
 
     /* check repository response */
     case CheckTriplestoreResponse(status, message) =>
@@ -361,7 +357,7 @@ class ApplicationActor(
       }
 
     case UpdateRepository() =>
-      storeManager ! UpdateRepositoryRequest()
+      self ! UpdateRepositoryRequest()
 
     case RepositoryUpdatedResponse(message) =>
       logger.info(message)
@@ -373,7 +369,7 @@ class ApplicationActor(
       self ! SetAppState(AppStates.CachesReady)
 
     case UpdateSearchIndex() =>
-      storeManager ! SearchIndexUpdateRequest()
+      self ! SearchIndexUpdateRequest()
 
     case SparqlUpdateResponse() =>
       self ! SetAppState(AppStates.SearchIndexReady)
@@ -409,11 +405,13 @@ class ApplicationActor(
       logger.warn("Redis server not running. Please start it.")
       timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
-    // Forward messages to the responder manager and the store manager.
-    case responderMessage: KnoraRequestV1  => responderManager forward responderMessage
-    case responderMessage: KnoraRequestV2  => responderManager forward responderMessage
-    case responderMessage: KnoraRequestADM => responderManager forward responderMessage
-    case storeMessage: StoreRequest        => storeManager forward storeMessage
+    // Forward messages to the responder manager and the different store managers.
+    case msg: KnoraRequestV1      => responderManager forward msg
+    case msg: KnoraRequestV2      => responderManager forward msg
+    case msg: KnoraRequestADM     => responderManager forward msg
+    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, appConfig)
+    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, appConfig)
+    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, appConfig)
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {

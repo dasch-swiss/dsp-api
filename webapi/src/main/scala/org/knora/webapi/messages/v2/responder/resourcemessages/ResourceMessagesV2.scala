@@ -284,13 +284,12 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 case class TEIHeader(
   headerInfo: ReadResourceV2,
   headerXSLT: Option[String],
-  featureFactoryConfig: FeatureFactoryConfig,
   settings: KnoraSettingsImpl
 ) {
 
   def toXML: String =
     if (headerXSLT.nonEmpty) {
-      val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+      val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
       // Convert the resource to a JsonLDDocument.
       val headerJsonLD: JsonLDDocument =

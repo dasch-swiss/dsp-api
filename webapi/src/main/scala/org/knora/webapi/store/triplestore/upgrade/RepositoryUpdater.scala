@@ -24,22 +24,23 @@ import java.nio.file.Path
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.reflect.io.Directory
+import org.knora.webapi.config.AppConfig
+
+import zio._
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
- * Updates a Knora repository to work with the current version of Knora.
+ * Updates a DSP repository to work with the current version of DSP-API.
  *
- * @param system               the Akka [[ActorSystem]].
- * @param appActor             a reference to the main application actor.
- * @param featureFactoryConfig the feature factory configuration.
- * @param settings             the Knora application settings.
+ * @param triplestoreService a [[TriplestoreService]] implementation.
+ * @param appConfig             the application configureation.
  */
-class RepositoryUpdater(
-  system: ActorSystem,
-  appActor: ActorRef,
-  featureFactoryConfig: FeatureFactoryConfig,
-  settings: KnoraSettingsImpl
+final case class RepositoryUpdater(
+  triplestoreService: TriplestoreService,
+  appConfig: AppConfig
 ) extends LazyLogging {
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   // A SPARQL query to find out the knora-base version in a repository.
   private val knoraBaseVersionQuery =
@@ -73,10 +74,8 @@ class RepositoryUpdater(
   /**
    * A list of available plugins.
    */
-  private val plugins: Seq[PluginForKnoraBaseVersion] = RepositoryUpdatePlan.makePluginsForVersions(
-    featureFactoryConfig = featureFactoryConfig,
-    log = log
-  )
+  private val plugins: Seq[PluginForKnoraBaseVersion] =
+    RepositoryUpdatePlan.makePluginsForVersions(log)
 
   private val tempDirNamePrefix: String = "knora"
 
@@ -305,5 +304,16 @@ class RepositoryUpdater(
   def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
     val fileContent: String = FileUtil.readTextResource(filename)
     rdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
+  }
+}
+
+object RepositoryUpdater {
+  val layer: ZLayer[TriplestoreService & AppConfig, Nothing, RepositoryUpdater] = {
+    ZLayer {
+      for {
+        ts     <- ZIO.service[TriplestoreService]
+        config <- ZIO.service[AppConfig]
+      } yield RepositoryUpdater(ts, config)
+    }
   }
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.triplestore.http
+package org.knora.webapi.store.triplestore.impl
 
 import akka.actor.Actor
 import akka.actor.ActorLogging
@@ -47,7 +47,6 @@ import org.knora.webapi.messages.util.FakeTriplestore
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
 import spray.json._
@@ -67,11 +66,19 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.config.AppConfig
+
+import zio._
+
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
  * `application.conf`.
  */
-class HttpTriplestoreConnector extends Actor with ActorLogging with InstrumentationSupport {
+case class TriplestoreServiceHttpConnectorImpl(
+  config: AppConfig,
+  httpClient: CloseableHttpClient
+) extends TriplestoreService {
 
   // MIME type constants.
   private val mimeTypeApplicationJson              = "application/json"
@@ -502,7 +509,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
       val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
       val defaultRdfDataObjectList = defaultRdfDataList.asScala.map { config =>
-        RdfDataObjectFactory(config)
+        RdfDataObject.fromConfig(config)
       }
 
       val completeRdfDataObjectList = if (prependDefaults) {
@@ -1090,4 +1097,76 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         }
     }
+}
+
+object TriplestoreServiceHttpConnectorImpl {
+
+  /**
+   * Acquires a configured httpClient, backed by a connection pool,
+   * to be used in communicating with Fuseki.
+   */
+  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
+
+    // timeout from config
+    val sipiTimeoutMillis: Int = config.sipi.timeoutInSeconds.toMillis.toInt
+
+    // Create a connection manager with custom configuration.
+    val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
+
+    // Create socket configuration
+    val socketConfig: SocketConfig = SocketConfig
+      .custom()
+      .setTcpNoDelay(true)
+      .build();
+
+    // Configure the connection manager to use socket configuration by default.
+    connManager.setDefaultSocketConfig(socketConfig)
+
+    // Validate connections after 1 sec of inactivity
+    connManager.setValidateAfterInactivity(1000);
+
+    // Configure total max or per route limits for persistent connections
+    // that can be kept in the pool or leased by the connection manager.
+    connManager.setMaxTotal(100)
+    connManager.setDefaultMaxPerRoute(10)
+
+    // Sipi custom default request config
+    val defaultRequestConfig = RequestConfig
+      .custom()
+      .setConnectTimeout(sipiTimeoutMillis)
+      .setConnectionRequestTimeout(sipiTimeoutMillis)
+      .setSocketTimeout(sipiTimeoutMillis)
+      .build()
+
+    // Create an HttpClient with the given custom dependencies and configuration.
+    val httpClient: CloseableHttpClient = HttpClients
+      .custom()
+      .setConnectionManager(connManager)
+      .setDefaultRequestConfig(defaultRequestConfig)
+      .build()
+
+    httpClient
+  }.tap(_ => ZIO.debug(">>> Acquire Triplestore Service Http Connector <<<")).orDie
+
+  /**
+   * Releases the httpClient, freeing all resources.
+   */
+  private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] =
+    ZIO.attemptBlocking {
+      httpClient.close()
+    }.tap(_ => ZIO.debug(">>> Release Triplestore Service Http Connector <<<")).orDie
+
+  val layer: ZLayer[AppConfig, Nothing, TriplestoreService] = {
+    ZLayer {
+      for {
+        config <- ZIO.service[AppConfig]
+        // _          <- ZIO.debug(config)
+        // HINT: Scope does not work when used together with unsafeRun to
+        // bridge over to Akka. Need to change this as soon Akka is removed
+        // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
+        httpClient <- acquire(config)
+      } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
+    }.tap(_ => ZIO.debug(">>> Triplestore Service Http Connector Initialized <<<"))
+  }
+
 }

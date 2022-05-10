@@ -259,7 +259,6 @@ object RouteUtilV2 {
                                            rdfFormat = RdfFormat.fromMediaType(specificMediaType),
                                            targetSchema = targetSchema,
                                            settings = settings,
-                                           featureFactoryConfig = featureFactoryConfig,
                                            schemaOptions = schemaOptions
                                          )
     } yield featureFactoryConfig.addHeaderToHttpResponse(
@@ -379,10 +378,9 @@ object RouteUtilV2 {
   def requestToRdfModel(
     entityStr: String,
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig
   ): RdfModel =
     RdfFeatureFactory
-      .getRdfFormatUtil(featureFactoryConfig)
+      .getRdfFormatUtil()
       .parseToRdfModel(
         rdfStr = entityStr,
         rdfFormat = RdfFormat.fromMediaType(getRequestContentType(requestContext))
@@ -398,10 +396,9 @@ object RouteUtilV2 {
   def requestToJsonLD(
     entityStr: String,
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig
   ): JsonLDDocument =
     RdfFeatureFactory
-      .getRdfFormatUtil(featureFactoryConfig)
+      .getRdfFormatUtil()
       .parseToJsonLDDocument(
         rdfStr = entityStr,
         rdfFormat = RdfFormat.fromMediaType(getRequestContentType(requestContext))

@@ -78,12 +78,7 @@ object RdfFeatureFactory extends FeatureFactory {
    * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfNodeFactory]].
    */
-  def getRdfNodeFactory(featureFactoryConfig: FeatureFactoryConfig): RdfNodeFactory =
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaNodeFactory
-    } else {
-      rdf4jNodeFactory
-    }
+  def getRdfNodeFactory(): RdfNodeFactory = jenaNodeFactory
 
   /**
    * Returns an [[RdfFormatUtil]].
@@ -91,12 +86,7 @@ object RdfFeatureFactory extends FeatureFactory {
    * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfFormatUtil]].
    */
-  def getRdfFormatUtil(featureFactoryConfig: FeatureFactoryConfig): RdfFormatUtil =
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaFormatUtil
-    } else {
-      rdf4jFormatUtil
-    }
+  def getRdfFormatUtil(): RdfFormatUtil = jenaFormatUtil
 
   def getShaclValidator(featureFactoryConfig: FeatureFactoryConfig): ShaclValidator = {
     def notInitialised: Nothing = throw AssertionException("RdfFeatureFactory has not been initialised")
