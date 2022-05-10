@@ -1,5 +1,13 @@
 # Changelog
 
+### [20.2.2](https://www.github.com/dasch-swiss/dsp-api/compare/v20.2.1...v20.2.2) (2022-05-10)
+
+
+### Maintenance
+
+* check that the expected Fuseki version is present (DEV-331) ([#2057](https://www.github.com/dasch-swiss/dsp-api/issues/2057)) ([2a695ec](https://www.github.com/dasch-swiss/dsp-api/commit/2a695ec5d917d02e70ec3d3ddcf1ee6ebe265f05))
+* **deps:** bump ZIO version (DEV-893) ([#2056](https://www.github.com/dasch-swiss/dsp-api/issues/2056)) ([933f91e](https://www.github.com/dasch-swiss/dsp-api/commit/933f91e049f4a6392015e11ccce0b9b3caa26657))
+
 ### [20.2.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.2.0...v20.2.1) (2022-05-05)
 
 
