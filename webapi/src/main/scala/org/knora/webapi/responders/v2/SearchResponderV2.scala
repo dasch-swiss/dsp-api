@@ -521,8 +521,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           featureFactoryConfig = featureFactoryConfig
         )
 
-      // TODO-old: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
-      // TODO-old: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
+      // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
+      // TODO: the ORDER BY criterion has to be included in a GROUP BY statement, returning more than one row if property occurs more than once
 
       ontologiesForInferenceMaybe <-
         QueryTraverser.getOntologiesRelevantForInference(

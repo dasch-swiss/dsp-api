@@ -229,7 +229,7 @@ object QueryTraverser {
             val shortcode = internal.getProjectCode
             shortcode match {
               case None => Seq.empty
-              case some => {
+              case _ => {
                 // find the project with the shortcode
                 val projectFuture =
                   (storeManager ? CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))

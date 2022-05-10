@@ -114,7 +114,7 @@ object SparqlTransformer {
 
     entityStr
       .replaceAll("[:/.#-]", "")
-      .replaceAll("\\s", "") // TODO-old: check if this is complete and if it could lead to collision of variable names
+      .replaceAll("\\s", "") // TODO: check if this is complete and if it could lead to collision of variable names
   }
 
   /**

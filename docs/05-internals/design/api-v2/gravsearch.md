@@ -288,15 +288,11 @@ to the maximum allowed page size, the predicate
 
 ## Inference
 
-Gravsearch queries support a subset of RDFS reasoning
-(see [Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
+Gravsearch queries support a subset of RDFS reasoning (see [Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
 on Gravsearch). This is implemented as follows:
 
-When the non-triplestore-specific version of a SPARQL query is generated, statements that do not need
-inference are marked with the virtual named graph `<http://www.knora.org/explicit>`.
-
-When the triplestore-specific version of the query is generated, this could make use of a triplestore's inference. Currently, no triplestore-based inference is used because of poor performance. Instead, the API expands the prequery on basis of the available ontologies, to achieve the same results as if inference was used. For that reason, `SparqlTransformer.transformStatementInWhereForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked statements using `UNION` statements for all subclasses and subproperties (equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). Similarly, `SparqlTransformer.transformStatementInWhereForNoInference`
-replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
+To simulate RDF inference, the API expands the prequery on basis of the available ontologies. For that reason, `SparqlTransformer.transformStatementInWhereForNoInference` expands all `rdfs:subClassOf` and `rdfs:subPropertyOf` statements using `UNION` statements for all subclasses and subproperties from the ontologies (equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). 
+Similarly, `SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 
 # Optimisation of generated SPARQL
