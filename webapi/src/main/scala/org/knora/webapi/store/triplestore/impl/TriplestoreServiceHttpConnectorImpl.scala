@@ -234,7 +234,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @return a [[SparqlSelectResult]].
    */
-  private def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): Try[SparqlSelectResult] = {
+  private def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResult] = {
       val parseTry = Try {
         resultStr.parseJson.convertTo[SparqlSelectResult]

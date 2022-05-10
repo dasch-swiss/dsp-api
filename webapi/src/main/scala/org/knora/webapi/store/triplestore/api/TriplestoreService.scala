@@ -34,7 +34,7 @@ trait TriplestoreService {
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @return a [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): Task[SparqlSelectResult]
+  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].

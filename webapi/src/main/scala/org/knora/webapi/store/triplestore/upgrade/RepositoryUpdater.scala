@@ -51,22 +51,6 @@ final case class RepositoryUpdater(
       |}""".stripMargin
 
   /**
-   * The execution context for futures created in Knora actors.
-   */
-  private implicit val executionContext: ExecutionContext =
-    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  /**
-   * A string formatter.
-   */
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  /**
-   * The application's default timeout for `ask` messages.
-   */
-  private implicit val timeout: Timeout = settings.defaultTimeout
-
-  /**
    * Provides logging.
    */
   private val log: Logger = logger
@@ -80,45 +64,27 @@ final case class RepositoryUpdater(
   private val tempDirNamePrefix: String = "knora"
 
   /**
-   * Deletes directories inside temp directory starting with `tempDirNamePrefix`.
-   */
-  def deleteTempDirectories(): Unit = {
-    val rootDir         = new File("/tmp/")
-    val getTempToDelete = rootDir.listFiles.filter(_.getName.startsWith(tempDirNamePrefix))
-
-    if (getTempToDelete.length != 0) {
-      getTempToDelete.foreach { dir =>
-        val dirToDelete = new Directory(dir)
-        dirToDelete.deleteRecursively()
-      }
-      log.info(s"Deleted temp directories: ${getTempToDelete.map(_.getName()).mkString(", ")}")
-    }
-  }
-
-  /**
-   * Updates the repository, if necessary, to work with the current version of Knora.
+   * Updates the repository, if necessary, to work with the current version of dsp-api.
    *
    * @return a response indicating what was done.
    */
-  def maybeUpdateRepository: Future[RepositoryUpdatedResponse] =
+  def maybeUpdateRepository: UIO[RepositoryUpdatedResponse] =
     for {
-      foundRepositoryVersion: Option[String] <- getRepositoryVersion
-      requiredRepositoryVersion               = org.knora.webapi.KnoraBaseVersion
+      foundRepositoryVersion    <- getRepositoryVersion()
+      requiredRepositoryVersion <- ZIO.succeed(org.knora.webapi.KnoraBaseVersion)
 
       // Is the repository up to date?
-      repositoryUpToDate: Boolean = foundRepositoryVersion.contains(requiredRepositoryVersion)
+      repositoryUpToDate: Boolean <- ZIO.succeed(foundRepositoryVersion.contains(requiredRepositoryVersion))
 
       repositoryUpdatedResponse: RepositoryUpdatedResponse <-
         if (repositoryUpToDate) {
           // Yes. Nothing more to do.
-          FastFuture.successful(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
+          ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
         } else {
           // No. Construct the list of updates that it needs.
-          log.info(
+          ZIO.logInfo(
             s"Repository not up-to-date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
-          )
-
-          deleteTempDirectories()
+          ) *> deleteTempDirectories()
 
           val selectedPlugins: Seq[PluginForKnoraBaseVersion] = selectPluginsForNeededUpdates(foundRepositoryVersion)
           log.info(s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}")
@@ -129,22 +95,36 @@ final case class RepositoryUpdater(
     } yield repositoryUpdatedResponse
 
   /**
+   * Deletes directories inside temp directory starting with `tempDirNamePrefix`.
+   */
+  private def deleteTempDirectories(): UIO[Unit] = ZIO.attempt {
+    val rootDir         = new File("/tmp/")
+    val getTempToDelete = rootDir.listFiles.filter(_.getName.startsWith(tempDirNamePrefix))
+
+    if (getTempToDelete.length != 0) {
+      getTempToDelete.foreach { dir =>
+        val dirToDelete = new Directory(dir)
+        dirToDelete.deleteRecursively()
+      }
+      log.info(s"Deleted temp directories: ${getTempToDelete.map(_.getName()).mkString(", ")}")
+    }
+    ()
+  }.orDie
+
+  /**
    * Determines the `knora-base` version in the repository.
    *
    * @return the `knora-base` version string, if any, in the repository.
    */
-  private def getRepositoryVersion: Future[Option[String]] =
+  private def getRepositoryVersion: UIO[Option[String]] =
     for {
-      repositoryVersionResponse: SparqlSelectResult <- (appActor ? SparqlSelectRequest(knoraBaseVersionQuery))
-                                                         .mapTo[SparqlSelectResult]
-
-      bindings = repositoryVersionResponse.results.bindings
-
-      versionString =
+      repositoryVersionResponse <- triplestoreService.sparqlHttpSelect(knoraBaseVersionQuery)
+      bindings                  <- ZIO.succeed(repositoryVersionResponse.results.bindings)
+      versionString <-
         if (bindings.nonEmpty) {
-          Some(bindings.head.rowMap("knoraBaseVersion"))
+          ZIO.succeed(Some(bindings.head.rowMap("knoraBaseVersion")))
         } else {
-          None
+          ZIO.none
         }
     } yield versionString
 
@@ -301,7 +281,7 @@ final case class RepositoryUpdater(
    * @param rdfFormat the file format.
    * @return an [[RdfModel]] representing the contents of the file.
    */
-  def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
+  private def readResourceIntoModel(filename: String, rdfFormat: NonJsonLD): RdfModel = {
     val fileContent: String = FileUtil.readTextResource(filename)
     rdfFormatUtil.parseToRdfModel(fileContent, rdfFormat)
   }

@@ -23,22 +23,19 @@ import org.knora.webapi.util.ActorUtil._
 import scala.concurrent.ExecutionContext
 
 import zio._
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * This service receives akka messages and translates them to calls to ZIO besed service implementations.
  * This will be removed when Akka-Actors are removed.
  *
- * @param appActor                    a reference to the main application actor.
- * @param settings                    the application settings.
- * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
+ * @param ts                    a triplestore service.
+ * @param updater                    a RepositoryUpdater for processing requests to update the repository.
  */
 final case class TriplestoreManager(
-  appActor: ActorRef,
-  settings: KnoraSettingsImpl,
-  defaultFeatureFactoryConfig: FeatureFactoryConfig
-) extends Actor
-    with ActorLogging {
-  this: ActorMaker =>
+  ts: TriplestoreService,
+  updater: RepositoryUpdater
+) {
 
   protected implicit val executionContext: ExecutionContext =
     context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
@@ -82,17 +79,65 @@ final case class TriplestoreManager(
   }
 
   def receive(message: TriplestoreRequest) = message match {
-    case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, log)
-    case other                     => storeActorRef.forward(other)
+    case UpdateRepositoryRequest()           =>  repositoryUpdater.maybeUpdateRepository
+    case SparqlSelectRequest(sparql: String) => try2Message(sender(), sparqlHttpSelect(sparql), log)
+    case sparqlConstructRequest: SparqlConstructRequest =>
+      try2Message(sender(), sparqlHttpConstruct(sparqlConstructRequest), log)
+    case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
+      try2Message(sender(), sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest), log)
+    case SparqlConstructFileRequest(
+          sparql: String,
+          graphIri: IRI,
+          outputFile: Path,
+          outputFormat: QuadFormat,
+          featureFactoryConfig: FeatureFactoryConfig
+        ) =>
+      try2Message(
+        sender(),
+        sparqlHttpConstructFile(sparql, graphIri, outputFile, outputFormat, featureFactoryConfig),
+        log
+      )
+    case NamedGraphFileRequest(
+          graphIri: IRI,
+          outputFile: Path,
+          outputFormat: QuadFormat,
+          featureFactoryConfig: FeatureFactoryConfig
+        ) =>
+      try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile, outputFormat, featureFactoryConfig), log)
+    case NamedGraphDataRequest(graphIri: IRI) => try2Message(sender(), sparqlHttpGraphData(graphIri), log)
+    case SparqlUpdateRequest(sparql: String)  => try2Message(sender(), sparqlHttpUpdate(sparql), log)
+    case SparqlAskRequest(sparql: String)     => try2Message(sender(), sparqlHttpAsk(sparql), log)
+    case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) =>
+      try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
+    case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
+    case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
+      try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
+    case HelloTriplestore(msg: String) if msg == settings.triplestoreType =>
+      sender() ! HelloTriplestore(settings.triplestoreType)
+    case CheckTriplestoreRequest() => try2Message(sender(), checkFusekiTriplestore(), log)
+    case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
+      try2Message(sender(), Success(SparqlUpdateResponse()), log)
+    case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
+      try2Message(sender(), downloadRepository(outputFile, featureFactoryConfig), log)
+    case UploadRepositoryRequest(inputFile: Path) => try2Message(sender(), uploadRepository(inputFile), log)
+    case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>
+      try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
+    case SimulateTimeoutRequest() => try2Message(sender(), doSimulateTimeout(), log)
+    case other =>
+      sender() ! Status.Failure(
+        UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}")
+      )
   }
+
 }
 
 object TriplestoreManager {
-  val layer: ZLayer[TriplestoreService, Nothing, TriplestoreManager] = {
+  val layer: ZLayer[TriplestoreService & RepositoryUpdater, Nothing, TriplestoreManager] = {
     ZLayer {
       for {
-        ts <- ZIO.service[TriplestoreService]
-      } yield TriplestoreManager(iiif)
+        ts      <- ZIO.service[TriplestoreService]
+        updater <- ZIO.service[RepositoryUpdater]
+      } yield TriplestoreManager(ts, updater)
     }
   }
 }
