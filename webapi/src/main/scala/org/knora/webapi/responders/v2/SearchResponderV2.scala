@@ -193,7 +193,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               separator = None,    // no separator needed for count query
               limit = 1,
               offset = 0,
-              countQuery = true // do  not get the resources themselves, but the sum of results
+              countQuery = true // do not get the resources themselves, but the sum of results
             )
             .toString()
         )
