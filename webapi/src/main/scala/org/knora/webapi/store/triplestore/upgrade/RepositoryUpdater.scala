@@ -55,12 +55,6 @@ final case class RepositoryUpdater(
    */
   private val log: Logger = logger
 
-  /**
-   * A list of available plugins.
-   */
-  private val plugins: Seq[PluginForKnoraBaseVersion] =
-    RepositoryUpdatePlan.makePluginsForVersions(log)
-
   private val tempDirNamePrefix: String = "knora"
 
   /**
@@ -74,9 +68,9 @@ final case class RepositoryUpdater(
       requiredRepositoryVersion <- ZIO.succeed(org.knora.webapi.KnoraBaseVersion)
 
       // Is the repository up to date?
-      repositoryUpToDate: Boolean <- ZIO.succeed(foundRepositoryVersion.contains(requiredRepositoryVersion))
+      repositoryUpToDate <- ZIO.succeed(foundRepositoryVersion.contains(requiredRepositoryVersion))
 
-      repositoryUpdatedResponse: RepositoryUpdatedResponse <-
+      repositoryUpdatedResponse <-
         if (repositoryUpToDate) {
           // Yes. Nothing more to do.
           ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
@@ -116,7 +110,7 @@ final case class RepositoryUpdater(
    *
    * @return the `knora-base` version string, if any, in the repository.
    */
-  private def getRepositoryVersion: UIO[Option[String]] =
+  private def getRepositoryVersion(): UIO[Option[String]] =
     for {
       repositoryVersionResponse <- triplestoreService.sparqlHttpSelect(knoraBaseVersionQuery)
       bindings                  <- ZIO.succeed(repositoryVersionResponse.results.bindings)
@@ -136,29 +130,38 @@ final case class RepositoryUpdater(
    */
   private def selectPluginsForNeededUpdates(
     maybeRepositoryVersionString: Option[String]
-  ): Seq[PluginForKnoraBaseVersion] =
-    maybeRepositoryVersionString match {
-      case Some(repositoryVersion) =>
-        // The repository has a version string. Get the plugins for all subsequent versions.
+  ): UIO[Seq[PluginForKnoraBaseVersion]] = {
 
-        // Make a map of version strings to plugins.
-        val versionsToPluginsMap: Map[String, PluginForKnoraBaseVersion] = plugins.map { plugin =>
-          plugin.versionString -> plugin
-        }.toMap
+    // A list of available plugins.
+    val plugins: Seq[PluginForKnoraBaseVersion] =
+      RepositoryUpdatePlan.makePluginsForVersions(log)
 
-        val pluginForRepositoryVersion: PluginForKnoraBaseVersion = versionsToPluginsMap.getOrElse(
-          repositoryVersion,
-          throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
-        )
+    ZIO.attempt {
+      maybeRepositoryVersionString match {
+        case Some(repositoryVersion) =>
+          // The repository has a version string. Get the plugins for all subsequent versions.
 
-        plugins.filter { plugin =>
-          plugin.versionNumber > pluginForRepositoryVersion.versionNumber
-        }
+          // Make a map of version strings to plugins.
+          val versionsToPluginsMap: Map[String, PluginForKnoraBaseVersion] = plugins.map { plugin =>
+            plugin.versionString -> plugin
+          }.toMap
 
-      case None =>
-        // The repository has no version string. Include all updates.
-        plugins
-    }
+          val pluginForRepositoryVersion: PluginForKnoraBaseVersion =
+            versionsToPluginsMap.getOrElse(
+              repositoryVersion,
+              throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
+            )
+
+          plugins.filter { plugin =>
+            plugin.versionNumber > pluginForRepositoryVersion.versionNumber
+          }
+
+        case None =>
+          // The repository has no version string. Include all updates.
+          plugins
+      }
+    }.orDie
+  }
 
   /**
    * Updates the repository with the specified list of plugins.
@@ -168,43 +171,36 @@ final case class RepositoryUpdater(
    */
   private def updateRepositoryWithSelectedPlugins(
     pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]
-  ): Future[RepositoryUpdatedResponse] = {
-    val downloadDir: Path = Files.createTempDirectory(tempDirNamePrefix)
-    log.info(s"Repository update using download directory $downloadDir")
+  ): UIO[RepositoryUpdatedResponse] =
+    (for {
+      downloadDir <- ZIO.attempt(Files.createTempDirectory(tempDirNamePrefix))
+      _           <- ZIO.logInfo(s"Repository update using download directory $downloadDir")
 
-    // The file to save the repository in.
-    val downloadedRepositoryFile  = downloadDir.resolve("downloaded-repository.nq")
-    val transformedRepositoryFile = downloadDir.resolve("transformed-repository.nq")
-    log.info("Downloading repository file...")
+      // The file to save the repository in.
+      downloadedRepositoryFile  <- ZIO.attempt(downloadDir.resolve("downloaded-repository.nq"))
+      transformedRepositoryFile <- ZIO.attempt(downloadDir.resolve("transformed-repository.nq"))
 
-    for {
       // Ask the store actor to download the repository to the file.
-      _: FileWrittenResponse <- (appActor ? DownloadRepositoryRequest(
-                                  outputFile = downloadedRepositoryFile,
-                                  featureFactoryConfig = featureFactoryConfig
-                                )).mapTo[FileWrittenResponse]
+      _ <- ZIO.logInfo("Downloading repository file...")
+      _ <- triplestoreService.downloadRepository(downloadedRepositoryFile)
 
       // Run the transformations to produce an output file.
-      _ = doTransformations(
-            downloadedRepositoryFile = downloadedRepositoryFile,
-            transformedRepositoryFile = transformedRepositoryFile,
-            pluginsForNeededUpdates = pluginsForNeededUpdates
-          )
-
-      _ = log.info("Emptying the repository...")
+      _ <- doTransformations(
+             downloadedRepositoryFile = downloadedRepositoryFile,
+             transformedRepositoryFile = transformedRepositoryFile,
+             pluginsForNeededUpdates = pluginsForNeededUpdates
+           )
 
       // Empty the repository.
-      _: DropAllRepositoryContentACK <- (appActor ? DropAllTRepositoryContent()).mapTo[DropAllRepositoryContentACK]
-
-      _ = log.info("Uploading transformed repository data...")
+      _ <- ZIO.logInfo("Emptying the repository...")
+      _ <- triplestoreService.dropAllTriplestoreContent()
 
       // Upload the transformed repository.
-      _: RepositoryUploadedResponse <- (appActor ? UploadRepositoryRequest(transformedRepositoryFile))
-                                         .mapTo[RepositoryUploadedResponse]
+      _ <- ZIO.logInfo("Uploading transformed repository data...")
+      _ <- triplestoreService.uploadRepository(transformedRepositoryFile)
     } yield RepositoryUpdatedResponse(
       message = s"Updated repository to ${org.knora.webapi.KnoraBaseVersion}"
-    )
-  }
+    )).orDie
 
   /**
    * Transforms a file containing a downloaded repository.
@@ -217,7 +213,7 @@ final case class RepositoryUpdater(
     downloadedRepositoryFile: Path,
     transformedRepositoryFile: Path,
     pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]
-  ): Unit = {
+  ): UIO[Unit] = ZIO.attempt {
     // Parse the input file.
     log.info("Reading repository file...")
     val model = rdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = NQuads)

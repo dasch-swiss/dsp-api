@@ -162,64 +162,9 @@ case class TriplestoreServiceHttpConnectorImpl(
   private val dataInsertPath = s"/${settings.triplestoreDatabaseName}/data"
 
   /**
-   * Receives a message requesting a SPARQL select or update, and returns an appropriate response message or
-   * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-   * method first returns `Failure` to the sender, then throws an exception.
-   */
-  def receive: PartialFunction[Any, Unit] = {
-    case SparqlSelectRequest(sparql: String) => try2Message(sender(), sparqlHttpSelect(sparql), log)
-    case sparqlConstructRequest: SparqlConstructRequest =>
-      try2Message(sender(), sparqlHttpConstruct(sparqlConstructRequest), log)
-    case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
-      try2Message(sender(), sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest), log)
-    case SparqlConstructFileRequest(
-          sparql: String,
-          graphIri: IRI,
-          outputFile: Path,
-          outputFormat: QuadFormat,
-          featureFactoryConfig: FeatureFactoryConfig
-        ) =>
-      try2Message(
-        sender(),
-        sparqlHttpConstructFile(sparql, graphIri, outputFile, outputFormat, featureFactoryConfig),
-        log
-      )
-    case NamedGraphFileRequest(
-          graphIri: IRI,
-          outputFile: Path,
-          outputFormat: QuadFormat,
-          featureFactoryConfig: FeatureFactoryConfig
-        ) =>
-      try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile, outputFormat, featureFactoryConfig), log)
-    case NamedGraphDataRequest(graphIri: IRI) => try2Message(sender(), sparqlHttpGraphData(graphIri), log)
-    case SparqlUpdateRequest(sparql: String)  => try2Message(sender(), sparqlHttpUpdate(sparql), log)
-    case SparqlAskRequest(sparql: String)     => try2Message(sender(), sparqlHttpAsk(sparql), log)
-    case ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean) =>
-      try2Message(sender(), resetTripleStoreContent(rdfDataObjects, prependDefaults), log)
-    case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
-    case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
-      try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
-    case HelloTriplestore(msg: String) if msg == settings.triplestoreType =>
-      sender() ! HelloTriplestore(settings.triplestoreType)
-    case CheckTriplestoreRequest() => try2Message(sender(), checkFusekiTriplestore(), log)
-    case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
-      try2Message(sender(), Success(SparqlUpdateResponse()), log)
-    case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
-      try2Message(sender(), downloadRepository(outputFile, featureFactoryConfig), log)
-    case UploadRepositoryRequest(inputFile: Path) => try2Message(sender(), uploadRepository(inputFile), log)
-    case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>
-      try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
-    case SimulateTimeoutRequest() => try2Message(sender(), doSimulateTimeout(), log)
-    case other =>
-      sender() ! Status.Failure(
-        UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}")
-      )
-  }
-
-  /**
    * Simulates a read timeout.
    */
-  private def doSimulateTimeout(): Try[SparqlSelectResult] = {
+  private def doSimulateTimeout(): UIO[SparqlSelectResult] = {
     val sparql = """SELECT ?foo WHERE {
                    |    BIND("foo" AS ?foo)
                    |}""".stripMargin
@@ -810,9 +755,8 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @return a string containing the contents of the graph in N-Quads format.
    */
   private def downloadRepository(
-    outputFile: Path,
-    featureFactoryConfig: FeatureFactoryConfig
-  ): Try[FileWrittenResponse] = {
+    outputFile: Path
+  ): UIO[FileWrittenResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
 
     val uriBuilder: URIBuilder = new URIBuilder(repositoryDownloadPath)
