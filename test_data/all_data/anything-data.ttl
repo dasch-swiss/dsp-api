@@ -2196,4 +2196,38 @@
     knora-base:hasRootNode      <http://rdfh.ch/lists/0001/notUsedList> ;
     knora-base:listNodePosition 0 ;
     rdfs:label                  "child of node 3"@en .
-  
+
+<http://rdfh.ch/lists/0001/testList>
+    a                            knora-base:ListNode ;
+    knora-base:isRootNode        true ;
+    knora-base:listNodeName      "Test list root for comments" ;
+    rdfs:label                   "Test list root label"@en ;
+    rdfs:comment                 "Test list root comment"@en ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:hasSubListNode    <http://rdfh.ch/lists/0001/testList01>,
+                                 <http://rdfh.ch/lists/0001/testList02>,
+                                 <http://rdfh.ch/lists/0001/testList03> .
+
+<http://rdfh.ch/lists/0001/testList01>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "Test list node 01 with one comment" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/testList> ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Test list node 01"@en ;
+    rdfs:comment                "Test list child node comment"@en .
+
+<http://rdfh.ch/lists/0001/testList02>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "Test list node 02 with two comments" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/testList> ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Test list node 02"@en ;
+    rdfs:comment                "Test list child node comment 01"@en ;
+    rdfs:comment                "Test list child node comment 02"@en .
+
+<http://rdfh.ch/lists/0001/testList03>
+    a                           knora-base:ListNode ;
+    knora-base:listNodeName     "Test list node 02 w/o comments" ;
+    knora-base:hasRootNode      <http://rdfh.ch/lists/0001/testList> ;
+    knora-base:listNodePosition 0 ;
+    rdfs:label                  "Test list node 03"@en .
