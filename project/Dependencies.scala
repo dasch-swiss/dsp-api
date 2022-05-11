@@ -157,6 +157,7 @@ object Dependencies {
     zioMacros
   )
 
+  // schema project dependencies
   val schemaApiLibraryDependencies = Seq(
     zioHttp
   )
@@ -168,4 +169,16 @@ object Dependencies {
   val schemaRepoLibraryDependencies                  = Seq()
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
+
+  // user project dependencies
+  val userApiLibraryDependencies = Seq(
+    zio
+  )
+  val userCoreLibraryDependencies = Seq(
+    zio,
+    zioMacros
+  )
+  val userRepoLibraryDependencies = Seq(
+    zio
+  )
 }

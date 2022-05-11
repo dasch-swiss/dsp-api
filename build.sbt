@@ -282,3 +282,36 @@ lazy val schemaRepoSearchService = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
+
+lazy val userApi = project
+  .in(file("dsp-user/api"))
+  .settings(
+    name := "userApi",
+    libraryDependencies ++= Dependencies.userApiLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(userCore)
+
+lazy val userCore = project
+  .in(file("dsp-user/core"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userCore",
+    libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(userCore)
