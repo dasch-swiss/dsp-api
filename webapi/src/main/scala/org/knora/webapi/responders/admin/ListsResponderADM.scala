@@ -92,6 +92,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       deleteListItemRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
     case CanDeleteListRequestADM(iri, featureFactoryConfig, requestingUser) =>
       canDeleteListRequestADM(iri)
+    case ListChildNodeCommentsDeleteRequestADM(iri, featureFactoryConfig, requestingUser) =>
+      deleteListChildNodeCommentsADM(iri, featureFactoryConfig, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -1829,6 +1831,49 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         else false
 
     } yield CanDeleteListResponseADM(iri, canDelete)
+
+  private def deleteListChildNodeCommentsADM(
+    iri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ListChildNodeCommentsDeleteResponseADM] =
+    for {
+      node <- listNodeGetADM(
+                nodeIri = iri,
+                shallow = false,
+                featureFactoryConfig = featureFactoryConfig,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+
+      isRootNode = node match {
+                     case Some(_: ListRootNodeADM)  => true
+                     case Some(_: ListChildNodeADM) => false
+                     case _                         => false
+                   }
+      
+      projectIri <- getProjectIriFromNode(iri, featureFactoryConfig)
+      namedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
+
+      sparqlQuery <- Future(
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .deleteListChildNodeComments(
+                           namedGraph = namedGraph,
+                           nodeIri = iri,
+                           isRootNode = isRootNode
+                         )
+                         .toString()
+                     )
+
+      _: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlQuery))
+                                        .mapTo[SparqlUpdateResponse]
+
+      responseMessage = if(isRootNode) {
+        s"Comments of provided list node $iri have not been deleted. Deleting list root node comments is forbidden."
+      } else {
+        s"Comments of provided list node $iri have been deleted successfully."
+      }
+
+    } yield ListChildNodeCommentsDeleteResponseADM(iri, !isRootNode)
 
   /**
    * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,

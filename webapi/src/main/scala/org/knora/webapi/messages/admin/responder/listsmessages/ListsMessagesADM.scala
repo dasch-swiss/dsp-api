@@ -22,6 +22,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import spray.json._
 
 import java.util.UUID
+import org.knora.webapi.messages.admin.responder.valueObjects.Comments
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -339,8 +340,33 @@ case class ListItemDeleteRequestADM(
 case class CanDeleteListRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
     extends ListsResponderRequestADM
 
+/**
+ * Request deletes a list comments. A successful response will be a [[ListChildNodeCommentsDeleteADM]]
+ *
+ * @param iri                  the IRI of the list node (root or child).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ */
+case class ListChildNodeCommentsDeleteRequestADM(
+  iri: IRI,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends ListsResponderRequestADM
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
+
+
+/**
+ * Responds to deletion of a list comments by returning a success message.
+ *
+ * @param iri the IRI of the list that comments are deleted.
+ * @param commentsDeleted ???
+ */
+case class ListChildNodeCommentsDeleteResponseADM(iri: IRI, commentsDeleted: Boolean)
+    extends KnoraResponseADM with ListADMJsonProtocol {
+  def toJsValue: JsValue = listChildNodeCommentsDeleteResponseADMFormat.write(this)
+}
 
 /**
  * Represents a sequence of list info nodes.
@@ -1339,4 +1365,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     jsonFormat(ListDeleteResponseADM, "iri", "deleted")
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
     jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
+  implicit val listChildNodeCommentsDeleteResponseADMFormat: RootJsonFormat[ListChildNodeCommentsDeleteResponseADM] =
+    jsonFormat(ListChildNodeCommentsDeleteResponseADM, "iri", "commentsDeleted")
 }

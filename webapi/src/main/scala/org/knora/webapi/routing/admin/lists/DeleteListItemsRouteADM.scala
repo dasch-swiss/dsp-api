@@ -39,7 +39,8 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
   def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     deleteListItem(featureFactoryConfig) ~
-      canDeleteList(featureFactoryConfig)
+      canDeleteList(featureFactoryConfig) ~
+      deleteListChildNodeComments(featureFactoryConfig)
 
   /* delete list (i.e. root node) or a child node which should also delete its children */
   private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
@@ -85,6 +86,31 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+    }
+
+  private def deleteListChildNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(ListsBasePath / "deletecomments" / Segment) { iri =>
+      delete { requestContext =>
+        val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
+
+        val requestMessage: Future[ListChildNodeCommentsDeleteRequestADM] =
+          for {
+            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          } yield ListChildNodeCommentsDeleteRequestADM(
+            iri = listIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
