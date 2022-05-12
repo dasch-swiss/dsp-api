@@ -128,7 +128,7 @@ pattern orders must be optimised by moving `LuceneQueryPatterns` to the beginnin
 - `ConstructToConstructTransformer` (extends `WhereTransformer`): instructions how to turn a triplestore independent Construct query into a triplestore dependent Construct query (implementation of inference).
 
 The traits listed above define methods that are implemented in the transformer classes and called by `QueryTraverser` to perform SPARQL to SPARQL conversions.
-When iterating over the statements of the input query, the transformer class's transformation methods are called to perform the conversion.
+When iterating over the statements of the input query, the transformer class' transformation methods are called to perform the conversion.
 
 ### Prequery
 
@@ -152,7 +152,7 @@ Next, the Gravsearch query's WHERE clause is transformed and the prequery (SELEC
 The transformation of the Gravsearch query's WHERE clause relies on the implementation of the abstract class `AbstractPrequeryGenerator`.
 
 `AbstractPrequeryGenerator` contains members whose state is changed during the iteration over the statements of the input query.
-They can then by used to create the converted query.
+They can then be used to create the converted query.
 
 - `mainResourceVariable: Option[QueryVariable]`: SPARQL variable representing the main resource of the input query. Present in the prequery's SELECT clause.
 - `dependentResourceVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing dependent resources in the input query. Used in an aggregation function in the prequery's SELECT clause (see below).
@@ -288,29 +288,12 @@ to the maximum allowed page size, the predicate
 
 ## Inference
 
-Gravsearch queries support a subset of RDFS reasoning
-(see [Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
+Gravsearch queries support a subset of RDFS reasoning (see [Inference](../../../03-apis/api-v2/query-language.md#inference) in the API documentation
 on Gravsearch). This is implemented as follows:
 
-When the non-triplestore-specific version of a SPARQL query is generated, statements that do not need
-inference are marked with the virtual named graph `<http://www.knora.org/explicit>`.
+To simulate RDF inference, the API expands the prequery on basis of the available ontologies. For that reason, `SparqlTransformer.transformStatementInWhereForNoInference` expands all `rdfs:subClassOf` and `rdfs:subPropertyOf` statements using `UNION` statements for all subclasses and subproperties from the ontologies (equivalent to `rdfs:subClassOf*` and `rdfs:subPropertyOf*`). 
+Similarly, `SparqlTransformer.transformStatementInWhereForNoInference` replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
-When the triplestore-specific version of the query is generated:
-
-- If the triplestore is GraphDB, `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` changes statements
-  with the virtual graph `<http://www.knora.org/explicit>` so that they are marked with the GraphDB-specific graph
-  `<http://www.ontotext.com/explicit>`, and leaves other statements unchanged. 
-  `SparqlTransformer.transformKnoraExplicitToGraphDBExplicit` also adds the `valueHasString` statements which GraphDB needs 
-  for text searches.
-
-- If Knora is not using the triplestore's inference (e.g. with Fuseki),
-  `SparqlTransformer.transformStatementInWhereForNoInference` removes `<http://www.knora.org/explicit>`, and expands unmarked
-  statements using `rdfs:subClassOf*` and `rdfs:subPropertyOf*`.
-
-Gravsearch also provides some virtual properties, which take advantage of forward-chaining inference
-as an optimisation if the triplestore provides it. For example, the virtual property
-`knora-api:standoffTagHasStartAncestor` is equivalent to `knora-base:standoffTagHasStartParent*`. If Knora is not using the triplestore's inference, `SparqlTransformer.transformStatementInWhereForNoInference`
-replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHasStartParent*`.
 
 # Optimisation of generated SPARQL
 
@@ -320,8 +303,7 @@ Lucene queries to the beginning of the block in which they occur.
 
 ## Query Optimization by Topological Sorting of Statements
 
-GraphDB seems to have inherent algorithms to optimize the query time, however query performance of Fuseki highly depends 
-on the order of the query statements. For example, a query such as the one below:
+In Jena Fuseki, the performance of a query highly depends on the order of the query statements. For example, a query such as the one below:
 
 ```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -370,8 +352,7 @@ The rest of the query then reads:
  ?letter beol:creationDate ?date .
 ```
 
-Since we cannot expect clients to know about performance of triplestores in order to write efficient queries, we have 
-implemented an optimization method to automatically rearrange the statements of the given queries. 
+Since users cannot be expected to know about performance of triplestores in order to write efficient queries, an optimization method to automatically rearrange the statements of the given queries has been implemented. 
 Upon receiving the Gravsearch query, the algorithm converts the query to a graph. For each statement pattern,
 the subject of the statement is the origin node, the predicate is a directed edge, and the object 
 is the target node. For the query above, this conversion would result in the following graph:
@@ -384,17 +365,16 @@ topological sorting algorithm](https://en.wikipedia.org/wiki/Topological_sorting
 The algorithm returns the nodes of the graph ordered in several layers, where the 
 root element `?letter` is in layer 0, `[?date, ?person1, ?person2]` are in layer 1, `[?gnd1, ?gnd2]` in layer 2, and the 
 leaf nodes `[(DE-588)118531379, (DE-588)118696149]` are given in the last layer (i.e. layer 3). 
-According to Kahn's algorithm, there are multiple valid permutations of the topological order. The graph in the example 
- above has 24 valid permutations of topological order. Here are two of them (nodes are ordered from left to right with the highest 
- order to the lowest):
+According to Kahn's algorithm, there are multiple valid permutations of the topological order. The graph in the example
+above has 24 valid permutations of topological order. Here are two of them (nodes are ordered from left to right with the 
+highest order to the lowest):
  
 - `(?letter, ?date, ?person2, ?person1, ?gnd2, ?gnd1, (DE-588)118696149, (DE-588)118531379)`   
 - `(?letter, ?date, ?person1, ?person2, ?gnd1, ?gnd2, (DE-588)118531379, (DE-588)118696149)`.   
 
-From all valid topological orders, one is chosen based on certain criteria; for example, the leaf should node should not 
+From all valid topological orders, one is chosen based on certain criteria; for example, the leaf node should not 
 belong to a statement that has predicate `rdf:type`, since that could match all resources of the specified type.
-Once the best order is chosen, it is used to re-arrange the query 
-statements. Starting from the last leaf node, i.e. 
+Once the best order is chosen, it is used to re-arrange the query statements. Starting from the last leaf node, i.e. 
 `(DE-588)118696149`, the method finds the statement pattern which has this node as its object, and brings this statement 
 to the top of the query. This rearrangement continues so that the statements with the fewest dependencies on other 
 statements are all brought to the top of the query. The resulting query is as follows:
@@ -423,8 +403,7 @@ CONSTRUCT {
 
 Note that position of the FILTER statements does not play a significant role in the optimization. 
 
-If a Gravsearch query contains statements in `UNION`, `OPTIONAL`, `MINUS`, or 
-`FILTER NOT EXISTS`, they are reordered 
+If a Gravsearch query contains statements in `UNION`, `OPTIONAL`, `MINUS`, or `FILTER NOT EXISTS`, they are reordered 
 by defining a graph per block. For example, consider the following query with `UNION`:
 
 ```sparql

@@ -3581,9 +3581,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
         // Update the ontology cache using the new class definition.
-        newReadClassInfo: ReadClassInfoV2 = ReadClassInfoV2(
-                                              entityInfoContent = loadedClassDef,
-                                              allBaseClasses = classToUpdate.allBaseClasses
+        newReadClassInfo: ReadClassInfoV2 = classToUpdate.copy(
+                                              entityInfoContent = classDefWithoutComment
                                             )
 
         updatedOntologyMetadata: OntologyMetadataV2 = ontology.ontologyMetadata.copy(

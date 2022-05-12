@@ -738,13 +738,22 @@ case class TriplestoreServiceHttpConnectorImpl(
       (queryHttpClient, queryHttpPost)
     }
 
-    doHttpRequest(
+    val tryRequest = doHttpRequest(
       client = httpClient,
       request = httpPost,
       context = httpContext,
       processResponse = returnResponseAsString,
       simulateTimeout = simulateTimeout
     )
+    tryRequest match {
+      case Failure(exception) =>
+        exception match {
+          case TriplestoreTimeoutException(_, _) =>
+            log.error(s"Triplestore timed out after query: $sparql")
+        }
+        tryRequest
+      case _ => tryRequest
+    }
   }
 
   /**

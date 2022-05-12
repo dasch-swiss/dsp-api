@@ -1,5 +1,24 @@
 # Changelog
 
+## [20.3.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.2.1...v20.3.0) (2022-05-12)
+
+
+### Bug Fixes
+
+* Problem with updating cache after deleting comments (DEV-508) ([#2060](https://www.github.com/dasch-swiss/dsp-api/issues/2060)) ([a9fda7e](https://www.github.com/dasch-swiss/dsp-api/commit/a9fda7e4449f52e61350863e6302cce79202fa92))
+
+
+### Maintenance
+
+* check that the expected Fuseki version is present (DEV-331) ([#2057](https://www.github.com/dasch-swiss/dsp-api/issues/2057)) ([2a695ec](https://www.github.com/dasch-swiss/dsp-api/commit/2a695ec5d917d02e70ec3d3ddcf1ee6ebe265f05))
+* **deps:** bump ZIO version (DEV-893) ([#2056](https://www.github.com/dasch-swiss/dsp-api/issues/2056)) ([933f91e](https://www.github.com/dasch-swiss/dsp-api/commit/933f91e049f4a6392015e11ccce0b9b3caa26657))
+
+
+### Enhancements
+
+* add Romansh as supported language (DEV-557) ([#2053](https://www.github.com/dasch-swiss/dsp-api/issues/2053)) ([58971c8](https://www.github.com/dasch-swiss/dsp-api/commit/58971c8e5dcdc83d0dcf0456887b42b7dedff0e9))
+* **gravsearch:** improve gravsearch performance by using unions in prequery (DEV-492) ([#2045](https://www.github.com/dasch-swiss/dsp-api/issues/2045)) ([40354a7](https://www.github.com/dasch-swiss/dsp-api/commit/40354a7d0ee7bc4954adb87e8b16ba4d9fc45784))
+
 ### [20.2.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.2.0...v20.2.1) (2022-05-05)
 
 

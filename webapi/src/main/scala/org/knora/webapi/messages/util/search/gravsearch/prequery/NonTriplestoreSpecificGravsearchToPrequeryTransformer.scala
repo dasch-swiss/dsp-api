@@ -9,12 +9,15 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
 import org.knora.webapi.settings.KnoraSettingsImpl
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -45,19 +48,22 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
   /**
    * Transforms a [[org.knora.webapi.messages.util.search.StatementPattern]] in a WHERE clause into zero or more query patterns.
    *
-   * @param statementPattern the statement to be transformed.
-   * @param inputOrderBy     the ORDER BY clause in the input query.
+   * @param statementPattern           the statement to be transformed.
+   * @param inputOrderBy               the ORDER BY clause in the input query.
+   * @param limitInferenceToOntologies a set of ontology IRIs, to which the simulated inference will be limited. If `None`, all possible inference will be done.
    * @return the result of the transformation.
    */
   override def transformStatementInWhere(
     statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion]
-  ): Seq[QueryPattern] =
+    inputOrderBy: Seq[OrderCriterion],
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
+  )(implicit executionContext: ExecutionContext): Seq[QueryPattern] =
     // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
     // other information about the matching resources or values.
     processStatementPatternFromWhereClause(
       statementPattern = statementPattern,
-      inputOrderBy = inputOrderBy
+      inputOrderBy = inputOrderBy,
+      limitInferenceToOntologies = limitInferenceToOntologies
     )
 
   /**
