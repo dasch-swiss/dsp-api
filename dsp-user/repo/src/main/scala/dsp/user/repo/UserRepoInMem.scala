@@ -43,14 +43,14 @@ final case class UserRepoInMem(
    * Stores the user with key UUID in the users map.
    * Stores the username and email with the associated UUID in the lookup table.
    *
-   * @param value the value to be stored
+   * @param user the value to be stored
    */
-  private def putUser(value: User): UIO[Unit] =
+  private def putUser(user: User): UIO[Unit] =
     (for {
-      _ <- users.put(value.id.uuid, value)
-      _ <- lut.put(value.username, value.id.uuid)
-      _ <- lut.put(value.email, value.id.uuid)
-    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored user: ${value.id}"))
+      _ <- users.put(user.id.uuid, user)
+      _ <- lut.put(user.username, user.id.uuid)
+      _ <- lut.put(user.email, user.id.uuid)
+    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored user: ${user.id}"))
 
   /**
    * Retrieves the user by ID.

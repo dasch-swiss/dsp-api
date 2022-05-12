@@ -61,8 +61,8 @@ object UserId {
 
 // These are just placeholders for now. Replace this with the real value objects once we have them.
 object UserValueObjects {
-  type UserIri    = String // IRI of the user that can be used by UserId (don't use it directly!)
-  type UserId     = String // the UserId which contains both UUID and IRI
+  type UserIri = String // IRI of the user that can be used by UserId (don't use it directly!)
+  //type UserId     = String // the UserId which contains both UUID and IRI
   type GivenName  = String
   type FamilyName = String
   type Username   = String
