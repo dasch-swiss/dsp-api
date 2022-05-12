@@ -1,5 +1,12 @@
 # Changelog
 
+### [20.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.3.0...v20.3.1) (2022-05-12)
+
+
+### Bug Fixes
+
+* **authentication:** Add bouncyCastle dependency (DEV-922) ([#2065](https://www.github.com/dasch-swiss/dsp-api/issues/2065)) ([4ac799d](https://www.github.com/dasch-swiss/dsp-api/commit/4ac799dd62ae93eb43ffce319070d238d47b0fee))
+
 ## [20.3.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.2.1...v20.3.0) (2022-05-12)
 
 
