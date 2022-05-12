@@ -1,4 +1,4 @@
-package org.knora.webapi.store.cacheservice.config
+package org.knora.webapi.store.cache.config
 
 final case class CacheServiceConfig(enabled: Boolean, redis: RedisConfig)
 

@@ -10,8 +10,9 @@ import akka.actor.ActorSystem
 import akka.stream.Materializer
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 import scala.concurrent.ExecutionContext
 
@@ -30,6 +31,8 @@ trait Core {
   val iiifServiceManager: IIIFServiceManager
 
   val cacheServiceManager: CacheServiceManager
+
+  val triplestoreServiceManager: TriplestoreServiceManager
 
   val appConfig: AppConfig
 

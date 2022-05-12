@@ -57,8 +57,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
-import org.knora.webapi.store.StoreManager
-import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.util.cache.CacheUtil

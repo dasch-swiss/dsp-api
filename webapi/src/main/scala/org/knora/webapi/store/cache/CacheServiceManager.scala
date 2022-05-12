@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice
+package org.knora.webapi.store.cache
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages._
-import org.knora.webapi.store.cacheservice.api.CacheService
+import org.knora.webapi.store.cache.api.CacheService
 import zio._
 import zio.metrics.Metric
 

@@ -41,7 +41,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
  * @param ts                    a triplestore service.
  * @param updater                    a RepositoryUpdater for processing requests to update the repository.
  */
-final case class TriplestoreManager(
+final case class TriplestoreServiceManager(
   ts: TriplestoreService,
   updater: RepositoryUpdater
 ) {
@@ -85,18 +85,19 @@ final case class TriplestoreManager(
     case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>
       ts.insertDataGraphRequest(graphContent, graphName)
     case SimulateTimeoutRequest() => ts.doSimulateTimeout()
-    case other => ZIO.die(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+    case other =>
+      ZIO.die(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
   }
 
 }
 
 object TriplestoreManager {
-  val layer: ZLayer[TriplestoreService & RepositoryUpdater, Nothing, TriplestoreManager] = {
+  val layer: ZLayer[TriplestoreService & RepositoryUpdater, Nothing, TriplestoreServiceManager] = {
     ZLayer {
       for {
         ts      <- ZIO.service[TriplestoreService]
         updater <- ZIO.service[RepositoryUpdater]
-      } yield TriplestoreManager(ts, updater)
+      } yield TriplestoreServiceManager(ts, updater)
     }
   }
 }

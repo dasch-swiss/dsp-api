@@ -54,7 +54,7 @@ trait LiveCore extends Core {
    * sequences.
    */
   lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig))
+    Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig))
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = APPLICATION_MANAGER_ACTOR_NAME
   )

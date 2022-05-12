@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.api
+package org.knora.webapi.store.cache.api
 
 import org.knora.webapi.exceptions.CacheServiceException
 
