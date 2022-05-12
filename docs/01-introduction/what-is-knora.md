@@ -74,7 +74,7 @@ and can regenerate the original XML document at any time.
 
 DSP-API provides a search language, [Gravsearch](../03-apis/api-v2/query-language.md),
 that is designed to meet the needs of humanities researchers. Gravsearch supports DSP-API's
-humanites-focused data structures, including calendar-independent dates and standoff markup, as well
+humanities-focused data structures, including calendar-independent dates and standoff markup, as well
 as fast full-text searches. This allows searches to combine text-related criteria with any other
 criteria. For example, you could search for a text that contains a certain word
 and also mentions a person who lived in the same city as another person who is the

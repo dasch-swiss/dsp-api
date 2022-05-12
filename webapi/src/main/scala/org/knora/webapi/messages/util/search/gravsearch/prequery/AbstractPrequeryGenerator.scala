@@ -574,7 +574,8 @@ abstract class AbstractPrequeryGenerator(
 
   protected def processStatementPatternFromWhereClause(
     statementPattern: StatementPattern,
-    inputOrderBy: Seq[OrderCriterion]
+    inputOrderBy: Seq[OrderCriterion],
+    limitInferenceToOntologies: Option[Set[SmartIri]] = None
   ): Seq[QueryPattern] =
     // Does this statement set a Gravsearch option?
     statementPattern.subj match {

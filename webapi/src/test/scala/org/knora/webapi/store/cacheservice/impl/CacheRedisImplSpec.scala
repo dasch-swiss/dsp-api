@@ -32,9 +32,9 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
-   * for running the tests.
+   * for running the tests. `bootstrap` overrides the base layer of ZIOApp.
    */
-  val layer = ZLayer.make[CacheService & zio.test.Annotations](
+  val bootstrap = ZLayer.make[CacheService & zio.test.Annotations](
     CacheServiceRedisImpl.layer,
     RedisTestConfig.redisTestContainer,
     zio.test.Annotations.live,
@@ -46,20 +46,20 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
   val userTests = suite("CacheRedisImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {
       for {
-        _             <- CacheService(_.putUserADM(user))
-        retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeIri = Some(user.id))))
+        _             <- CacheService.putUserADM(user)
+        retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
       } yield assert(retrievedUser)(equalTo(Some(user)))
     } @@ ignore +
       test("successfully store a user and retrieve by USERNAME")(
         for {
-          _             <- CacheService(_.putUserADM(user))
-          retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username))))
+          _             <- CacheService.putUserADM(user)
+          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
         } yield assert(retrievedUser)(equalTo(Some(user)))
       ) @@ ignore +
       test("successfully store a user and retrieve by EMAIL")(
         for {
-          _             <- CacheService(_.putUserADM(user))
-          retrievedUser <- CacheService(_.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email))))
+          _             <- CacheService.putUserADM(user)
+          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
         } yield assert(retrievedUser)(equalTo(Some(user)))
       ) @@ ignore
   )
@@ -67,22 +67,22 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
   val projectTests = suite("CacheRedisImplSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
-        _                <- CacheService(_.putProjectADM(project))
-        retrievedProject <- CacheService(_.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id))))
+        _                <- CacheService.putProjectADM(project)
+        retrievedProject <- CacheService.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
       } yield assert(retrievedProject)(equalTo(Some(project)))
     ) +
       test("successfully store a project and retrieve by SHORTCODE")(
         for {
-          _ <- CacheService(_.putProjectADM(project))
+          _ <- CacheService.putProjectADM(project)
           retrievedProject <-
-            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode))))
+            CacheService.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       ) +
       test("successfully store a project and retrieve by SHORTNAME")(
         for {
-          _ <- CacheService(_.putProjectADM(project))
+          _ <- CacheService.putProjectADM(project)
           retrievedProject <-
-            CacheService(_.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname))))
+            CacheService.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
         } yield assert(retrievedProject)(equalTo(Some(project)))
       )
   )

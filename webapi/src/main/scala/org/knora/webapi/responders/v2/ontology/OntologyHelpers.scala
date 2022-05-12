@@ -2109,6 +2109,25 @@ object OntologyHelpers {
       }
 
   /**
+   * Given all the `rdfs:subPropertyOf` relations between properties, calculates all the inverse relations.
+   *
+   * @param allSubPropertiesOfRelations all the `rdfs:subPropertyOf` relations between properties.
+   * @return a map of IRIs of properties to sets of the IRIs of their subproperties.
+   */
+  def calculateSuperPropertiesOfRelations(
+    allSubPropertiesOfRelations: Map[SmartIri, Set[SmartIri]]
+  ): Map[SmartIri, Set[SmartIri]] =
+    allSubPropertiesOfRelations.toVector.flatMap { case (subProp: SmartIri, baseProps: Set[SmartIri]) =>
+      baseProps.map { baseProp =>
+        baseProp -> subProp
+      }
+    }
+      .groupBy(_._1)
+      .map { case (baseProp: SmartIri, basePropAndSubProps: Vector[(SmartIri, SmartIri)]) =>
+        baseProp -> basePropAndSubProps.map(_._2).toSet
+      }
+
+  /**
    * Given a class loaded from the triplestore, recursively adds its inherited cardinalities to the cardinalities it defines
    * directly. A cardinality for a subproperty in a subclass overrides a cardinality for a base property in
    * a base class.

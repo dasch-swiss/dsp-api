@@ -157,8 +157,8 @@ case class CacheServiceInMemImpl(
     val emptyValueError = EmptyValue("The string value is empty. Aborting write to cache.")
 
     (for {
-      key   <- if (key.isEmpty()) Task.fail(emptyKeyError) else Task.succeed(key)
-      value <- if (value.isEmpty()) Task.fail(emptyValueError) else Task.succeed(value)
+      key   <- if (key.isEmpty()) ZIO.fail(emptyKeyError) else ZIO.succeed(key)
+      value <- if (value.isEmpty()) ZIO.fail(emptyValueError) else ZIO.succeed(value)
       _     <- lut.put(key, value).commit
     } yield ()).tap(_ => ZIO.logDebug(s"Wrote key: $key with value: $value to cache."))
   }
@@ -196,7 +196,7 @@ case class CacheServiceInMemImpl(
    * Pings the in-memory cache to see if it is available.
    */
   def ping(): Task[CacheServiceStatusResponse] =
-    Task.succeed(CacheServiceStatusOK)
+    ZIO.succeed(CacheServiceStatusOK)
 }
 
 /**
