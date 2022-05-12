@@ -70,7 +70,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
-        received.lists.size should be(8)
+        received.lists.size should be(9)
       }
 
       "return all lists belonging to the images project" in {
@@ -98,7 +98,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // log.debug("received: " + received)
 
-        received.lists.size should be(3)
+        received.lists.size should be(4)
       }
 
       "return basic list information (anything list)" in {
