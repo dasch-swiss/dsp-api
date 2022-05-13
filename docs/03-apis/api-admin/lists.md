@@ -15,6 +15,8 @@ If IRI of the child node is given, return the node with its immediate children
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
 - `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
 - `GET: /admin/lists/<listIri>/info` : return list basic information (without children)
+- `GET: /admin/lists/candelete/<listItemIri>` : check if list or its node is unused and can be deleted
+
 
 - `POST: /admin/lists` : create new list
 - `POST: /admin/lists/<parentNodeIri>` : create new child node under the supplied parent node IRI
@@ -27,6 +29,7 @@ If IRI of the child node is given, return the node with its immediate children
 parent node
 
 - `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not used
+- `DELETE: /admin/lists/deletecomments/<nodeIri>` : delete comments of child node
 
 ## List Item Operations
 
@@ -60,6 +63,21 @@ and all its children
 - Required permission: none
 - Return list (or node) basic information, `listinfo` (or `nodeinfo`), without its children
 - GET: `/admin/lists/<listIri>/info`
+
+### Check if list is unused and can be deleted
+
+- Required permission: none
+- GET: `/admin/lists/candelete/<listItemIri>`
+- Return simple JSON that confirmes if list can be deleted
+
+```json
+{
+    "canDeleteList": true,
+    "listIri": "http://rdfh.ch/lists/0801/xxx"
+}
+```
+
+List (root node or child node with all its children) can be deleted only if it (or one its children) is not used.
 
 ### Create new list
 
@@ -338,3 +356,17 @@ remaining child nodes with respect to the position of the deleted node.
     - If the IRI of a child node is given, the updated parent node is returned.
 
 - Delete `/admin/lists/<listItemIri>`
+
+### Delete child node comments
+
+By performing DELETE request to following route `/admin/lists/deletecomments/<nodeIri>` it is possible to delete child node comments.
+As a response sipmle JSON is returned:
+
+```json
+{
+    "commentsDeleted": true,
+    "nodeIri": "http://rdfh.ch/lists/0801/xxx"
+}
+```
+
+Keep in mind that it is impossible to delete root node comments, but if requested `commentsDeleted` key will hold `false` value.

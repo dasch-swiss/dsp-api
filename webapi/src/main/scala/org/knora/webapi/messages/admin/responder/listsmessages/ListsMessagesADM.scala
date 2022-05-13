@@ -357,10 +357,10 @@ case class ListChildNodeCommentsDeleteRequestADM(
 /**
  * Responds to deletion of a list comments by returning a success message.
  *
- * @param iri the IRI of the list that comments are deleted.
+ * @param nodeIri the IRI of the list that comments are deleted.
  * @param commentsDeleted boolean message if comments were deleted.
  */
-case class ListChildNodeCommentsDeleteResponseADM(iri: IRI, commentsDeleted: Boolean)
+case class ListChildNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Boolean)
     extends KnoraResponseADM
     with ListADMJsonProtocol {
   def toJsValue: JsValue = listChildNodeCommentsDeleteResponseADMFormat.write(this)
@@ -1367,5 +1367,5 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
     jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
   implicit val listChildNodeCommentsDeleteResponseADMFormat: RootJsonFormat[ListChildNodeCommentsDeleteResponseADM] =
-    jsonFormat(ListChildNodeCommentsDeleteResponseADM, "iri", "commentsDeleted")
+    jsonFormat(ListChildNodeCommentsDeleteResponseADM, "nodeIri", "commentsDeleted")
 }
