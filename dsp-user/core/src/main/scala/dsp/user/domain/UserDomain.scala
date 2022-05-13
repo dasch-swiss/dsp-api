@@ -61,8 +61,6 @@ object UserId {
 
 // These are just placeholders for now. Replace this with the real value objects once we have them.
 object UserValueObjects {
-  type UserIri = String // IRI of the user that can be used by UserId (don't use it directly!)
-  //type UserId     = String // the UserId which contains both UUID and IRI
   type GivenName  = String
   type FamilyName = String
   type Username   = String
@@ -77,7 +75,7 @@ import UserValueObjects._
 /**
  * Represents the user domain object.
  *
- * @param id          the ID of a user which contains both UUID and IRI of the user
+ * @param id          the ID of the user
  * @param givenName   the given name of the user
  * @param familyName  the family name of the user
  * @param username    the username of the user

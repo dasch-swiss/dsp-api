@@ -14,12 +14,12 @@ import dsp.user.domain.UserId
 /**
  * In-memory user repository implementation
  *
- * @param users     a map of users (UUID -> User).
- * @param lut       lut = lookup table; a map of username or email to UUID.
+ * @param users       a map of users (UUID -> User).
+ * @param lookupTable a map of username/email to UUID.
  */
 final case class UserRepoInMem(
   users: TMap[UUID, User],
-  lut: TMap[String, UUID] // sealed trait for key type
+  lookupTable: TMap[String, UUID] // sealed trait for key type
 ) extends UserRepo {
   def store(user: User): UIO[Unit] = putUser(user)
 
@@ -36,7 +36,7 @@ final case class UserRepoInMem(
     (for {
       user: User <- users.get(id.uuid).some
       _          <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
-      _          <- lut.delete(user.username) // remove the user also from the lookup table
+      _          <- lookupTable.delete(user.username) // remove the user also from the lookup table
     } yield ()).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
 
   /**
@@ -48,8 +48,8 @@ final case class UserRepoInMem(
   private def putUser(user: User): UIO[Unit] =
     (for {
       _ <- users.put(user.id.uuid, user)
-      _ <- lut.put(user.username, user.id.uuid)
-      _ <- lut.put(user.email, user.id.uuid)
+      _ <- lookupTable.put(user.username, user.id.uuid)
+      _ <- lookupTable.put(user.email, user.id.uuid)
     } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored user: ${user.id}"))
 
   /**
@@ -58,7 +58,7 @@ final case class UserRepoInMem(
    * @param id the user's ID.
    * @return an optional [[User]].
    */
-  private def getUserById(id: UserId): UIO[Option[User]] =
+  def getUserById(id: UserId): UIO[Option[User]] =
     users.get(id.uuid).commit.tap(_ => ZIO.logDebug(s"Found user by ID: ${id}"))
 
   /**
@@ -69,9 +69,9 @@ final case class UserRepoInMem(
    */
   private def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[User]] =
     (for {
-      iri: UUID  <- lut.get(usernameOrEmail).some
+      iri: UUID  <- lookupTable.get(usernameOrEmail).some
       user: User <- users.get(iri).some
-    } yield user).commit.unsome.tap(_ => ZIO.logDebug(s"Found user by username or e-mail: ${usernameOrEmail}"))
+    } yield user).commit.unsome.tap(_ => ZIO.logDebug(s"Found user by username or email: ${usernameOrEmail}"))
 
 }
 

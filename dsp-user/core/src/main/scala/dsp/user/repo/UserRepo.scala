@@ -26,19 +26,27 @@ trait UserRepo {
    * Gets a user from the repository by its id.
    *
    * @param id the user ID
-   * @return   a user or None if not found
+   * @return   an optional [[User]]
    */
   def lookup(id: UserId): UIO[Option[User]]
 
   /**
-   * Gets all users from the repository
+   * Gets all users from the repository.
    *
-   * @return   a list of users
+   * @return   a list of [[User]]
    */
   def getAll(): UIO[List[User]]
 
   /**
-   * Deletes a user from the repository by its id.
+   * Retrieves the user by ID.
+   *
+   * @param id the user's ID
+   * @return an optional [[User]]
+   */
+  def getUserById(id: UserId): UIO[Option[User]]
+
+  /**
+   * Deletes a [[User]] from the repository by its [[UserId]].
    *
    * @param id the user ID
    * @return   Unit or None if not found
