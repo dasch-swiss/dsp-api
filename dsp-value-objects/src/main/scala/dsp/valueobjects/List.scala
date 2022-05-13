@@ -7,8 +7,7 @@ package dsp.valueobjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -21,10 +20,10 @@ object ListName { self =>
 
   def make(value: String): Validation[Throwable, ListName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(LIST_NAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
     } else {
       val validatedValue = Validation(
-        sf.toSparqlEncodedString(value, throw BadRequestException(LIST_NAME_INVALID_ERROR))
+        sf.toSparqlEncodedString(value, throw BadRequestException(ListErrorMessages.ListNameInvalid))
       )
 
       validatedValue.map(new ListName(_) {})
@@ -44,7 +43,7 @@ sealed abstract case class Position private (value: Int)
 object Position { self =>
   def make(value: Int): Validation[Throwable, Position] =
     if (value < -1) {
-      Validation.fail(BadRequestException(INVALID_POSITION))
+      Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
     } else {
       Validation.succeed(new Position(value) {})
     }
@@ -65,11 +64,11 @@ object Labels { self =>
 
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, Labels] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(LABEL_MISSING_ERROR))
+      Validation.fail(BadRequestException(ListErrorMessages.LabelMissing))
     } else {
       val validatedLabels = Validation(value.map { label =>
         val validatedLabel =
-          sf.toSparqlEncodedString(label.value, throw BadRequestException(LABEL_INVALID_ERROR))
+          sf.toSparqlEncodedString(label.value, throw BadRequestException(ListErrorMessages.LabelInvalid))
         StringLiteralV2(value = validatedLabel, language = label.language)
       })
 
@@ -92,11 +91,11 @@ object Comments { self =>
 
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, Comments] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(COMMENT_MISSING_ERROR))
+      Validation.fail(BadRequestException(ListErrorMessages.CommentMissing))
     } else {
       val validatedComments = Validation(value.map { comment =>
         val validatedComment =
-          sf.toSparqlEncodedString(comment.value, throw BadRequestException(COMMENT_INVALID_ERROR))
+          sf.toSparqlEncodedString(comment.value, throw BadRequestException(ListErrorMessages.CommentInvalid))
         StringLiteralV2(value = validatedComment, language = comment.language)
       })
 
@@ -108,4 +107,18 @@ object Comments { self =>
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)
     }
+}
+
+object ListErrorMessages {
+  val ListNameMissing          = "List name cannot be empty."
+  val ListNameInvalid          = "List name is invalid."
+  val LabelMissing             = "At least one label needs to be supplied."
+  val LabelInvalid             = "Invalid label."
+  val CommentMissing           = "At least one comment needs to be supplied."
+  val CommentInvalid           = "Invalid comment."
+  val ListCreatePermission     = "A list can only be created by the project or system administrator."
+  val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
+  val ListChangePermission     = "A list can only be changed by the project or system administrator."
+  val UpdateRequestEmptyLabel  = "List labels cannot be empty."
+  val InvalidPosition          = "Invalid position value is given, position should be either a positive value or -1."
 }

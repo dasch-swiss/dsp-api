@@ -147,7 +147,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === INVALID_POSITION)
+      assert(caught.getMessage === ListErrorMessages.InvalidPosition)
     }
 
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {
@@ -190,7 +190,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
-      thrown.getMessage should equal(INVALID_POSITION)
+      thrown.getMessage should equal(ListErrorMessages.InvalidPosition)
     }
   }
 }

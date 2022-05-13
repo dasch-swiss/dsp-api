@@ -7,7 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
@@ -22,23 +22,23 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        ProjectIRI.make("") should equal(Validation.fail(BadRequestException(PROJECT_IRI_MISSING_ERROR)))
+        ProjectIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
         ProjectIRI.make("not a project IRI") should equal(
-          Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.ProjectIriInvalid))
         )
         ProjectIRI.make(projectIRIWithUUIDVersion3) should equal(
-          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         ProjectIRI.make(validProjectIri) should not equal Validation.fail(
-          BadRequestException(PROJECT_IRI_INVALID_ERROR)
+          BadRequestException(IriErrorMessages.ProjectIriInvalid)
         )
       }
       "return value passed to value object" in {
@@ -54,21 +54,21 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         Shortcode.make("") should equal(
-          Validation.fail(BadRequestException(SHORTCODE_MISSING_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
         )
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
         Shortcode.make(invalidShortcode) should equal(
-          Validation.fail(BadRequestException(SHORTCODE_INVALID_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Shortcode.make(validShortcode).toOption.get.value should not equal
-          BadRequestException(SHORTCODE_INVALID_ERROR)
+          BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
       }
       "return value passed to value object" in {
         Shortcode.make(validShortcode).toOption.get.value should equal(validShortcode)
@@ -83,21 +83,21 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         Shortname.make("") should equal(
-          Validation.fail(BadRequestException(SHORTNAME_MISSING_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
         )
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
         Shortname.make(invalidShortname) should equal(
-          Validation.fail(BadRequestException(SHORTNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Shortname.make(validShortname).toOption.get.value should not equal
-          BadRequestException(SHORTNAME_INVALID_ERROR)
+          BadRequestException(ProjectErrorMessages.ShortnameInvalid)
       }
       "return value passed to value object" in {
         Shortname.make(validShortname).toOption.get.value should equal(validShortname)
@@ -111,7 +111,7 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         Longname.make("") should equal(
-          Validation.fail(BadRequestException(LONGNAME_MISSING_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
         )
       }
     }
@@ -132,7 +132,7 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         ProjectDescription.make(Seq.empty) should equal(
-          Validation.fail(BadRequestException(PROJECT_DESCRIPTION_MISSING_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing))
         )
       }
     }
@@ -153,7 +153,7 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         Keywords.make(Seq.empty) should equal(
-          Validation.fail(BadRequestException(KEYWORDS_MISSING_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
         )
       }
     }
@@ -174,7 +174,7 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         Logo.make("") should equal(
-          Validation.fail(BadRequestException(LOGO_MISSING_ERROR))
+          Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
         )
       }
     }

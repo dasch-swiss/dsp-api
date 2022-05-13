@@ -7,7 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
 import zio.prelude.Validation
 
@@ -21,18 +21,24 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        UserIRI.make("") should equal(Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR)))
+        UserIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        UserIRI.make("not a user IRI") should equal(Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR)))
-        UserIRI.make(userIRIWithUUIDVersion3) should equal(Validation.fail(BadRequestException(UUID_INVALID_ERROR)))
+        UserIRI.make("not a user IRI") should equal(
+          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid))
+        )
+        UserIRI.make(userIRIWithUUIDVersion3) should equal(
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
+        )
       }
     }
     "created using valid value" should {
       "not throw BadRequestException" in {
-        UserIRI.make(validUserIRI) should not equal Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
+        UserIRI.make(validUserIRI) should not equal Validation.fail(
+          BadRequestException(IriErrorMessages.UserIriInvalid)
+        )
       }
       "return value passed to value object" in {
         UserIRI.make(validUserIRI).toOption.get.value should equal(validUserIRI)
@@ -46,59 +52,61 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        Username.make("") should equal(Validation.fail(BadRequestException(USERNAME_MISSING_ERROR)))
+        Username.make("") should equal(Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException for username less than 4 characters long" in {
         Username.make("123") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username containg more than 50 characters" in {
         Username.make("01234567890123456789012345678901234567890123456789011") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username started with underscore" in {
         Username.make("_123") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username ended with underscore" in {
         Username.make("123_") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username started with dot" in {
         Username.make(".123") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username ended with dot" in {
         Username.make("123.") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username with underscore used multiple times in a row" in {
         Username.make("1__23") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username with dot used multiple times in a row" in {
         Username.make("1..23") should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
       "throw BadRequestException for username created with bad forbidden characters" in {
         Username.make(invalidUsername) should equal(
-          Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
         )
       }
     }
     "created using valid characters" should {
       "not throw BadRequestExceptions" in {
-        Username.make(validUsername) should not equal Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+        Username.make(validUsername) should not equal Validation.fail(
+          BadRequestException(UserErrorMessages.UsernameMissing)
+        )
       }
       "return value passed to value object" in {
         Username.make(validUsername).toOption.get.value should equal(validUsername)
@@ -113,21 +121,21 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         Email.make("") should equal(
-          Validation.fail(BadRequestException(EMAIL_MISSING_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
         )
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
         Email.make(invalidEmailAddress) should equal(
-          Validation.fail(BadRequestException(EMAIL_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Email.make(validEmailAddress).toOption.get.value should not equal
-          BadRequestException(EMAIL_INVALID_ERROR)
+          BadRequestException(UserErrorMessages.EmailInvalid)
       }
       "return value passed to value object" in {
         Email.make(validEmailAddress).toOption.get.value should equal(validEmailAddress)
@@ -140,12 +148,14 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        Password.make("") should equal(Validation.fail(BadRequestException(PASSWORD_MISSING_ERROR)))
+        Password.make("") should equal(Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing)))
       }
     }
     "created using valid characters" should {
       "not throw BadRequestExceptions" in {
-        Password.make(validassword) should not equal Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+        Password.make(validassword) should not equal Validation.fail(
+          BadRequestException(UserErrorMessages.UsernameMissing)
+        )
       }
       "return value passed to value object" in {
         Password.make(validassword).toOption.get.value should equal(validassword)
@@ -159,7 +169,7 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         GivenName.make("") should equal(
-          Validation.fail(BadRequestException(GIVEN_NAME_MISSING_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
         )
       }
     }
@@ -180,7 +190,7 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         FamilyName.make("") should equal(
-          Validation.fail(BadRequestException(FAMILY_NAME_MISSING_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
         )
       }
     }
@@ -199,21 +209,21 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         LanguageCode.make("") should equal(
-          Validation.fail(BadRequestException(LANGUAGE_CODE_MISSING_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
         )
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
         LanguageCode.make("kk") should equal(
-          Validation.fail(BadRequestException(LANGUAGE_CODE_INVALID_ERROR))
+          Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         LanguageCode.make("de").toOption.get.value should not equal
-          BadRequestException(LANGUAGE_CODE_INVALID_ERROR)
+          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
       }
       "return value passed to value object" in {
         LanguageCode.make("en").toOption.get.value should equal("en")

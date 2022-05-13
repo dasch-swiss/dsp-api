@@ -19,17 +19,17 @@ object Iri {
 
     def make(value: String): Validation[Throwable, GroupIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
+        Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
       } else {
         val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
         if (!sf.isKnoraGroupIriStr(value)) {
-          Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
         } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeIri(value, throw BadRequestException(GROUP_IRI_INVALID_ERROR))
+            sf.validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.GroupIriInvalid))
           )
 
           validatedValue.map(new GroupIRI(_) {})
@@ -52,17 +52,17 @@ object Iri {
 
     def make(value: String): Validation[Throwable, ListIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
+        Validation.fail(BadRequestException(IriErrorMessages.ListNodeIriMissing))
       } else {
         val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
         if (!sf.isKnoraListIriStr(value)) {
-          Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.ListNodeIriInvalid))
         } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+            sf.validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.ListNodeIriInvalid))
           )
 
           validatedValue.map(new ListIRI(_) {})
@@ -85,17 +85,17 @@ object Iri {
 
     def make(value: String): Validation[Throwable, ProjectIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(PROJECT_IRI_MISSING_ERROR))
+        Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))
       } else {
         val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
         if (!sf.isKnoraProjectIriStr(value)) {
-          Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.ProjectIriInvalid))
         } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
+            sf.validateAndEscapeProjectIri(value, throw BadRequestException(IriErrorMessages.ProjectIriInvalid))
           )
 
           validatedValue.map(new ProjectIRI(_) {})
@@ -118,17 +118,17 @@ object Iri {
 
     def make(value: String): Validation[Throwable, UserIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
+        Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
       } else {
         val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
 
         if (!sf.isKnoraUserIriStr(value)) {
-          Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid))
         } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeUserIri(value, throw BadRequestException(USER_IRI_INVALID_ERROR))
+            sf.validateAndEscapeUserIri(value, throw BadRequestException(IriErrorMessages.UserIriInvalid))
           )
 
           validatedValue.map(new UserIRI(_) {})
@@ -147,6 +147,16 @@ object IriValidation {
   // string formatter stuff
 }
 
-object IriErrors {
-  // error messages
+object IriErrorMessages {
+  val GroupIriMissing    = "Group IRI cannot be empty."
+  val GroupIriInvalid    = "Group IRI is invalid."
+  val ListIriMissing     = "List IRI cannot be empty."
+  val ListIriInvalid     = "List IRI cannot be empty."
+  val ListNodeIriMissing = "List node IRI cannot be empty."
+  val ListNodeIriInvalid = "List node IRI is invalid."
+  val ProjectIriMissing  = "Project IRI cannot be empty."
+  val ProjectIriInvalid  = "Project IRI is invalid."
+  val UserIriMissing     = "User IRI cannot be empty."
+  val UserIriInvalid     = "User IRI is invalid."
+  val UuidInvalid        = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
 }

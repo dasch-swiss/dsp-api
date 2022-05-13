@@ -7,8 +7,7 @@ package dsp.valueobjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -21,10 +20,10 @@ object GroupName { self =>
 
   def make(value: String): Validation[Throwable, GroupName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(GROUP_NAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
     } else {
       val validatedValue = Validation(
-        sf.toSparqlEncodedString(value, throw BadRequestException(GROUP_NAME_INVALID_ERROR))
+        sf.toSparqlEncodedString(value, throw BadRequestException(GroupErrorMessages.GroupNameInvalid))
       )
 
       validatedValue.map(new GroupName(_) {})
@@ -46,11 +45,14 @@ object GroupDescriptions { self =>
 
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(GROUP_DESCRIPTION_MISSING_ERROR))
+      Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionMissing))
     } else {
       val validatedDescriptions = Validation(value.map { description =>
         val validatedDescription =
-          sf.toSparqlEncodedString(description.value, throw BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR))
+          sf.toSparqlEncodedString(
+            description.value,
+            throw BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
+          )
         StringLiteralV2(value = validatedDescription, language = description.language)
       })
       validatedDescriptions.map(new GroupDescriptions(_) {})
@@ -89,4 +91,11 @@ object GroupSelfJoin { self =>
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)
     }
+}
+
+object GroupErrorMessages {
+  val GroupNameMissing        = "Group name cannot be empty."
+  val GroupNameInvalid        = "Group name is invalid."
+  val GroupDescriptionMissing = "Group description cannot be empty."
+  val GroupDescriptionInvalid = "Group description is invalid."
 }

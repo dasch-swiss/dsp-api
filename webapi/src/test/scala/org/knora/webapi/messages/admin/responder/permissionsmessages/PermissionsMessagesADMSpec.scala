@@ -11,7 +11,7 @@ import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
@@ -163,7 +163,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === UUID_INVALID_ERROR)
+      assert(caught.getMessage === IriErrorMessages.UuidInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
@@ -560,7 +560,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === UUID_INVALID_ERROR)
+      assert(caught.getMessage === IriErrorMessages.UuidInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {

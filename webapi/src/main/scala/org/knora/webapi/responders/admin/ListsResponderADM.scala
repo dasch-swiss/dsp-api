@@ -1257,7 +1257,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
@@ -1336,7 +1336,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                           changeNodeInfoRequest = ListNodeChangePayloadADM(
@@ -1414,7 +1414,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
@@ -1750,7 +1750,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         // get node in its current position
@@ -2003,7 +2003,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         maybeNode: Option[ListNodeADM] <- listNodeGetADM(

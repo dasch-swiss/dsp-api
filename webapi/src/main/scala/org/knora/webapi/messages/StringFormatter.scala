@@ -51,8 +51,6 @@ import scala.util.matching.Regex
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
-  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
-
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -3003,7 +3001,7 @@ class StringFormatter private (
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
     if (iri.isKnoraResourceIri && hasUUIDLength(iri.toString.split("/").last) && !isUUIDVersion4Or5(iri.toString)) {
-      throw BadRequestException(UUID_INVALID_ERROR)
+      throw BadRequestException(IriErrorMessages.UuidInvalid)
     }
 
   /**
@@ -3012,7 +3010,7 @@ class StringFormatter private (
    */
   def validatePermissionIRI(iri: IRI): Unit =
     if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
-      throw BadRequestException(UUID_INVALID_ERROR)
+      throw BadRequestException(IriErrorMessages.UuidInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
     }

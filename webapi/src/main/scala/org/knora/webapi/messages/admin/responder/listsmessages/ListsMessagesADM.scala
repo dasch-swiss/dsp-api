@@ -143,7 +143,7 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
   }
 
   if (position < -1) {
-    throw BadRequestException(INVALID_POSITION)
+    throw BadRequestException(ListErrorMessages.InvalidPosition)
   }
   def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
 }

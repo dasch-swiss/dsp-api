@@ -7,7 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
@@ -22,20 +22,24 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        GroupIRI.make("") should equal(Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR)))
+        GroupIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        GroupIRI.make("not a group IRI") should equal(Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR)))
+        GroupIRI.make("not a group IRI") should equal(
+          Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
+        )
         GroupIRI.make(groupIRIWithUUIDVersion3) should equal(
-          Validation.fail(BadRequestException(UUID_INVALID_ERROR))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestException" in {
-        GroupIRI.make(validGroupIri) should not equal Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
+        GroupIRI.make(validGroupIri) should not equal Validation.fail(
+          BadRequestException(IriErrorMessages.GroupIriInvalid)
+        )
       }
       "return value passed to value object" in {
         GroupIRI.make(validGroupIri).toOption.get.value should equal(validGroupIri)
@@ -48,19 +52,21 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        GroupName.make("") should equal(Validation.fail(BadRequestException(GROUP_NAME_MISSING_ERROR)))
+        GroupName.make("") should equal(Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
         GroupName.make("Invalid group name\r") should equal(
-          Validation.fail(BadRequestException(GROUP_NAME_INVALID_ERROR))
+          Validation.fail(BadRequestException(GroupErrorMessages.GroupNameInvalid))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        GroupName.make(validGroupName) should not equal Validation.fail(BadRequestException(GROUP_NAME_INVALID_ERROR))
+        GroupName.make(validGroupName) should not equal Validation.fail(
+          BadRequestException(GroupErrorMessages.GroupNameInvalid)
+        )
       }
       "return value passed to value object" in {
         GroupName.make(validGroupName).toOption.get.value should equal(validGroupName)
@@ -75,7 +81,7 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using empty value" should {
       "throw BadRequestException" in {
         GroupDescriptions.make(Seq.empty) should equal(
-          Validation.fail(BadRequestException(GROUP_DESCRIPTION_MISSING_ERROR))
+          Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionMissing))
         )
       }
     }

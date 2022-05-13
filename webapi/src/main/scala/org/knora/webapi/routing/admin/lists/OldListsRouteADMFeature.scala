@@ -16,8 +16,8 @@ import org.knora.webapi.feature.Feature
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_CREATE_PERMISSION_ERROR
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_NODE_CREATE_PERMISSION_ERROR
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.ListErrorMessages.ListCreatePermission
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.ListErrorMessages.ListNodeCreatePermission
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import dsp.valueObjects
 import org.knora.webapi.routing.Authenticator
@@ -240,7 +240,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                 ) && !requestingUser.permissions.isSystemAdmin
               ) {
                 // not project or a system admin
-                throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                throw ForbiddenException(ListErrorMessages.ListCreatePermission)
               }
         } yield ListRootNodeCreateRequestADM(
           createRootNode = payload,
@@ -320,7 +320,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                   ) && !requestingUser.permissions.isSystemAdmin
                 ) {
                   // not project or a system admin
-                  throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                  throw ForbiddenException(ListErrorMessages.ListCreatePermission)
                 }
           } yield ListChildNodeCreateRequestADM(
             createChildNodeRequest = payload,
@@ -399,7 +399,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                 ) && !requestingUser.permissions.isSystemAdmin
               ) {
                 // not project or a system admin
-                throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
+                throw ForbiddenException(ListErrorMessages.ListNodeCreatePermission)
               }
         } yield NodeInfoChangeRequestADM(
           listIri = listIri.toOption.get.value,

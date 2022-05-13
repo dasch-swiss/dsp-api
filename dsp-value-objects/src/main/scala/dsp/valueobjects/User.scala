@@ -8,8 +8,7 @@ package dsp.valueobjects
 import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
@@ -33,11 +32,11 @@ object Username { self =>
   def make(value: String): Validation[Throwable, Username] =
     if (value.isEmpty) {
       // remobe exception return just the error
-      Validation.fail(BadRequestException(USERNAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
     } else {
       UsernameRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Username(value) {})
-        case None        => Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+        case None        => Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
       }
     }
 
@@ -57,11 +56,11 @@ object Email { self =>
 
   def make(value: String): Validation[Throwable, Email] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(EMAIL_MISSING_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
     } else {
       EmailRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Email(value) {})
-        case None        => Validation.fail(BadRequestException(EMAIL_INVALID_ERROR))
+        case None        => Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
       }
     }
 
@@ -79,7 +78,7 @@ sealed abstract case class GivenName private (value: String)
 object GivenName { self =>
   def make(value: String): Validation[Throwable, GivenName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(GIVEN_NAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
     } else {
       Validation.succeed(new GivenName(value) {})
     }
@@ -98,7 +97,7 @@ sealed abstract case class FamilyName private (value: String)
 object FamilyName { self =>
   def make(value: String): Validation[Throwable, FamilyName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(FAMILY_NAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
     } else {
       Validation.succeed(new FamilyName(value) {})
     }
@@ -119,11 +118,11 @@ object Password { self =>
 
   def make(value: String): Validation[Throwable, Password] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(PASSWORD_MISSING_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
     } else {
       PasswordRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Password(value) {})
-        case None        => Validation.fail(BadRequestException(PASSWORD_INVALID_ERROR))
+        case None        => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
       }
     }
 
@@ -150,9 +149,9 @@ sealed abstract case class LanguageCode private (value: String)
 object LanguageCode { self =>
   def make(value: String): Validation[Throwable, LanguageCode] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(LANGUAGE_CODE_MISSING_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
     } else if (!LanguageCodes.SupportedLanguageCodes.contains(value)) {
-      Validation.fail(BadRequestException(LANGUAGE_CODE_INVALID_ERROR))
+      Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
     } else {
       Validation.succeed(new LanguageCode(value) {})
     }
@@ -171,4 +170,19 @@ sealed abstract case class SystemAdmin private (value: Boolean)
 object SystemAdmin {
   def make(value: Boolean): Validation[Throwable, SystemAdmin] =
     Validation.succeed(new SystemAdmin(value) {})
+}
+
+object UserErrorMessages {
+  val UsernameMissing     = "Username cannot be empty."
+  val UsernameInvalid     = "Username is invalid."
+  val EmailMissing        = "Email cannot be empty."
+  val EmailInvalid        = "Email is invalid."
+  val PasswordMissing     = "Password cannot be empty."
+  val PasswordInvalid     = "Password is invalid."
+  val GivenNameMissing    = "GivenName cannot be empty."
+  val GivenNameInvalid    = "GivenName is invalid."
+  val FamilyNameMissing   = "FamilyName cannot be empty."
+  val FamilyNameInvalid   = "FamilyName is invalid."
+  val LanguageCodeMissing = "LanguageCode cannot be empty."
+  val LanguageCodeInvalid = "LanguageCode is invalid."
 }

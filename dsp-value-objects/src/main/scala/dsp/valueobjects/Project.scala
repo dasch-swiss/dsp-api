@@ -7,8 +7,7 @@ package dsp.valueobjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsErrorMessagesADM._
+import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -21,10 +20,10 @@ object Shortcode { self =>
 
   def make(value: String): Validation[Throwable, Shortcode] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(SHORTCODE_MISSING_ERROR))
+      Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
     } else {
       val validatedValue: Validation[Throwable, String] = Validation(
-        sf.validateProjectShortcode(value, throw BadRequestException(SHORTCODE_INVALID_ERROR))
+        sf.validateProjectShortcode(value, throw BadRequestException(ProjectErrorMessages.ShortcodeInvalid))
       )
       validatedValue.map(new Shortcode(_) {})
     }
@@ -45,10 +44,10 @@ object Shortname { self =>
 
   def make(value: String): Validation[Throwable, Shortname] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(SHORTNAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
     } else {
       val validatedValue = Validation(
-        sf.validateAndEscapeProjectShortname(value, throw BadRequestException(SHORTNAME_INVALID_ERROR))
+        sf.validateAndEscapeProjectShortname(value, throw BadRequestException(ProjectErrorMessages.ShortnameInvalid))
       )
       validatedValue.map(new Shortname(_) {})
     }
@@ -67,7 +66,7 @@ sealed abstract case class Longname private (value: String)
 object Longname { self =>
   def make(value: String): Validation[Throwable, Longname] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(LONGNAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
     } else {
       Validation.succeed(new Longname(value) {})
     }
@@ -86,7 +85,7 @@ sealed abstract case class ProjectDescription private (value: Seq[StringLiteralV
 object ProjectDescription { self =>
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, ProjectDescription] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(PROJECT_DESCRIPTION_MISSING_ERROR))
+      Validation.fail(BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing))
     } else {
       Validation.succeed(new ProjectDescription(value) {})
     }
@@ -105,7 +104,7 @@ sealed abstract case class Keywords private (value: Seq[String])
 object Keywords { self =>
   def make(value: Seq[String]): Validation[Throwable, Keywords] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(KEYWORDS_MISSING_ERROR))
+      Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
     } else {
       Validation.succeed(new Keywords(value) {})
     }
@@ -124,7 +123,7 @@ sealed abstract case class Logo private (value: String)
 object Logo { self =>
   def make(value: String): Validation[Throwable, Logo] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(LOGO_MISSING_ERROR))
+      Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
     } else {
       Validation.succeed(new Logo(value) {})
     }
@@ -163,4 +162,19 @@ object ProjectStatus { self =>
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)
     }
+}
+
+object ProjectErrorMessages {
+  val ShortcodeMissing          = "Shortcode cannot be empty."
+  val ShortcodeInvalid          = "Shortcode is invalid."
+  val ShortnameMissing          = "Shortname cannot be empty."
+  val ShortnameInvalid          = "Shortname is invalid."
+  val LongnameMissing           = "Longname cannot be empty."
+  val LongnameInvalid           = "Longname is invalid."
+  val ProjectDescriptionMissing = "Description cannot be empty."
+  val ProjectDescriptionInvalid = "Description is invalid."
+  val KeywordsMissing           = "Keywords cannot be empty."
+  val KeywordsInvalid           = "Keywords are invalid."
+  val LogoMissing               = "Logo cannot be empty."
+  val LogoInvalid               = "Logo is invalid."
 }
