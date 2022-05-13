@@ -170,4 +170,8 @@ object Dependencies {
   val schemaRepoLibraryDependencies                  = Seq()
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
+
+  val valueObjectsLibraryDependencies = Seq(
+    zioPrelude
+  )
 }
