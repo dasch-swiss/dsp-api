@@ -1832,6 +1832,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     } yield CanDeleteListResponseADM(iri, canDelete)
 
+  /**
+   * Deletes all comments from child list node.
+   */
   private def deleteListChildNodeCommentsADM(
     iri: IRI,
     featureFactoryConfig: FeatureFactoryConfig,
@@ -1850,7 +1853,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                      case Some(_: ListChildNodeADM) => false
                      case _                         => false
                    }
-      
+
       projectIri <- getProjectIriFromNode(iri, featureFactoryConfig)
       namedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
 
@@ -1865,13 +1868,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                      )
 
       _: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlQuery))
-                                        .mapTo[SparqlUpdateResponse]
-
-      responseMessage = if(isRootNode) {
-        s"Comments of provided list node $iri have not been deleted. Deleting list root node comments is forbidden."
-      } else {
-        s"Comments of provided list node $iri have been deleted successfully."
-      }
+                                   .mapTo[SparqlUpdateResponse]
 
     } yield ListChildNodeCommentsDeleteResponseADM(iri, !isRootNode)
 

@@ -98,6 +98,9 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
       }
     }
 
+  /**
+   * Deletes all comments from child list node.
+   */
   private def deleteListChildNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / "deletecomments" / Segment) { iri =>
       delete { requestContext =>
