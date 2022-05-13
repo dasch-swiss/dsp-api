@@ -59,11 +59,28 @@ object UserId {
   }
 }
 
+/**
+ * Username value object.
+ */
+sealed abstract case class Username private (value: String)
+object Username {
+  def make(value: String): Username =
+    new Username(value) {}
+}
+
+/**
+ * Email value object.
+ */
+sealed abstract case class Email private (value: String)
+object Email {
+  def make(value: String): Email =
+    new Email(value) {}
+}
+
 // These are just placeholders for now. Replace this with the real value objects once we have them.
 object UserValueObjects {
   type GivenName  = String
   type FamilyName = String
-  type Username   = String
   type Email      = String
   type Password   = String
   type Language   = String

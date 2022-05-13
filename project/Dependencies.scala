@@ -176,7 +176,9 @@ object Dependencies {
   )
   val userCoreLibraryDependencies = Seq(
     zio,
-    zioMacros
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
   )
   val userRepoLibraryDependencies = Seq(
     zio,

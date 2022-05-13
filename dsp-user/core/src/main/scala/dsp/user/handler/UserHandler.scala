@@ -1,25 +1,42 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package dsp.user.handler
 
-import dsp.user.domain.User
+import dsp.user.domain._
 import dsp.user.repo.UserRepo
 import zio._
-import dsp.user.domain.UserId
+import java.util.UUID
+import zio.macros.accessible
 
 /**
  * The user handler.
  *
- * @param repo  the user repository (interface)
+ * @param repo  the user repository (trait)
  */
 final case class UserHandler(repo: UserRepo) {
-  def getAll(): ZIO[Any, Nothing, List[User]] = repo.getAll()
-  def getUserById(id: UserId): ZIO[Any, Nothing, Option[User]] =
-    repo.lookup(id) // used for V3, needs to be able to handle both IRIs and UUIDs
-  def getUserByIri(): User         = ??? // used for V2, has only IRIs
-  def getUserByUsername(): User    = ???
-  def getUserByEmail(): User       = ???
-  def createUser(user: User): Unit = repo.store(user)
-  def updateUser(): User           = ???
-  def deleteUser(): Unit           = ???
+  def getAll(): ZIO[Any, Nothing, List[User]]                  = repo.getAllUsers()
+  def getUserById(id: UserId): ZIO[Any, Nothing, Option[User]] = repo.getUserById(id)
+  def getUserByIri(iri: Iri.UserIri): ZIO[Any, Nothing, Option[User]] = {
+    val userId = UserId.fromString(iri.toString())
+    getUserById(userId)
+  }
+
+  def getUserByUuid(uuid: UUID): ZIO[Any, Nothing, Option[User]] = ???
+  def getUserByUsername(username: Username): ZIO[Any, Nothing, Option[User]] =
+    repo.getUserByUsernameOrEmail(username.value)
+  def getUserByEmail(email: Email): ZIO[Any, Nothing, Option[User]] =
+    repo.getUserByUsernameOrEmail(email.value)
+  def createUser(user: User): UIO[Unit] = repo.storeUser(user)
+  def updateUser(user: User): UIO[Unit] =
+    for {
+      currentUser <- getUserById(user.id) //.orElse()?
+      //_           <- deleteUser(user.id)
+      //_           <- createUser(user)
+    } yield ()
+  def deleteUser(id: UserId): IO[Option[Nothing], Unit] = repo.deleteUser(id)
 }
 
 /**

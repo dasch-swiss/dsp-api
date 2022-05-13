@@ -314,4 +314,4 @@ lazy val userRepo = project
     libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(userCore)
+  .dependsOn(userCore % "compile->compile;test->test")
