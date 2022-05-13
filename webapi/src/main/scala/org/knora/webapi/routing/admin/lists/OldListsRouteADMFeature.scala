@@ -19,7 +19,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePay
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_CREATE_PERMISSION_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_NODE_CREATE_PERMISSION_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueObjects
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData

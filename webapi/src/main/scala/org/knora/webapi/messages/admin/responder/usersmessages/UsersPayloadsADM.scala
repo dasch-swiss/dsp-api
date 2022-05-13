@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueObjects
 
 /**
  * User creation payload

@@ -24,7 +24,7 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueObjects
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData

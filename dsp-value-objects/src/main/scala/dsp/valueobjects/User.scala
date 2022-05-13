@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
 import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.BadRequestException
@@ -13,39 +13,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessage
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
-
-/**
- * UserIRI value object.
- */
-sealed abstract case class UserIRI private (value: String)
-object UserIRI { self =>
-  private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  def make(value: String): Validation[Throwable, UserIRI] =
-    if (value.isEmpty) {
-      Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
-    } else {
-      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
-
-      if (!sf.isKnoraUserIriStr(value)) {
-        Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
-      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
-      } else {
-        val validatedValue = Validation(
-          sf.validateAndEscapeUserIri(value, throw BadRequestException(USER_IRI_INVALID_ERROR))
-        )
-
-        validatedValue.map(new UserIRI(_) {})
-      }
-    }
-
-  def make(value: Option[String]): Validation[Throwable, Option[UserIRI]] =
-    value match {
-      case Some(v) => self.make(v).map(Some(_))
-      case None    => Validation.succeed(None)
-    }
-}
 
 /**
  * Username value object.
@@ -65,6 +32,7 @@ object Username { self =>
 
   def make(value: String): Validation[Throwable, Username] =
     if (value.isEmpty) {
+      // remobe exception return just the error
       Validation.fail(BadRequestException(USERNAME_MISSING_ERROR))
     } else {
       UsernameRegex.findFirstIn(value) match {

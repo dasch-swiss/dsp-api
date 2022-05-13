@@ -19,7 +19,7 @@ import org.knora.webapi.exceptions.DuplicateValueException
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri

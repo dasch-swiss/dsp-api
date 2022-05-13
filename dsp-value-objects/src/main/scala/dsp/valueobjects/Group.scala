@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
@@ -11,39 +11,6 @@ import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
-
-/**
- * GroupIRI value object.
- */
-sealed abstract case class GroupIRI private (value: String)
-object GroupIRI { self =>
-  private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  def make(value: String): Validation[Throwable, GroupIRI] =
-    if (value.isEmpty) {
-      Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
-    } else {
-      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
-
-      if (!sf.isKnoraGroupIriStr(value)) {
-        Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
-      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
-      } else {
-        val validatedValue = Validation(
-          sf.validateAndEscapeIri(value, throw BadRequestException(GROUP_IRI_INVALID_ERROR))
-        )
-
-        validatedValue.map(new GroupIRI(_) {})
-      }
-    }
-
-  def make(value: Option[String]): Validation[Throwable, Option[GroupIRI]] =
-    value match {
-      case Some(v) => self.make(v).map(Some(_))
-      case None    => Validation.succeed(None)
-    }
-}
 
 /**
  * GroupName value object.

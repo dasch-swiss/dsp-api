@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
@@ -11,39 +11,6 @@ import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
-
-/**
- * List ListIRI value object.
- */
-sealed abstract case class ListIRI private (value: String)
-object ListIRI { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  def make(value: String): Validation[Throwable, ListIRI] =
-    if (value.isEmpty) {
-      Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
-    } else {
-      val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
-
-      if (!sf.isKnoraListIriStr(value)) {
-        Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
-      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
-      } else {
-        val validatedValue = Validation(
-          sf.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
-        )
-
-        validatedValue.map(new ListIRI(_) {})
-      }
-    }
-
-  def make(value: Option[String]): Validation[Throwable, Option[ListIRI]] =
-    value match {
-      case Some(v) => self.make(v).map(Some(_))
-      case None    => Validation.succeed(None)
-    }
-}
 
 /**
  * List ListName value object.

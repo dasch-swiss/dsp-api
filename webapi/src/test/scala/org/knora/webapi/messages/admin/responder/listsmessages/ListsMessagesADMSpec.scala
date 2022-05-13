@@ -10,7 +10,7 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
