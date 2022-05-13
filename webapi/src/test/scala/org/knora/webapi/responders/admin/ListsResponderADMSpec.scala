@@ -1030,8 +1030,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
-        val response: ListChildNodeCommentsDeleteResponseADM = expectMsgType[ListChildNodeCommentsDeleteResponseADM](timeout)
-        response.iri should be(nodeIri)
+        val response: ListChildNodeCommentsDeleteResponseADM =
+          expectMsgType[ListChildNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
         response.commentsDeleted should be(true)
       }
 
@@ -1042,8 +1043,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
-        val response: ListChildNodeCommentsDeleteResponseADM = expectMsgType[ListChildNodeCommentsDeleteResponseADM](timeout)
-        response.iri should be(nodeIri)
+        val response: ListChildNodeCommentsDeleteResponseADM =
+          expectMsgType[ListChildNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
         response.commentsDeleted should be(true)
       }
 
@@ -1054,8 +1056,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
-        val response: ListChildNodeCommentsDeleteResponseADM = expectMsgType[ListChildNodeCommentsDeleteResponseADM](timeout)
-        response.iri should be(nodeIri)
+        val response: ListChildNodeCommentsDeleteResponseADM =
+          expectMsgType[ListChildNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
         response.commentsDeleted should be(false)
       }
     }
