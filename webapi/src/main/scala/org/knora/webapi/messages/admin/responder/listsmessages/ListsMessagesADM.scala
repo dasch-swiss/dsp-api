@@ -24,8 +24,7 @@ import spray.json._
 import java.util.UUID
 import org.knora.webapi.messages.admin.responder.valueObjects.Comments
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
+/////////////// API requests
 
 /**
  * Represents an API request payload that asks the Knora API server to create a new list root node.
@@ -353,19 +352,31 @@ case class ListChildNodeCommentsDeleteRequestADM(
   requestingUser: UserADM
 ) extends ListsResponderRequestADM
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Responses
-
+///////////////////////// Responses
 
 /**
  * Responds to deletion of a list comments by returning a success message.
  *
  * @param iri the IRI of the list that comments are deleted.
- * @param commentsDeleted ???
+ * @param commentsDeleted boolean message if comments were deleted.
  */
 case class ListChildNodeCommentsDeleteResponseADM(iri: IRI, commentsDeleted: Boolean)
-    extends KnoraResponseADM with ListADMJsonProtocol {
+    extends KnoraResponseADM
+    with ListADMJsonProtocol {
   def toJsValue: JsValue = listChildNodeCommentsDeleteResponseADMFormat.write(this)
+}
+
+/**
+ * Checks if a list can be deleted (none of its nodes is used in data).
+ *
+ * @param iri the IRI of the list that is checked.
+ * @param canDeleteList boolean message if list can be deleted.
+ */
+case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
+    extends KnoraResponseADM
+    with ListADMJsonProtocol {
+
+  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 }
 
 /**
@@ -457,16 +468,6 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
-}
-
-/**
- * Checks if a list can be deleted (none of its nodes is used in data).
- *
- * @param iri the IRI of the list that is checked.
- */
-case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends ListItemDeleteResponseADM {
-
-  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 }
 
 /**
