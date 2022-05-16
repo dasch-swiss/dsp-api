@@ -292,6 +292,15 @@ lazy val userApi = project
   )
   .dependsOn(userCore)
 
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(userCore % "compile->compile;test->test")
+
 lazy val userCore = project
   .in(file("dsp-user/core"))
   .settings(
@@ -306,12 +315,3 @@ lazy val userCore = project
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-
-lazy val userRepo = project
-  .in(file("dsp-user/repo"))
-  .settings(
-    name := "userRepo",
-    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(userCore % "compile->compile;test->test")

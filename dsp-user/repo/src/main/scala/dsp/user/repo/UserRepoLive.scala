@@ -75,9 +75,9 @@ object UserRepoLive {
   val live: ZLayer[Any, Nothing, UserRepo] = {
     ZLayer {
       for {
-        users <- TMap.empty[UUID, User].commit
-        lut   <- TMap.empty[String, UUID].commit
-      } yield UserRepoLive(users, lut)
+        users       <- TMap.empty[UUID, User].commit
+        lookupTable <- TMap.empty[String, UUID].commit
+      } yield UserRepoLive(users, lookupTable)
     }.tap(_ => ZIO.debug(">>> User repository initialized <<<"))
   }
 }

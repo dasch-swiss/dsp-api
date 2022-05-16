@@ -13,7 +13,7 @@ import dsp.user.repo.UserRepo
 import dsp.user.repo.UserRepoInMem
 
 /**
- * This spec is used to test [[dsp.user.repo.UserRepoInMem]].
+ * This spec is used to test [[dsp.user.repo.UserRepo]].
  */
 object UserRepoSpec extends ZIOSpec[UserRepo] {
 
