@@ -292,12 +292,15 @@ object TriplestoreConnectionException {
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-case class TriplestoreTimeoutException(message: String, cause: Option[Throwable] = None)
+final case class TriplestoreTimeoutException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
 object TriplestoreTimeoutException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreTimeoutException =
     TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+
+  def apply(message: String): TriplestoreTimeoutException =
+    TriplestoreTimeoutException(message)
 }
 
 /**
@@ -334,12 +337,15 @@ object TriplestoreInternalException {
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-case class TriplestoreResponseException(message: String, cause: Option[Throwable] = None)
+final case class TriplestoreResponseException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
 object TriplestoreResponseException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreResponseException =
     TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+  
+  def apply(message: String): TriplestoreResponseException =
+    TriplestoreResponseException(message)
 }
 
 /**

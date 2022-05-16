@@ -71,7 +71,7 @@ import scala.util.Success
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.store.triplestore.TriplestoreManager
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 /**
  * This is the first actor in the application. All other actors are children
@@ -84,7 +84,7 @@ import org.knora.webapi.store.triplestore.TriplestoreManager
 class ApplicationActor(
   cacheServiceManager: CacheServiceManager,
   iiifServiceManager: IIIFServiceManager,
-  triplestoreManager: TriplestoreManager,
+  triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig
 ) extends Actor
     with Stash
@@ -376,7 +376,6 @@ class ApplicationActor(
     /* load ontologies request */
     case LoadOntologies() =>
       responderManager ! LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -408,9 +407,9 @@ class ApplicationActor(
     case msg: KnoraRequestV1      => responderManager forward msg
     case msg: KnoraRequestV2      => responderManager forward msg
     case msg: KnoraRequestADM     => responderManager forward msg
-    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), log, appConfig)
-    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), log, appConfig)
-    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), log, appConfig)
+    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig)
+    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig)
+    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig)
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {

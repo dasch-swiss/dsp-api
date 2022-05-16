@@ -67,8 +67,7 @@ trait TriplestoreService {
     sparql: String,
     graphIri: IRI,
     outputFile: Path,
-    outputFormat: QuadFormat,
-    featureFactoryConfig: FeatureFactoryConfig
+    outputFormat: QuadFormat
   ): Task[FileWrittenResponse]
 
   /**
@@ -99,8 +98,7 @@ trait TriplestoreService {
   def sparqlHttpGraphFile(
     graphIri: IRI,
     outputFile: Path,
-    outputFormat: QuadFormat,
-    featureFactoryConfig: FeatureFactoryConfig
+    outputFormat: QuadFormat
   ): Task[FileWrittenResponse]
 
   /**
@@ -116,7 +114,7 @@ trait TriplestoreService {
    * First performs `dropAllTriplestoreContent` and afterwards `insertDataIntoTriplestore`.
    *
    * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
-   * @param denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
+   * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    */
   def resetTripleStoreContent(
     rdfDataObjects: Seq[RdfDataObject],
@@ -151,12 +149,10 @@ trait TriplestoreService {
    * Dumps the whole repository in N-Quads format, saving the response in a file.
    *
    * @param outputFile           the output file.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a string containing the contents of the graph in N-Quads format.
    */
   def downloadRepository(
-    outputFile: Path,
-    featureFactoryConfig: FeatureFactoryConfig
+    outputFile: Path
   ): Task[FileWrittenResponse]
 
   /**

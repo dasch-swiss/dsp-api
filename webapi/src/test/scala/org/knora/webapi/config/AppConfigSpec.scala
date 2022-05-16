@@ -16,8 +16,8 @@ object AppConfigSpec extends ZIOSpec[AppConfig] {
         appConfig <- ZIO.service[AppConfig]
         // _         <- ZIO.debug(appConfig)
       } yield {
-        assertTrue(appConfig.printExtendedConfig == false)
-        assertTrue(appConfig.jwtLongevityAsDuration == FiniteDuration(30L, TimeUnit.DAYS))
+        assertTrue(appConfig.printExtendedConfig == false) &&
+        assertTrue(appConfig.jwtLongevityAsDuration == FiniteDuration(30L, TimeUnit.DAYS)) &&
         assertTrue(appConfig.sipi.timeoutInSeconds == FiniteDuration(120L, TimeUnit.SECONDS))
       }
     }

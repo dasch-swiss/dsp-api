@@ -45,10 +45,9 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
  * starts, before it accepts any API requests. A successful response will be a [[SuccessResponseV2]].
  *
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class LoadOntologiesRequestV2(featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
+case class LoadOntologiesRequestV2(requestingUser: UserADM)
     extends OntologiesResponderRequestV2
 
 /**
@@ -60,7 +59,6 @@ case class LoadOntologiesRequestV2(featureFactoryConfig: FeatureFactoryConfig, r
  * @param label                the label of the ontology.
  * @param comment              the optional comment that described the ontology to be created.
  * @param apiRequestID         the ID of the API request.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class CreateOntologyRequestV2(

@@ -43,7 +43,7 @@ object ActorUtil {
    *
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig): Unit =
     runtime
       .unsafeRunTask(
         zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))

@@ -75,16 +75,21 @@ final case class RepositoryUpdater(
           // Yes. Nothing more to do.
           ZIO.succeed(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
         } else {
-          // No. Construct the list of updates that it needs.
-          ZIO.logInfo(
-            s"Repository not up-to-date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
-          ) *> deleteTempDirectories()
+          for {
+            // No. Construct the list of updates that it needs.
+            _ <-
+              ZIO.logInfo(
+                s"Repository not up-to-date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
+              )
+            _               <- deleteTempDirectories()
+            selectedPlugins <- selectPluginsForNeededUpdates(foundRepositoryVersion)
+            _ <- ZIO.logInfo(
+                   s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}"
+                 )
 
-          val selectedPlugins: Seq[PluginForKnoraBaseVersion] = selectPluginsForNeededUpdates(foundRepositoryVersion)
-          log.info(s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}")
-
-          // Update it with those plugins.
-          updateRepositoryWithSelectedPlugins(selectedPlugins)
+            // Update it with those plugins.
+            result <- updateRepositoryWithSelectedPlugins(selectedPlugins)
+          } yield result
         }
     } yield repositoryUpdatedResponse
 
@@ -236,7 +241,7 @@ final case class RepositoryUpdater(
       file = transformedRepositoryFile,
       rdfFormat = NQuads
     )
-  }
+  }.orDie
 
   /**
    * Adds Knora's built-in named graphs to an [[RdfModel]].

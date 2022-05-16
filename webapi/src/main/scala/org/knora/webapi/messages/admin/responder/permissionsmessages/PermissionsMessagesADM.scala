@@ -216,14 +216,12 @@ sealed trait PermissionsResponderRequestADM extends KnoraRequestADM
  * @param groupIris              the groups the user is member of.
  * @param isInProjectAdminGroups the projects for which the user is member of the ProjectAdmin group.
  * @param isInSystemAdminGroup   the flag denoting users membership in the SystemAdmin group.
- * @param featureFactoryConfig   the feature factory configuration.
  */
 case class PermissionDataGetADM(
   projectIris: Seq[IRI],
   groupIris: Seq[IRI],
   isInProjectAdminGroups: Seq[IRI],
   isInSystemAdminGroup: Boolean,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends PermissionsResponderRequestADM {
 
@@ -449,13 +447,11 @@ case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
  * Create a single [[AdministrativePermissionADM]].
  *
  * @param createRequest        the API create request payload.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the requesting user.
  * @param apiRequestID         the API request ID.
  */
 case class AdministrativePermissionCreateRequestADM(
   createRequest: CreateAdministrativePermissionAPIRequestADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
@@ -700,13 +696,11 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
  * Create a single [[DefaultObjectAccessPermissionADM]].
  *
  * @param createRequest  the create request.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser the requesting user.
  * @param apiRequestID   the API request ID.
  */
 case class DefaultObjectAccessPermissionCreateRequestADM(
   createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {

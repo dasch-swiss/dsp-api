@@ -120,11 +120,9 @@ case class GroupsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig, reque
  * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
  *
  * @param groupIri             IRI of the group.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  */
-case class GroupGetADM(groupIri: IRI, featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
-    extends GroupsResponderRequestADM
+case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
  * Get everything about a single group identified through its IRI. The response will be a

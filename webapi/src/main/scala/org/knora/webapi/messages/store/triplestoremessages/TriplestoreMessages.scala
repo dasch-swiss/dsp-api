@@ -29,6 +29,7 @@ import scala.util.Success
 import scala.util.Try
 
 import com.typesafe.config.Config
+import zio._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -80,8 +81,7 @@ case class SparqlConstructFileRequest(
   sparql: String,
   graphIri: IRI,
   outputFile: Path,
-  outputFormat: QuadFormat,
-  featureFactoryConfig: FeatureFactoryConfig
+  outputFormat: QuadFormat
 ) extends TriplestoreRequest
 
 /**
@@ -98,7 +98,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  * @param sparql               the SPARQL string.
  * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlExtendedConstructRequest(sparql: String, featureFactoryConfig: FeatureFactoryConfig)
+case class SparqlExtendedConstructRequest(sparql: String)
     extends TriplestoreRequest
 
 /**
@@ -122,11 +122,13 @@ object SparqlExtendedConstructResponse {
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(
-    turtleStr: String,
-    rdfFormatUtil: RdfFormatUtil,
-    log: LoggingAdapter
-  ): Try[SparqlExtendedConstructResponse] = {
-    val parseTry = Try {
+    turtleStr: String
+  ): IO[DataConversionException, SparqlExtendedConstructResponse] = {
+
+    val rdfFormatUtil: RdfFormatUtil =
+      RdfFeatureFactory.getRdfFormatUtil()
+
+    ZIO.attemptBlocking {
       implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
@@ -203,14 +205,12 @@ object SparqlExtendedConstructResponse {
       }
 
       SparqlExtendedConstructResponse(statementMap.toMap)
-    }
-
-    parseTry match {
-      case Success(parsed) => Success(parsed)
-      case Failure(e) =>
-        log.error(e, s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter")
-        Failure(DataConversionException("Couldn't parse Turtle document"))
-    }
+    }.foldZIO(
+      failure =>
+        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
+          ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      ZIO.succeed(_)
+    )
   }
 }
 
@@ -235,8 +235,7 @@ case class SparqlExtendedConstructResponse(
 case class NamedGraphFileRequest(
   graphIri: IRI,
   outputFile: Path,
-  outputFormat: QuadFormat,
-  featureFactoryConfig: FeatureFactoryConfig
+  outputFormat: QuadFormat
 ) extends TriplestoreRequest
 
 /**
@@ -427,13 +426,7 @@ object TriplestoreStatus extends Enumeration {
  * @param name of the named graph the data will be load into.
  */
 case class RdfDataObject(path: String, name: String)
-object RdfDataObject {
-  def fromConfig(conf: Config): RdfDataObject = {
-    val path = conf.getString("path")
-    val name = conf.getString("name")
-    new RdfDataObject(path, name)
-  }
-}
+
 
 /**
  * Represents the subject of a statement read from the triplestore.

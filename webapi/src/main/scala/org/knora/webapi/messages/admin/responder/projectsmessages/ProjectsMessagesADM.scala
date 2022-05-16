@@ -199,12 +199,10 @@ case class ProjectGetRequestADM(
  * of [[ProjectADM]]. Internal use only.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectGetADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -225,23 +223,19 @@ case class ProjectMembersGetRequestADM(
  * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectAdminMembersGetRequestADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
 /**
  * Returns all unique keywords for all projects.
  *
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class ProjectsKeywordsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
-    extends ProjectsResponderRequestADM
+case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
  * Returns all keywords for a project identified through IRI.

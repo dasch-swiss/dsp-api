@@ -57,15 +57,13 @@ final case class TriplestoreServiceManager(
           sparql: String,
           graphIri: IRI,
           outputFile: Path,
-          outputFormat: QuadFormat,
-          _
+          outputFormat: QuadFormat
         ) =>
       ts.sparqlHttpConstructFile(sparql, graphIri, outputFile, outputFormat)
     case NamedGraphFileRequest(
           graphIri: IRI,
           outputFile: Path,
-          outputFormat: QuadFormat,
-          _
+          outputFormat: QuadFormat
         ) =>
       ts.sparqlHttpGraphFile(graphIri, outputFile, outputFormat)
     case NamedGraphDataRequest(graphIri: IRI) => ts.sparqlHttpGraphData(graphIri)
