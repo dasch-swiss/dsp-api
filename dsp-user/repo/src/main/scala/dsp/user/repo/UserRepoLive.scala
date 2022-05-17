@@ -14,7 +14,7 @@ import dsp.user.domain.UserValueObjects
 import dsp.user.domain.Iri
 
 /**
- * User repository implementation
+ * User repository live implementation
  *
  * @param users       a map of users (UUID -> User).
  * @param lookupTable a map of username/email to UUID.
@@ -72,7 +72,7 @@ final case class UserRepoLive(
  * Companion object providing the layer with an initialized implementation of UserRepo
  */
 object UserRepoLive {
-  val live: ZLayer[Any, Nothing, UserRepo] = {
+  val layer: ZLayer[Any, Nothing, UserRepo] = {
     ZLayer {
       for {
         users       <- TMap.empty[UUID, User].commit

@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.user.handler
+package dsp.user.repo
 
 import zio.ZLayer
 import zio._
 import zio.test._
 import dsp.user.domain._
 import dsp.user.repo.UserRepo
-import dsp.user.repo.UserRepoInMem
+import dsp.user.repo.UserRepoLive
 
 /**
  * This spec is used to test [[dsp.user.repo.UserRepo]].
  */
 object UserRepoSpec extends ZIOSpec[UserRepo] {
 
-  val bootstrap = ZLayer.make[UserRepo](UserRepoInMem.test)
-  // the same tests should run for all implementations (UserRepoInMem and UserRepoLive)
+  val bootstrap = ZLayer.make[UserRepo](UserRepoLive.layer)
+  // the same tests should run for all implementations of the UserRepo interface (UserRepoMock and UserRepoLive)
 
   def spec = (userTests)
 
@@ -45,18 +45,18 @@ object UserRepoSpec extends ZIOSpec[UserRepo] {
   )
 
   val userTests = suite("UserRepo")(
-    test("successfully store a user and retrieve by ID") {
+    test("store a user and retrieve by ID") {
       for {
         _             <- UserRepo.storeUser(testUser1)
         retrievedUser <- UserRepo.getUserById(testUser1.id)
       } yield assertTrue(retrievedUser == Some(testUser1))
     } +
-      test("successfully retrieve the user by username") {
+      test("retrieve the user by username") {
         for {
           retrievedUser <- UserRepo.getUserByUsernameOrEmail(testUser1.username.value)
         } yield assertTrue(retrievedUser == Some(testUser1))
       } +
-      test("successfully retrieve the user by email") {
+      test("retrieve the user by email") {
         for {
           retrievedUser <- UserRepo.getUserByUsernameOrEmail(testUser1.email.value)
         } yield assertTrue(retrievedUser == Some(testUser1)) &&

@@ -14,7 +14,7 @@ import zio.macros.accessible
 /**
  * The user handler.
  *
- * @param repo  the user repository (trait)
+ * @param repo  the user repository
  */
 final case class UserHandler(repo: UserRepo) {
   def getAll(): ZIO[Any, Nothing, List[User]]                  = repo.getAllUsers()
@@ -30,11 +30,11 @@ final case class UserHandler(repo: UserRepo) {
   def getUserByEmail(email: Email): ZIO[Any, Nothing, Option[User]] =
     repo.getUserByUsernameOrEmail(email.value)
   def createUser(user: User): UIO[Unit] = repo.storeUser(user)
-  def updateUser(user: User): UIO[Unit] =
+  def updateUser(user: User): IO[Option[Nothing], Unit] =
     for {
       currentUser <- getUserById(user.id) //.orElse()?
-      //_           <- deleteUser(user.id)
-      //_           <- createUser(user)
+      _           <- deleteUser(user.id)
+      _           <- createUser(user)
     } yield ()
   def deleteUser(id: UserId): IO[Option[Nothing], Unit] = repo.deleteUser(id)
 }

@@ -12,14 +12,15 @@ import dsp.user.domain.User
 import dsp.user.domain.UserId
 import dsp.user.domain.UserValueObjects
 import dsp.user.domain.Iri
+import dsp.user.repo.UserRepo
 
 /**
- * In-memory user repository implementation for
+ * User repo test implementation. Mocks the user repo for tests.
  *
  * @param users       a map of users (UUID -> User).
- * @param lookupTable a map of username/email to UUID.
+ * @param lookupTable a map of users (username/email -> UUID).
  */
-final case class UserRepoInMem(
+final case class UserRepoMock(
   users: TMap[UUID, User],
   lookupTable: TMap[String, UUID] // sealed trait for key type
 ) extends UserRepo {
@@ -71,13 +72,13 @@ final case class UserRepoInMem(
 /**
  * Companion object providing the layer with an initialized implementation of UserRepo
  */
-object UserRepoInMem {
-  val test: ZLayer[Any, Nothing, UserRepo] = {
+object UserRepoMock {
+  val layer: ZLayer[Any, Nothing, UserRepo] = {
     ZLayer {
       for {
         users <- TMap.empty[UUID, User].commit
         lut   <- TMap.empty[String, UUID].commit
-      } yield UserRepoInMem(users, lut)
+      } yield UserRepoMock(users, lut)
     }.tap(_ => ZIO.debug(">>> In-memory user repository initialized <<<"))
   }
 }

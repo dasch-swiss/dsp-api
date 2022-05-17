@@ -10,7 +10,7 @@ import zio._
 import zio.test._
 import dsp.user.domain._
 import dsp.user.handler.UserHandler
-import dsp.user.repo.UserRepoInMem
+import dsp.user.repo.UserRepoMock
 
 /**
  * This spec is used to test [[dsp.user.repo.UserHandler]].
@@ -19,7 +19,7 @@ object UserHandlerSpec extends ZIOSpec[UserHandler] {
 
   val bootstrap = ZLayer.make[UserHandler](
     UserHandler.layer,
-    UserRepoInMem.test
+    UserRepoMock.layer
   )
 
   def spec = (userTests)
