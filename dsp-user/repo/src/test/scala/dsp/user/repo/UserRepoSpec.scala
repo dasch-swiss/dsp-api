@@ -11,16 +11,15 @@ import zio.test._
 import dsp.user.domain._
 import dsp.user.repo.UserRepo
 import dsp.user.repo.UserRepoLive
+import dsp.user.repo.UserRepoMock
+import zio.test.ZIOSpecDefault
 
 /**
- * This spec is used to test [[dsp.user.repo.UserRepo]].
+ * This spec is used to test all [[dsp.user.repo.UserRepo]] implementations.
  */
-object UserRepoSpec extends ZIOSpec[UserRepo] {
+object UserRepoSpec extends ZIOSpecDefault {
 
-  val bootstrap = ZLayer.make[UserRepo](UserRepoLive.layer)
-  // the same tests should run for all implementations of the UserRepo interface (UserRepoMock and UserRepoLive)
-
-  def spec = (userTests)
+  def spec = (userRepoMockTests + userRepoLiveTests)
 
   private val testUser1: User = User(
     id = UserId.make(),
@@ -44,7 +43,7 @@ object UserRepoSpec extends ZIOSpec[UserRepo] {
     role = "role"
   )
 
-  val userTests = suite("UserRepo")(
+  val userTests =
     test("store a user and retrieve by ID") {
       for {
         _             <- UserRepo.storeUser(testUser1)
@@ -53,14 +52,24 @@ object UserRepoSpec extends ZIOSpec[UserRepo] {
     } +
       test("retrieve the user by username") {
         for {
+          _             <- UserRepo.storeUser(testUser1)
           retrievedUser <- UserRepo.getUserByUsernameOrEmail(testUser1.username.value)
         } yield assertTrue(retrievedUser == Some(testUser1))
       } +
       test("retrieve the user by email") {
         for {
+          _             <- UserRepo.storeUser(testUser1)
           retrievedUser <- UserRepo.getUserByUsernameOrEmail(testUser1.email.value)
         } yield assertTrue(retrievedUser == Some(testUser1)) &&
           assertTrue(retrievedUser != Some(testUser2))
       }
-  )
+
+  val userRepoMockTests = suite("UserRepoMock")(
+    userTests
+  ).provide(UserRepoMock.layer)
+
+  val userRepoLiveTests = suite("UserRepoLive")(
+    userTests
+  ).provide(UserRepoLive.layer)
+
 }

@@ -48,7 +48,7 @@ trait UserRepo {
    * @param usernameOrEmail username or email of the user.
    * @return an optional [[User]].
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[User]]
+  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[User]]
 
   /**
    * Deletes a [[User]] from the repository by its [[UserId]].

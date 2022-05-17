@@ -36,7 +36,7 @@ object UserHandlerSpec extends ZIOSpec[UserHandler] {
   )
 
   val userTests = suite("UserHandler")(
-    test("successfully store a user and retrieve by ID") {
+    test("store a user and retrieve by ID") {
       for {
         userHandler   <- ZIO.service[UserHandler]
         _             <- userHandler.createUser(testUser1)

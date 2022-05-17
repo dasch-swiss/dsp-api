@@ -52,7 +52,7 @@ final case class UserRepoMock(
   /**
    * @inheritDoc
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): ZIO[Any, Nothing, Option[User]] =
+  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[User]] =
     (for {
       iri: UUID  <- lookupTable.get(usernameOrEmail).some
       user: User <- users.get(iri).some
