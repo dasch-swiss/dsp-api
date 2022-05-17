@@ -35,7 +35,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+  override def makeRoute(): Route = {
 
     path("v2" / "standoff" / Segment / Segment / Segment) {
       (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>
@@ -61,23 +61,18 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
 
           val requestMessageFuture: Future[GetStandoffPageRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
           } yield GetStandoffPageRequestV2(
             resourceIri = resourceIri.toString,
             valueIri = valueIri.toString,
             offset = offset,
             targetSchema = targetSchema,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,
@@ -122,10 +117,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             .runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
           val requestMessageFuture: Future[CreateMappingRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+            requestingUser              <- getUserADM(requestContext)
             allParts: Map[Name, String] <- allPartsFuture
             jsonldDoc =
               JsonLDUtil.parseJsonLD(
@@ -137,16 +129,16 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                   .toString
               )
 
-            metadata: CreateMappingRequestMetadataV2 <- CreateMappingRequestMetadataV2.fromJsonLD(
-                                                          jsonLDDocument = jsonldDoc,
-                                                          apiRequestID = apiRequestID,
-                                                          requestingUser = requestingUser,
-                                                          responderManager = responderManager,
-                                                          storeManager = storeManager,
-                                                          featureFactoryConfig = featureFactoryConfig,
-                                                          settings = settings,
-                                                          log = log
-                                                        )
+            metadata: CreateMappingRequestMetadataV2 <-
+              CreateMappingRequestMetadataV2.fromJsonLD(
+                jsonLDDocument = jsonldDoc,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
+              )
 
             xml: String =
               allParts
@@ -158,7 +150,6 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           } yield CreateMappingRequestV2(
             metadata = metadata,
             xml = CreateMappingRequestXMLV2(xml),
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = apiRequestID
           )
@@ -166,7 +157,6 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,

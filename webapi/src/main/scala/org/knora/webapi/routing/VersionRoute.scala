@@ -53,7 +53,7 @@ class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("version") {
       get { requestContext =>
         requestContext.complete(createResponse())

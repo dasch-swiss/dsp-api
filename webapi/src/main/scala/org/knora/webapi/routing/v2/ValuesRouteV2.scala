@@ -108,18 +108,17 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[CreateValueRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext
-                              )
-            requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
-                                                      requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      responderManager = responderManager,
-                                                      storeManager = storeManager,
-                                                      settings = settings,
-                                                      log = log
-                                                    )
+            requestingUser <- getUserADM(requestContext)
+            requestMessage: CreateValueRequestV2 <-
+              CreateValueRequestV2.fromJsonLD(
+                requestDoc,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
+              )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(
@@ -143,18 +142,17 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[UpdateValueRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext
-                              )
-            requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
-                                                      requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      responderManager = responderManager,
-                                                      storeManager = storeManager,
-                                                      settings = settings,
-                                                      log = log
-                                                    )
+            requestingUser <- getUserADM(requestContext)
+            requestMessage: UpdateValueRequestV2 <-
+              UpdateValueRequestV2.fromJsonLD(
+                requestDoc,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
+              )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(
@@ -171,33 +169,29 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
   }
 
-  private def deleteValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / "delete") {
+  private def deleteValue(): Route = path(ValuesBasePath / "delete") {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
           val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
           val requestMessageFuture: Future[DeleteValueRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
-            requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
-                                                      requestDoc,
-                                                      apiRequestID = UUID.randomUUID,
-                                                      requestingUser = requestingUser,
-                                                      responderManager = responderManager,
-                                                      storeManager = storeManager,
-                                                      featureFactoryConfig = featureFactoryConfig,
-                                                      settings = settings,
-                                                      log = log
-                                                    )
+            requestingUser <- getUserADM(requestContext)
+            requestMessage: DeleteValueRequestV2 <-
+              DeleteValueRequestV2.fromJsonLD(
+                requestDoc,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                settings = settings,
+                log = log
+              )
           } yield requestMessage
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,

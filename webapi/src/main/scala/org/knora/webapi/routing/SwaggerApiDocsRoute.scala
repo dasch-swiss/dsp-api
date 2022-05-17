@@ -51,7 +51,7 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     routes
 
 }

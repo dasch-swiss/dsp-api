@@ -241,15 +241,12 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "search" /) {
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
+          userADM <- getUserADM(requestContext)
           params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         } yield makeExtendedSearchRequestMessage(userADM, params)
 
@@ -266,10 +263,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
             val requestMessage = for {
-              userADM <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
-                         )
+              userADM <- getUserADM(requestContext)
               params: Map[String, String] = requestContext.request.uri.query().toMap
             } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 

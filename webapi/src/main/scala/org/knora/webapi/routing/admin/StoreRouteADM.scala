@@ -34,7 +34,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = Route {
+  override def makeRoute(): Route = Route {
     path("admin" / "store") {
       get { requestContext =>
         /**
@@ -51,8 +51,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
           parameter(Symbol("prependdefaults").as[Boolean] ? true) { prependDefaults => requestContext =>
             val msg = ResetTriplestoreContentRequestADM(
               rdfDataObjects = apiRequest,
-              prependDefaults = prependDefaults,
-              featureFactoryConfig = featureFactoryConfig
+              prependDefaults = prependDefaults
             )
 
             val requestMessage = Future.successful(msg)
@@ -60,7 +59,6 @@ class StoreRouteADM(routeData: KnoraRouteData)
             RouteUtilADM.runJsonRoute(
               requestMessageF = requestMessage,
               requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig,
               settings = settings,
               responderManager = responderManager,
               log = log

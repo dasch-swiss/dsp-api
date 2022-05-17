@@ -30,7 +30,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "mapping") {
       post {
         entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
@@ -66,10 +66,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
-                           )
+            userProfile <- getUserADM(requestContext)
 
             allParts: Map[Name, String] <- allPartsFuture
 
@@ -109,7 +106,6 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
               standoffApiJSONRequest.mappingName,
               throw BadRequestException("'mappingName' contains invalid characters")
             ),
-            featureFactoryConfig = featureFactoryConfig,
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
           )

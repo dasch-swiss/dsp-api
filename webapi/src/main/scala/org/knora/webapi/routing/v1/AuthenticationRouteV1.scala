@@ -19,14 +19,11 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "authenticate") {
       get { requestContext =>
         requestContext.complete {
-          doAuthenticateV1(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          doAuthenticateV1(requestContext)
         }
       }
     } ~ path("v1" / "session") {
@@ -36,23 +33,14 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
           if (params.contains("logout")) {
             doLogoutV2(requestContext)
           } else if (params.contains("login")) {
-            doLoginV1(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+            doLoginV1(requestContext)
           } else {
-            doAuthenticateV1(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
+            doAuthenticateV1(requestContext)
           }
         }
       } ~ post { requestContext =>
         requestContext.complete {
-          doLoginV1(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          doLoginV1(requestContext)
         }
       } ~ delete { requestContext =>
         requestContext.complete {

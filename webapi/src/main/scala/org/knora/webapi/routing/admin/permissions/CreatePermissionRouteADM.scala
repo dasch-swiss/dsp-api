@@ -77,13 +77,15 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
           val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
             requestingUser <- getUserADM(requestContext)
           } yield DefaultObjectAccessPermissionCreateRequestADM(
-            createRequest = apiRequest requestingUser = requestingUser,
+            createRequest = apiRequest,
+            requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
-            requestContext = requestContext settings = settings,
+            requestContext = requestContext,
+            settings = settings,
             responderManager = responderManager,
             log = log
           )

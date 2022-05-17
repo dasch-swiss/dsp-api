@@ -25,14 +25,11 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
       get { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
           projectID = stringFormatter.validateProjectShortcode(
                         projectIDAndFile.head,
                         throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'")
@@ -45,14 +42,12 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         } yield SipiFileInfoGetRequestADM(
           projectID = projectID,
           filename = filename,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log

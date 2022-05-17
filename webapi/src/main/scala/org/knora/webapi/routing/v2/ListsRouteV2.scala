@@ -26,34 +26,29 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    getList(featureFactoryConfig) ~
-      getNode(featureFactoryConfig)
+  override def makeRoute(): Route =
+    getList() ~
+      getNode()
 
-  private def getList(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "lists" / Segment) {
+  private def getList(): Route = path("v2" / "lists" / Segment) {
     lIri: String =>
       get {
         /* return a list (a graph with all list nodes) */
         requestContext =>
           val requestMessage: Future[ListGetRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
             listIri: IRI = stringFormatter.validateAndEscapeIri(
                              lIri,
                              throw BadRequestException(s"Invalid list IRI: '$lIri'")
                            )
           } yield ListGetRequestV2(
             listIri = listIri,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,
@@ -63,30 +58,25 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       }
   }
 
-  private def getNode(featureFactoryConfig: FeatureFactoryConfig): Route = path("v2" / "node" / Segment) {
+  private def getNode(): Route = path("v2" / "node" / Segment) {
     nIri: String =>
       get {
         /* return a list node */
         requestContext =>
           val requestMessage: Future[NodeGetRequestV2] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
             nodeIri: IRI = stringFormatter.validateAndEscapeIri(
                              nIri,
                              throw BadRequestException(s"Invalid list IRI: '$nIri'")
                            )
           } yield NodeGetRequestV2(
             nodeIri = nodeIri,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,

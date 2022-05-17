@@ -30,7 +30,7 @@ class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "assets" / Remaining) { assetId =>
       get { requestContext =>
         requestContext.complete {

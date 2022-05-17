@@ -202,7 +202,6 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   * @param featureFactoryConfig           the feature factory configuration.
    * @param settings                       the application's settings.
    * @param responderManager               a reference to the responder manager.
    * @param log                            a logging adapter.
@@ -215,7 +214,6 @@ object RouteUtilV1 {
     mappingIri: IRI,
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     responderManager: ActorRef,
     log: LoggingAdapter
@@ -225,7 +223,6 @@ object RouteUtilV1 {
       // get the mapping directly from v2 responder directly (to avoid useless back and forth conversions between v2 and v1 message formats)
       mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
                                                  mappingIri = mappingIri,
-                                                 featureFactoryConfig = featureFactoryConfig,
                                                  requestingUser = userProfile
                                                )).mapTo[GetMappingResponseV2]
 

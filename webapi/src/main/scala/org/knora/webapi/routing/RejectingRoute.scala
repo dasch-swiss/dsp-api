@@ -48,7 +48,7 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path(Remaining) { wholePath =>
       // check to see if route is on the rejection list
       val rejectSeq: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject: String =>

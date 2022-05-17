@@ -21,14 +21,11 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "ckan") {
       get { requestContext =>
         val requestMessage = for {
-          userProfile <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
-                         )
+          userProfile <- getUserADM(requestContext)
           params                       = requestContext.request.uri.query().toMap
           project: Option[Seq[String]] = params.get("project").map(_.split(",").toSeq)
           limit: Option[Int]           = params.get("limit").map(_.toInt)
@@ -37,7 +34,6 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
           projects = project,
           limit = limit,
           info = info,
-          featureFactoryConfig = featureFactoryConfig,
           userProfile = userProfile
         )
 

@@ -463,13 +463,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Verify that the resource was updated correctly.
 
-        updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                          resourceIris =
-                                                            Seq(updateResourceMetadataRequestV2.resourceIri),
-                                                          targetSchema = ApiV2Complex,
-                                                          requestingUser =
-                                                            updateResourceMetadataRequestV2.requestingUser
-                                                        )
+        updatedResourcesSeq: ReadResourcesSequenceV2 <-
+          getResourcePreviewV2(
+            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+            targetSchema = ApiV2Complex,
+            requestingUser = updateResourceMetadataRequestV2.requestingUser
+          )
 
         _ = if (updatedResourcesSeq.resources.size != 1) {
               throw AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}")
@@ -780,7 +779,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     defaultResourcePermissions: String,
     defaultPropertyPermissions: Map[SmartIri, String],
     creationDate: Instant,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
@@ -858,44 +856,43 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
-      resourcePermissions: String <- internalCreateResource.permissions match {
-                                       case Some(permissionStr) =>
-                                         for {
-                                           validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
-                                                                                   permissionLiteral = permissionStr,
-                                                                                   featureFactoryConfig =
-                                                                                     featureFactoryConfig,
-                                                                                   responderManager = responderManager
-                                                                                 )
+      resourcePermissions: String <-
+        internalCreateResource.permissions match {
+          case Some(permissionStr) =>
+            for {
+              validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
+                                                      permissionLiteral = permissionStr,
+                                                      responderManager = responderManager
+                                                    )
 
-                                           // Is the requesting user a system admin, or an admin of this project?
-                                           _ = if (
-                                                 !(requestingUser.permissions.isProjectAdmin(
-                                                   internalCreateResource.projectADM.id
-                                                 ) || requestingUser.permissions.isSystemAdmin)
-                                               ) {
+              // Is the requesting user a system admin, or an admin of this project?
+              _ = if (
+                    !(requestingUser.permissions.isProjectAdmin(
+                      internalCreateResource.projectADM.id
+                    ) || requestingUser.permissions.isSystemAdmin)
+                  ) {
 
-                                                 // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                    // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                                                 val permissionComparisonResult: PermissionComparisonResult =
-                                                   PermissionUtilADM.comparePermissionsADM(
-                                                     entityCreator = requestingUser.id,
-                                                     entityProject = internalCreateResource.projectADM.id,
-                                                     permissionLiteralA = validatedCustomPermissions,
-                                                     permissionLiteralB = defaultResourcePermissions,
-                                                     requestingUser = requestingUser
-                                                   )
+                    val permissionComparisonResult: PermissionComparisonResult =
+                      PermissionUtilADM.comparePermissionsADM(
+                        entityCreator = requestingUser.id,
+                        entityProject = internalCreateResource.projectADM.id,
+                        permissionLiteralA = validatedCustomPermissions,
+                        permissionLiteralB = defaultResourcePermissions,
+                        requestingUser = requestingUser
+                      )
 
-                                                 if (permissionComparisonResult == AGreaterThanB) {
-                                                   throw ForbiddenException(
-                                                     s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
-                                                   )
-                                                 }
-                                               }
-                                         } yield validatedCustomPermissions
+                    if (permissionComparisonResult == AGreaterThanB) {
+                      throw ForbiddenException(
+                        s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
+                      )
+                    }
+                  }
+            } yield validatedCustomPermissions
 
-                                       case None => FastFuture.successful(defaultResourcePermissions)
-                                     }
+          case None => FastFuture.successful(defaultResourcePermissions)
+        }
 
       valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <-
         validateAndFormatValuePermissions(
@@ -903,7 +900,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           values = internalCreateResource.values,
           defaultPropertyPermissions = defaultPropertyPermissions,
           resourceIDForErrorMsg = resourceIDForErrorMsg,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
@@ -936,14 +932,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * to be created.
    *
    * @param internalCreateResources the resources to be created.
-   * @param featureFactoryConfig    the feature factory configuration.
    * @param requestingUser          the user making the request.
    * @return a map of resource IRIs to class IRIs.
    */
   private def getLinkTargetClasses(
     resourceIri: IRI,
     internalCreateResources: Seq[CreateResourceV2],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Map[IRI, SmartIri]] = {
     // Get the IRIs of the new and existing resources that are targets of links.
@@ -974,7 +968,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                     resourceIris = existingTargetIris.toSeq,
                                                     targetSchema = ApiV2Complex,
-                                                    featureFactoryConfig = featureFactoryConfig,
                                                     requestingUser = requestingUser
                                                   )
 
@@ -1117,12 +1110,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * permission to see it.
    *
    * @param values               the values to be checked.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    */
   private def checkStandoffLinkTargets(
     values: Iterable[CreateValueInNewResourceV2],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Unit] = {
     val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
@@ -1137,7 +1128,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     getResourcePreviewV2(
       resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
       targetSchema = ApiV2Complex,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     ).map(_ => ())
   }
@@ -1186,7 +1176,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
     val propertyValuesWithValidatedPermissionsFutures
@@ -1201,7 +1190,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 for {
                   validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
                                                   permissionLiteral = permissionStr,
-                                                  featureFactoryConfig = featureFactoryConfig,
                                                   responderManager = responderManager
                                                 )
 
@@ -1322,14 +1310,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceReadyToCreate the resource that should have been created.
    * @param projectIri            the IRI of the project in which the resource should have been created.
-   * @param featureFactoryConfig  the feature factory configuration.
    * @param requestingUser        the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
     resourceReadyToCreate: ResourceReadyToCreate,
     projectIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
@@ -1339,7 +1325,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                       resourceIris = Seq(resourceIri),
                                                       requestingUser = requestingUser,
                                                       targetSchema = ApiV2Complex,
-                                                      featureFactoryConfig = featureFactoryConfig,
                                                       schemaOptions = SchemaOptions.ForStandoffWithTextValues
                                                     )
 
@@ -1469,7 +1454,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
    *                             Cannot be used in conjunction with `preview`.
    * @param queryStandoff        `true` if standoff should be queried.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a map of resource IRIs to RDF data.
    */
   private def getResourcesFromTriplestore(
@@ -1480,7 +1464,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
     queryStandoff: Boolean,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
     // eliminate duplicate Iris
@@ -1512,10 +1495,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                    .toString()
                                )
 
-      resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                                    sparql = resourceRequestSparql,
-                                                                    featureFactoryConfig = featureFactoryConfig
-                                                                  )).mapTo[SparqlExtendedConstructResponse]
+      resourceRequestResponse: SparqlExtendedConstructResponse <-
+        (storeManager ? SparqlExtendedConstructRequest(resourceRequestSparql)).mapTo[SparqlExtendedConstructResponse]
 
       // separate resources and values
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -1538,7 +1519,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param withDeleted          if defined, indicates if the deleted resource and values should be returned or not.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
@@ -1551,7 +1531,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
@@ -1564,49 +1543,43 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
 
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
-                                                                                              resourceIris =
-                                                                                                resourceIris,
-                                                                                              preview = false,
-                                                                                              withDeleted = withDeleted,
-                                                                                              propertyIri = propertyIri,
-                                                                                              valueUuid = valueUuid,
-                                                                                              versionDate = versionDate,
-                                                                                              queryStandoff =
-                                                                                                queryStandoff,
-                                                                                              featureFactoryConfig =
-                                                                                                featureFactoryConfig,
-                                                                                              requestingUser =
-                                                                                                requestingUser
-                                                                                            )
+      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
+        getResourcesFromTriplestore(
+          resourceIris = resourceIris,
+          preview = false,
+          withDeleted = withDeleted,
+          propertyIri = propertyIri,
+          valueUuid = valueUuid,
+          versionDate = versionDate,
+          queryStandoff = queryStandoff,
+          requestingUser = requestingUser
+        )
 
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <-
         if (queryStandoff) {
           getMappingsFromQueryResultsSeparated(
             queryResultsSeparated = mainResourcesAndValueRdfData.resources,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
         } else {
           FastFuture.successful(Map.empty[IRI, MappingAndXSLTransformation])
         }
 
-      apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                orderByResourceIri = resourceIrisDistinct,
-                                                pageSizeBeforeFiltering =
-                                                  resourceIris.size, // doesn't matter because we're not doing paging
-                                                mappings = mappingsAsMap,
-                                                queryStandoff = queryStandoff,
-                                                versionDate = versionDate,
-                                                calculateMayHaveMoreResults = false,
-                                                responderManager = responderManager,
-                                                targetSchema = targetSchema,
-                                                settings = settings,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                requestingUser = requestingUser
-                                              )
+      apiResponse: ReadResourcesSequenceV2 <-
+        ConstructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = resourceIrisDistinct,
+          pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+          mappings = mappingsAsMap,
+          queryStandoff = queryStandoff,
+          versionDate = versionDate,
+          calculateMayHaveMoreResults = false,
+          responderManager = responderManager,
+          targetSchema = targetSchema,
+          settings = settings,
+          requestingUser = requestingUser
+        )
 
       _ = apiResponse.checkResourceIris(
             targetResourceIris = resourceIris.toSet,
@@ -1625,29 +1598,27 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           }
 
       // Check if resources are deleted, if so, replace them with DeletedResource
-      responseWithDeletedResourcesReplaced = apiResponse.resources match {
-                                               case resourceList =>
-                                                 if (resourceList.nonEmpty) {
-                                                   val resourceListWithDeletedResourcesReplaced = resourceList.map {
-                                                     resource =>
-                                                       resource.deletionInfo match {
-                                                         // Resource deleted -> return DeletedResource instead
-                                                         case Some(_) => resource.asDeletedResource()
-                                                         // Resource not deleted -> return resource
-                                                         case None =>
-                                                           // deleted values should be shown -> resource can be returned
-                                                           if (showDeletedValues) resource
-                                                           // deleted Values should not be shown -> replace them with generic DeletedValue
-                                                           else resource.withDeletedValues()
-                                                       }
-                                                   }
-                                                   apiResponse.copy(resources =
-                                                     resourceListWithDeletedResourcesReplaced
-                                                   )
-                                                 } else {
-                                                   apiResponse
-                                                 }
-                                             }
+      responseWithDeletedResourcesReplaced =
+        apiResponse.resources match {
+          case resourceList =>
+            if (resourceList.nonEmpty) {
+              val resourceListWithDeletedResourcesReplaced = resourceList.map { resource =>
+                resource.deletionInfo match {
+                  // Resource deleted -> return DeletedResource instead
+                  case Some(_) => resource.asDeletedResource()
+                  // Resource not deleted -> return resource
+                  case None =>
+                    // deleted values should be shown -> resource can be returned
+                    if (showDeletedValues) resource
+                    // deleted Values should not be shown -> replace them with generic DeletedValue
+                    else resource.withDeletedValues()
+                }
+              }
+              apiResponse.copy(resources = resourceListWithDeletedResourcesReplaced)
+            } else {
+              apiResponse
+            }
+        }
 
     } yield responseWithDeletedResourcesReplaced
 
@@ -1658,7 +1629,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIris         the resource to query for.
    * @param withDeleted          indicates if the deleted resource should be returned or not.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
@@ -1666,7 +1636,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
 
@@ -1674,34 +1643,29 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
     for {
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
-                                                                                              resourceIris =
-                                                                                                resourceIris,
-                                                                                              preview = true,
-                                                                                              withDeleted = withDeleted,
-                                                                                              queryStandoff =
-                                                                                                false, // This has no effect, because we are not querying values.
-                                                                                              featureFactoryConfig =
-                                                                                                featureFactoryConfig,
-                                                                                              requestingUser =
-                                                                                                requestingUser
-                                                                                            )
+      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
+        getResourcesFromTriplestore(
+          resourceIris = resourceIris,
+          preview = true,
+          withDeleted = withDeleted,
+          queryStandoff = false, // This has no effect, because we are not querying values.
+          requestingUser = requestingUser
+        )
 
-      apiResponse: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
-                                                mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
-                                                orderByResourceIri = resourceIrisDistinct,
-                                                pageSizeBeforeFiltering =
-                                                  resourceIris.size, // doesn't matter because we're not doing paging
-                                                mappings = Map.empty[IRI, MappingAndXSLTransformation],
-                                                queryStandoff = false,
-                                                versionDate = None,
-                                                calculateMayHaveMoreResults = false,
-                                                responderManager = responderManager,
-                                                targetSchema = targetSchema,
-                                                settings = settings,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                requestingUser = requestingUser
-                                              )
+      apiResponse: ReadResourcesSequenceV2 <-
+        ConstructResponseUtilV2.createApiResponse(
+          mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
+          orderByResourceIri = resourceIrisDistinct,
+          pageSizeBeforeFiltering = resourceIris.size, // doesn't matter because we're not doing paging
+          mappings = Map.empty[IRI, MappingAndXSLTransformation],
+          queryStandoff = false,
+          versionDate = None,
+          calculateMayHaveMoreResults = false,
+          responderManager = responderManager,
+          targetSchema = targetSchema,
+          settings = settings,
+          requestingUser = requestingUser
+        )
 
       _ = apiResponse.checkResourceIris(
             targetResourceIris = resourceIris.toSet,
@@ -1709,23 +1673,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           )
 
       // Check if resources are deleted, if so, replace them with DeletedResource
-      responseWithDeletedResourcesReplaced = apiResponse.resources match {
-                                               case resourceList =>
-                                                 if (resourceList.nonEmpty) {
-                                                   val resourceListWithDeletedResourcesReplaced = resourceList.map {
-                                                     resource =>
-                                                       resource.deletionInfo match {
-                                                         case Some(_) => resource.asDeletedResource()
-                                                         case None    => resource.withDeletedValues()
-                                                       }
-                                                   }
-                                                   apiResponse.copy(resources =
-                                                     resourceListWithDeletedResourcesReplaced
-                                                   )
-                                                 } else {
-                                                   apiResponse
-                                                 }
-                                             }
+      responseWithDeletedResourcesReplaced =
+        apiResponse.resources match {
+          case resourceList =>
+            if (resourceList.nonEmpty) {
+              val resourceListWithDeletedResourcesReplaced = resourceList.map { resource =>
+                resource.deletionInfo match {
+                  case Some(_) => resource.asDeletedResource()
+                  case None    => resource.withDeletedValues()
+                }
+              }
+              apiResponse.copy(resources = resourceListWithDeletedResourcesReplaced)
+            } else {
+              apiResponse
+            }
+        }
 
     } yield responseWithDeletedResourcesReplaced
   }
@@ -1734,24 +1696,22 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * Obtains a Gravsearch template from Sipi.
    *
    * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
-   * @param featureFactoryConfig  the feature factory configuration.
    * @param requestingUser        the user making the request.
    * @return the Gravsearch template.
    */
   private def getGravsearchTemplate(
     gravsearchTemplateIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[String] = {
 
     val gravsearchUrlFuture = for {
-      resources: ReadResourcesSequenceV2 <- getResourcesV2(
-                                              resourceIris = Vector(gravsearchTemplateIri),
-                                              targetSchema = ApiV2Complex,
-                                              schemaOptions = Set(MarkupAsStandoff),
-                                              featureFactoryConfig = featureFactoryConfig,
-                                              requestingUser = requestingUser
-                                            )
+      resources: ReadResourcesSequenceV2 <-
+        getResourcesV2(
+          resourceIris = Vector(gravsearchTemplateIri),
+          targetSchema = ApiV2Complex,
+          schemaOptions = Set(MarkupAsStandoff),
+          requestingUser = requestingUser
+        )
 
       resource: ReadResourceV2 = resources.toResource(gravsearchTemplateIri)
 
@@ -1800,11 +1760,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
       gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-      response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
-                                             fileUrl = gravsearchTemplateUrl,
-                                             requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                             senderName = this.getClass.getName
-                                           )).mapTo[SipiGetTextFileResponse]
+      response: SipiGetTextFileResponse <-
+        (storeManager ? SipiGetTextFileRequest(
+          fileUrl = gravsearchTemplateUrl,
+          requestingUser = KnoraSystemInstances.Users.SystemUser,
+          senderName = this.getClass.getName
+        )).mapTo[SipiGetTextFileResponse]
       gravsearchTemplate: String = response.content
 
     } yield gravsearchTemplate
@@ -1820,7 +1781,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param mappingIri            the Iri of the mapping to be used to convert standoff to XML, if a custom mapping is provided. The mapping is expected to contain an XSL transformation.
    * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header. The resource Iri is expected to be represented by the placeholder '$resourceIri' in a BIND.
    * @param headerXSLTIri         the Iri of the XSL template to convert the metadata properties to the TEI header.
-   * @param featureFactoryConfig  the feature factory configuration.
    * @param requestingUser        the user making the request.
    * @return a [[ResourceTEIGetResponseV2]].
    */
@@ -1830,7 +1790,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     mappingIri: Option[IRI],
     gravsearchTemplateIri: Option[IRI],
     headerXSLTIri: Option[String],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceTEIGetResponseV2] = {
 
@@ -1921,7 +1880,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // get the template
             template <- getGravsearchTemplate(
                           gravsearchTemplateIri = gravsearchTemplateIri.get,
-                          featureFactoryConfig = featureFactoryConfig,
                           requestingUser = requestingUser
                         )
 
@@ -1936,7 +1894,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                              constructQuery = constructQuery,
                                                              targetSchema = ApiV2Complex,
                                                              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                                                             featureFactoryConfig = featureFactoryConfig,
                                                              requestingUser = requestingUser
                                                            )).mapTo[ReadResourcesSequenceV2]
           } yield gravSearchResponse.toResource(resourceIri)
@@ -1956,7 +1913,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                           resourceIris = Vector(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                          featureFactoryConfig = featureFactoryConfig,
                           requestingUser = requestingUser
                         ).map(_.toResource(resourceIri))
           } yield resource
@@ -1975,99 +1931,99 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                        )
 
       // get the XSL transformation for the TEI header
-      headerXSLT: Option[String] <- headerXSLTIri match {
-                                      case Some(headerIri) =>
-                                        val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
-                                          xsltTextRepresentationIri = headerIri,
-                                          featureFactoryConfig = featureFactoryConfig,
-                                          requestingUser = requestingUser
-                                        )
+      headerXSLT: Option[String] <-
+        headerXSLTIri match {
+          case Some(headerIri) =>
+            val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
+              xsltTextRepresentationIri = headerIri,
+              requestingUser = requestingUser
+            )
 
-                                        val xslTransformationFuture = for {
-                                          xslTransformation: GetXSLTransformationResponseV2 <-
-                                            (responderManager ? teiHeaderXsltRequest)
-                                              .mapTo[GetXSLTransformationResponseV2]
-                                        } yield Some(xslTransformation.xslt)
+            val xslTransformationFuture = for {
+              xslTransformation: GetXSLTransformationResponseV2 <-
+                (responderManager ? teiHeaderXsltRequest)
+                  .mapTo[GetXSLTransformationResponseV2]
+            } yield Some(xslTransformation.xslt)
 
-                                        xslTransformationFuture.recover {
-                                          case notFound: NotFoundException =>
-                                            throw SipiException(
-                                              s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}"
-                                            )
+            xslTransformationFuture.recover {
+              case notFound: NotFoundException =>
+                throw SipiException(
+                  s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}"
+                )
 
-                                          case other => throw other
-                                        }
+              case other => throw other
+            }
 
-                                      case None => Future(None)
-                                    }
+          case None => Future(None)
+        }
 
       // get the Iri of the mapping to convert standoff markup to TEI/XML
-      mappingToBeApplied = mappingIri match {
-                             case Some(mapping: IRI) =>
-                               // a custom mapping is provided
-                               mapping
+      mappingToBeApplied =
+        mappingIri match {
+          case Some(mapping: IRI) =>
+            // a custom mapping is provided
+            mapping
 
-                             case None =>
-                               // no mapping is provided, assume the standard case (standard standoff entites only)
-                               OntologyConstants.KnoraBase.TEIMapping
-                           }
+          case None =>
+            // no mapping is provided, assume the standard case (standard standoff entites only)
+            OntologyConstants.KnoraBase.TEIMapping
+        }
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                                            mappingIri = mappingToBeApplied,
-                                            featureFactoryConfig = featureFactoryConfig,
-                                            requestingUser = requestingUser
-                                          )).mapTo[GetMappingResponseV2]
+      teiMapping: GetMappingResponseV2 <-
+        (responderManager ? GetMappingRequestV2(
+          mappingIri = mappingToBeApplied,
+          requestingUser = requestingUser
+        )).mapTo[GetMappingResponseV2]
 
       // get XSLT from mapping for the TEI body
-      bodyXslt: String <- teiMapping.mappingIri match {
-                            case OntologyConstants.KnoraBase.TEIMapping =>
-                              // standard standoff to TEI conversion
+      bodyXslt: String <-
+        teiMapping.mappingIri match {
+          case OntologyConstants.KnoraBase.TEIMapping =>
+            // standard standoff to TEI conversion
 
-                              // use standard XSLT (built-in)
-                              val teiXSLTFile: String = FileUtil.readTextResource("standoffToTEI.xsl")
+            // use standard XSLT (built-in)
+            val teiXSLTFile: String = FileUtil.readTextResource("standoffToTEI.xsl")
 
-                              // return the file's content
-                              Future(teiXSLTFile)
+            // return the file's content
+            Future(teiXSLTFile)
 
-                            case otherMapping =>
-                              teiMapping.mapping.defaultXSLTransformation match {
-                                // custom standoff to TEI conversion
+          case otherMapping =>
+            teiMapping.mapping.defaultXSLTransformation match {
+              // custom standoff to TEI conversion
 
-                                case Some(xslTransformationIri) =>
-                                  // get XSLT for the TEI body.
-                                  val teiBodyXsltRequest = GetXSLTransformationRequestV2(
-                                    xsltTextRepresentationIri = xslTransformationIri,
-                                    featureFactoryConfig = featureFactoryConfig,
-                                    requestingUser = requestingUser
-                                  )
+              case Some(xslTransformationIri) =>
+                // get XSLT for the TEI body.
+                val teiBodyXsltRequest = GetXSLTransformationRequestV2(
+                  xsltTextRepresentationIri = xslTransformationIri,
+                  requestingUser = requestingUser
+                )
 
-                                  val xslTransformationFuture = for {
-                                    xslTransformation: GetXSLTransformationResponseV2 <-
-                                      (responderManager ? teiBodyXsltRequest)
-                                        .mapTo[GetXSLTransformationResponseV2]
-                                  } yield xslTransformation.xslt
+                val xslTransformationFuture = for {
+                  xslTransformation: GetXSLTransformationResponseV2 <-
+                    (responderManager ? teiBodyXsltRequest)
+                      .mapTo[GetXSLTransformationResponseV2]
+                } yield xslTransformation.xslt
 
-                                  xslTransformationFuture.recover {
-                                    case notFound: NotFoundException =>
-                                      throw SipiException(
-                                        s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
-                                      )
+                xslTransformationFuture.recover {
+                  case notFound: NotFoundException =>
+                    throw SipiException(
+                      s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}"
+                    )
 
-                                    case other => throw other
-                                  }
-                                case None =>
-                                  throw BadRequestException(
-                                    s"Default XSL Transformation expected for mapping $otherMapping"
-                                  )
-                              }
-                          }
+                  case other => throw other
+                }
+              case None =>
+                throw BadRequestException(
+                  s"Default XSL Transformation expected for mapping $otherMapping"
+                )
+            }
+        }
 
       tei = ResourceTEIGetResponseV2(
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                featureFactoryConfig = featureFactoryConfig,
                 settings = settings
               ),
               body = TEIBody(
@@ -2160,17 +2116,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       for {
         // Get the direct links from/to the start node.
-        sparql <- Future(
-                    org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                      .getGraphData(
-                        startNodeIri = startNode.nodeIri,
-                        startNodeOnly = false,
-                        maybeExcludeLinkProperty = excludePropertyInternal,
-                        outbound = outbound, // true to query outbound edges, false to query inbound edges
-                        limit = settings.maxGraphBreadth
-                      )
-                      .toString()
-                  )
+        sparql <-
+          Future(
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .getGraphData(
+                startNodeIri = startNode.nodeIri,
+                startNodeOnly = false,
+                maybeExcludeLinkProperty = excludePropertyInternal,
+                outbound = outbound, // true to query outbound edges, false to query inbound edges
+                limit = settings.maxGraphBreadth
+              )
+              .toString()
+          )
 
         // _ = println(sparql)
 
@@ -2416,30 +2373,31 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     for {
       // Get the resource preview, to make sure the user has permission to see the resource, and to get
       // its creation date.
-      resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                            resourceIris = Seq(resourceHistoryRequest.resourceIri),
-                                                            withDeleted = resourceHistoryRequest.withDeletedResource,
-                                                            targetSchema = ApiV2Complex,
-                                                            featureFactoryConfig =
-                                                              resourceHistoryRequest.featureFactoryConfig,
-                                                            requestingUser = resourceHistoryRequest.requestingUser
-                                                          )
+      resourcePreviewResponse: ReadResourcesSequenceV2 <-
+        getResourcePreviewV2(
+          resourceIris = Seq(resourceHistoryRequest.resourceIri),
+          withDeleted = resourceHistoryRequest.withDeletedResource,
+          targetSchema = ApiV2Complex,
+          requestingUser = resourceHistoryRequest.requestingUser
+        )
 
       resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
 
       // Get the version history of the resource's values.
 
-      historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                               .getResourceValueVersionHistory(
-                                 withDeletedResource = resourceHistoryRequest.withDeletedResource,
-                                 resourceIri = resourceHistoryRequest.resourceIri,
-                                 maybeStartDate = resourceHistoryRequest.startDate,
-                                 maybeEndDate = resourceHistoryRequest.endDate
-                               )
-                               .toString()
+      historyRequestSparql =
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .getResourceValueVersionHistory(
+            withDeletedResource = resourceHistoryRequest.withDeletedResource,
+            resourceIri = resourceHistoryRequest.resourceIri,
+            maybeStartDate = resourceHistoryRequest.startDate,
+            maybeEndDate = resourceHistoryRequest.endDate
+          )
+          .toString()
 
-      valueHistoryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(historyRequestSparql))
-                                                    .mapTo[SparqlSelectResult]
+      valueHistoryResponse: SparqlSelectResult <-
+        (storeManager ? SparqlSelectRequest(historyRequestSparql))
+          .mapTo[SparqlSelectResult]
 
       valueHistoryEntries: Seq[ResourceHistoryEntry] =
         valueHistoryResponse.results.bindings.map { row: VariableResultsRow =>
@@ -2489,24 +2447,25 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
       // Make a Gravsearch query from a template.
-      gravsearchQueryForIncomingLinks: String <- Future(
-                                                   org.knora.webapi.messages.twirl.queries.gravsearch.txt
-                                                     .getIncomingImageLinks(
-                                                       resourceIri = request.resourceIri
-                                                     )
-                                                     .toString()
-                                                 )
+      gravsearchQueryForIncomingLinks: String <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.gravsearch.txt
+            .getIncomingImageLinks(
+              resourceIri = request.resourceIri
+            )
+            .toString()
+        )
 
       // Run the query.
 
       parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse <- (responderManager ? GravsearchRequestV2(
-                          constructQuery = parsedGravsearchQuery,
-                          targetSchema = ApiV2Complex,
-                          schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
-                          featureFactoryConfig = request.featureFactoryConfig,
-                          requestingUser = request.requestingUser
-                        )).mapTo[ReadResourcesSequenceV2]
+      searchResponse <-
+        (responderManager ? GravsearchRequestV2(
+          constructQuery = parsedGravsearchQuery,
+          targetSchema = ApiV2Complex,
+          schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
+          requestingUser = request.requestingUser
+        )).mapTo[ReadResourcesSequenceV2]
 
       resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
 
@@ -2514,9 +2473,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resource.values
           .getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
 
-      representations: Seq[ReadResourceV2] = incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
-                                               readLinkValueV2.valueContent.nestedResource
-                                             }.flatten
+      representations: Seq[ReadResourceV2] =
+        incomingLinks.collect { case readLinkValueV2: ReadLinkValueV2 =>
+          readLinkValueV2.valueContent.nestedResource
+        }.flatten
     } yield ResourceIIIFManifestGetResponseV2(
       JsonLDDocument(
         body = JsonLDObject(
@@ -2634,26 +2594,20 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     resourceHistoryEventsGetRequest: ResourceHistoryEventsGetRequestV2
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
-      resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-                                                             ResourceVersionHistoryGetRequestV2(
-                                                               resourceIri =
-                                                                 resourceHistoryEventsGetRequest.resourceIri,
-                                                               withDeletedResource = true,
-                                                               featureFactoryConfig =
-                                                                 resourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                               requestingUser =
-                                                                 resourceHistoryEventsGetRequest.requestingUser
-                                                             )
-                                                           )
-      resourceFullHist: Seq[ResourceAndValueHistoryEvent] <- extractEventsFromHistory(
-                                                               resourceIri =
-                                                                 resourceHistoryEventsGetRequest.resourceIri,
-                                                               resourceHistory = resourceHistory.history,
-                                                               featureFactoryConfig =
-                                                                 resourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                               requestingUser =
-                                                                 resourceHistoryEventsGetRequest.requestingUser
-                                                             )
+      resourceHistory: ResourceVersionHistoryResponseV2 <-
+        getResourceHistoryV2(
+          ResourceVersionHistoryGetRequestV2(
+            resourceIri = resourceHistoryEventsGetRequest.resourceIri,
+            withDeletedResource = true,
+            requestingUser = resourceHistoryEventsGetRequest.requestingUser
+          )
+        )
+      resourceFullHist: Seq[ResourceAndValueHistoryEvent] <-
+        extractEventsFromHistory(
+          resourceIri = resourceHistoryEventsGetRequest.resourceIri,
+          resourceHistory = resourceHistory.history,
+          requestingUser = resourceHistoryEventsGetRequest.requestingUser
+        )
       sortedResourceHistory = resourceFullHist.sortBy(_.versionDate)
     } yield ResourceAndValueVersionHistoryResponseV2(historyEvents = sortedResourceHistory)
 
@@ -2668,15 +2622,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                                                      identifier = ProjectIdentifierADM(maybeIri =
-                                                        Some(projectResourceHistoryEventsGetRequest.projectIri)
-                                                      ),
-                                                      featureFactoryConfig =
-                                                        projectResourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                      requestingUser =
-                                                        projectResourceHistoryEventsGetRequest.requestingUser
-                                                    )).mapTo[ProjectGetResponseADM]
+      projectInfoResponse: ProjectGetResponseADM <-
+        (responderManager ? ProjectGetRequestADM(
+          identifier = ProjectIdentifierADM(maybeIri = Some(projectResourceHistoryEventsGetRequest.projectIri)),
+          requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+        )).mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -2691,24 +2641,20 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIri =>
           for {
-            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-                                                                   ResourceVersionHistoryGetRequestV2(
-                                                                     resourceIri = resourceIri,
-                                                                     withDeletedResource = true,
-                                                                     featureFactoryConfig =
-                                                                       projectResourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                                     requestingUser =
-                                                                       projectResourceHistoryEventsGetRequest.requestingUser
-                                                                   )
-                                                                 )
-            resourceFullHist: Seq[ResourceAndValueHistoryEvent] <- extractEventsFromHistory(
-                                                                     resourceIri = resourceIri,
-                                                                     resourceHistory = resourceHistory.history,
-                                                                     featureFactoryConfig =
-                                                                       projectResourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                                     requestingUser =
-                                                                       projectResourceHistoryEventsGetRequest.requestingUser
-                                                                   )
+            resourceHistory: ResourceVersionHistoryResponseV2 <-
+              getResourceHistoryV2(
+                ResourceVersionHistoryGetRequestV2(
+                  resourceIri = resourceIri,
+                  withDeletedResource = true,
+                  requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+                )
+              )
+            resourceFullHist: Seq[ResourceAndValueHistoryEvent] <-
+              extractEventsFromHistory(
+                resourceIri = resourceIri,
+                resourceHistory = resourceHistory.history,
+                requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+              )
           } yield resourceFullHist
         }
 
@@ -2722,46 +2668,44 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIri     the IRI of the resource.
    * @param resourceHistory the full representations of the resource in each point in its history.
-   * @param featureFactoryConfig       the feature factory configuration.
    * @param requestingUser             the user making the request.
    * @return the full history of resource as sequence of [[ResourceAndValueHistoryEvent]].
    */
   def extractEventsFromHistory(
     resourceIri: IRI,
     resourceHistory: Seq[ResourceHistoryEntry],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[ResourceAndValueHistoryEvent]] =
     for {
       resourceHist: Seq[ResourceHistoryEntry] <- Future.successful(resourceHistory.reverse)
       // Collect the full representations of the resource for each version date
-      histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
-                                                                         getResourceAtGivenTime(
-                                                                           resourceIri = resourceIri,
-                                                                           versionHist = hist,
-                                                                           featureFactoryConfig = featureFactoryConfig,
-                                                                           requestingUser = requestingUser
-                                                                         )
-                                                                       }
+      histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] =
+        resourceHist.map { hist =>
+          getResourceAtGivenTime(
+            resourceIri = resourceIri,
+            versionHist = hist,
+            requestingUser = requestingUser
+          )
+        }
 
       fullReps: Seq[(ResourceHistoryEntry, ReadResourceV2)] <- Future.sequence(histories)
 
       // Create an event for the resource at creation time
       (creationTimeHist, resourceAtCreation) = fullReps.head
-      resourceCreationEvent: Seq[ResourceAndValueHistoryEvent] = getResourceCreationEvent(
-                                                                   resourceAtCreation,
-                                                                   creationTimeHist
-                                                                 )
+      resourceCreationEvent: Seq[ResourceAndValueHistoryEvent] =
+        getResourceCreationEvent(
+          resourceAtCreation,
+          creationTimeHist
+        )
 
       // If there is a version history for deletion of the event, create a delete resource event for it.
-      (deletionRep, resourceAtValueChanges) = fullReps.tail.partition { case (resHist, resource) =>
-                                                resource
-                                                  .asInstanceOf[ReadResourceV2]
-                                                  .deletionInfo
-                                                  .exists(deletionInfo =>
-                                                    deletionInfo.deleteDate == resHist.versionDate
-                                                  )
-                                              }
+      (deletionRep, resourceAtValueChanges) =
+        fullReps.tail.partition { case (resHist, resource) =>
+          resource
+            .asInstanceOf[ReadResourceV2]
+            .deletionInfo
+            .exists(deletionInfo => deletionInfo.deleteDate == resHist.versionDate)
+        }
       resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
 
       // For each value version, form an event
@@ -2771,11 +2715,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         }
 
       // Get the update resource metadata event, if there is any.
-      resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryEvent] = getResourceMetadataUpdateEvent(
-                                                                         fullReps.last,
-                                                                         valuesEvents,
-                                                                         resourceDeleteEvent
-                                                                       )
+      resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryEvent] =
+        getResourceMetadataUpdateEvent(
+          fullReps.last,
+          valuesEvents,
+          resourceDeleteEvent
+        )
 
     } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents ++ resourceMetadataUpdateEvent
 
@@ -2784,26 +2729,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIri                the IRI of the resource.
    * @param versionHist                the history info of the version; i.e. versionDate and author.
-   * @param featureFactoryConfig       the feature factory configuration.
    * @param requestingUser             the user making the request.
    * @return the full representation of the resource at the given version date.
    */
   private def getResourceAtGivenTime(
     resourceIri: IRI,
     versionHist: ResourceHistoryEntry,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
-      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- getResourcesV2(
-                                                                  resourceIris = Seq(resourceIri),
-                                                                  versionDate = Some(versionHist.versionDate),
-                                                                  showDeletedValues = true,
-                                                                  targetSchema = ApiV2Complex,
-                                                                  schemaOptions = Set.empty[SchemaOption],
-                                                                  featureFactoryConfig = featureFactoryConfig,
-                                                                  requestingUser = requestingUser
-                                                                )
+      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <-
+        getResourcesV2(
+          resourceIris = Seq(resourceIri),
+          versionDate = Some(versionHist.versionDate),
+          showDeletedValues = true,
+          targetSchema = ApiV2Complex,
+          schemaOptions = Set.empty[SchemaOption],
+          requestingUser = requestingUser
+        )
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
     } yield versionHist -> resourceAtCreationTime
 

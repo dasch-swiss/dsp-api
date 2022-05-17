@@ -48,15 +48,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
   import OldListsRouteADMFeature._
 
-  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    getLists(featureFactoryConfig) ~
-      getListNode(featureFactoryConfig) ~
-      getListOrNodeInfo(featureFactoryConfig, "infos") ~
-      getListOrNodeInfo(featureFactoryConfig, "nodes") ~
-      getListInfo(featureFactoryConfig) ~
-      createListRootNode(featureFactoryConfig) ~
-      createListChildNode(featureFactoryConfig) ~
-      updateList(featureFactoryConfig)
+  def makeRoute(): Route =
+    getLists() ~
+      getListNode() ~
+      getListOrNodeInfo("infos") ~
+      getListOrNodeInfo("nodes") ~
+      getListInfo() ~
+      createListRootNode() ~
+      createListChildNode() ~
+      updateList()
 
   @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
   @ApiResponses(
@@ -67,7 +67,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns all lists optionally filtered by project.
    */
-  private def getLists(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
+  private def getLists(): Route = path(ListsBasePath) {
     get {
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val projectIri =
@@ -82,14 +82,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                             )
         } yield ListsGetRequestADM(
           projectIri = projectIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log
@@ -108,7 +106,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns a list node, root or child, with children (if exist).
    */
-  private def getListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+  private def getListNode(): Route = path(ListsBasePath / Segment) { iri =>
     get { requestContext =>
       val listIri =
         stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -117,14 +115,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         requestingUser <- getUserADM(requestContext)
       } yield ListGetRequestADM(
         iri = listIri,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
 
       RouteUtilADM.runJsonRoute(
         requestMessageF = requestMessage,
         requestContext = requestContext,
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings,
         responderManager = responderManager,
         log = log
@@ -135,7 +131,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns basic information about list node, root or child, w/o children (if exist).
    */
-  private def getListOrNodeInfo(featureFactoryConfig: FeatureFactoryConfig, routeSwitch: String): Route =
+  private def getListOrNodeInfo(routeSwitch: String): Route =
     path(ListsBasePath / routeSwitch / Segment) { iri =>
       get { requestContext =>
         val listIri =
@@ -144,14 +140,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestingUser <- getUserADM(requestContext)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log
@@ -162,7 +156,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns basic information about a node, root or child, w/o children.
    */
-  private def getListInfo(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getListInfo(): Route =
 //  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
     path(ListsBasePath / Segment / "info") { iri =>
       get { requestContext =>
@@ -173,14 +167,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestingUser <- getUserADM(requestContext)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log
@@ -213,7 +205,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Creates a new list (root node).
    */
-  private def createListRootNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
+  private def createListRootNode(): Route = path(ListsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
         val maybeId: Validation[Throwable, Option[ListIRI]]    = ListIRI.make(apiRequest.id)
@@ -239,7 +231,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
               }
         } yield ListRootNodeCreateRequestADM(
           createRootNode = payload,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -247,7 +238,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log
@@ -282,7 +272,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Creates a new list child node.
    */
-  private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) {
+  private def createListChildNode(): Route = path(ListsBasePath / Segment) {
     iri =>
       post {
         entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
@@ -306,7 +296,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
           val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
             payload        <- toFuture(validatedCreateChildNodePeyload)
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
 
             // check if the requesting user is allowed to perform operation
             _ = if (
@@ -319,7 +309,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                 }
           } yield ListChildNodeCreateRequestADM(
             createChildNodeRequest = payload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -327,7 +316,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log
@@ -362,7 +350,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Updates existing list node, either root or child.
    */
-  private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+  private def updateList(): Route = path(ListsBasePath / Segment) { iri =>
     put {
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
         // check if requested Iri matches the route Iri
@@ -386,7 +374,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           payload        <- toFuture(validatedChangeNodeInfoPayload)
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
           // check if the requesting user is allowed to perform operation
           _ = if (
                 !requestingUser.permissions.isProjectAdmin(
@@ -399,7 +387,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         } yield NodeInfoChangeRequestADM(
           listIri = listIri.toOption.get.value,
           changeNodeRequest = payload,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -407,7 +394,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log

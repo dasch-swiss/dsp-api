@@ -23,17 +23,14 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+  override def makeRoute(): Route = {
 
     val stringFormatter = StringFormatter.getGeneralInstance
 
     path("v1" / "hlists" / Segment) { iri =>
       get { requestContext =>
         val requestMessageFuture = for {
-          userProfile <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
-                         ).map(_.asUserProfileV1)
+          userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
           listIri = stringFormatter.validateAndEscapeIri(
                       iri,
                       throw BadRequestException(s"Invalid param list IRI: $iri")
@@ -58,10 +55,7 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
       path("v1" / "selections" / Segment) { iri =>
         get { requestContext =>
           val requestMessageFuture = for {
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
-                           ).map(_.asUserProfileV1)
+            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
             selIri = stringFormatter.validateAndEscapeIri(
                        iri,
                        throw BadRequestException(s"Invalid param list IRI: $iri")

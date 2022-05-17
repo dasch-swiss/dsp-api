@@ -26,14 +26,13 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v2" / "authentication") {
       get { // authenticate credentials
         requestContext =>
           requestContext.complete {
             doAuthenticateV2(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
+              requestContext = requestContext
             )
           }
       } ~
@@ -61,8 +60,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
                     maybeUsername = apiRequest.username
                   ),
                   password = apiRequest.password
-                ),
-                featureFactoryConfig = featureFactoryConfig
+                )
               )
             }
           }
@@ -91,8 +89,7 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
                         maybeUsername = Some(username)
                       ),
                       password = password
-                    ),
-                    featureFactoryConfig = featureFactoryConfig
+                    )
                   )
                 }
               }

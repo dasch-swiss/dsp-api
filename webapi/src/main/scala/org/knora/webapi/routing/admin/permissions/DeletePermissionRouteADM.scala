@@ -34,20 +34,17 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    deletePermission(featureFactoryConfig)
+  override def makeRoute(): Route =
+    deletePermission()
 
   /**
    * Delete a permission
    */
-  private def deletePermission(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def deletePermission(): Route =
     path(PermissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield PermissionDeleteRequestADM(
           permissionIri = iri,
           requestingUser = requestingUser,
@@ -57,7 +54,6 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log

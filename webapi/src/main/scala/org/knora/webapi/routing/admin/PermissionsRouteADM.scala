@@ -20,9 +20,9 @@ class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeDat
   private val updatePermissionRoute: UpdatePermissionRouteADM = new UpdatePermissionRouteADM(routeData)
   private val deletePermissionRoute: DeletePermissionRouteADM = new DeletePermissionRouteADM(routeData)
 
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    createPermissionRoute.makeRoute(featureFactoryConfig) ~
-      getPermissionRoute.makeRoute(featureFactoryConfig) ~
-      updatePermissionRoute.makeRoute(featureFactoryConfig) ~
-      deletePermissionRoute.makeRoute(featureFactoryConfig)
+  override def makeRoute(): Route =
+    createPermissionRoute.makeRoute() ~
+      getPermissionRoute.makeRoute() ~
+      updatePermissionRoute.makeRoute() ~
+      deletePermissionRoute.makeRoute()
 }

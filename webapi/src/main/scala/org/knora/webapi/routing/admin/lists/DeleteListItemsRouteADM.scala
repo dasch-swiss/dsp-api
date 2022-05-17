@@ -36,12 +36,12 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
   import DeleteListItemsRouteADM._
 
-  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    deleteListItem(featureFactoryConfig) ~
-      canDeleteList(featureFactoryConfig)
+  def makeRoute(): Route =
+    deleteListItem() ~
+      canDeleteList()
 
   /* delete list (i.e. root node) or a child node which should also delete its children */
-  private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+  private def deleteListItem(): Route = path(ListsBasePath / Segment) { iri =>
     delete {
       /* delete a list item root node or child if unused */
       requestContext =>
@@ -69,7 +69,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Checks if a list can be deleted (none of its nodes is used in data).
    */
-  private def canDeleteList(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def canDeleteList(): Route =
     path(ListsBasePath / "candelete" / Segment) { iri =>
       get { requestContext =>
         val listIri =
@@ -79,14 +79,12 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           requestingUser <- getUserADM(requestContext)
         } yield CanDeleteListRequestADM(
           iri = listIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log

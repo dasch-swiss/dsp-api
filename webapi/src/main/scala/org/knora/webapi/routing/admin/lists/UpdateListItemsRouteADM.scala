@@ -41,11 +41,11 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
 
   import UpdateListItemsRouteADM._
 
-  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    updateNodeName(featureFactoryConfig) ~
-      updateNodeLabels(featureFactoryConfig) ~
-      updateNodeComments(featureFactoryConfig) ~
-      updateNodePosition(featureFactoryConfig)
+  def makeRoute(): Route =
+    updateNodeName() ~
+      updateNodeLabels() ~
+      updateNodeComments() ~
+      updateNodePosition()
 
   @Path("/{IRI}/name")
   @ApiOperation(
@@ -73,7 +73,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Update name of an existing list node, either root or child.
    */
-  private def updateNodeName(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodeName(): Route =
     path(ListsBasePath / Segment / "name") { iri =>
       put {
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
@@ -88,7 +88,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           } yield NodeNameChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeNameRequest = namePayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -96,7 +95,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log
@@ -131,7 +129,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Update labels of an existing list node, either root or child.
    */
-  private def updateNodeLabels(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodeLabels(): Route =
     path(ListsBasePath / Segment / "labels") { iri =>
       put {
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
@@ -146,7 +144,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           } yield NodeLabelsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeLabelsRequest = labelsPayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -154,7 +151,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log
@@ -189,7 +185,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Updates comments of an existing list node, either root or child.
    */
-  private def updateNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodeComments(): Route =
     path(ListsBasePath / Segment / "comments") { iri =>
       put {
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
@@ -204,7 +200,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           } yield NodeCommentsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeCommentsRequest = commentsPayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -212,7 +207,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log
@@ -247,7 +241,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Updates position of an existing list child node.
    */
-  private def updateNodePosition(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodePosition(): Route =
     path(ListsBasePath / Segment / "position") { iri =>
       put {
         entity(as[ChangeNodePositionApiRequestADM]) { apiRequest => requestContext =>
@@ -259,7 +253,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           } yield NodePositionChangeRequestADM(
             nodeIri = nodeIri,
             changeNodePositionRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -267,7 +260,6 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log
