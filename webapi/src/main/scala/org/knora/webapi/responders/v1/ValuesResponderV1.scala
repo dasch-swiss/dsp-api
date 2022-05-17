@@ -104,7 +104,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                       for {
                         maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
                                                       userIri = valueQueryResult.creatorIri,
-                                                      userProfileType = UserProfileTypeV1.RESTRICTED,
+                                                      userProfileType = UserProfileTypeV1.RESTRICTED
                                                     )).mapTo[Option[UserProfileV1]]
 
                         valueCreatorProfile = maybeValueCreatorProfile match {
@@ -425,37 +425,32 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // For each target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property and one LinkValue,
         // with the associated count as the LinkValue's initial reference count.
         standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] =
-              targetIris.toSeq.map {
-                                                               case (targetIri, initialReferenceCount) =>
-                                                                 // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
-                                                                 val realTargetIri =
-                                                                   stringFormatter.toRealStandoffLinkTargetResourceIri(
-                                                                     iri = targetIri,
-                                                                     clientResourceIDsToResourceIris =
-                                                                       createMultipleValuesRequest.clientResourceIDsToResourceIris
-                                                                   )
+          targetIris.toSeq.map { case (targetIri, initialReferenceCount) =>
+            // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
+            val realTargetIri =
+              stringFormatter.toRealStandoffLinkTargetResourceIri(
+                iri = targetIri,
+                clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris
+              )
 
-                                                                 SparqlTemplateLinkUpdate(
-                                                                   linkPropertyIri =
-                                                                     OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                                                                   directLinkExists = false,
-                                                                   insertDirectLink = true,
-                                                                   deleteDirectLink = false,
-                                                                   linkValueExists = false,
-                                                                   linkTargetExists =
-                                                                     true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-                                                                   newLinkValueIri = stringFormatter.makeRandomValueIri(
-                                                                     createMultipleValuesRequest.resourceIri
-                                                                   ),
-                                                                   linkTargetIri = realTargetIri,
-                                                                   currentReferenceCount = 0,
-                                                                   newReferenceCount = initialReferenceCount,
-                                                                   newLinkValueCreator =
-                                                                     OntologyConstants.KnoraAdmin.SystemUser,
-                                                                   newLinkValuePermissions =
-                                                                     standoffLinkValuePermissions
-                                                                 )
-                                                             }
+            SparqlTemplateLinkUpdate(
+              linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+              directLinkExists = false,
+              insertDirectLink = true,
+              deleteDirectLink = false,
+              linkValueExists = false,
+              linkTargetExists =
+                true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+              newLinkValueIri = stringFormatter.makeRandomValueIri(
+                createMultipleValuesRequest.resourceIri
+              ),
+              linkTargetIri = realTargetIri,
+              currentReferenceCount = 0,
+              newReferenceCount = initialReferenceCount,
+              newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+              newLinkValuePermissions = standoffLinkValuePermissions
+            )
+          }
 
         // Generate INSERT clause statements based on those SparqlTemplateLinkUpdates.
         standoffLinkInsertSparql: String = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -872,27 +867,26 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       for {
         // Ensure that the user has permission to modify the value.
         maybeCurrentValueQueryResult: Option[ValueQueryResult] <-
-           changeValueRequest.value match {
-                                                                    case linkUpdateV1: LinkUpdateV1 =>
-                                                                      // We're being asked to update a link. We expect the current value version IRI to point to a
-                                                                      // knora-base:LinkValue. Get all necessary information about the LinkValue and the corresponding
-                                                                      // direct link.
-                                                                      findLinkValueByIri(
-                                                                        subjectIri =
-                                                                          findResourceWithValueResult.resourceIri,
-                                                                        predicateIri = propertyIri,
-                                                                        objectIri = None,
-                                                                        linkValueIri = changeValueRequest.valueIri,
-                                                                        userProfile = changeValueRequest.userProfile
-                                                                      )
+          changeValueRequest.value match {
+            case linkUpdateV1: LinkUpdateV1 =>
+              // We're being asked to update a link. We expect the current value version IRI to point to a
+              // knora-base:LinkValue. Get all necessary information about the LinkValue and the corresponding
+              // direct link.
+              findLinkValueByIri(
+                subjectIri = findResourceWithValueResult.resourceIri,
+                predicateIri = propertyIri,
+                objectIri = None,
+                linkValueIri = changeValueRequest.valueIri,
+                userProfile = changeValueRequest.userProfile
+              )
 
-                                                                    case otherValueV1 =>
-                                                                      // We're being asked to update an ordinary value.
-                                                                      findValue(
-                                                                        valueIri = changeValueRequest.valueIri, 
-                                                                        userProfile = changeValueRequest.userProfile
-                                                                      )
-                                                                  }
+            case otherValueV1 =>
+              // We're being asked to update an ordinary value.
+              findValue(
+                valueIri = changeValueRequest.valueIri,
+                userProfile = changeValueRequest.userProfile
+              )
+          }
 
         currentValueQueryResult =
           maybeCurrentValueQueryResult.getOrElse(
@@ -2193,6 +2187,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     resourceIri: IRI,
     propertyIri: IRI,
     searchValueIri: IRI,
+    userProfile: UserADM
   ): Future[ValueQueryResult] =
     for {
       // Do a SPARQL query to look for the value in the resource's version history.
@@ -2241,6 +2236,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     linkPropertyIri: IRI,
     linkTargetIri: IRI,
     linkValueIri: IRI,
+    userProfile: UserADM
   ): Future[LinkValueQueryResult] =
     for {
       maybeLinkValueQueryResult <- findLinkValueByIri(
@@ -2454,32 +2450,29 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
     for {
       // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
-      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- value match {
-                                                              case textValueV1: TextValueWithStandoffV1 =>
-                                                                // Make sure the text value's list of resource references is correct.
-                                                                checkTextValueResourceRefs(textValueV1)
+      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
+        value match {
+          case textValueV1: TextValueWithStandoffV1 =>
+            // Make sure the text value's list of resource references is correct.
+            checkTextValueResourceRefs(textValueV1)
 
-                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-                                                                val standoffLinkUpdatesForAddedResourceRefs
-                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
-                                                                  textValueV1.resource_reference.map {
-                                                                    targetResourceIri =>
-                                                                      incrementLinkValue(
-                                                                        sourceResourceIri = resourceIri,
-                                                                        linkPropertyIri =
-                                                                          OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                                                        targetResourceIri = targetResourceIri,
-                                                                        valueCreator =
-                                                                          OntologyConstants.KnoraAdmin.SystemUser,
-                                                                        valuePermissions = standoffLinkValuePermissions,
-                                                                        userProfile = userProfile
-                                                                      )
-                                                                  }.toVector
+            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+            val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
+              textValueV1.resource_reference.map { targetResourceIri =>
+                incrementLinkValue(
+                  sourceResourceIri = resourceIri,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                  targetResourceIri = targetResourceIri,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  userProfile = userProfile
+                )
+              }.toVector
 
-                                                                Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
+            Future.sequence(standoffLinkUpdatesForAddedResourceRefs)
 
-                                                              case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
-                                                            }
+          case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
+        }
 
       // Generate a SPARQL update string.
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -2653,78 +2646,71 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
-         (currentValueV1, updateValueV1) match {
-                                                              case (
-                                                                    currentTextValue: TextValueV1,
-                                                                    newTextValue: TextValueV1
-                                                                  ) =>
-                                                                // Make sure the new text value's list of resource references is correct.
+        (currentValueV1, updateValueV1) match {
+          case (
+                currentTextValue: TextValueV1,
+                newTextValue: TextValueV1
+              ) =>
+            // Make sure the new text value's list of resource references is correct.
 
-                                                                newTextValue match {
-                                                                  case newTextWithStandoff: TextValueWithStandoffV1 =>
-                                                                    checkTextValueResourceRefs(newTextWithStandoff)
-                                                                  case textValueSimple: TextValueSimpleV1 => ()
-                                                                }
+            newTextValue match {
+              case newTextWithStandoff: TextValueWithStandoffV1 =>
+                checkTextValueResourceRefs(newTextWithStandoff)
+              case textValueSimple: TextValueSimpleV1 => ()
+            }
 
-                                                                // Identify the resource references that have been added or removed in the new version of
-                                                                // the value.
-                                                                val currentResourceRefs = currentTextValue match {
-                                                                  case textValueWithStandoff: TextValueWithStandoffV1 =>
-                                                                    textValueWithStandoff.resource_reference
-                                                                  case textValueSimple: TextValueSimpleV1 =>
-                                                                    Set.empty[IRI]
-                                                                }
+            // Identify the resource references that have been added or removed in the new version of
+            // the value.
+            val currentResourceRefs = currentTextValue match {
+              case textValueWithStandoff: TextValueWithStandoffV1 =>
+                textValueWithStandoff.resource_reference
+              case textValueSimple: TextValueSimpleV1 =>
+                Set.empty[IRI]
+            }
 
-                                                                val newResourceRefs = newTextValue match {
-                                                                  case textValueWithStandoff: TextValueWithStandoffV1 =>
-                                                                    textValueWithStandoff.resource_reference
-                                                                  case textValueSimple: TextValueSimpleV1 =>
-                                                                    Set.empty[IRI]
-                                                                }
-                                                                val addedResourceRefs =
-                                                                  newResourceRefs -- currentResourceRefs
-                                                                val removedResourceRefs =
-                                                                  currentResourceRefs -- newResourceRefs
+            val newResourceRefs = newTextValue match {
+              case textValueWithStandoff: TextValueWithStandoffV1 =>
+                textValueWithStandoff.resource_reference
+              case textValueSimple: TextValueSimpleV1 =>
+                Set.empty[IRI]
+            }
+            val addedResourceRefs =
+              newResourceRefs -- currentResourceRefs
+            val removedResourceRefs =
+              currentResourceRefs -- newResourceRefs
 
-                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-                                                                val standoffLinkUpdatesForAddedResourceRefs
-                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
-                                                                  addedResourceRefs.toVector.map { targetResourceIri =>
-                                                                    incrementLinkValue(
-                                                                      sourceResourceIri = resourceIri,
-                                                                      linkPropertyIri =
-                                                                        OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                                                      targetResourceIri = targetResourceIri,
-                                                                      valueCreator =
-                                                                        OntologyConstants.KnoraAdmin.SystemUser,
-                                                                      valuePermissions = standoffLinkValuePermissions,
-                                                                      userProfile = userProfile
-                                                                    )
-                                                                  }
+            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+            val standoffLinkUpdatesForAddedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
+              addedResourceRefs.toVector.map { targetResourceIri =>
+                incrementLinkValue(
+                  sourceResourceIri = resourceIri,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                  targetResourceIri = targetResourceIri,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  userProfile = userProfile
+                )
+              }
 
-                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-                                                                val standoffLinkUpdatesForRemovedResourceRefs
-                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
-                                                                  removedResourceRefs.toVector.map {
-                                                                    removedTargetResource =>
-                                                                      decrementLinkValue(
-                                                                        sourceResourceIri = resourceIri,
-                                                                        linkPropertyIri =
-                                                                          OntologyConstants.KnoraBase.HasStandoffLinkTo,
-                                                                        targetResourceIri = removedTargetResource,
-                                                                        valueCreator =
-                                                                          OntologyConstants.KnoraAdmin.SystemUser,
-                                                                        valuePermissions = standoffLinkValuePermissions,
-                                                                        userProfile = userProfile
-                                                                      )
-                                                                  }
+            // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
+            val standoffLinkUpdatesForRemovedResourceRefs: Seq[Future[SparqlTemplateLinkUpdate]] =
+              removedResourceRefs.toVector.map { removedTargetResource =>
+                decrementLinkValue(
+                  sourceResourceIri = resourceIri,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                  targetResourceIri = removedTargetResource,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  userProfile = userProfile
+                )
+              }
 
-                                                                Future.sequence(
-                                                                  standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
-                                                                )
+            Future.sequence(
+              standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
+            )
 
-                                                              case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
-                                                            }
+          case _ => Future(Vector.empty[SparqlTemplateLinkUpdate])
+        }
 
       // Get project info
       maybeProjectInfo <- {

@@ -1801,7 +1801,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
                 creationDate = creationDate,
                 fileValues = fileValues,
-                featureFactoryConfig = featureFactoryConfig,
                 userProfile = requestingUser,
                 apiRequestID = apiRequestID
               )
