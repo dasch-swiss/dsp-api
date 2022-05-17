@@ -5,10 +5,6 @@
 
 package dsp.valueobjects
 
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
 /**
@@ -16,14 +12,15 @@ import zio.prelude.Validation
  */
 sealed abstract case class Shortcode private (value: String)
 object Shortcode { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
-
   def make(value: String): Validation[Throwable, Shortcode] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+      Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortcodeMissing))
     } else {
       val validatedValue: Validation[Throwable, String] = Validation(
-        sf.validateProjectShortcode(value, throw BadRequestException(ProjectErrorMessages.ShortcodeInvalid))
+        V2ProjectIriValidation.validateProjectShortcode(
+          value,
+          throw V2.BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
+        )
       )
       validatedValue.map(new Shortcode(_) {})
     }
@@ -40,14 +37,15 @@ object Shortcode { self =>
  */
 sealed abstract case class Shortname private (value: String)
 object Shortname { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
-
   def make(value: String): Validation[Throwable, Shortname] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
+      Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortnameMissing))
     } else {
       val validatedValue = Validation(
-        sf.validateAndEscapeProjectShortname(value, throw BadRequestException(ProjectErrorMessages.ShortnameInvalid))
+        V2ProjectIriValidation.validateAndEscapeProjectShortname(
+          value,
+          throw V2.BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+        )
       )
       validatedValue.map(new Shortname(_) {})
     }
@@ -66,7 +64,7 @@ sealed abstract case class Longname private (value: String)
 object Longname { self =>
   def make(value: String): Validation[Throwable, Longname] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
+      Validation.fail(V2.BadRequestException(ProjectErrorMessages.LongnameMissing))
     } else {
       Validation.succeed(new Longname(value) {})
     }
@@ -81,16 +79,16 @@ object Longname { self =>
 /**
  * ProjectDescription value object.
  */
-sealed abstract case class ProjectDescription private (value: Seq[StringLiteralV2])
+sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2])
 object ProjectDescription { self =>
-  def make(value: Seq[StringLiteralV2]): Validation[Throwable, ProjectDescription] =
+  def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing))
+      Validation.fail(V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing))
     } else {
       Validation.succeed(new ProjectDescription(value) {})
     }
 
-  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[ProjectDescription]] =
+  def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[ProjectDescription]] =
     value match {
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)
@@ -104,7 +102,7 @@ sealed abstract case class Keywords private (value: Seq[String])
 object Keywords { self =>
   def make(value: Seq[String]): Validation[Throwable, Keywords] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
+      Validation.fail(V2.BadRequestException(ProjectErrorMessages.KeywordsMissing))
     } else {
       Validation.succeed(new Keywords(value) {})
     }
@@ -123,7 +121,7 @@ sealed abstract case class Logo private (value: String)
 object Logo { self =>
   def make(value: String): Validation[Throwable, Logo] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
+      Validation.fail(V2.BadRequestException(ProjectErrorMessages.LogoMissing))
     } else {
       Validation.succeed(new Logo(value) {})
     }

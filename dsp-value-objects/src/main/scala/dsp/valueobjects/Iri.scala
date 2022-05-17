@@ -15,21 +15,19 @@ object Iri {
    */
   sealed abstract case class GroupIRI private (value: String)
   object GroupIRI { self =>
-    private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
     def make(value: String): Validation[Throwable, GroupIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
+        Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriMissing))
       } else {
-        val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
+        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
 
-        if (!sf.isKnoraGroupIriStr(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
-        } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
+        if (!V2IriValidation.isKnoraGroupIriStr(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
+        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.GroupIriInvalid))
+            V2IriValidation.validateAndEscapeIri(value, throw V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
           )
 
           validatedValue.map(new GroupIRI(_) {})
@@ -48,21 +46,22 @@ object Iri {
    */
   sealed abstract case class ListIRI private (value: String)
   object ListIRI { self =>
-    val sf: StringFormatter = StringFormatter.getGeneralInstance
-
     def make(value: String): Validation[Throwable, ListIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.ListNodeIriMissing))
+        Validation.fail(V2.BadRequestException(IriErrorMessages.ListNodeIriMissing))
       } else {
-        val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
+        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
 
-        if (!sf.isKnoraListIriStr(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.ListNodeIriInvalid))
-        } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
+        if (!V2IriValidation.isKnoraListIriStr(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.ListNodeIriInvalid))
+        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.ListNodeIriInvalid))
+            V2IriValidation.validateAndEscapeIri(
+              value,
+              throw V2.BadRequestException(IriErrorMessages.ListNodeIriInvalid)
+            )
           )
 
           validatedValue.map(new ListIRI(_) {})
@@ -81,21 +80,22 @@ object Iri {
    */
   sealed abstract case class ProjectIRI private (value: String)
   object ProjectIRI { self =>
-    private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
     def make(value: String): Validation[Throwable, ProjectIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))
+        Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriMissing))
       } else {
-        val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
+        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
 
-        if (!sf.isKnoraProjectIriStr(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
+        if (!V2IriValidation.isKnoraProjectIriStr(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriInvalid))
+        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeProjectIri(value, throw BadRequestException(IriErrorMessages.ProjectIriInvalid))
+            V2IriValidation.validateAndEscapeProjectIri(
+              value,
+              throw V2.BadRequestException(IriErrorMessages.ProjectIriInvalid)
+            )
           )
 
           validatedValue.map(new ProjectIRI(_) {})
@@ -114,21 +114,22 @@ object Iri {
    */
   sealed abstract case class UserIRI private (value: String) extends Iri
   object UserIRI { self =>
-    private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
     def make(value: String): Validation[Throwable, UserIRI] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
+        Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriMissing))
       } else {
-        val isUUID: Boolean = sf.hasUUIDLength(value.split("/").last)
+        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
 
-        if (!sf.isKnoraUserIriStr(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid))
-        } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
+        if (!V2IriValidation.isKnoraUserIriStr(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriInvalid))
+        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
-            sf.validateAndEscapeUserIri(value, throw BadRequestException(IriErrorMessages.UserIriInvalid))
+            V2IriValidation.validateAndEscapeUserIri(
+              value,
+              throw V2.BadRequestException(IriErrorMessages.UserIriInvalid)
+            )
           )
 
           validatedValue.map(new UserIRI(_) {})
@@ -141,10 +142,6 @@ object Iri {
         case None    => Validation.succeed(None)
       }
   }
-}
-
-object IriValidation {
-  // string formatter stuff
 }
 
 object IriErrorMessages {

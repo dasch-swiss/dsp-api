@@ -5,12 +5,7 @@
 
 package dsp.valueobjects
 
-import org.knora.webapi.LanguageCodes
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import zio.prelude.Validation
-
 import scala.util.matching.Regex
 
 /**
@@ -32,11 +27,11 @@ object Username { self =>
   def make(value: String): Validation[Throwable, Username] =
     if (value.isEmpty) {
       // remobe exception return just the error
-      Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
+      Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
     } else {
       UsernameRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Username(value) {})
-        case None        => Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
+        case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
       }
     }
 
@@ -56,11 +51,11 @@ object Email { self =>
 
   def make(value: String): Validation[Throwable, Email] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
+      Validation.fail(V2.BadRequestException(UserErrorMessages.EmailMissing))
     } else {
       EmailRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Email(value) {})
-        case None        => Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
+        case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.EmailInvalid))
       }
     }
 
@@ -78,7 +73,7 @@ sealed abstract case class GivenName private (value: String)
 object GivenName { self =>
   def make(value: String): Validation[Throwable, GivenName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
+      Validation.fail(V2.BadRequestException(UserErrorMessages.GivenNameMissing))
     } else {
       Validation.succeed(new GivenName(value) {})
     }
@@ -97,7 +92,7 @@ sealed abstract case class FamilyName private (value: String)
 object FamilyName { self =>
   def make(value: String): Validation[Throwable, FamilyName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
+      Validation.fail(V2.BadRequestException(UserErrorMessages.FamilyNameMissing))
     } else {
       Validation.succeed(new FamilyName(value) {})
     }
@@ -118,11 +113,11 @@ object Password { self =>
 
   def make(value: String): Validation[Throwable, Password] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+      Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordMissing))
     } else {
       PasswordRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Password(value) {})
-        case None        => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
+        case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordInvalid))
       }
     }
 
@@ -149,9 +144,9 @@ sealed abstract case class LanguageCode private (value: String)
 object LanguageCode { self =>
   def make(value: String): Validation[Throwable, LanguageCode] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
-    } else if (!LanguageCodes.SupportedLanguageCodes.contains(value)) {
-      Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
+      Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeMissing))
+    } else if (!V2.SupportedLanguageCodes.contains(value)) {
+      Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeInvalid))
     } else {
       Validation.succeed(new LanguageCode(value) {})
     }

@@ -5,10 +5,6 @@
 
 package dsp.valueobjects
 
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
 /**
@@ -16,14 +12,12 @@ import zio.prelude.Validation
  */
 sealed abstract case class ListName private (value: String)
 object ListName { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
-
   def make(value: String): Validation[Throwable, ListName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
+      Validation.fail(V2.BadRequestException(ListErrorMessages.ListNameMissing))
     } else {
       val validatedValue = Validation(
-        sf.toSparqlEncodedString(value, throw BadRequestException(ListErrorMessages.ListNameInvalid))
+        V2IriValidation.toSparqlEncodedString(value, throw V2.BadRequestException(ListErrorMessages.ListNameInvalid))
       )
 
       validatedValue.map(new ListName(_) {})
@@ -43,7 +37,7 @@ sealed abstract case class Position private (value: Int)
 object Position { self =>
   def make(value: Int): Validation[Throwable, Position] =
     if (value < -1) {
-      Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
+      Validation.fail(V2.BadRequestException(ListErrorMessages.InvalidPosition))
     } else {
       Validation.succeed(new Position(value) {})
     }
@@ -58,24 +52,25 @@ object Position { self =>
 /**
  * List Labels value object.
  */
-sealed abstract case class Labels private (value: Seq[StringLiteralV2])
+sealed abstract case class Labels private (value: Seq[V2.StringLiteralV2])
 object Labels { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  def make(value: Seq[StringLiteralV2]): Validation[Throwable, Labels] =
+  def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, Labels] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ListErrorMessages.LabelMissing))
+      Validation.fail(V2.BadRequestException(ListErrorMessages.LabelMissing))
     } else {
       val validatedLabels = Validation(value.map { label =>
         val validatedLabel =
-          sf.toSparqlEncodedString(label.value, throw BadRequestException(ListErrorMessages.LabelInvalid))
-        StringLiteralV2(value = validatedLabel, language = label.language)
+          V2IriValidation.toSparqlEncodedString(
+            label.value,
+            throw V2.BadRequestException(ListErrorMessages.LabelInvalid)
+          )
+        V2.StringLiteralV2(value = validatedLabel, language = label.language)
       })
 
       validatedLabels.map(new Labels(_) {})
     }
 
-  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[Labels]] =
+  def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[Labels]] =
     value match {
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)
@@ -85,24 +80,25 @@ object Labels { self =>
 /**
  * List Comments value object.
  */
-sealed abstract case class Comments private (value: Seq[StringLiteralV2])
+sealed abstract case class Comments private (value: Seq[V2.StringLiteralV2])
 object Comments { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  def make(value: Seq[StringLiteralV2]): Validation[Throwable, Comments] =
+  def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, Comments] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(ListErrorMessages.CommentMissing))
+      Validation.fail(V2.BadRequestException(ListErrorMessages.CommentMissing))
     } else {
       val validatedComments = Validation(value.map { comment =>
         val validatedComment =
-          sf.toSparqlEncodedString(comment.value, throw BadRequestException(ListErrorMessages.CommentInvalid))
-        StringLiteralV2(value = validatedComment, language = comment.language)
+          V2IriValidation.toSparqlEncodedString(
+            comment.value,
+            throw V2.BadRequestException(ListErrorMessages.CommentInvalid)
+          )
+        V2.StringLiteralV2(value = validatedComment, language = comment.language)
       })
 
       validatedComments.map(new Comments(_) {})
     }
 
-  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[Comments]] =
+  def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[Comments]] =
     value match {
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)

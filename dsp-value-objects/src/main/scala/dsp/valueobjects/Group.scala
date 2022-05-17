@@ -5,25 +5,29 @@
 
 package dsp.valueobjects
 
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
+
+// sealed abstract case class LangString private (value: String, iso: String)
+// object LangString { self =>
+//   def make(value: String, iso: String): Validation[String, LangString] =
+//     if(value.isEmpty || iso.isEmpty) {
+//       Validation.fail("Value and Iso cannot be empty.")
+//     } else {
+//       // new LangString(_, _) {}
+//     }
+// }
 
 /**
  * GroupName value object.
  */
 sealed abstract case class GroupName private (value: String)
 object GroupName { self =>
-  private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
   def make(value: String): Validation[Throwable, GroupName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
+      Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))
     } else {
       val validatedValue = Validation(
-        sf.toSparqlEncodedString(value, throw BadRequestException(GroupErrorMessages.GroupNameInvalid))
+        V2IriValidation.toSparqlEncodedString(value, throw V2.BadRequestException(GroupErrorMessages.GroupNameInvalid))
       )
 
       validatedValue.map(new GroupName(_) {})
@@ -39,26 +43,24 @@ object GroupName { self =>
 /**
  * GroupDescriptions value object.
  */
-sealed abstract case class GroupDescriptions private (value: Seq[StringLiteralV2])
+sealed abstract case class GroupDescriptions private (value: Seq[V2.StringLiteralV2])
 object GroupDescriptions { self =>
-  private val sf: StringFormatter = StringFormatter.getGeneralInstance
-
-  def make(value: Seq[StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
+  def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionMissing))
+      Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupDescriptionMissing))
     } else {
       val validatedDescriptions = Validation(value.map { description =>
         val validatedDescription =
-          sf.toSparqlEncodedString(
+          V2IriValidation.toSparqlEncodedString(
             description.value,
-            throw BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
+            throw V2.BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
           )
-        StringLiteralV2(value = validatedDescription, language = description.language)
+        V2.StringLiteralV2(value = validatedDescription, language = description.language)
       })
       validatedDescriptions.map(new GroupDescriptions(_) {})
     }
 
-  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[GroupDescriptions]] =
+  def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[GroupDescriptions]] =
     value match {
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)

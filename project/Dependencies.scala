@@ -103,6 +103,9 @@ object Dependencies {
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.2"         // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.16.3"
 
+  // found/added by the plugin but deleted anyway
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
+
   val webapiLibraryDependencies = Seq(
     akkaActor,
     akkaHttp,
@@ -114,6 +117,7 @@ object Dependencies {
     akkaStreamTestkit % Test,
     akkaTestkit       % Test,
     commonsValidator,
+    commonsLang3,
     diff,
     ehcache,
     gatlingHighcharts    % Test,
@@ -172,6 +176,9 @@ object Dependencies {
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
   val valueObjectsLibraryDependencies = Seq(
+    commonsLang3,
+    commonsValidator,
+    gwtServlet,
     zioPrelude
   )
 }
