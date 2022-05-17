@@ -22,7 +22,6 @@ import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
 import org.knora.webapi.exceptions.FileWriteException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.feature.TestFeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter

@@ -16,7 +16,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.SipiException
 import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse

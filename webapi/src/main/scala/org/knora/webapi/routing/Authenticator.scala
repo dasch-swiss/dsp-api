@@ -21,7 +21,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.AuthenticationException
 import org.knora.webapi.exceptions.BadCredentialsException
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -69,12 +68,11 @@ trait Authenticator extends InstrumentationSupport {
    * with the generated session id for the client to save.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   * @param featureFactoryConfig the feature factory configuration.
    * @param system               the current [[ActorSystem]]
    * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
    *         the generated session id.
    */
-  def doLoginV1(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  def doLoginV1(requestContext: RequestContext)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     executionContext: ExecutionContext
@@ -86,8 +84,7 @@ trait Authenticator extends InstrumentationSupport {
 
     for {
       userADM <- getUserADMThroughCredentialsV2(
-                   credentials = credentials,
-                   featureFactoryConfig = featureFactoryConfig
+                   credentials = credentials
                  ) // will return or throw
       userProfile = userADM.asUserProfileV1
 
@@ -129,12 +126,11 @@ trait Authenticator extends InstrumentationSupport {
    * Checks if the provided credentials are valid, and if so returns a JWT token for the client to save.
    *
    * @param credentials          the user supplied [[KnoraPasswordCredentialsV2]] containing the user's login information.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param system               the current [[ActorSystem]]
    * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
    *         the generated session id.
    */
-  def doLoginV2(credentials: KnoraPasswordCredentialsV2, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     executionContext: ExecutionContext
@@ -145,15 +141,13 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will throw exception if not valid and thus trigger the correct response
       _ <- authenticateCredentialsV2(
-             credentials = Some(credentials),
-             featureFactoryConfig = featureFactoryConfig
+             credentials = Some(credentials)
            )
 
       settings = KnoraSettings(system)
 
       userADM <- getUserByIdentifier(
-                   identifier = credentials.identifier,
-                   featureFactoryConfig = featureFactoryConfig
+                   identifier = credentials.identifier
                  )
 
       cookieDomain = Some(settings.cookieDomain)
@@ -244,11 +238,10 @@ trait Authenticator extends InstrumentationSupport {
    * generated.
    *
    * @param requestContext       a [[RequestContext]] containing the http request
-   * @param featureFactoryConfig the feature factory configuration.
    * @param system               the current [[ActorSystem]]
    * @return a [[RequestContext]]
    */
-  def doAuthenticateV1(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  def doAuthenticateV1(requestContext: RequestContext)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     executionContext: ExecutionContext
@@ -259,8 +252,7 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will authenticate and either return or throw
       userADM: UserADM <- getUserADMThroughCredentialsV2(
-                            credentials = credentials,
-                            featureFactoryConfig = featureFactoryConfig
+                            credentials = credentials
                           )
 
       userProfile: UserProfileV1 = userADM.asUserProfileV1
@@ -286,7 +278,7 @@ trait Authenticator extends InstrumentationSupport {
    * @param system         the current [[ActorSystem]]
    * @return a [[HttpResponse]]
    */
-  def doAuthenticateV2(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  def doAuthenticateV2(requestContext: RequestContext)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     executionContext: ExecutionContext
@@ -297,8 +289,7 @@ trait Authenticator extends InstrumentationSupport {
     for {
       // will throw exception if not valid
       _ <- authenticateCredentialsV2(
-             credentials = credentials,
-             featureFactoryConfig = featureFactoryConfig
+             credentials = credentials
            )
 
       httpResponse = HttpResponse(
@@ -413,7 +404,7 @@ trait Authenticator extends InstrumentationSupport {
    * @return a [[UserProfileV1]]
    */
   @deprecated("Please use: getUserADM()", "Knora v1.7.0")
-  def getUserProfileV1(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  def getUserProfileV1(requestContext: RequestContext)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     executionContext: ExecutionContext
@@ -436,10 +427,7 @@ trait Authenticator extends InstrumentationSupport {
       FastFuture.successful(UserProfileV1())
     } else {
       for {
-        userADM <- getUserADMThroughCredentialsV2(
-                     credentials = credentials,
-                     featureFactoryConfig = featureFactoryConfig
-                   )
+        userADM                   <- getUserADMThroughCredentialsV2(credentials)
         userProfile: UserProfileV1 = userADM.asUserProfileV1
         _                          = log.debug("Authenticator - getUserProfileV1 - userProfile: {}", userProfile)
 
@@ -459,7 +447,7 @@ trait Authenticator extends InstrumentationSupport {
    * @param system               the current [[ActorSystem]]
    * @return a [[UserProfileV1]]
    */
-  def getUserADM(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  def getUserADM(requestContext: RequestContext)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     executionContext: ExecutionContext
@@ -479,11 +467,8 @@ trait Authenticator extends InstrumentationSupport {
     } else {
 
       for {
-        user: UserADM <- getUserADMThroughCredentialsV2(
-                           credentials = credentials,
-                           featureFactoryConfig = featureFactoryConfig
-                         )
-        _ = log.debug("Authenticator - getUserADM - user: {}", user)
+        user: UserADM <- getUserADMThroughCredentialsV2(credentials)
+        _              = log.debug("Authenticator - getUserADM - user: {}", user)
 
         /* we return the complete UserADM */
       } yield user.ofType(UserInformationTypeADM.Full)
@@ -521,7 +506,6 @@ object Authenticator extends InstrumentationSupport {
    * to be valid.
    *
    * @param credentials          the user supplied and extracted credentials.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param system               the current [[ActorSystem]]
    * @return true if the credentials are valid. If the credentials are invalid, then the corresponding exception
    *         will be thrown.
@@ -529,49 +513,44 @@ object Authenticator extends InstrumentationSupport {
    *                                 when the password does not match; when the supplied token is not valid.
    */
   def authenticateCredentialsV2(
-    credentials: Option[KnoraCredentialsV2],
-    featureFactoryConfig: FeatureFactoryConfig
+    credentials: Option[KnoraCredentialsV2]
   )(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[Boolean] =
     for {
       settings <- FastFuture.successful(KnoraSettings(system))
 
-      result <- credentials match {
-                  case Some(passCreds: KnoraPasswordCredentialsV2) =>
-                    for {
-                      user <- getUserByIdentifier(
-                                identifier = passCreds.identifier,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+      result <-
+        credentials match {
+          case Some(passCreds: KnoraPasswordCredentialsV2) =>
+            for {
+              user <- getUserByIdentifier(passCreds.identifier)
 
-                      /* check if the user is active, if not, then no need to check the password */
-                      _ = if (!user.isActive) {
-                            log.debug("authenticateCredentials - user is not active")
-                            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
-                          }
+              /* check if the user is active, if not, then no need to check the password */
+              _ = if (!user.isActive) {
+                    log.debug("authenticateCredentials - user is not active")
+                    throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                  }
 
-                      _ = if (!user.passwordMatch(passCreds.password)) {
-                            log.debug("authenticateCredentialsV2 - password did not match")
-                            throw BadCredentialsException(BAD_CRED_NOT_VALID)
-                          }
-                    } yield true
-                  case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-                    if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
-                      log.debug("authenticateCredentialsV2 - token was not valid")
-                      throw BadCredentialsException(BAD_CRED_NOT_VALID)
-                    }
-                    FastFuture.successful(true)
-                  case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-                    if (
-                      !JWTHelper.validateToken(sessionToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)
-                    ) {
-                      log.debug("authenticateCredentialsV2 - session token was not valid")
-                      throw BadCredentialsException(BAD_CRED_NOT_VALID)
-                    }
-                    FastFuture.successful(true)
-                  case None =>
-                    log.debug("authenticateCredentialsV2 - no credentials supplied")
-                    throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-                }
+              _ = if (!user.passwordMatch(passCreds.password)) {
+                    log.debug("authenticateCredentialsV2 - password did not match")
+                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                  }
+            } yield true
+          case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+            if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
+              log.debug("authenticateCredentialsV2 - token was not valid")
+              throw BadCredentialsException(BAD_CRED_NOT_VALID)
+            }
+            FastFuture.successful(true)
+          case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+            if (!JWTHelper.validateToken(sessionToken, settings.jwtSecretKey, settings.externalKnoraApiHostPort)) {
+              log.debug("authenticateCredentialsV2 - session token was not valid")
+              throw BadCredentialsException(BAD_CRED_NOT_VALID)
+            }
+            FastFuture.successful(true)
+          case None =>
+            log.debug("authenticateCredentialsV2 - no credentials supplied")
+            throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+        }
 
     } yield result
 
@@ -753,67 +732,57 @@ object Authenticator extends InstrumentationSupport {
    * with authenticated credentials.
    *
    * @param credentials          the user supplied credentials.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[UserADM]]
    * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
    */
   private def getUserADMThroughCredentialsV2(
-    credentials: Option[KnoraCredentialsV2],
-    featureFactoryConfig: FeatureFactoryConfig
+    credentials: Option[KnoraCredentialsV2]
   )(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
     val settings = KnoraSettings(system)
 
     for {
-      authenticated <- authenticateCredentialsV2(credentials = credentials, featureFactoryConfig = featureFactoryConfig)
+      authenticated <- authenticateCredentialsV2(credentials)
 
-      user: UserADM <- credentials match {
-                         case Some(passCreds: KnoraPasswordCredentialsV2) =>
-                           // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
-                           getUserByIdentifier(
-                             identifier = passCreds.identifier,
-                             featureFactoryConfig = featureFactoryConfig
-                           )
-                         case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
-                           val userIri: IRI = JWTHelper.extractUserIriFromToken(
-                             jwtToken,
-                             settings.jwtSecretKey,
-                             settings.externalKnoraApiHostPort
-                           ) match {
-                             case Some(iri) => iri
-                             case None      =>
-                               // should not happen, as the token is already validated
-                               throw AuthenticationException(
-                                 "No IRI found inside token. Please report this as a possible bug."
-                               )
-                           }
-                           // log.debug("getUserADMThroughCredentialsV2 - used token")
-                           getUserByIdentifier(
-                             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                             featureFactoryConfig = featureFactoryConfig
-                           )
-                         case Some(KnoraSessionCredentialsV2(sessionToken)) =>
-                           val userIri: IRI = JWTHelper.extractUserIriFromToken(
-                             sessionToken,
-                             settings.jwtSecretKey,
-                             settings.externalKnoraApiHostPort
-                           ) match {
-                             case Some(iri) => iri
-                             case None      =>
-                               // should not happen, as the token is already validated
-                               throw AuthenticationException(
-                                 "No IRI found inside token. Please report this as a possible bug."
-                               )
-                           }
-                           // log.debug("getUserADMThroughCredentialsV2 - used session token")
-                           getUserByIdentifier(
-                             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                             featureFactoryConfig = featureFactoryConfig
-                           )
-                         case None =>
-                           // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
-                           throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-                       }
+      user: UserADM <-
+        credentials match {
+          case Some(passCreds: KnoraPasswordCredentialsV2) =>
+            // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
+            getUserByIdentifier(passCreds.identifier)
+          case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+            val userIri: IRI = JWTHelper.extractUserIriFromToken(
+              jwtToken,
+              settings.jwtSecretKey,
+              settings.externalKnoraApiHostPort
+            ) match {
+              case Some(iri) => iri
+              case None      =>
+                // should not happen, as the token is already validated
+                throw AuthenticationException(
+                  "No IRI found inside token. Please report this as a possible bug."
+                )
+            }
+            // log.debug("getUserADMThroughCredentialsV2 - used token")
+            getUserByIdentifier(UserIdentifierADM(maybeIri = Some(userIri)))
+          case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+            val userIri: IRI = JWTHelper.extractUserIriFromToken(
+              sessionToken,
+              settings.jwtSecretKey,
+              settings.externalKnoraApiHostPort
+            ) match {
+              case Some(iri) => iri
+              case None      =>
+                // should not happen, as the token is already validated
+                throw AuthenticationException(
+                  "No IRI found inside token. Please report this as a possible bug."
+                )
+            }
+            // log.debug("getUserADMThroughCredentialsV2 - used session token")
+            getUserByIdentifier(UserIdentifierADM(maybeIri = Some(userIri)))
+          case None =>
+            // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
+            throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+        }
 
     } yield user
   }
@@ -826,14 +795,13 @@ object Authenticator extends InstrumentationSupport {
    * Tries to get a [[UserADM]].
    *
    * @param identifier           the IRI, email, or username of the user to be queried
-   * @param featureFactoryConfig the feature factory configuration.
    * @param system               the current akka actor system
    * @param timeout              the timeout of the query
    * @param executionContext     the current execution context
    * @return a [[UserADM]]
    * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
    */
-  private def getUserByIdentifier(identifier: UserIdentifierADM, featureFactoryConfig: FeatureFactoryConfig)(implicit
+  private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit
     system: ActorSystem,
     responderManager: ActorRef,
     timeout: Timeout,
@@ -843,7 +811,6 @@ object Authenticator extends InstrumentationSupport {
       maybeUserADM <- (responderManager ? UserGetADM(
                         identifier = identifier,
                         userInformationTypeADM = UserInformationTypeADM.Full,
-                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = KnoraSystemInstances.Users.SystemUser
                       )).mapTo[Option[UserADM]]
 

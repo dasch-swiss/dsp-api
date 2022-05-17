@@ -28,8 +28,6 @@ import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
 import org.knora.webapi.exceptions.SipiException
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.exceptions.UnsupportedValueException
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
@@ -105,11 +103,6 @@ class ApplicationActor(
    * The Cache Service's configuration.
    */
   implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
-
-  /**
-   * The default feature factory configuration, which is used during startup.
-   */
-  val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(knoraSettings)
 
   /**
    * Provides the actor materializer (akka-http)
@@ -555,11 +548,6 @@ class ApplicationActor(
     msg += "\n"
     msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
     msg += "------------------------------------------------\n"
-
-    defaultFeatureFactoryConfig.makeToggleSettingsString match {
-      case Some(toggleSettingsString) => msg += s"Default feature toggle settings: $toggleSettingsString\n"
-      case None                       => ()
-    }
 
     if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
       msg += "WARNING: Resetting DB over HTTP is turned ON.\n"

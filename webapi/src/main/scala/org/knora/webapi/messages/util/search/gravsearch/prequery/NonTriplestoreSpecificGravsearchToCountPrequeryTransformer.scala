@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
@@ -21,13 +20,11 @@ import scala.concurrent.ExecutionContext
  * @param constructClause      the CONSTRUCT clause from the input query.
  * @param typeInspectionResult the result of type inspection of the input query.
  * @param querySchema          the ontology schema used in the input query.
- * @param featureFactoryConfig the feature factory configuration.
  */
 class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema,
-  featureFactoryConfig: FeatureFactoryConfig
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
@@ -80,8 +77,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
     GravsearchQueryOptimisationFactory
       .getGravsearchQueryOptimisationFeature(
         typeInspectionResult = typeInspectionResult,
-        querySchema = querySchema,
-        featureFactoryConfig = featureFactoryConfig
+        querySchema = querySchema
       )
       .optimiseQueryPatterns(patterns)
 

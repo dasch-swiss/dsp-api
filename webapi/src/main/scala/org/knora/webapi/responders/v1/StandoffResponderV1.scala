@@ -9,7 +9,6 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.exceptions.SipiException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -33,12 +32,12 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
    * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: StandoffResponderRequestV1) = msg match {
-    case CreateMappingRequestV1(xml, label, projectIri, mappingName, featureFactoryConfig, userProfile, uuid) =>
-      createMappingV1(xml, label, projectIri, mappingName, featureFactoryConfig, userProfile, uuid)
-    case GetMappingRequestV1(mappingIri, featureFactoryConfig, userProfile) =>
-      getMappingV1(mappingIri, featureFactoryConfig, userProfile)
-    case GetXSLTransformationRequestV1(xsltTextReprIri, featureFactoryConfig, userProfile) =>
-      getXSLTransformation(xsltTextReprIri, featureFactoryConfig, userProfile)
+    case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) =>
+      createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid)
+    case GetMappingRequestV1(mappingIri, userProfile) =>
+      getMappingV1(mappingIri, userProfile)
+    case GetXSLTransformationRequestV1(xsltTextReprIri, userProfile) =>
+      getXSLTransformation(xsltTextReprIri, userProfile)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -48,20 +47,17 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
    * Retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL file from Sipi.
    *
    * @param xslTransformationIri The IRI of the resource representing the XSL Transformation (a [[org.knora.webapi.messages.OntologyConstants.KnoraBase.XSLTransformation]]).
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          The client making the request.
    * @return a [[GetXSLTransformationResponseV1]].
    */
   private def getXSLTransformation(
     xslTransformationIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[GetXSLTransformationResponseV1] = {
 
     val xslTransformationFuture = for {
       xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2(
                               xsltTextRepresentationIri = xslTransformationIri,
-                              featureFactoryConfig = featureFactoryConfig,
                               requestingUser = userProfile
                             )).mapTo[GetXSLTransformationResponseV2]
     } yield GetXSLTransformationResponseV1(
@@ -89,7 +85,6 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     label: String,
     projectIri: IRI,
     mappingName: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM,
     apiRequestID: UUID
   ): Future[CreateMappingResponseV1] = {
@@ -103,7 +98,6 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
         mappingName = mappingName
       ),
       xml = CreateMappingRequestXMLV2(xml),
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = userProfile,
       apiRequestID = apiRequestID
     )
@@ -125,19 +119,16 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
    * Gets a mapping either from the cache or by making a request to the triplestore.
    *
    * @param mappingIri  the IRI of the mapping to retrieve.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile the user making the request.
    * @return a [[MappingXMLtoStandoff]].
    */
   private def getMappingV1(
     mappingIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[GetMappingResponseV1] =
     for {
       mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
                                                  mappingIri = mappingIri,
-                                                 featureFactoryConfig = featureFactoryConfig,
                                                  requestingUser = userProfile
                                                )).mapTo[GetMappingResponseV2]
     } yield GetMappingResponseV1(

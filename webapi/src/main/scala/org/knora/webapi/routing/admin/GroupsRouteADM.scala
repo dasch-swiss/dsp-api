@@ -10,7 +10,6 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.Authenticator

@@ -16,7 +16,6 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

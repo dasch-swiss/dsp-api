@@ -16,7 +16,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

@@ -2,7 +2,6 @@ package org.knora.webapi.util.search.gravsearch.prequery
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM

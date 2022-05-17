@@ -13,7 +13,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_CREATE_PERMISSION_ERROR
@@ -79,8 +78,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListsGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield ListsGetRequestADM(
           projectIri = projectIri,
@@ -116,10 +114,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
       val requestMessage: Future[ListGetRequestADM] = for {
-        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                          )
+        requestingUser <- getUserADM(requestContext)
       } yield ListGetRequestADM(
         iri = listIri,
         featureFactoryConfig = featureFactoryConfig,
@@ -146,7 +141,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
           featureFactoryConfig = featureFactoryConfig,
@@ -175,7 +170,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
           featureFactoryConfig = featureFactoryConfig,
@@ -231,7 +226,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
           _ = if (

@@ -61,18 +61,19 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
     )
 
     for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getFileValue(
-                           filename = request.filename
-                         )
-                         .toString()
-                     )
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getFileValue(
+              filename = request.filename
+            )
+            .toString()
+        )
 
-      queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                          sparql = sparqlQuery,
-                                                          featureFactoryConfig = request.featureFactoryConfig
-                                                        )).mapTo[SparqlExtendedConstructResponse]
+      queryResponse: SparqlExtendedConstructResponse <-
+        (storeManager ? SparqlExtendedConstructRequest(
+          sparql = sparqlQuery
+        )).mapTo[SparqlExtendedConstructResponse]
 
       _ = if (queryResponse.statements.isEmpty)
             throw NotFoundException(s"No file value was found for filename ${request.filename}")
@@ -118,7 +119,6 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                                              responderManager ? ProjectRestrictedViewSettingsGetADM(
                                                identifier =
                                                  ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
-                                               featureFactoryConfig = request.featureFactoryConfig,
                                                requestingUser = KnoraSystemInstances.Users.SystemUser
                                              )
                                            ).mapTo[Option[ProjectRestrictedViewSettingsADM]]

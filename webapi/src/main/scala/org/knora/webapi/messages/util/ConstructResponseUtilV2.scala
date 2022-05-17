@@ -13,7 +13,6 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.exceptions.NotImplementedException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -917,7 +916,6 @@ object ConstructResponseUtilV2 {
    * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
    * @param queryStandoff             if `true`, make separate queries to get the standoff for the text value.
    * @param responderManager          the Knora responder manager.
-   * @param featureFactoryConfig      the feature factory configuration.
    * @param requestingUser            the user making the request.
    * @return a [[TextValueContentV2]].
    */
@@ -929,7 +927,6 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     responderManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
@@ -972,7 +969,6 @@ object ConstructResponseUtilV2 {
               standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(
                                     resourceIri = resourceIri,
                                     valueIri = valueObject.subjectIri,
-                                    featureFactoryConfig = featureFactoryConfig,
                                     requestingUser = requestingUser
                                   )).mapTo[GetStandoffResponseV2]
             } yield standoff ++ standoffResponse.standoff
@@ -1115,7 +1111,6 @@ object ConstructResponseUtilV2 {
    * @param versionDate               if defined, represents the requested time in the the resources' version history.
    * @param responderManager          the Knora responder manager.
    * @param targetSchema              the schema of the response.
-   * @param featureFactoryConfig      the feature factory configuration.
    * @param settings                  the application's settings.
    * @param requestingUser            the user making the request.
    * @return a [[LinkValueContentV2]].
@@ -1129,7 +1124,6 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     responderManager: ActorRef,
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     requestingUser: UserADM
   )(implicit
@@ -1165,7 +1159,6 @@ object ConstructResponseUtilV2 {
                               responderManager = responderManager,
                               requestingUser = requestingUser,
                               targetSchema = targetSchema,
-                              featureFactoryConfig = featureFactoryConfig,
                               settings = settings
                             )
         } yield linkValue.copy(
@@ -1187,7 +1180,6 @@ object ConstructResponseUtilV2 {
    * @param versionDate          if defined, represents the requested time in the the resources' version history.
    * @param responderManager     the Knora responder manager.
    * @param targetSchema         the schema of the response.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application's settings.
    * @param requestingUser       the user making the request.
    * @return a [[ValueContentV2]] representing a value.
@@ -1200,7 +1192,6 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant] = None,
     responderManager: ActorRef,
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     requestingUser: UserADM
   )(implicit
@@ -1228,7 +1219,6 @@ object ConstructResponseUtilV2 {
           mappings = mappings,
           queryStandoff = queryStandoff,
           responderManager = responderManager,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
@@ -1342,7 +1332,6 @@ object ConstructResponseUtilV2 {
             for {
               nodeResponse <- (responderManager ? NodeGetRequestV2(
                                 nodeIri = listNodeIri,
-                                featureFactoryConfig = featureFactoryConfig,
                                 requestingUser = requestingUser
                               )).mapTo[NodeGetResponseV2]
             } yield listNode.copy(
@@ -1388,7 +1377,6 @@ object ConstructResponseUtilV2 {
           responderManager = responderManager,
           requestingUser = requestingUser,
           targetSchema = targetSchema,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings
         )
 
@@ -1419,7 +1407,6 @@ object ConstructResponseUtilV2 {
    * @param versionDate              if defined, represents the requested time in the the resources' version history.
    * @param responderManager         the Knora responder manager.
    * @param targetSchema             the schema of the response.
-   * @param featureFactoryConfig     the feature factory configuration.
    * @param settings                 the application's settings.
    * @param requestingUser           the user making the request.
    * @return a [[ReadResourceV2]].
@@ -1432,7 +1419,6 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     responderManager: ActorRef,
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     requestingUser: UserADM
   )(implicit
@@ -1501,7 +1487,6 @@ object ConstructResponseUtilV2 {
                                                 responderManager = responderManager,
                                                 requestingUser = requestingUser,
                                                 targetSchema = targetSchema,
-                                                featureFactoryConfig = featureFactoryConfig,
                                                 settings = settings
                                               )
 
@@ -1575,7 +1560,6 @@ object ConstructResponseUtilV2 {
       projectResponse: ProjectGetResponseADM <-
         (responderManager ? ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )).mapTo[ProjectGetResponseADM]
 
@@ -1610,7 +1594,6 @@ object ConstructResponseUtilV2 {
    * @param versionDate                  if defined, represents the requested time in the the resources' version history.
    * @param responderManager             the Knora responder manager.
    * @param targetSchema                 the schema of response.
-   * @param featureFactoryConfig         the feature factory configuration.
    * @param settings                     the application's settings.
    * @param requestingUser               the user making the request.
    * @return a collection of [[ReadResourceV2]] representing the search results.
@@ -1625,7 +1608,6 @@ object ConstructResponseUtilV2 {
     versionDate: Option[Instant],
     responderManager: ActorRef,
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     requestingUser: UserADM
   )(implicit
@@ -1648,7 +1630,6 @@ object ConstructResponseUtilV2 {
         versionDate = versionDate,
         responderManager = responderManager,
         targetSchema = targetSchema,
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings,
         requestingUser = requestingUser
       )

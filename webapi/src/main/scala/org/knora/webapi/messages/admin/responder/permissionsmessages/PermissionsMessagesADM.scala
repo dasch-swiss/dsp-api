@@ -9,7 +9,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
@@ -233,13 +232,11 @@ case class PermissionDataGetADM(
  * A successful response will be a [[PermissionsForProjectGetResponseADM]].
  *
  * @param projectIri           the project for which the permissions are queried.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiation the request.
  * @param apiRequestID         the API request ID.
  */
 case class PermissionsForProjectGetRequestADM(
   projectIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {

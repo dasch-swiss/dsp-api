@@ -11,7 +11,6 @@ import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._

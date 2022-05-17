@@ -39,7 +39,6 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -613,7 +612,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param graphIri             the IRI of the named graph.
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a string containing the contents of the graph in N-Quads format.
    */
   private def sparqlHttpGraphFile(
@@ -736,7 +734,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * Dumps the whole repository in N-Quads format, saving the response in a file.
    *
    * @param outputFile           the output file.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a string containing the contents of the graph in N-Quads format.
    */
   private def downloadRepository(
@@ -982,7 +979,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * Writes an HTTP response to a file.
    *
    * @param outputFile             the output file.
-   * @param featureFactoryConfig   the feature factory configuration.
    * @param maybeGraphIriAndFormat a graph IRI and quad format for the output file. If defined, the response
    *                               is parsed as Turtle and converted to the output format, with the graph IRI
    *                               added to each statement. Otherwise, the response is written as-is to the

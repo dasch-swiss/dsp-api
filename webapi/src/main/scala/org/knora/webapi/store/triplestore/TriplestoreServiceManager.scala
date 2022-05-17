@@ -77,9 +77,8 @@ final case class TriplestoreServiceManager(
     // case HelloTriplestore(msg: String) if msg == settings.triplestoreType => sender() ! HelloTriplestore(settings.triplestoreType)
     case CheckTriplestoreRequest() => ts.checkTriplestore()
     // case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), Success(SparqlUpdateResponse()), log)
-    case DownloadRepositoryRequest(outputFile: Path, _) =>
-      ts.downloadRepository(outputFile)
-    case UploadRepositoryRequest(inputFile: Path) => ts.uploadRepository(inputFile)
+    case DownloadRepositoryRequest(outputFile: Path) => ts.downloadRepository(outputFile)
+    case UploadRepositoryRequest(inputFile: Path)    => ts.uploadRepository(inputFile)
     case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>
       ts.insertDataGraphRequest(graphContent, graphName)
     case SimulateTimeoutRequest() => ts.doSimulateTimeout()

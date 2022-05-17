@@ -10,7 +10,6 @@ import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.exceptions.SipiException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation

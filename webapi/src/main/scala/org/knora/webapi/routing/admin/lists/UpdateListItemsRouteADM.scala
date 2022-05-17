@@ -11,7 +11,6 @@ import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.Comments
 import org.knora.webapi.messages.admin.responder.valueObjects.Labels
@@ -85,7 +84,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeNameChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodeNameChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeNameRequest = namePayload,
@@ -143,7 +142,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodeLabelsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeLabelsRequest = labelsPayload,
@@ -201,7 +200,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodeCommentsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeCommentsRequest = commentsPayload,
@@ -256,7 +255,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
           val requestMessage: Future[NodePositionChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodePositionChangeRequestADM(
             nodeIri = nodeIri,
             changeNodePositionRequest = apiRequest,

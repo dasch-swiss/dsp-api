@@ -11,7 +11,6 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

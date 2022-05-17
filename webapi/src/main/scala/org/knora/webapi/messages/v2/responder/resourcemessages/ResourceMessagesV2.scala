@@ -11,7 +11,6 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -58,7 +57,6 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
  * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
  * @param targetSchema         the target API schema.
  * @param schemaOptions        the schema options submitted with the request.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ResourcesGetRequestV2(
@@ -69,7 +67,6 @@ case class ResourcesGetRequestV2(
   withDeleted: Boolean = true,
   targetSchema: ApiV2Schema,
   schemaOptions: Set[SchemaOption] = Set.empty,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
@@ -79,14 +76,12 @@ case class ResourcesGetRequestV2(
  * @param resourceIris         the IRIs of the resources to obtain a preview for.
  * @param withDeletedResource  indicates if a preview of deleted resource should be returned.
  * @param targetSchema         the schema of the response.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ResourcesPreviewGetRequestV2(
   resourceIris: Seq[IRI],
   withDeletedResource: Boolean = true,
   targetSchema: ApiV2Schema,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
@@ -95,12 +90,10 @@ case class ResourcesPreviewGetRequestV2(
  * resource.
  *
  * @param resourceIri          the resource IRI.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ResourceIIIFManifestGetRequestV2(
   resourceIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
@@ -125,7 +118,6 @@ case class ResourceIIIFManifestGetResponseV2(manifest: JsonLDDocument) extends K
  * @param withDeletedResource  indicates if the version history of deleted resources should be returned or not.
  * @param startDate            the start of the time period to return, inclusive.
  * @param endDate              the end of the time period to return, exclusive.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ResourceVersionHistoryGetRequestV2(
@@ -133,7 +125,6 @@ case class ResourceVersionHistoryGetRequestV2(
   withDeletedResource: Boolean = false,
   startDate: Option[Instant] = None,
   endDate: Option[Instant] = None,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
@@ -141,12 +132,10 @@ case class ResourceVersionHistoryGetRequestV2(
  * Requests the full version history of a resource and its values as events.
  *
  * @param resourceIri            the IRI of the resource.
- * @param featureFactoryConfig   the feature factory configuration.
  * @param requestingUser         the user making the request.
  */
 case class ResourceHistoryEventsGetRequestV2(
   resourceIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -160,12 +149,10 @@ case class ResourceHistoryEventsGetRequestV2(
  * Requests the version history of all resources of a project.
  *
  * @param projectIri          the IRI of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectResourcesWithHistoryGetRequestV2(
   projectIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -246,7 +233,6 @@ case class ResourceVersionHistoryResponseV2(history: Seq[ResourceHistoryEntry]) 
  * @param mappingIri            the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
  * @param gravsearchTemplateIri the gravsearch template to query the metadata for the TEI header, if provided.
  * @param headerXSLTIri         the IRI of the XSL transformation to convert the resource's metadata to the TEI header.
- * @param featureFactoryConfig  the feature factory configuration.
  * @param requestingUser        the user making the request.
  */
 case class ResourceTEIGetRequestV2(
@@ -255,7 +241,6 @@ case class ResourceTEIGetRequestV2(
   mappingIri: Option[IRI],
   gravsearchTemplateIri: Option[IRI],
   headerXSLTIri: Option[IRI],
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ResourcesResponderRequestV2
 
@@ -661,13 +646,11 @@ case class CreateResourceV2(
  * Represents a request to create a resource.
  *
  * @param createResource       the resource to be created.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the API request ID.
  */
 case class CreateResourceRequestV2(
   createResource: CreateResourceV2,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
@@ -682,7 +665,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -693,7 +675,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
@@ -722,7 +703,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
       projectInfoResponse: ProjectGetResponseADM <-
         (responderManager ? ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )).mapTo[ProjectGetResponseADM]
 
@@ -751,15 +731,15 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                                    stringFormatter.toSmartIriWithErr
                                                  )
 
-      maybeAttachedToUserFuture: Option[Future[UserADM]] = maybeAttachedToUserIri.map { attachedToUserIri =>
-                                                             UserUtilADM.switchToUser(
-                                                               requestingUser = requestingUser,
-                                                               requestedUserIri = attachedToUserIri.toString,
-                                                               projectIri = projectIri.toString,
-                                                               featureFactoryConfig = featureFactoryConfig,
-                                                               responderManager = responderManager
-                                                             )
-                                                           }
+      maybeAttachedToUserFuture: Option[Future[UserADM]] =
+        maybeAttachedToUserIri.map { attachedToUserIri =>
+          UserUtilADM.switchToUser(
+            requestingUser = requestingUser,
+            requestedUserIri = attachedToUserIri.toString,
+            projectIri = projectIri.toString,
+            responderManager = responderManager
+          )
+        }
 
       maybeAttachedToUser: Option[UserADM] <- ActorUtil.optionFuture2FutureOption(maybeAttachedToUserFuture)
 
@@ -796,15 +776,15 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             }
 
             for {
-              valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                                                jsonLDObject = valueJsonLDObject,
-                                                requestingUser = requestingUser,
-                                                responderManager = responderManager,
-                                                storeManager = storeManager,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                settings = settings,
-                                                log = log
-                                              )
+              valueContent: ValueContentV2 <-
+                ValueContentV2.fromJsonLDObject(
+                  jsonLDObject = valueJsonLDObject,
+                  requestingUser = requestingUser,
+                  responderManager = responderManager,
+                  storeManager = storeManager,
+                  settings = settings,
+                  log = log
+                )
 
               maybeCustomValueIri: Option[SmartIri] = valueJsonLDObject.maybeIDAsKnoraDataIri
               maybeCustomValueUUID: Option[UUID] = valueJsonLDObject.maybeUUID(
@@ -813,25 +793,20 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
               // Get the value's creation date.
               // TODO: creationDate for values is a bug, and will not be supported in future. Use valueCreationDate instead.
-              maybeCustomValueCreationDate: Option[Instant] = valueJsonLDObject
-                                                                .maybeDatatypeValueInObject(
-                                                                  key =
-                                                                    OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
-                                                                  expectedDatatype =
-                                                                    OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                                  validationFun =
-                                                                    stringFormatter.xsdDateTimeStampToInstant
-                                                                )
-                                                                .orElse(
-                                                                  valueJsonLDObject.maybeDatatypeValueInObject(
-                                                                    key =
-                                                                      OntologyConstants.KnoraApiV2Complex.CreationDate,
-                                                                    expectedDatatype =
-                                                                      OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
-                                                                    validationFun =
-                                                                      stringFormatter.xsdDateTimeStampToInstant
-                                                                  )
-                                                                )
+              maybeCustomValueCreationDate: Option[Instant] =
+                valueJsonLDObject
+                  .maybeDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2Complex.ValueCreationDate,
+                    expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                    validationFun = stringFormatter.xsdDateTimeStampToInstant
+                  )
+                  .orElse(
+                    valueJsonLDObject.maybeDatatypeValueInObject(
+                      key = OntologyConstants.KnoraApiV2Complex.CreationDate,
+                      expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                      validationFun = stringFormatter.xsdDateTimeStampToInstant
+                    )
+                  )
 
               maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(
                                                    OntologyConstants.KnoraApiV2Complex.HasPermissions,
@@ -862,7 +837,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         permissions = permissions,
         creationDate = creationDate
       ),
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = maybeAttachedToUser.getOrElse(requestingUser),
       apiRequestID = apiRequestID
     )
@@ -878,7 +852,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
  * @param maybeLabel                the resource's new `rdfs:label`, if any.
  * @param maybePermissions          the resource's new permissions, if any.
  * @param maybeNewModificationDate  the resource's new last modification date, if any.
- * @param featureFactoryConfig      the feature factory configuration.
  */
 case class UpdateResourceMetadataRequestV2(
   resourceIri: IRI,
@@ -887,7 +860,6 @@ case class UpdateResourceMetadataRequestV2(
   maybeLabel: Option[String] = None,
   maybePermissions: Option[String] = None,
   maybeNewModificationDate: Option[Instant] = None,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
@@ -902,7 +874,6 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -913,14 +884,12 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] =
     Future {
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser,
         apiRequestID = apiRequestID
       )
@@ -928,7 +897,6 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
 
   def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): UpdateResourceMetadataRequestV2 = {
@@ -974,7 +942,6 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
       maybeLabel = maybeLabel,
       maybePermissions = maybePermissions,
       maybeNewModificationDate = maybeNewModificationDate,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser,
       apiRequestID = apiRequestID
     )
@@ -989,15 +956,13 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
  * @param lastModificationDate      the resource's last modification date.
  * @param maybeLabel                the resource's new `rdfs:label`, if any.
  * @param maybePermissions          the resource's new permissions, if any.
- * @param featureFactoryConfig      the feature factory configuration.
  */
 case class UpdateResourceMetadataResponseV2(
   resourceIri: IRI,
   resourceClassIri: SmartIri,
   lastModificationDate: Instant,
   maybeLabel: Option[String] = None,
-  maybePermissions: Option[String] = None,
-  featureFactoryConfig: FeatureFactoryConfig
+  maybePermissions: Option[String] = None
 ) extends KnoraJsonLDResponseV2 {
 
   /**
@@ -1076,7 +1041,6 @@ case class UpdateResourceMetadataResponseV2(
  *                                  the current time will be used.
  * @param maybeLastModificationDate the resource's last modification date, if any.
  * @param erase                     if `true`, the resource will be erased from the triplestore, otherwise it will be marked as deleted.
- * @param featureFactoryConfig      the feature factory configuration.
  */
 case class DeleteOrEraseResourceRequestV2(
   resourceIri: IRI,
@@ -1085,7 +1049,6 @@ case class DeleteOrEraseResourceRequestV2(
   maybeDeleteDate: Option[Instant] = None,
   maybeLastModificationDate: Option[Instant] = None,
   erase: Boolean = false,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ResourcesResponderRequestV2
@@ -1100,7 +1063,6 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -1111,14 +1073,12 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] =
     Future {
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser,
         apiRequestID = apiRequestID
       )
@@ -1126,7 +1086,6 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
 
   def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): DeleteOrEraseResourceRequestV2 = {
@@ -1163,7 +1122,6 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
       maybeDeleteComment = maybeDeleteComment,
       maybeDeleteDate = maybeDeleteDate,
       maybeLastModificationDate = maybeLastModificationDate,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser,
       apiRequestID = apiRequestID
     )

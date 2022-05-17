@@ -12,7 +12,6 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.exceptions.NotImplementedException
 import org.knora.webapi.exceptions.OntologyConstraintException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -43,21 +42,18 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    *
    * @param valueProps           a [[GroupedProps.ValueProps]] resulting from querying the `Value`, in which the keys are RDF predicates,
    *                             and the values are lists of the objects of each predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[ApiValueV1]] representing the `Value`.
    */
   def makeValueV1(
     valueProps: ValueProps,
     projectShortcode: String,
     responderManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val valueTypeIri = valueProps.literalData(OntologyConstants.Rdf.Type).literals.head
 
     valueTypeIri match {
-      case OntologyConstants.KnoraBase.TextValue =>
-        makeTextValue(valueProps, responderManager, featureFactoryConfig, userProfile)
+      case OntologyConstants.KnoraBase.TextValue     => makeTextValue(valueProps, responderManager, userProfile)
       case OntologyConstants.KnoraBase.IntValue      => makeIntValue(valueProps, responderManager, userProfile)
       case OntologyConstants.KnoraBase.DecimalValue  => makeDecimalValue(valueProps, responderManager, userProfile)
       case OntologyConstants.KnoraBase.BooleanValue  => makeBooleanValue(valueProps, responderManager, userProfile)
@@ -703,7 +699,6 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param utf8str              the string representation.
    * @param valueProps           the properties of the TextValue with standoff.
    * @param responderManager     the responder manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the client that is making the request.
    * @return a [[TextValueWithStandoffV1]].
    */
@@ -712,7 +707,6 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     language: Option[String] = None,
     valueProps: ValueProps,
     responderManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
 
@@ -733,7 +727,6 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
       mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
                                                  mappingIri = mappingIri,
-                                                 featureFactoryConfig = featureFactoryConfig,
                                                  requestingUser = userProfile
                                                )).mapTo[GetMappingResponseV2]
 
@@ -775,13 +768,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * Converts a [[ValueProps]] into a [[TextValueV1]].
    *
    * @param valueProps           a [[ValueProps]] representing the SPARQL query results to be converted.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[TextValueV1]].
    */
   private def makeTextValue(
     valueProps: ValueProps,
     responderManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
@@ -801,7 +792,6 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         language = valueHasLanguage,
         valueProps = valueProps,
         responderManager = responderManager,
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userProfile
       )
 

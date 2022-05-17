@@ -15,7 +15,6 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -203,7 +202,6 @@ object RouteUtilV2 {
    *
    * @param requestMessage       a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param featureFactoryConfig the per-request feature factory configuration.
    * @param settings             the application's settings.
    * @param responderManager     a reference to the responder manager.
    * @param log                  a logging adapter.
@@ -215,7 +213,6 @@ object RouteUtilV2 {
   private def runRdfRoute(
     requestMessage: KnoraRequestV2,
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     responderManager: ActorRef,
     log: LoggingAdapter,
@@ -261,13 +258,11 @@ object RouteUtilV2 {
                                            settings = settings,
                                            schemaOptions = schemaOptions
                                          )
-    } yield featureFactoryConfig.addHeaderToHttpResponse(
-      HttpResponse(
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          contentType,
-          formattedResponseContent
-        )
+    } yield HttpResponse(
+      status = StatusCodes.OK,
+      entity = HttpEntity(
+        contentType,
+        formattedResponseContent
       )
     )
 
@@ -279,7 +274,6 @@ object RouteUtilV2 {
    *
    * @param requestMessageF      a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param featureFactoryConfig the per-request feature factory configuration.
    * @param settings             the application's settings.
    * @param responderManager     a reference to the responder manager.
    * @param log                  a logging adapter.
@@ -291,7 +285,6 @@ object RouteUtilV2 {
   def runTEIXMLRoute(
     requestMessageF: Future[KnoraRequestV2],
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     responderManager: ActorRef,
     log: LoggingAdapter,
@@ -315,13 +308,11 @@ object RouteUtilV2 {
                          )
                      }
 
-    } yield featureFactoryConfig.addHeaderToHttpResponse(
-      HttpResponse(
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          contentType,
-          teiResponse.toXML
-        )
+    } yield HttpResponse(
+      status = StatusCodes.OK,
+      entity = HttpEntity(
+        contentType,
+        teiResponse.toXML
       )
     )
 
@@ -333,7 +324,6 @@ object RouteUtilV2 {
    *
    * @param requestMessageF      a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param featureFactoryConfig the per-request feature factory configuration.
    * @param settings             the application's settings.
    * @param responderManager     a reference to the responder manager.
    * @param log                  a logging adapter.
@@ -346,7 +336,6 @@ object RouteUtilV2 {
   def runRdfRouteWithFuture(
     requestMessageF: Future[KnoraRequestV2],
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     responderManager: ActorRef,
     log: LoggingAdapter,
@@ -358,7 +347,6 @@ object RouteUtilV2 {
       routeResult <- runRdfRoute(
                        requestMessage = requestMessage,
                        requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig,
                        settings = settings,
                        responderManager = responderManager,
                        log = log,
@@ -377,7 +365,7 @@ object RouteUtilV2 {
    */
   def requestToRdfModel(
     entityStr: String,
-    requestContext: RequestContext,
+    requestContext: RequestContext
   ): RdfModel =
     RdfFeatureFactory
       .getRdfFormatUtil()
@@ -395,7 +383,7 @@ object RouteUtilV2 {
    */
   def requestToJsonLD(
     entityStr: String,
-    requestContext: RequestContext,
+    requestContext: RequestContext
   ): JsonLDDocument =
     RdfFeatureFactory
       .getRdfFormatUtil()

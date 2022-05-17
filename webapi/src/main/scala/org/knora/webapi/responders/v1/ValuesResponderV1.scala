@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v1
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -62,10 +61,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: ValuesResponderRequestV1) = msg match {
-    case ValueGetRequestV1(valueIri, featureFactoryConfig, userProfile) =>
-      getValueResponseV1(valueIri, featureFactoryConfig, userProfile)
-    case LinkValueGetRequestV1(subjectIri, predicateIri, objectIri, featureFactoryConfig, userProfile) =>
-      getLinkValue(subjectIri, predicateIri, objectIri, featureFactoryConfig, userProfile)
+    case ValueGetRequestV1(valueIri, userProfile) =>
+      getValueResponseV1(valueIri, userProfile)
+    case LinkValueGetRequestV1(subjectIri, predicateIri, objectIri, userProfile) =>
+      getLinkValue(subjectIri, predicateIri, objectIri, userProfile)
     case versionHistoryRequest: ValueVersionHistoryGetRequestV1 =>
       getValueVersionHistoryResponseV1(versionHistoryRequest)
     case createValueRequest: CreateValueRequestV1         => createValueV1(createValueRequest)
@@ -87,19 +86,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * Queries a `knora-base:Value` and returns a [[ValueGetResponseV1]] describing it.
    *
    * @param valueIri             the IRI of the value to be queried.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[ValueGetResponseV1]].
    */
   private def getValueResponseV1(
     valueIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[ValueGetResponseV1] =
     for {
       maybeValueQueryResult <- findValue(
                                  valueIri = valueIri,
-                                 featureFactoryConfig = featureFactoryConfig,
                                  userProfile = userProfile
                                )
 
@@ -109,7 +105,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                         maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
                                                       userIri = valueQueryResult.creatorIri,
                                                       userProfileType = UserProfileTypeV1.RESTRICTED,
-                                                      featureFactoryConfig = featureFactoryConfig
                                                     )).mapTo[Option[UserProfileV1]]
 
                         valueCreatorProfile = maybeValueCreatorProfile match {
@@ -172,7 +167,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                propertyIri = createValueRequest.propertyIri,
                propertyObjectClassConstraint = propertyObjectClassConstraint,
                updateValueV1 = createValueRequest.value,
-               featureFactoryConfig = createValueRequest.featureFactoryConfig,
                userProfile = createValueRequest.userProfile
              )
 
@@ -181,7 +175,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
                                   iri = createValueRequest.resourceIri,
-                                  featureFactoryConfig = createValueRequest.featureFactoryConfig,
                                   userADM = createValueRequest.userProfile,
                                   getIncoming = false
                                 )).mapTo[ResourceFullResponseV1]
@@ -263,7 +256,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         maybeProjectInfo <- {
           responderManager ? ProjectInfoByIRIGetV1(
             iri = projectIri,
-            featureFactoryConfig = createValueRequest.featureFactoryConfig,
             userProfileV1 = Some(createValueRequest.userProfile.asUserProfileV1)
           )
         }.mapTo[Option[ProjectInfoV1]]
@@ -284,7 +276,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                              comment = createValueRequest.comment,
                              valueCreator = userIri,
                              valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
-                             featureFactoryConfig = createValueRequest.featureFactoryConfig,
                              userProfile = createValueRequest.userProfile
                            )
 
@@ -293,7 +284,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          resourceIri = createValueRequest.resourceIri,
                          propertyIri = createValueRequest.propertyIri,
                          unverifiedValue = unverifiedValue,
-                         featureFactoryConfig = createValueRequest.featureFactoryConfig,
                          userProfile = createValueRequest.userProfile
                        )
       } yield apiResponse
@@ -429,13 +419,13 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         targetIriCheckResult <- checkStandoffResourceReferenceTargets(
                                   targetIris = targetIrisThatAlreadyExist,
-                                  featureFactoryConfig = createMultipleValuesRequest.featureFactoryConfig,
                                   userProfile = createMultipleValuesRequest.userProfile
                                 )
 
         // For each target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property and one LinkValue,
         // with the associated count as the LinkValue's initial reference count.
-        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = targetIris.toSeq.map {
+        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] =
+              targetIris.toSeq.map {
                                                                case (targetIri, initialReferenceCount) =>
                                                                  // If the target of a standoff link is a client ID for a resource, convert it to the corresponding real resource IRI.
                                                                  val realTargetIri =
@@ -706,7 +696,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             resourceIri = verifyRequest.resourceIri,
             propertyIri = propertyIri,
             unverifiedValue = unverifiedValue,
-            featureFactoryConfig = verifyRequest.featureFactoryConfig,
             userProfile = verifyRequest.userProfile
           )
         }
@@ -792,7 +781,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                              ChangeValueRequestV1(
                                                valueIri = fileValues.head.valueObjectIri,
                                                value = changeFileValueRequest.file,
-                                               featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
                                                userProfile = changeFileValueRequest.userProfile,
                                                apiRequestID = changeFileValueRequest.apiRequestID // re-use the same id
                                              )
@@ -823,7 +811,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     for {
       resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
                                 iri = changeFileValueRequest.resourceIri,
-                                featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
                                 userProfile = changeFileValueRequest.userProfile
                               )).mapTo[ResourceInfoResponseV1]
 
@@ -831,7 +818,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       projectResponse <- {
         responderManager ? ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(resourceInfoResponse.resource_info.get.project_id)),
-          featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
           requestingUser = changeFileValueRequest.userProfile
         )
       }.mapTo[ProjectGetResponseADM]
@@ -885,7 +871,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
       for {
         // Ensure that the user has permission to modify the value.
-        maybeCurrentValueQueryResult: Option[ValueQueryResult] <- changeValueRequest.value match {
+        maybeCurrentValueQueryResult: Option[ValueQueryResult] <-
+           changeValueRequest.value match {
                                                                     case linkUpdateV1: LinkUpdateV1 =>
                                                                       // We're being asked to update a link. We expect the current value version IRI to point to a
                                                                       // knora-base:LinkValue. Get all necessary information about the LinkValue and the corresponding
@@ -896,17 +883,13 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                         predicateIri = propertyIri,
                                                                         objectIri = None,
                                                                         linkValueIri = changeValueRequest.valueIri,
-                                                                        featureFactoryConfig =
-                                                                          changeValueRequest.featureFactoryConfig,
                                                                         userProfile = changeValueRequest.userProfile
                                                                       )
 
                                                                     case otherValueV1 =>
                                                                       // We're being asked to update an ordinary value.
                                                                       findValue(
-                                                                        valueIri = changeValueRequest.valueIri,
-                                                                        featureFactoryConfig =
-                                                                          changeValueRequest.featureFactoryConfig,
+                                                                        valueIri = changeValueRequest.valueIri, 
                                                                         userProfile = changeValueRequest.userProfile
                                                                       )
                                                                   }
@@ -949,7 +932,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                propertyIri = propertyIri,
                propertyObjectClassConstraint = propertyObjectClassConstraint,
                updateValueV1 = changeValueRequest.value,
-               featureFactoryConfig = changeValueRequest.featureFactoryConfig,
                userProfile = changeValueRequest.userProfile
              )
 
@@ -969,7 +951,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // and there's no point in doing it if the other checks fail.)
         resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
                                   iri = findResourceWithValueResult.resourceIri,
-                                  featureFactoryConfig = changeValueRequest.featureFactoryConfig,
                                   userADM = changeValueRequest.userProfile,
                                   getIncoming = false
                                 )).mapTo[ResourceFullResponseV1]
@@ -1030,7 +1011,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         maybeProjectInfo <- {
           responderManager ? ProjectInfoByIRIGetV1(
             iri = resourceFullResponse.resinfo.get.project_id,
-            featureFactoryConfig = changeValueRequest.featureFactoryConfig,
             userProfileV1 = Some(changeValueRequest.userProfile.asUserProfileV1)
           )
         }.mapTo[Option[ProjectInfoV1]]
@@ -1072,7 +1052,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                              comment = changeValueRequest.comment,
                              valueCreator = userIri,
                              valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
-                             featureFactoryConfig = changeValueRequest.featureFactoryConfig,
                              userProfile = changeValueRequest.userProfile
                            )
 
@@ -1104,7 +1083,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                              comment = changeValueRequest.comment,
                              valueCreator = userIri,
                              valuePermissions = valuePermissions,
-                             featureFactoryConfig = changeValueRequest.featureFactoryConfig,
                              userProfile = changeValueRequest.userProfile
                            )
                        }
@@ -1150,8 +1128,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Ensure that the user has permission to modify the value.
         maybeCurrentValueQueryResult: Option[ValueQueryResult] <- findValue(
                                                                     valueIri = changeCommentRequest.valueIri,
-                                                                    featureFactoryConfig =
-                                                                      changeCommentRequest.featureFactoryConfig,
                                                                     userProfile = changeCommentRequest.userProfile
                                                                   )
 
@@ -1184,7 +1160,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         maybeProjectInfo <- {
           responderManager ? ProjectInfoByIRIGetV1(
             findResourceWithValueResult.projectIri,
-            featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
             None
           )
         }.mapTo[Option[ProjectInfoV1]]
@@ -1219,7 +1194,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 resourceIri = findResourceWithValueResult.resourceIri,
                                 propertyIri = findResourceWithValueResult.propertyIri,
                                 searchValueIri = newValueIri,
-                                featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
                                 userProfile = changeCommentRequest.userProfile
                               )
       } yield ChangeValueResponseV1(
@@ -1277,7 +1251,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Ensure that the user has permission to mark the value as deleted.
         maybeCurrentValueQueryResult <- findValue(
                                           valueIri = deleteValueRequest.valueIri,
-                                          featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
                                           userProfile = deleteValueRequest.userProfile
                                         )
 
@@ -1331,7 +1304,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                  maybeProjectInfo <- {
                                                    responderManager ? ProjectInfoByIRIGetV1(
                                                      iri = findResourceWithValueResult.projectIri,
-                                                     featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
                                                      userProfileV1 = None
                                                    )
                                                  }.mapTo[Option[ProjectInfoV1]]
@@ -1351,8 +1323,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                                targetResourceIri = linkValue.objectIri,
                                                                                valueCreator = userIri,
                                                                                valuePermissions = valuePermissions,
-                                                                               featureFactoryConfig =
-                                                                                 deleteValueRequest.featureFactoryConfig,
                                                                                userProfile =
                                                                                  deleteValueRequest.userProfile
                                                                              )
@@ -1388,8 +1358,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                            targetResourceIri = targetResourceIri,
                                                            valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
                                                            valuePermissions = standoffLinkValuePermissions,
-                                                           featureFactoryConfig =
-                                                             deleteValueRequest.featureFactoryConfig,
                                                            userProfile = deleteValueRequest.userProfile
                                                          )
                                                      }.toVector
@@ -1406,7 +1374,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                  maybeProjectInfo <- {
                                                    responderManager ? ProjectInfoByIRIGetV1(
                                                      iri = findResourceWithValueResult.projectIri,
-                                                     featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
                                                      userProfileV1 = None
                                                    )
                                                  }.mapTo[Option[ProjectInfoV1]]
@@ -1620,7 +1587,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param subjectIri           the IRI of the resource that is the source of the link.
    * @param predicateIri         the IRI of the property that links the two resources.
    * @param objectIri            the IRI of the resource that is the target of the link.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[ValueGetResponseV1]] containing a [[LinkValueV1]].
    */
@@ -1629,7 +1595,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     subjectIri: IRI,
     predicateIri: IRI,
     objectIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[ValueGetResponseV1] =
     for {
@@ -1637,7 +1602,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                  subjectIri = subjectIri,
                                  predicateIri = predicateIri,
                                  objectIri = objectIri,
-                                 featureFactoryConfig = featureFactoryConfig,
                                  userProfile = userProfile
                                )
 
@@ -1646,8 +1610,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                for {
                                  maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
                                                                userIri = valueQueryResult.creatorIri,
-                                                               userProfileType = UserProfileTypeV1.RESTRICTED,
-                                                               featureFactoryConfig = featureFactoryConfig
+                                                               userProfileType = UserProfileTypeV1.RESTRICTED
                                                              )).mapTo[Option[UserProfileV1]]
 
                                  valueCreatorProfile = maybeValueCreatorProfile match {
@@ -1755,13 +1718,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * Queries a `knora-base:Value` and returns a [[ValueQueryResult]] describing it.
    *
    * @param valueIri             the IRI of the value to be queried.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[ValueQueryResult]], or `None` if the value is not found.
    */
   private def findValue(
     valueIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Option[ValueQueryResult]] =
     for {
@@ -1779,7 +1740,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       maybeValueQueryResult <- sparqlQueryResults2ValueQueryResult(
                                  valueIri = valueIri,
                                  rows = rows,
-                                 featureFactoryConfig = featureFactoryConfig,
                                  userProfile = userProfile
                                )
 
@@ -1855,7 +1815,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param predicateIri         the IRI of the property that links the two resources.
    * @param objectIri            if provided, the IRI of the target resource.
    * @param linkValueIri         the IRI of the `LinkValue`.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
    */
@@ -1864,7 +1823,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     predicateIri: IRI,
     objectIri: Option[IRI],
     linkValueIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Option[LinkValueQueryResult]] =
     for {
@@ -1884,7 +1842,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
       maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
                                      rows = rows,
-                                     featureFactoryConfig = featureFactoryConfig,
                                      userProfile = userProfile
                                    )
 
@@ -1902,7 +1859,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param subjectIri           the IRI of the resource that is the source of the link.
    * @param predicateIri         the IRI of the property that links the two resources.
    * @param objectIri            the IRI of the target resource.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return an optional [[ValueGetResponseV1]] containing a [[LinkValueV1]].
    */
@@ -1910,7 +1866,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     subjectIri: IRI,
     predicateIri: IRI,
     objectIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Option[LinkValueQueryResult]] =
     for {
@@ -1929,7 +1884,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
       maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
                                      rows = rows,
-                                     featureFactoryConfig = featureFactoryConfig,
                                      userProfile = userProfile
                                    )
 
@@ -1948,7 +1902,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    *
    * @param valueIri             the IRI of the value that was queried.
    * @param rows                 the query result rows.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[ValueQueryResult]].
    */
@@ -1956,7 +1909,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   private def sparqlQueryResults2ValueQueryResult(
     valueIri: IRI,
     rows: Seq[VariableResultsRow],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Option[BasicValueQueryResult]] = {
     val userProfileV1 = userProfile.asUserProfileV1
@@ -1976,7 +1928,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                    valueProps = valueProps,
                    projectShortcode = projectShortcode,
                    responderManager = responderManager,
-                   featureFactoryConfig = featureFactoryConfig,
                    userProfile = userProfile
                  )
 
@@ -2068,13 +2019,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * Converts SPARQL query results about a `knora-base:LinkValue` into a [[LinkValueQueryResult]].
    *
    * @param rows                 SPARQL query results about a `knora-base:LinkValue`.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[LinkValueQueryResult]].
    */
   private def sparqlQueryResults2LinkValueQueryResult(
     rows: Seq[VariableResultsRow],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Option[LinkValueQueryResult]] = {
     val userProfileV1 = userProfile.asUserProfileV1
@@ -2097,7 +2046,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             valueProps = valueProps,
                             projectShortcode = projectShortcode,
                             responderManager = responderManager,
-                            featureFactoryConfig = featureFactoryConfig,
                             userProfile = userProfile
                           )
 
@@ -2180,7 +2128,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param resourceIri          the IRI of the resource in which the value should have been created.
    * @param propertyIri          the IRI of the property that should point from the resource to the value.
    * @param unverifiedValue      the value that should have been created.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[CreateValueResponseV1]], or a failed [[Future]] if the value could not be found in
    *         the resource's version history.
@@ -2189,7 +2136,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     resourceIri: IRI,
     propertyIri: IRI,
     unverifiedValue: UnverifiedValueV1,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[CreateValueResponseV1] =
     unverifiedValue.value match {
@@ -2200,7 +2146,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                     linkPropertyIri = propertyIri,
                                     linkTargetIri = linkUpdateV1.targetResourceIri,
                                     linkValueIri = unverifiedValue.newValueIri,
-                                    featureFactoryConfig = featureFactoryConfig,
                                     userProfile = userProfile
                                   )
 
@@ -2221,7 +2166,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                   resourceIri = resourceIri,
                                   propertyIri = propertyIri,
                                   searchValueIri = unverifiedValue.newValueIri,
-                                  featureFactoryConfig = featureFactoryConfig,
                                   userProfile = userProfile
                                 )
 
@@ -2240,7 +2184,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param resourceIri          the IRI of the resource that may have the value.
    * @param propertyIri          the IRI of the property that may have have the value.
    * @param searchValueIri       the IRI of the value.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[ValueQueryResult]].
    */
@@ -2250,8 +2193,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     resourceIri: IRI,
     propertyIri: IRI,
     searchValueIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
-    userProfile: UserADM
   ): Future[ValueQueryResult] =
     for {
       // Do a SPARQL query to look for the value in the resource's version history.
@@ -2273,7 +2214,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       resultOption <- sparqlQueryResults2ValueQueryResult(
                         valueIri = searchValueIri,
                         rows = rows,
-                        featureFactoryConfig = featureFactoryConfig,
                         userProfile = userProfile
                       )
 
@@ -2291,7 +2231,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param linkPropertyIri      the IRI of the link property.
    * @param linkTargetIri        the IRI of the resource that should be the target of the link.
    * @param linkValueIri         the IRI of the `knora-base:LinkValue` that should have been created.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[LinkValueQueryResult]].
    */
@@ -2302,8 +2241,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     linkPropertyIri: IRI,
     linkTargetIri: IRI,
     linkValueIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
-    userProfile: UserADM
   ): Future[LinkValueQueryResult] =
     for {
       maybeLinkValueQueryResult <- findLinkValueByIri(
@@ -2311,7 +2248,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                      predicateIri = linkPropertyIri,
                                      objectIri = Some(linkTargetIri),
                                      linkValueIri = linkValueIri,
-                                     featureFactoryConfig = featureFactoryConfig,
                                      userProfile = userProfile
                                    )
 
@@ -2392,7 +2328,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param value                the value to create.
    * @param valueCreator         the IRI of the new value's owner.
    * @param valuePermissions     the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return an [[UnverifiedValueV1]].
    */
@@ -2405,7 +2340,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     comment: Option[String],
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[UnverifiedValueV1] =
     value match {
@@ -2418,7 +2352,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           comment = comment,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
-          featureFactoryConfig = featureFactoryConfig,
           userProfile = userProfile
         )
 
@@ -2431,7 +2364,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           comment = comment,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
-          featureFactoryConfig = featureFactoryConfig,
           userProfile = userProfile
         )
     }
@@ -2445,7 +2377,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param linkUpdateV1         a [[LinkUpdateV1]] specifying the target resource.
    * @param valueCreator         the IRI of the new link value's owner.
    * @param valuePermissions     the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return an [[UnverifiedValueV1]].
    */
@@ -2457,7 +2388,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     comment: Option[String],
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[UnverifiedValueV1] =
     for {
@@ -2467,7 +2397,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                     targetResourceIri = linkUpdateV1.targetResourceIri,
                                     valueCreator = valueCreator,
                                     valuePermissions = valuePermissions,
-                                    featureFactoryConfig = featureFactoryConfig,
                                     userProfile = userProfile
                                   )
 
@@ -2506,7 +2435,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param value                an [[UpdateValueV1]] describing the value.
    * @param valueCreator         the IRI of the new value's owner.
    * @param valuePermissions     the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return an [[UnverifiedValueV1]].
    */
@@ -2518,7 +2446,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     comment: Option[String],
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[UnverifiedValueV1] = {
     // Generate an IRI for the new value.
@@ -2545,7 +2472,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                         valueCreator =
                                                                           OntologyConstants.KnoraAdmin.SystemUser,
                                                                         valuePermissions = standoffLinkValuePermissions,
-                                                                        featureFactoryConfig = featureFactoryConfig,
                                                                         userProfile = userProfile
                                                                       )
                                                                   }.toVector
@@ -2599,7 +2525,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param comment              an optional comment on the new link value.
    * @param valueCreator         the IRI of the new link value's owner.
    * @param valuePermissions     the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[ChangeValueResponseV1]].
    */
@@ -2613,7 +2538,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     comment: Option[String],
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[ChangeValueResponseV1] =
     for {
@@ -2624,7 +2548,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                   targetResourceIri = currentLinkValueV1.objectIri,
                                                   valueCreator = valueCreator,
                                                   valuePermissions = valuePermissions,
-                                                  featureFactoryConfig = featureFactoryConfig,
                                                   userProfile = userProfile
                                                 )
 
@@ -2635,7 +2558,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                               targetResourceIri = linkUpdateV1.targetResourceIri,
                                               valueCreator = valueCreator,
                                               valuePermissions = valuePermissions,
-                                              featureFactoryConfig = featureFactoryConfig,
                                               userProfile = userProfile
                                             )
 
@@ -2643,7 +2565,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       maybeProjectInfo <- {
         responderManager ? ProjectInfoByIRIGetV1(
           iri = projectIri,
-          featureFactoryConfig = featureFactoryConfig,
           userProfileV1 = None
         )
       }.mapTo[Option[ProjectInfoV1]]
@@ -2685,7 +2606,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 linkPropertyIri = propertyIri,
                                 linkTargetIri = linkUpdateV1.targetResourceIri,
                                 linkValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-                                featureFactoryConfig = featureFactoryConfig,
                                 userProfile = userProfile
                               )
 
@@ -2728,12 +2648,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     comment: Option[String],
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[ChangeValueResponseV1] = {
     for {
       // If we're adding a text value, update direct links and LinkValues for any resource references in Standoff.
-      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValueV1, updateValueV1) match {
+      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
+         (currentValueV1, updateValueV1) match {
                                                               case (
                                                                     currentTextValue: TextValueV1,
                                                                     newTextValue: TextValueV1
@@ -2778,7 +2698,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                       valueCreator =
                                                                         OntologyConstants.KnoraAdmin.SystemUser,
                                                                       valuePermissions = standoffLinkValuePermissions,
-                                                                      featureFactoryConfig = featureFactoryConfig,
                                                                       userProfile = userProfile
                                                                     )
                                                                   }
@@ -2796,7 +2715,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                         valueCreator =
                                                                           OntologyConstants.KnoraAdmin.SystemUser,
                                                                         valuePermissions = standoffLinkValuePermissions,
-                                                                        featureFactoryConfig = featureFactoryConfig,
                                                                         userProfile = userProfile
                                                                       )
                                                                   }
@@ -2812,7 +2730,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       maybeProjectInfo <- {
         responderManager ? ProjectInfoByIRIGetV1(
           iri = projectIri,
-          featureFactoryConfig = featureFactoryConfig,
           userProfileV1 = None
         )
       }.mapTo[Option[ProjectInfoV1]]
@@ -2859,7 +2776,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                               resourceIri = resourceIri,
                               propertyIri = propertyIri,
                               searchValueIri = newValueIri,
-                              featureFactoryConfig = featureFactoryConfig,
                               userProfile = userProfile
                             )
     } yield ChangeValueResponseV1(
@@ -2889,7 +2805,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param targetResourceIri    the IRI of the target resource.
    * @param valueCreator         the IRI of the new link value's owner.
    * @param valuePermissions     the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
@@ -2899,7 +2814,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     targetResourceIri: IRI,
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[SparqlTemplateLinkUpdate] =
     for {
@@ -2908,14 +2822,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                      subjectIri = sourceResourceIri,
                                      predicateIri = linkPropertyIri,
                                      objectIri = targetResourceIri,
-                                     featureFactoryConfig = featureFactoryConfig,
                                      userProfile = userProfile
                                    )
 
       // Check that the target resource actually exists and is a knora-base:Resource.
       targetIriCheckResult <- checkStandoffResourceReferenceTargets(
                                 targetIris = Set(targetResourceIri),
-                                featureFactoryConfig = featureFactoryConfig,
                                 userProfile = userProfile
                               )
 
@@ -2982,7 +2894,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param targetResourceIri    the IRI of the target resource.
    * @param valueCreator         the IRI of the new link value's owner.
    * @param valuePermissions     the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a [[SparqlTemplateLinkUpdate]] that can be passed to a SPARQL update template.
    */
@@ -2992,7 +2903,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     targetResourceIri: IRI,
     valueCreator: IRI,
     valuePermissions: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[SparqlTemplateLinkUpdate] =
     for {
@@ -3001,7 +2911,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                      subjectIri = sourceResourceIri,
                                      predicateIri = linkPropertyIri,
                                      objectIri = targetResourceIri,
-                                     featureFactoryConfig = featureFactoryConfig,
                                      userProfile = userProfile
                                    )
 
@@ -3081,14 +2990,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * Given a set of IRIs of standoff resource reference targets, checks that each one actually refers to a `knora-base:Resource`.
    *
    * @param targetIris           the IRIs to check.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the profile of the user making the request.
    * @return a `Future[Unit]` on success, otherwise a `Future` containing an exception ([[NotFoundException]] if the target resource is not found,
    *         or [[BadRequestException]] if the target IRI isn't a `knora-base:Resource`).
    */
   private def checkStandoffResourceReferenceTargets(
     targetIris: Set[IRI],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Unit] =
     if (targetIris.isEmpty) {
@@ -3099,7 +3006,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
                                         resourceIri = targetIri,
                                         owlClass = OntologyConstants.KnoraBase.Resource,
-                                        featureFactoryConfig = featureFactoryConfig,
                                         userProfile = userProfile
                                       )).mapTo[ResourceCheckClassResponseV1]
 
@@ -3123,7 +3029,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
    * @param propertyIri                   the IRI of the property.
    * @param propertyObjectClassConstraint the IRI of the `knora-base:objectClassConstraint` of the property.
    * @param updateValueV1                 the value to be updated.
-   * @param featureFactoryConfig          the feature factory configuration.
    * @param userProfile                   the profile of the user making the request.
    * @return an empty [[Future]] on success, or a failed [[Future]] if the value has the wrong type.
    */
@@ -3131,7 +3036,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     propertyIri: IRI,
     propertyObjectClassConstraint: IRI,
     updateValueV1: UpdateValueV1,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Unit] =
     for {
@@ -3142,7 +3046,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                       checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
                                                     resourceIri = linkUpdate.targetResourceIri,
                                                     owlClass = propertyObjectClassConstraint,
-                                                    featureFactoryConfig = featureFactoryConfig,
                                                     userProfile = userProfile
                                                   )).mapTo[ResourceCheckClassResponseV1]
 

@@ -10,7 +10,6 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -50,10 +49,9 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -61,7 +59,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log
@@ -79,7 +76,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[CanDeleteListRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield CanDeleteListRequestADM(
           iri = listIri,
           featureFactoryConfig = featureFactoryConfig,

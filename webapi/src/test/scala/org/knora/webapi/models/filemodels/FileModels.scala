@@ -5,7 +5,6 @@
 
 package org.knora.webapi.models.filemodels
 
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

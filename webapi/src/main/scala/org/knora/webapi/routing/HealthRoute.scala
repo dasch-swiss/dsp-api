@@ -11,7 +11,6 @@ import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.app.appmessages.AppState
 import org.knora.webapi.messages.app.appmessages.AppStates
 import org.knora.webapi.messages.app.appmessages.GetAppState

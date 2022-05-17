@@ -7,7 +7,6 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.AttachedToProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.LastModificationDate

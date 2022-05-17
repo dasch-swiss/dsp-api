@@ -7,7 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -42,10 +41,9 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
   def receive(msg: StoreResponderRequestADM) = msg match {
     case ResetTriplestoreContentRequestADM(
           rdfDataObjects: Seq[RdfDataObject],
-          prependDefaults: Boolean,
-          featureFactoryConfig: FeatureFactoryConfig
+          prependDefaults: Boolean
         ) =>
-      resetTriplestoreContent(rdfDataObjects, prependDefaults, featureFactoryConfig)
+      resetTriplestoreContent(rdfDataObjects, prependDefaults)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -57,8 +55,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    */
   private def resetTriplestoreContent(
     rdfDataObjects: Seq[RdfDataObject],
-    prependDefaults: Boolean = true,
-    featureFactoryConfig: FeatureFactoryConfig
+    prependDefaults: Boolean = true
   ): Future[ResetTriplestoreContentResponseADM] = {
 
     log.debug(s"resetTriplestoreContent - called")
@@ -76,7 +73,6 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
       loadOntologiesResponse <- (responderManager ? LoadOntologiesRequestV2(
-                                  featureFactoryConfig = featureFactoryConfig,
                                   requestingUser = systemUser
                                 )).mapTo[SuccessResponseV2]
       _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)

@@ -1,7 +1,6 @@
 package org.knora.webapi.store.triplestore.api
 
 import org.knora.webapi._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
 import org.knora.webapi.messages.store.triplestoremessages.DropAllRepositoryContentACK
 import org.knora.webapi.messages.store.triplestoremessages.FileWrittenResponse

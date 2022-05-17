@@ -10,7 +10,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -63,9 +62,8 @@ case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
  * [[SparqlConstructResponse]].
  *
  * @param sparql               the SPARQL string.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
+case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
@@ -75,7 +73,6 @@ case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureF
  * @param graphIri             the named graph IRI to be used in the TriG file.
  * @param outputFile           the file to be written.
  * @param outputFormat         the output file format.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlConstructFileRequest(
   sparql: String,
@@ -96,7 +93,6 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  * [[SparqlExtendedConstructResponse]].
  *
  * @param sparql               the SPARQL string.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlExtendedConstructRequest(sparql: String)
     extends TriplestoreRequest
@@ -230,7 +226,6 @@ case class SparqlExtendedConstructResponse(
  * @param graphIri             the IRI of the named graph.
  * @param outputFile           the destination file.
  * @param outputFormat         the output file format.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class NamedGraphFileRequest(
   graphIri: IRI,
@@ -367,9 +362,8 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
  * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[FileWrittenResponse]].
  *
  * @param outputFile           the output file.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig)
+case class DownloadRepositoryRequest(outputFile: Path)
     extends TriplestoreRequest
 
 /**

@@ -8,7 +8,6 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoresADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

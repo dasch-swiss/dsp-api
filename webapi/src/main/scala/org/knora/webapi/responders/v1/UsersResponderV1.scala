@@ -11,7 +11,6 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.ApplicationCacheException
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -48,14 +47,14 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     case UsersGetV1(userProfile)            => usersGetV1(userProfile)
     case UsersGetRequestV1(userProfileV1)   => usersGetRequestV1(userProfileV1)
     case UserDataByIriGetV1(userIri, short) => userDataByIriGetV1(userIri, short)
-    case UserProfileByIRIGetV1(userIri, profileType, featureFactoryConfig) =>
-      userProfileByIRIGetV1(userIri, profileType, featureFactoryConfig)
-    case UserProfileByIRIGetRequestV1(userIri, profileType, featureFactoryConfig, userProfile) =>
-      userProfileByIRIGetRequestV1(userIri, profileType, featureFactoryConfig, userProfile)
-    case UserProfileByEmailGetV1(email, profileType, featureFactoryConfig) =>
-      userProfileByEmailGetV1(email, profileType, featureFactoryConfig)
-    case UserProfileByEmailGetRequestV1(email, profileType, featureFactoryConfig, userProfile) =>
-      userProfileByEmailGetRequestV1(email, profileType, featureFactoryConfig, userProfile)
+    case UserProfileByIRIGetV1(userIri, profileType) =>
+      userProfileByIRIGetV1(userIri, profileType)
+    case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) =>
+      userProfileByIRIGetRequestV1(userIri, profileType, userProfile)
+    case UserProfileByEmailGetV1(email, profileType) =>
+      userProfileByEmailGetV1(email, profileType)
+    case UserProfileByEmailGetRequestV1(email, profileType, userProfile) =>
+      userProfileByEmailGetRequestV1(email, profileType, userProfile)
     case UserProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID) =>
       userProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
     case UserProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID) =>
@@ -158,13 +157,11 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    *
    * @param userIri              the IRI of the user.
    * @param profileType          the type of the requested profile (restricted of full).
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[UserProfileV1]] describing the user.
    */
   private def userProfileByIRIGetV1(
     userIri: IRI,
     profileType: UserProfileType,
-    featureFactoryConfig: FeatureFactoryConfig
   ): Future[Option[UserProfileV1]] =
     // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
@@ -189,7 +186,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
                                   userDataQueryResponse = userDataQueryResponse,
-                                  featureFactoryConfig = featureFactoryConfig
                                 )
 
           _ = if (maybeUserProfileV1.nonEmpty) {
@@ -207,14 +203,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    *
    * @param userIRI              the IRI of the user.
    * @param profileType          the type of the requested profile (restriced or full).
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the requesting user's profile.
    * @return a [[UserProfileResponseV1]]
    */
   private def userProfileByIRIGetRequestV1(
     userIRI: IRI,
     profileType: UserProfileType,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserProfileV1
   ): Future[UserProfileResponseV1] =
     for {
@@ -226,7 +220,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
       maybeUserProfileToReturn <- userProfileByIRIGetV1(
                                     userIri = userIRI,
                                     profileType = profileType,
-                                    featureFactoryConfig = featureFactoryConfig
                                   )
 
       result = maybeUserProfileToReturn match {
@@ -241,13 +234,11 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    *
    * @param email                the email of the user.
    * @param profileType          the type of the requested profile (restricted or full).
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[UserProfileV1]] describing the user.
    */
   private def userProfileByEmailGetV1(
     email: String,
-    profileType: UserProfileType,
-    featureFactoryConfig: FeatureFactoryConfig
+    profileType: UserProfileType
   ): Future[Option[UserProfileV1]] =
     // log.debug(s"userProfileByEmailGetV1: username = '{}', type = '{}'", email, profileType)
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, email) match {
@@ -271,8 +262,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
           //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
-                                  userDataQueryResponse = userDataQueryResponse,
-                                  featureFactoryConfig = featureFactoryConfig
+                                  userDataQueryResponse = userDataQueryResponse
                                 )
 
           _ = if (maybeUserProfileV1.nonEmpty) {
@@ -291,7 +281,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    *
    * @param email                the email of the user.
    * @param profileType          the type of the requested profile (restricted or full).
-   * @param featureFactoryConfig the feature factory configuration.
    * @param userProfile          the requesting user's profile.
    * @return a [[UserProfileResponseV1]]
    * @throws NotFoundException if the user with the supplied email is not found.
@@ -299,14 +288,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   private def userProfileByEmailGetRequestV1(
     email: String,
     profileType: UserProfileType,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserProfileV1
   ): Future[UserProfileResponseV1] =
     for {
       maybeUserProfileToReturn <- userProfileByEmailGetV1(
                                     email = email,
-                                    profileType = profileType,
-                                    featureFactoryConfig = featureFactoryConfig
+                                    profileType = profileType
                                   )
 
       result = maybeUserProfileToReturn match {
@@ -483,12 +470,10 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResult]] containing user data.
    *
    * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
-   * @param featureFactoryConfig  the feature factory configuration.
    * @return a [[UserProfileV1]] containing the user's data.
    */
   private def userDataQueryResponse2UserProfileV1(
-    userDataQueryResponse: SparqlSelectResult,
-    featureFactoryConfig: FeatureFactoryConfig
+    userDataQueryResponse: SparqlSelectResult
   ): Future[Option[UserProfileV1]] =
     // log.debug("userDataQueryResponse2UserProfileV1 - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
     if (userDataQueryResponse.results.bindings.nonEmpty) {
@@ -547,14 +532,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                             groupIris = groupIris,
                             isInProjectAdminGroups = isInProjectAdminGroups,
                             isInSystemAdminGroup = isInSystemAdminGroup,
-                            featureFactoryConfig = featureFactoryConfig,
                             requestingUser = KnoraSystemInstances.Users.SystemUser
                           )).mapTo[PermissionsDataADM]
 
         maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map { projectIri =>
                                                                         (responderManager ? ProjectInfoByIRIGetV1(
                                                                           iri = projectIri,
-                                                                          featureFactoryConfig = featureFactoryConfig,
                                                                           userProfileV1 = None
                                                                         )).mapTo[Option[ProjectInfoV1]]
                                                                       }

@@ -16,7 +16,6 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.feature.RequestContextFeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter

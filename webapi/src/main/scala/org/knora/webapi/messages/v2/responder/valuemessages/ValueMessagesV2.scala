@@ -15,7 +15,6 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.NotImplementedException
 import org.knora.webapi.exceptions.SipiException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -52,13 +51,11 @@ sealed trait ValuesResponderRequestV2 extends KnoraRequestV2
  *
  * @param createValue          a [[CreateValueV2]] representing the value to be created. A successful response will be
  *                             a [[CreateValueResponseV2]].
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the API request ID.
  */
 case class CreateValueRequestV2(
   createValue: CreateValueV2,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ValuesResponderRequestV2
@@ -76,7 +73,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -87,7 +83,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
@@ -113,7 +108,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                                                             requestingUser = requestingUser,
                                                                             responderManager = responderManager,
                                                                             storeManager = storeManager,
-                                                                            featureFactoryConfig = featureFactoryConfig,
                                                                             settings = settings,
                                                                             log = log
                                                                           )
@@ -173,7 +167,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                     }
     } yield CreateValueRequestV2(
       createValue = createValue,
-      featureFactoryConfig = featureFactoryConfig,
       apiRequestID = apiRequestID,
       requestingUser = requestingUser
     )
@@ -234,13 +227,11 @@ case class CreateValueResponseV2(
  *
  * @param updateValue          an [[UpdateValueV2]] representing the new version of the value. A successful response will be
  *                             an [[UpdateValueResponseV2]].
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the API request ID.
  */
 case class UpdateValueRequestV2(
   updateValue: UpdateValueV2,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ValuesResponderRequestV2
@@ -258,7 +249,6 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -269,7 +259,6 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
@@ -363,15 +352,15 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                           // No. This is a request to change the value content.
 
                                           for {
-                                            valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                                                                              jsonLDObject = jsonLDObject,
-                                                                              requestingUser = requestingUser,
-                                                                              responderManager = responderManager,
-                                                                              storeManager = storeManager,
-                                                                              featureFactoryConfig: FeatureFactoryConfig,
-                                                                              settings = settings,
-                                                                              log = log
-                                                                            )
+                                            valueContent: ValueContentV2 <-
+                                              ValueContentV2.fromJsonLDObject(
+                                                jsonLDObject = jsonLDObject,
+                                                requestingUser = requestingUser,
+                                                responderManager = responderManager,
+                                                storeManager = storeManager,
+                                                settings = settings,
+                                                log = log
+                                              )
 
                                             maybePermissions: Option[String] =
                                               jsonLDObject.maybeStringWithValidation(
@@ -392,7 +381,6 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                     }
     } yield UpdateValueRequestV2(
       updateValue = updateValue,
-      featureFactoryConfig = featureFactoryConfig,
       apiRequestID = apiRequestID,
       requestingUser = requestingUser
     )
@@ -449,7 +437,6 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
  * @param deleteComment        an optional comment explaining why the value is being marked as deleted.
  * @param deleteDate           an optional timestamp indicating when the value was deleted. If not supplied,
  *                             the current time will be used.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the API request ID.
  */
@@ -461,7 +448,6 @@ case class DeleteValueRequestV2(
   valueTypeIri: SmartIri,
   deleteComment: Option[String] = None,
   deleteDate: Option[Instant] = None,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ValuesResponderRequestV2
@@ -476,7 +462,6 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -487,7 +472,6 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteValueRequestV2] =
@@ -495,7 +479,6 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -503,7 +486,6 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeleteValueRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -555,7 +537,6 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
           valueTypeIri = valueTypeIri,
           deleteComment = deleteComment,
           deleteDate = deleteDate,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = apiRequestID
         )
@@ -1182,7 +1163,6 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a subclass of [[ValueContentV2]].
@@ -1192,7 +1172,6 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
@@ -1216,7 +1195,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ValueContentV2]].
@@ -1226,7 +1204,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
@@ -1245,7 +1222,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1256,7 +1232,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1267,7 +1242,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1278,7 +1252,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1289,7 +1262,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1300,7 +1272,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1311,7 +1282,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1322,7 +1292,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1333,7 +1302,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1344,7 +1312,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1355,7 +1322,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1366,7 +1332,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1377,7 +1342,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1388,7 +1352,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1399,7 +1362,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1410,7 +1372,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1421,7 +1382,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1432,7 +1392,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1443,7 +1402,6 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                             requestingUser = requestingUser,
                                             responderManager = responderManager,
                                             storeManager = storeManager,
-                                            featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
                                           )
@@ -1617,7 +1575,6 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DateValueContentV2]].
@@ -1627,7 +1584,6 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] =
@@ -2020,7 +1976,6 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
    * @param requestingUser       the user making the request.
    * @param responderManager     a reference to the responder manager.
    * @param storeManager         a reference to the store manager.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[TextValueContentV2]].
@@ -2030,7 +1985,6 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
@@ -2060,7 +2014,6 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                                                                      mappingResponse: GetMappingResponseV2 <-
                                                                        (responderManager ? GetMappingRequestV2(
                                                                          mappingIri = mappingIri,
-                                                                         featureFactoryConfig = featureFactoryConfig,
                                                                          requestingUser = requestingUser
                                                                        )).mapTo[GetMappingResponseV2]
                                                                    } yield mappingResponse
@@ -2187,7 +2140,6 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] =
@@ -2287,7 +2239,6 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] =
@@ -2383,7 +2334,6 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] =
@@ -2481,7 +2431,6 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] =
@@ -2601,7 +2550,6 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] =
@@ -2719,7 +2667,6 @@ object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TimeValueContentV2] =
@@ -2836,7 +2783,6 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] =
@@ -2940,7 +2886,6 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] =
@@ -3042,7 +2987,6 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] =
@@ -3149,7 +3093,6 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] =
@@ -3342,7 +3285,6 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
@@ -3523,7 +3465,6 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DocumentFileValueContentV2] = {
@@ -3564,7 +3505,6 @@ object ArchiveFileValueContentV2 extends ValueContentReaderV2[ArchiveFileValueCo
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ArchiveFileValueContentV2] = {
@@ -3660,7 +3600,6 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
@@ -3758,7 +3697,6 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AudioFileValueContentV2] = {
@@ -3861,7 +3799,6 @@ object MovingImageFileValueContentV2 extends ValueContentReaderV2[MovingImageFil
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[MovingImageFileValueContentV2] = {
@@ -4010,7 +3947,6 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] =

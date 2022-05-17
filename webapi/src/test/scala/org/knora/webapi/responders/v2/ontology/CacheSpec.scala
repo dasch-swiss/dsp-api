@@ -9,7 +9,6 @@ import akka.actor.Props
 import org.knora.webapi.IntegrationSpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.TestContainerFuseki
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

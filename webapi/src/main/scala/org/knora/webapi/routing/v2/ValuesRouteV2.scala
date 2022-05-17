@@ -10,7 +10,6 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -40,13 +39,13 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    getValue(featureFactoryConfig) ~
-      createValue(featureFactoryConfig) ~
-      updateValue(featureFactoryConfig) ~
-      deleteValue(featureFactoryConfig)
+  override def makeRoute(): Route =
+    getValue() ~
+      createValue() ~
+      updateValue() ~
+      deleteValue()
 
-  private def getValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / Segment / Segment) {
+  private def getValue(): Route = path(ValuesBasePath / Segment / Segment) {
     (resourceIriStr: IRI, valueUuidStr: String) =>
       get { requestContext =>
         val resourceIri: SmartIri =
@@ -81,23 +80,18 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
 
         val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
-                            )
+          requestingUser <- getUserADM(requestContext = requestContext)
         } yield ResourcesGetRequestV2(
           resourceIris = Seq(resourceIri.toString),
           valueUuid = Some(valueUuid),
           versionDate = versionDate,
           targetSchema = targetSchema,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilV2.runRdfRouteWithFuture(
           requestMessageF = requestMessageFuture,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           responderManager = responderManager,
           log = log,
@@ -107,7 +101,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       }
   }
 
-  private def createValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
+  private def createValue(): Route = path(ValuesBasePath) {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -115,8 +109,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[CreateValueRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
+                                requestContext = requestContext
                               )
             requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
                                                       requestDoc,
@@ -124,7 +117,6 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                       requestingUser = requestingUser,
                                                       responderManager = responderManager,
                                                       storeManager = storeManager,
-                                                      featureFactoryConfig = featureFactoryConfig,
                                                       settings = settings,
                                                       log = log
                                                     )
@@ -133,7 +125,6 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,
@@ -145,7 +136,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
   }
 
-  private def updateValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
+  private def updateValue(): Route = path(ValuesBasePath) {
     put {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -153,8 +144,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessageFuture: Future[UpdateValueRequestV2] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
+                                requestContext = requestContext
                               )
             requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
                                                       requestDoc,
@@ -162,7 +152,6 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                       requestingUser = requestingUser,
                                                       responderManager = responderManager,
                                                       storeManager = storeManager,
-                                                      featureFactoryConfig = featureFactoryConfig,
                                                       settings = settings,
                                                       log = log
                                                     )
@@ -171,7 +160,6 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             responderManager = responderManager,
             log = log,

@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.rdf
 
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature.FeatureFactory
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.util.rdf.jenaimpl._
 import org.knora.webapi.messages.util.rdf.rdf4jimpl._
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -62,20 +61,13 @@ object RdfFeatureFactory extends FeatureFactory {
   /**
    * Returns an [[RdfModelFactory]].
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfModelFactory]].
    */
-  def getRdfModelFactory(featureFactoryConfig: FeatureFactoryConfig): RdfModelFactory =
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaModelFactory
-    } else {
-      rdf4jModelFactory
-    }
+  def getRdfModelFactory(): RdfModelFactory = jenaModelFactory
 
   /**
    * Returns an [[RdfNodeFactory]].
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfNodeFactory]].
    */
   def getRdfNodeFactory(): RdfNodeFactory = jenaNodeFactory
@@ -83,18 +75,13 @@ object RdfFeatureFactory extends FeatureFactory {
   /**
    * Returns an [[RdfFormatUtil]].
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfFormatUtil]].
    */
   def getRdfFormatUtil(): RdfFormatUtil = jenaFormatUtil
 
-  def getShaclValidator(featureFactoryConfig: FeatureFactoryConfig): ShaclValidator = {
+  def getShaclValidator(): ShaclValidator = {
     def notInitialised: Nothing = throw AssertionException("RdfFeatureFactory has not been initialised")
 
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaShaclValidator.getOrElse(notInitialised)
-    } else {
-      rdf4jShaclValidator.getOrElse(notInitialised)
-    }
+    jenaShaclValidator.getOrElse(notInitialised)
   }
 }

@@ -58,31 +58,30 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
-    case ProjectsGetADM(_, requestingUser) => projectsGetADM(requestingUser)
-    case ProjectsGetRequestADM(_, requestingUser) =>
+    case ProjectsGetADM(requestingUser) => projectsGetADM(requestingUser)
+    case ProjectsGetRequestADM(requestingUser) =>
       projectsGetRequestADM(requestingUser)
     case ProjectGetADM(identifier, requestingUser) =>
       getSingleProjectADM(identifier, requestingUser)
-    case ProjectGetRequestADM(identifier, _, requestingUser) =>
+    case ProjectGetRequestADM(identifier, requestingUser) =>
       getSingleProjectADMRequest(identifier, requestingUser)
-    case ProjectMembersGetRequestADM(identifier, _, requestingUser) =>
+    case ProjectMembersGetRequestADM(identifier, requestingUser) =>
       projectMembersGetRequestADM(identifier, requestingUser)
     case ProjectAdminMembersGetRequestADM(identifier, requestingUser) =>
       projectAdminMembersGetRequestADM(identifier, requestingUser)
     case ProjectsKeywordsGetRequestADM(requestingUser) =>
       projectsKeywordsGetRequestADM(requestingUser)
-    case ProjectKeywordsGetRequestADM(projectIri, _, requestingUser) =>
+    case ProjectKeywordsGetRequestADM(projectIri, requestingUser) =>
       projectKeywordsGetRequestADM(projectIri, requestingUser)
-    case ProjectRestrictedViewSettingsGetADM(identifier, _, requestingUser) =>
+    case ProjectRestrictedViewSettingsGetADM(identifier, requestingUser) =>
       projectRestrictedViewSettingsGetADM(identifier, requestingUser)
-    case ProjectRestrictedViewSettingsGetRequestADM(identifier, _, requestingUser) =>
+    case ProjectRestrictedViewSettingsGetRequestADM(identifier, requestingUser) =>
       projectRestrictedViewSettingsGetRequestADM(identifier, requestingUser)
-    case ProjectCreateRequestADM(createRequest, _, requestingUser, apiRequestID) =>
+    case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(
           projectIri,
           changeProjectRequest,
-          _,
           requestingUser,
           apiRequestID
         ) =>
@@ -92,7 +91,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         requestingUser,
         apiRequestID
       )
-    case ProjectDataGetRequestADM(projectIdentifier, _, requestingUser) =>
+    case ProjectDataGetRequestADM(projectIdentifier, requestingUser) =>
       projectDataGetRequestADM(projectIdentifier, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
@@ -107,15 +106,16 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     requestingUser: UserADM
   ): Future[Seq[ProjectADM]] =
     for {
-      sparqlQueryString <- Future(
-                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                               .getProjects(
-                                 maybeIri = None,
-                                 maybeShortname = None,
-                                 maybeShortcode = None
-                               )
-                               .toString()
-                           )
+      sparqlQueryString <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getProjects(
+              maybeIri = None,
+              maybeShortname = None,
+              maybeShortcode = None
+            )
+            .toString()
+        )
       // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
       projectsResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -132,15 +132,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
 
-      projects: Seq[ProjectADM] = statements.map {
-                                    case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                                      val projectOntologies =
-                                        ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
-                                      statements2ProjectADM(
-                                        statements = (projectIriSubject, propsMap),
-                                        ontologies = projectOntologies
-                                      )
-                                  }
+      projects: Seq[ProjectADM] =
+        statements.map { case (projectIriSubject: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+          val projectOntologies =
+            ontologiesForProjects.getOrElse(projectIriSubject.toString, Seq.empty[IRI])
+          statements2ProjectADM(
+            statements = (projectIriSubject, propsMap),
+            ontologies = projectOntologies
+          )
+        }
 
     } yield projects.sorted
 
@@ -153,10 +153,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    */
   private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] =
     for {
-      ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(
-                                                            projectIris = projectIris.map(_.toSmartIri),
-                                                            requestingUser = requestingUser
-                                                          )).mapTo[ReadOntologyMetadataV2]
+      ontologyMetadataResponse: ReadOntologyMetadataV2 <-
+        (responderManager ? OntologyMetadataGetByProjectRequestV2(
+          projectIris = projectIris.map(_.toSmartIri),
+          requestingUser = requestingUser
+        )).mapTo[ReadOntologyMetadataV2]
     } yield ontologyMetadataResponse.ontologies.map { ontology =>
       val ontologyIri: IRI = ontology.ontologyIri.toString
       val projectIri: IRI = ontology.projectIri

@@ -8,7 +8,6 @@ package org.knora.webapi.messages.v2.responder
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
@@ -74,7 +73,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
     requestingUser: UserADM,
     responderManager: ActorRef,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
