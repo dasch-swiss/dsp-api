@@ -101,14 +101,12 @@ object Cache extends LazyLogging {
   /**
    * Loads and caches all ontology information.
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @return a [[SuccessResponseV2]].
    */
   def loadOntologies(
     settings: KnoraSettingsImpl,
     storeManager: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {
     val loadOntologiesFuture: Future[SuccessResponseV2] = for {
@@ -151,49 +149,46 @@ object Cache extends LazyLogging {
           }
 
       // Get the contents of each named graph containing an ontology.
-      ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] = allOntologyMetadata.keys.map { ontologyIri =>
-                                                                        val ontology: OntologyMetadataV2 =
-                                                                          allOntologyMetadata.get(ontologyIri).get
-                                                                        val lastModificationDate: Option[Instant] =
-                                                                          ontology.lastModificationDate
-                                                                        val attachedToProject: Option[SmartIri] =
-                                                                          ontology.projectIri
+      ontologyGraphResponseFutures: Iterable[Future[OntologyGraph]] =
+        allOntologyMetadata.keys.map { ontologyIri =>
+          val ontology: OntologyMetadataV2 =
+            allOntologyMetadata.get(ontologyIri).get
+          val lastModificationDate: Option[Instant] =
+            ontology.lastModificationDate
+          val attachedToProject: Option[SmartIri] =
+            ontology.projectIri
 
-                                                                        // throw an expception if ontology doesn't have lastModificationDate property and isn't attached to system project
-                                                                        lastModificationDate match {
-                                                                          case None =>
-                                                                            attachedToProject match {
-                                                                              case Some(iri: SmartIri) =>
-                                                                                if (
-                                                                                  iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri
-                                                                                ) {
-                                                                                  throw MissingLastModificationDateOntologyException(
-                                                                                    s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
-                                                                                  )
-                                                                                }
-                                                                              case _ => ()
-                                                                            }
-                                                                          case _ => ()
-                                                                        }
+          // throw an expception if ontology doesn't have lastModificationDate property and isn't attached to system project
+          lastModificationDate match {
+            case None =>
+              attachedToProject match {
+                case Some(iri: SmartIri) =>
+                  if (iri != OntologyConstants.KnoraAdmin.SystemProject.toSmartIri) {
+                    throw MissingLastModificationDateOntologyException(
+                      s"Required property knora-base:lastModificationDate is missing in `$ontologyIri`"
+                    )
+                  }
+                case _ => ()
+              }
+            case _ => ()
+          }
 
-                                                                        val ontologyGraphConstructQuery =
-                                                                          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                                                            .getOntologyGraph(
-                                                                              ontologyGraph = ontologyIri
-                                                                            )
-                                                                            .toString
+          val ontologyGraphConstructQuery =
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .getOntologyGraph(
+                ontologyGraph = ontologyIri
+              )
+              .toString
 
-                                                                        (storeManager ? SparqlExtendedConstructRequest(
-                                                                          sparql = ontologyGraphConstructQuery,
-                                                                          featureFactoryConfig = featureFactoryConfig
-                                                                        )).mapTo[SparqlExtendedConstructResponse].map {
-                                                                          response =>
-                                                                            OntologyGraph(
-                                                                              ontologyIri = ontologyIri,
-                                                                              constructResponse = response
-                                                                            )
-                                                                        }
-                                                                      }
+          (storeManager ? SparqlExtendedConstructRequest(
+            sparql = ontologyGraphConstructQuery
+          )).mapTo[SparqlExtendedConstructResponse].map { response =>
+            OntologyGraph(
+              ontologyIri = ontologyIri,
+              constructResponse = response
+            )
+          }
+        }
 
       ontologyGraphs: Iterable[OntologyGraph] <- Future.sequence(ontologyGraphResponseFutures)
 

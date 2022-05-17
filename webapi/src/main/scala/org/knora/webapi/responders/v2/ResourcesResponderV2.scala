@@ -90,7 +90,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           withDeleted,
           targetSchema,
           schemaOptions,
-          featureFactoryConfig,
           requestingUser
         ) =>
       getResourcesV2(
@@ -102,24 +101,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         showDeletedValues = false,
         targetSchema,
         schemaOptions,
-        featureFactoryConfig,
         requestingUser
       )
     case ResourcesPreviewGetRequestV2(
           resIris,
           withDeletedResource,
           targetSchema,
-          featureFactoryConfig,
           requestingUser
         ) =>
-      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, featureFactoryConfig, requestingUser)
+      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, requestingUser)
     case ResourceTEIGetRequestV2(
           resIri,
           textProperty,
           mappingIri,
           gravsearchTemplateIri,
           headerXSLTIri,
-          featureFactoryConfig,
           requestingUser
         ) =>
       getResourceAsTeiV2(
@@ -128,7 +124,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         mappingIri,
         gravsearchTemplateIri,
         headerXSLTIri,
-        featureFactoryConfig,
         requestingUser
       )
 
@@ -184,7 +179,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         _ <- checkStandoffLinkTargets(
                values = internalCreateResource.flatValues,
-               featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                requestingUser = createResourceRequestV2.requestingUser
              )
 
@@ -194,7 +188,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
                                                    resourceIri: IRI,
                                                    internalCreateResources = Seq(internalCreateResource),
-                                                   featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                                                    requestingUser = createResourceRequestV2.requestingUser
                                                  )
 
@@ -234,15 +227,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // Get the default permissions of each property used.
 
-        defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <- getDefaultPropertyPermissions(
-                                                                                 projectIri =
-                                                                                   createResourceRequestV2.createResource.projectADM.id,
-                                                                                 resourceClassProperties = Map(
-                                                                                   internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
-                                                                                 ),
-                                                                                 requestingUser =
-                                                                                   createResourceRequestV2.requestingUser
-                                                                               )
+        defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <-
+          getDefaultPropertyPermissions(
+            projectIri = createResourceRequestV2.createResource.projectADM.id,
+            resourceClassProperties = Map(
+              internalCreateResource.resourceClassIri -> internalCreateResource.values.keySet
+            ),
+            requestingUser = createResourceRequestV2.requestingUser
+          )
 
         defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(
                                                               internalCreateResource.resourceClassIri
@@ -262,8 +254,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                           defaultResourcePermissions = defaultResourcePermissions,
                                                           defaultPropertyPermissions = defaultPropertyPermissions,
                                                           creationDate = creationDate,
-                                                          featureFactoryConfig =
-                                                            createResourceRequestV2.featureFactoryConfig,
                                                           requestingUser = createResourceRequestV2.requestingUser
                                                         )
 
@@ -288,8 +278,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                                resourceReadyToCreate = resourceReadyToCreate,
                                                                projectIri =
                                                                  createResourceRequestV2.createResource.projectADM.id,
-                                                               featureFactoryConfig =
-                                                                 createResourceRequestV2.featureFactoryConfig,
                                                                requestingUser = createResourceRequestV2.requestingUser
                                                              )
       } yield previewOfCreatedResource
@@ -396,8 +384,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                    resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                                                    targetSchema = ApiV2Complex,
-                                                   featureFactoryConfig =
-                                                     updateResourceMetadataRequestV2.featureFactoryConfig,
                                                    requestingUser = updateResourceMetadataRequestV2.requestingUser
                                                  )
 
@@ -442,21 +428,22 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Get the IRI of the named graph in which the resource is stored.
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resource.projectADM)
 
-        newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
-                                         case Some(submittedNewModificationDate) =>
-                                           if (
-                                             resource.lastModificationDate.exists(
-                                               _.isAfter(submittedNewModificationDate)
-                                             )
-                                           ) {
-                                             throw BadRequestException(
-                                               s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
-                                             )
-                                           } else {
-                                             submittedNewModificationDate
-                                           }
-                                         case None => Instant.now
-                                       }
+        newModificationDate: Instant =
+          updateResourceMetadataRequestV2.maybeNewModificationDate match {
+            case Some(submittedNewModificationDate) =>
+              if (
+                resource.lastModificationDate.exists(
+                  _.isAfter(submittedNewModificationDate)
+                )
+              ) {
+                throw BadRequestException(
+                  s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate"
+                )
+              } else {
+                submittedNewModificationDate
+              }
+            case None => Instant.now
+          }
 
         // Generate SPARQL for updating the resource.
         sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -480,8 +467,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                           resourceIris =
                                                             Seq(updateResourceMetadataRequestV2.resourceIri),
                                                           targetSchema = ApiV2Complex,
-                                                          featureFactoryConfig =
-                                                            updateResourceMetadataRequestV2.featureFactoryConfig,
                                                           requestingUser =
                                                             updateResourceMetadataRequestV2.requestingUser
                                                         )
@@ -534,8 +519,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
-        lastModificationDate = newModificationDate,
-        featureFactoryConfig = updateResourceMetadataRequestV2.featureFactoryConfig
+        lastModificationDate = newModificationDate
       )
     }
 
@@ -576,7 +560,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                    resourceIris = Seq(deleteResourceV2.resourceIri),
                                                    targetSchema = ApiV2Complex,
-                                                   featureFactoryConfig = deleteResourceV2.featureFactoryConfig,
                                                    requestingUser = deleteResourceV2.requestingUser
                                                  )
 
@@ -684,7 +667,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                    resourceIris = Seq(eraseResourceV2.resourceIri),
                                                    targetSchema = ApiV2Complex,
-                                                   featureFactoryConfig = eraseResourceV2.featureFactoryConfig,
                                                    requestingUser = eraseResourceV2.requestingUser
                                                  )
 
@@ -786,7 +768,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
    *                                   have custom permissions. This is a map of property IRIs to permission strings.
    * @param creationDate               the versionDate to be attached to the resource and its values.
-   * @param featureFactoryConfig       the feature factory configuration.
    * @param requestingUser             the user making the request.
    * @return a [[ResourceReadyToCreate]].
    */
