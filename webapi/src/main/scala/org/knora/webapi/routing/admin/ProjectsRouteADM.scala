@@ -24,7 +24,6 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import dsp.valueObjects
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -36,6 +35,8 @@ import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
+import dsp.valueobjects.Iri.ProjectIRI
+import dsp.valueobjects.Project._
 
 object ProjectsRouteADM {
   val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")

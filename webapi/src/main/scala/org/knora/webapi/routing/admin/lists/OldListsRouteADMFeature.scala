@@ -16,10 +16,7 @@ import org.knora.webapi.feature.Feature
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.ListErrorMessages.ListCreatePermission
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.ListErrorMessages.ListNodeCreatePermission
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import dsp.valueObjects
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -29,6 +26,9 @@ import zio.prelude.Validation
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.ListErrorMessages
 
 object OldListsRouteADMFeature {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")

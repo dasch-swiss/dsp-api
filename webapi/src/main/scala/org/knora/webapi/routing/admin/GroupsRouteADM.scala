@@ -12,7 +12,6 @@ import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import dsp.valueObjects
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -21,6 +20,8 @@ import zio.prelude.Validation
 
 import java.util.UUID
 import javax.ws.rs.Path
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Group._
 
 object GroupsRouteADM {
   val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")

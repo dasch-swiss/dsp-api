@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import dsp.valueObjects
+import dsp.valueobjects.Iri.ProjectIRI
+import dsp.valueobjects.Project._
 
 /**
  * Project creation payload

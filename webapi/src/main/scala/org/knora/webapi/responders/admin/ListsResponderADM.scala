@@ -15,15 +15,11 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.ListIRI
-import org.knora.webapi.messages.admin.responder.valueObjects.ListName
-import org.knora.webapi.messages.admin.responder.valueObjects.ProjectIRI
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
@@ -35,6 +31,8 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.Future
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.ListErrorMessages
 
 /**
  * A responder that returns information about hierarchical lists.

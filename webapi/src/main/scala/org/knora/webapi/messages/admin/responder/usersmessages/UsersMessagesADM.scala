@@ -20,12 +20,12 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import dsp.valueObjects
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import spray.json._
 
 import java.util.UUID
+import dsp.valueobjects.User._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

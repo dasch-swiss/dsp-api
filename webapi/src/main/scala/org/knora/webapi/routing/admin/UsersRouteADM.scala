@@ -14,7 +14,6 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import dsp.valueObjects
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -25,6 +24,8 @@ import zio.prelude.Validation
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
+import dsp.valueobjects.Iri.UserIRI
+import dsp.valueobjects.User._
 
 object UsersRouteADM {
   val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")

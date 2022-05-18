@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
-import dsp.valueObjects
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Group._
 
 /**
  * Group create payload
