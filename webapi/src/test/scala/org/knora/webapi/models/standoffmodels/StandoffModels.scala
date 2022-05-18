@@ -54,7 +54,6 @@ sealed abstract case class DefineStandoffMapping private (
    */
   def toMessage(
     xml: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     user: UserADM
   ): CreateMappingRequestV2 = {
     val mappingMetadata = CreateMappingRequestMetadataV2(
@@ -65,7 +64,6 @@ sealed abstract case class DefineStandoffMapping private (
     CreateMappingRequestV2(
       metadata = mappingMetadata,
       xml = CreateMappingRequestXMLV2(xml),
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = user,
       apiRequestID = UUID.randomUUID()
     )

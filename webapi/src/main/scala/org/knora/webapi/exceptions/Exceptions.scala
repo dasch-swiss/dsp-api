@@ -343,7 +343,7 @@ final case class TriplestoreResponseException(message: String, cause: Option[Thr
 object TriplestoreResponseException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreResponseException =
     TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
-  
+
   def apply(message: String): TriplestoreResponseException =
     TriplestoreResponseException(message)
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.serialization
+package org.knora.webapi.store.cache.serialization
 
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -11,6 +11,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio.test.Assertion._
 import zio.test.TestAspect.ignore
 import zio.test._
+import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
 
 /**
  * This spec is used to test [[CacheSerialization]].

@@ -40,9 +40,9 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
       parent = new KnoraSettingsFeatureFactoryConfig(settings)
     )
 
-  private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-  private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-  private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator(featureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil()
+  private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()
+  private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator()
 
   private val conformsIri: IriNode =
     nodeFactory

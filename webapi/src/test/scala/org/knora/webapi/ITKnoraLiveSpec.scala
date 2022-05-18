@@ -31,8 +31,8 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -52,6 +52,10 @@ import zio.ZLayer
 import zio._
 
 import scala.concurrent.ExecutionContext
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ITKnoraLiveSpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -76,19 +80,21 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   /* constructors */
   def this(name: String, config: Config) =
     this(
-      ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig)))
+      ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig))
     )
+
   def this(config: Config) =
     this(
       ActorSystem(
         "IntegrationTests",
-        TestContainerFuseki.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))
+        config.withFallback(ITKnoraLiveSpec.defaultConfig)
       )
     )
   def this(name: String) =
-    this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    this(ActorSystem(name, ITKnoraLiveSpec.defaultConfig))
+
   def this() =
-    this(ActorSystem("IntegrationTests", TestContainerFuseki.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    this(ActorSystem("IntegrationTests", ITKnoraLiveSpec.defaultConfig))
 
   /* needed by the core trait (represents the KnoraTestCore trait)*/
   implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
@@ -111,32 +117,36 @@ class ITKnoraLiveSpec(_system: ActorSystem)
    * The effect for building a cache service manager, a IIIF service manager,
    * and the sipi test client.
    */
-  val managers = for {
+  lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  } yield (csm, iiifsm, tssm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      // FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      SipiTestContainer.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   /**
    * Create both managers and the sipi client by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager, appConfig) =
+  val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -148,7 +158,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 

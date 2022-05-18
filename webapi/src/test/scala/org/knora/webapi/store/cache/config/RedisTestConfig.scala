@@ -1,6 +1,6 @@
-package org.knora.webapi.store.cacheservice.config
+package org.knora.webapi.store.cache.config
 
-import org.knora.webapi.store.cacheservice.config.RedisConfig
+import org.knora.webapi.store.cache.config.RedisConfig
 import org.knora.webapi.testcontainers.RedisTestContainer
 import zio._
 

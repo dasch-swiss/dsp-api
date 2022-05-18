@@ -1124,46 +1124,45 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def deleteOntology(): Route = path(OntologiesBasePath / Segment) {
-    ontologyIriStr =>
-      delete { requestContext =>
-        val ontologyIri = ontologyIriStr.toSmartIri
-        stringFormatter.checkExternalOntologyName(ontologyIri)
+  private def deleteOntology(): Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
+    delete { requestContext =>
+      val ontologyIri = ontologyIriStr.toSmartIri
+      stringFormatter.checkExternalOntologyName(ontologyIri)
 
-        if (
-          !ontologyIri.isKnoraOntologyIri || ontologyIri.isKnoraBuiltInDefinitionIri || !ontologyIri.getOntologySchema
-            .contains(ApiV2Complex)
-        ) {
-          throw BadRequestException(s"Invalid ontology IRI for request: $ontologyIri")
-        }
-
-        val lastModificationDateStr = requestContext.request.uri
-          .query()
-          .toMap
-          .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
-        val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
-          lastModificationDateStr,
-          throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
-        )
-
-        val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield DeleteOntologyRequestV2(
-          ontologyIri = ontologyIri,
-          lastModificationDate = lastModificationDate,
-          apiRequestID = UUID.randomUUID,
-          requestingUser = requestingUser
-        )
-
-        RouteUtilV2.runRdfRouteWithFuture(
-          requestMessageF = requestMessageFuture,
-          requestContext = requestContext,
-          settings = settings,
-          responderManager = responderManager,
-          log = log,
-          targetSchema = ApiV2Complex,
-          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-        )
+      if (
+        !ontologyIri.isKnoraOntologyIri || ontologyIri.isKnoraBuiltInDefinitionIri || !ontologyIri.getOntologySchema
+          .contains(ApiV2Complex)
+      ) {
+        throw BadRequestException(s"Invalid ontology IRI for request: $ontologyIri")
       }
+
+      val lastModificationDateStr = requestContext.request.uri
+        .query()
+        .toMap
+        .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+      val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
+        lastModificationDateStr,
+        throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr")
+      )
+
+      val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
+        requestingUser <- getUserADM(requestContext)
+      } yield DeleteOntologyRequestV2(
+        ontologyIri = ontologyIri,
+        lastModificationDate = lastModificationDate,
+        apiRequestID = UUID.randomUUID,
+        requestingUser = requestingUser
+      )
+
+      RouteUtilV2.runRdfRouteWithFuture(
+        requestMessageF = requestMessageFuture,
+        requestContext = requestContext,
+        settings = settings,
+        responderManager = responderManager,
+        log = log,
+        targetSchema = ApiV2Complex,
+        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+      )
+    }
   }
 }

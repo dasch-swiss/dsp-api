@@ -172,8 +172,7 @@ case class ListsGetRequestADM(
  * @param iri                  the IRI of the node (root or child).
  * @param requestingUser       the user making the request.
  */
-case class ListGetRequestADM(iri: IRI, requestingUser: UserADM)
-    extends ListsResponderRequestADM
+case class ListGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Request basic information about a node (root or child). A successful response will be a [[NodeInfoGetResponseADM]]
@@ -181,8 +180,7 @@ case class ListGetRequestADM(iri: IRI, requestingUser: UserADM)
  * @param iri                  the IRI of the list node.
  * @param requestingUser       the user making the request.
  */
-case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: UserADM)
-    extends ListsResponderRequestADM
+case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Requests the path from the root node of a list to a particular node. A successful response will be
@@ -191,8 +189,7 @@ case class ListNodeInfoGetRequestADM(iri: IRI, requestingUser: UserADM)
  * @param iri                  the IRI of the node.
  * @param requestingUser       the user making the request.
  */
-case class NodePathGetRequestADM(iri: IRI, requestingUser: UserADM)
-    extends ListsResponderRequestADM
+case class NodePathGetRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
 
 /**
  * Requests the creation of a new list.
@@ -313,8 +310,7 @@ case class ListItemDeleteRequestADM(
  * @param iri                  the IRI of the list node (root or child).
  * @param requestingUser       the user making the request.
  */
-case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM)
-    extends ListsResponderRequestADM
+case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses

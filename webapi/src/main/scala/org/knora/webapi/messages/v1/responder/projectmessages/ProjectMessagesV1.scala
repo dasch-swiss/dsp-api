@@ -36,8 +36,7 @@ sealed trait ProjectsResponderRequestV1 extends KnoraRequestV1
  *
  * @param userProfile          the profile of the user making the request.
  */
-case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1])
-    extends ProjectsResponderRequestV1
+case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
  * Get all information about all projects in form of a sequence of [[ProjectInfoV1]]. Returns an empty sequence if
@@ -45,8 +44,7 @@ case class ProjectsGetRequestV1(userProfile: Option[UserProfileV1])
  *
  * @param userProfile          the profile of the user making the request.
  */
-case class ProjectsGetV1(userProfile: Option[UserProfileV1])
-    extends ProjectsResponderRequestV1
+case class ProjectsGetV1(userProfile: Option[UserProfileV1]) extends ProjectsResponderRequestV1
 
 /**
  * Get info about a single project identified through its IRI. A successful response will be a [[ProjectInfoResponseV1]].

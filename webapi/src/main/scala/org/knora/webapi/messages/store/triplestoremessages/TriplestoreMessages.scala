@@ -94,8 +94,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  *
  * @param sparql               the SPARQL string.
  */
-case class SparqlExtendedConstructRequest(sparql: String)
-    extends TriplestoreRequest
+case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
@@ -363,8 +362,7 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
  *
  * @param outputFile           the output file.
  */
-case class DownloadRepositoryRequest(outputFile: Path)
-    extends TriplestoreRequest
+case class DownloadRepositoryRequest(outputFile: Path) extends TriplestoreRequest
 
 /**
  * Indicates that a file was written successfully.
@@ -420,7 +418,6 @@ object TriplestoreStatus extends Enumeration {
  * @param name of the named graph the data will be load into.
  */
 case class RdfDataObject(path: String, name: String)
-
 
 /**
  * Represents the subject of a statement read from the triplestore.

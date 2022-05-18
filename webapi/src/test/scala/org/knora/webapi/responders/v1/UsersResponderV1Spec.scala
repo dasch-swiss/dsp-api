@@ -65,8 +65,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       "return a profile if the user (root user) is known" in {
         responderManager ! UserProfileByIRIGetV1(
           userIri = rootUserIri,
-          UserProfileTypeV1.FULL,
-          featureFactoryConfig = defaultFeatureFactoryConfig
+          UserProfileTypeV1.FULL
         )
         val response = expectMsgType[Option[UserProfileV1]](timeout)
         // println(response)
@@ -76,8 +75,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       "return a profile if the user (incunabula user) is known" in {
         responderManager ! UserProfileByIRIGetV1(
           incunabulaUserIri,
-          UserProfileTypeV1.FULL,
-          featureFactoryConfig = defaultFeatureFactoryConfig
+          UserProfileTypeV1.FULL
         )
         expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
       }
@@ -86,7 +84,6 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         responderManager ! UserProfileByIRIGetRequestV1(
           userIri = "http://rdfh.ch/users/notexisting",
           userProfileType = UserProfileTypeV1.RESTRICTED,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfile = rootUser
         )
         expectMsg(Failure(NotFoundException(s"User 'http://rdfh.ch/users/notexisting' not found")))
@@ -95,8 +92,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       "return 'None' when the user is unknown " in {
         responderManager ! UserProfileByIRIGetV1(
           userIri = "http://rdfh.ch/users/notexisting",
-          userProfileType = UserProfileTypeV1.RESTRICTED,
-          featureFactoryConfig = defaultFeatureFactoryConfig
+          userProfileType = UserProfileTypeV1.RESTRICTED
         )
         expectMsg(None)
       }
@@ -107,8 +103,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       "return a profile if the user (root user) is known" in {
         responderManager ! UserProfileByEmailGetV1(
           email = rootUserEmail,
-          userProfileType = UserProfileTypeV1.RESTRICTED,
-          featureFactoryConfig = defaultFeatureFactoryConfig
+          userProfileType = UserProfileTypeV1.RESTRICTED
         )
         expectMsg(Some(rootUser.ofType(UserProfileTypeV1.RESTRICTED)))
       }
@@ -116,8 +111,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       "return a profile if the user (incunabula user) is known" in {
         responderManager ! UserProfileByEmailGetV1(
           email = incunabulaUserEmail,
-          userProfileType = UserProfileTypeV1.RESTRICTED,
-          featureFactoryConfig = defaultFeatureFactoryConfig
+          userProfileType = UserProfileTypeV1.RESTRICTED
         )
         expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.RESTRICTED)))
       }
@@ -126,7 +120,6 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
         responderManager ! UserProfileByEmailGetRequestV1(
           email = "userwrong@example.com",
           userProfileType = UserProfileTypeV1.RESTRICTED,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfile = rootUser
         )
         expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
@@ -135,8 +128,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       "return 'None' when the user is unknown" in {
         responderManager ! UserProfileByEmailGetV1(
           email = "userwrong@example.com",
-          userProfileType = UserProfileTypeV1.RESTRICTED,
-          featureFactoryConfig = defaultFeatureFactoryConfig
+          userProfileType = UserProfileTypeV1.RESTRICTED
         )
         expectMsg(None)
       }

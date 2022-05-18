@@ -23,8 +23,8 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   "The JSON-LD tool" should {
     "parse JSON-LD text, compact it with an empty context, convert the result to a JsonLDDocument, and convert that back to text" in {

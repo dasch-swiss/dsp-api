@@ -66,12 +66,12 @@ abstract class IntegrationSpec(_config: Config)
     with LazyLogging {
 
   def this() =
-    this(UnitSpec.defaultConfig)
+    this(IntegrationSpec.defaultConfig)
 
   implicit val system: ActorSystem =
     ActorSystem(
       IntegrationSpec.getCallerName(classOf[IntegrationSpec]),
-      TestContainerFuseki.PortConfig.withFallback(IntegrationSpec.defaultConfig)
+      IntegrationSpec.defaultConfig
     )
 
   implicit val settings: KnoraSettingsImpl = KnoraSettings(system)
@@ -86,11 +86,12 @@ abstract class IntegrationSpec(_config: Config)
     logger.info("Waiting for triplestore to be ready ...")
     implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     val checkTriplestore: Task[Unit] = for {
-      checkResult <- ZIO.attemptBlocking {
-                       Await
-                         .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
-                         .asInstanceOf[CheckTriplestoreResponse]
-                     }
+      checkResult <-
+        ZIO.attemptBlocking {
+          Await
+            .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
+            .asInstanceOf[CheckTriplestoreResponse]
+        }
 
       value <-
         if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
@@ -114,7 +115,7 @@ abstract class IntegrationSpec(_config: Config)
 
   protected def loadTestData(
     actorRef: ActorRef,
-    rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
+    rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
   ): Unit = {
     logger.info("Loading test data started ...")
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)

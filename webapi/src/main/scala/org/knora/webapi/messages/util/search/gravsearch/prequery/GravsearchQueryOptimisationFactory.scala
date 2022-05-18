@@ -52,7 +52,7 @@ object GravsearchQueryOptimisationFactory extends FeatureFactory {
    */
   def getGravsearchQueryOptimisationFeature(
     typeInspectionResult: GravsearchTypeInspectionResult,
-    querySchema: ApiV2Schema,
+    querySchema: ApiV2Schema
   ): GravsearchQueryOptimisationFeature =
     new GravsearchQueryOptimisationFeature(
       typeInspectionResult: GravsearchTypeInspectionResult,
@@ -66,7 +66,7 @@ object GravsearchQueryOptimisationFactory extends FeatureFactory {
                 .optimiseQueryPatterns(patterns)
             )
         )
-        
+
     }
 }
 

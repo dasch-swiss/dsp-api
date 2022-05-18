@@ -53,7 +53,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         returnFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -76,7 +75,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         returnFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
@@ -100,7 +98,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         returnFiles = true,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
@@ -124,7 +121,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -144,7 +140,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -164,7 +159,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -182,7 +176,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -198,7 +191,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         searchValue = "Narrenschiff",
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -214,7 +206,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         searchValue = "Das Narrenschiff",
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
@@ -232,7 +223,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
         page = 0,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -252,7 +242,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         returnFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
@@ -275,7 +264,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         returnFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
@@ -295,7 +283,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         constructQuery = query,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 

@@ -238,7 +238,6 @@ sealed abstract case class ChangeFileRequest private (
    * @return
    */
   def toMessage(
-    featureFactoryConfig: FeatureFactoryConfig,
     internalMimeType: Option[String] = None,
     originalFilename: Option[String] = None,
     originalMimeType: Option[String] = None,
@@ -273,7 +272,6 @@ sealed abstract case class ChangeFileRequest private (
         valueCreationDate = valueCreationDate,
         newValueVersionIri = newValueVersionIri
       ),
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser,
       apiRequestID = UUID.randomUUID
     )

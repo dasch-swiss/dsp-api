@@ -28,9 +28,9 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-  private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()
+  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   private val expectedThingLabelStatement = rdfNodeFactory.makeStatement(
     rdfNodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#Thing"),

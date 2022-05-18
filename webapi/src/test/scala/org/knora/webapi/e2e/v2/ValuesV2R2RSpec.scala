@@ -26,8 +26,8 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
@@ -35,6 +35,9 @@ import zio.&
 import zio.ZLayer
 
 import scala.concurrent.ExecutionContextExecutor
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 /**
  * Tests creating a still image file value using a mock Sipi.
@@ -57,12 +60,15 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfig.live,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer
     )
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"

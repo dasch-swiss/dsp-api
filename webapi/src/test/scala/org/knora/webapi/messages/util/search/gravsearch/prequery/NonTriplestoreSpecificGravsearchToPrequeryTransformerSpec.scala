@@ -30,8 +30,7 @@ private object QueryHandler {
   def transformQuery(
     query: String,
     responderData: ResponderData,
-    settings: KnoraSettingsImpl,
-    featureFactoryConfig: FeatureFactoryConfig
+    settings: KnoraSettingsImpl
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
@@ -58,8 +57,7 @@ private object QueryHandler {
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
         querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        settings = settings,
-        featureFactoryConfig = featureFactoryConfig
+        settings = settings
       )
 
     val nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -3200,7 +3198,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     "transform an input query with an optional property criterion without removing the rdf:type statement" in {
 
       val transformedQuery =
-        QueryHandler.transformQuery(queryWithOptional, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryWithOptional, responderData, settings)
       assert(transformedQuery === TransformedQueryWithOptional)
     }
 
@@ -3210,8 +3208,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterion,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
@@ -3224,8 +3221,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterionComplex,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
@@ -3238,8 +3234,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterionAndFilter,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
@@ -3252,8 +3247,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterionAndFilterComplex,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
@@ -3266,8 +3260,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterion,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
@@ -3280,8 +3273,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterionComplex,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
@@ -3294,8 +3286,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterionAndFilter,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
@@ -3308,8 +3299,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterionAndFilterComplex,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
@@ -3322,8 +3312,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterion,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
@@ -3335,8 +3324,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionComplex,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
@@ -3348,8 +3336,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -3361,8 +3348,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
@@ -3374,8 +3360,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndLiteralInSimpleSchema,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery == TransformedQueryWithRdfsLabelAndLiteral)
@@ -3386,8 +3371,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndLiteralInComplexSchema,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
@@ -3398,8 +3382,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndVariableInSimpleSchema,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
@@ -3410,8 +3393,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndVariableInComplexSchema,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
@@ -3422,8 +3404,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndRegexInSimpleSchema,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
@@ -3434,8 +3415,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndRegexInComplexSchema,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
@@ -3443,7 +3423,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
 
     "transform an input query with UNION scopes in the simple schema" in {
       val transformedQuery =
-        QueryHandler.transformQuery(InputQueryWithUnionScopes, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(InputQueryWithUnionScopes, responderData, settings)
 
       assert(transformedQuery === TransformedQueryWithUnionScopes)
     }
@@ -3453,8 +3433,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(
           queryWithStandoffTagHasStartAncestor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithStandoffTagHasStartAncestor)
@@ -3462,42 +3441,42 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
 
     "reorder query patterns in where clause" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorder, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryToReorder, responderData, settings)
 
       assert(transformedQuery === transformedQueryToReorder)
     }
 
     "reorder query patterns in where clause with union" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorderWithUnion, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryToReorderWithUnion, responderData, settings)
 
       assert(transformedQuery === transformedQueryToReorderWithUnion)
     }
 
     "reorder query patterns in where clause with optional" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryWithOptional, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryWithOptional, responderData, settings)
 
       assert(transformedQuery === TransformedQueryWithOptional)
     }
 
     "reorder query patterns with minus scope" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorderWithMinus, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryToReorderWithMinus, responderData, settings)
 
       assert(transformedQuery == transformedQueryToReorderWithMinus)
     }
 
     "reorder a query with a cycle" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorderWithCycle, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryToReorderWithCycle, responderData, settings)
 
       assert(transformedQuery == transformedQueryToReorderWithCycle)
     }
 
     "not remove rdf:type knora-api:Resource if it's needed" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryWithKnoraApiResource, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(queryWithKnoraApiResource, responderData, settings)
 
       assert(
         transformedQuery.whereClause.patterns.contains(

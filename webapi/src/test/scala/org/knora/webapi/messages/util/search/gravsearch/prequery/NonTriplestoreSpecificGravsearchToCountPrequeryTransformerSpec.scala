@@ -29,8 +29,7 @@ private object CountQueryHandler {
 
   def transformQuery(
     query: String,
-    responderData: ResponderData,
-    featureFactoryConfig: FeatureFactoryConfig
+    responderData: ResponderData
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
@@ -56,8 +55,7 @@ private object CountQueryHandler {
       new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
-        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        featureFactoryConfig = featureFactoryConfig
+        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
       )
 
     val nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -339,8 +337,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       val transformedQuery =
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
-          responderData,
-          defaultFeatureFactoryConfig
+          responderData
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -352,8 +349,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       val transformedQuery =
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
-          responderData,
-          defaultFeatureFactoryConfig
+          responderData
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)

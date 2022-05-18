@@ -48,7 +48,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
     "asked about all groups" should {
       "return a list" in {
         responderManager ! GroupsGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
 
@@ -62,7 +61,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return group info if the group is known " in {
         responderManager ! GroupGetRequestADM(
           groupIri = imagesReviewerGroup.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
 
@@ -72,7 +70,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return 'NotFoundException' when the group is unknown " in {
         responderManager ! GroupGetRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
 
@@ -101,7 +98,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             status = GroupStatus.make(true).fold(e => throw e.head, v => v),
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -135,7 +131,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             status = GroupStatus.make(true).fold(e => throw e.head, v => v),
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -158,7 +153,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -186,7 +180,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -207,7 +200,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -226,7 +218,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return all members of a group identified by IRI" in {
         responderManager ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
 
@@ -241,7 +232,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "remove all members when group is deactivated" in {
         responderManager ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
 
@@ -251,7 +241,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupChangeStatusRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
           changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -262,7 +251,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         responderManager ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
 
@@ -272,7 +260,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return 'NotFound' when the group IRI is unknown" in {
         responderManager ! GroupMembersGetRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
 

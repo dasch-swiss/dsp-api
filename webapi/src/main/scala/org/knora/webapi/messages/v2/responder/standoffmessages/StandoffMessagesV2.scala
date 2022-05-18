@@ -249,8 +249,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
  * @param mappingIri           the IRI of the mapping.
  * @param requestingUser       the the user making the request.
  */
-case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM)
-    extends StandoffResponderRequestV2
+case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
  * Represents a response to a [[GetMappingRequestV2]].

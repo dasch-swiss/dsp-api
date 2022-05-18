@@ -46,8 +46,7 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
  *
  * @param requestingUser       the user making the request.
  */
-case class LoadOntologiesRequestV2(requestingUser: UserADM)
-    extends OntologiesResponderRequestV2
+case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].

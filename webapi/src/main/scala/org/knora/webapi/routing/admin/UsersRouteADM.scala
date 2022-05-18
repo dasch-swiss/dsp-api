@@ -159,25 +159,24 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * return a single user identified by iri
    */
-  private def getUserByIri(): Route = path(UsersBasePath / "iri" / Segment) {
-    userIri =>
-      get { requestContext =>
-        val requestMessage: Future[UserGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.Restricted,
-          requestingUser = requestingUser
-        )
+  private def getUserByIri(): Route = path(UsersBasePath / "iri" / Segment) { userIri =>
+    get { requestContext =>
+      val requestMessage: Future[UserGetRequestADM] = for {
+        requestingUser <- getUserADM(requestContext)
+      } yield UserGetRequestADM(
+        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+        userInformationTypeADM = UserInformationTypeADM.Restricted,
+        requestingUser = requestingUser
+      )
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          settings = settings,
-          responderManager = responderManager,
-          log = log
-        )
-      }
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        settings = settings,
+        responderManager = responderManager,
+        log = log
+      )
+    }
   }
 
   /**
@@ -387,42 +386,41 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: delete a user identified by iri (change status to false).
    */
   @ApiMayChange
-  private def deleteUser(): Route = path(UsersBasePath / "iri" / Segment) {
-    userIri =>
-      delete { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+  private def deleteUser(): Route = path(UsersBasePath / "iri" / Segment) { userIri =>
+    delete { requestContext =>
+      if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+      val checkedUserIri =
+        stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        /* update existing user's status to false */
-        val status = UserStatus.make(false).fold(error => throw error.head, value => value)
-
-        val requestMessage: Future[UserChangeStatusRequestADM] = for {
-          requestingUser <- getUserADM(requestContext)
-        } yield UserChangeStatusRequestADM(
-          userIri = checkedUserIri,
-          status = status,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+      if (
+        checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
+          KnoraSystemInstances.Users.AnonymousUser.id
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          settings = settings,
-          responderManager = responderManager,
-          log = log
-        )
+      ) {
+        throw BadRequestException("Changes to built-in users are not allowed.")
       }
+
+      /* update existing user's status to false */
+      val status = UserStatus.make(false).fold(error => throw error.head, value => value)
+
+      val requestMessage: Future[UserChangeStatusRequestADM] = for {
+        requestingUser <- getUserADM(requestContext)
+      } yield UserChangeStatusRequestADM(
+        userIri = checkedUserIri,
+        status = status,
+        requestingUser = requestingUser,
+        apiRequestID = UUID.randomUUID()
+      )
+
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        settings = settings,
+        responderManager = responderManager,
+        log = log
+      )
+    }
   }
 
   /**

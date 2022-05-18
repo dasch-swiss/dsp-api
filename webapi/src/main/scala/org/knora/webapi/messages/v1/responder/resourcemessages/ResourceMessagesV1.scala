@@ -156,8 +156,7 @@ sealed trait ResourcesResponderRequestV1 extends KnoraRequestV1
  * @param iri                  the IRI of the resource to be queried.
  * @param userProfile          the profile of the user making the request.
  */
-case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserADM)
-    extends ResourcesResponderRequestV1
+case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests a full description of a resource, along with its properties, their values, incoming references, and other
@@ -192,8 +191,7 @@ case class ResourceContextGetRequestV1(
  * @param iri                  the IRI of the resource to be queried.
  * @param userProfile          the profile of the user making the request.
  */
-case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserADM)
-    extends ResourcesResponderRequestV1
+case class ResourceRightsGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 /**
  * Requests a search for resources matching the given string.
@@ -419,8 +417,7 @@ case class ResourceCreateResponseV1(
  *
  * @param iri                  the iri of the given resource.
  */
-case class PropertiesGetRequestV1(iri: IRI, userProfile: UserADM)
-    extends ResourcesResponderRequestV1
+case class PropertiesGetRequestV1(iri: IRI, userProfile: UserADM) extends ResourcesResponderRequestV1
 
 // TODO: refactor PropertiesGetResponseV1 (https://github.com/dhlab-basel/Knora/issues/134#issue-154443186)
 

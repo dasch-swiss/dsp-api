@@ -24,7 +24,7 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   private val turtle =
     """<http://rdfh.ch/foo1> a <http://example.org/foo#Foo>;
@@ -143,7 +143,6 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set.empty,
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings
       )
 
@@ -172,7 +171,6 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         rdfFormat = Turtle,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty,
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings
       )
 
@@ -195,7 +193,6 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         rdfFormat = JsonLD,
         targetSchema = ApiV2Complex,
         schemaOptions = Set(FlatJsonLD),
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings
       )
 
@@ -210,7 +207,6 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set(HierarchicalJsonLD),
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings
       )
 
@@ -225,7 +221,6 @@ abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpe
         rdfFormat = JsonLD,
         targetSchema = InternalSchema,
         schemaOptions = Set(FlatJsonLD),
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings
       )
 

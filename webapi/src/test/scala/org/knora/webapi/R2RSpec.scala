@@ -35,8 +35,8 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -60,6 +60,10 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -87,11 +91,6 @@ class R2RSpec
   StringFormatter.initForTest()
   RdfFeatureFactory.init(settings)
 
-  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set.empty,
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
-
   lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // override so that we can use our own system
@@ -110,29 +109,33 @@ class R2RSpec
   lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  } yield (csm, iiifsm, tssm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      // FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      SipiTestContainer.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   /**
    * Create both managers by unsafe running them.
    */
-  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
+  lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -144,7 +147,7 @@ class R2RSpec
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
@@ -193,12 +196,12 @@ class R2RSpec
   }
 
   protected def parseTurtle(turtleStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
   }
 
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
   }
 

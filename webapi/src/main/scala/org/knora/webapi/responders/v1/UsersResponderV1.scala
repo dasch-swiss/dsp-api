@@ -161,7 +161,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    */
   private def userProfileByIRIGetV1(
     userIri: IRI,
-    profileType: UserProfileType,
+    profileType: UserProfileType
   ): Future[Option[UserProfileV1]] =
     // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
@@ -185,7 +185,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
-                                  userDataQueryResponse = userDataQueryResponse,
+                                  userDataQueryResponse = userDataQueryResponse
                                 )
 
           _ = if (maybeUserProfileV1.nonEmpty) {
@@ -219,7 +219,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
            )
       maybeUserProfileToReturn <- userProfileByIRIGetV1(
                                     userIri = userIRI,
-                                    profileType = profileType,
+                                    profileType = profileType
                                   )
 
       result = maybeUserProfileToReturn match {

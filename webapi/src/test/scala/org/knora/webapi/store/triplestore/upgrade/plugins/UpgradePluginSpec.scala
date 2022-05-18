@@ -16,7 +16,7 @@ import java.io.FileInputStream
  * Provides helper methods for specs that test upgrade plugins.
  */
 abstract class UpgradePluginSpec extends CoreSpec() {
-  protected val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+  protected val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   /**
    * Parses a TriG file and returns it as an [[RdfModel]].

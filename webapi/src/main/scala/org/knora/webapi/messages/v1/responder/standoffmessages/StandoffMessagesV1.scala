@@ -54,8 +54,7 @@ case class CreateMappingResponseV1(mappingIri: IRI) extends KnoraResponseV1 {
  * @param mappingIri  the IRI of the mapping.
  * @param userProfile the profile of the user making the request.
  */
-case class GetMappingRequestV1(mappingIri: IRI,  userProfile: UserADM)
-    extends StandoffResponderRequestV1
+case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV1
 
 /**
  * Represents a response to a [[GetMappingRequestV1]].

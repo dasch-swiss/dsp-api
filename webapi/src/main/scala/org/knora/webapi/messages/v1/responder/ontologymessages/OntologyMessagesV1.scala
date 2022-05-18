@@ -35,8 +35,7 @@ sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
  *
  * @param userADM              the profile of the user making the request.
  */
-case class LoadOntologiesRequestV1(userADM: UserADM)
-    extends OntologyResponderRequestV1
+case class LoadOntologiesRequestV1(userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
  * Indicates that all ontologies were loaded.

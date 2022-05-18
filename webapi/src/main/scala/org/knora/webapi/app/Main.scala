@@ -16,6 +16,7 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
 
 import java.util.concurrent.TimeUnit
@@ -55,9 +56,10 @@ object Main extends scala.App with LiveCore {
             AppConfig.live,
             IIIFServiceManager.layer,
             IIIFServiceSipiImpl.layer,
+            JWTService.layer,
             TriplestoreServiceManager.layer,
             TriplestoreServiceHttpConnectorImpl.layer,
-            JWTService.layer
+            RepositoryUpdater.layer
           )
       )
 

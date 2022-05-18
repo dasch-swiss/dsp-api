@@ -41,7 +41,6 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with Im
       responderManager ! SipiFileInfoGetRequestADM(
         projectID = "0803",
         filename = "incunabula_0000003328.jp2",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.incunabulaMemberUser
       )
 
@@ -53,7 +52,6 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with Im
       responderManager ! SipiFileInfoGetRequestADM(
         projectID = "0803",
         filename = "incunabula_0000003328.jp2",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anonymousUser
       )
 

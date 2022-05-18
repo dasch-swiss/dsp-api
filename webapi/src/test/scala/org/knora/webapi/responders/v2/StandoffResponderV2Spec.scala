@@ -39,8 +39,7 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     implicit val timeout: Timeout = Duration(10, SECONDS)
     val resF: Future[SparqlConstructResponse] = (storeManager ? SparqlConstructRequest(
-      sparql = getMappingSparql,
-      featureFactoryConfig = defaultFeatureFactoryConfig
+      sparql = getMappingSparql
     )).mapTo[SparqlConstructResponse]
     Await.result(resF, 10.seconds)
   }
@@ -101,7 +100,6 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
            |""".stripMargin
       val message = mapping.toMessage(
         xml = xmlContent,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         user = SharedTestDataADM.rootUser
       )
       responderManager ! message

@@ -24,7 +24,7 @@ import scala.concurrent.ExecutionContext
 class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
   constructClause: ConstructClause,
   typeInspectionResult: GravsearchTypeInspectionResult,
-  querySchema: ApiV2Schema,
+  querySchema: ApiV2Schema
 ) extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,

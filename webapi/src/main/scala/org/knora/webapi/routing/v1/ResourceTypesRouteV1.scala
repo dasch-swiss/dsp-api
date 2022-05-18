@@ -50,7 +50,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(requestContext)
-          params = requestContext.request.uri.query().toMap
+          params   = requestContext.request.uri.query().toMap
 
           vocabularyId = params.getOrElse(
                            "vocabulary",
@@ -86,7 +86,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(requestContext)
-          params = requestContext.request.uri.query().toMap
+          params   = requestContext.request.uri.query().toMap
 
           vocabularyId: Option[String]   = params.get("vocabulary")
           resourcetypeId: Option[String] = params.get("restype")

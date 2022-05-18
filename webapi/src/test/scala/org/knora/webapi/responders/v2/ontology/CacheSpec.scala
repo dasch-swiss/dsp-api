@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.Props
-import org.knora.webapi.IntegrationSpec
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.TestContainerFuseki
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
@@ -22,7 +22,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoConte
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.cache.CacheUtil
 
 import java.time.Instant
@@ -30,13 +29,15 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import akka.util.Timeout
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
  */
-class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
+class CacheSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val timeout: Timeout                 = settings.defaultTimeout
 
   val additionalTestData = List(
     RdfDataObject(
@@ -49,31 +50,13 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     )
   )
 
-  val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
-
-  // start fuseki http connector actor
-  private val fusekiActor = system.actorOf(
-    Props(new HttpTriplestoreConnector()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = "httpTriplestoreConnector"
-  )
-
-  override def beforeAll(): Unit = {
-    CacheUtil.createCaches(settings.caches)
-    waitForReadyTriplestore(fusekiActor)
-    loadTestData(fusekiActor, additionalTestData)
-  }
-
-  override protected def afterAll(): Unit =
-    CacheUtil.removeAllCaches()
-
   "The basic functionality of the ontology cache" should {
 
     "successfully load all ontologies" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
         _ <- Cache.loadOntologies(
                settings,
-               fusekiActor,
-               defaultFeatureFactoryConfig,
+               appActor,
                KnoraSystemInstances.Users.SystemUser
              )
         cacheData: Cache.OntologyCacheData       <- Cache.getCacheData

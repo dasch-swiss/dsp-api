@@ -30,59 +30,57 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
     getList() ~
       getNode()
 
-  private def getList(): Route = path("v2" / "lists" / Segment) {
-    lIri: String =>
-      get {
-        /* return a list (a graph with all list nodes) */
-        requestContext =>
-          val requestMessage: Future[ListGetRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-            listIri: IRI = stringFormatter.validateAndEscapeIri(
-                             lIri,
-                             throw BadRequestException(s"Invalid list IRI: '$lIri'")
-                           )
-          } yield ListGetRequestV2(
-            listIri = listIri,
-            requestingUser = requestingUser
-          )
+  private def getList(): Route = path("v2" / "lists" / Segment) { lIri: String =>
+    get {
+      /* return a list (a graph with all list nodes) */
+      requestContext =>
+        val requestMessage: Future[ListGetRequestV2] = for {
+          requestingUser <- getUserADM(requestContext)
+          listIri: IRI = stringFormatter.validateAndEscapeIri(
+                           lIri,
+                           throw BadRequestException(s"Invalid list IRI: '$lIri'")
+                         )
+        } yield ListGetRequestV2(
+          listIri = listIri,
+          requestingUser = requestingUser
+        )
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            settings = settings,
-            responderManager = responderManager,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
-      }
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+    }
   }
 
-  private def getNode(): Route = path("v2" / "node" / Segment) {
-    nIri: String =>
-      get {
-        /* return a list node */
-        requestContext =>
-          val requestMessage: Future[NodeGetRequestV2] = for {
-            requestingUser <- getUserADM(requestContext)
-            nodeIri: IRI = stringFormatter.validateAndEscapeIri(
-                             nIri,
-                             throw BadRequestException(s"Invalid list IRI: '$nIri'")
-                           )
-          } yield NodeGetRequestV2(
-            nodeIri = nodeIri,
-            requestingUser = requestingUser
-          )
+  private def getNode(): Route = path("v2" / "node" / Segment) { nIri: String =>
+    get {
+      /* return a list node */
+      requestContext =>
+        val requestMessage: Future[NodeGetRequestV2] = for {
+          requestingUser <- getUserADM(requestContext)
+          nodeIri: IRI = stringFormatter.validateAndEscapeIri(
+                           nIri,
+                           throw BadRequestException(s"Invalid list IRI: '$nIri'")
+                         )
+        } yield NodeGetRequestV2(
+          nodeIri = nodeIri,
+          requestingUser = requestingUser
+        )
 
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            settings = settings,
-            responderManager = responderManager,
-            log = log,
-            targetSchema = ApiV2Complex,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-          )
-      }
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+    }
   }
 }

@@ -77,7 +77,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
       responderManager ! UserGetADM(
         identifier = UserIdentifierADM(maybeIri = Some(rootUserIri)),
         userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -86,7 +85,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
       responderManager ! UserGetADM(
         identifier = UserIdentifierADM(maybeIri = Some(ddd1UserIri)),
         userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -95,7 +93,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
       responderManager ! UserGetADM(
         UserIdentifierADM(maybeIri = Some(ddd2UserIri)),
         userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -204,7 +201,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         projectIri = drawingsGodsProjectIri,
         values = valuesToBeCreated,
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = ddd1.get,
         apiRequestID = UUID.randomUUID
       )
@@ -214,7 +210,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
       responderManager ! ResourceFullGetRequestV1(
         iri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = ddd1.get
       )
 
@@ -251,7 +246,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         projectIri = drawingsGodsProjectIri,
         values = valuesToBeCreated,
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = rootUser.get,
         apiRequestID = UUID.randomUUID
       )

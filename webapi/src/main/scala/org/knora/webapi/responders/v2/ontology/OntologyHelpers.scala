@@ -1751,7 +1751,7 @@ object OntologyHelpers {
     settings: KnoraSettingsImpl,
     storeManager: ActorRef,
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
+    expectedLastModificationDate: Instant
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,

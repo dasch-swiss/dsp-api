@@ -10,7 +10,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1367Spec extends UpgradePluginSpec {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   "Upgrade plugin PR1367" should {
     "fix the datatypes of decimal literals" in {
@@ -18,7 +18,7 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr1367.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR1367(defaultFeatureFactoryConfig)
+      val plugin = new UpgradePluginPR1367()
       plugin.transform(model)
 
       // Check that the decimal datatype was fixed.

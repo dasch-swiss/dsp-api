@@ -20,8 +20,8 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Logging
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -55,6 +55,10 @@ import messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import store.cacheservice.settings.CacheServiceSettings
 import util.StartupUtils
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object CoreSpec {
 
@@ -92,7 +96,7 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         name,
-        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+        config.withFallback(CoreSpec.defaultConfig)
       )
     )
 
@@ -100,17 +104,23 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+        config.withFallback(CoreSpec.defaultConfig)
       )
     )
 
-  def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load())))
+  def this(name: String) =
+    this(
+      ActorSystem(
+        name,
+        ConfigFactory.load()
+      )
+    )
 
   def this() =
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load())
+        ConfigFactory.load()
       )
     )
 
@@ -120,7 +130,7 @@ abstract class CoreSpec(_system: ActorSystem)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
-  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+  lazy val rdfDataObjects = List.empty[RdfDataObject]
 
   // needs to be initialized early on
   StringFormatter.initForTest()
@@ -132,32 +142,36 @@ abstract class CoreSpec(_system: ActorSystem)
   val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   // The effect for building a cache service manager and a IIIF service manager.
-  val managers = for {
+  lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  } yield (csm, iiifsm, tssm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      // FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      SipiTestContainer.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   /**
    * Create both managers by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager, appConfig) =
+  val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -169,7 +183,7 @@ abstract class CoreSpec(_system: ActorSystem)
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
@@ -184,11 +198,6 @@ abstract class CoreSpec(_system: ActorSystem)
     cacheServiceSettings = new CacheServiceSettings(system.settings.config)
   )
 
-  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set.empty,
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
-
   final override def beforeAll(): Unit = {
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
@@ -200,14 +209,12 @@ abstract class CoreSpec(_system: ActorSystem)
     applicationStateRunning()
 
     loadTestData(rdfDataObjects)
-
-    // memusage()
   }
 
   final override def afterAll(): Unit =
     TestKit.shutdownActorSystem(system)
 
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+  protected def loadTestData(rdfDataObjects: List[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
     Try(Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)) match {
@@ -218,10 +225,7 @@ abstract class CoreSpec(_system: ActorSystem)
     logger.info("Loading load ontologies into cache started ...")
     Try(
       Await.result(
-        appActor ? LoadOntologiesRequestV2(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        ),
+        appActor ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser),
         1 minute
       )
     ) match {

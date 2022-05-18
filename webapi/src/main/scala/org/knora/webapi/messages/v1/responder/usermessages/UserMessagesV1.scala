@@ -75,7 +75,7 @@ case class UserProfileByIRIGetRequestV1(
  */
 case class UserProfileByIRIGetV1(
   userIri: IRI,
-  userProfileType: UserProfileType,
+  userProfileType: UserProfileType
 ) extends UsersResponderRequestV1
 
 /**
@@ -99,7 +99,7 @@ case class UserProfileByEmailGetRequestV1(
  */
 case class UserProfileByEmailGetV1(
   email: String,
-  userProfileType: UserProfileType,
+  userProfileType: UserProfileType
 ) extends UsersResponderRequestV1
 
 /**

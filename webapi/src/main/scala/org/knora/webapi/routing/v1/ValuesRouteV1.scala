@@ -679,7 +679,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
       } ~ delete { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(requestContext)
+          userADM      <- getUserADM(requestContext)
           params        = requestContext.request.uri.query().toMap
           deleteComment = params.get("deleteComment")
         } yield makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userADM = userADM)

@@ -64,7 +64,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to query information about lists" should {
       "return all lists" in {
         responderManager ! ListsGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -76,7 +75,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "return all lists belonging to the images project" in {
         responderManager ! ListsGetRequestADM(
           projectIri = Some(IMAGES_PROJECT_IRI),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -90,7 +88,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "return all lists belonging to the anything project" in {
         responderManager ! ListsGetRequestADM(
           projectIri = Some(ANYTHING_PROJECT_IRI),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -104,7 +101,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "return basic list information (anything list)" in {
         responderManager ! ListNodeInfoGetRequestADM(
           iri = "http://rdfh.ch/lists/0001/treeList",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
 
@@ -118,7 +114,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "return basic list information (anything other list)" in {
         responderManager ! ListNodeInfoGetRequestADM(
           iri = "http://rdfh.ch/lists/0001/otherTreeList",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
 
@@ -132,7 +127,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "return basic node information (images list - sommer)" in {
         responderManager ! ListNodeInfoGetRequestADM(
           iri = "http://rdfh.ch/lists/00FF/526f26ed04",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -146,7 +140,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "return a full list response" in {
         responderManager ! ListGetRequestADM(
           iri = "http://rdfh.ch/lists/0001/treeList",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
 
@@ -177,7 +170,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               .make(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -218,7 +210,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               .make(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -273,7 +264,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -313,7 +303,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             projectIri = projectIRI,
             name = name
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -341,7 +330,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -394,7 +382,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -446,7 +433,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -500,7 +486,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -523,7 +508,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 3,
             parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -538,7 +522,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 30,
             parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -553,7 +536,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 30,
             parentIri = "http://rdfh.ch/lists/0001/notUsedList"
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -569,7 +551,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 1,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -602,7 +583,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = -1,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -636,7 +616,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 2,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -661,7 +640,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         /* check old parent node */
         responderManager ! ListGetRequestADM(
           iri = oldParentIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
@@ -687,7 +665,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = -1,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -712,7 +689,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         /* check old parent node */
         responderManager ! ListGetRequestADM(
           iri = oldParentIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
@@ -732,7 +708,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = -1,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -757,7 +732,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 2,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -782,7 +756,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 0,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -802,7 +775,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 3,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -822,7 +794,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 5,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -842,7 +813,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             position = 0,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -859,7 +829,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeInUseIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -871,7 +840,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -886,7 +854,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeInUseInOntologyIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -900,7 +867,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -921,7 +887,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -938,7 +903,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val listIri = "http://rdfh.ch/lists/0001/notUsedList"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = listIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -953,7 +917,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
         responderManager ! CanDeleteListRequestADM(
           iri = nodeInUseIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -965,7 +928,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
         responderManager ! CanDeleteListRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -977,7 +939,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
         responderManager ! CanDeleteListRequestADM(
           iri = nodeInUseInOntologyIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -989,7 +950,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
         responderManager ! CanDeleteListRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -1001,7 +961,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
         responderManager ! CanDeleteListRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -1013,7 +972,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val listIri = "http://rdfh.ch/lists/0001/notUsedList"
         responderManager ! CanDeleteListRequestADM(
           iri = listIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
