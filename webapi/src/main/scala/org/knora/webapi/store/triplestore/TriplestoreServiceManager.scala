@@ -38,14 +38,13 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
  * This service receives akka messages and translates them to calls to ZIO besed service implementations.
  * This will be removed when Akka-Actors are removed.
  *
- * @param ts                    a triplestore service.
- * @param updater                    a RepositoryUpdater for processing requests to update the repository.
+ * @param ts       a triplestore service.
+ * @param updater  a RepositoryUpdater for processing requests to update the repository.
  */
 final case class TriplestoreServiceManager(
   ts: TriplestoreService,
   updater: RepositoryUpdater
 ) {
-
   def receive(message: TriplestoreRequest) = message match {
     case UpdateRepositoryRequest()           => updater.maybeUpdateRepository
     case SparqlSelectRequest(sparql: String) => ts.sparqlHttpSelect(sparql)
@@ -73,7 +72,7 @@ final case class TriplestoreServiceManager(
       ts.resetTripleStoreContent(rdfDataObjects, prependDefaults)
     case DropAllTRepositoryContent() => ts.dropAllTriplestoreContent()
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
-      ts.insertDataIntoTriplestore(rdfDataObjects)
+      ts.insertDataIntoTriplestore(rdfDataObjects, true)
     // case HelloTriplestore(msg: String) if msg == settings.triplestoreType => sender() ! HelloTriplestore(settings.triplestoreType)
     case CheckTriplestoreRequest() => ts.checkTriplestore()
     // case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), Success(SparqlUpdateResponse()), log)
@@ -85,10 +84,9 @@ final case class TriplestoreServiceManager(
     case other =>
       ZIO.die(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
   }
-
 }
 
-object TriplestoreManager {
+object TriplestoreServiceManager {
   val layer: ZLayer[TriplestoreService & RepositoryUpdater, Nothing, TriplestoreServiceManager] = {
     ZLayer {
       for {

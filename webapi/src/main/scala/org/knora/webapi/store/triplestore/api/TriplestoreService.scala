@@ -116,9 +116,9 @@ trait TriplestoreService {
    * @param prependDefaults denotes if the rdfDataObjects list should be prepended with a default set. Default is `true`.
    */
   def resetTripleStoreContent(
-    rdfDataObjects: Seq[RdfDataObject],
+    rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean = true
-  ): Task[ResetRepositoryContentACK]
+  ): UIO[ResetRepositoryContentACK]
 
   /**
    * Drops (deletes) all data from the triplestore.
@@ -134,15 +134,15 @@ trait TriplestoreService {
    * @return [[InsertTriplestoreContentACK]]
    */
   def insertDataIntoTriplestore(
-    rdfDataObjects: Seq[RdfDataObject],
-    prependDefaults: Boolean = true
-  ): Task[InsertTriplestoreContentACK]
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean
+  ): UIO[InsertTriplestoreContentACK]
 
   /**
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure (initialize) the required dataset.
    */
-  def checkTriplestore(): Task[CheckTriplestoreResponse]
+  def checkTriplestore(): UIO[CheckTriplestoreResponse]
 
   /**
    * Dumps the whole repository in N-Quads format, saving the response in a file.

@@ -14,6 +14,8 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import zio._
 
 import java.util.concurrent.TimeUnit
@@ -36,13 +38,14 @@ object Main extends scala.App with LiveCore {
   val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  } yield (csm, iiifsm, tssm, appConfig)
 
   /**
    * Create both managers by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager, appConfig) =
+  val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
     runtime
       .unsafeRun(
         managers
@@ -52,6 +55,8 @@ object Main extends scala.App with LiveCore {
             AppConfig.live,
             IIIFServiceManager.layer,
             IIIFServiceSipiImpl.layer,
+            TriplestoreServiceManager.layer,
+            TriplestoreServiceHttpConnectorImpl.layer,
             JWTService.layer
           )
       )

@@ -212,7 +212,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         orderByProperty = maybeOrderByProperty,
         page = page,
         targetSchema = targetSchema,
-        schemaOptions = schemaOptions
+        schemaOptions = schemaOptions,
+        requestingUser = requestingUser
       )
 
       RouteUtilV2.runRdfRouteWithFuture(

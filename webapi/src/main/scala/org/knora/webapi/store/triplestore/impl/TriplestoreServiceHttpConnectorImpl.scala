@@ -156,7 +156,7 @@ case class TriplestoreServiceHttpConnectorImpl(
   /**
    * Simulates a read timeout.
    */
-  private def doSimulateTimeout(): UIO[SparqlSelectResult] = {
+  def doSimulateTimeout(): UIO[SparqlSelectResult] = {
     val sparql = """SELECT ?foo WHERE {
                    |    BIND("foo" AS ?foo)
                    |}""".stripMargin
@@ -171,7 +171,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @return a [[SparqlSelectResult]].
    */
-  private def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult] = {
+  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult] = {
 
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
@@ -208,7 +208,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param sparqlConstructRequest the request message.
    * @return a [[SparqlConstructResponse]]
    */
-  private def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse] = {
+  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse] = {
     // println(logDelimiter + sparql)
 
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
@@ -275,7 +275,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param outputFormat the output file format.
    * @return a [[FileWrittenResponse]].
    */
-  private def sparqlHttpConstructFile(
+  def sparqlHttpConstructFile(
     sparql: String,
     graphIri: IRI,
     outputFile: Path,
@@ -302,7 +302,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param sparqlExtendedConstructRequest the request message.
    * @return a [[SparqlExtendedConstructResponse]]
    */
-  private def sparqlHttpExtendedConstruct(
+  def sparqlHttpExtendedConstruct(
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
   ): UIO[SparqlExtendedConstructResponse] =
     for {
@@ -331,7 +331,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param sparqlUpdate the SPARQL update.
    * @return a [[SparqlUpdateResponse]].
    */
-  private def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse] =
+  def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse] =
     // println(logDelimiter + sparqlUpdate)
     for {
       // Send the request to the triplestore.
@@ -364,7 +364,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   def resetTripleStoreContent(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean = true
+    prependDefaults: Boolean
   ): UIO[ResetRepositoryContentACK] =
     for {
       _ <- ZIO.logDebug("resetTripleStoreContent")
@@ -403,7 +403,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   def insertDataIntoTriplestore(
     rdfDataObjects: List[RdfDataObject],
-    prependDefaults: Boolean = true
+    prependDefaults: Boolean
   ): UIO[InsertTriplestoreContentACK] = {
 
     val calculateCompleteRdfDataObjectList: UIO[NonEmptyChunk[RdfDataObject]] =
@@ -474,7 +474,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * Checks the Fuseki triplestore if it is available and configured correctly. If it is not
    * configured, tries to automatically configure (initialize) the required dataset.
    */
-  private def checkFusekiTriplestore(): UIO[CheckTriplestoreResponse] = {
+  def checkTriplestore(): UIO[CheckTriplestoreResponse] = {
 
     val triplestoreAvailableResponse =
       ZIO.succeed(
@@ -614,7 +614,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param outputFormat         the output file format.
    * @return a string containing the contents of the graph in N-Quads format.
    */
-  private def sparqlHttpGraphFile(
+  def sparqlHttpGraphFile(
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
@@ -650,7 +650,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param graphIri the IRI of the named graph.
    * @return a string containing the contents of the graph in Turtle format.
    */
-  private def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = {
+  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = {
 
     val httpGet = ZIO.attempt {
       val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
@@ -736,7 +736,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param outputFile           the output file.
    * @return a string containing the contents of the graph in N-Quads format.
    */
-  private def downloadRepository(
+  def downloadRepository(
     outputFile: Path
   ): UIO[FileWrittenResponse] = {
 
@@ -768,7 +768,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  private def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse] = {
+  def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse] = {
 
     val httpPost = ZIO.attempt {
       val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
@@ -795,7 +795,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  private def insertDataGraphRequest(graphContent: String, graphName: String): UIO[InsertGraphDataContentResponse] = {
+  def insertDataGraphRequest(graphContent: String, graphName: String): UIO[InsertGraphDataContentResponse] = {
 
     val httpPut = ZIO.attempt {
       val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)

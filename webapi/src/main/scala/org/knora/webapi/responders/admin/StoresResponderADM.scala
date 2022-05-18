@@ -40,7 +40,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    */
   def receive(msg: StoreResponderRequestADM) = msg match {
     case ResetTriplestoreContentRequestADM(
-          rdfDataObjects: Seq[RdfDataObject],
+          rdfDataObjects: List[RdfDataObject],
           prependDefaults: Boolean
         ) =>
       resetTriplestoreContent(rdfDataObjects, prependDefaults)
@@ -54,7 +54,7 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    * @return a future containing a [[ResetTriplestoreContentResponseADM]].
    */
   private def resetTriplestoreContent(
-    rdfDataObjects: Seq[RdfDataObject],
+    rdfDataObjects: List[RdfDataObject],
     prependDefaults: Boolean = true
   ): Future[ResetTriplestoreContentResponseADM] = {
 

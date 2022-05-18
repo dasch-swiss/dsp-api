@@ -280,7 +280,7 @@ case class SparqlAskResponse(result: Boolean)
  * @param rdfDataObjects  contains a list of [[RdfDataObject]].
  * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
  */
-case class ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true)
+case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDefaults: Boolean = true)
     extends TriplestoreRequest
 
 /**
@@ -303,7 +303,7 @@ case class DropAllRepositoryContentACK()
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].
  */
-case class InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
+case class InsertRepositoryContent(rdfDataObjects: List[RdfDataObject]) extends TriplestoreRequest
 
 /**
  * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.

@@ -16,7 +16,7 @@ import zio.metrics.Metric
 
 import java.time.temporal.ChronoUnit
 
-case class CacheServiceManager(cs: CacheService) {
+final case class CacheServiceManager(cs: CacheService) {
 
   val cacheServiceWriteUserTimer = Metric
     .timer(
