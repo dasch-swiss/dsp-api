@@ -93,7 +93,6 @@ final case class Triplestore(
   updateTimeout: String,
   autoInit: Boolean,
   profileQueries: Boolean,
-  defaultRdfData: List[RdfDataObject],
   fuseki: Fuseki
 ) {
   val queryTimeoutAsDuration  = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
