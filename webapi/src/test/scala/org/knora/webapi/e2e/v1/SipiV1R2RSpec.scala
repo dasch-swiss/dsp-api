@@ -33,6 +33,8 @@ import java.nio.file.Paths
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -66,10 +68,11 @@ class SipiV1R2RSpec extends R2RSpec {
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   object RequestParams {

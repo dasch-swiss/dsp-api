@@ -38,6 +38,8 @@ import scala.concurrent.ExecutionContextExecutor
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * Tests creating a still image file value using a mock Sipi.
@@ -65,10 +67,11 @@ class ValuesV2R2RSpec extends R2RSpec {
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"

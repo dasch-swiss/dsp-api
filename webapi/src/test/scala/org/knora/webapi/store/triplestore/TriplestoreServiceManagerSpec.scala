@@ -12,12 +12,12 @@ import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutReques
 
 import scala.concurrent.duration._
 
-class HttpTriplestoreConnectorSpec extends CoreSpec() with ImplicitSender {
+class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
   private val timeout = 10.seconds
 
-  "The HttpTriplestoreConnector" should {
+  "The TriplestoreServiceManager" should {
     "report a connection timeout with an appropriate error message" in {
-      storeManager ! SimulateTimeoutRequest()
+      appActor ! SimulateTimeoutRequest()
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[TriplestoreTimeoutException])

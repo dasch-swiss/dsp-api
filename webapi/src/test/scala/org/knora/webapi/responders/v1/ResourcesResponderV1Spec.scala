@@ -44,6 +44,8 @@ import scala.concurrent.duration._
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
@@ -670,10 +672,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   // The default timeout for receiving reply messages from actors.

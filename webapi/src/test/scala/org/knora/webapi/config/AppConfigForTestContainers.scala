@@ -34,6 +34,22 @@ object AppConfigForTestContainers {
     ZIO.succeed(newConfig)
   }
 
+  private def alterFusekiPort(
+    oldConfig: AppConfig,
+    fusekiContainer: FusekiTestContainer
+  ): UIO[AppConfig] = {
+
+    val newFusekiPort = fusekiContainer.container.getFirstMappedPort()
+
+    val alteredFuseki = oldConfig.triplestore.fuseki.copy(port = newFusekiPort)
+
+    val alteredTriplestore = oldConfig.triplestore.copy(fuseki = alteredFuseki)
+
+    val newConfig: AppConfig = oldConfig.copy(triplestore = alteredTriplestore)
+
+    ZIO.succeed(newConfig)
+  }
+
   /**
    * Reads in the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
    * the Typesafe-Config format. Reads the 'app' configuration from 'application.conf'.
@@ -57,5 +73,17 @@ object AppConfigForTestContainers {
         sipiContainer   <- ZIO.service[SipiTestContainer]
         alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> AppConfigForTestContainers Initialized <<<"))
+    }.tap(_ => ZIO.debug(">>> app config for fuseki and sipi testcontainers initialized <<<"))
+
+  /**
+   * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
+   */
+  val fusekiOnlyTestcontainer: ZLayer[FusekiTestContainer, Nothing, AppConfig] =
+    ZLayer {
+      for {
+        appConfig       <- config
+        fusekiContainer <- ZIO.service[FusekiTestContainer]
+        alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
+      } yield alteredConfig
+    }.tap(_ => ZIO.debug(">>> app config for fuseki only testcontainers initialized <<<"))
 }

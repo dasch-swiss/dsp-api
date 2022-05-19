@@ -45,6 +45,8 @@ import scala.concurrent.duration._
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -416,10 +418,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live,
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   override lazy val rdfDataObjects = List(
