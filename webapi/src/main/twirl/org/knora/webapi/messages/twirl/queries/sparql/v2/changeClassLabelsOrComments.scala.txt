@@ -60,6 +60,8 @@ WHERE {
         ?ontology rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
+        ?class ?p ?o .
+
         OPTIONAL {
             ?class <@predicateToUpdate> ?oldObj .
         }

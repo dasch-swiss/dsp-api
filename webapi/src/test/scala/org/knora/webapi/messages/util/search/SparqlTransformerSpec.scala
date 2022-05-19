@@ -19,6 +19,11 @@ class SparqlTransformerSpec extends CoreSpec() {
 
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  private val thingIRI         = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri
+  private val blueThingIRI     = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
+  private val hasOtherThingIRI = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri
+  private val hasTextIRI       = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri
+
   "SparqlTransformer" should {
 
     "create a syntactically valid base name from a given variable" in {
@@ -70,7 +75,7 @@ class SparqlTransformerSpec extends CoreSpec() {
       val typeStatement = StatementPattern.makeExplicit(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
+        obj = IriRef(thingIRI)
       )
       val isDeletedStatement = StatementPattern.makeExplicit(
         subj = QueryVariable("foo"),
@@ -79,7 +84,7 @@ class SparqlTransformerSpec extends CoreSpec() {
       )
       val linkStatement = StatementPattern.makeExplicit(
         subj = QueryVariable("foo"),
-        pred = IriRef("http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri),
+        pred = IriRef(hasOtherThingIRI),
         obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
       )
 
@@ -112,12 +117,12 @@ class SparqlTransformerSpec extends CoreSpec() {
       val typeStatement = StatementPattern.makeExplicit(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
+        obj = IriRef(thingIRI)
       )
       val hasValueStatement =
         StatementPattern.makeExplicit(
           subj = QueryVariable("foo"),
-          pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
+          pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
         )
       val bindPattern =
@@ -144,7 +149,7 @@ class SparqlTransformerSpec extends CoreSpec() {
       val hasValueStatement =
         StatementPattern.makeExplicit(
           subj = QueryVariable("foo"),
-          pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
+          pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
         )
       val valueHasStringStatement =
@@ -178,11 +183,11 @@ class SparqlTransformerSpec extends CoreSpec() {
       optimisedPatterns should ===(expectedPatterns)
     }
 
-    "expand an rdf:type statement to simulate RDFS inference" in {
+    "not simulate any RDF inference for a class, if there are no known subclasses" in {
       val typeStatement = StatementPattern.makeInferred(
         subj = QueryVariable("foo"),
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-        obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
+        obj = IriRef(blueThingIRI)
       )
       val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
         statementPattern = typeStatement,
@@ -191,36 +196,76 @@ class SparqlTransformerSpec extends CoreSpec() {
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
-          subj = QueryVariable(variableName = "foo__subClassOf__httpwwwknoraorgontology0001anythingThing"),
-          pred = IriRef(
-            iri = OntologyConstants.Rdfs.SubClassOf.toSmartIri,
-            propertyPathOperator = Some('*')
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-            propertyPathOperator = None
-          ),
-          namedGraph = None
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "foo"),
-          pred = IriRef(
-            iri = OntologyConstants.Rdf.Type.toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "foo__subClassOf__httpwwwknoraorgontology0001anythingThing"),
+          subj = QueryVariable("foo"),
+          pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+          obj = IriRef(blueThingIRI),
           namedGraph = None
         )
       )
 
-      expandedStatements should ===(expectedStatements)
+      expandedStatements should equal(expectedStatements)
     }
 
-    "expand a statement with a property IRI to simulate RDFS inference" in {
+    "create a union pattern to simulate RDF inference for a class, if there are known subclasses" in {
+      val typeStatement = StatementPattern.makeInferred(
+        subj = QueryVariable("foo"),
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(thingIRI)
+      )
+      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
+        statementPattern = typeStatement,
+        simulateInference = true
+      )
+
+      val expectedUnionPattern = UnionPattern(
+        Seq(
+          Seq(
+            StatementPattern(
+              subj = QueryVariable("foo"),
+              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+              obj = IriRef(thingIRI),
+              namedGraph = None
+            )
+          ),
+          Seq(
+            StatementPattern(
+              subj = QueryVariable("foo"),
+              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+              obj = IriRef(blueThingIRI),
+              namedGraph = None
+            )
+          ),
+          Seq(
+            StatementPattern(
+              subj = QueryVariable("foo"),
+              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+              obj = IriRef("http://www.knora.org/ontology/0001/something#Something".toSmartIri),
+              namedGraph = None
+            )
+          ),
+          Seq(
+            StatementPattern(
+              subj = QueryVariable("foo"),
+              pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+              obj = IriRef("http://www.knora.org/ontology/0001/anything#ThingWithSeqnum".toSmartIri),
+              namedGraph = None
+            )
+          )
+        )
+      )
+
+      expandedStatements match {
+        case (head: UnionPattern) :: Nil =>
+          head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
+        case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
+      }
+    }
+
+    "not simulate any RDF inference for a property, if there are no known subproperties" in {
       val hasValueStatement =
         StatementPattern.makeInferred(
           subj = QueryVariable("foo"),
-          pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
+          pred = IriRef(hasTextIRI),
           obj = QueryVariable("text")
         )
       val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
@@ -230,26 +275,73 @@ class SparqlTransformerSpec extends CoreSpec() {
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
-          subj = QueryVariable(variableName = "httpwwwknoraorgontology0001anythinghasText__subPropertyOf"),
+          subj = QueryVariable(variableName = "foo"),
           pred = IriRef(
-            iri = OntologyConstants.Rdfs.SubPropertyOf.toSmartIri,
-            propertyPathOperator = Some('*')
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri,
+            iri = hasTextIRI,
             propertyPathOperator = None
           ),
-          namedGraph = None
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "foo"),
-          pred = QueryVariable(variableName = "httpwwwknoraorgontology0001anythinghasText__subPropertyOf"),
           obj = QueryVariable(variableName = "text"),
           namedGraph = None
         )
       )
 
-      expandedStatements should ===(expectedStatements)
+      expandedStatements should equal(expectedStatements)
+    }
+
+    "create a union pattern to simulate RDF inference for a property, if there are known subproperties" in {
+      val hasValueStatement =
+        StatementPattern.makeInferred(
+          subj = QueryVariable("foo"),
+          pred = IriRef(hasOtherThingIRI),
+          obj = QueryVariable("text")
+        )
+      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
+        statementPattern = hasValueStatement,
+        simulateInference = true
+      )
+
+      val expectedUnionPattern: UnionPattern = UnionPattern(
+        Seq(
+          Seq(
+            StatementPattern(
+              subj = QueryVariable(variableName = "foo"),
+              pred = IriRef(
+                iri = "http://www.knora.org/ontology/0001/something#hasOtherSomething".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = QueryVariable(variableName = "text"),
+              namedGraph = None
+            )
+          ),
+          Seq(
+            StatementPattern(
+              subj = QueryVariable(variableName = "foo"),
+              pred = IriRef(
+                iri = hasOtherThingIRI,
+                propertyPathOperator = None
+              ),
+              obj = QueryVariable(variableName = "text"),
+              namedGraph = None
+            )
+          ),
+          Seq(
+            StatementPattern(
+              subj = QueryVariable(variableName = "foo"),
+              pred = IriRef(
+                iri = "http://www.knora.org/ontology/0001/anything#hasBlueThing".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = QueryVariable(variableName = "text"),
+              namedGraph = None
+            )
+          )
+        )
+      )
+      expandedStatements match {
+        case (head: UnionPattern) :: Nil =>
+          head.blocks.toSet should equal(expectedUnionPattern.blocks.toSet)
+        case _ => throw new AssertionError("Simulated RDF inference should have resulted in exactly one Union Pattern")
+      }
     }
   }
 }

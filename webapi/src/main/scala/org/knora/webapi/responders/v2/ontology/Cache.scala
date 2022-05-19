@@ -69,19 +69,27 @@ object Cache extends LazyLogging {
   /**
    * The in-memory cache of ontologies.
    *
-   * @param ontologies              a map of ontology IRIs to ontologies.
-   * @param subClassOfRelations     a map of subclasses to their base classes.
-   * @param superClassOfRelations   a map of base classes to their subclasses.
-   * @param subPropertyOfRelations  a map of subproperties to their base proeprties.
-   * @param guiAttributeDefinitions a map of salsah-gui:Guielement individuals to their GUI attribute definitions.
-   * @param standoffProperties      a set of standoff properties.
+   * @param ontologies                a map of ontology IRIs to ontologies.
+   * @param subClassOfRelations       a map of subclasses to their base classes.
+   * @param superClassOfRelations     a map of base classes to their subclasses.
+   * @param subPropertyOfRelations    a map of subproperties to their base properties.
+   * @param superPropertyOfRelations  a map of base classes to their subproperties.
+   * @param guiAttributeDefinitions   a map of salsah-gui:Guielement individuals to their GUI attribute definitions.
+   * @param classDefinedInOntology    a map of class IRIs to the ontology where the class is defined
+   * @param propertyDefinedInOntology a map of property IRIs to the ontology where the property is defined
+   * @param entityDefinedInOntology   a map of entity IRIs (property or class) to the ontology where the entity is defined
+   * @param standoffProperties        a set of standoff properties.
    */
   case class OntologyCacheData(
     ontologies: Map[SmartIri, ReadOntologyV2],
     subClassOfRelations: Map[SmartIri, Seq[SmartIri]],
     superClassOfRelations: Map[SmartIri, Set[SmartIri]],
     subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
+    superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
+    classDefinedInOntology: Map[SmartIri, SmartIri],
+    propertyDefinedInOntology: Map[SmartIri, SmartIri],
+    entityDefinedInOntology: Map[SmartIri, SmartIri],
     standoffProperties: Set[SmartIri]
   ) {
     lazy val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologies.values
@@ -305,6 +313,11 @@ object Cache extends LazyLogging {
       (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSubPropertyOfRelations).toSet + propertyIri)
     }.toMap
 
+    // Make a map in which each property IRI points to the full set of its subproperties. A property is also
+    // a superproperty of itself.
+    val allSuperPropertyOfRelations: Map[SmartIri, Set[SmartIri]] =
+      OntologyHelpers.calculateSuperPropertiesOfRelations(allSubPropertyOfRelations)
+
     // A set of all subproperties of knora-base:resourceProperty.
     val allKnoraResourceProps: Set[SmartIri] = allPropertyIris.filter { prop =>
       val allPropSubPropertyOfRelations = allSubPropertyOfRelations(prop)
@@ -429,6 +442,13 @@ object Cache extends LazyLogging {
         }
     }.toSet
 
+    val classDefinedInOntology = classIrisPerOntology.flatMap { case (ontoIri, classIris) =>
+      classIris.map(_ -> ontoIri)
+    }
+    val propertyDefinedInOntology = propertyIrisPerOntology.flatMap { case (ontoIri, propertyIris) =>
+      propertyIris.map(_ -> ontoIri)
+    }
+
     // Construct the ontology cache data.
     val ontologyCacheData: OntologyCacheData = OntologyCacheData(
       ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, key => s"Ontology not found: $key"),
@@ -438,6 +458,16 @@ object Cache extends LazyLogging {
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, key => s"Class not found: $key"),
       subPropertyOfRelations =
         new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, key => s"Property not found: $key"),
+      superPropertyOfRelations =
+        new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperPropertyOfRelations, key => s"Property not found: $key"),
+      classDefinedInOntology =
+        new ErrorHandlingMap[SmartIri, SmartIri](classDefinedInOntology, key => s"Class not found: $key"),
+      propertyDefinedInOntology =
+        new ErrorHandlingMap[SmartIri, SmartIri](propertyDefinedInOntology, key => s"Property not found: $key"),
+      entityDefinedInOntology = new ErrorHandlingMap[SmartIri, SmartIri](
+        propertyDefinedInOntology ++ classDefinedInOntology,
+        key => s"Property not found: $key"
+      ),
       guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](
         allGuiAttributeDefinitions,
         key => s"salsah-gui:Guielement not found: $key"
