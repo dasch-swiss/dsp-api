@@ -17,3 +17,7 @@ package dsp.user.api
 
 //   def run = Server.start(8090, app)
 // }
+
+// Here are the methods that need to be implemented:
+// getSingleUser --> calls either getUserById, getUserByIri,
+// getUserByUuid, getUserByEmail, getUserByUsername etc. from the user handler

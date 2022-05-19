@@ -9,7 +9,6 @@ import dsp.user.domain._
 import dsp.user.repo.UserRepo
 import zio._
 import java.util.UUID
-import zio.macros.accessible
 
 /**
  * The user handler.
@@ -17,26 +16,98 @@ import zio.macros.accessible
  * @param repo  the user repository
  */
 final case class UserHandler(repo: UserRepo) {
-  def getAll(): ZIO[Any, Nothing, List[User]]                  = repo.getAllUsers()
-  def getUserById(id: UserId): ZIO[Any, Nothing, Option[User]] = repo.getUserById(id)
-  def getUserByIri(iri: Iri.UserIri): ZIO[Any, Nothing, Option[User]] = {
-    val userId = UserId.fromString(iri.toString())
-    getUserById(userId)
+  // implement all possible requests from V2, but divide things up into smaller functions to keep it cleaner than before
+
+  /**
+   * Retrieve all users (sorted by IRI).
+   */
+  def getAll(): UIO[List[User]] =
+    repo.getAllUsers().map(_.sorted)
+
+  // getSingleUserADM should be inspected in the route. According to the user identifier, the
+  // right method from the userHandler should be called.
+
+  /**
+   * Retrieve the user by ID.
+   *
+   * @param id  the user's ID
+   * @param userInformationType  the type of the requested profile (restricted or full).
+   */
+  def getUserById(id: UserId, userInformationType: UserInformationType): UIO[Option[User]] =
+    for {
+      user <- repo.getUserById(id)
+      _ <- userInformationType match {
+             case UserInformationType.Full       => ZIO.succeed(user)
+             case UserInformationType.Restricted => ZIO.succeed(user.map(u => u.copy(password = None)))
+           }
+    } yield user
+
+  /**
+   * Retrieve the user by IRI.
+   *
+   * @param iri  the user's IRI
+   * @param userInformationType  the type of the requested profile (restricted or full).
+   */
+  def getUserByIri(iri: Iri.UserIri, userInformationType: UserInformationType): UIO[Option[User]] = {
+    val userId = UserId.fromIri(iri)
+    for {
+      user <- getUserById(userId, userInformationType)
+    } yield user
   }
 
-  def getUserByUuid(uuid: UUID): ZIO[Any, Nothing, Option[User]] = ???
-  def getUserByUsername(username: Username): ZIO[Any, Nothing, Option[User]] =
-    repo.getUserByUsernameOrEmail(username.value)
-  def getUserByEmail(email: Email): ZIO[Any, Nothing, Option[User]] =
-    repo.getUserByUsernameOrEmail(email.value)
-  def createUser(user: User): UIO[Unit] = repo.storeUser(user)
-  def updateUser(user: User): IO[Option[Nothing], Unit] =
+  /**
+   * Retrieve the user by UUID.
+   *
+   * @param uuuid  the user's UUID
+   * @param userInformationType  the type of the requested profile (restricted or full).
+   */
+  def getUserByUuid(uuid: UUID, userInformationType: UserInformationType): UIO[Option[User]] = {
+    val userId = UserId.fromUuid(uuid)
     for {
-      currentUser <- getUserById(user.id) //.orElse()?
+      user <- getUserById(userId, userInformationType)
+    } yield user
+  }
+
+  /**
+   * Retrieve the user by username.
+   *
+   * @param username  the user's username
+   * @param userInformationType  the type of the requested profile (restricted or full).
+   */
+  def getUserByUsername(username: Username, userInformationType: UserInformationType): UIO[Option[User]] =
+    repo.getUserByUsernameOrEmail(username.value)
+
+  /**
+   * Retrieve the user by email.
+   *
+   * @param email  the user's email
+   * @param userInformationType  the type of the requested profile (restricted or full).
+   */
+  def getUserByEmail(email: Email, userInformationType: UserInformationType): UIO[Option[User]] =
+    repo.getUserByUsernameOrEmail(email.value)
+
+  // TODO: ask Ivan how we handle errors
+  def createUser(user: User): IO[Throwable, Unit] = {
+    // check if username is unique
+    val username = user.username
+    val users    = repo.getAllUsers()
+
+    for {
+      isUsernameUsed <- users.map(userList => userList.map(user => user.username == username))
+    } yield (isUsernameUsed)
+
+    // check if email is unique
+    repo.storeUser(user) // all information needed at once
+  }
+
+  def updateUser(user: User): IO[Option[Nothing], Unit] = // all values should be changed separately
+    for {
+      currentUser <- getUserById(user.id, UserInformationType.Full)
       _           <- deleteUser(user.id)
-      _           <- createUser(user)
+      _           <- createUser(user).orDie
     } yield ()
-  def deleteUser(id: UserId): IO[Option[Nothing], Unit] = repo.deleteUser(id)
+
+  def deleteUser(id: UserId): IO[Option[Nothing], Unit] = repo.deleteUser(id) // set state to inactive
 }
 
 /**

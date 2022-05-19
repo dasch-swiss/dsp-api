@@ -27,7 +27,7 @@ object UserRepoSpec extends ZIOSpecDefault {
     familyName = "FamilyName",
     username = Username.make("Username"),
     email = Email.make("Email"),
-    password = "Password",
+    password = Some("Password"),
     language = "en",
     role = "role"
   )
@@ -38,7 +38,7 @@ object UserRepoSpec extends ZIOSpecDefault {
     familyName = "FamilyName2",
     username = Username.make("Username2"),
     email = Email.make("Email2"),
-    password = "Password2",
+    password = Some("Password2"),
     language = "en",
     role = "role"
   )

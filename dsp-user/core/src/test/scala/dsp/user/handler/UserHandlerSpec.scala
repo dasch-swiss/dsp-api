@@ -30,7 +30,7 @@ object UserHandlerSpec extends ZIOSpec[UserHandler] {
     familyName = "FamilyName",
     username = Username.make("Username"),
     email = Email.make("Email"),
-    password = "Password",
+    password = Some("Password"),
     language = "en",
     role = "role"
   )
@@ -40,8 +40,36 @@ object UserHandlerSpec extends ZIOSpec[UserHandler] {
       for {
         userHandler   <- ZIO.service[UserHandler]
         _             <- userHandler.createUser(testUser1)
-        retrievedUser <- userHandler.getUserById(testUser1.id)
+        retrievedUser <- userHandler.getUserById(testUser1.id, UserInformationType.Full)
       } yield assertTrue(retrievedUser == Some(testUser1))
-    }
+    } +
+      test("store a user and retrieve by IRI") {
+        for {
+          userHandler   <- ZIO.service[UserHandler]
+          _             <- userHandler.createUser(testUser1)
+          retrievedUser <- userHandler.getUserByIri(testUser1.id.iri, UserInformationType.Full)
+        } yield assertTrue(retrievedUser == Some(testUser1))
+      } +
+      test("store a user and retrieve by UUID") {
+        for {
+          userHandler   <- ZIO.service[UserHandler]
+          _             <- userHandler.createUser(testUser1)
+          retrievedUser <- userHandler.getUserByUuid(testUser1.id.uuid, UserInformationType.Full)
+        } yield assertTrue(retrievedUser == Some(testUser1))
+      } +
+      test("store a user and retrieve by username") {
+        for {
+          userHandler   <- ZIO.service[UserHandler]
+          _             <- userHandler.createUser(testUser1)
+          retrievedUser <- userHandler.getUserByUsername(testUser1.username, UserInformationType.Full)
+        } yield assertTrue(retrievedUser == Some(testUser1))
+      } +
+      test("store a user and retrieve by email") {
+        for {
+          userHandler   <- ZIO.service[UserHandler]
+          _             <- userHandler.createUser(testUser1)
+          retrievedUser <- userHandler.getUserByEmail(testUser1.email, UserInformationType.Full)
+        } yield assertTrue(retrievedUser == Some(testUser1))
+      }
   )
 }

@@ -15,11 +15,13 @@ object Iri {
   /**
    * UserIri value object.
    */
-  abstract case class UserIri private (iri: String) extends Iri
-  object UserIri {
-    def make(iri: String): UserIri = new UserIri(iri) {}
+  sealed abstract case class UserIri private (value: String) extends Iri
+  object UserIri { self =>
+
+    def make(value: String): UserIri = new UserIri(value) {}
   }
   // ...
+
 }
 
 /**
@@ -44,8 +46,38 @@ object UserId {
    * @param value the string to parse (either UUID or IRI)
    * @return a new UserId instance
    */
-  def fromString(value: String): UserId =
-    ??? // check if String parameter is a  UUID or an IRI, according to what it is, create the UserId, like so: new UserId(uuid, iri) {}
+  // TODO not sure if we need this
+  // def fromString(value: String): UserId = {
+  //   val uuidPattern = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$".r
+  //   val iriPattern  = "^http*".r
+
+  //   value match {
+  //     case uuidPattern(value) => new UserId(UUID.fromString(value), Iri.UserIri.make(value)) {}
+  //     case iriPattern(value) =>
+  //       new UserId(UUID.fromString(value.substring(value.lastIndexOf("/") + 1)), Iri.UserIri.make(value)) {}
+  //     //case _                  => ???
+  //   }
+  // }
+
+  /**
+   * Generates a UserId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
+   *
+   * @return a new UserId instance
+   */
+  def fromIri(iri: Iri.UserIri): UserId = {
+    val uuid: UUID = UUID.fromString(iri.value.split("/").last)
+    new UserId(uuid, iri) {}
+  }
+
+  /**
+   * Generates a UserId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
+   *
+   * @return a new UserId instance
+   */
+  def fromUuid(uuid: UUID): UserId = {
+    val iri: Iri.UserIri = Iri.UserIri.make("http://rdfh.ch/users/" + uuid.toString)
+    new UserId(uuid, iri) {}
+  }
 
   /**
    * Generates a UserId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
@@ -107,7 +139,33 @@ final case class User(
   familyName: FamilyName,
   username: Username,
   email: Email,
-  password: Password,
+  password: Option[Password],
   language: Language,
   role: Role
-)
+) extends Ordered[User] { self =>
+
+  /**
+   * Allows to sort collections of [[User]]s. Sorting is done by the IRI.
+   */
+  def compare(that: User): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
+}
+
+/**
+ * UserInformationTypeADM types:
+ * full: everything
+ * restricted: everything without sensitive information, i.e. token, password, session.
+ * short: like restricted and additionally without groups, projects and permissions.
+ * public: temporary: givenName, familyName
+ *
+ * Mainly used in combination with the 'ofType' method, to make sure that a request receiving this information
+ * also returns the user profile of the correct type. Should be used in cases where we don't want to expose
+ * sensitive information to the outside world. Since in API Admin [[UserADM]] is returned with some responses,
+ * we use 'restricted' in those cases.
+ */
+sealed trait UserInformationType
+object UserInformationType {
+  //case object Public     extends UserInformationType // not sure if we need those
+  //case object Short      extends UserInformationType
+  case object Restricted extends UserInformationType
+  case object Full       extends UserInformationType
+}
