@@ -43,13 +43,9 @@ object TriplestoreServiceHttpConnectorImplSpec extends ZIOSpec[TriplestoreServic
     test("successfully simulate a timeout") {
       for {
         result <- TriplestoreService.doSimulateTimeout().exit
-      } yield assert(result)(
-        fails(
-          equalTo(
-            TriplestoreTimeoutException(
-              "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-            )
-          )
+      } yield assertTrue(
+        result.is(_.die) == TriplestoreTimeoutException(
+          "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
         )
       )
     }

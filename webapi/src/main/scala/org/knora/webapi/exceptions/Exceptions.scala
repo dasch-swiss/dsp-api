@@ -300,7 +300,7 @@ object TriplestoreTimeoutException {
     TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 
   def apply(message: String): TriplestoreTimeoutException =
-    TriplestoreTimeoutException(message)
+    TriplestoreTimeoutException(message, None)
 }
 
 /**

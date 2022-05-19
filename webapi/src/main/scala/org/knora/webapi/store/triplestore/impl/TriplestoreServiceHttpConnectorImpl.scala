@@ -161,10 +161,9 @@ case class TriplestoreServiceHttpConnectorImpl(
                    |    BIND("foo" AS ?foo)
                    |}""".stripMargin
 
-    (for {
-      _      <- ZIO.debug("doSimulateTimeout")
+    for {
       result <- sparqlHttpSelect(sparql = sparql, simulateTimeout = true)
-    } yield result).tapDefect(ZIO.debug(_))
+    } yield result
   }
 
   /**
@@ -198,7 +197,6 @@ case class TriplestoreServiceHttpConnectorImpl(
         )
 
     for {
-      _ <- ZIO.debug("sparqlHttpSelect")
       resultStr <-
         getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout).tapDefect(ZIO.debug(_))
 
@@ -626,7 +624,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse] = {
+  ): UIO[FileWrittenResponse] = {
 
     val httpGet = ZIO.attempt {
       val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
@@ -640,8 +638,8 @@ case class TriplestoreServiceHttpConnectorImpl(
     )
 
     for {
-      ctx <- makeHttpContext
-      req <- httpGet
+      ctx <- makeHttpContext.orDie
+      req <- httpGet.orDie
       res <- doHttpRequest(
                client = queryHttpClient,
                request = req,
@@ -658,7 +656,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @param graphIri the IRI of the named graph.
    * @return a string containing the contents of the graph in Turtle format.
    */
-  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse] = {
+  def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse] = {
 
     val httpGet = ZIO.attempt {
       val httpGet = new HttpGet(makeNamedGraphDownloadUri(graphIri))
@@ -669,8 +667,8 @@ case class TriplestoreServiceHttpConnectorImpl(
     val makeResponse: CloseableHttpResponse => NamedGraphDataResponse = returnGraphDataAsTurtle(graphIri)
 
     for {
-      ctx <- makeHttpContext
-      req <- httpGet
+      ctx <- makeHttpContext.orDie
+      req <- httpGet.orDie
       res <- doHttpRequest(
                client = queryHttpClient,
                request = req,
@@ -866,9 +864,9 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     // TODO: Can we make Fuseki abandon the query if it takes too long?
 
-    def checkSimulateTimeout(): IO[TriplestoreTimeoutException, Unit] =
+    def checkSimulateTimeout(): UIO[Unit] =
       if (simulateTimeout) {
-        ZIO.debug("simulate timeout true") *> ZIO.logError("simulate timeout true") *> ZIO.fail(
+        ZIO.debug("simulate timeout true") *> ZIO.die(
           TriplestoreTimeoutException(
             "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
           )
@@ -922,17 +920,15 @@ case class TriplestoreServiceHttpConnectorImpl(
         .flatMap(took => ZIO.logInfo(s"[$statusCode] Triplestore query took: ${took}ms"))
 
     (for {
-      _          <- ZIO.debug("doHttpRequest")
-      _          <- checkSimulateTimeout().orDie
-      _          <- ZIO.debug("after simulated timeout")
-      start      <- ZIO.attempt(java.lang.System.currentTimeMillis()).orDie
+      _          <- checkSimulateTimeout()
+      // start      <- ZIO.attempt(java.lang.System.currentTimeMillis()).orDie
       response   <- ZIO.attempt(client.execute(targetHost, request, context)).orDie
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode).orDie
       _          <- checkResponse(response, statusCode)
       result     <- attemptProcessResponse(response, processResponse)
       _          <- ZIO.attempt(response.close()).orDie // TODO: rewrite with ensuring
-      _          <- logTimeTook(start, statusCode)
-    } yield result).tapDefect(ZIO.debug(_))
+      // _          <- logTimeTook(start, statusCode)
+    } yield result)
   }
 
   /**

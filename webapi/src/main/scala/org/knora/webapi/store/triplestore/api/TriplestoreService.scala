@@ -27,6 +27,11 @@ import java.nio.file.Path
 trait TriplestoreService {
 
   /**
+   * Simulates a read timeout.
+   */
+  def doSimulateTimeout(): UIO[SparqlSelectResult]
+
+  /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
    * @param sparql the SPARQL SELECT query string.
@@ -41,7 +46,7 @@ trait TriplestoreService {
    * @param sparqlConstructRequest the request message.
    * @return a [[SparqlConstructResponse]]
    */
-  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): Task[SparqlConstructResponse]
+  def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returns the result as a [[SparqlExtendedConstructResponse]].
@@ -51,7 +56,7 @@ trait TriplestoreService {
    */
   def sparqlHttpExtendedConstruct(
     sparqlExtendedConstructRequest: SparqlExtendedConstructRequest
-  ): Task[SparqlExtendedConstructResponse]
+  ): UIO[SparqlExtendedConstructResponse]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
@@ -67,7 +72,7 @@ trait TriplestoreService {
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse]
+  ): UIO[FileWrittenResponse]
 
   /**
    * Performs a SPARQL update operation.
@@ -75,7 +80,7 @@ trait TriplestoreService {
    * @param sparqlUpdate the SPARQL update.
    * @return a [[SparqlUpdateResponse]].
    */
-  def sparqlHttpUpdate(sparqlUpdate: String): Task[SparqlUpdateResponse]
+  def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse]
 
   /**
    * Performs a SPARQL ASK query.
@@ -83,7 +88,7 @@ trait TriplestoreService {
    * @param sparql the SPARQL ASK query.
    * @return a [[SparqlAskResponse]].
    */
-  def sparqlHttpAsk(sparql: String): Task[SparqlAskResponse]
+  def sparqlHttpAsk(sparql: String): UIO[SparqlAskResponse]
 
   /**
    * Requests the contents of a named graph, saving the response in a file.
@@ -98,7 +103,7 @@ trait TriplestoreService {
     graphIri: IRI,
     outputFile: Path,
     outputFormat: QuadFormat
-  ): Task[FileWrittenResponse]
+  ): UIO[FileWrittenResponse]
 
   /**
    * Requests the contents of a named graph, returning the response as Turtle.
@@ -106,7 +111,7 @@ trait TriplestoreService {
    * @param graphIri the IRI of the named graph.
    * @return a string containing the contents of the graph in Turtle format.
    */
-  def sparqlHttpGraphData(graphIri: IRI): Task[NamedGraphDataResponse]
+  def sparqlHttpGraphData(graphIri: IRI): UIO[NamedGraphDataResponse]
 
   /**
    * Resets the content of the triplestore with the data supplied with the request.
@@ -123,7 +128,7 @@ trait TriplestoreService {
   /**
    * Drops (deletes) all data from the triplestore.
    */
-  def dropAllTriplestoreContent(): Task[DropAllRepositoryContentACK]
+  def dropAllTriplestoreContent(): UIO[DropAllRepositoryContentACK]
 
   /**
    * Inserts the data referenced inside the `rdfDataObjects` by appending it to a default set of `rdfDataObjects`
@@ -152,14 +157,14 @@ trait TriplestoreService {
    */
   def downloadRepository(
     outputFile: Path
-  ): Task[FileWrittenResponse]
+  ): UIO[FileWrittenResponse]
 
   /**
    * Uploads repository content from an N-Quads file.
    *
    * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
    */
-  def uploadRepository(inputFile: Path): Task[RepositoryUploadedResponse]
+  def uploadRepository(inputFile: Path): UIO[RepositoryUploadedResponse]
 
   /**
    * Puts a data graph into the repository.
@@ -167,10 +172,6 @@ trait TriplestoreService {
    * @param graphContent a data graph in Turtle format to be inserted into the repository.
    * @param graphName    the name of the graph.
    */
-  def insertDataGraphRequest(graphContent: String, graphName: String): Task[InsertGraphDataContentResponse]
+  def insertDataGraphRequest(graphContent: String, graphName: String): UIO[InsertGraphDataContentResponse]
 
-  /**
-   * Simulates a read timeout.
-   */
-  def doSimulateTimeout(): Task[SparqlSelectResult]
 }
