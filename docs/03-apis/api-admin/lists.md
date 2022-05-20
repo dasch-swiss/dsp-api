@@ -29,7 +29,7 @@ If IRI of the child node is given, return the node with its immediate children
 parent node
 
 - `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not used
-- `DELETE: /admin/lists/deletecomments/<nodeIri>` : delete comments of child node
+- `DELETE: /admin/lists/deletecomments/<nodeIri>` : delete comments of a node (child only)
 
 ## List Item Operations
 
@@ -64,11 +64,11 @@ and all its children
 - Return list (or node) basic information, `listinfo` (or `nodeinfo`), without its children
 - GET: `/admin/lists/<listIri>/info`
 
-### Check if list is unused and can be deleted
+### Check if list node is unused and can be deleted
 
 - Required permission: none
 - GET: `/admin/lists/candelete/<listItemIri>`
-- Return simple JSON that confirmes if list can be deleted
+- Return simple JSON that confirms if the list node can be deleted
 
 ```json
 {
@@ -77,7 +77,7 @@ and all its children
 }
 ```
 
-List (root node or child node with all its children) can be deleted only if it (or one its children) is not used.
+List (root node or child node with all its children) can be deleted only if it (or one of its children) is not used.
 
 ### Create new list
 
@@ -359,7 +359,7 @@ remaining child nodes with respect to the position of the deleted node.
 
 ### Delete child node comments
 
-By performing DELETE request to following route `/admin/lists/deletecomments/<nodeIri>` it is possible to delete child node comments.
+Performing a DELETE request to route `/admin/lists/deletecomments/<nodeIri>` deletes the comments of that node.
 As a response sipmle JSON is returned:
 
 ```json
@@ -368,5 +368,3 @@ As a response sipmle JSON is returned:
     "nodeIri": "http://rdfh.ch/lists/0801/xxx"
 }
 ```
-
-Keep in mind that it is impossible to delete root node comments, but if requested `commentsDeleted` key will hold `false` value.

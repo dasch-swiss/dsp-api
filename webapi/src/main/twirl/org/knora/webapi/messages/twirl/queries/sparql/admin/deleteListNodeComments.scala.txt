@@ -6,10 +6,10 @@
 @import org.knora.webapi.IRI
 
 @**
- * Deletes a list child node comment.
+ * Deletes a list node comment.
  *
  * @param namedGraph     the named graph to update.
- * @param nodeIri        the IRI of the list child node to update.
+ * @param nodeIri        the IRI of the list node to update.
  * @param isRootNode     flag to identify node type.
  *@
 @(namedGraph: IRI,
@@ -21,9 +21,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 DELETE {
     GRAPH <@namedGraph> {
-        @if(!isRootNode){
-            <@nodeIri> rdfs:comment ?comments .
-        }
+        <@nodeIri> rdfs:comment ?comments .
     }
 }
 

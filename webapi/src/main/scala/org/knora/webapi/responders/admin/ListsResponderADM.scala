@@ -92,8 +92,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       deleteListItemRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
     case CanDeleteListRequestADM(iri, featureFactoryConfig, requestingUser) =>
       canDeleteListRequestADM(iri)
-    case ListChildNodeCommentsDeleteRequestADM(iri, featureFactoryConfig, requestingUser) =>
-      deleteListChildNodeCommentsADM(iri, featureFactoryConfig, requestingUser)
+    case ListNodeCommentsDeleteRequestADM(iri, featureFactoryConfig, requestingUser) =>
+      deleteListNodeCommentsADM(iri, featureFactoryConfig, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -1833,44 +1833,55 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     } yield CanDeleteListResponseADM(iri, canDelete)
 
   /**
-   * Deletes all comments from child list node.
+   * Deletes all comments from requested list node (only child).
    */
-  private def deleteListChildNodeCommentsADM(
+  private def deleteListNodeCommentsADM(
     iri: IRI,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
-  ): Future[ListChildNodeCommentsDeleteResponseADM] =
+  ): Future[ListNodeCommentsDeleteResponseADM] =
     for {
-      node <- listNodeGetADM(
+      node <- listNodeInfoGetADM(
                 nodeIri = iri,
-                shallow = false,
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = KnoraSystemInstances.Users.SystemUser
               )
 
-      isRootNode = node match {
-                     case Some(_: ListRootNodeADM)  => true
-                     case Some(_: ListChildNodeADM) => false
-                     case _                         => false
-                   }
+      doesNodeHaveComments = node.get.getComments.stringLiterals.length > 0
+
+      _ = if (!doesNodeHaveComments) {
+            throw BadRequestException(s"Nothing to delete. Node $iri already does not have comments.")
+          }
+
+      isRootNode =
+        node match {
+          case Some(_: ListRootNodeInfoADM)  => true
+          case Some(_: ListChildNodeInfoADM) => false
+          case _                             => throw InconsistentRepositoryDataException("Bad data. List node epected.")
+        }
+
+      _ = if (isRootNode) {
+            throw BadRequestException("Root node comments cannot be deleted.")
+          }
 
       projectIri <- getProjectIriFromNode(iri, featureFactoryConfig)
       namedGraph <- getDataNamedGraph(projectIri, featureFactoryConfig)
 
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .deleteListChildNodeComments(
-                           namedGraph = namedGraph,
-                           nodeIri = iri,
-                           isRootNode = isRootNode
-                         )
-                         .toString()
-                     )
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .deleteListNodeComments(
+              namedGraph = namedGraph,
+              nodeIri = iri,
+              isRootNode = isRootNode
+            )
+            .toString()
+        )
 
       _: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlQuery))
                                    .mapTo[SparqlUpdateResponse]
 
-    } yield ListChildNodeCommentsDeleteResponseADM(iri, !isRootNode)
+    } yield ListNodeCommentsDeleteResponseADM(iri, !isRootNode)
 
   /**
    * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,
