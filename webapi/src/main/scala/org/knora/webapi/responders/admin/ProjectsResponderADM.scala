@@ -556,14 +556,16 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
     for {
       // Get the project info.
-      maybeProject: Option[ProjectADM] <- getSingleProjectADM(
-                                            identifier = projectIdentifier,
-                                            requestingUser = requestingUser
-                                          )
+      maybeProject: Option[ProjectADM] <-
+        getSingleProjectADM(
+          identifier = projectIdentifier,
+          requestingUser = requestingUser
+        )
 
-      project: ProjectADM = maybeProject.getOrElse(
-                              throw NotFoundException(s"Project '${projectIdentifier.value}' not found.")
-                            )
+      project: ProjectADM =
+        maybeProject.getOrElse(
+          throw NotFoundException(s"Project '${projectIdentifier.value}' not found.")
+        )
 
       // Check that the user has permission to download the data.
       _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(project.id))) {
@@ -586,14 +588,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       projectSpecificNamedGraphTrigFileWriteFutures: Seq[Future[FileWrittenResponse]] =
         projectSpecificNamedGraphTrigFiles.map { trigFile =>
           for {
-            fileWrittenResponse: FileWrittenResponse <- (
-                                                          storeManager ?
-                                                            NamedGraphFileRequest(
-                                                              graphIri = trigFile.graphIri,
-                                                              outputFile = trigFile.dataFile,
-                                                              outputFormat = TriG
-                                                            )
-                                                        ).mapTo[FileWrittenResponse]
+            fileWrittenResponse: FileWrittenResponse <-
+              (
+                storeManager ?
+                  NamedGraphFileRequest(
+                    graphIri = trigFile.graphIri,
+                    outputFile = trigFile.dataFile,
+                    outputFormat = TriG
+                  )
+              ).mapTo[FileWrittenResponse]
           } yield fileWrittenResponse
         }
 

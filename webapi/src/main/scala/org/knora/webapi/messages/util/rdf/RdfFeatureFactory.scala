@@ -8,7 +8,6 @@ package org.knora.webapi.messages.util.rdf
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature.FeatureFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl._
-import org.knora.webapi.messages.util.rdf.rdf4jimpl._
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
@@ -27,12 +26,6 @@ object RdfFeatureFactory extends FeatureFactory {
   private val jenaFormatUtil                                 = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
   private var jenaShaclValidator: Option[JenaShaclValidator] = None
 
-  // RDF4J singletons.
-  private val rdf4jNodeFactory                                 = new RDF4JNodeFactory
-  private val rdf4jModelFactory                                = new RDF4JModelFactory(rdf4jNodeFactory)
-  private val rdf4jFormatUtil                                  = new RDF4JFormatUtil(modelFactory = rdf4jModelFactory, nodeFactory = rdf4jNodeFactory)
-  private var rdf4jShaclValidator: Option[RDF4JShaclValidator] = None
-
   /**
    * Initialises the [[RdfFeatureFactory]]. This method must be called once, on application startup.
    *
@@ -46,14 +39,6 @@ object RdfFeatureFactory extends FeatureFactory {
           baseDir = settings.shaclShapesDir,
           rdfFormatUtil = jenaFormatUtil,
           nodeFactory = jenaNodeFactory
-        )
-      )
-
-      rdf4jShaclValidator = Some(
-        new RDF4JShaclValidator(
-          baseDir = settings.shaclShapesDir,
-          rdfFormatUtil = rdf4jFormatUtil,
-          nodeFactory = rdf4jNodeFactory
         )
       )
     }
