@@ -5,13 +5,13 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
+import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._

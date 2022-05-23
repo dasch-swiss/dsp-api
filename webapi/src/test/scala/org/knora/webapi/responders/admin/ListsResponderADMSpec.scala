@@ -9,6 +9,9 @@ import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.DuplicateValueException
@@ -17,7 +20,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import dsp.valueObjects
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
@@ -171,10 +173,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
               .fold(e => throw e.head, v => v),
             comments = Comments
-              .make(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -212,10 +214,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v),
             comments = Comments
-              .make(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -256,8 +258,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               Labels
                 .make(
                   Seq(
-                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                    StringLiteralV2(value = "Changed List", language = Some("en"))
+                    V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    V2.StringLiteralV2(value = "Changed List", language = Some("en"))
                   )
                 )
                 .fold(e => throw e.head, v => v)
@@ -266,8 +268,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               Comments
                 .make(
                   Seq(
-                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                    StringLiteralV2(value = "New Comment", language = Some("en"))
+                    V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    V2.StringLiteralV2(value = "New Comment", language = Some("en"))
                   )
                 )
                 .fold(e => throw e.head, v => v)
@@ -333,11 +335,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -358,13 +360,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
         )
 
         // check position
@@ -386,11 +390,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -411,13 +415,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
         )
 
         // check position
@@ -438,11 +444,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -463,13 +469,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+          Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
         )
 
         // check position
@@ -492,11 +500,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),

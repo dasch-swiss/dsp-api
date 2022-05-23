@@ -6,11 +6,13 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import com.typesafe.config.ConfigFactory
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.V2
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import dsp.valueObjects
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
@@ -134,11 +136,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
             projectIri = ProjectIRI.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New child node", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New child comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
