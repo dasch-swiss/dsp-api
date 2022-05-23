@@ -34,7 +34,7 @@ object V2 {
    * @param value    the string value.
    * @param language the language iso.
    */
-  case class StringLiteralV2(value: String, language: String)
+  case class StringLiteralV2(value: String, language: Option[String])
 
   /**
    * An exception indicating that the request parameters did not make sense.

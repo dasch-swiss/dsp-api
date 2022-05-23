@@ -33,6 +33,7 @@ import scala.annotation.tailrec
 import scala.concurrent.Future
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.List.ListName
 
 /**
  * A responder that returns information about hierarchical lists.

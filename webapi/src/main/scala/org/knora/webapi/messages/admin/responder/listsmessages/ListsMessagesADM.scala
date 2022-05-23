@@ -22,6 +22,7 @@ import spray.json._
 
 import java.util.UUID
 import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.V2
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -40,8 +41,8 @@ case class ListRootNodeCreateApiRequestADM(
   id: Option[IRI] = None,
   projectIri: IRI,
   name: Option[String] = None,
-  labels: Seq[StringLiteralV2],
-  comments: Seq[StringLiteralV2]
+  labels: Seq[V2.StringLiteralV2],
+  comments: Seq[V2.StringLiteralV2]
 ) extends ListADMJsonProtocol {
   def toJsValue: JsValue = createListRootNodeApiRequestADMFormat.write(this)
 }
@@ -67,8 +68,8 @@ case class ListChildNodeCreateApiRequestADM(
   projectIri: IRI,
   name: Option[String] = None,
   position: Option[Int] = None,
-  labels: Seq[StringLiteralV2],
-  comments: Option[Seq[StringLiteralV2]]
+  labels: Seq[V2.StringLiteralV2],
+  comments: Option[Seq[V2.StringLiteralV2]]
 ) extends ListADMJsonProtocol {
   def toJsValue: JsValue = createListChildNodeApiRequestADMFormat.write(this)
 }
@@ -90,8 +91,8 @@ case class ListNodeChangeApiRequestADM(
   hasRootNode: Option[IRI] = None,
   position: Option[Int] = None,
   name: Option[String] = None,
-  labels: Option[Seq[StringLiteralV2]] = None,
-  comments: Option[Seq[StringLiteralV2]] = None
+  labels: Option[Seq[V2.StringLiteralV2]] = None,
+  comments: Option[Seq[V2.StringLiteralV2]] = None
 ) extends ListADMJsonProtocol {
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
@@ -111,7 +112,7 @@ case class ChangeNodeNameApiRequestADM(name: String) extends ListADMJsonProtocol
  *
  * @param labels the new labels of the node
  */
-case class ChangeNodeLabelsApiRequestADM(labels: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+case class ChangeNodeLabelsApiRequestADM(labels: Seq[V2.StringLiteralV2]) extends ListADMJsonProtocol {
 
   def toJsValue: JsValue = changeNodeLabelsApiRequestADMFormat.write(this)
 }
@@ -121,7 +122,7 @@ case class ChangeNodeLabelsApiRequestADM(labels: Seq[StringLiteralV2]) extends L
  *
  * @param comments the new comments of the node.
  */
-case class ChangeNodeCommentsApiRequestADM(comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+case class ChangeNodeCommentsApiRequestADM(comments: Seq[V2.StringLiteralV2]) extends ListADMJsonProtocol {
 
   def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
 }

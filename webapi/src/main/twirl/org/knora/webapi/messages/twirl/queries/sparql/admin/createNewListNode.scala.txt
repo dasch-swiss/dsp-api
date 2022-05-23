@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import dsp.valueobjects.V2
 
 @*
  * Creates a new root list node.
@@ -29,8 +29,8 @@
   rootNodeIri: Option[IRI],
   position: Option[Int],
   maybeName: Option[String],
-  maybeLabels: Seq[StringLiteralV2],
-  maybeComments: Option[Seq[StringLiteralV2]]
+  maybeLabels: Seq[V2.StringLiteralV2],
+  maybeComments: Option[Seq[V2.StringLiteralV2]]
 )
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
