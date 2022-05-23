@@ -299,8 +299,8 @@ object TriplestoreTimeoutException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreTimeoutException =
     TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 
-  def apply(message: String): TriplestoreTimeoutException =
-    TriplestoreTimeoutException(message, None)
+  def apply(message: String, cause: Throwable): TriplestoreTimeoutException =
+    TriplestoreTimeoutException(message, Some(cause))
 }
 
 /**

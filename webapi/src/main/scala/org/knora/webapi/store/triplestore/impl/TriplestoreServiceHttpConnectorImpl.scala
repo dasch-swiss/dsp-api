@@ -632,11 +632,6 @@ case class TriplestoreServiceHttpConnectorImpl(
       httpGet
     }
 
-    val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(
-      outputFile = outputFile,
-      maybeGraphIriAndFormat = Some(GraphIriAndFormat(graphIri = graphIri, quadFormat = outputFormat))
-    )
-
     for {
       ctx <- makeHttpContext.orDie
       req <- httpGet.orDie
@@ -644,7 +639,10 @@ case class TriplestoreServiceHttpConnectorImpl(
                client = queryHttpClient,
                request = req,
                context = ctx,
-               processResponse = makeResponse
+               processResponse = writeResponseFile(
+                 outputFile = outputFile,
+                 maybeGraphIriAndFormat = Some(GraphIriAndFormat(graphIri = graphIri, quadFormat = outputFormat))
+               )
              )
     } yield res
 
@@ -664,8 +662,6 @@ case class TriplestoreServiceHttpConnectorImpl(
       httpGet
     }
 
-    val makeResponse: CloseableHttpResponse => NamedGraphDataResponse = returnGraphDataAsTurtle(graphIri)
-
     for {
       ctx <- makeHttpContext.orDie
       req <- httpGet.orDie
@@ -673,7 +669,7 @@ case class TriplestoreServiceHttpConnectorImpl(
                client = queryHttpClient,
                request = req,
                context = ctx,
-               processResponse = makeResponse
+               processResponse = returnGraphDataAsTurtle(graphIri)
              )
     } yield res
   }
@@ -753,10 +749,6 @@ case class TriplestoreServiceHttpConnectorImpl(
       httpGet
     }
 
-    val makeResponse: CloseableHttpResponse => FileWrittenResponse = writeResponseFile(
-      outputFile = outputFile
-    )
-
     for {
       ctx <- makeHttpContext.orDie
       req <- httpGet.orDie
@@ -764,7 +756,7 @@ case class TriplestoreServiceHttpConnectorImpl(
                client = longRequestClient,
                request = req,
                context = ctx,
-               processResponse = makeResponse
+               processResponse = writeResponseFile(outputFile)
              )
     } yield res
   }
@@ -812,8 +804,6 @@ case class TriplestoreServiceHttpConnectorImpl(
       httpPut
     }
 
-    val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(graphName)
-
     for {
       ctx <- makeHttpContext.orDie
       req <- httpPut.orDie
@@ -821,7 +811,7 @@ case class TriplestoreServiceHttpConnectorImpl(
                client = longRequestClient,
                request = req,
                context = ctx,
-               processResponse = makeResponse
+               processResponse = returnInsertGraphDataResponse(graphName)
              )
     } yield res
   }
@@ -858,7 +848,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     client: CloseableHttpClient,
     request: HttpRequest,
     context: HttpClientContext,
-    processResponse: CloseableHttpResponse => T,
+    processResponse: CloseableHttpResponse => UIO[T],
     simulateTimeout: Boolean = false
   ): UIO[T] = {
 
@@ -873,6 +863,26 @@ case class TriplestoreServiceHttpConnectorImpl(
         )
       } else
         ZIO.unit
+
+    def executeQuery(): UIO[CloseableHttpResponse] =
+      ZIO
+        .attempt(client.execute(targetHost, request, context))
+        .catchSome {
+          case socketTimeoutException: java.net.SocketTimeoutException => {
+            val message =
+              "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
+            val error = TriplestoreTimeoutException(message, socketTimeoutException)
+            ZIO.logError(error.toString()) *>
+              ZIO.die(error)
+          }
+          case e: Exception => {
+            val message = s"Failed to connect to triplestore."
+            val error   = TriplestoreConnectionException(message)
+            ZIO.logError(error.toString()) *>
+              ZIO.die(error)
+          }
+        }
+        .orDie
 
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): UIO[Unit] =
       if (statusCode == 404) {
@@ -896,36 +906,18 @@ case class TriplestoreServiceHttpConnectorImpl(
         }
       }
 
-    def attemptProcessResponse(response: CloseableHttpResponse, f: CloseableHttpResponse => T): UIO[T] =
-      ZIO
-        .attempt(f(response))
-        .catchSome {
-          case socketTimeoutException: java.net.SocketTimeoutException => {
-            val message =
-              "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-            ZIO.logError(message + socketTimeoutException.getMessage()) *>
-              ZIO.die(TriplestoreTimeoutException(message))
-          }
-          case e: Exception => {
-            val message = s"Failed to connect to triplestore."
-            ZIO.logError(message + e.getMessage()) *>
-              ZIO.die(TriplestoreConnectionException(message))
-          }
-        }
-        .orDie
-
     def logTimeTook(start: Long, statusCode: Int) =
       ZIO
         .succeed(java.lang.System.currentTimeMillis() - start)
         .flatMap(took => ZIO.logInfo(s"[$statusCode] Triplestore query took: ${took}ms"))
 
     (for {
-      _          <- checkSimulateTimeout()
+      _ <- checkSimulateTimeout()
       // start      <- ZIO.attempt(java.lang.System.currentTimeMillis()).orDie
-      response   <- ZIO.attempt(client.execute(targetHost, request, context)).orDie
+      response   <- executeQuery()
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode).orDie
       _          <- checkResponse(response, statusCode)
-      result     <- attemptProcessResponse(response, processResponse)
+      result     <- processResponse(response)
       _          <- ZIO.attempt(response.close()).orDie // TODO: rewrite with ensuring
       // _          <- logTimeTook(start, statusCode)
     } yield result)
@@ -934,47 +926,46 @@ case class TriplestoreServiceHttpConnectorImpl(
   /**
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[String]].
    */
-  private def returnResponseAsString(response: CloseableHttpResponse): String =
+  private def returnResponseAsString(response: CloseableHttpResponse): UIO[String] =
     Option(response.getEntity) match {
-      case None => ""
-
-      case Some(responseEntity) =>
-        EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
+      case None                 => ZIO.succeed("")
+      case Some(responseEntity) => ZIO.attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)).orDie
     }
 
   /**
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[NamedGraphDataResponse]].
    */
-  private def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): NamedGraphDataResponse =
+  private def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): UIO[NamedGraphDataResponse] =
     Option(response.getEntity) match {
-      case None =>
-        throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
-
+      case None => ZIO.die(TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri"))
       case Some(responseEntity: HttpEntity) =>
-        NamedGraphDataResponse(
-          turtle = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
-        )
+        ZIO
+          .attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
+          .flatMap(entity =>
+            ZIO.succeed(
+              NamedGraphDataResponse(
+                turtle = entity
+              )
+            )
+          )
+          .orDie
     }
 
   /**
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[RepositoryUploadedResponse]].
    */
-  private def returnUploadResponse: CloseableHttpResponse => RepositoryUploadedResponse = { _ =>
-    RepositoryUploadedResponse()
-  }
+  private def returnUploadResponse: CloseableHttpResponse => UIO[RepositoryUploadedResponse] =
+    _ => ZIO.succeed(RepositoryUploadedResponse())
 
   /**
    * Attempts to transforms a [[CloseableHttpResponse]] to a [[InsertGraphDataContentResponse]].
    */
   private def returnInsertGraphDataResponse(
     graphName: String
-  )(response: CloseableHttpResponse): InsertGraphDataContentResponse =
+  )(response: CloseableHttpResponse): UIO[InsertGraphDataContentResponse] =
     Option(response.getEntity) match {
-      case None =>
-        throw TriplestoreResponseException(s"$graphName could not be inserted into Triplestore.")
-
-      case Some(_) =>
-        InsertGraphDataContentResponse()
+      case None    => ZIO.die(TriplestoreResponseException(s"$graphName could not be inserted into Triplestore."))
+      case Some(_) => ZIO.succeed(InsertGraphDataContentResponse())
     }
 
   /**
@@ -999,7 +990,7 @@ case class TriplestoreServiceHttpConnectorImpl(
   private def writeResponseFile(
     outputFile: Path,
     maybeGraphIriAndFormat: Option[GraphIriAndFormat] = None
-  )(response: CloseableHttpResponse): FileWrittenResponse =
+  )(response: CloseableHttpResponse): UIO[FileWrittenResponse] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
         // Are we converting the response to a quad format?
@@ -1034,17 +1025,21 @@ case class TriplestoreServiceHttpConnectorImpl(
             Files.copy(responseEntity.getContent, outputFile)
         }
 
-        FileWrittenResponse()
+        ZIO.succeed(FileWrittenResponse())
 
       case None =>
         maybeGraphIriAndFormat match {
           case Some(GraphIriAndFormat(graphIri, _)) =>
-            // log.error(s"Triplestore returned no content for graph $graphIri")
-            throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
+            val message = s"Triplestore returned no content for graph $graphIri"
+            val error   = TriplestoreResponseException(message)
+            ZIO.logError(error.toString()) *>
+              ZIO.die(error)
 
           case None =>
-            // log.error(s"Triplestore returned no content for repository dump")
-            throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+            val message = "Triplestore returned no content for repository dump"
+            val error   = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+            ZIO.logError(error.toString()) *>
+              ZIO.die(error)
         }
     }
 }
