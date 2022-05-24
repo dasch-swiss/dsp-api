@@ -1044,6 +1044,14 @@ object Cache extends LazyLogging {
     }
   }
 
+  /**
+   * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @param updatedClassIri     the IRI of the changed class
+   * @return the updated cache data
+   */
   def cacheUpdatedOntologyWithClass(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
@@ -1060,6 +1068,13 @@ object Cache extends LazyLogging {
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
 
+  /**
+   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @return the updated cache data
+   */
   def cacheUpdatedOntology(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2
@@ -1074,6 +1089,13 @@ object Cache extends LazyLogging {
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
 
+  /**
+   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @return the updated cache data
+   */
   def cacheUpdatedOntologyWithoutUpdatingMaps(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2
@@ -1088,6 +1110,12 @@ object Cache extends LazyLogging {
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
 
+  /**
+   * Deletes an ontology from the cache.
+   *
+   * @param updatedOntologyIri  the IRI of the ontology to delete
+   * @return the updated cache data
+   */
   def deleteOntology(ontologyIri: SmartIri)(implicit
     ec: ExecutionContext
   ): Future[OntologyCacheData] =
