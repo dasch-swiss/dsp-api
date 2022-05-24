@@ -15,6 +15,8 @@ If IRI of the child node is given, return the node with its immediate children
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
 - `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
 - `GET: /admin/lists/<listIri>/info` : return list basic information (without children)
+- `GET: /admin/lists/candelete/<listItemIri>` : check if list or its node is unused and can be deleted
+
 
 - `POST: /admin/lists` : create new list
 - `POST: /admin/lists/<parentNodeIri>` : create new child node under the supplied parent node IRI
@@ -27,6 +29,7 @@ If IRI of the child node is given, return the node with its immediate children
 parent node
 
 - `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not used
+- `DELETE: /admin/lists/comments/<nodeIri>` : delete comments of a node (child only)
 
 ## List Item Operations
 
@@ -60,6 +63,21 @@ and all its children
 - Required permission: none
 - Return list (or node) basic information, `listinfo` (or `nodeinfo`), without its children
 - GET: `/admin/lists/<listIri>/info`
+
+### Check if list node is unused and can be deleted
+
+- Required permission: none
+- GET: `/admin/lists/candelete/<listItemIri>`
+- Return simple JSON that confirms if the list node can be deleted
+
+```json
+{
+    "canDeleteList": true,
+    "listIri": "http://rdfh.ch/lists/0801/xxx"
+}
+```
+
+List (root node or child node with all its children) can be deleted only if it (or one of its children) is not used.
 
 ### Create new list
 
@@ -338,3 +356,15 @@ remaining child nodes with respect to the position of the deleted node.
     - If the IRI of a child node is given, the updated parent node is returned.
 
 - Delete `/admin/lists/<listItemIri>`
+
+### Delete child node comments
+
+Performing a DELETE request to route `/admin/lists/comments/<nodeIri>` deletes the comments of that node.
+As a response sipmle JSON is returned:
+
+```json
+{
+    "commentsDeleted": true,
+    "nodeIri": "http://rdfh.ch/lists/0801/xxx"
+}
+```

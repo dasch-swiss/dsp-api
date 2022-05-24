@@ -22,9 +22,9 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import spray.json._
 
 import java.util.UUID
+import org.knora.webapi.messages.admin.responder.valueObjects.Comments
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
+/////////////// API requests
 
 /**
  * Represents an API request payload that asks the Knora API server to create a new list root node.
@@ -330,7 +330,7 @@ case class ListItemDeleteRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Request checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
+ * Requests checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
  *
  * @param iri                  the IRI of the list node (root or child).
  * @param featureFactoryConfig the feature factory configuration.
@@ -339,8 +339,45 @@ case class ListItemDeleteRequestADM(
 case class CanDeleteListRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
     extends ListsResponderRequestADM
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Responses
+/**
+ * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteADM]]
+ *
+ * @param iri                  the IRI of the list node (root or child).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ */
+case class ListNodeCommentsDeleteRequestADM(
+  iri: IRI,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends ListsResponderRequestADM
+
+///////////////////////// Responses
+
+/**
+ * Responds to deletion of list node's comments by returning a success message.
+ *
+ * @param nodeIri         the IRI of the list that comments are deleted.
+ * @param commentsDeleted contains a boolean value if comments were deleted.
+ */
+case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Boolean)
+    extends KnoraResponseADM
+    with ListADMJsonProtocol {
+  def toJsValue: JsValue = ListNodeCommentsDeleteResponseADMFormat.write(this)
+}
+
+/**
+ * Returns an information if node can be deleted (none of its nodes is used in data).
+ *
+ * @param iri           the IRI of the list that is checked.
+ * @param canDeleteList contains a boolean value if list node can be deleted.
+ */
+case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
+    extends KnoraResponseADM
+    with ListADMJsonProtocol {
+
+  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
+}
 
 /**
  * Represents a sequence of list info nodes.
@@ -431,16 +468,6 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
-}
-
-/**
- * Checks if a list can be deleted (none of its nodes is used in data).
- *
- * @param iri the IRI of the list that is checked.
- */
-case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends ListItemDeleteResponseADM {
-
-  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 }
 
 /**
@@ -1339,4 +1366,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     jsonFormat(ListDeleteResponseADM, "iri", "deleted")
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
     jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
+  implicit val ListNodeCommentsDeleteResponseADMFormat: RootJsonFormat[ListNodeCommentsDeleteResponseADM] =
+    jsonFormat(ListNodeCommentsDeleteResponseADM, "nodeIri", "commentsDeleted")
 }
