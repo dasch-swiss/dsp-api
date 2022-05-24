@@ -20,6 +20,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import scala.concurrent.duration._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
@@ -37,6 +38,10 @@ import org.knora.webapi.util._
 
 import java.time.Instant
 import scala.concurrent.Future
+import scala.concurrent.Await
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.feature.TestFeatureFactoryConfig
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 
 /**
  * Responds to requests dealing with ontologies.
@@ -1036,8 +1041,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update the cache.
 
-        updatedSubClassOfRelations   = cacheData.subClassOfRelations + (internalClassIri -> allBaseClassIris)
-        updatedSuperClassOfRelations = OntologyHelpers.calculateSuperClassOfRelations(updatedSubClassOfRelations)
+        updatedSubClassOfRelations     = cacheData.subClassOfRelations + (internalClassIri    -> allBaseClassIris)
+        updatedSuperClassOfRelations   = OntologyHelpers.calculateSuperClassOfRelations(updatedSubClassOfRelations)
+        updatedClassDefinedInOntology  = cacheData.classDefinedInOntology + (internalClassIri -> internalOntologyIri)
+        updatedEntityDefinedInOntology = cacheData.propertyDefinedInOntology ++ updatedClassDefinedInOntology
 
         updatedOntology = ontology.copy(
                             ontologyMetadata = ontology.ontologyMetadata.copy(
@@ -1046,13 +1053,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.storeCacheData(
-              cacheData.copy(
-                ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology),
-                subClassOfRelations = updatedSubClassOfRelations,
-                superClassOfRelations = updatedSuperClassOfRelations
-              )
-            )
+        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
@@ -1234,14 +1235,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update subclasses and write the cache.
 
-        _ = Cache.storeCacheData(
-              Cache.updateSubClasses(
-                baseClassIri = internalClassIri,
-                cacheData = cacheData.copy(
-                  ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
-                )
-              )
-            )
+        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
@@ -1292,6 +1286,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     addCardinalitiesRequest: AddCardinalitiesToClassRequestV2
   ): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
+      println("AAAAAA")
       for {
         cacheData                           <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -1481,14 +1476,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.storeCacheData(
-              Cache.updateSubClasses(
-                baseClassIri = internalClassIri,
-                cacheData = cacheData.copy(
-                  ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
-                )
-              )
-            )
+        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
