@@ -953,7 +953,7 @@ object Cache extends LazyLogging {
    *
    * @param cacheData the updated data to be cached.
    */
-  def storeCacheData(cacheData: OntologyCacheData): Unit =
+  private def storeCacheData(cacheData: OntologyCacheData): Unit =
     CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
 
   /**
@@ -1050,25 +1050,53 @@ object Cache extends LazyLogging {
     updatedClassIri: SmartIri
   )(implicit
     ec: ExecutionContext
-  ): Unit =
+  ): Future[OntologyCacheData] =
     for {
-      ontologyCache       <- getCacheData
-      newOntologies        = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      newOntologyCacheData = make(newOntologies)
-      updatedCacheData     = updateSubClasses(updatedClassIri, newOntologyCacheData)
-      _                    = storeCacheData(updatedCacheData)
-    } yield ()
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      newOntologyCacheData  = make(newOntologies)
+      updatedCacheData      = updateSubClasses(updatedClassIri, newOntologyCacheData)
+      _                     = storeCacheData(updatedCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
 
-  def addNewOntology(ontologyIri: SmartIri, ontologyData: ReadOntologyV2)(implicit
+  def cacheUpdatedOntologyWithProperty(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2
+  )(implicit
     ec: ExecutionContext
-  ): Unit =
+  ): Future[OntologyCacheData] =
     for {
-      ontologyCache       <- getCacheData
-      newOntologies        = ontologyCache.ontologies + (ontologyIri -> ontologyData)
-      newOntologyCacheData = make(newOntologies)
-      _                    = storeCacheData(newOntologyCacheData)
-    } yield () // TODO: use this
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      newOntologyCacheData  = make(newOntologies)
+      _                     = storeCacheData(newOntologyCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
 
-  // TODO: remove ontology
+  def cacheUpdatedOntologyWithoutUpdatingMaps(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2
+  )(implicit
+    ec: ExecutionContext
+  ): Future[OntologyCacheData] =
+    for {
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      updatedCacheData      = ontologyCache.copy(ontologies = newOntologies)
+      _                     = storeCacheData(updatedCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
+
+  def deleteOntology(ontologyIri: SmartIri)(implicit
+    ec: ExecutionContext
+  ): Future[OntologyCacheData] =
+    for {
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies - ontologyIri
+      newOntologyCacheData  = make(newOntologies)
+      _                     = storeCacheData(newOntologyCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
 
 }
