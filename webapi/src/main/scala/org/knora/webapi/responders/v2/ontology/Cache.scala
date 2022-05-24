@@ -1044,7 +1044,7 @@ object Cache extends LazyLogging {
     }
   }
 
-  def cacheUpdatedOntology(
+  def cacheUpdatedOntologyWithClass(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2,
     updatedClassIri: SmartIri
@@ -1060,7 +1060,7 @@ object Cache extends LazyLogging {
       updatedOntologyCache <- getCacheData
     } yield updatedOntologyCache
 
-  def cacheUpdatedOntologyWithProperty(
+  def cacheUpdatedOntology(
     updatedOntologyIri: SmartIri,
     updatedOntologyData: ReadOntologyV2
   )(implicit
