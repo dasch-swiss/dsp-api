@@ -1069,7 +1069,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         expectMsg(
-          Failure(BadRequestException(s"Nothing to delete. Node $nodeIri already does not have comments."))
+          Failure(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
         )
       }
     }

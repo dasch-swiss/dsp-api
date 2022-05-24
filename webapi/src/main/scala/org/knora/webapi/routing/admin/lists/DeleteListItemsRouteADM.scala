@@ -102,7 +102,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
    * Deletes all comments from requested list node (only child).
    */
   private def deleteListNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
-    path(ListsBasePath / "deletecomments" / Segment) { iri =>
+    path(ListsBasePath / "comments" / Segment) { iri =>
       delete { requestContext =>
         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 

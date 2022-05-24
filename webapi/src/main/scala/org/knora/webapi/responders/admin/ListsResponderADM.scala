@@ -1850,14 +1850,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       doesNodeHaveComments = node.get.getComments.stringLiterals.length > 0
 
       _ = if (!doesNodeHaveComments) {
-            throw BadRequestException(s"Nothing to delete. Node $iri already does not have comments.")
+            throw BadRequestException(s"Nothing to delete. Node $iri does not have comments.")
           }
 
       isRootNode =
         node match {
           case Some(_: ListRootNodeInfoADM)  => true
           case Some(_: ListChildNodeInfoADM) => false
-          case _                             => throw InconsistentRepositoryDataException("Bad data. List node epected.")
+          case _                             => throw InconsistentRepositoryDataException("Bad data. List node expected.")
         }
 
       _ = if (isRootNode) {

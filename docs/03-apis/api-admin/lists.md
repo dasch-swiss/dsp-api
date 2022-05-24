@@ -29,7 +29,7 @@ If IRI of the child node is given, return the node with its immediate children
 parent node
 
 - `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not used
-- `DELETE: /admin/lists/deletecomments/<nodeIri>` : delete comments of a node (child only)
+- `DELETE: /admin/lists/comments/<nodeIri>` : delete comments of a node (child only)
 
 ## List Item Operations
 
@@ -359,7 +359,7 @@ remaining child nodes with respect to the position of the deleted node.
 
 ### Delete child node comments
 
-Performing a DELETE request to route `/admin/lists/deletecomments/<nodeIri>` deletes the comments of that node.
+Performing a DELETE request to route `/admin/lists/comments/<nodeIri>` deletes the comments of that node.
 As a response sipmle JSON is returned:
 
 ```json
