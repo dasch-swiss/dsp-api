@@ -346,10 +346,6 @@ object Cache extends LazyLogging {
       propertyIris.map(_ -> ontoIri)
     }
 
-    //
-    // -------------------------------------------------
-    //
-
     val ontologiesErrorMap =
       new ErrorHandlingMap[SmartIri, ReadOntologyV2](ontologies, key => s"Ontology not found: $key")
     val subClassOfRelationsErrorMap =
@@ -585,69 +581,8 @@ object Cache extends LazyLogging {
         )
     }
 
-    // A set of the IRIs of all properties used in cardinalities in standoff classes.
-    val propertiesUsedInStandoffCardinalities: Set[SmartIri] = readClassInfos.flatMap { case (_, readClassInfo) =>
-      if (readClassInfo.isStandoffClass) {
-        readClassInfo.allCardinalities.keySet
-      } else {
-        Set.empty[SmartIri]
-      }
-    }.toSet
-
-    // A set of the IRIs of all properties whose subject class constraint is a standoff class.
-    val propertiesWithStandoffTagSubjects: Set[SmartIri] = readPropertyInfos.flatMap {
-      case (propertyIri, readPropertyInfo) =>
-        readPropertyInfo.entityInfoContent.getPredicateIriObject(
-          OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
-        ) match {
-          case Some(subjectClassConstraint: SmartIri) =>
-            readClassInfos.get(subjectClassConstraint) match {
-              case Some(subjectReadClassInfo: ReadClassInfoV2) =>
-                if (subjectReadClassInfo.isStandoffClass) {
-                  Some(propertyIri)
-                } else {
-                  None
-                }
-
-              case None => None
-            }
-
-          case None => None
-        }
-    }.toSet
-
-    val classDefinedInOntology = classIrisPerOntology.flatMap { case (ontoIri, classIris) =>
-      classIris.map(_ -> ontoIri)
-    }
-    val propertyDefinedInOntology = propertyIrisPerOntology.flatMap { case (ontoIri, propertyIris) =>
-      propertyIris.map(_ -> ontoIri)
-    }
-
     // Construct the ontology cache data.
-    val ontologyCacheData: OntologyCacheData = OntologyCacheData(
-      ontologies = new ErrorHandlingMap[SmartIri, ReadOntologyV2](readOntologies, key => s"Ontology not found: $key"),
-      subClassOfRelations =
-        new ErrorHandlingMap[SmartIri, Seq[SmartIri]](allSubClassOfRelations, key => s"Class not found: $key"),
-      superClassOfRelations =
-        new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperClassOfRelations, key => s"Class not found: $key"),
-      subPropertyOfRelations =
-        new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSubPropertyOfRelations, key => s"Property not found: $key"),
-      superPropertyOfRelations =
-        new ErrorHandlingMap[SmartIri, Set[SmartIri]](allSuperPropertyOfRelations, key => s"Property not found: $key"),
-      classDefinedInOntology =
-        new ErrorHandlingMap[SmartIri, SmartIri](classDefinedInOntology, key => s"Class not found: $key"),
-      propertyDefinedInOntology =
-        new ErrorHandlingMap[SmartIri, SmartIri](propertyDefinedInOntology, key => s"Property not found: $key"),
-      entityDefinedInOntology = new ErrorHandlingMap[SmartIri, SmartIri](
-        propertyDefinedInOntology ++ classDefinedInOntology,
-        key => s"Property not found: $key"
-      ),
-      guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](
-        allGuiAttributeDefinitions,
-        key => s"salsah-gui:Guielement not found: $key"
-      ),
-      standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
-    )
+    val ontologyCacheData: OntologyCacheData = make(readOntologies)
 
     // Check property subject and object class constraints.
 
