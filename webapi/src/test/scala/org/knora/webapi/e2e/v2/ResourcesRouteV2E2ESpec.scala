@@ -2282,30 +2282,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val ontologiesPath               = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
       val auth                         = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
-      // val createOntology =
-      //   s"""{
-      //      |    "knora-api:ontologyName": "NewOntology",
-      //      |    "knora-api:attachedToProject": {
-      //      |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
-      //      |    },
-      //      |    "rdfs:label": "a new ontology",
-      //      |    "@context": {
-      //      |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-      //      |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
-      //      |    }
-      //      |}""".stripMargin
-
-      // val createOntologyRequest =
-      //   Post(
-      //     s"$baseApiUrl/v2/ontologies",
-      //     HttpEntity(RdfMediaTypes.`application/ld+json`, createOntology)
-      //   ) ~> addCredentials(auth)
-      // val createOntologyResponse = singleAwaitingRequest(createOntologyRequest)
-
-      // assert(createOntologyResponse.status == StatusCodes.OK)
-
-      // println(responseToString(createOntologyResponse))
-
       // create a new resource class and add a property with cardinality to it
       val createResourceClass =
         s"""{
