@@ -471,9 +471,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
      */
     case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
       lazy val dataFile: Path = {
-        val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") +
-          ".trig"
-
+        val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") + ".trig"
         tempDir.resolve(filename)
       }
     }
@@ -641,7 +639,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
         projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
       resultFile: Path = tempDir.resolve(project.shortname + ".trig")
-      _                = combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
+      _                = println(s"namedGraphTrigFiles: $namedGraphTrigFiles and resultFile: $resultFile")
+      _                = combineGraphs(namedGraphTrigFiles, resultFile)
     } yield ProjectDataGetResponseADM(resultFile)
   }
 

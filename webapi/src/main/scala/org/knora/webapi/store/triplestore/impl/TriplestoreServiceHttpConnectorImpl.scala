@@ -639,9 +639,10 @@ case class TriplestoreServiceHttpConnectorImpl(
                client = queryHttpClient,
                request = req,
                context = ctx,
-               processResponse = writeResponseFile(
+               processResponse = writeResponseFileAsTurtleContent(
                  outputFile = outputFile,
-                 maybeGraphIriAndFormat = Some(GraphIriAndFormat(graphIri = graphIri, quadFormat = outputFormat))
+                 graphIri = graphIri,
+                 quadFormat = outputFormat
                )
              )
     } yield res
@@ -756,7 +757,7 @@ case class TriplestoreServiceHttpConnectorImpl(
                client = longRequestClient,
                request = req,
                context = ctx,
-               processResponse = writeResponseFile(outputFile)
+               processResponse = writeResponseFileAsPlainContent(outputFile)
              )
     } yield res
   }
@@ -969,79 +970,81 @@ case class TriplestoreServiceHttpConnectorImpl(
     }
 
   /**
-   * Represents a named graph IRI and the file format that the graph should be written in.
-   *
-   * @param graphIri   the named graph IRI.
-   * @param quadFormat the file format.
-   */
-  private case class GraphIriAndFormat(graphIri: IRI, quadFormat: QuadFormat)
-
-  /**
-   * Writes an HTTP response to a file.
+   * Writes an HTTP response the response is written as-is to the output file.
    *
    * @param outputFile             the output file.
-   * @param maybeGraphIriAndFormat a graph IRI and quad format for the output file. If defined, the response
-   *                               is parsed as Turtle and converted to the output format, with the graph IRI
-   *                               added to each statement. Otherwise, the response is written as-is to the
-   *                               output file.
    * @param response               the response to be read.
    * @return a [[FileWrittenResponse]].
    */
-  private def writeResponseFile(
-    outputFile: Path,
-    maybeGraphIriAndFormat: Option[GraphIriAndFormat] = None
+  private def writeResponseFileAsPlainContent(
+    outputFile: Path
   )(response: CloseableHttpResponse): UIO[FileWrittenResponse] =
     Option(response.getEntity) match {
       case Some(responseEntity: HttpEntity) =>
-        // Are we converting the response to a quad format?
-        maybeGraphIriAndFormat match {
-          case Some(GraphIriAndFormat(graphIri, quadFormat)) =>
-            // Yes. Stream the HTTP entity to a temporary Turtle file.
-            val turtleFile = Paths.get(outputFile.toString + ".ttl")
-            Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
-
-            // Convert the Turtle to the output format.
-
-            val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
-
-            val processFileTry: Try[Unit] = Try {
-              rdfFormatUtil.turtleToQuadsFile(
-                rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(turtleFile))),
-                graphIri = graphIri,
-                outputFile = outputFile,
-                outputFormat = quadFormat
-              )
-            }
-
-            Files.delete(turtleFile)
-
-            processFileTry match {
-              case Success(_)  => ()
-              case Failure(ex) => throw ex
-            }
-
-          case None =>
-            // No. Stream the HTTP entity directly to the output file.
-            Files.copy(responseEntity.getContent, outputFile)
-        }
-
-        ZIO.succeed(FileWrittenResponse())
+        ZIO.attempt {
+          // Stream the HTTP entity directly to the output file.
+          Files.copy(responseEntity.getContent, outputFile)
+        }.flatMap(_ => ZIO.succeed(FileWrittenResponse())).orDie.debug("after file written response.")
 
       case None =>
-        maybeGraphIriAndFormat match {
-          case Some(GraphIriAndFormat(graphIri, _)) =>
-            val message = s"Triplestore returned no content for graph $graphIri"
-            val error   = TriplestoreResponseException(message)
-            ZIO.logError(error.toString()) *>
-              ZIO.die(error)
-
-          case None =>
-            val message = "Triplestore returned no content for repository dump"
-            val error   = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
-            ZIO.logError(error.toString()) *>
-              ZIO.die(error)
-        }
+        val message = "Triplestore returned no content for repository dump"
+        val error   = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+        ZIO.logError(error.toString()) *>
+          ZIO.die(error)
     }
+
+  /**
+   * Writes an HTTP response to a file, where the response is parsed as Turtle
+   * and converted to the output format, with the graph IRI added to each statement.
+   *
+   * @param outputFile        the output file.
+   * @param graphIri           the IRI of the graph used in the output.
+   * @param quadFormat         the output format.
+   * @param response           the response to be read.
+   * @return a [[FileWrittenResponse]].
+   */
+  private def writeResponseFileAsTurtleContent(
+    outputFile: Path,
+    graphIri: IRI,
+    quadFormat: QuadFormat
+  )(response: CloseableHttpResponse): UIO[FileWrittenResponse] =
+    Option(response.getEntity) match {
+      case Some(responseEntity: HttpEntity) =>
+        ZIO.attempt {
+          // Yes. Stream the HTTP entity to a temporary Turtle file.
+          val turtleFile = Paths.get(outputFile.toString + ".ttl")
+          Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
+
+          // Convert the Turtle to the output format.
+
+          val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+
+          val processFileTry: Try[Unit] = Try {
+            rdfFormatUtil.turtleToQuadsFile(
+              rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(turtleFile))),
+              graphIri = graphIri,
+              outputFile = outputFile,
+              outputFormat = quadFormat
+            )
+          }
+
+          Files.delete(turtleFile)
+
+          processFileTry match {
+            case Success(_)  => ()
+            case Failure(ex) => throw ex
+          }
+        }.flatMap(_ => ZIO.succeed(FileWrittenResponse()))
+          .orDie
+          .debug(s"after file written response: $graphIri and $quadFormat")
+
+      case None =>
+        val message = s"Triplestore returned no content for graph $graphIri"
+        val error   = TriplestoreResponseException(message)
+        ZIO.logError(error.toString()) *>
+          ZIO.die(error)
+    }
+
 }
 
 object TriplestoreServiceHttpConnectorImpl {
