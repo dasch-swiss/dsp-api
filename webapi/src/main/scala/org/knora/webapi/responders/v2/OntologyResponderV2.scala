@@ -1053,7 +1053,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 
@@ -1235,7 +1235,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update subclasses and write the cache.
 
-        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 
@@ -1286,7 +1286,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     addCardinalitiesRequest: AddCardinalitiesToClassRequestV2
   ): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
-      println("AAAAAA")
       for {
         cacheData                           <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -1476,7 +1475,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 

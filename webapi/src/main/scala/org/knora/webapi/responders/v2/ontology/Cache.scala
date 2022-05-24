@@ -1044,14 +1044,31 @@ object Cache extends LazyLogging {
     }
   }
 
-  def cacheUpdatedOntology(updatedOntologyIri: SmartIri, updatedOntologyData: ReadOntologyV2)(implicit
+  def cacheUpdatedOntology(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2,
+    updatedClassIri: SmartIri
+  )(implicit
     ec: ExecutionContext
   ): Unit =
     for {
-      ontologyCache                          <- getCacheData
-      newOntologies                           = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
-      newOntologyCacheData: OntologyCacheData = make(newOntologies)
-      _                                       = storeCacheData(newOntologyCacheData)
+      ontologyCache       <- getCacheData
+      newOntologies        = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      newOntologyCacheData = make(newOntologies)
+      updatedCacheData     = updateSubClasses(updatedClassIri, newOntologyCacheData)
+      _                    = storeCacheData(updatedCacheData)
     } yield ()
+
+  def addNewOntology(ontologyIri: SmartIri, ontologyData: ReadOntologyV2)(implicit
+    ec: ExecutionContext
+  ): Unit =
+    for {
+      ontologyCache       <- getCacheData
+      newOntologies        = ontologyCache.ontologies + (ontologyIri -> ontologyData)
+      newOntologyCacheData = make(newOntologies)
+      _                    = storeCacheData(newOntologyCacheData)
+    } yield () // TODO: use this
+
+  // TODO: remove ontology
 
 }

@@ -434,7 +434,7 @@ object Cardinalities {
                           classes = ontology.classes + (internalClassIri -> readClassInfo)
                         )
 
-      _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+      _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology, internalClassIri)
 
       // Read the data back from the cache.
 
