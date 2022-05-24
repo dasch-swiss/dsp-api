@@ -70,7 +70,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
-        received.lists.size should be(8)
+        received.lists.size should be(9)
       }
 
       "return all lists belonging to the images project" in {
@@ -98,7 +98,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // log.debug("received: " + received)
 
-        received.lists.size should be(3)
+        received.lists.size should be(4)
       }
 
       "return basic list information (anything list)" in {
@@ -1019,6 +1019,58 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
         response.listIri should be(listIri)
         response.canDeleteList should be(true)
+      }
+    }
+
+    "used to delete list node comments" should {
+      "do not delete a comment of root list node" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        expectMsg(
+          Failure(BadRequestException("Root node comments cannot be deleted."))
+        )
+      }
+
+      "delete all comments of child node that contains just one comment" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList01"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: ListNodeCommentsDeleteResponseADM =
+          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
+        response.commentsDeleted should be(true)
+      }
+
+      "delete all comments of child node that contains more than one comment" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList02"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: ListNodeCommentsDeleteResponseADM =
+          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
+        response.commentsDeleted should be(true)
+      }
+
+      "if reqested list does not have comments, inform there is no comments to delete" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList03"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        expectMsg(
+          Failure(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
+        )
       }
     }
   }
