@@ -590,10 +590,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update the ontology cache with the unescaped metadata.
 
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(
-              internalOntologyIri,
-              ReadOntologyV2(ontologyMetadata = unescapedNewMetadata)
-            )
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(
+               internalOntologyIri,
+               ReadOntologyV2(ontologyMetadata = unescapedNewMetadata)
+             )
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -746,10 +746,10 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         updatedOntology = cacheData
                             .ontologies(internalOntologyIri)
                             .copy(ontologyMetadata = unescapedNewMetadata)
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(
-              internalOntologyIri,
-              updatedOntology
-            )
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(
+               internalOntologyIri,
+               updatedOntology
+             )
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -844,7 +844,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         updatedOntology = cacheData
                             .ontologies(internalOntologyIri)
                             .copy(ontologyMetadata = unescapedNewMetadata)
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
 
       } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
 
@@ -1046,7 +1046,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 
@@ -1228,7 +1228,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update subclasses and write the cache.
 
-        _ = Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 
@@ -1468,7 +1468,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 
@@ -1719,7 +1719,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> readClassInfo)
                           )
 
-        _ = Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
         // Read the data back from the cache.
 
@@ -1940,7 +1940,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes - internalClassIri
                           )
 
-        _ = Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
 
       } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
 
@@ -2113,19 +2113,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             properties = ontology.properties -- propertiesToRemoveFromCache
           )
 
-        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
-        // updatedSubPropertyOfRelations =
-        //   (cacheData.subPropertyOfRelations -- propertiesToRemoveFromCache).map { case (subProperty, baseProperties) =>
-        //     subProperty -> (baseProperties -- propertiesToRemoveFromCache)
-        //   }
-
-        // _ = Cache.storeCacheData(
-        //       cacheData.copy(
-        //         ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology),
-        //         subPropertyOfRelations = updatedSubPropertyOfRelations
-        //       )
-        //     )
       } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
 
     for {
@@ -2241,7 +2230,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             }
 
         // Remove the ontology from the cache.
-        _ = Cache.deleteOntology(internalOntologyIri)
+        _ <- Cache.deleteOntology(internalOntologyIri)
       } yield SuccessResponseV2(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been deleted")
 
     for {
@@ -2583,7 +2572,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
           )
 
-        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
         response <- getPropertyDefinitionsFromOntologyV2(
@@ -2806,7 +2795,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
           )
 
-        _ = Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
@@ -3010,7 +2999,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
           )
 
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
@@ -3148,7 +3137,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes + (internalClassIri -> newReadClassInfo)
                           )
 
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
@@ -3342,7 +3331,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
           )
 
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
@@ -3497,7 +3486,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             classes = ontology.classes + (internalClassIri -> newReadClassInfo)
           )
 
-        _ = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
+        _ <- Cache.cacheUpdatedOntologyWithoutUpdatingMaps(internalOntologyIri, updatedOntology)
 
         // Read the data back from the cache.
 
