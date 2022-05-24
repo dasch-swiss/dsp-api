@@ -179,6 +179,8 @@ object Dependencies {
     commonsLang3,
     commonsValidator,
     gwtServlet,
-    zioPrelude
+    zioPrelude,
+    zioTest    % Test,
+    zioTestSbt % Test
   )
 }
