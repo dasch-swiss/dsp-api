@@ -3,207 +3,201 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
-import org.knora.webapi.UnitSpec
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsErrorMessagesADM._
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import dsp.valueobjects.Project._
 import zio.prelude.Validation
+import zio.test._
 
 /**
- * This spec is used to test the [[ProjectsValueObjectsADM]] value objects creation.
+ * This spec is used to test the [[Project]] value objects creation.
  */
-class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
-  "ProjectIRI value object" when {
-    val validProjectIri            = "http://rdfh.ch/projects/0001"
-    val projectIRIWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
+object ProjectSpec extends ZIOSpecDefault {
+  private val validShortcode   = "1234"
+  private val invalidShortcode = "12345"
+  private val validShortname   = "validShortname"
+  private val invalidShortname = "~!@#$%^&*()_+"
+  private val validLongname    = "That is the project longname"
+  private val validDescription = Seq(
+    V2.StringLiteralV2(value = "Valid project description", language = Some("en"))
+  )
+  private val validKeywords = Seq("key", "word")
+  private val validLogo     = "/fu/bar/baz.jpg"
 
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        ProjectIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        ProjectIRI.make("not a project IRI") should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.ProjectIriInvalid))
-        )
-        ProjectIRI.make(projectIRIWithUUIDVersion3) should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
-        )
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        ProjectIRI.make(validProjectIri) should not equal Validation.fail(
-          BadRequestException(IriErrorMessages.ProjectIriInvalid)
-        )
-      }
-      "return value passed to value object" in {
-        ProjectIRI.make(validProjectIri).toOption.get.value should equal(validProjectIri)
-      }
-    }
-  }
+  def spec =
+    (shortcodeTest + shortnameTest + longnameTest + projectDescriptionsTest + keywordsTest + logoTest + projectStatusTest + projectSelfJoinTest)
 
-  "Shortcode value object" when {
-    val validShortcode   = "1234"
-    val invalidShortcode = "12345"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Shortcode.make("") should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+  private val shortcodeTest = suite("ProjectSpec - Shortcode")(
+    test("pass an empty value and throw an error") {
+      assertTrue(Shortcode.make("") == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortcodeMissing)))
+      assertTrue(
+        Shortcode.make(Some("")) == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          Shortcode.make(invalidShortcode) == Validation.fail(
+            V2.BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
+          )
         )
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        Shortcode.make(invalidShortcode) should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeInvalid))
+        assertTrue(
+          Shortcode.make(Some(invalidShortcode)) == Validation.fail(
+            V2.BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
+          )
+        )
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Shortcode.make(validShortcode).toOption.get.value == validShortcode)
+        assertTrue(Shortcode.make(Option(validShortcode)).getOrElse(null).get.value == validShortcode)
+      } +
+      test("pass None") {
+        assertTrue(
+          Shortcode.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Shortcode.make(validShortcode).toOption.get.value should not equal
-          BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
-      }
-      "return value passed to value object" in {
-        Shortcode.make(validShortcode).toOption.get.value should equal(validShortcode)
-      }
-    }
-  }
+  )
 
-  "Shortname value object" when {
-    val validShortname   = "validShortname"
-    val invalidShortname = "~!@#$%^&*()_+"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Shortname.make("") should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
+  private val shortnameTest = suite("ProjectSpec - Shortname")(
+    test("pass an empty value and throw an error") {
+      assertTrue(Shortname.make("") == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortnameMissing)))
+      assertTrue(
+        Shortname.make(Some("")) == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortnameMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          Shortname.make(invalidShortname) == Validation.fail(
+            V2.BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+          )
+        )
+        assertTrue(
+          Shortname.make(Some(invalidShortname)) == Validation.fail(
+            V2.BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+          )
+        )
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Shortname.make(validShortname).toOption.get.value == validShortname)
+        assertTrue(Shortname.make(Option(validShortname)).getOrElse(null).get.value == validShortname)
+      } +
+      test("pass None") {
+        assertTrue(
+          Shortcode.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        Shortname.make(invalidShortname) should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameInvalid))
+  )
+
+  private val longnameTest = suite("ProjectSpec - Longname")(
+    test("pass an empty value and throw an error") {
+      assertTrue(Longname.make("") == Validation.fail(V2.BadRequestException(ProjectErrorMessages.LongnameMissing)))
+      assertTrue(
+        Longname.make(Some("")) == Validation.fail(V2.BadRequestException(ProjectErrorMessages.LongnameMissing))
+      )
+    } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Longname.make(validLongname).toOption.get.value == validLongname)
+        assertTrue(Longname.make(Option(validLongname)).getOrElse(null).get.value == validLongname)
+      } +
+      test("pass None") {
+        assertTrue(
+          Shortcode.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Shortname.make(validShortname).toOption.get.value should not equal
-          BadRequestException(ProjectErrorMessages.ShortnameInvalid)
-      }
-      "return value passed to value object" in {
-        Shortname.make(validShortname).toOption.get.value should equal(validShortname)
-      }
-    }
-  }
+  )
 
-  "Longname value object" when {
-    val validLongname = "That's the project longname"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Longname.make("") should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
+  private val projectDescriptionsTest = suite("ProjectSpec - ProjectDescriptions")(
+    test("pass an empty object and throw an error") {
+      assertTrue(
+        ProjectDescription.make(Seq.empty) == Validation.fail(
+          V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing)
+        )
+      )
+      assertTrue(
+        ProjectDescription.make(Some(Seq.empty)) == Validation.fail(
+          V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing)
+        )
+      )
+    } +
+      test("pass a valid object and successfully create value object") {
+        assertTrue(ProjectDescription.make(validDescription).toOption.get.value == validDescription)
+        assertTrue(ProjectDescription.make(Option(validDescription)).getOrElse(null).get.value == validDescription)
+      } +
+      test("pass None") {
+        assertTrue(
+          ProjectDescription.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Longname.make(validLongname).toOption.get.value should not equal
-          BadRequestException(LONGNAME_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        Longname.make(validLongname).toOption.get.value should equal(validLongname)
-      }
-    }
-  }
+  )
 
-  "ProjectDescription value object" when {
-    val validProjectDescription = Seq(StringLiteralV2(value = "Valid description", language = Some("en")))
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        ProjectDescription.make(Seq.empty) should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing))
+  private val keywordsTest = suite("ProjectSpec - Keywords")(
+    test("pass an empty object and throw an error") {
+      assertTrue(
+        Keywords.make(Seq.empty) == Validation.fail(
+          V2.BadRequestException(ProjectErrorMessages.KeywordsMissing)
+        )
+      )
+      assertTrue(
+        Keywords.make(Some(Seq.empty)) == Validation.fail(
+          V2.BadRequestException(ProjectErrorMessages.KeywordsMissing)
+        )
+      )
+    } +
+      test("pass a valid object and successfully create value object") {
+        assertTrue(Keywords.make(validKeywords).toOption.get.value == validKeywords)
+        assertTrue(Keywords.make(Option(validKeywords)).getOrElse(null).get.value == validKeywords)
+      } +
+      test("pass None") {
+        assertTrue(
+          Keywords.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        ProjectDescription.make(validProjectDescription).toOption.get.value should not equal
-          BadRequestException(PROJECT_DESCRIPTION_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        ProjectDescription.make(validProjectDescription).toOption.get.value should equal(validProjectDescription)
-      }
-    }
-  }
+  )
 
-  "Keywords value object" when {
-    val validKeywords = Seq("key", "word")
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Keywords.make(Seq.empty) should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
+  private val logoTest = suite("ProjectSpec - Logo")(
+    test("pass an empty object and throw an error") {
+      assertTrue(
+        Logo.make("") == Validation.fail(
+          V2.BadRequestException(ProjectErrorMessages.LogoMissing)
+        )
+      )
+      assertTrue(
+        Logo.make(Some("")) == Validation.fail(
+          V2.BadRequestException(ProjectErrorMessages.LogoMissing)
+        )
+      )
+    } +
+      test("pass a valid object and successfully create value object") {
+        assertTrue(Logo.make(validLogo).toOption.get.value == validLogo)
+        assertTrue(Logo.make(Option(validLogo)).getOrElse(null).get.value == validLogo)
+      } +
+      test("pass None") {
+        assertTrue(
+          Keywords.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Keywords.make(validKeywords).toOption.get.value should not equal
-          BadRequestException(KEYWORDS_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        Keywords.make(validKeywords).toOption.get.value should equal(validKeywords)
-      }
-    }
-  }
+  )
 
-  "Logo value object" when {
-    val validLogo = "/fu/bar/baz.jpg"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Logo.make("") should equal(
-          Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
+  private val projectStatusTest = suite("ProjectSpec - ProjectStatus")(
+    test("pass a valid object and successfully create value object") {
+      assertTrue(ProjectStatus.make(true).toOption.get.value == true)
+      assertTrue(ProjectStatus.make(Some(false)).getOrElse(null).get.value == false)
+    } +
+      test("pass None") {
+        assertTrue(
+          ProjectStatus.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Logo.make(validLogo).toOption.get.value should not equal
-          BadRequestException(LOGO_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        Logo.make(validLogo).toOption.get.value should equal(validLogo)
-      }
-    }
-  }
+  )
 
-  "ProjectSelfJoin value object" when {
-    "created using valid value" should {
-      "return value passed to value object" in {
-        ProjectSelfJoin.make(false).toOption.get.value should equal(false)
-        ProjectSelfJoin.make(true).toOption.get.value should equal(true)
+  private val projectSelfJoinTest = suite("ProjectSpec - ProjectSelfJoin")(
+    test("pass a valid object and successfully create value object") {
+      assertTrue(ProjectSelfJoin.make(true).toOption.get.value == true)
+      assertTrue(ProjectSelfJoin.make(Some(false)).getOrElse(null).get.value == false)
+    } +
+      test("pass None") {
+        assertTrue(
+          ProjectSelfJoin.make(None) == Validation.succeed(None)
+        )
       }
-    }
-  }
-
-  "ProjectStatus value object" when {
-    "created using valid value" should {
-      "return value passed to value object" in {
-        ProjectStatus.make(true).toOption.get.value should equal(true)
-        ProjectStatus.make(false).toOption.get.value should equal(false)
-      }
-    }
-  }
+  )
 }

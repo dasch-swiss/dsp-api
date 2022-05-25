@@ -3,240 +3,282 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
-import org.knora.webapi.UnitSpec
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
+import dsp.valueobjects.User._
 import zio.prelude.Validation
+import zio.test._
 
 /**
- * This spec is used to test the [[UsersValueObjectsADM]] value objects creation.
+ * This spec is used to test the [[User]] value objects creation.
  */
-class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
-  "UserIRI value object" when {
-    val validUserIRI            = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
-    val userIRIWithUUIDVersion3 = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
+object UserSpec extends ZIOSpecDefault {
+  private val validUsername                               = "user008"
+  private val tooShortUsername                            = "123"
+  private val tooLongUsername                             = "01234567890123456789012345678901234567890123456789011"
+  private val invalidUsernameWithUnderscoreAsFirstChar    = "_123"
+  private val invalidUsernameWithUnderscoreAsLastChar     = "123_"
+  private val invalidUsernameWithMultipleUnderscoresInRow = "12__3"
+  private val invalidUsernameWithDotAsFirstChar           = ".123"
+  private val invalidUsernameWithDotAsLastChar            = "123."
+  private val invalidUsernameWithMultipleDotsInRow        = "12..3"
+  private val invalidUsername                             = "user!@#$%^&*()_+"
+  private val validEmailAddress                           = "address@ch"
+  private val invalidEmailAddress                         = "invalid_email_address"
+  private val validPassword                               = "pass-word"
+  private val validGivenName                              = "John"
+  private val validFamilyName                             = "Rambo"
+  private val validLanguageCode                           = "de"
+  private val invalidLanguageCode                         = "00"
 
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        UserIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        UserIRI.make("not a user IRI") should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid))
-        )
-        UserIRI.make(userIRIWithUUIDVersion3) should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
-        )
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestException" in {
-        UserIRI.make(validUserIRI) should not equal Validation.fail(
-          BadRequestException(IriErrorMessages.UserIriInvalid)
-        )
-      }
-      "return value passed to value object" in {
-        UserIRI.make(validUserIRI).toOption.get.value should equal(validUserIRI)
-      }
-    }
-  }
+  def spec =
+    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + languageCodeTest + systemAdminTest)
 
-  "Username value object" when {
-    val validUsername   = "user008"
-    val invalidUsername = "user!@#$%^&*()_+"
+  private val usernameTest = suite("UserSpec - Username")(
+    test("pass an empty value and throw an error") {
+      assertTrue(Username.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing)))
+      assertTrue(
+        Username.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          Username.make(invalidUsername) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsername)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass too short value and throw an error") {
+        assertTrue(
+          Username.make(tooShortUsername) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(tooShortUsername)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass too long value and throw an error") {
+        assertTrue(
+          Username.make(tooLongUsername) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(tooLongUsername)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass an invalid value with '_' as the first char and throw an error") {
+        assertTrue(
+          Username.make(invalidUsernameWithUnderscoreAsFirstChar) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsernameWithUnderscoreAsFirstChar)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass an invalid value with '_' as the last char and throw an error") {
+        assertTrue(
+          Username.make(invalidUsernameWithUnderscoreAsLastChar) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsernameWithUnderscoreAsLastChar)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass an invalid value with '_' used multiple times in a row and throw an error") {
+        assertTrue(
+          Username.make(invalidUsernameWithMultipleUnderscoresInRow) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsernameWithMultipleUnderscoresInRow)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass an invalid value with '.' as the first char and throw an error") {
+        assertTrue(
+          Username.make(invalidUsernameWithDotAsFirstChar) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsernameWithDotAsFirstChar)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass an invalid value with '.' as the last char and throw an error") {
+        assertTrue(
+          Username.make(invalidUsernameWithDotAsLastChar) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsernameWithDotAsLastChar)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass an invalid value with '.' used multiple times in a row and throw an error") {
+        assertTrue(
+          Username.make(invalidUsernameWithMultipleDotsInRow) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+        assertTrue(
+          Username.make(Some(invalidUsernameWithMultipleDotsInRow)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          )
+        )
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Username.make(validUsername).toOption.get.value == validUsername)
+        assertTrue(Username.make(Option(validUsername)).getOrElse(null).get.value == validUsername)
+      } +
+      test("pass None") {
+        assertTrue(
+          Username.make(None) == Validation.succeed(None)
+        )
+      }
+  )
 
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Username.make("") should equal(Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException for username less than 4 characters long" in {
-        Username.make("123") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
+  private val emailTest = suite("UserSpec - Email")(
+    test("pass an empty value and throw an error") {
+      assertTrue(Email.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.EmailMissing)))
+      assertTrue(
+        Email.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.EmailMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          Email.make(invalidEmailAddress) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.EmailInvalid)
+          )
+        )
+        assertTrue(
+          Email.make(Some(invalidEmailAddress)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.EmailInvalid)
+          )
+        )
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Email.make(validEmailAddress).toOption.get.value == validEmailAddress)
+        assertTrue(Email.make(Option(validEmailAddress)).getOrElse(null).get.value == validEmailAddress)
+      } +
+      test("pass None") {
+        assertTrue(
+          Email.make(None) == Validation.succeed(None)
         )
       }
-      "throw BadRequestException for username containg more than 50 characters" in {
-        Username.make("01234567890123456789012345678901234567890123456789011") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username started with underscore" in {
-        Username.make("_123") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username ended with underscore" in {
-        Username.make("123_") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username started with dot" in {
-        Username.make(".123") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username ended with dot" in {
-        Username.make("123.") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username with underscore used multiple times in a row" in {
-        Username.make("1__23") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username with dot used multiple times in a row" in {
-        Username.make("1..23") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-      "throw BadRequestException for username created with bad forbidden characters" in {
-        Username.make(invalidUsername) should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-        )
-      }
-    }
-    "created using valid characters" should {
-      "not throw BadRequestExceptions" in {
-        Username.make(validUsername) should not equal Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameMissing)
-        )
-      }
-      "return value passed to value object" in {
-        Username.make(validUsername).toOption.get.value should equal(validUsername)
-      }
-    }
-  }
+  )
 
-  "Email value object" when {
-    val validEmailAddress   = "address@ch"
-    val invalidEmailAddress = "invalid_email_address"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Email.make("") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
+  private val givenNameTest = suite("UserSpec - GivenName")(
+    test("pass an empty value and throw an error") {
+      assertTrue(GivenName.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.GivenNameMissing)))
+      assertTrue(
+        GivenName.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.GivenNameMissing))
+      )
+    } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(GivenName.make(validGivenName).toOption.get.value == validGivenName)
+        assertTrue(GivenName.make(Option(validGivenName)).getOrElse(null).get.value == validGivenName)
+      } +
+      test("pass None") {
+        assertTrue(
+          GivenName.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        Email.make(invalidEmailAddress) should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
+  )
+
+  private val familyNameTest = suite("UserSpec - FamilyName")(
+    test("pass an empty value and throw an error") {
+      assertTrue(FamilyName.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.FamilyNameMissing)))
+      assertTrue(
+        FamilyName.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.FamilyNameMissing))
+      )
+    } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(FamilyName.make(validFamilyName).toOption.get.value == validFamilyName)
+        assertTrue(FamilyName.make(Option(validFamilyName)).getOrElse(null).get.value == validFamilyName)
+      } +
+      test("pass None") {
+        assertTrue(
+          FamilyName.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Email.make(validEmailAddress).toOption.get.value should not equal
-          BadRequestException(UserErrorMessages.EmailInvalid)
-      }
-      "return value passed to value object" in {
-        Email.make(validEmailAddress).toOption.get.value should equal(validEmailAddress)
-      }
-    }
-  }
+  )
 
-  "Password value object" when {
-    val validassword = "pass-word"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Password.make("") should equal(Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing)))
-      }
-    }
-    "created using valid characters" should {
-      "not throw BadRequestExceptions" in {
-        Password.make(validassword) should not equal Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameMissing)
+  private val passwordTest = suite("UserSpec - Password")(
+    test("pass an empty value and throw an error") {
+      assertTrue(Password.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordMissing)))
+      assertTrue(
+        Password.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordMissing))
+      )
+    } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Password.make(validPassword).toOption.get.value == validPassword)
+        assertTrue(Password.make(Option(validPassword)).getOrElse(null).get.value == validPassword)
+      } +
+      test("pass None") {
+        assertTrue(
+          Password.make(None) == Validation.succeed(None)
         )
       }
-      "return value passed to value object" in {
-        Password.make(validassword).toOption.get.value should equal(validassword)
-      }
-    }
-  }
+  )
 
-  "GivenName value object" when {
-    val validGivenName = "John"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        GivenName.make("") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
+  private val languageCodeTest = suite("UserSpec - LanguageCode")(
+    test("pass an empty value and throw an error") {
+      assertTrue(
+        LanguageCode.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeMissing))
+      )
+      assertTrue(
+        LanguageCode.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          LanguageCode.make(invalidLanguageCode) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.LanguageCodeInvalid)
+          )
+        )
+        assertTrue(
+          LanguageCode.make(Some(invalidLanguageCode)) == Validation.fail(
+            V2.BadRequestException(UserErrorMessages.LanguageCodeInvalid)
+          )
+        )
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(LanguageCode.make(validLanguageCode).toOption.get.value == validLanguageCode)
+        assertTrue(LanguageCode.make(Option(validLanguageCode)).getOrElse(null).get.value == validLanguageCode)
+      } +
+      test("pass None") {
+        assertTrue(
+          LanguageCode.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        GivenName.make(validGivenName).toOption.get.value should not equal
-          BadRequestException(GIVEN_NAME_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        GivenName.make(validGivenName).toOption.get.value should equal(validGivenName)
-      }
-    }
-  }
+  )
 
-  "FamilyName value object" when {
-    val validFamilyName = "Rambo"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        FamilyName.make("") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
-        )
-      }
+  private val systemAdminTest = suite("GroupSpec - SystemAdmin")(
+    test("pass a valid object and successfully create value object") {
+      assertTrue(SystemAdmin.make(true).toOption.get.value == true)
     }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        FamilyName.make(validFamilyName).toOption.get.value should not equal
-          BadRequestException(FAMILY_NAME_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        FamilyName.make(validFamilyName).toOption.get.value should equal(validFamilyName)
-      }
-    }
-  }
-
-  "LanguageCode value object" when {
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        LanguageCode.make("") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
-        )
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        LanguageCode.make("kk") should equal(
-          Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
-        )
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        LanguageCode.make("de").toOption.get.value should not equal
-          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
-      }
-      "return value passed to value object" in {
-        LanguageCode.make("en").toOption.get.value should equal("en")
-      }
-    }
-  }
-
-  "SystemAdmin value object" when {
-    "created using valid value" should {
-      "return value passed to value object" in {
-        SystemAdmin.make(true).toOption.get.value should equal(true)
-        SystemAdmin.make(false).toOption.get.value should equal(false)
-      }
-    }
-  }
+  )
 }

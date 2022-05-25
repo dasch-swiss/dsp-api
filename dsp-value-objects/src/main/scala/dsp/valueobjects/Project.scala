@@ -10,6 +10,8 @@ import zio.prelude.Validation
 sealed trait Project
 object Project {
 
+  // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
+
   /**
    * Project Shortcode value object.
    */
@@ -82,7 +84,7 @@ object Project {
   /**
    * ProjectDescription value object.
    */
-  sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2])
+  sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =
       if (value.isEmpty) {
@@ -173,8 +175,8 @@ object ProjectErrorMessages {
   val ShortnameInvalid          = "Shortname is invalid."
   val LongnameMissing           = "Longname cannot be empty."
   val LongnameInvalid           = "Longname is invalid."
-  val ProjectDescriptionMissing = "Description cannot be empty."
-  val ProjectDescriptionInvalid = "Description is invalid."
+  val ProjectDescriptionMissing = "Description cannot be empty." //make it plural
+  val ProjectDescriptionInvalid = "Description is invalid."      //make it plural
   val KeywordsMissing           = "Keywords cannot be empty."
   val KeywordsInvalid           = "Keywords are invalid."
   val LogoMissing               = "Logo cannot be empty."

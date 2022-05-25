@@ -11,6 +11,8 @@ import scala.util.matching.Regex
 sealed trait User
 object User {
 
+  // TODO-mpro: password, givenname, familyname are missing enhanced validation
+
   /**
    * Username value object.
    */
@@ -29,12 +31,12 @@ object User {
 
     def make(value: String): Validation[Throwable, Username] =
       if (value.isEmpty) {
-        // remobe exception return just the error
+        // remove exception return just the error
         Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
       } else {
         UsernameRegex.findFirstIn(value) match {
           case Some(value) => Validation.succeed(new Username(value) {})
-          case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
+          case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameInvalid))
         }
       }
 

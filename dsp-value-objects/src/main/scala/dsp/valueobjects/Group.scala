@@ -104,6 +104,6 @@ object Group {
 object GroupErrorMessages {
   val GroupNameMissing        = "Group name cannot be empty."
   val GroupNameInvalid        = "Group name is invalid."
-  val GroupDescriptionMissing = "Group description cannot be empty."
-  val GroupDescriptionInvalid = "Group description is invalid."
+  val GroupDescriptionMissing = "Group description cannot be empty." // make it plural
+  val GroupDescriptionInvalid = "Group description is invalid."      // make it plural
 }

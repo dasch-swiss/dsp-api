@@ -3,122 +3,112 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
-import org.knora.webapi.UnitSpec
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import dsp.valueobjects.Group._
 import zio.prelude.Validation
+import zio.test._
 
 /**
- * This spec is used to test the [[GroupsValueObjectsADM]] value objects creation.
+ * This spec is used to test the [[Group]] value objects creation.
  */
-class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
+object GroupSpec extends ZIOSpecDefault {
+  private val validName        = "Valid group name"
+  private val invalidName      = "Invalid group name\r"
+  private val validDescription = Seq(V2.StringLiteralV2(value = "Valid group description", language = Some("en")))
+  private val invalidDescription = Seq(
+    V2.StringLiteralV2(value = "Invalid group description \r", language = Some("en"))
+  )
 
-  "GroupIRI value object" when {
-    val validGroupIri            = "http://rdfh.ch/groups/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-    val groupIRIWithUUIDVersion3 = "http://rdfh.ch/groups/0803/rKAU0FNjPUKWqOT8MEW_UQ"
+  def spec = (groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest)
 
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        GroupIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        GroupIRI.make("not a group IRI") should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
+  private val groupNameTest = suite("GroupSpec - GroupName")(
+    test("pass an empty value and throw an error") {
+      assertTrue(GroupName.make("") == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing)))
+      assertTrue(
+        GroupName.make(Some("")) == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          GroupName.make(invalidName) == Validation.fail(
+            V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
+          )
         )
-        GroupIRI.make(groupIRIWithUUIDVersion3) should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
+        assertTrue(
+          GroupName.make(Some(invalidName)) == Validation.fail(
+            V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
+          )
         )
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestException" in {
-        GroupIRI.make(validGroupIri) should not equal Validation.fail(
-          BadRequestException(IriErrorMessages.GroupIriInvalid)
-        )
-      }
-      "return value passed to value object" in {
-        GroupIRI.make(validGroupIri).toOption.get.value should equal(validGroupIri)
-      }
-    }
-  }
-
-  "GroupName value object" when {
-    val validGroupName = "Valid group name"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        GroupName.make("") should equal(Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        GroupName.make("Invalid group name\r") should equal(
-          Validation.fail(BadRequestException(GroupErrorMessages.GroupNameInvalid))
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(GroupName.make(validName).toOption.get.value == validName)
+        assertTrue(GroupName.make(Option(validName)).getOrElse(null).get.value == validName)
+      } +
+      test("pass None") {
+        assertTrue(
+          GroupName.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        GroupName.make(validGroupName) should not equal Validation.fail(
-          BadRequestException(GroupErrorMessages.GroupNameInvalid)
+  )
+
+  private val groupDescriptionsTest = suite("GroupSpec - GroupDescriptions")(
+    test("pass an empty object and throw an error") {
+      assertTrue(
+        GroupDescriptions.make(Seq.empty) == Validation.fail(
+          V2.BadRequestException(GroupErrorMessages.GroupDescriptionMissing)
+        )
+      )
+      assertTrue(
+        GroupDescriptions.make(Some(Seq.empty)) == Validation.fail(
+          V2.BadRequestException(GroupErrorMessages.GroupDescriptionMissing)
+        )
+      )
+    } +
+      test("pass an invalid object and throw an error") {
+        assertTrue(
+          GroupDescriptions.make(invalidDescription) == Validation.fail(
+            V2.BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
+          )
+        )
+        assertTrue(
+          GroupDescriptions.make(Some(invalidDescription)) == Validation.fail(
+            V2.BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
+          )
+        )
+      } +
+      test("pass a valid object and successfully create value object") {
+        assertTrue(GroupDescriptions.make(validDescription).toOption.get.value == validDescription)
+        assertTrue(GroupDescriptions.make(Option(validDescription)).getOrElse(null).get.value == validDescription)
+      } +
+      test("pass None") {
+        assertTrue(
+          GroupDescriptions.make(None) == Validation.succeed(None)
         )
       }
-      "return value passed to value object" in {
-        GroupName.make(validGroupName).toOption.get.value should equal(validGroupName)
-      }
-    }
-  }
+  )
 
-  "GroupDescriptions value object" when {
-    val validDescription   = Seq(StringLiteralV2(value = "Valid description", language = Some("en")))
-    val invalidDescription = Seq(StringLiteralV2(value = "Invalid description \r", language = Some("en")))
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        GroupDescriptions.make(Seq.empty) should equal(
-          Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionMissing))
+  private val groupStatusTest = suite("GroupSpec - GroupStatus")(
+    test("pass a valid object and successfully create value object") {
+      assertTrue(GroupStatus.make(true).toOption.get.value == true)
+      assertTrue(GroupStatus.make(Some(false)).getOrElse(null).get.value == false)
+    } +
+      test("pass None") {
+        assertTrue(
+          GroupStatus.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        GroupDescriptions.make(invalidDescription) should equal(
-          Validation.fail(BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR))
+  )
+
+  private val groupSelfJoinTest = suite("GroupSpec - GroupSelfJoin")(
+    test("pass a valid object and successfully create value object") {
+      assertTrue(GroupSelfJoin.make(true).toOption.get.value == true)
+      assertTrue(GroupSelfJoin.make(Some(false)).getOrElse(null).get.value == false)
+    } +
+      test("pass None") {
+        assertTrue(
+          GroupSelfJoin.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        GroupDescriptions.make(validDescription).toOption.get.value should not equal
-          BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR)
-      }
-      "return value passed to value object" in {
-        GroupDescriptions.make(validDescription).toOption.get.value should equal(validDescription)
-      }
-    }
-  }
-
-  "GroupStatus value object" when {
-    "created using valid value" should {
-      "return value passed to value object" in {
-        GroupStatus.make(true).toOption.get.value should equal(true)
-        GroupStatus.make(false).toOption.get.value should equal(false)
-      }
-    }
-  }
-
-  "GroupSelfJoin value object" when {
-    "created using valid value" should {
-      "return value passed to value object" in {
-        GroupSelfJoin.make(false).toOption.get.value should equal(false)
-        GroupSelfJoin.make(true).toOption.get.value should equal(true)
-      }
-    }
-  }
+  )
 }

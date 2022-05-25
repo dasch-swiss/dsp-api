@@ -3,144 +3,150 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.admin.responder.valueObjects
+package dsp.valueobjects
 
-import org.knora.webapi.UnitSpec
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter.IriErrorMessages.UuidInvalid
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import dsp.valueobjects.List._
 import zio.prelude.Validation
+import zio.test._
 
 /**
- * This spec is used to test the [[ListsValueObjectsADM]] value objects creation.
+ * This spec is used to test the [[List]] value objects creation.
  */
-class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
-  "ListIRI value object" when {
-    val validListIri            = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
-    val listIRIWithUUIDVersion3 = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
+object ListSpec extends ZIOSpecDefault {
+  private val validName       = "Valid list name"
+  private val invalidName     = "Invalid list name\r"
+  private val validPosition   = 0
+  private val invalidPosition = -2
+  private val validLabel      = Seq(V2.StringLiteralV2(value = "Valid list label", language = Some("en")))
+  private val invalidLabel    = Seq(V2.StringLiteralV2(value = "Invalid list label \r", language = Some("en")))
+  private val validComment    = Seq(V2.StringLiteralV2(value = "Valid list comment", language = Some("en")))
+  private val invalidComment  = Seq(V2.StringLiteralV2(value = "Invalid list comment \r", language = Some("en")))
 
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        ListIRI.make("") should equal(Validation.fail(BadRequestException(IriErrorMessages.ListNodeIriMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        ListIRI.make("not a list IRI") should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.ListNodeIriInvalid))
-        )
-        ListIRI.make(listIRIWithUUIDVersion3) should equal(
-          Validation.fail(BadRequestException(IriErrorMessages.UuidInvalid))
-        )
-      }
-    }
-    "created using valid value" should {
-      "return value object that value equals to the value used to its creation" in {
-        ListIRI.make(validListIri) should not equal Validation.fail(
-          BadRequestException(IriErrorMessages.ListNodeIriInvalid)
-        )
-      }
-      "return value passed to value object" in {
-        ListIRI.make(validListIri).toOption.get.value should equal(validListIri)
-      }
-    }
-  }
+  def spec = (listNameTest + positionTest + labelsTest + commentsTest)
 
-  "ListName value object" when {
-    val validListName = "Valid list name"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        ListName.make("") should equal(Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        ListName.make("\r") should equal(Validation.fail(BadRequestException(ListErrorMessages.ListNameInvalid)))
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        ListName.make(validListName) should not equal Validation.fail(
-          BadRequestException(ListErrorMessages.ListNameInvalid)
+  private val listNameTest = suite("ListSpec - ListName")(
+    test("pass an empty value and throw an error") {
+      assertTrue(ListName.make("") == Validation.fail(V2.BadRequestException(ListErrorMessages.ListNameMissing)))
+      assertTrue(
+        ListName.make(Some("")) == Validation.fail(V2.BadRequestException(ListErrorMessages.ListNameMissing))
+      )
+    } +
+      test("pass an invalid value and throw an error") {
+        assertTrue(
+          ListName.make(invalidName) == Validation.fail(
+            V2.BadRequestException(ListErrorMessages.ListNameInvalid)
+          )
+        )
+        assertTrue(
+          ListName.make(Some(invalidName)) == Validation.fail(
+            V2.BadRequestException(ListErrorMessages.ListNameInvalid)
+          )
+        )
+      } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(ListName.make(validName).toOption.get.value == validName)
+        assertTrue(ListName.make(Option(validName)).getOrElse(null).get.value == validName)
+      } +
+      test("pass None") {
+        assertTrue(
+          ListName.make(None) == Validation.succeed(None)
         )
       }
-      "return value passed to value object" in {
-        ListName.make(validListName).toOption.get.value should equal(validListName)
-      }
-    }
-  }
+  )
 
-  "Position value object" when {
-    val validPosition = 0
-
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        Position.make(-2) should equal(Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition)))
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Position.make(validPosition) should not equal Validation.fail(
-          BadRequestException(ListErrorMessages.InvalidPosition)
+  private val positionTest = suite("ListSpec - Position")(
+    test("pass an invalid value and throw an error") {
+      assertTrue(
+        Position.make(invalidPosition) == Validation.fail(
+          V2.BadRequestException(ListErrorMessages.InvalidPosition)
+        )
+      )
+      assertTrue(
+        Position.make(Some(invalidPosition)) == Validation.fail(
+          V2.BadRequestException(ListErrorMessages.InvalidPosition)
+        )
+      )
+    } +
+      test("pass a valid value and successfully create value object") {
+        assertTrue(Position.make(validPosition).toOption.get.value == validPosition)
+        assertTrue(Position.make(Option(validPosition)).getOrElse(null).get.value == validPosition)
+      } +
+      test("pass None") {
+        assertTrue(
+          Position.make(None) == Validation.succeed(None)
         )
       }
-      "return value passed to value object" in {
-        Position.make(validPosition).toOption.get.value should equal(validPosition)
-      }
-    }
-  }
+  )
 
-  "Labels value object" when {
-    val validLabels   = Seq(StringLiteralV2(value = "New Label", language = Some("en")))
-    val invalidLabels = Seq(StringLiteralV2(value = "\r", language = Some("en")))
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Labels.make(Seq.empty) should equal(Validation.fail(BadRequestException(ListErrorMessages.LabelMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        Labels.make(invalidLabels) should equal(Validation.fail(BadRequestException(ListErrorMessages.LabelInvalid)))
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Labels.make(validLabels) should not equal Validation.fail(BadRequestException(ListErrorMessages.LabelInvalid))
-      }
-      "return value passed to value object" in {
-        Labels.make(validLabels).toOption.get.value should equal(validLabels)
-      }
-    }
-  }
-
-  "Comments value object" when {
-    val validComments   = Seq(StringLiteralV2(value = "Valid comment", language = Some("en")))
-    val invalidComments = Seq(StringLiteralV2(value = "Invalid comment \r", language = Some("en")))
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        Comments.make(Seq.empty) should equal(Validation.fail(BadRequestException(ListErrorMessages.CommentMissing)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        Comments.make(invalidComments) should equal(
-          Validation.fail(BadRequestException(ListErrorMessages.CommentInvalid))
+  private val labelsTest = suite("ListSpec - Labels")(
+    test("pass an empty object and throw an error") {
+      assertTrue(
+        Labels.make(Seq.empty) == Validation.fail(
+          V2.BadRequestException(ListErrorMessages.LabelMissing)
+        )
+      )
+      assertTrue(
+        Labels.make(Some(Seq.empty)) == Validation.fail(
+          V2.BadRequestException(ListErrorMessages.LabelMissing)
+        )
+      )
+    } +
+      test("pass an invalid object and throw an error") {
+        assertTrue(
+          Labels.make(invalidLabel) == Validation.fail(
+            V2.BadRequestException(ListErrorMessages.LabelInvalid)
+          )
+        )
+        assertTrue(
+          Labels.make(Some(invalidLabel)) == Validation.fail(
+            V2.BadRequestException(ListErrorMessages.LabelInvalid)
+          )
+        )
+      } +
+      test("pass a valid object and successfully create value object") {
+        assertTrue(Labels.make(validLabel).toOption.get.value == validLabel)
+        assertTrue(Labels.make(Option(validLabel)).getOrElse(null).get.value == validLabel)
+      } +
+      test("pass None") {
+        assertTrue(
+          Labels.make(None) == Validation.succeed(None)
         )
       }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        Comments.make(validComments) should not equal Validation.fail(
-          BadRequestException(ListErrorMessages.CommentInvalid)
+  )
+
+  private val commentsTest = suite("ListSpec - Comments")(
+    test("pass an empty object and throw an error") {
+      assertTrue(
+        Comments.make(Seq.empty) == Validation.fail(
+          V2.BadRequestException(ListErrorMessages.CommentMissing)
+        )
+      )
+      assertTrue(
+        Comments.make(Some(Seq.empty)) == Validation.fail(
+          V2.BadRequestException(ListErrorMessages.CommentMissing)
+        )
+      )
+    } +
+      test("pass an invalid object and throw an error") {
+        assertTrue(
+          Comments.make(invalidComment) == Validation.fail(
+            V2.BadRequestException(ListErrorMessages.CommentInvalid)
+          )
+        )
+        assertTrue(
+          Comments.make(Some(invalidComment)) == Validation.fail(
+            V2.BadRequestException(ListErrorMessages.CommentInvalid)
+          )
+        )
+      } +
+      test("pass a valid object and successfully create value object") {
+        assertTrue(Comments.make(validComment).toOption.get.value == validComment)
+        assertTrue(Comments.make(Option(validComment)).getOrElse(null).get.value == validComment)
+      } +
+      test("pass None") {
+        assertTrue(
+          Comments.make(None) == Validation.succeed(None)
         )
       }
-      "return value passed to value object" in {
-        Comments.make(validComments).toOption.get.value should equal(validComments)
-      }
-    }
-  }
+  )
 }

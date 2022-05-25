@@ -48,19 +48,19 @@ object Iri {
   object ListIRI { self =>
     def make(value: String): Validation[Throwable, ListIRI] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(IriErrorMessages.ListNodeIriMissing))
+        Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriMissing))
       } else {
         val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraListIriStr(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.ListNodeIriInvalid))
+          Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriInvalid))
         } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeIri(
               value,
-              throw V2.BadRequestException(IriErrorMessages.ListNodeIriInvalid)
+              throw V2.BadRequestException(IriErrorMessages.ListIriInvalid)
             )
           )
 
@@ -145,15 +145,13 @@ object Iri {
 }
 
 object IriErrorMessages {
-  val GroupIriMissing    = "Group IRI cannot be empty."
-  val GroupIriInvalid    = "Group IRI is invalid."
-  val ListIriMissing     = "List IRI cannot be empty."
-  val ListIriInvalid     = "List IRI cannot be empty."
-  val ListNodeIriMissing = "List node IRI cannot be empty."
-  val ListNodeIriInvalid = "List node IRI is invalid."
-  val ProjectIriMissing  = "Project IRI cannot be empty."
-  val ProjectIriInvalid  = "Project IRI is invalid."
-  val UserIriMissing     = "User IRI cannot be empty."
-  val UserIriInvalid     = "User IRI is invalid."
-  val UuidInvalid        = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
+  val GroupIriMissing   = "Group IRI cannot be empty."
+  val GroupIriInvalid   = "Group IRI is invalid."
+  val ListIriMissing    = "List IRI cannot be empty."
+  val ListIriInvalid    = "List IRI cannot be empty."
+  val ProjectIriMissing = "Project IRI cannot be empty."
+  val ProjectIriInvalid = "Project IRI is invalid."
+  val UserIriMissing    = "User IRI cannot be empty."
+  val UserIriInvalid    = "User IRI is invalid."
+  val UuidInvalid       = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
 }
