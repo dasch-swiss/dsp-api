@@ -639,7 +639,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
         projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
       resultFile: Path = tempDir.resolve(project.shortname + ".trig")
-      _                = println(s"namedGraphTrigFiles: $namedGraphTrigFiles and resultFile: $resultFile")
       _                = combineGraphs(namedGraphTrigFiles, resultFile)
     } yield ProjectDataGetResponseADM(resultFile)
   }

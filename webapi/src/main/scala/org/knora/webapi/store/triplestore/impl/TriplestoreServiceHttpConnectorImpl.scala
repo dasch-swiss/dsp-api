@@ -61,9 +61,6 @@ import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.config.AppConfig
@@ -288,12 +285,15 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
-      _ <- rdfFormatUtil
-             .turtleToQuadsFile(
-               rdfSource = RdfStringSource(turtleStr),
-               graphIri = graphIri,
-               outputFile = outputFile,
-               outputFormat = outputFormat
+      _ <- ZIO
+             .attempt(
+               rdfFormatUtil
+                 .turtleToQuadsFile(
+                   rdfSource = RdfStringSource(turtleStr),
+                   graphIri = graphIri,
+                   outputFile = outputFile,
+                   outputFormat = outputFormat
+                 )
              )
              .orDie
     } yield FileWrittenResponse()
@@ -984,7 +984,7 @@ case class TriplestoreServiceHttpConnectorImpl(
         ZIO.attempt {
           // Stream the HTTP entity directly to the output file.
           Files.copy(responseEntity.getContent, outputFile)
-        }.flatMap(_ => ZIO.succeed(FileWrittenResponse())).orDie.debug("after file written response.")
+        }.flatMap(_ => ZIO.succeed(FileWrittenResponse())).orDie
 
       case None =>
         val message = "Triplestore returned no content for repository dump"
@@ -1012,31 +1012,24 @@ case class TriplestoreServiceHttpConnectorImpl(
       case Some(responseEntity: HttpEntity) =>
         ZIO.attempt {
           // Yes. Stream the HTTP entity to a temporary Turtle file.
-          val turtleFile = Paths.get(outputFile.toString + ".ttl")
-          Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
+          val tempTurtleFile = Paths.get(outputFile.toString + ".ttl")
+          Files.copy(responseEntity.getContent, tempTurtleFile, StandardCopyOption.REPLACE_EXISTING)
 
           // Convert the Turtle to the output format.
 
           val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
-          val processFileTry: Try[Unit] = Try {
-            rdfFormatUtil.turtleToQuadsFile(
-              rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(turtleFile))),
-              graphIri = graphIri,
-              outputFile = outputFile,
-              outputFormat = quadFormat
-            )
-          }
+          rdfFormatUtil.turtleToQuadsFile(
+            rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(tempTurtleFile))),
+            graphIri = graphIri,
+            outputFile = outputFile,
+            outputFormat = quadFormat
+          )
 
-          Files.delete(turtleFile)
+          Files.delete(tempTurtleFile)
 
-          processFileTry match {
-            case Success(_)  => ()
-            case Failure(ex) => throw ex
-          }
-        }.flatMap(_ => ZIO.succeed(FileWrittenResponse()))
-          .orDie
-          .debug(s"after file written response: $graphIri and $quadFormat")
+          FileWrittenResponse()
+        }.orDie
 
       case None =>
         val message = s"Triplestore returned no content for graph $graphIri"

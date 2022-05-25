@@ -374,38 +374,37 @@ trait RdfFormatUtil {
    * @param outputFile   the output file.
    * @param outputFormat the output file format.
    */
-  def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Task[Unit] =
-    ZIO.attemptBlocking {
-      var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
+  def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Unit = {
+    var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
-      val processingTry: Try[Unit] = Try {
-        val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
-        maybeBufferedFileOutputStream = Some(bufferedFileOutputStream)
+    val processingTry: Try[Unit] = Try {
+      val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
+      maybeBufferedFileOutputStream = Some(bufferedFileOutputStream)
 
-        val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
-          outputStream = bufferedFileOutputStream,
-          rdfFormat = outputFormat
-        )
+      val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
+        outputStream = bufferedFileOutputStream,
+        rdfFormat = outputFormat
+      )
 
-        val contextAddingProcessor = new ContextAddingProcessor(
-          graphIri = graphIri,
-          formattingStreamProcessor = formattingStreamProcessor
-        )
+      val contextAddingProcessor = new ContextAddingProcessor(
+        graphIri = graphIri,
+        formattingStreamProcessor = formattingStreamProcessor
+      )
 
-        parseWithStreamProcessor(
-          rdfSource = rdfSource,
-          rdfFormat = Turtle,
-          rdfStreamProcessor = contextAddingProcessor
-        )
-      }
-
-      maybeBufferedFileOutputStream.foreach(_.close)
-
-      processingTry match {
-        case Success(_)  => ()
-        case Failure(ex) => throw ex
-      }
+      parseWithStreamProcessor(
+        rdfSource = rdfSource,
+        rdfFormat = Turtle,
+        rdfStreamProcessor = contextAddingProcessor
+      )
     }
+
+    maybeBufferedFileOutputStream.foreach(_.close)
+
+    processingTry match {
+      case Success(_)  => ()
+      case Failure(ex) => throw ex
+    }
+  }
 
   /**
    * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
