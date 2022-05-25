@@ -351,7 +351,7 @@ object Cache extends LazyLogging {
     val subClassOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Seq[SmartIri]](
         allSubClassOfRelations,
-        key => s"Class not foundin subClassOfRelations: $key"
+        key => s"Class not found in subClassOfRelations: $key"
       )
     val superClassOfRelationsErrorMap =
       new ErrorHandlingMap[SmartIri, Set[SmartIri]](
