@@ -1,5 +1,17 @@
 # Changelog
 
+## [20.4.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.3.1...v20.4.0) (2022-05-25)
+
+
+### Bug Fixes
+
+* **cache:** cache does not update correctly when an ontology is modified (DEV-939) ([#2068](https://www.github.com/dasch-swiss/dsp-api/issues/2068)) ([8541519](https://www.github.com/dasch-swiss/dsp-api/commit/8541519c9a4120b4cfa96b3fea4e071956a2e0c4))
+
+
+### Enhancements
+
+* **admin:** add list child node deletion route (DEV-729) ([#2064](https://www.github.com/dasch-swiss/dsp-api/issues/2064)) ([179ad19](https://www.github.com/dasch-swiss/dsp-api/commit/179ad19bc25637e73d3e850299877600638fd57f))
+
 ### [20.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.3.0...v20.3.1) (2022-05-12)
 
 
