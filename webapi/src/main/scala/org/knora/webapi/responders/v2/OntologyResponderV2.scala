@@ -1034,11 +1034,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Update the cache.
 
-        updatedSubClassOfRelations     = cacheData.subClassOfRelations + (internalClassIri    -> allBaseClassIris)
-        updatedSuperClassOfRelations   = OntologyHelpers.calculateSuperClassOfRelations(updatedSubClassOfRelations)
-        updatedClassDefinedInOntology  = cacheData.classDefinedInOntology + (internalClassIri -> internalOntologyIri)
-        updatedEntityDefinedInOntology = cacheData.propertyDefinedInOntology ++ updatedClassDefinedInOntology
-
         updatedOntology = ontology.copy(
                             ontologyMetadata = ontology.ontologyMetadata.copy(
                               lastModificationDate = Some(currentTime)
@@ -1940,7 +1935,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             classes = ontology.classes - internalClassIri
                           )
 
-        _ <- Cache.cacheUpdatedOntologyWithClass(internalOntologyIri, updatedOntology, internalClassIri)
+        _ <- Cache.cacheUpdatedOntology(internalOntologyIri, updatedOntology)
 
       } yield ReadOntologyMetadataV2(Set(updatedOntology.ontologyMetadata))
 
