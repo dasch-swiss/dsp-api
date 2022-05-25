@@ -202,7 +202,7 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
       case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
     }
 
-    logger.info("Loading load ontologies into cache started ...")
+    logger.info("Loading ontologies into cache started ...")
     Try(
       Await.result(
         appActor ? LoadOntologiesRequestV2(
