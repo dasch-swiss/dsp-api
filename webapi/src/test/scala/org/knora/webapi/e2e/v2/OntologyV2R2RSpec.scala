@@ -1122,7 +1122,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseFromJsonLD: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
-        println(responseFromJsonLD)
         responseFromJsonLD.classes.head._2.predicates.toSet should ===(
           expectedResponseToCompare.classes.head._2.predicates.toSet
         )
