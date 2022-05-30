@@ -23,13 +23,17 @@ import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.routing.RouteUtilV2
+import org.knora.webapi.routing.v2.OntologiesRouteV2
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import org.xmlunit.builder.DiffBuilder
@@ -2271,6 +2275,131 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
 
       assert(responseJson == expectedJson)
+    }
+
+    "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
+      var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
+      val ontologiesPath               = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
+      val auth                         = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
+
+      // create a new resource class and add a property with cardinality to it
+      val createResourceClass =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$freetestLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "freetest:NewClass",
+           |    "@type" : "owl:Class",
+           |    "rdfs:label" : {
+           |      "@language" : "en",
+           |      "@value" : "New resource class"
+           |    },
+           |    "rdfs:subClassOf" : [
+           |            {
+           |               "@id": "knora-api:Resource"
+           |            },
+           |      {
+           |        "@type": "http://www.w3.org/2002/07/owl#Restriction",
+           |        "owl:maxCardinality": 1,
+           |        "owl:onProperty": {
+           |          "@id": "freetest:hasName"
+           |        },
+           |        "salsah-gui:guiOrder": 1
+           |      }
+           |    ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+           |  }
+           |}""".stripMargin
+
+      val createResourceClassRequest = Post(
+        s"$baseApiUrl/v2/ontologies/classes",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceClass)
+      ) ~> addCredentials(auth)
+      val createResourceClassResponse: HttpResponse = singleAwaitingRequest(createResourceClassRequest)
+
+      assert(createResourceClassResponse.status == StatusCodes.OK, createResourceClassResponse.toString)
+      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(createResourceClassResponse)
+
+      // create an instance of the class
+      val createResourceWithValues: String =
+        """{
+          |  "@type" : "freetest:NewClass",
+          |  "freetest:hasName" : {
+          |    "@type" : "knora-api:TextValue",
+          |    "knora-api:valueAsString" : "The new text value"
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "test resource instance",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+          |  }
+          |}""".stripMargin
+
+      val resourceRequest = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
+      ) ~> addCredentials(auth)
+      val resourceResponse: HttpResponse = singleAwaitingRequest(resourceRequest)
+
+      assert(resourceResponse.status == StatusCodes.OK, resourceResponse.toString)
+      val resourceIri: IRI =
+        responseToJsonLDDocument(resourceResponse).body
+          .requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+
+      // get resource back
+      val resourceComplexGetRequest = Get(
+        s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}"
+      ) ~> addCredentials(auth)
+      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+
+      val valueObject = responseToJsonLDDocument(resourceComplexGetResponse).body
+        .requireObject("http://0.0.0.0:3333/ontology/0001/freetest/v2#hasName")
+      val valueIri: IRI      = valueObject.requireString("@id")
+      val valueAsString: IRI = valueObject.requireString("http://api.knora.org/ontology/knora-api/v2#valueAsString")
+
+      assert(valueAsString == "The new text value")
+
+      // try to edit the value which requires the class to be properly cached
+      val editValue =
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "freetest:NewClass",
+           |  "freetest:hasName" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "changed value"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "freetest" : "http://0.0.0.0:3333/ontology/0001/freetest/v2#"
+           |  }
+           |}""".stripMargin
+
+      val editValueRequest =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, editValue)) ~> addCredentials(
+          auth
+        )
+      val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
+      val editValueResponseDoc            = responseToJsonLDDocument(editValueResponse)
+      assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
     }
   }
 }

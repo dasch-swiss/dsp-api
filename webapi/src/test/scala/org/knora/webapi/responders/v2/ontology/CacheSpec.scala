@@ -115,7 +115,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             val newCacheData = previousCacheData.copy(
               ontologies = previousCacheData.ontologies + (iri -> newBooks)
             )
-            Cache.storeCacheData(newCacheData)
+            val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
+            Await.ready(updatedCacheFuture, 1.second)
 
             // read back the cache
             val newCachedCacheDataFuture = for {
@@ -210,7 +211,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             val newCacheData = previousCacheData.copy(
               ontologies = previousCacheData.ontologies + (iri -> newBooks)
             )
-            Cache.storeCacheData(newCacheData)
+            val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
+            Await.ready(updatedCacheFuture, 1.second)
 
             // read back the cache
             val newCachedCacheDataFuture = for {
@@ -306,7 +308,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             val newCacheData = previousCacheData.copy(
               ontologies = previousCacheData.ontologies + (ontologyIri -> newBooks)
             )
-            Cache.storeCacheData(newCacheData)
+            val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
+            Await.ready(updatedCacheFuture, 1.second)
 
             // read back the cache
             val newCachedCacheData = Await.result(Cache.getCacheData, 2 seconds)
