@@ -368,7 +368,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
         )
 
         // check position
@@ -423,7 +423,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
         )
 
         // check position
@@ -477,7 +477,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
         )
 
         // check position

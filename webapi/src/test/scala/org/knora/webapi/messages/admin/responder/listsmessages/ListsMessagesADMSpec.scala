@@ -129,7 +129,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
-      val caught = intercept[BadRequestException](
+      val caught = intercept[V2.BadRequestException](
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIRI.make(exampleListIri).fold(e => throw e.head, v => v),

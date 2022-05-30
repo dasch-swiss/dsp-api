@@ -13,6 +13,9 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.apache.commons.lang3.StringUtils
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 
+// TODO-mpro: don't forget to remove all occurances and additional "helper"
+// implementations in webapi project which needed to be added temporary in order
+// to avoid circular dependencies after moving value objects to separate project.
 object V2 {
   val DE: String = "de"
   val EN: String = "en"
@@ -41,7 +44,7 @@ object V2 {
    *
    * @param message a description of the error.
    */
-  case class BadRequestException(message: String) extends Exception
+  case class BadRequestException(message: String, cause: Throwable = null) extends Exception(message, cause)
 }
 
 object V2IriValidation {

@@ -23,6 +23,7 @@ import spray.json.JsNumber
 import spray.json.JsObject
 import spray.json.JsString
 import spray.json.JsValue
+import dsp.valueobjects.V2
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
@@ -71,6 +72,21 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
+        }
+      }
+
+    case bre: V2.BadRequestException =>
+      extractRequest { request =>
+        val url = request.uri.path.toString
+
+        if (url.startsWith("/v1")) {
+          complete(exceptionToJsonHttpResponseV1(bre, settingsImpl))
+        } else if (url.startsWith("/v2")) {
+          complete(exceptionToJsonHttpResponseV2(bre, settingsImpl))
+        } else if (url.startsWith("/admin")) {
+          complete(exceptionToJsonHttpResponseADM(bre, settingsImpl))
+        } else {
+          complete(exceptionToJsonHttpResponseADM(bre, settingsImpl))
         }
       }
 

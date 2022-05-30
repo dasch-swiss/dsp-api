@@ -8,6 +8,7 @@ package org.knora.webapi.http.status
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes
 import org.knora.webapi.exceptions._
+import dsp.valueobjects.V2
 
 /**
  * The possible values for the HTTP status code that is returned as part of each Knora API v2 response.
@@ -30,6 +31,7 @@ object ApiStatusCodesV2 {
       case OntologyConstraintException(_) => StatusCodes.BadRequest
       case EditConflictException(_)       => StatusCodes.Conflict
       case RequestRejectedException(_)    => StatusCodes.BadRequest
+      case V2.BadRequestException(_, _)   => StatusCodes.BadRequest
 
       // Subclasses of InternalServerException (which must be last in this group)
       case UpdateNotPerformedException(_)    => StatusCodes.Conflict
