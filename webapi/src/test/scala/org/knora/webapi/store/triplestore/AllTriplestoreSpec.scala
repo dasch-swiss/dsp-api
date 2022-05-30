@@ -166,15 +166,6 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         response.triplestoreStatus should be(TriplestoreStatus.ServiceAvailable)
       }
     }
-
-    "receiving a Hello " should {
-      "reply " in {
-        within(1.seconds) {
-          storeManager ! HelloTriplestore(settings.triplestoreType)
-          expectMsg(HelloTriplestore(settings.triplestoreType))
-        }
-      }
-    }
     "receiving a 'ResetTriplestoreContent' request " should {
       "reset the data " in {
         //println("==>> Reset test case start")
