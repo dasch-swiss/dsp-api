@@ -39,7 +39,7 @@ class CacheSpec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout                 = settings.defaultTimeout
 
-  val additionalTestData = List(
+  override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books"
@@ -52,16 +52,10 @@ class CacheSpec extends CoreSpec {
 
   "The basic functionality of the ontology cache" should {
 
-    "successfully load all ontologies" in {
+    "successfully get the ontology cache" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
-        _ <- Cache.loadOntologies(
-               settings,
-               appActor,
-               KnoraSystemInstances.Users.SystemUser
-             )
-        cacheData: Cache.OntologyCacheData       <- Cache.getCacheData
-        ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
-      } yield ontologies
+        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+      } yield cacheData.ontologies
 
       ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
         res.size should equal(13)
@@ -76,13 +70,14 @@ class CacheSpec extends CoreSpec {
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
-        val iri: SmartIri       = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasTitle")
+        val iri: SmartIri = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-        val previousCacheDataFuture = Cache.getCacheData
-        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+        val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData
+        val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
 
         val previousBooksMaybe = previousCacheData.ontologies.get(iri)
+
         previousBooksMaybe match {
           case Some(previousBooks) =>
             // copy books-onto but remove :hasTitle property
@@ -117,10 +112,10 @@ class CacheSpec extends CoreSpec {
                 previousBooks.properties should contain key hasTitlePropertyIri
                 newCachedBooks.properties should not contain key(hasTitlePropertyIri)
 
-              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+              case None => fail("no books found in cache after update")
             }
 
-          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+          case None => fail("no books found in cache before update")
         }
       }
     }
@@ -129,8 +124,8 @@ class CacheSpec extends CoreSpec {
 
       "add a value property to the cache." in {
 
-        val iri: SmartIri             = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
+        val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
         val previousCacheDataFuture = Cache.getCacheData
         val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)

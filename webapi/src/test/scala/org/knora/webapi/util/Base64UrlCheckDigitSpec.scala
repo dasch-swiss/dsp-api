@@ -5,53 +5,56 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.CoreSpec
+import zio.test.ZIOSpecDefault
+import zio.Scope
+import zio.test._
+import zio.test.Spec
+import zio.test.TestEnvironment
 
 /**
  * Tests [[Base64UrlCheckDigit]].
  */
-class Base64UrlCheckDigitSpec extends CoreSpec {
+class Base64UrlCheckDigitSpec extends ZIOSpecDefault {
   private val base64UrlCheckDigit         = new Base64UrlCheckDigit
   private val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
   private val correctResourceIDCheckDigit = "n"
 
-  "Base64UrlCheckDigit" should {
-    "reject a string without a check digit" in {
-      assert(!base64UrlCheckDigit.isValid(correctResourceID))
-    }
+  def spec = suite("Base64UrlCheckDigit")(
+    test("reject a string without a check digit") {
+      assertTrue(!base64UrlCheckDigit.isValid(correctResourceID))
+    } +
+      test("calculate a check digit for a string and validate it") {
+        val checkDigit                             = base64UrlCheckDigit.calculate(correctResourceID)
+        val correctResourceIDWithCorrectCheckDigit = correctResourceID + checkDigit
 
-    "calculate a check digit for a string and validate it" in {
-      val checkDigit = base64UrlCheckDigit.calculate(correctResourceID)
-      assert(checkDigit == correctResourceIDCheckDigit)
+        assertTrue(checkDigit == correctResourceIDCheckDigit) &&
+        assertTrue(base64UrlCheckDigit.isValid(correctResourceIDWithCorrectCheckDigit))
+      } +
+      test("reject a string with an incorrect check digit") {
+        val correctResourceIDWithIncorrectCheckDigit = correctResourceID + "m"
 
-      val correctResourceIDWithCorrectCheckDigit = correctResourceID + checkDigit
-      assert(base64UrlCheckDigit.isValid(correctResourceIDWithCorrectCheckDigit))
-    }
+        assertTrue(!base64UrlCheckDigit.isValid(correctResourceIDWithIncorrectCheckDigit))
+      } +
+      test("reject a string with a missing character") {
+        val resourceIDWithMissingCharacter = "cmfk1DMHRBiR4-6HXpEFA"
+        val resourceIDWithMissingCharacterAndCorrectCheckDigit =
+          resourceIDWithMissingCharacter + correctResourceIDCheckDigit
 
-    "reject a string with an incorrect check digit" in {
-      val correctResourceIDWithIncorrectCheckDigit = correctResourceID + "m"
-      assert(!base64UrlCheckDigit.isValid(correctResourceIDWithIncorrectCheckDigit))
-    }
+        assertTrue(!base64UrlCheckDigit.isValid(resourceIDWithMissingCharacterAndCorrectCheckDigit))
+      } +
+      test("reject a string with an incorrect character") {
+        val resourceIDWithIncorrectCharacter = "cmfk1DMHRBir4-_6HXpEFA"
+        val resourceIDWithIncorrectCharacterAndCorrectCheckDigit =
+          resourceIDWithIncorrectCharacter + correctResourceIDCheckDigit
 
-    "reject a string with a missing character" in {
-      val resourceIDWithMissingCharacter = "cmfk1DMHRBiR4-6HXpEFA"
-      val resourceIDWithMissingCharacterAndCorrectCheckDigit =
-        resourceIDWithMissingCharacter + correctResourceIDCheckDigit
-      assert(!base64UrlCheckDigit.isValid(resourceIDWithMissingCharacterAndCorrectCheckDigit))
-    }
+        assertTrue(!base64UrlCheckDigit.isValid(resourceIDWithIncorrectCharacterAndCorrectCheckDigit))
+      } +
+      test("reject a string with swapped characters") {
+        val resourceIDWithSwappedCharacters = "cmfk1DMHRBiR4_-6HXpEFA"
+        val resourceIDWithSwappedCharactersAndCorrectCheckDigit =
+          resourceIDWithSwappedCharacters + correctResourceIDCheckDigit
 
-    "reject a string with an incorrect character" in {
-      val resourceIDWithIncorrectCharacter = "cmfk1DMHRBir4-_6HXpEFA"
-      val resourceIDWithIncorrectCharacterAndCorrectCheckDigit =
-        resourceIDWithIncorrectCharacter + correctResourceIDCheckDigit
-      assert(!base64UrlCheckDigit.isValid(resourceIDWithIncorrectCharacterAndCorrectCheckDigit))
-    }
-
-    "reject a string with swapped characters" in {
-      val resourceIDWithSwappedCharacters = "cmfk1DMHRBiR4_-6HXpEFA"
-      val resourceIDWithSwappedCharactersAndCorrectCheckDigit =
-        resourceIDWithSwappedCharacters + correctResourceIDCheckDigit
-      assert(!base64UrlCheckDigit.isValid(resourceIDWithSwappedCharactersAndCorrectCheckDigit))
-    }
-  }
+        assertTrue(!base64UrlCheckDigit.isValid(resourceIDWithSwappedCharactersAndCorrectCheckDigit))
+      }
+  )
 }

@@ -73,9 +73,7 @@ final case class TriplestoreServiceManager(
     case DropAllTRepositoryContent() => ts.dropAllTriplestoreContent()
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
       ts.insertDataIntoTriplestore(rdfDataObjects, true)
-    // case HelloTriplestore(msg: String) if msg == settings.triplestoreType => sender() ! HelloTriplestore(settings.triplestoreType)
-    case CheckTriplestoreRequest() => ts.checkTriplestore()
-    // case SearchIndexUpdateRequest(subjectIri: Option[String]) => try2Message(sender(), Success(SparqlUpdateResponse()), log)
+    case CheckTriplestoreRequest()                   => ts.checkTriplestore()
     case DownloadRepositoryRequest(outputFile: Path) => ts.downloadRepository(outputFile)
     case UploadRepositoryRequest(inputFile: Path)    => ts.uploadRepository(inputFile)
     case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>

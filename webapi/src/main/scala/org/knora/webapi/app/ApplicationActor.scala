@@ -248,16 +248,6 @@ class ApplicationActor(
           self ! CreateCaches()
 
         case AppStates.CachesReady =>
-          self ! SetAppState(AppStates.UpdatingSearchIndex)
-
-        case AppStates.UpdatingSearchIndex =>
-          if (ignoreRepository) {
-            self ! SetAppState(AppStates.SearchIndexReady)
-          } else {
-            self ! UpdateSearchIndex()
-          }
-
-        case AppStates.SearchIndexReady =>
           self ! SetAppState(AppStates.LoadingOntologies)
 
         case AppStates.LoadingOntologies =>
@@ -359,12 +349,6 @@ class ApplicationActor(
     case CreateCaches() =>
       CacheUtil.createCaches(knoraSettings.caches)
       self ! SetAppState(AppStates.CachesReady)
-
-    case UpdateSearchIndex() =>
-      self ! SearchIndexUpdateRequest()
-
-    case SparqlUpdateResponse() =>
-      self ! SetAppState(AppStates.SearchIndexReady)
 
     /* load ontologies request */
     case LoadOntologies() =>

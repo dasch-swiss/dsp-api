@@ -505,12 +505,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // If the resource's label was changed, update the full-text search index.
         _ <- updateResourceMetadataRequestV2.maybeLabel match {
-               case Some(_) =>
-                 for {
-                   _ <- (storeManager ? SearchIndexUpdateRequest(Some(updateResourceMetadataRequestV2.resourceIri)))
-                          .mapTo[SparqlUpdateResponse]
-                 } yield ()
-
+               case Some(_) => FastFuture.successful(())
                case None => FastFuture.successful(())
              }
       } yield UpdateResourceMetadataResponseV2(
