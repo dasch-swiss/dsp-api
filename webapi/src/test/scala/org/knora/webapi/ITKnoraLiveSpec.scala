@@ -110,9 +110,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
-
   /**
    * The effect for building a cache service manager, a IIIF service manager,
    * and the sipi test client.
@@ -128,7 +125,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
-  val effectLayers =
+  lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
@@ -140,20 +137,18 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      Logging.fromInfo
     )
+
+  // The ZIO runtime used to run functional effects
+  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
   /**
    * Create both managers and the sipi client by unsafe running them.
    */
   val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-          .provide(
-            effectLayers
-          )
-      )
+    runtime.unsafeRun(managers)
 
   // start the Application Actor
   lazy val appActor: ActorRef =
@@ -182,10 +177,9 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   }
 
   override def afterAll(): Unit = {
-    // turn on/off in logback-test.xml
-    log.debug(TestContainersAll.SipiContainer.getLogs())
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
+    runtime.shutdown()
   }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =

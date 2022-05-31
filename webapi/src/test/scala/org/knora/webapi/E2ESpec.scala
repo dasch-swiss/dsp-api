@@ -117,9 +117,6 @@ class E2ESpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
-
   // The effect for building a cache service manager and a IIIF service manager.
   lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
@@ -144,20 +141,18 @@ class E2ESpec(_system: ActorSystem)
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      Logging.fromInfo
     )
+
+  // The ZIO runtime used to run functional effects
+  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
   /**
    * Create both managers by unsafe running them.
    */
   lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-          .provide(
-            effectLayers
-          )
-      )
+    runtime.unsafeRun(managers)
 
   // start the Application Actor
   lazy val appActor: ActorRef =
@@ -186,9 +181,11 @@ class E2ESpec(_system: ActorSystem)
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit =
+  override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
+    runtime.shutdown()
+  }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
     runtime.unsafeRunTask(

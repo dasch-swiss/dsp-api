@@ -102,9 +102,6 @@ class R2RSpec
 
   implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
-
   // The effect for building a cache service manager and a IIIF service manager.
   lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
@@ -129,20 +126,18 @@ class R2RSpec
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      Logging.fromInfo
     )
+
+  // The ZIO runtime used to run functional effects
+  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
   /**
    * Create both managers by unsafe running them.
    */
   lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-          .provide(
-            effectLayers
-          )
-      )
+    runtime.unsafeRun(managers)
 
   // start the Application Actor
   lazy val appActor: ActorRef =
@@ -177,9 +172,11 @@ class R2RSpec
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit =
+  override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
+    runtime.shutdown()
+  }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
     runtime.unsafeRunTask(
