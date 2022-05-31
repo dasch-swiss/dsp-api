@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.user.repo
+package dsp.user.api
 
 import dsp.user.domain._
 import zio._

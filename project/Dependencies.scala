@@ -173,8 +173,17 @@ object Dependencies {
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
   // user project dependencies
-  val userApiLibraryDependencies = Seq(
-    zio
+  val userInterfaceLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val userHandlerLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
   )
   val userCoreLibraryDependencies = Seq(
     zio,
@@ -184,7 +193,9 @@ object Dependencies {
   )
   val userRepoLibraryDependencies = Seq(
     zio,
+    zioMacros,
     zioTest    % Test,
     zioTestSbt % Test
   )
+
 }

@@ -283,23 +283,37 @@ lazy val schemaRepoSearchService = project
   )
   .dependsOn(schemaRepo)
 
-lazy val userApi = project
-  .in(file("dsp-user/api"))
+lazy val userInterface = project
+  .in(file("dsp-user/interface"))
   .settings(
-    name := "userApi",
-    libraryDependencies ++= Dependencies.userApiLibraryDependencies,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userInterface",
+    libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(userCore)
+  .dependsOn(userHandler)
 
-lazy val userRepo = project
-  .in(file("dsp-user/repo"))
+lazy val userHandler = project
+  .in(file("dsp-user/handler"))
   .settings(
-    name := "userRepo",
-    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userHandler",
+    libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(userCore % "compile->compile;test->test")
+  .dependsOn(userCore, userRepo % "test->test")
 
 lazy val userCore = project
   .in(file("dsp-user/core"))
@@ -314,4 +328,21 @@ lazy val userCore = project
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  ) //.dependsOn(valueObjects)
+
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
+  .dependsOn(userCore)
+//.dependsOn(userHandler % "compile->compile;test->test", userDomain)

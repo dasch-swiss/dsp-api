@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.user.repo
+package dsp.user.repo.impl
 
 import zio._
 import zio.stm._
@@ -12,7 +12,7 @@ import dsp.user.domain.User
 import dsp.user.domain.UserId
 import dsp.user.domain.UserValueObjects
 import dsp.user.domain.Iri
-import dsp.user.repo.UserRepo
+import dsp.user.api.UserRepo
 
 /**
  * User repo test implementation. Mocks the user repo for tests.

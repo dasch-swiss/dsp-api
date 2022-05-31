@@ -6,7 +6,7 @@
 package dsp.user.handler
 
 import dsp.user.domain._
-import dsp.user.repo.UserRepo
+import dsp.user.api.UserRepo
 import zio._
 import java.util.UUID
 
@@ -113,7 +113,7 @@ final case class UserHandler(repo: UserRepo) {
 /**
  * Companion object providing the layer with an initialized implementation
  */
-object UserHandler {
+object UserHandlerLive {
   val layer: ZLayer[UserRepo, Nothing, UserHandler] = {
     ZLayer {
       for {
