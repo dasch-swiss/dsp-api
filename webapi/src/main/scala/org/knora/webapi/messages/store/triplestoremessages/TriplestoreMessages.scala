@@ -389,7 +389,6 @@ case class RepositoryUploadedResponse()
  */
 case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 

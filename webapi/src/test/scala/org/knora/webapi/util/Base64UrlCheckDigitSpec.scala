@@ -14,7 +14,7 @@ import zio.test.TestEnvironment
 /**
  * Tests [[Base64UrlCheckDigit]].
  */
-class Base64UrlCheckDigitSpec extends ZIOSpecDefault {
+object Base64UrlCheckDigitSpec extends ZIOSpecDefault {
   private val base64UrlCheckDigit         = new Base64UrlCheckDigit
   private val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
   private val correctResourceIDCheckDigit = "n"

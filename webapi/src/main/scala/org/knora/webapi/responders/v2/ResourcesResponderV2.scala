@@ -506,7 +506,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // If the resource's label was changed, update the full-text search index.
         _ <- updateResourceMetadataRequestV2.maybeLabel match {
                case Some(_) => FastFuture.successful(())
-               case None => FastFuture.successful(())
+               case None    => FastFuture.successful(())
              }
       } yield UpdateResourceMetadataResponseV2(
         resourceIri = updateResourceMetadataRequestV2.resourceIri,

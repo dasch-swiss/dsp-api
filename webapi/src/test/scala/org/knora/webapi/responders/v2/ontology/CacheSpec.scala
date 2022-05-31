@@ -70,7 +70,7 @@ class CacheSpec extends CoreSpec {
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
-        val iri: SmartIri = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
         val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
         val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData

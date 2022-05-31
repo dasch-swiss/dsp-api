@@ -6,133 +6,139 @@
 package org.knora.webapi.util
 
 import org.knora.webapi._
+import zio.test.ZIOSpecDefault
+import zio._
+import zio.test._
 
-class ApacheLuceneSupportSpec extends CoreSpec() {
+object ApacheLuceneSupportSpec extends ZIOSpecDefault {
 
-  "The ApacheLuceneSupport class" should {
+  def spec: Spec[TestEnvironment with Scope, Any] =
+    suite("The ApacheLuceneSupport class")(
+      test("leave a Lucene query unchanged") {
 
-    "leave a Lucene query unchanged" in {
+        val searchString             = "Reise Land"
+        val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-      val searchString             = "Reise Land"
-      val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
+        assertTrue(searchExpression == "Reise Land")
+      } +
 
-      assert(searchExpression == "Reise Land")
-    }
+        test("leave a Lucene query unchanged (2)") {
 
-    "leave a Lucene query unchanged (2)" in {
+          val searchString             = "Reise ins Land"
+          val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-      val searchString             = "Reise ins Land"
-      val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
+          assertTrue(searchExpression == "Reise ins Land")
+        } +
 
-      assert(searchExpression == "Reise ins Land")
-    }
+        test("leave a Lucene query containing phrases and terms unchanged") {
 
-    "leave a Lucene query containing phrases and terms unchanged" in {
+          val searchString             = "\"Leonhard Euler\" Bernoulli"
+          val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-      val searchString             = "\"Leonhard Euler\" Bernoulli"
-      val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
+          assertTrue(searchExpression == "\"Leonhard Euler\" Bernoulli")
 
-      assert(searchExpression == "\"Leonhard Euler\" Bernoulli")
+        } +
 
-    }
+        test("leave a Lucene query containing two phrases and one term unchanged") {
 
-    "leave a Lucene query containing two phrases and one term unchanged" in {
+          val searchString             = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
+          val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-      val searchString             = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula"
-      val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
+          assertTrue(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula")
 
-      assert(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula")
+        } +
 
-    }
+        test("leave a Lucene query containing two phrases and two terms unchanged") {
 
-    "leave a Lucene query containing two phrases and two terms unchanged" in {
+          val searchString             = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
+          val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-      val searchString             = "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria"
-      val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
+          assertTrue(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria")
 
-      assert(searchExpression == "\"Leonhard Euler\" \"Daniel Bernoulli\" formula geometria")
+        } +
 
-    }
+        test("get terms contained in  a Lucene query") {
 
-    "get terms contained in  a Lucene query" in {
+          val searchString             = "Reise Land"
+          val singleTerms: Seq[String] = ApacheLuceneSupport.LuceneQueryString(searchString).getSingleTerms
 
-      val searchString             = "Reise Land"
-      val singleTerms: Seq[String] = ApacheLuceneSupport.LuceneQueryString(searchString).getSingleTerms
+          assertTrue(singleTerms.size == 2)
 
-      assert(singleTerms.size === 2)
+        } +
 
-    }
+        test("handle one phrase correctly") {
 
-    "handle one phrase correctly" in {
+          val searchString             = "\"Leonhard Euler\""
+          val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
 
-      val searchString             = "\"Leonhard Euler\""
-      val searchExpression: String = ApacheLuceneSupport.LuceneQueryString(searchString).getQueryString
+          assertTrue(searchExpression == "\"Leonhard Euler\"")
 
-      assert(searchExpression == "\"Leonhard Euler\"")
+        } +
 
-    }
+        test(
+          "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)"
+        ) {
 
-    "combine space separated words with a logical AND and add a wildcard to the last word (non exact sequence)" in {
+          val searchString = "Reise ins Heilige Lan"
+          val searchExpression =
+            ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithoutExactSequence
 
-      val searchString = "Reise ins Heilige Lan"
-      val searchExpression =
-        ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithoutExactSequence
+          assertTrue(searchExpression == "Reise AND ins AND Heilige AND Lan*")
 
-      assert(searchExpression == "Reise AND ins AND Heilige AND Lan*")
+        } +
 
-    }
+        test("add a wildcard to the word if the search string only contains one word (non exact sequence)") {
 
-    "add a wildcard to the word if the search string only contains one word (non exact sequence)" in {
+          val searchString = "Reis"
+          val searchExpression =
+            ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithoutExactSequence
 
-      val searchString = "Reis"
-      val searchExpression =
-        ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithoutExactSequence
+          assertTrue(searchExpression == "Reis*")
 
-      assert(searchExpression == "Reis*")
+        } +
 
-    }
+        test(
+          "combine all space separated words to a phrase but the last one and add a wildcard to it (exact sequence)"
+        ) {
 
-    "combine all space separated words to a phrase but the last one and add a wildcard to it (exact sequence)" in {
+          val searchString = "Reise ins Heilige Lan"
+          val searchExpression =
+            ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithExactSequence
 
-      val searchString = "Reise ins Heilige Lan"
-      val searchExpression =
-        ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithExactSequence
+          assertTrue(searchExpression == """"Reise ins Heilige" AND Lan*""")
 
-      assert(searchExpression == """"Reise ins Heilige" AND Lan*""")
+        } +
 
-    }
+        test("add a wildcard to the word if the search string only contains one word (exact sequence)") {
 
-    "add a wildcard to the word if the search string only contains one word (exact sequence)" in {
+          val searchString = "Reis"
+          val searchExpression =
+            ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithExactSequence
 
-      val searchString = "Reis"
-      val searchExpression =
-        ApacheLuceneSupport.MatchStringWhileTyping(searchString).generateLiteralForLuceneIndexWithExactSequence
+          assertTrue(searchExpression == "Reis*")
 
-      assert(searchExpression == "Reis*")
+        } +
 
-    }
+        test("create a regex FILTER expression for an exact match") {
 
-    "create a regex FILTER expression for an exact match" in {
+          val searchString = "Reise ins Heilige Lan"
+          val searchExpression = ApacheLuceneSupport
+            .MatchStringWhileTyping(searchString)
+            .generateRegexFilterStatementForExactSequenceMatch("firstProp")
 
-      val searchString = "Reise ins Heilige Lan"
-      val searchExpression = ApacheLuceneSupport
-        .MatchStringWhileTyping(searchString)
-        .generateRegexFilterStatementForExactSequenceMatch("firstProp")
+          assertTrue(searchExpression == "FILTER regex(?firstProp, 'Reise ins Heilige Lan*', 'i')")
 
-      assert(searchExpression == "FILTER regex(?firstProp, 'Reise ins Heilige Lan*', 'i')")
+        } +
 
-    }
+        test("not create a regex FILTER expression for an exact match when only one word is provided") {
 
-    "not create a regex FILTER expression for an exact match when only one word is provided" in {
+          val searchString = "Reise"
+          val searchExpression = ApacheLuceneSupport
+            .MatchStringWhileTyping(searchString)
+            .generateRegexFilterStatementForExactSequenceMatch("firstProp")
 
-      val searchString = "Reise"
-      val searchExpression = ApacheLuceneSupport
-        .MatchStringWhileTyping(searchString)
-        .generateRegexFilterStatementForExactSequenceMatch("firstProp")
+          assertTrue(searchExpression == "")
 
-      assert(searchExpression == "")
-
-    }
-
-  }
+        }
+    )
 }
