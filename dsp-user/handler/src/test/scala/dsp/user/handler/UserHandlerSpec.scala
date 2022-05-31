@@ -17,7 +17,7 @@ import dsp.user.repo.impl.UserRepoMock
 object UserHandlerSpec extends ZIOSpec[UserHandler] {
 
   val bootstrap = ZLayer.make[UserHandler](
-    //UserHandler.layer,
+    UserHandler.layer,
     UserRepoMock.layer
   )
 
