@@ -24,7 +24,7 @@ import zio.prelude.Validation
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
-import dsp.valueobjects.Iri.UserIRI
+import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.User._
 
 object UsersRouteADM {
@@ -120,7 +120,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        val id: Validation[Throwable, Option[UserIRI]]        = UserIRI.make(apiRequest.id)
+        val id: Validation[Throwable, Option[UserIri]]        = UserIri.make(apiRequest.id)
         val username: Validation[Throwable, Username]         = Username.make(apiRequest.username)
         val email: Validation[Throwable, Email]               = Email.make(apiRequest.email)
         val givenName: Validation[Throwable, GivenName]       = GivenName.make(apiRequest.givenName)

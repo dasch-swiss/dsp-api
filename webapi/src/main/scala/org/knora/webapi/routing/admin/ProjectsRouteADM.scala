@@ -35,7 +35,7 @@ import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
-import dsp.valueobjects.Iri.ProjectIRI
+import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 
 object ProjectsRouteADM {
@@ -137,7 +137,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
-        val id: Validation[Throwable, Option[ProjectIRI]]          = ProjectIRI.make(apiRequest.id)
+        val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
         val shortname: Validation[Throwable, Shortname]            = Shortname.make(apiRequest.shortname)
         val shortcode: Validation[Throwable, Shortcode]            = Shortcode.make(apiRequest.shortcode)
         val longname: Validation[Throwable, Option[Longname]]      = Longname.make(apiRequest.longname)

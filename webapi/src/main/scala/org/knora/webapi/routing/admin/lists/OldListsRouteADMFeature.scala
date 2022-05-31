@@ -221,8 +221,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   private def createListRootNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIRI]]    = ListIRI.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIRI]      = ProjectIRI.make(apiRequest.projectIri)
+        val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.make(apiRequest.projectIri)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
@@ -292,14 +292,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
           // check if requested ListIri matches the Iri passed in the route
-          val parentNodeIri: Validation[Throwable, ListIRI] = if (iri == apiRequest.parentNodeIri) {
-            ListIRI.make(apiRequest.parentNodeIri)
+          val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
+            ListIri.make(apiRequest.parentNodeIri)
           } else {
             Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
           }
 
-          val id: Validation[Throwable, Option[ListIRI]]        = ListIRI.make(apiRequest.id)
-          val projectIri: Validation[Throwable, ProjectIRI]     = ProjectIRI.make(apiRequest.projectIri)
+          val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
+          val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
           val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
           val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
           val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
@@ -371,14 +371,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
         // check if requested Iri matches the route Iri
-        val listIri: Validation[Throwable, ListIRI] = if (iri == apiRequest.listIri) {
-          ListIRI.make(apiRequest.listIri)
+        val listIri: Validation[Throwable, ListIri] = if (iri == apiRequest.listIri) {
+          ListIri.make(apiRequest.listIri)
         } else {
           Validation.fail(throw BadRequestException("Route and payload listIri mismatch."))
         }
 
-        val projectIri: Validation[Throwable, ProjectIRI]       = ProjectIRI.make(apiRequest.projectIri)
-        val hasRootNode: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.hasRootNode)
+        val projectIri: Validation[Throwable, ProjectIri]       = ProjectIri.make(apiRequest.projectIri)
+        val hasRootNode: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.hasRootNode)
         val position: Validation[Throwable, Option[Position]]   = Position.make(apiRequest.position)
         val name: Validation[Throwable, Option[ListName]]       = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Option[Labels]]       = Labels.make(apiRequest.labels)

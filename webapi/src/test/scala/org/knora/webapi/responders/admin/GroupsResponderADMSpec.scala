@@ -102,7 +102,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 )
               )
               .fold(e => throw e.head, v => v),
-            project = ProjectIRI.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            project = ProjectIri.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             status = GroupStatus.make(true).fold(e => throw e.head, v => v),
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
@@ -130,13 +130,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(
-              GroupIRI.make(imagesReviewerGroup.id).fold(e => throw e.head, v => v)
+              GroupIri.make(imagesReviewerGroup.id).fold(e => throw e.head, v => v)
             ),
             name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
             descriptions = GroupDescriptions
               .make(Seq(V2.StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
-            project = ProjectIRI.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            project = ProjectIri.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             status = GroupStatus.make(true).fold(e => throw e.head, v => v),
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),

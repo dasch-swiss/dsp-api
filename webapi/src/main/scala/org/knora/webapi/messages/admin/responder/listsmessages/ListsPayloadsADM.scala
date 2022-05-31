@@ -18,16 +18,16 @@ sealed trait ListNodeCreatePayloadADM
 //     2. Rethink other field names if they are descriptive enough, e.g. id should be renamed to customIri or something similar
 object ListNodeCreatePayloadADM {
   final case class ListRootNodeCreatePayloadADM(
-    id: Option[ListIRI] = None,
-    projectIri: ProjectIRI,
+    id: Option[ListIri] = None,
+    projectIri: ProjectIri,
     name: Option[ListName] = None,
     labels: Labels,
     comments: Comments
   ) extends ListNodeCreatePayloadADM
   final case class ListChildNodeCreatePayloadADM(
-    id: Option[ListIRI] = None,
-    parentNodeIri: ListIRI,
-    projectIri: ProjectIRI,
+    id: Option[ListIri] = None,
+    parentNodeIri: ListIri,
+    projectIri: ProjectIri,
     name: Option[ListName] = None,
     position: Option[Position] = None,
     labels: Labels,
@@ -40,9 +40,9 @@ object ListNodeCreatePayloadADM {
  */
 final case class ListNodeChangePayloadADM(
 //  TODO-mpro: listIri can be probably removed here or maybe from the route??
-  listIri: ListIRI,
-  projectIri: ProjectIRI,
-  hasRootNode: Option[ListIRI] = None,
+  listIri: ListIri,
+  projectIri: ProjectIri,
+  hasRootNode: Option[ListIri] = None,
   position: Option[Position] = None,
   name: Option[ListName] = None,
   labels: Option[Labels] = None,

@@ -854,7 +854,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 //    println("ZZZZZ-createNode", createNodeRequest)
 //    TODO-mpro: it's quickfix, refactor
-    val parentNode: Option[ListIRI] = createNodeRequest match {
+    val parentNode: Option[ListIri] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
       case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
     }
@@ -1263,8 +1263,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
                                         changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                          listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                          projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                          listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                          projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                           name = Some(changeNodeNameRequest.name)
                                         ),
                                         featureFactoryConfig = featureFactoryConfig
@@ -1341,8 +1341,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                           changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                            listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                            projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                             labels = Some(changeNodeLabelsRequest.labels)
                                           ),
                                           featureFactoryConfig = featureFactoryConfig
@@ -1420,8 +1420,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                             changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                              listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                              projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                              listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                              projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                               comments = Some(changeNodeCommentsRequest.comments)
                                             ),
                                             featureFactoryConfig = featureFactoryConfig

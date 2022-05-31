@@ -5,14 +5,14 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import dsp.valueobjects.Iri.UserIRI
+import dsp.valueobjects.Iri.UserIri
 import dsp.valueobjects.User._
 
 /**
  * User creation payload
  */
 final case class UserCreatePayloadADM(
-  id: Option[UserIRI] = None,
+  id: Option[UserIri] = None,
   username: Username,
   email: Email,
   givenName: GivenName,

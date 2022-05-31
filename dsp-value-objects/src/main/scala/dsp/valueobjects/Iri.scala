@@ -11,11 +11,11 @@ sealed trait Iri
 object Iri {
 
   /**
-   * GroupIRI value object.
+   * GroupIri value object.
    */
-  sealed abstract case class GroupIRI private (value: String)
-  object GroupIRI { self =>
-    def make(value: String): Validation[Throwable, GroupIRI] =
+  sealed abstract case class GroupIri private (value: String)
+  object GroupIri { self =>
+    def make(value: String): Validation[Throwable, GroupIri] =
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriMissing))
       } else {
@@ -30,11 +30,11 @@ object Iri {
             V2IriValidation.validateAndEscapeIri(value, throw V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
           )
 
-          validatedValue.map(new GroupIRI(_) {})
+          validatedValue.map(new GroupIri(_) {})
         }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[GroupIRI]] =
+    def make(value: Option[String]): Validation[Throwable, Option[GroupIri]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -44,9 +44,9 @@ object Iri {
   /**
    * ListIri value object.
    */
-  sealed abstract case class ListIRI private (value: String)
-  object ListIRI { self =>
-    def make(value: String): Validation[Throwable, ListIRI] =
+  sealed abstract case class ListIri private (value: String)
+  object ListIri { self =>
+    def make(value: String): Validation[Throwable, ListIri] =
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriMissing))
       } else {
@@ -64,11 +64,11 @@ object Iri {
             )
           )
 
-          validatedValue.map(new ListIRI(_) {})
+          validatedValue.map(new ListIri(_) {})
         }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[ListIRI]] =
+    def make(value: Option[String]): Validation[Throwable, Option[ListIri]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -76,11 +76,11 @@ object Iri {
   }
 
   /**
-   * ProjectIRI value object.
+   * ProjectIri value object.
    */
-  sealed abstract case class ProjectIRI private (value: String)
-  object ProjectIRI { self =>
-    def make(value: String): Validation[Throwable, ProjectIRI] =
+  sealed abstract case class ProjectIri private (value: String)
+  object ProjectIri { self =>
+    def make(value: String): Validation[Throwable, ProjectIri] =
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriMissing))
       } else {
@@ -98,11 +98,11 @@ object Iri {
             )
           )
 
-          validatedValue.map(new ProjectIRI(_) {})
+          validatedValue.map(new ProjectIri(_) {})
         }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[ProjectIRI]] =
+    def make(value: Option[String]): Validation[Throwable, Option[ProjectIri]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -110,11 +110,11 @@ object Iri {
   }
 
   /**
-   * UserIRI value object.
+   * UserIri value object.
    */
-  sealed abstract case class UserIRI private (value: String) extends Iri
-  object UserIRI { self =>
-    def make(value: String): Validation[Throwable, UserIRI] =
+  sealed abstract case class UserIri private (value: String) extends Iri
+  object UserIri { self =>
+    def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriMissing))
       } else {
@@ -132,11 +132,11 @@ object Iri {
             )
           )
 
-          validatedValue.map(new UserIRI(_) {})
+          validatedValue.map(new UserIri(_) {})
         }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[UserIRI]] =
+    def make(value: Option[String]): Validation[Throwable, Option[UserIri]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
