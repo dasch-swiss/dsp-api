@@ -6,15 +6,6 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
-// sealed abstract case class LangString private (value: String, iso: String)
-// object LangString { self =>
-//   def make(value: String, iso: String): Validation[String, LangString] =
-//     if(value.isEmpty || iso.isEmpty) {
-//       Validation.fail("Value and Iso cannot be empty.")
-//     } else {
-//       // new LangString(_, _) {}
-//     }
-// }
 
 sealed trait Group
 object Group {

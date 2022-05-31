@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-// import dsp.valueobjects._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 
