@@ -746,7 +746,7 @@ class XMLToStandoffUtil(
         case Some(existingUuid) => existingUuid
         case None               =>
           // Otherwise, try to parse the ID as a UUID.
-          if (stringFormatter.hasUUIDLength(id)) {
+          if (stringFormatter.hasUuidLength(id)) {
             stringFormatter.decodeUuid(id)
           } else {
             // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.

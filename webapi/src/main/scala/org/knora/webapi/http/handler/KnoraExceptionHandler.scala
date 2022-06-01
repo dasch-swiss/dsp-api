@@ -49,8 +49,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(rre, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
         }
@@ -68,8 +66,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(ise, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
         }
@@ -83,8 +79,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(bre, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(bre, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(bre, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(bre, settingsImpl))
         }
@@ -102,8 +96,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(other, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(other, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
         }

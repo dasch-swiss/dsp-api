@@ -851,8 +851,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     createNodeRequest: ListNodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[IRI] = {
-
-//    println("ZZZZZ-createNode", createNodeRequest)
 //    TODO-mpro: it's quickfix, refactor
     val parentNode: Option[ListIri] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None

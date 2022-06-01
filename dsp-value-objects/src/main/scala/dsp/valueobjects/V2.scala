@@ -91,7 +91,7 @@ object V2IriValidation {
   }
 
   /**
-   * The domain name used to construct Knora IRIs.
+   * The domain name used to construct IRIs.
    */
   val IriDomain: String = "rdfh.ch"
 
@@ -103,7 +103,7 @@ object V2IriValidation {
     new UrlValidator(
       schemes,
       UrlValidator.ALLOW_LOCAL_URLS
-    ) // local urls are URL-encoded Knora IRIs as part of the whole URL
+    ) // local urls are URL-encoded IRIs as part of the whole URL
 
   /**
    * Returns `true` if a string is an IRI.
@@ -241,7 +241,7 @@ object V2UuidValidation {
    * @param s the string to check.
    * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
    */
-  def hasUUIDLength(s: String): Boolean =
+  def hasUuidLength(s: String): Boolean =
     s.length == CanonicalUuidLength || s.length == Base64UuidLength
 
   /**
@@ -249,7 +249,7 @@ object V2UuidValidation {
    * @param s the string (IRI) to be checked.
    * @return TRUE for correct versions, FALSE for incorrect.
    */
-  def isUUIDVersion4Or5(s: String): Boolean =
+  def isUuidVersion4Or5(s: String): Boolean =
     getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**

@@ -19,11 +19,11 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriMissing))
       } else {
-        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraGroupIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
-        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -50,11 +50,11 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriMissing))
       } else {
-        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraListIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriInvalid))
-        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -84,11 +84,11 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriMissing))
       } else {
-        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriInvalid))
-        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
@@ -118,11 +118,11 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriMissing))
       } else {
-        val isUUID: Boolean = V2UuidValidation.hasUUIDLength(value.split("/").last)
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraUserIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriInvalid))
-        } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
+        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
