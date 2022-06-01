@@ -163,7 +163,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === IriErrorMessages.UuidInvalid)
+      assert(caught.getMessage === IriErrorMessages.UuidVersionInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
@@ -560,7 +560,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === IriErrorMessages.UuidInvalid)
+      assert(caught.getMessage === IriErrorMessages.UuidVersionInvalid)
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {

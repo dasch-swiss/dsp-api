@@ -46,7 +46,7 @@ import scala.util.Success
 import scala.util.Try
 import scala.util.control.Exception._
 import scala.util.matching.Regex
-import dsp.valueobjects.IriErrorMessages.UuidInvalid
+import dsp.valueobjects.IriErrorMessages.UuidVersionInvalid
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -3002,7 +3002,7 @@ class StringFormatter private (
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
     if (iri.isKnoraResourceIri && hasUUIDLength(iri.toString.split("/").last) && !isUUIDVersion4Or5(iri.toString)) {
-      throw BadRequestException(UuidInvalid)
+      throw BadRequestException(UuidVersionInvalid)
     }
 
   /**
@@ -3011,7 +3011,7 @@ class StringFormatter private (
    */
   def validatePermissionIRI(iri: IRI): Unit =
     if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
-      throw BadRequestException(UuidInvalid)
+      throw BadRequestException(UuidVersionInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
     }

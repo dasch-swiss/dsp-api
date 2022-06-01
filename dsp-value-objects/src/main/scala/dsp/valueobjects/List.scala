@@ -59,13 +59,13 @@ object List {
   object Labels { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, Labels] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ListErrorMessages.LabelMissing))
+        Validation.fail(V2.BadRequestException(ListErrorMessages.LabelsMissing))
       } else {
         val validatedLabels = Validation(value.map { label =>
           val validatedLabel =
             V2IriValidation.toSparqlEncodedString(
               label.value,
-              throw V2.BadRequestException(ListErrorMessages.LabelInvalid)
+              throw V2.BadRequestException(ListErrorMessages.LabelsInvalid)
             )
           V2.StringLiteralV2(value = validatedLabel, language = label.language)
         })
@@ -87,13 +87,13 @@ object List {
   object Comments { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, Comments] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ListErrorMessages.CommentMissing))
+        Validation.fail(V2.BadRequestException(ListErrorMessages.CommentsMissing))
       } else {
         val validatedComments = Validation(value.map { comment =>
           val validatedComment =
             V2IriValidation.toSparqlEncodedString(
               comment.value,
-              throw V2.BadRequestException(ListErrorMessages.CommentInvalid)
+              throw V2.BadRequestException(ListErrorMessages.CommentsInvalid)
             )
           V2.StringLiteralV2(value = validatedComment, language = comment.language)
         })
@@ -112,13 +112,13 @@ object List {
 object ListErrorMessages {
   val ListNameMissing          = "List name cannot be empty."
   val ListNameInvalid          = "List name is invalid."
-  val LabelMissing             = "At least one label needs to be supplied."   //make it plural
-  val LabelInvalid             = "Invalid label."                             //make it plural
-  val CommentMissing           = "At least one comment needs to be supplied." //make it plural
-  val CommentInvalid           = "Invalid comment."                           //make it plural
+  val LabelsMissing            = "At least one label needs to be supplied."
+  val LabelsInvalid            = "Invalid label."
+  val CommentsMissing          = "At least one comment needs to be supplied."
+  val CommentsInvalid          = "Invalid comment."
   val ListCreatePermission     = "A list can only be created by the project or system administrator."
   val ListNodeCreatePermission = "A list node can only be created by the project or system administrator."
   val ListChangePermission     = "A list can only be changed by the project or system administrator."
   val UpdateRequestEmptyLabel  = "List labels cannot be empty."
-  val InvalidPosition          = "Invalid position value is given, position should be either a positive value or -1."
+  val InvalidPosition          = "Invalid position value is given. Position should be either a positive value, 0 or -1."
 }

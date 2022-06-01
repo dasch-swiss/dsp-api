@@ -43,13 +43,13 @@ object Group {
   object GroupDescriptions { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupDescriptionMissing))
+        Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
       } else {
         val validatedDescriptions = Validation(value.map { description =>
           val validatedDescription =
             V2IriValidation.toSparqlEncodedString(
               description.value,
-              throw V2.BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
+              throw V2.BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
             )
           V2.StringLiteralV2(value = validatedDescription, language = description.language)
         })
@@ -93,8 +93,8 @@ object Group {
 }
 
 object GroupErrorMessages {
-  val GroupNameMissing        = "Group name cannot be empty."
-  val GroupNameInvalid        = "Group name is invalid."
-  val GroupDescriptionMissing = "Group description cannot be empty." // make it plural
-  val GroupDescriptionInvalid = "Group description is invalid."      // make it plural
+  val GroupNameMissing         = "Group name cannot be empty."
+  val GroupNameInvalid         = "Group name is invalid."
+  val GroupDescriptionsMissing = "Group description cannot be empty."
+  val GroupDescriptionsInvalid = "Group description is invalid."
 }

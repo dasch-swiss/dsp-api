@@ -250,11 +250,7 @@ object V2UuidValidation {
    * @return TRUE for correct versions, FALSE for incorrect.
    */
   def isUUIDVersion4Or5(s: String): Boolean =
-    if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
-      true
-    } else {
-      false
-    }
+    getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5
 
   /**
    * Gets the last segment of IRI, decodes UUID and gets the version.

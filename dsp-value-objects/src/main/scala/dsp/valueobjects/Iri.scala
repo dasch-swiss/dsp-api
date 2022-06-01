@@ -24,7 +24,7 @@ object Iri {
         if (!V2IriValidation.isKnoraGroupIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
         } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeIri(value, throw V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
@@ -55,7 +55,7 @@ object Iri {
         if (!V2IriValidation.isKnoraListIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriInvalid))
         } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeIri(
@@ -89,7 +89,7 @@ object Iri {
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriInvalid))
         } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeProjectIri(
@@ -123,7 +123,7 @@ object Iri {
         if (!V2IriValidation.isKnoraUserIriStr(value)) {
           Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriInvalid))
         } else if (isUUID && !V2UuidValidation.isUUIDVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidInvalid))
+          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeUserIri(
@@ -145,13 +145,13 @@ object Iri {
 }
 
 object IriErrorMessages {
-  val GroupIriMissing   = "Group IRI cannot be empty."
-  val GroupIriInvalid   = "Group IRI is invalid."
-  val ListIriMissing    = "List IRI cannot be empty."
-  val ListIriInvalid    = "List IRI cannot be empty."
-  val ProjectIriMissing = "Project IRI cannot be empty."
-  val ProjectIriInvalid = "Project IRI is invalid."
-  val UserIriMissing    = "User IRI cannot be empty."
-  val UserIriInvalid    = "User IRI is invalid."
-  val UuidInvalid       = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
+  val GroupIriMissing    = "Group IRI cannot be empty."
+  val GroupIriInvalid    = "Group IRI is invalid."
+  val ListIriMissing     = "List IRI cannot be empty."
+  val ListIriInvalid     = "List IRI is invalid"
+  val ProjectIriMissing  = "Project IRI cannot be empty."
+  val ProjectIriInvalid  = "Project IRI is invalid."
+  val UserIriMissing     = "User IRI cannot be empty."
+  val UserIriInvalid     = "User IRI is invalid."
+  val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
 }

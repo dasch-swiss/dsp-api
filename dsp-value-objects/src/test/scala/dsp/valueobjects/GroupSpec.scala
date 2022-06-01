@@ -24,91 +24,91 @@ object GroupSpec extends ZIOSpecDefault {
 
   private val groupNameTest = suite("GroupSpec - GroupName")(
     test("pass an empty value and throw an error") {
-      assertTrue(GroupName.make("") == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing)))
+      assertTrue(GroupName.make("") == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))) &&
       assertTrue(
         GroupName.make(Some("")) == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))
       )
-    } +
-      test("pass an invalid value and throw an error") {
-        assertTrue(
-          GroupName.make(invalidName) == Validation.fail(
-            V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
-          )
+    },
+    test("pass an invalid value and throw an error") {
+      assertTrue(
+        GroupName.make(invalidName) == Validation.fail(
+          V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
         )
-        assertTrue(
-          GroupName.make(Some(invalidName)) == Validation.fail(
-            V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
-          )
+      ) &&
+      assertTrue(
+        GroupName.make(Some(invalidName)) == Validation.fail(
+          V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
         )
-      } +
-      test("pass a valid value and successfully create value object") {
-        assertTrue(GroupName.make(validName).toOption.get.value == validName)
-        assertTrue(GroupName.make(Option(validName)).getOrElse(null).get.value == validName)
-      } +
-      test("pass None") {
-        assertTrue(
-          GroupName.make(None) == Validation.succeed(None)
-        )
-      }
+      )
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(GroupName.make(validName).toOption.get.value == validName) &&
+      assertTrue(GroupName.make(Option(validName)).getOrElse(null).get.value == validName)
+    },
+    test("successfully validate passing None") {
+      assertTrue(
+        GroupName.make(None) == Validation.succeed(None)
+      )
+    }
   )
 
   private val groupDescriptionsTest = suite("GroupSpec - GroupDescriptions")(
     test("pass an empty object and throw an error") {
       assertTrue(
         GroupDescriptions.make(Seq.empty) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupDescriptionMissing)
+          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
         )
-      )
+      ) &&
       assertTrue(
         GroupDescriptions.make(Some(Seq.empty)) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupDescriptionMissing)
+          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
         )
       )
-    } +
-      test("pass an invalid object and throw an error") {
-        assertTrue(
-          GroupDescriptions.make(invalidDescription) == Validation.fail(
-            V2.BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
-          )
+    },
+    test("pass an invalid object and throw an error") {
+      assertTrue(
+        GroupDescriptions.make(invalidDescription) == Validation.fail(
+          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
         )
-        assertTrue(
-          GroupDescriptions.make(Some(invalidDescription)) == Validation.fail(
-            V2.BadRequestException(GroupErrorMessages.GroupDescriptionInvalid)
-          )
+      ) &&
+      assertTrue(
+        GroupDescriptions.make(Some(invalidDescription)) == Validation.fail(
+          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
         )
-      } +
-      test("pass a valid object and successfully create value object") {
-        assertTrue(GroupDescriptions.make(validDescription).toOption.get.value == validDescription)
-        assertTrue(GroupDescriptions.make(Option(validDescription)).getOrElse(null).get.value == validDescription)
-      } +
-      test("pass None") {
-        assertTrue(
-          GroupDescriptions.make(None) == Validation.succeed(None)
-        )
-      }
+      )
+    },
+    test("pass a valid object and successfully create value object") {
+      assertTrue(GroupDescriptions.make(validDescription).toOption.get.value == validDescription) &&
+      assertTrue(GroupDescriptions.make(Option(validDescription)).getOrElse(null).get.value == validDescription)
+    },
+    test("successfully validate passing None") {
+      assertTrue(
+        GroupDescriptions.make(None) == Validation.succeed(None)
+      )
+    }
   )
 
   private val groupStatusTest = suite("GroupSpec - GroupStatus")(
     test("pass a valid object and successfully create value object") {
-      assertTrue(GroupStatus.make(true).toOption.get.value == true)
+      assertTrue(GroupStatus.make(true).toOption.get.value == true) &&
       assertTrue(GroupStatus.make(Some(false)).getOrElse(null).get.value == false)
-    } +
-      test("pass None") {
-        assertTrue(
-          GroupStatus.make(None) == Validation.succeed(None)
-        )
-      }
+    },
+    test("successfully validate passing None") {
+      assertTrue(
+        GroupStatus.make(None) == Validation.succeed(None)
+      )
+    }
   )
 
   private val groupSelfJoinTest = suite("GroupSpec - GroupSelfJoin")(
     test("pass a valid object and successfully create value object") {
-      assertTrue(GroupSelfJoin.make(true).toOption.get.value == true)
+      assertTrue(GroupSelfJoin.make(true).toOption.get.value == true) &&
       assertTrue(GroupSelfJoin.make(Some(false)).getOrElse(null).get.value == false)
-    } +
-      test("pass None") {
-        assertTrue(
-          GroupSelfJoin.make(None) == Validation.succeed(None)
-        )
-      }
+    },
+    test("successfully validate passing None") {
+      assertTrue(
+        GroupSelfJoin.make(None) == Validation.succeed(None)
+      )
+    }
   )
 }

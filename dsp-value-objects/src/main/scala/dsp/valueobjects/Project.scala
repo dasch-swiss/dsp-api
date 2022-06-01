@@ -88,7 +88,7 @@ object Project {
   object ProjectDescription { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionMissing))
+        Validation.fail(V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing))
       } else {
         Validation.succeed(new ProjectDescription(value) {})
       }
@@ -169,16 +169,16 @@ object Project {
 }
 
 object ProjectErrorMessages {
-  val ShortcodeMissing          = "Shortcode cannot be empty."
-  val ShortcodeInvalid          = "Shortcode is invalid."
-  val ShortnameMissing          = "Shortname cannot be empty."
-  val ShortnameInvalid          = "Shortname is invalid."
-  val LongnameMissing           = "Longname cannot be empty."
-  val LongnameInvalid           = "Longname is invalid."
-  val ProjectDescriptionMissing = "Description cannot be empty." //make it plural
-  val ProjectDescriptionInvalid = "Description is invalid."      //make it plural
-  val KeywordsMissing           = "Keywords cannot be empty."
-  val KeywordsInvalid           = "Keywords are invalid."
-  val LogoMissing               = "Logo cannot be empty."
-  val LogoInvalid               = "Logo is invalid."
+  val ShortcodeMissing           = "Shortcode cannot be empty."
+  val ShortcodeInvalid           = "Shortcode is invalid."
+  val ShortnameMissing           = "Shortname cannot be empty."
+  val ShortnameInvalid           = "Shortname is invalid."
+  val LongnameMissing            = "Longname cannot be empty."
+  val LongnameInvalid            = "Longname is invalid."
+  val ProjectDescriptionsMissing = "Description cannot be empty."
+  val ProjectDescriptionsInvalid = "Description is invalid."
+  val KeywordsMissing            = "Keywords cannot be empty."
+  val KeywordsInvalid            = "Keywords are invalid."
+  val LogoMissing                = "Logo cannot be empty."
+  val LogoInvalid                = "Logo is invalid."
 }

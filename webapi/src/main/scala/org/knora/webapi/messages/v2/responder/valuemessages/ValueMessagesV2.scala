@@ -531,7 +531,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
           stringFormatter.hasUUIDLength(valueIri.toString.split("/").last)
           && !stringFormatter.isUUIDVersion4Or5(valueIri.toString)
         ) {
-          throw BadRequestException(IriErrorMessages.UuidInvalid)
+          throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
         }
 
         val valueTypeIri: SmartIri = jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri
