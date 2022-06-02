@@ -36,18 +36,26 @@ final case class UserRepoMock(
       _ <- users.put(user.id.uuid, user)
       _ <- lookupTable.put(user.username.value, user.id.uuid)
       _ <- lookupTable.put(user.email.value, user.id.uuid)
-    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored user: ${user.id}"))
+    } yield ()).commit.tap(_ => ZIO.logInfo(s"Stored user: ${user.id.uuid}"))
 
   /**
    * @inheritDoc
    */
-  def getAllUsers(): UIO[List[User]] = users.values.commit
+  def getUsers(): UIO[List[User]] =
+    users.values.commit.tap(userList => ZIO.logInfo(s"Looked up all users, found ${userList.size}"))
 
   /**
    * @inheritDoc
    */
   def getUserById(id: UserId): UIO[Option[User]] =
-    users.get(id.uuid).commit.tap(_ => ZIO.logDebug(s"Found user by ID: ${id}"))
+    users
+      .get(id.uuid)
+      .commit
+      .tap(user =>
+        ZIO.logInfo(
+          s"Looked up user by UUID '${id.uuid}', ${user.fold("no user found")(u => s"found '${u.id.uuid}'")}"
+        )
+      )
 
   /**
    * @inheritDoc
@@ -56,7 +64,10 @@ final case class UserRepoMock(
     (for {
       iri: UUID  <- lookupTable.get(usernameOrEmail).some
       user: User <- users.get(iri).some
-    } yield user).commit.unsome.tap(_ => ZIO.logDebug(s"Found user by username or email: ${usernameOrEmail}"))
+    } yield user).commit.unsome.tap(user =>
+      ZIO.logInfo(s"Looked up user by username or email '${usernameOrEmail}', ${user
+        .fold("no user found")(u => s"found '${u.id.uuid}'")}")
+    )
 
   /**
    * @inheritDoc

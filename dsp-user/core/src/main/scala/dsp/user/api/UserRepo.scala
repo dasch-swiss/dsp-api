@@ -32,7 +32,7 @@ trait UserRepo {
    *
    * @return   a list of [[User]]
    */
-  def getAllUsers(): UIO[List[User]]
+  def getUsers(): UIO[List[User]]
 
   /**
    * Retrieves the user from the repository by ID.

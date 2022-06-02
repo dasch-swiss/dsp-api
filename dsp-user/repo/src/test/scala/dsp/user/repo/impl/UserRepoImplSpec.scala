@@ -17,7 +17,7 @@ import dsp.user.api.UserRepo
 /**
  * This spec is used to test all [[dsp.user.repo.UserRepo]] implementations.
  */
-object UserRepoSpec extends ZIOSpecDefault {
+object UserRepoImplSpec extends ZIOSpecDefault {
 
   def spec = (userRepoMockTests + userRepoLiveTests)
 
@@ -60,8 +60,10 @@ object UserRepoSpec extends ZIOSpecDefault {
         for {
           _             <- UserRepo.storeUser(testUser1)
           retrievedUser <- UserRepo.getUserByUsernameOrEmail(testUser1.email.value)
-        } yield assertTrue(retrievedUser == Some(testUser1)) &&
+        } yield {
+          assertTrue(retrievedUser == Some(testUser1)) &&
           assertTrue(retrievedUser != Some(testUser2))
+        }
       }
 
   val userRepoMockTests = suite("UserRepoMock")(

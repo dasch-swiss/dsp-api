@@ -12,7 +12,7 @@ import dsp.user.domain._
 import dsp.user.repo.impl.UserRepoMock
 
 /**
- * This spec is used to test [[dsp.user.repo.UserHandler]].
+ * This spec is used to test [[dsp.user.handler.UserHandler]].
  */
 object UserHandlerSpec extends ZIOSpec[UserHandler] {
 
@@ -40,35 +40,36 @@ object UserHandlerSpec extends ZIOSpec[UserHandler] {
         userHandler   <- ZIO.service[UserHandler]
         _             <- userHandler.createUser(testUser1)
         retrievedUser <- userHandler.getUserById(testUser1.id, UserInformationType.Full)
+        _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser == Some(testUser1))
-    } +
-      test("store a user and retrieve by IRI") {
-        for {
-          userHandler   <- ZIO.service[UserHandler]
-          _             <- userHandler.createUser(testUser1)
-          retrievedUser <- userHandler.getUserByIri(testUser1.id.iri, UserInformationType.Full)
-        } yield assertTrue(retrievedUser == Some(testUser1))
-      } +
-      test("store a user and retrieve by UUID") {
-        for {
-          userHandler   <- ZIO.service[UserHandler]
-          _             <- userHandler.createUser(testUser1)
-          retrievedUser <- userHandler.getUserByUuid(testUser1.id.uuid, UserInformationType.Full)
-        } yield assertTrue(retrievedUser == Some(testUser1))
-      } +
-      test("store a user and retrieve by username") {
-        for {
-          userHandler   <- ZIO.service[UserHandler]
-          _             <- userHandler.createUser(testUser1)
-          retrievedUser <- userHandler.getUserByUsername(testUser1.username, UserInformationType.Full)
-        } yield assertTrue(retrievedUser == Some(testUser1))
-      } +
-      test("store a user and retrieve by email") {
-        for {
-          userHandler   <- ZIO.service[UserHandler]
-          _             <- userHandler.createUser(testUser1)
-          retrievedUser <- userHandler.getUserByEmail(testUser1.email, UserInformationType.Full)
-        } yield assertTrue(retrievedUser == Some(testUser1))
-      }
+    },
+    test("store a user and retrieve by IRI") {
+      for {
+        userHandler   <- ZIO.service[UserHandler]
+        _             <- userHandler.createUser(testUser1)
+        retrievedUser <- userHandler.getUserByIri(testUser1.id.iri, UserInformationType.Full)
+      } yield assertTrue(retrievedUser == Some(testUser1))
+    },
+    test("store a user and retrieve by UUID") {
+      for {
+        userHandler   <- ZIO.service[UserHandler]
+        _             <- userHandler.createUser(testUser1)
+        retrievedUser <- userHandler.getUserByUuid(testUser1.id.uuid, UserInformationType.Full)
+      } yield assertTrue(retrievedUser == Some(testUser1))
+    },
+    test("store a user and retrieve by username") {
+      for {
+        userHandler   <- ZIO.service[UserHandler]
+        _             <- userHandler.createUser(testUser1)
+        retrievedUser <- userHandler.getUserByUsername(testUser1.username, UserInformationType.Full)
+      } yield assertTrue(retrievedUser == Some(testUser1))
+    },
+    test("store a user and retrieve by email") {
+      for {
+        userHandler <- ZIO.service[UserHandler]
+        //_             <- userHandler.createUser(testUser1)
+        retrievedUser <- userHandler.getUserByEmail(testUser1.email, UserInformationType.Full)
+      } yield assertTrue(retrievedUser == Some(testUser1))
+    }
   )
 }

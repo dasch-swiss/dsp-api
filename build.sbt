@@ -239,6 +239,8 @@ lazy val apiMain = project
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
 
+// Schema projects
+
 lazy val schemaApi = project
   .in(file("dsp-schema/api"))
   .settings(
@@ -283,6 +285,8 @@ lazy val schemaRepoSearchService = project
   )
   .dependsOn(schemaRepo)
 
+// User projects
+
 lazy val userInterface = project
   .in(file("dsp-user/interface"))
   .settings(
@@ -313,7 +317,7 @@ lazy val userHandler = project
     libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(userCore, userRepo % "test->test")
+  .dependsOn(userCore, userRepo % "test->test") //userHandler tests need mock implementation of UserRepo
 
 lazy val userCore = project
   .in(file("dsp-user/core"))

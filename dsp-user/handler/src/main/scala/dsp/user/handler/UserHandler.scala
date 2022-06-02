@@ -9,6 +9,7 @@ import dsp.user.domain._
 import dsp.user.api.UserRepo
 import zio._
 import java.util.UUID
+import dsp.user.error.UserError
 
 /**
  * The user handler.
@@ -21,8 +22,8 @@ final case class UserHandler(repo: UserRepo) {
   /**
    * Retrieve all users (sorted by IRI).
    */
-  def getAll(): UIO[List[User]] =
-    repo.getAllUsers().map(_.sorted)
+  def getUsers(): UIO[List[User]] =
+    repo.getUsers().map(_.sorted)
 
   // getSingleUserADM should be inspected in the route. According to the user identifier, the
   // right method from the userHandler should be called.
@@ -36,6 +37,7 @@ final case class UserHandler(repo: UserRepo) {
   def getUserById(id: UserId, userInformationType: UserInformationType): UIO[Option[User]] =
     for {
       user <- repo.getUserById(id)
+      _    <- ZIO.debug("yyy", user)
       _ <- userInformationType match {
              case UserInformationType.Full       => ZIO.succeed(user)
              case UserInformationType.Restricted => ZIO.succeed(user.map(u => u.copy(password = None)))
@@ -88,16 +90,28 @@ final case class UserHandler(repo: UserRepo) {
 
   // TODO: ask Ivan how we handle errors
   def createUser(user: User): IO[Throwable, Unit] = {
-    // check if username is unique
+    // check if username and email are not yet used
     val username = user.username
-    val users    = repo.getAllUsers()
+    val email    = user.email
+    val users    = repo.getUsers()
 
     for {
-      isUsernameUsed <- users.map(userList => userList.map(user => user.username == username))
-    } yield (isUsernameUsed)
+      userByUsernameOption <- repo.getUserByUsernameOrEmail(username.value) // discuss naming conventions for options
+      usernameTaken = userByUsernameOption match {
+                        case None    => None
+                        case Some(_) => Some(username)
+                      }
+      userByEmailOption <- repo.getUserByUsernameOrEmail(email.value)
+      emailTaken = userByEmailOption match {
+                     case None    => None
+                     case Some(_) => Some(email)
+                   }
+      _ <- (usernameTaken, emailTaken) match {
+             case (None, None) => repo.storeUser(user)
+             case _            => ZIO.die(UserError.UserAlreadyExists(usernameTaken, emailTaken))
+           }
+    } yield ()
 
-    // check if email is unique
-    repo.storeUser(user) // all information needed at once
   }
 
   def updateUser(user: User): IO[Option[Nothing], Unit] = // all values should be changed separately

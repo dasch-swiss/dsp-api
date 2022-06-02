@@ -41,7 +41,7 @@ final case class UserRepoLive(
   /**
    * @inheritDoc
    */
-  def getAllUsers(): UIO[List[User]] = users.values.commit
+  def getUsers(): UIO[List[User]] = users.values.commit
 
   /**
    * @inheritDoc
