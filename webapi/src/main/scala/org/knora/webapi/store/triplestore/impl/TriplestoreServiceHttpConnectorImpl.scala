@@ -1098,14 +1098,11 @@ object TriplestoreServiceHttpConnectorImpl {
     }.tap(_ => ZIO.debug(">>> Release Triplestore Service Http Connector <<<")).orDie
 
   val layer: ZLayer[AppConfig, Nothing, TriplestoreService] = {
-    ZLayer {
+    ZLayer.scoped {
       for {
         config <- ZIO.service[AppConfig]
         // _          <- ZIO.debug(config)
-        // HINT: Scope does not work when used together with unsafeRun to
-        // bridge over to Akka. Need to change this as soon Akka is removed
-        // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-        httpClient <- acquire(config)
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
     }.tap(_ => ZIO.debug(">>> Triplestore Service Http Connector Initialized <<<"))
   }
