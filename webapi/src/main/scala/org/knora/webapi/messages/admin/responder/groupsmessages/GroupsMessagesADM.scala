@@ -21,6 +21,7 @@ import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
 import java.util.UUID
+import dsp.valueobjects.V2
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -38,7 +39,7 @@ import java.util.UUID
 case class CreateGroupApiRequestADM(
   id: Option[IRI] = None,
   name: String,
-  descriptions: Seq[StringLiteralV2],
+  descriptions: Seq[V2.StringLiteralV2],
   project: IRI,
   status: Boolean,
   selfjoin: Boolean
@@ -60,7 +61,7 @@ case class CreateGroupApiRequestADM(
  */
 case class ChangeGroupApiRequestADM(
   name: Option[String] = None,
-  descriptions: Option[Seq[StringLiteralV2]] = None,
+  descriptions: Option[Seq[V2.StringLiteralV2]] = None,
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 ) extends GroupsADMJsonProtocol {

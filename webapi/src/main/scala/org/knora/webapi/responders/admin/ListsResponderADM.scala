@@ -15,15 +15,11 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.ListIRI
-import org.knora.webapi.messages.admin.responder.valueObjects.ListName
-import org.knora.webapi.messages.admin.responder.valueObjects.ProjectIRI
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
@@ -35,6 +31,9 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.Future
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.List.ListName
 
 /**
  * A responder that returns information about hierarchical lists.
@@ -852,10 +851,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     createNodeRequest: ListNodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[IRI] = {
-
-//    println("ZZZZZ-createNode", createNodeRequest)
 //    TODO-mpro: it's quickfix, refactor
-    val parentNode: Option[ListIRI] = createNodeRequest match {
+    val parentNode: Option[ListIri] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
       case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
     }
@@ -1259,13 +1256,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
                                         changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                          listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                          projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                          listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                          projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                           name = Some(changeNodeNameRequest.name)
                                         ),
                                         featureFactoryConfig = featureFactoryConfig
@@ -1338,12 +1335,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                           changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                            listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                            projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                             labels = Some(changeNodeLabelsRequest.labels)
                                           ),
                                           featureFactoryConfig = featureFactoryConfig
@@ -1416,13 +1413,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                             changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                              listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                              projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                              listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                              projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                               comments = Some(changeNodeCommentsRequest.comments)
                                             ),
                                             featureFactoryConfig = featureFactoryConfig
@@ -1752,7 +1749,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         // get node in its current position
@@ -2056,7 +2053,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         maybeNode: Option[ListNodeADM] <- listNodeGetADM(
