@@ -7,7 +7,6 @@ package dsp.valueobjects
 
 import zio.prelude.Validation
 
-sealed trait Group
 object Group {
 
   /**

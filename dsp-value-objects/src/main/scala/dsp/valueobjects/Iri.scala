@@ -13,7 +13,7 @@ object Iri {
   /**
    * GroupIri value object.
    */
-  sealed abstract case class GroupIri private (value: String)
+  sealed abstract case class GroupIri private (value: String) extends Iri
   object GroupIri { self =>
     def make(value: String): Validation[Throwable, GroupIri] =
       if (value.isEmpty) {
@@ -44,7 +44,7 @@ object Iri {
   /**
    * ListIri value object.
    */
-  sealed abstract case class ListIri private (value: String)
+  sealed abstract case class ListIri private (value: String) extends Iri
   object ListIri { self =>
     def make(value: String): Validation[Throwable, ListIri] =
       if (value.isEmpty) {
@@ -78,7 +78,7 @@ object Iri {
   /**
    * ProjectIri value object.
    */
-  sealed abstract case class ProjectIri private (value: String)
+  sealed abstract case class ProjectIri private (value: String) extends Iri
   object ProjectIri { self =>
     def make(value: String): Validation[Throwable, ProjectIri] =
       if (value.isEmpty) {

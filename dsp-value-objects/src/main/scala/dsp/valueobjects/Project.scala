@@ -7,7 +7,6 @@ package dsp.valueobjects
 
 import zio.prelude.Validation
 
-sealed trait Project
 object Project {
 
   // TODO-mpro: longname, description, keywords, logo are missing enhanced validation

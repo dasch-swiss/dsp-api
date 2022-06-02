@@ -8,7 +8,6 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import scala.util.matching.Regex
 
-sealed trait User
 object User {
 
   // TODO-mpro: password, givenname, familyname are missing enhanced validation
