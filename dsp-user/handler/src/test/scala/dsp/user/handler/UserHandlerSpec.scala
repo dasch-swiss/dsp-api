@@ -14,12 +14,7 @@ import dsp.user.repo.impl.UserRepoMock
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].
  */
-object UserHandlerSpec extends ZIOSpec[UserHandler] {
-
-  val bootstrap = ZLayer.make[UserHandler](
-    UserHandler.layer,
-    UserRepoMock.layer
-  )
+object UserHandlerSpec extends ZIOSpecDefault {
 
   def spec = (userTests)
 
@@ -66,10 +61,10 @@ object UserHandlerSpec extends ZIOSpec[UserHandler] {
     },
     test("store a user and retrieve by email") {
       for {
-        userHandler <- ZIO.service[UserHandler]
-        //_             <- userHandler.createUser(testUser1)
+        userHandler   <- ZIO.service[UserHandler]
+        _             <- userHandler.createUser(testUser1)
         retrievedUser <- userHandler.getUserByEmail(testUser1.email, UserInformationType.Full)
       } yield assertTrue(retrievedUser == Some(testUser1))
     }
-  )
+  ).provide(UserRepoMock.layer, UserHandler.layer)
 }
