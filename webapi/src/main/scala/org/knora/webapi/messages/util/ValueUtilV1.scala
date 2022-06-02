@@ -977,10 +977,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
-        projectShortcode = projectShortcode,
-        duration = predicates
-          .get(OntologyConstants.KnoraBase.Duration)
-          .map(valueLiterals => BigDecimal(valueLiterals.literals.head))
+        projectShortcode = projectShortcode
       )
     )
   }
@@ -1004,15 +1001,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
-        projectShortcode = projectShortcode,
-        dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
-        dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
-        fps = predicates.get(OntologyConstants.KnoraBase.Fps).map { giveLiteralValue =>
-          BigDecimal(giveLiteralValue.literals.head)
-        },
-        duration = predicates
-          .get(OntologyConstants.KnoraBase.Duration)
-          .map(valueLiterals => BigDecimal(valueLiterals.literals.head))
+        projectShortcode = projectShortcode
       )
     )
   }
