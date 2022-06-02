@@ -208,6 +208,8 @@ DELETE {
             case stillImageFileValue: StillImageFileValueV1 => {
                 ?newValue knora-base:internalFilename """@stillImageFileValue.internalFilename""" .
                 ?newValue knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" .
+                ?newValue knora-base:dimX @stillImageFileValue.dimX .
+                ?newValue knora-base:dimY @stillImageFileValue.dimY .
 
                 @stillImageFileValue.originalFilename match {
                     case Some(definedOriginalFilename) => {
@@ -266,11 +268,21 @@ DELETE {
 
                     case None => {}
                 }
+
+                @audioFileValue.duration match {
+                    case Some(definedDuration) => {
+                        ?newValue knora-base:duration """@definedDuration""" .
+                    }
+
+                    case None => {}
+                }
             }
 
             case videoFileValue: MovingImageFileValueV1 => {
                 ?newValue knora-base:internalFilename """@videoFileValue.internalFilename""" ;
-                          knora-base:internalMimeType """@videoFileValue.internalMimeType""" .
+                          knora-base:internalMimeType """@videoFileValue.internalMimeType""" ;
+                          knora-base:dimX @videoFileValue.dimX ;
+                          knora-base:dimY @videoFileValue.dimY .
 
                 @videoFileValue.originalFilename match {
                     case Some(definedOriginalFilename) => {
@@ -287,11 +299,43 @@ DELETE {
 
                     case None => {}
                 }
+
+                @videoFileValue.duration match {
+                    case Some(definedDuration) => {
+                        ?newValue knora-base:duration """@definedDuration""" .
+                    }
+
+                    case None => {}
+                }
+
+               @videoFileValue.fps match {
+                    case Some(definedFps) => {
+                        newValue knora-base:fps """@definedFps""" .
+                        }
+
+                    case None => {}
+               }
             }
 
             case documentFileValue: DocumentFileValueV1 => {
                 ?newValue knora-base:internalFilename """@documentFileValue.internalFilename""" .
                 ?newValue knora-base:internalMimeType """@documentFileValue.internalMimeType""" .
+
+                @documentFileValue.dimX match {
+                    case Some(definedDimX) => {
+                        ?newValue knora-base:dimX @definedDimX .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.dimY match {
+                    case Some(definedDimY) => {
+                        ?newValue knora-base:dimY @definedDimY .
+                    }
+
+                    case None => {}
+                }
 
                 @documentFileValue.pageCount match {
                     case Some(definedPageCount) => {

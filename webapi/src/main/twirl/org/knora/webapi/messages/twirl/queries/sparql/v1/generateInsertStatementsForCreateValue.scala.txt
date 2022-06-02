@@ -165,7 +165,9 @@
 
             case stillImageFileValue: StillImageFileValueV1 => {
                 <@newValueIri> knora-base:internalFilename """@stillImageFileValue.internalFilename""" ;
-                               knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" .
+                               knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" ;
+                               knora-base:dimX @stillImageFileValue.dimX ;
+                               knora-base:dimY @stillImageFileValue.dimY .
 
                 @stillImageFileValue.originalFilename match {
                     case Some(definedOriginalFilename) => {
@@ -224,11 +226,21 @@
 
                     case None => {}
                 }
+
+                @audioFileValue.duration match {
+                    case Some(definedDuration) => {
+                        <@newValueIri> knora-base:duration """@definedDuration""" .
+                    }
+
+                    case None => {}
+                }
             }
 
             case videoFileValue: MovingImageFileValueV1 => {
                 <@newValueIri> knora-base:internalFilename """@videoFileValue.internalFilename""" ;
-                               knora-base:internalMimeType """@videoFileValue.internalMimeType""" .
+                               knora-base:internalMimeType """@videoFileValue.internalMimeType""" ;
+                               knora-base:dimX @videoFileValue.dimX ;
+                               knora-base:dimY @videoFileValue.dimY .
 
                 @videoFileValue.originalFilename match {
                     case Some(definedOriginalFilename) => {
@@ -245,11 +257,43 @@
 
                     case None => {}
                 }
+
+                @videoFileValue.duration match {
+                    case Some(definedDuration) => {
+                        <@newValueIri> knora-base:duration """@definedDuration""" .
+                    }
+
+                    case None => {}
+                }
+
+                @videoFileValue.fps match {
+                    case Some(definedFps) => {
+                        <@newValueIri> knora-base:duration """@definedFps""" .
+                    }
+
+                    case None => {}
+                }
             }
 
             case documentFileValue: DocumentFileValueV1 => {
                 <@newValueIri> knora-base:internalFilename """@documentFileValue.internalFilename""" ;
                                knora-base:internalMimeType """@documentFileValue.internalMimeType""" .
+
+                @documentFileValue.dimX match {
+                    case Some(definedDimX) => {
+                        <@newValueIri> knora-base:dimX @definedDimX .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.dimY match {
+                    case Some(definedDimY) => {
+                        <@newValueIri> knora-base:dimY @definedDimY .
+                    }
+
+                    case None => {}
+                }
 
                 @documentFileValue.pageCount match {
                     case Some(definedPageCount) => {

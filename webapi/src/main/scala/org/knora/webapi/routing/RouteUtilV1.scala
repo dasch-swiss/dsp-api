@@ -347,7 +347,8 @@ object RouteUtilV1 {
         internalMimeType = fileMetadataResponse.internalMimeType,
         originalFilename = fileMetadataResponse.originalFilename,
         originalMimeType = fileMetadataResponse.originalMimeType,
-        projectShortcode = projectShortcode
+        projectShortcode = projectShortcode,
+        duration = fileMetadataResponse.duration
       )
     } else if (videoMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
       MovingImageFileValueV1(
@@ -355,7 +356,12 @@ object RouteUtilV1 {
         internalMimeType = fileMetadataResponse.internalMimeType,
         originalFilename = fileMetadataResponse.originalFilename,
         originalMimeType = fileMetadataResponse.originalMimeType,
-        projectShortcode = projectShortcode
+        projectShortcode = projectShortcode,
+        duration = fileMetadataResponse.duration,
+        fps = fileMetadataResponse.fps,
+        dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the video")),
+        dimY =
+          fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the video"))
       )
     } else if (archiveMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
       ArchiveFileValueV1(
