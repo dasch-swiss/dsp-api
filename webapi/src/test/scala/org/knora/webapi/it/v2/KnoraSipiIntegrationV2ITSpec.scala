@@ -114,7 +114,6 @@ class KnoraSipiIntegrationV2ITSpec
 
   private val minimalWavOriginalFilename = "minimal.wav"
   private val pathToMinimalWav           = Paths.get("..", s"test_data/test_route/files/$minimalWavOriginalFilename")
-  private val minimalWavDuration         = BigDecimal("0.0")
 
   private val testWavOriginalFilename = "test.wav"
   private val pathToTestWav           = Paths.get("..", s"test_data/test_route/files/$testWavOriginalFilename")
@@ -167,19 +166,14 @@ class KnoraSipiIntegrationV2ITSpec
    *
    * @param internalFilename the file's internal filename.
    * @param url              the file's URL.
-   * @param duration         the duration of the audio in seconds.
    */
-  case class SavedAudioFile(internalFilename: String, url: String, duration: Option[BigDecimal])
+  case class SavedAudioFile(internalFilename: String, url: String)
 
   /**
    * Represents the information that Knora returns about a video file value that was created.
    *
    * @param internalFilename the file's internal filename.
    * @param url              the file's URL.
-   * @param width            the video's width in pixels.
-   * @param height           the video's height in pixels.
-   * @param duration         the duration of the video in seconds.
-   * @param fps              the frame rate of the video in seconds.
    */
   case class SavedVideoFile(
     internalFilename: String,
@@ -329,16 +323,9 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun = stringFormatter.toSparqlEncodedString
     )
 
-    val duration: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
-      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
-    )
-
     SavedAudioFile(
       internalFilename = internalFilename,
-      url = url,
-      duration = duration
+      url = url
     )
   }
 
@@ -355,12 +342,6 @@ class KnoraSipiIntegrationV2ITSpec
       key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
       expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
       validationFun = stringFormatter.toSparqlEncodedString
-    )
-
-    val duration: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
-      key = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
-      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
-      validationFun = stringFormatter.validateBigDecimal
     )
 
     SavedVideoFile(
@@ -1233,7 +1214,6 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValueObj)
       assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
-      assert(savedAudioFile.duration.forall(_ == minimalWavDuration))
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))

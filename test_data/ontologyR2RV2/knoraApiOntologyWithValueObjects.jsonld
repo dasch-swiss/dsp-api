@@ -480,13 +480,6 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
-                        "@id": "knora-api:audioFileValueHasDuration"
-                    },
-                    "owl:cardinality": 1
-                },
-                {
-                    "@type": "owl:Restriction",
-                    "owl:onProperty": {
                         "@id": "knora-api:deleteComment"
                     },
                     "owl:maxCardinality": 1,
@@ -6757,21 +6750,6 @@
                 "@id": "xsd:anyURI"
             },
             "@id": "knora-api:attachedToUser"
-        },
-        {
-            "rdfs:label": "Audio file value has duration",
-            "rdfs:subPropertyOf": {
-                "@id": "knora-api:valueHas"
-            },
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:decimal"
-            },
-            "@id": "knora-api:audioFileValueHasDuration",
-            "knora-api:subjectType": {
-                "@id": "knora-api:AudioFileValue"
-            },
-            "rdfs:comment": "The duration of an audio file value."
         },
         {
             "rdfs:label": "author",
