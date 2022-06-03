@@ -5,16 +5,17 @@
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Group._
 
 /**
  * Group create payload
  */
 final case class GroupCreatePayloadADM(
-  id: Option[GroupIRI] = None,
+  id: Option[GroupIri] = None,
   name: GroupName,
   descriptions: GroupDescriptions,
-  project: ProjectIRI,
+  project: ProjectIri,
   status: GroupStatus,
   selfjoin: GroupSelfJoin
 )

@@ -28,6 +28,7 @@ import spray.json.RootJsonFormat
 
 import java.nio.file.Path
 import java.util.UUID
+import dsp.valueobjects.V2
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -50,7 +51,7 @@ case class CreateProjectApiRequestADM(
   shortname: String,
   shortcode: String,
   longname: Option[String],
-  description: Seq[StringLiteralV2],
+  description: Seq[V2.StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
   status: Boolean,
