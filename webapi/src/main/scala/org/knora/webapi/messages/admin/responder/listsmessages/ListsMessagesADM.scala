@@ -321,7 +321,6 @@ case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends Li
  */
 case class ListNodeCommentsDeleteRequestADM(
   iri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ListsResponderRequestADM
 

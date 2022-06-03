@@ -993,7 +993,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/testList"
         responderManager ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         expectMsg(
@@ -1005,7 +1004,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/testList01"
         responderManager ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: ListNodeCommentsDeleteResponseADM =
@@ -1018,7 +1016,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/testList02"
         responderManager ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: ListNodeCommentsDeleteResponseADM =
@@ -1031,7 +1028,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri = "http://rdfh.ch/lists/0001/testList03"
         responderManager ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         expectMsg(
