@@ -52,7 +52,7 @@ class DeleteListItemsRouteADME2ESpec
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
   // Collects client test data
-  private def CollectClientTestData(fileName: String, fileContent: String): Unit =
+  private def collectClientTestData(fileName: String, fileContent: String): Unit =
     clientTestDataCollector.addFile(
       TestDataFileContent(
         filePath = TestDataFilePath(
@@ -138,7 +138,7 @@ class DeleteListItemsRouteADME2ESpec
         val firstChild = children.head
         firstChild.children.size should be(5)
 
-        CollectClientTestData("delete-list-node-response", responseToString(response))
+        collectClientTestData("delete-list-node-response", responseToString(response))
       }
 
       "delete the single child of a node" in {
@@ -165,7 +165,7 @@ class DeleteListItemsRouteADME2ESpec
       val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
       deletedStatus.convertTo[Boolean] should be(true)
 
-      CollectClientTestData("delete-list-response", responseToString(response))
+      collectClientTestData("delete-list-response", responseToString(response))
     }
   }
 
@@ -186,7 +186,7 @@ class DeleteListItemsRouteADME2ESpec
         val listIri = AkkaHttpUtils.httpResponseToJson(response).fields("listIri")
         listIri.convertTo[String] should be(unusedList)
 
-        CollectClientTestData("candeletelist-response", responseToString(response))
+        collectClientTestData("candeletelist-response", responseToString(response))
       }
 
       "return negative response for used list" in {
@@ -236,7 +236,7 @@ class DeleteListItemsRouteADME2ESpec
         val nodeIri = AkkaHttpUtils.httpResponseToJson(response).fields("nodeIri")
         nodeIri.convertTo[String] should be(childNodeIri)
 
-        CollectClientTestData("delete-list-node-comments-response", responseStr)
+        collectClientTestData("delete-list-node-comments-response", responseStr)
       }
 
       "return exception for root node comments" in {
