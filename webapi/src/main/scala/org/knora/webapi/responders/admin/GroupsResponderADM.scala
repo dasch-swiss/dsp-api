@@ -17,7 +17,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.GroupStatus
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
@@ -28,6 +27,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import java.util.UUID
 import scala.concurrent.Future
+import dsp.valueobjects.Group.GroupStatus
 
 /**
  * Returns information about Knora projects.

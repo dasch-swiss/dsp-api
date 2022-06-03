@@ -1,0 +1,32 @@
+@*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ *@
+
+@import org.knora.webapi.IRI
+
+@**
+ * Deletes a list node comment.
+ *
+ * @param namedGraph     the named graph to update.
+ * @param nodeIri        the IRI of the list node to update.
+ * @param isRootNode     flag to identify node type.
+ *@
+@(namedGraph: IRI,
+  nodeIri: IRI,
+  isRootNode: Boolean)
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    GRAPH <@namedGraph> {
+        <@nodeIri> rdfs:comment ?comments .
+    }
+}
+
+WHERE {
+    GRAPH <@namedGraph> {
+        <@nodeIri> rdfs:comment ?comments .
+    }
+}

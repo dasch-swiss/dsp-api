@@ -13,12 +13,10 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.feature.Feature
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_CREATE_PERMISSION_ERROR
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_NODE_CREATE_PERMISSION_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -28,6 +26,9 @@ import zio.prelude.Validation
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.ListErrorMessages
 
 object OldListsRouteADMFeature {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -112,7 +113,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
       val requestMessage: Future[ListGetRequestADM] = for {
-        requestingUser <- getUserADM(requestContext)
+        requestingUser <- getUserADM(
+                            requestContext = requestContext
+                          )
       } yield ListGetRequestADM(
         iri = listIri,
         requestingUser = requestingUser
@@ -208,8 +211,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   private def createListRootNode(): Route = path(ListsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIRI]]    = ListIRI.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIRI]      = ProjectIRI.make(apiRequest.projectIri)
+        val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.make(apiRequest.projectIri)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
@@ -227,7 +230,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                 ) && !requestingUser.permissions.isSystemAdmin
               ) {
                 // not project or a system admin
-                throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                throw ForbiddenException(ListErrorMessages.ListCreatePermission)
               }
         } yield ListRootNodeCreateRequestADM(
           createRootNode = payload,
@@ -272,55 +275,56 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Creates a new list child node.
    */
-  private def createListChildNode(): Route = path(ListsBasePath / Segment) { iri =>
-    post {
-      entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        // check if requested ListIri matches the Iri passed in the route
-        val parentNodeIri: Validation[Throwable, ListIRI] = if (iri == apiRequest.parentNodeIri) {
-          ListIRI.make(apiRequest.parentNodeIri)
-        } else {
-          Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
-        }
+  private def createListChildNode(): Route = path(ListsBasePath / Segment) {
+    iri =>
+      post {
+        entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
+          // check if requested ListIri matches the Iri passed in the route
+          val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
+            ListIri.make(apiRequest.parentNodeIri)
+          } else {
+            Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
+          }
 
-        val id: Validation[Throwable, Option[ListIRI]]        = ListIRI.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIRI]     = ProjectIRI.make(apiRequest.projectIri)
-        val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
-        val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
-        val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
-        val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
-        val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
-          Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
-            ListChildNodeCreatePayloadADM
+          val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
+          val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
+          val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
+          val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
+          val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
+          val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
+          val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
+            Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
+              ListChildNodeCreatePayloadADM
+            )
+
+          val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
+            payload        <- toFuture(validatedCreateChildNodePeyload)
+            requestingUser <- getUserADM(requestContext)
+
+            // check if the requesting user is allowed to perform operation
+            _ = if (
+                  !requestingUser.permissions.isProjectAdmin(
+                    projectIri.toOption.get.value
+                  ) && !requestingUser.permissions.isSystemAdmin
+                ) {
+                  // not project or a system admin
+                  throw ForbiddenException(ListErrorMessages.ListCreatePermission)
+                }
+          } yield ListChildNodeCreateRequestADM(
+            createChildNodeRequest = payload,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
           )
 
-        val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-          payload        <- toFuture(validatedCreateChildNodePeyload)
-          requestingUser <- getUserADM(requestContext)
-
-          // check if the requesting user is allowed to perform operation
-          _ = if (
-                !requestingUser.permissions.isProjectAdmin(
-                  projectIri.toOption.get.value
-                ) && !requestingUser.permissions.isSystemAdmin
-              ) {
-                // not project or a system admin
-                throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-              }
-        } yield ListChildNodeCreateRequestADM(
-          createChildNodeRequest = payload,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          settings = settings,
-          responderManager = responderManager,
-          log = log
-        )
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+        }
       }
-    }
   }
 
   @Path("/{IRI}")
@@ -353,14 +357,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
         // check if requested Iri matches the route Iri
-        val listIri: Validation[Throwable, ListIRI] = if (iri == apiRequest.listIri) {
-          ListIRI.make(apiRequest.listIri)
+        val listIri: Validation[Throwable, ListIri] = if (iri == apiRequest.listIri) {
+          ListIri.make(apiRequest.listIri)
         } else {
           Validation.fail(throw BadRequestException("Route and payload listIri mismatch."))
         }
 
-        val projectIri: Validation[Throwable, ProjectIRI]       = ProjectIRI.make(apiRequest.projectIri)
-        val hasRootNode: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.hasRootNode)
+        val projectIri: Validation[Throwable, ProjectIri]       = ProjectIri.make(apiRequest.projectIri)
+        val hasRootNode: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.hasRootNode)
         val position: Validation[Throwable, Option[Position]]   = Position.make(apiRequest.position)
         val name: Validation[Throwable, Option[ListName]]       = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Option[Labels]]       = Labels.make(apiRequest.labels)
@@ -381,7 +385,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
                 ) && !requestingUser.permissions.isSystemAdmin
               ) {
                 // not project or a system admin
-                throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
+                throw ForbiddenException(ListErrorMessages.ListNodeCreatePermission)
               }
         } yield NodeInfoChangeRequestADM(
           listIri = listIri.toOption.get.value,

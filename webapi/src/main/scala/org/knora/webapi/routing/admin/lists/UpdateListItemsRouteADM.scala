@@ -12,9 +12,6 @@ import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.Comments
-import org.knora.webapi.messages.admin.responder.valueObjects.Labels
-import org.knora.webapi.messages.admin.responder.valueObjects.ListName
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -23,6 +20,7 @@ import org.knora.webapi.routing.RouteUtilADM
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
+import dsp.valueobjects.List._
 
 object UpdateListItemsRouteADM {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")

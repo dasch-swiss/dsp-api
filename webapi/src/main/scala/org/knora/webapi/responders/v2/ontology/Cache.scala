@@ -209,6 +209,196 @@ object Cache extends LazyLogging {
   }
 
   /**
+   * Creates an [[OntologyCacheData]] object on the basis of a map of ontology IRIs to the corresponding [[ReadOntologyV2]].
+   *
+   * @param ontologies a map of ontology IRIs to the corresponding [[ReadOntologyV2]]
+   * @return An [[OntologyCacheData]] object
+   */
+  def make(ontologies: Map[SmartIri, ReadOntologyV2]): OntologyCacheData = {
+    implicit val sf: StringFormatter = StringFormatter.getGeneralInstance
+
+    // A map of ontology IRIs to class IRIs in each ontology.
+    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
+      case (iri, ontology) => {
+        val classIris = ontology.classes.values.map { case classInfo: ReadClassInfoV2 =>
+          classInfo.entityInfoContent.classIri
+        }.toSet
+        (iri -> classIris)
+      }
+    }
+
+    // A map of ontology IRIs to property IRIs in each ontology.
+    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = ontologies.map {
+      case (iri, ontology) => {
+        val propertyIris = ontology.properties.values.map { case propertyInfo: ReadPropertyInfoV2 =>
+          propertyInfo.entityInfoContent.propertyIri
+        }.toSet
+        (iri -> propertyIris)
+      }
+    }
+
+    // A map of OWL named individual IRIs to named individuals.
+    val allIndividuals = ontologies.flatMap {
+      case (_, ontology) => {
+        ontology.individuals.map {
+          case (individualIri, readIndividual) => {
+            individualIri -> readIndividual.entityInfoContent
+          }
+        }
+      }
+    }
+    // A map of salsah-gui:GuiElement individuals to their GUI attribute definitions.
+    val allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]] =
+      OntologyHelpers.makeGuiAttributeDefinitions(allIndividuals)
+
+    // Construct entity definitions.
+
+    val readClassInfos: Map[SmartIri, ReadClassInfoV2] = ontologies.flatMap { case (_, ontology) =>
+      ontology.classes
+    }
+    val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = ontologies.flatMap { case (_, ontology) =>
+      ontology.properties
+    }
+    // A map of class IRIs to class definitions.
+    val allClassDefs: Map[SmartIri, ClassInfoContentV2] = readClassInfos.map { case (iri, classInfo) =>
+      iri -> classInfo.entityInfoContent
+    }
+    // A map of property IRIs to property definitions.
+    val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = readPropertyInfos.map { case (iri, propertyInfo) =>
+      iri -> propertyInfo.entityInfoContent
+    }
+
+    // Determine relations between entities.
+
+    // A map of class IRIs to their immediate super classes.
+    val directSubClassOfRelations: Map[SmartIri, Set[SmartIri]] = allClassDefs.map { case (classIri, classDef) =>
+      classIri -> classDef.subClassOf
+    }
+
+    // A map of property IRIs to their immediate super properties.
+    val directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = allPropertyDefs.map {
+      case (propertyIri, propertyDef) => propertyIri -> propertyDef.subPropertyOf
+    }
+
+    val allClassIris    = readClassInfos.keySet
+    val allPropertyIris = readPropertyInfos.keySet
+
+    // A map in which each class IRI points to the full sequence of its super classes.
+    val allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]] = allClassIris.toSeq.map { classIri =>
+      // get the hierarchically ordered super classes.
+      val superClasses: Seq[SmartIri] = OntologyUtil.getAllBaseDefs(classIri, directSubClassOfRelations)
+      // prepend the classIri to the sequence of super classes because a class is also a subclass of itself.
+      (classIri, classIri +: superClasses)
+    }.toMap
+
+    // Make a map in which each property IRI points to the full set of its base properties. A property is also a subproperty of itself.
+    val allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] = allPropertyIris.map { propertyIri =>
+      (propertyIri, OntologyUtil.getAllBaseDefs(propertyIri, directSubPropertyOfRelations).toSet + propertyIri)
+    }.toMap
+
+    // A map in which each class IRI points to the full set of its subclasses. A class is also a subclass of itself.
+    val allSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] =
+      OntologyHelpers.calculateSuperClassOfRelations(allSubClassOfRelations)
+
+    // Make a map in which each property IRI points to the full set of its subproperties. A property is also a superproperty of itself.
+    val allSuperPropertyOfRelations: Map[SmartIri, Set[SmartIri]] =
+      OntologyHelpers.calculateSuperPropertiesOfRelations(allSubPropertyOfRelations)
+
+    // A set of the IRIs of all properties used in cardinalities in standoff classes.
+    val propertiesUsedInStandoffCardinalities: Set[SmartIri] = readClassInfos.flatMap { case (_, readClassInfo) =>
+      if (readClassInfo.isStandoffClass) {
+        readClassInfo.allCardinalities.keySet
+      } else {
+        Set.empty[SmartIri]
+      }
+    }.toSet
+
+    // A set of the IRIs of all properties whose subject class constraint is a standoff class.
+    val propertiesWithStandoffTagSubjects: Set[SmartIri] = readPropertyInfos.flatMap {
+      case (propertyIri, readPropertyInfo) =>
+        readPropertyInfo.entityInfoContent.getPredicateIriObject(
+          OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
+        ) match {
+          case Some(subjectClassConstraint: SmartIri) =>
+            readClassInfos.get(subjectClassConstraint) match {
+              case Some(subjectReadClassInfo: ReadClassInfoV2) =>
+                if (subjectReadClassInfo.isStandoffClass) {
+                  Some(propertyIri)
+                } else {
+                  None
+                }
+
+              case None => None
+            }
+
+          case None => None
+        }
+    }.toSet
+
+    val classDefinedInOntology = classIrisPerOntology.flatMap { case (ontoIri, classIris) =>
+      classIris.map(_ -> ontoIri)
+    }
+    val propertyDefinedInOntology = propertyIrisPerOntology.flatMap { case (ontoIri, propertyIris) =>
+      propertyIris.map(_ -> ontoIri)
+    }
+
+    val ontologiesErrorMap =
+      new ErrorHandlingMap[SmartIri, ReadOntologyV2](ontologies, key => s"Ontology not found in ontologies: $key")
+    val subClassOfRelationsErrorMap =
+      new ErrorHandlingMap[SmartIri, Seq[SmartIri]](
+        allSubClassOfRelations,
+        key => s"Class not found in subClassOfRelations: $key"
+      )
+    val superClassOfRelationsErrorMap =
+      new ErrorHandlingMap[SmartIri, Set[SmartIri]](
+        allSuperClassOfRelations,
+        key => s"Class not found in superClassOfRelations: $key"
+      )
+    val subPropertyOfRelationsErrorMap =
+      new ErrorHandlingMap[SmartIri, Set[SmartIri]](
+        allSubPropertyOfRelations,
+        key => s"Property not found in allSubPropertyOfRelations: $key"
+      )
+    val superPropertyOfRelationsErrorMap =
+      new ErrorHandlingMap[SmartIri, Set[SmartIri]](
+        allSuperPropertyOfRelations,
+        key => s"Property not found in allSuperPropertyOfRelations: $key"
+      )
+    val classDefinedInOntologyErrorMap =
+      new ErrorHandlingMap[SmartIri, SmartIri](
+        classDefinedInOntology,
+        key => s"Class not found classDefinedInOntology: $key"
+      )
+    val propertyDefinedInOntologyErrorMap =
+      new ErrorHandlingMap[SmartIri, SmartIri](
+        propertyDefinedInOntology,
+        key => s"Property not found in propertyDefinedInOntology: $key"
+      )
+    val entityDefinedInOntologyErrorMap = new ErrorHandlingMap[SmartIri, SmartIri](
+      propertyDefinedInOntology ++ classDefinedInOntology,
+      key => s"Property not found in propertyDefinedInOntology: $key"
+    )
+    val guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](
+      allGuiAttributeDefinitions,
+      key => s"salsah-gui:Guielement not found in allGuiAttributeDefinitions: $key"
+    )
+    val standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
+
+    OntologyCacheData(
+      ontologies = ontologiesErrorMap,
+      subClassOfRelations = subClassOfRelationsErrorMap,
+      superClassOfRelations = superClassOfRelationsErrorMap,
+      subPropertyOfRelations = subPropertyOfRelationsErrorMap,
+      superPropertyOfRelations = superPropertyOfRelationsErrorMap,
+      classDefinedInOntology = classDefinedInOntologyErrorMap,
+      propertyDefinedInOntology = propertyDefinedInOntologyErrorMap,
+      entityDefinedInOntology = entityDefinedInOntologyErrorMap,
+      guiAttributeDefinitions = guiAttributeDefinitions,
+      standoffProperties = standoffProperties
+    )
+  }
+
+  /**
    * Given ontology metdata and ontology graphs read from the triplestore, constructs the ontology cache.
    *
    * @param allOntologyMetadata a map of ontology IRIs to ontology metadata.
@@ -773,7 +963,7 @@ object Cache extends LazyLogging {
    *
    * @param cacheData the updated data to be cached.
    */
-  def storeCacheData(cacheData: OntologyCacheData): Unit =
+  private def storeCacheData(cacheData: OntologyCacheData): Unit =
     CacheUtil.put(cacheName = OntologyCacheName, key = OntologyCacheKey, value = cacheData)
 
   /**
@@ -863,5 +1053,88 @@ object Cache extends LazyLogging {
         updateSubClasses(baseClassIri = directSubClassIri, cacheDataAcc)
     }
   }
+
+  /**
+   * Updates an existing ontology in the cache and ensures that the sub- and superclasses of a (presumably changed) class get updated correctly.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @param updatedClassIri     the IRI of the changed class
+   * @return the updated cache data
+   */
+  def cacheUpdatedOntologyWithClass(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2,
+    updatedClassIri: SmartIri
+  )(implicit
+    ec: ExecutionContext
+  ): Future[OntologyCacheData] =
+    for {
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      newOntologyCacheData  = make(newOntologies)
+      updatedCacheData      = updateSubClasses(updatedClassIri, newOntologyCacheData)
+      _                     = storeCacheData(updatedCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
+
+  /**
+   * Updates an existing ontology in the cache. If a class has changed, use `cacheUpdatedOntologyWithClass()`.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @return the updated cache data
+   */
+  def cacheUpdatedOntology(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2
+  )(implicit
+    ec: ExecutionContext
+  ): Future[OntologyCacheData] =
+    for {
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      newOntologyCacheData  = make(newOntologies)
+      _                     = storeCacheData(newOntologyCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
+
+  /**
+   * Updates an existing ontology in the cache without updating the cache lookup maps. This should only be used if only the ontology metadata has changed.
+   *
+   * @param updatedOntologyIri  the IRI of the updated ontology
+   * @param updatedOntologyData the [[ReadOntologyV2]] representation of the updated ontology
+   * @return the updated cache data
+   */
+  def cacheUpdatedOntologyWithoutUpdatingMaps(
+    updatedOntologyIri: SmartIri,
+    updatedOntologyData: ReadOntologyV2
+  )(implicit
+    ec: ExecutionContext
+  ): Future[OntologyCacheData] =
+    for {
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies + (updatedOntologyIri -> updatedOntologyData)
+      updatedCacheData      = ontologyCache.copy(ontologies = newOntologies)
+      _                     = storeCacheData(updatedCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
+
+  /**
+   * Deletes an ontology from the cache.
+   *
+   * @param updatedOntologyIri  the IRI of the ontology to delete
+   * @return the updated cache data
+   */
+  def deleteOntology(ontologyIri: SmartIri)(implicit
+    ec: ExecutionContext
+  ): Future[OntologyCacheData] =
+    for {
+      ontologyCache        <- getCacheData
+      newOntologies         = ontologyCache.ontologies - ontologyIri
+      newOntologyCacheData  = make(newOntologies)
+      _                     = storeCacheData(newOntologyCacheData)
+      updatedOntologyCache <- getCacheData
+    } yield updatedOntologyCache
 
 }

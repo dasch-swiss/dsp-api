@@ -23,6 +23,7 @@ import spray.json.JsNumber
 import spray.json.JsObject
 import spray.json.JsString
 import spray.json.JsValue
+import dsp.valueobjects.V2
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
@@ -48,8 +49,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(rre, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
         }
@@ -67,10 +66,21 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(ise, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
+        }
+      }
+
+    case bre: V2.BadRequestException =>
+      extractRequest { request =>
+        val url = request.uri.path.toString
+
+        if (url.startsWith("/v1")) {
+          complete(exceptionToJsonHttpResponseV1(bre, settingsImpl))
+        } else if (url.startsWith("/v2")) {
+          complete(exceptionToJsonHttpResponseV2(bre, settingsImpl))
+        } else {
+          complete(exceptionToJsonHttpResponseADM(bre, settingsImpl))
         }
       }
 
@@ -86,8 +96,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(other, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(other, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
         }

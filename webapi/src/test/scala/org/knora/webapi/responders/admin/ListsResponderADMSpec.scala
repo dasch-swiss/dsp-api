@@ -9,6 +9,9 @@ import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.DuplicateValueException
@@ -17,7 +20,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
@@ -69,7 +71,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
-        received.lists.size should be(8)
+        received.lists.size should be(9)
       }
 
       "return all lists belonging to the images project" in {
@@ -95,7 +97,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // log.debug("received: " + received)
 
-        received.lists.size should be(3)
+        received.lists.size should be(4)
       }
 
       "return basic list information (anything list)" in {
@@ -161,13 +163,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "create a list" in {
         responderManager ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
               .fold(e => throw e.head, v => v),
             comments = Comments
-              .make(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -201,13 +203,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
         responderManager ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v),
             comments = Comments
-              .make(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -240,15 +242,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
             labels = Some(
               Labels
                 .make(
                   Seq(
-                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                    StringLiteralV2(value = "Changed List", language = Some("en"))
+                    V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    V2.StringLiteralV2(value = "Changed List", language = Some("en"))
                   )
                 )
                 .fold(e => throw e.head, v => v)
@@ -257,8 +259,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               Comments
                 .make(
                   Seq(
-                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                    StringLiteralV2(value = "New Comment", language = Some("en"))
+                    V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    V2.StringLiteralV2(value = "New Comment", language = Some("en"))
                   )
                 )
                 .fold(e => throw e.head, v => v)
@@ -295,11 +297,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
-        val projectIRI = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
+        val projectIRI = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
+            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = projectIRI,
             name = name
           ),
@@ -318,15 +320,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -346,7 +348,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
@@ -369,16 +373,16 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -398,7 +402,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
@@ -421,15 +427,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(secondChildIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -449,7 +455,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
@@ -473,16 +481,16 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
@@ -977,6 +985,58 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
         response.listIri should be(listIri)
         response.canDeleteList should be(true)
+      }
+    }
+
+    "used to delete list node comments" should {
+      "do not delete a comment of root list node" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        expectMsg(
+          Failure(BadRequestException("Root node comments cannot be deleted."))
+        )
+      }
+
+      "delete all comments of child node that contains just one comment" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList01"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: ListNodeCommentsDeleteResponseADM =
+          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
+        response.commentsDeleted should be(true)
+      }
+
+      "delete all comments of child node that contains more than one comment" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList02"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: ListNodeCommentsDeleteResponseADM =
+          expectMsgType[ListNodeCommentsDeleteResponseADM](timeout)
+        response.nodeIri should be(nodeIri)
+        response.commentsDeleted should be(true)
+      }
+
+      "if reqested list does not have comments, inform there is no comments to delete" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/testList03"
+        responderManager ! ListNodeCommentsDeleteRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        expectMsg(
+          Failure(BadRequestException(s"Nothing to delete. Node $nodeIri does not have comments."))
+        )
       }
     }
   }

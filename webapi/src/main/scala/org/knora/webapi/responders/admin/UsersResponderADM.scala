@@ -24,11 +24,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserChangeRequestADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.Email
-import org.knora.webapi.messages.admin.responder.valueObjects.Password
-import org.knora.webapi.messages.admin.responder.valueObjects.SystemAdmin
-import org.knora.webapi.messages.admin.responder.valueObjects.UserStatus
-import org.knora.webapi.messages.admin.responder.valueObjects.Username
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRemoveValues
@@ -43,6 +38,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 import java.util.UUID
 import scala.concurrent.Future
+import dsp.valueobjects.User._
 
 /**
  * Provides information about Knora users to other responders.

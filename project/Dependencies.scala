@@ -70,6 +70,7 @@ object Dependencies {
   val jwtSprayJson = "com.pauldijou" %% "jwt-spray-json" % "5.0.0" // Scala 3 incompatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "5.6.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
@@ -102,6 +103,9 @@ object Dependencies {
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.2"         // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.16.3"
 
+  // found/added by the plugin but deleted anyway
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
+
   val webapiLibraryDependencies = Seq(
     akkaActor,
     akkaHttp,
@@ -113,6 +117,7 @@ object Dependencies {
     akkaStreamTestkit % Test,
     akkaTestkit       % Test,
     commonsValidator,
+    commonsLang3,
     diff,
     ehcache,
     gatlingHighcharts    % Test,
@@ -135,6 +140,7 @@ object Dependencies {
     scalaTest % Test,
     scallop,
     springSecurityCore,
+    bouncyCastle,
     swaggerAkkaHttp,
     testcontainers % Test,
     titaniumJSONLD,
@@ -168,4 +174,13 @@ object Dependencies {
   val schemaRepoLibraryDependencies                  = Seq()
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
+
+  val valueObjectsLibraryDependencies = Seq(
+    commonsLang3,
+    commonsValidator,
+    gwtServlet,
+    zioPrelude,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
 }

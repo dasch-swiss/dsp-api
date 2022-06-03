@@ -11,7 +11,6 @@ import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -20,6 +19,8 @@ import zio.prelude.Validation
 
 import java.util.UUID
 import javax.ws.rs.Path
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Group._
 
 object GroupsRouteADM {
   val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
@@ -123,10 +124,10 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   private def createGroup(): Route = path(GroupsBasePath) {
     post {
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val id: Validation[Throwable, Option[GroupIRI]]            = GroupIRI.make(apiRequest.id)
+        val id: Validation[Throwable, Option[GroupIri]]            = GroupIri.make(apiRequest.id)
         val name: Validation[Throwable, GroupName]                 = GroupName.make(apiRequest.name)
         val descriptions: Validation[Throwable, GroupDescriptions] = GroupDescriptions.make(apiRequest.descriptions)
-        val project: Validation[Throwable, ProjectIRI]             = ProjectIRI.make(apiRequest.project)
+        val project: Validation[Throwable, ProjectIri]             = ProjectIri.make(apiRequest.project)
         val status: Validation[Throwable, GroupStatus]             = GroupStatus.make(apiRequest.status)
         val selfjoin: Validation[Throwable, GroupSelfJoin]         = GroupSelfJoin.make(apiRequest.selfjoin)
 

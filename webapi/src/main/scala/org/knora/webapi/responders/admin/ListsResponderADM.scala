@@ -14,15 +14,11 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.ListIRI
-import org.knora.webapi.messages.admin.responder.valueObjects.ListName
-import org.knora.webapi.messages.admin.responder.valueObjects.ProjectIRI
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
@@ -34,6 +30,9 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.Future
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.List.ListName
 
 /**
  * A responder that returns information about hierarchical lists.
@@ -88,6 +87,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       deleteListItemRequestADM(nodeIri, requestingUser, apiRequestID)
     case CanDeleteListRequestADM(iri, requestingUser) =>
       canDeleteListRequestADM(iri)
+    case ListNodeCommentsDeleteRequestADM(iri, requestingUser) =>
+      deleteListNodeCommentsADM(iri, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -820,10 +821,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   private def createNode(
     createNodeRequest: ListNodeCreatePayloadADM
   ): Future[IRI] = {
-
-//    println("ZZZZZ-createNode", createNodeRequest)
 //    TODO-mpro: it's quickfix, refactor
-    val parentNode: Option[ListIRI] = createNodeRequest match {
+    val parentNode: Option[ListIri] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
       case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
     }
@@ -1210,14 +1209,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         changeNodeNameSparqlString <-
           getUpdateNodeInfoSparqlStatement(
             changeNodeInfoRequest = ListNodeChangePayloadADM(
-              listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-              projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+              listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+              projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
               name = Some(changeNodeNameRequest.name)
             )
           )
@@ -1285,12 +1284,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                           changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                            listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                            projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                             labels = Some(changeNodeLabelsRequest.labels)
                                           )
                                         )
@@ -1357,13 +1356,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
                                             changeNodeInfoRequest = ListNodeChangePayloadADM(
-                                              listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-                                              projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
+                                              listIri = ListIri.make(nodeIri).fold(e => throw e.head, v => v),
+                                              projectIri = ProjectIri.make(projectIri).fold(e => throw e.head, v => v),
                                               comments = Some(changeNodeCommentsRequest.comments)
                                             )
                                           )
@@ -1676,7 +1675,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         // get node in its current position
@@ -1753,6 +1752,55 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         else false
 
     } yield CanDeleteListResponseADM(iri, canDelete)
+
+  /**
+   * Deletes all comments from requested list node (only child).
+   */
+  private def deleteListNodeCommentsADM(
+    iri: IRI,
+    requestingUser: UserADM
+  ): Future[ListNodeCommentsDeleteResponseADM] =
+    for {
+      node <- listNodeInfoGetADM(
+                nodeIri = iri,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+
+      doesNodeHaveComments = node.get.getComments.stringLiterals.length > 0
+
+      _ = if (!doesNodeHaveComments) {
+            throw BadRequestException(s"Nothing to delete. Node $iri does not have comments.")
+          }
+
+      isRootNode =
+        node match {
+          case Some(_: ListRootNodeInfoADM)  => true
+          case Some(_: ListChildNodeInfoADM) => false
+          case _                             => throw InconsistentRepositoryDataException("Bad data. List node expected.")
+        }
+
+      _ = if (isRootNode) {
+            throw BadRequestException("Root node comments cannot be deleted.")
+          }
+
+      projectIri <- getProjectIriFromNode(iri)
+      namedGraph <- getDataNamedGraph(projectIri)
+
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .deleteListNodeComments(
+              namedGraph = namedGraph,
+              nodeIri = iri,
+              isRootNode = isRootNode
+            )
+            .toString()
+        )
+
+      _: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlQuery))
+                                   .mapTo[SparqlUpdateResponse]
+
+    } yield ListNodeCommentsDeleteResponseADM(iri, !isRootNode)
 
   /**
    * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,
@@ -1922,7 +1970,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform operation
         _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
               // not project or a system admin
-              throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
+              throw ForbiddenException(ListErrorMessages.ListChangePermission)
             }
 
         maybeNode: Option[ListNodeADM] <-

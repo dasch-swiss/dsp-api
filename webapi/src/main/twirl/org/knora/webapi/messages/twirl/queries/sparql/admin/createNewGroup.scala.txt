@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import dsp.valueobjects.V2
 
 @*
  * Creates a new group.
@@ -22,7 +22,7 @@
   groupIri: IRI,
   groupClassIri: IRI,
   name: String,
-  descriptions: Seq[StringLiteralV2],
+  descriptions: Seq[V2.StringLiteralV2],
   projectIri: IRI,
   status: Boolean,
   hasSelfJoinEnabled: Boolean)

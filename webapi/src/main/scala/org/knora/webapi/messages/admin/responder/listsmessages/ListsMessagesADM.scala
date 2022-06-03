@@ -13,7 +13,6 @@ import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -21,9 +20,10 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import spray.json._
 
 import java.util.UUID
+import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.V2
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// API requests
+/////////////// API requests
 
 /**
  * Represents an API request payload that asks the Knora API server to create a new list root node.
@@ -39,8 +39,8 @@ case class ListRootNodeCreateApiRequestADM(
   id: Option[IRI] = None,
   projectIri: IRI,
   name: Option[String] = None,
-  labels: Seq[StringLiteralV2],
-  comments: Seq[StringLiteralV2]
+  labels: Seq[V2.StringLiteralV2],
+  comments: Seq[V2.StringLiteralV2]
 ) extends ListADMJsonProtocol {
   def toJsValue: JsValue = createListRootNodeApiRequestADMFormat.write(this)
 }
@@ -66,8 +66,8 @@ case class ListChildNodeCreateApiRequestADM(
   projectIri: IRI,
   name: Option[String] = None,
   position: Option[Int] = None,
-  labels: Seq[StringLiteralV2],
-  comments: Option[Seq[StringLiteralV2]]
+  labels: Seq[V2.StringLiteralV2],
+  comments: Option[Seq[V2.StringLiteralV2]]
 ) extends ListADMJsonProtocol {
   def toJsValue: JsValue = createListChildNodeApiRequestADMFormat.write(this)
 }
@@ -89,8 +89,8 @@ case class ListNodeChangeApiRequestADM(
   hasRootNode: Option[IRI] = None,
   position: Option[Int] = None,
   name: Option[String] = None,
-  labels: Option[Seq[StringLiteralV2]] = None,
-  comments: Option[Seq[StringLiteralV2]] = None
+  labels: Option[Seq[V2.StringLiteralV2]] = None,
+  comments: Option[Seq[V2.StringLiteralV2]] = None
 ) extends ListADMJsonProtocol {
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
@@ -110,7 +110,7 @@ case class ChangeNodeNameApiRequestADM(name: String) extends ListADMJsonProtocol
  *
  * @param labels the new labels of the node
  */
-case class ChangeNodeLabelsApiRequestADM(labels: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+case class ChangeNodeLabelsApiRequestADM(labels: Seq[V2.StringLiteralV2]) extends ListADMJsonProtocol {
 
   def toJsValue: JsValue = changeNodeLabelsApiRequestADMFormat.write(this)
 }
@@ -120,7 +120,7 @@ case class ChangeNodeLabelsApiRequestADM(labels: Seq[StringLiteralV2]) extends L
  *
  * @param comments the new comments of the node.
  */
-case class ChangeNodeCommentsApiRequestADM(comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+case class ChangeNodeCommentsApiRequestADM(comments: Seq[V2.StringLiteralV2]) extends ListADMJsonProtocol {
 
   def toJsValue: JsValue = changeNodeCommentsApiRequestADMFormat.write(this)
 }
@@ -142,7 +142,7 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
   }
 
   if (position < -1) {
-    throw BadRequestException(INVALID_POSITION)
+    throw BadRequestException(ListErrorMessages.InvalidPosition)
   }
   def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
 }
@@ -305,15 +305,52 @@ case class ListItemDeleteRequestADM(
 ) extends ListsResponderRequestADM
 
 /**
- * Request checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
+ * Requests checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
  *
  * @param iri                  the IRI of the list node (root or child).
  * @param requestingUser       the user making the request.
  */
 case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends ListsResponderRequestADM
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Responses
+/**
+ * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteADM]]
+ *
+ * @param iri                  the IRI of the list node (root or child).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ */
+case class ListNodeCommentsDeleteRequestADM(
+  iri: IRI,
+  featureFactoryConfig: FeatureFactoryConfig,
+  requestingUser: UserADM
+) extends ListsResponderRequestADM
+
+///////////////////////// Responses
+
+/**
+ * Responds to deletion of list node's comments by returning a success message.
+ *
+ * @param nodeIri         the IRI of the list that comments are deleted.
+ * @param commentsDeleted contains a boolean value if comments were deleted.
+ */
+case class ListNodeCommentsDeleteResponseADM(nodeIri: IRI, commentsDeleted: Boolean)
+    extends KnoraResponseADM
+    with ListADMJsonProtocol {
+  def toJsValue: JsValue = ListNodeCommentsDeleteResponseADMFormat.write(this)
+}
+
+/**
+ * Returns an information if node can be deleted (none of its nodes is used in data).
+ *
+ * @param iri           the IRI of the list that is checked.
+ * @param canDeleteList contains a boolean value if list node can be deleted.
+ */
+case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean)
+    extends KnoraResponseADM
+    with ListADMJsonProtocol {
+
+  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
+}
 
 /**
  * Represents a sequence of list info nodes.
@@ -404,16 +441,6 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
-}
-
-/**
- * Checks if a list can be deleted (none of its nodes is used in data).
- *
- * @param iri the IRI of the list that is checked.
- */
-case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends ListItemDeleteResponseADM {
-
-  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 }
 
 /**
@@ -1312,4 +1339,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     jsonFormat(ListDeleteResponseADM, "iri", "deleted")
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
     jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
+  implicit val ListNodeCommentsDeleteResponseADMFormat: RootJsonFormat[ListNodeCommentsDeleteResponseADM] =
+    jsonFormat(ListNodeCommentsDeleteResponseADM, "nodeIri", "commentsDeleted")
 }

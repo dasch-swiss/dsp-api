@@ -31,6 +31,7 @@ import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -312,4 +313,9 @@ class E2ESpec(_system: ActorSystem)
       }
     }
   }
+
+  val routeData: KnoraRouteData = KnoraRouteData(
+    system = system,
+    appActor = appActor
+  )
 }
