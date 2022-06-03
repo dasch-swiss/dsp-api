@@ -24,7 +24,6 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -36,6 +35,8 @@ import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
+import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project._
 
 object ProjectsRouteADM {
   val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
@@ -136,7 +137,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
-        val id: Validation[Throwable, Option[ProjectIRI]]          = ProjectIRI.make(apiRequest.id)
+        val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
         val shortname: Validation[Throwable, Shortname]            = Shortname.make(apiRequest.shortname)
         val shortcode: Validation[Throwable, Shortcode]            = Shortcode.make(apiRequest.shortcode)
         val longname: Validation[Throwable, Option[Longname]]      = Longname.make(apiRequest.longname)

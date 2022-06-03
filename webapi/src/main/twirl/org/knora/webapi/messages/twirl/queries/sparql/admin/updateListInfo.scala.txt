@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import dsp.valueobjects.V2
 
 @**
  * Updates an existing list with the provided values.
@@ -26,8 +26,8 @@
   hasOldName: Boolean,
   isRootNode: Boolean,
   maybeName : Option[String],
-  maybeLabels: Option[Seq[StringLiteralV2]],
-  maybeComments: Option[Seq[StringLiteralV2]])
+  maybeLabels: Option[Seq[V2.StringLiteralV2]],
+  maybeComments: Option[Seq[V2.StringLiteralV2]])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

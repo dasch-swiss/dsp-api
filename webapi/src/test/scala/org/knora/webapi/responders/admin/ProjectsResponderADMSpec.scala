@@ -13,6 +13,9 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project._
+import dsp.valueobjects.V2
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.exceptions.DuplicateValueException
@@ -22,7 +25,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -196,7 +198,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortcode = Shortcode.make(shortCode).fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
-              .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
@@ -290,7 +292,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
             longname = Some(Longname.make("project longname").fold(error => throw error.head, value => value)),
             description = ProjectDescription
-              .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
@@ -324,7 +326,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             longname =
               Longname.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
             description = ProjectDescription
-              .make(Seq(StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
@@ -357,7 +359,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
-              .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
@@ -378,7 +380,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
-              .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),

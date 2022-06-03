@@ -20,7 +20,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
@@ -41,6 +40,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import dsp.valueobjects.IriErrorMessages
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -528,10 +528,10 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
         }
 
         if (
-          stringFormatter.hasUUIDLength(valueIri.toString.split("/").last)
-          && !stringFormatter.isUUIDVersion4Or5(valueIri.toString)
+          stringFormatter.hasUuidLength(valueIri.toString.split("/").last)
+          && !stringFormatter.isUuidVersion4Or5(valueIri.toString)
         ) {
-          throw BadRequestException(UUID_INVALID_ERROR)
+          throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
         }
 
         val valueTypeIri: SmartIri = jsonLDObject.requireTypeAsKnoraApiV2ComplexTypeIri

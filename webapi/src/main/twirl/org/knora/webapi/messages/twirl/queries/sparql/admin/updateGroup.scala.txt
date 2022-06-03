@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import dsp.valueobjects.V2
 
 @**
  * Updates an existing group with the provided values.
@@ -20,7 +20,7 @@
 @(adminNamedGraphIri: IRI,
   groupIri: IRI,
   maybeName: Option[String],
-  maybeDescriptions: Option[Seq[StringLiteralV2]],
+  maybeDescriptions: Option[Seq[V2.StringLiteralV2]],
   maybeProject: Option[IRI],
   maybeStatus: Option[Boolean],
   maybeSelfjoin: Option[Boolean])

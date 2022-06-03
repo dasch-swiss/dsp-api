@@ -1367,9 +1367,9 @@ class StringFormatterSpec extends CoreSpec() {
       val iri4 = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
       val iri5 = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
 
-      val testIRIFromVersion3UUID = stringFormatter.isUUIDVersion4Or5(iri3)
-      val testIRIFromVersion4UUID = stringFormatter.isUUIDVersion4Or5(iri4)
-      val testIRIFromVersion5UUID = stringFormatter.isUUIDVersion4Or5(iri5)
+      val testIRIFromVersion3UUID = stringFormatter.isUuidVersion4Or5(iri3)
+      val testIRIFromVersion4UUID = stringFormatter.isUuidVersion4Or5(iri4)
+      val testIRIFromVersion5UUID = stringFormatter.isUuidVersion4Or5(iri5)
 
       val iri = "http://rdfh.ch/0001/rYAMw7wSTbGw3boYHefByg"
 
@@ -1378,8 +1378,8 @@ class StringFormatterSpec extends CoreSpec() {
         stringFormatter.makeRandomBase64EncodedUuid,
         stringFormatter.makeRandomBase64EncodedUuid,
         stringFormatter.getUUIDVersion(iri),
-        stringFormatter.hasUUIDLength(iri.split("/").last),
-        stringFormatter.isUUIDVersion4Or5(iri)
+        stringFormatter.hasUuidLength(iri.split("/").last),
+        stringFormatter.isUuidVersion4Or5(iri)
       )
 
       testIRIFromVersion3UUID should be(false)

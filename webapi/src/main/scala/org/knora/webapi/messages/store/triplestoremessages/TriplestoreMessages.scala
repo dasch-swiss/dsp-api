@@ -27,6 +27,7 @@ import scala.collection.mutable
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import dsp.valueobjects.V2
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -798,6 +799,62 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
             throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
         }
       case JsString(value) => StringLiteralV2(value, None)
+      case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
+    }
+  }
+
+  // TODO-mpro: below object needs to be here because of moving value object to separate project which are also partially used in V2.
+  // Once dsp.valueobjects.V2.StringLiteralV2 is replaced by LangString value object, it can be removed.
+  // By then it is quick fix solution.
+  implicit object V2LiteralV2Format extends JsonFormat[V2.StringLiteralV2] {
+
+    /**
+     * Converts a [[StringLiteralV2]] to a [[JsValue]].
+     *
+     * @param string a [[StringLiteralV2]].
+     * @return a [[JsValue]].
+     */
+    def write(string: V2.StringLiteralV2): JsValue =
+      if (string.language.isDefined) {
+        // have language tag
+        JsObject(
+          Map(
+            "value"    -> string.value.toJson,
+            "language" -> string.language.toJson
+          )
+        )
+      } else {
+        // no language tag
+        JsObject(
+          Map(
+            "value" -> string.value.toJson
+          )
+        )
+      }
+
+    /**
+     * Converts a [[JsValue]] to a [[StringLiteralV2]].
+     *
+     * @param json a [[JsValue]].
+     * @return a [[StringLiteralV2]].
+     */
+    def read(json: JsValue): V2.StringLiteralV2 = json match {
+      case stringWithLang: JsObject =>
+        stringWithLang.getFields("value", "language") match {
+          case Seq(JsString(value), JsString(language)) =>
+            V2.StringLiteralV2(
+              value = value,
+              language = Some(language)
+            )
+          case Seq(JsString(value)) =>
+            V2.StringLiteralV2(
+              value = value,
+              language = None
+            )
+          case _ =>
+            throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
+        }
+      case JsString(value) => V2.StringLiteralV2(value, None)
       case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
     }
   }

@@ -46,13 +46,12 @@ import scala.util.Success
 import scala.util.Try
 import scala.util.control.Exception._
 import scala.util.matching.Regex
+import dsp.valueobjects.IriErrorMessages
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
-  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
-
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -2981,7 +2980,7 @@ class StringFormatter private (
    * @param s the string (IRI) to be checked.
    * @return TRUE for correct versions, FALSE for incorrect.
    */
-  def isUUIDVersion4Or5(s: IRI): Boolean =
+  def isUuidVersion4Or5(s: IRI): Boolean =
     if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
       true
     } else {
@@ -2994,7 +2993,7 @@ class StringFormatter private (
    * @param s the string to check.
    * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
    */
-  def hasUUIDLength(s: String): Boolean =
+  def hasUuidLength(s: String): Boolean =
     s.length == CanonicalUuidLength || s.length == Base64UuidLength
 
   /**
@@ -3002,8 +3001,8 @@ class StringFormatter private (
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUUIDLength(iri.toString.split("/").last) && !isUUIDVersion4Or5(iri.toString)) {
-      throw BadRequestException(UUID_INVALID_ERROR)
+    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidVersion4Or5(iri.toString)) {
+      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     }
 
   /**
@@ -3011,8 +3010,8 @@ class StringFormatter private (
    * @param iri to be validated.
    */
   def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
-      throw BadRequestException(UUID_INVALID_ERROR)
+    if (isKnoraPermissionIriStr(iri) && !isUuidVersion4Or5(iri)) {
+      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
     }
