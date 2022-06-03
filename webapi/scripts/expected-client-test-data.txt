@@ -181,6 +181,8 @@ test-data/v2/ontologies/change-class-comment-request.json
 test-data/v2/ontologies/change-class-label-request.json
 test-data/v2/ontologies/change-gui-order-request.json
 test-data/v2/ontologies/change-property-comment-request.json
+test-data/v2/ontologies/delete-property-comment-response.json
+test-data/v2/ontologies/delete-class-comment-response.json
 test-data/v2/ontologies/change-property-guielement-request.json
 test-data/v2/ontologies/change-property-label-request.json
 test-data/v2/ontologies/create-class-with-cardinalities-request.json
