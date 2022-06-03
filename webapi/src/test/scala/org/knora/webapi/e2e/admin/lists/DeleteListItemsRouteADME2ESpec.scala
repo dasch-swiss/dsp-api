@@ -217,4 +217,40 @@ class DeleteListItemsRouteADME2ESpec
       }
     }
   }
+
+  "DeleteListNodeComments route (/admin/lists/comments)" when {
+    "deleting comments" should {
+      "delete child node comments" in {
+        val childNodeIri        = "http://rdfh.ch/lists/0001/testList01"
+        val childNodeIriEncoded = java.net.URLEncoder.encode(childNodeIri, "utf-8")
+        val request = Delete(s"$baseApiUrl/admin/lists/comments/$childNodeIriEncoded") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+        )
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val responseStr            = responseToString(response)
+
+        response.status should be(StatusCodes.OK)
+        val commentsDeleted = AkkaHttpUtils.httpResponseToJson(response).fields("commentsDeleted")
+        commentsDeleted.convertTo[Boolean] should be(true)
+        val nodeIri = AkkaHttpUtils.httpResponseToJson(response).fields("nodeIri")
+        nodeIri.convertTo[String] should be(childNodeIri)
+
+        CollectClientTestData("delete-list-node-comments-response", responseStr)
+      }
+
+      "return exception for root node comments" in {
+        val childNodeIri        = "http://rdfh.ch/lists/0001/testList"
+        val childNodeIriEncoded = java.net.URLEncoder.encode(childNodeIri, "utf-8")
+        val request = Delete(s"$baseApiUrl/admin/lists/comments/$childNodeIriEncoded") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+        )
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+        val responseStr            = responseToString(response)
+
+        response.status should be(StatusCodes.BadRequest)
+      }
+    }
+  }
 }
