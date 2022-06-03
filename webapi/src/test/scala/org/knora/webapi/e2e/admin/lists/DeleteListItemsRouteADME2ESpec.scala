@@ -51,6 +51,19 @@ class DeleteListItemsRouteADME2ESpec
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
+  // Collects client test data
+  private def CollectClientTestData(fileName: String, fileContent: String): Unit =
+    clientTestDataCollector.addFile(
+      TestDataFileContent(
+        filePath = TestDataFilePath(
+          directoryPath = clientTestDataPath,
+          filename = fileName,
+          fileExtension = "json"
+        ),
+        text = fileContent
+      )
+    )
+
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -125,16 +138,7 @@ class DeleteListItemsRouteADME2ESpec
         val firstChild = children.head
         firstChild.children.size should be(5)
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-list-node-response",
-              fileExtension = "json"
-            ),
-            text = responseToString(response)
-          )
-        )
+        CollectClientTestData("delete-list-node-response", responseToString(response))
       }
 
       "delete the single child of a node" in {
@@ -161,22 +165,13 @@ class DeleteListItemsRouteADME2ESpec
       val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
       deletedStatus.convertTo[Boolean] should be(true)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-list-response",
-            fileExtension = "json"
-          ),
-          text = responseToString(response)
-        )
-      )
+      CollectClientTestData("delete-list-response", responseToString(response))
     }
   }
 
   "Candeletelist route (/admin/lists/candelete)" when {
     "used to query if list can be deleted" should {
-      "return TRUE for unused list" in {
+      "return positive response for unused list" in {
         val unusedList        = "http://rdfh.ch/lists/0001/notUsedList"
         val unusedListEncoded = java.net.URLEncoder.encode(unusedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + unusedListEncoded) ~> addCredentials(
@@ -190,9 +185,11 @@ class DeleteListItemsRouteADME2ESpec
         canDelete.convertTo[Boolean] should be(true)
         val listIri = AkkaHttpUtils.httpResponseToJson(response).fields("listIri")
         listIri.convertTo[String] should be(unusedList)
+
+        CollectClientTestData("candeletelist-response", responseToString(response))
       }
 
-      "return FALSE for used list" in {
+      "return negative response for used list" in {
         val usedList        = "http://rdfh.ch/lists/0001/treeList01"
         val usedListEncoded = java.net.URLEncoder.encode(usedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + usedListEncoded) ~> addCredentials(
