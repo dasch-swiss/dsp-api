@@ -50,8 +50,7 @@ import scala.util.Success
 import scala.util.Try
 import org.knora.webapi.responders.ResponderManager
 
-class SearchResponderV2(responderData: ResponderData)
-    extends ResponderWithStandoffV2(responderData) {
+class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
   // A Gravsearch type inspection runner.
   private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(appActor, responderData)

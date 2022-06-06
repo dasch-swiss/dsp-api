@@ -27,8 +27,7 @@ import scala.concurrent.Future
 /**
  * An abstract class with standoff utility methods for v2 responders.
  */
-abstract class ResponderWithStandoffV2(responderData: ResponderData)
-    extends Responder(responderData) {
+abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData) {
 
   /**
    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].

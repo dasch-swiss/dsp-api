@@ -55,7 +55,7 @@ class PermissionsResponderADMSpec
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
 
-  private val responderUnderTest = appActor
+  private val responderUnderTest = new PermissionsResponderADM(responderData)
 
   /* define private method access */
   private val userAdministrativePermissionsGetADM =

@@ -58,9 +58,7 @@ object ResourceHtmlView {
           propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
 
         case OntologyConstants.KnoraBase.ListValue =>
-          propertyV1.values.map(literal =>
-            listValue2String(literal.asInstanceOf[HierarchicalListValueV1], appActor)
-          )
+          propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], appActor))
 
         case OntologyConstants.KnoraBase.Resource => // TODO: This could actually be a subclass of knora-base:Resource.
           propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1]))
