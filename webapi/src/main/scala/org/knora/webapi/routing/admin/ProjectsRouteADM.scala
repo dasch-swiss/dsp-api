@@ -104,7 +104,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         requestContext = requestContext,
         featureFactoryConfig = featureFactoryConfig,
         settings = settings,
-        responderManager = responderManager,
+        appActor = appActor,
         log = log
       )
     }
@@ -167,7 +167,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -192,7 +192,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         requestContext = requestContext,
         featureFactoryConfig = featureFactoryConfig,
         settings = settings,
-        responderManager = responderManager,
+        appActor = appActor,
         log = log
       )
     }
@@ -221,7 +221,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -252,7 +252,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -285,7 +285,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -318,7 +318,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -354,7 +354,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -389,7 +389,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -421,7 +421,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -455,7 +455,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -489,7 +489,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -521,7 +521,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -555,7 +555,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -589,7 +589,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -619,7 +619,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -650,7 +650,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -679,7 +679,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -731,7 +731,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
                            requestingUser = requestingUser
                          )
 
-        responseMessage <- (responderManager ? requestMessage).mapTo[ProjectDataGetResponseADM]
+        responseMessage <- (appActor.ask(requestMessage)).mapTo[ProjectDataGetResponseADM]
 
         // Stream the output file back to the client, then delete the file.
 

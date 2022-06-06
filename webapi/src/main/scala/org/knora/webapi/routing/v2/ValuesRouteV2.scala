@@ -99,7 +99,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log,
           targetSchema = targetSchema,
           schemaOptions = schemaOptions
@@ -122,8 +122,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                       requestDoc,
                                                       apiRequestID = UUID.randomUUID,
                                                       requestingUser = requestingUser,
-                                                      responderManager = responderManager,
-                                                      storeManager = storeManager,
+                                                      appActor = appActor,
                                                       featureFactoryConfig = featureFactoryConfig,
                                                       settings = settings,
                                                       log = log
@@ -135,7 +134,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -160,8 +159,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                       requestDoc,
                                                       apiRequestID = UUID.randomUUID,
                                                       requestingUser = requestingUser,
-                                                      responderManager = responderManager,
-                                                      storeManager = storeManager,
+                                                      appActor = appActor,
                                                       featureFactoryConfig = featureFactoryConfig,
                                                       settings = settings,
                                                       log = log
@@ -173,7 +171,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -198,8 +196,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                       requestDoc,
                                                       apiRequestID = UUID.randomUUID,
                                                       requestingUser = requestingUser,
-                                                      responderManager = responderManager,
-                                                      storeManager = storeManager,
+                                                      appActor = appActor,
                                                       featureFactoryConfig = featureFactoryConfig,
                                                       settings = settings,
                                                       log = log
@@ -211,7 +208,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)

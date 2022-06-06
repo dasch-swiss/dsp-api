@@ -27,6 +27,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future
+import org.knora.webapi.responders.ResponderManager
 
 /**
  * Handles requests for information about ontology entities.
@@ -79,10 +80,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
   ): Future[LoadOntologiesResponse] =
     for {
       // forward the request to the v2 ontologies responder
-      _: SuccessResponseV2 <- (responderManager ? LoadOntologiesRequestV2(
-                                featureFactoryConfig = featureFactoryConfig,
-                                requestingUser = userProfile
-                              )).mapTo[SuccessResponseV2]
+      _: SuccessResponseV2 <- appActor
+                                .ask(
+                                  LoadOntologiesRequestV2(
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = userProfile
+                                  )
+                                )
+                                .mapTo[SuccessResponseV2]
     } yield LoadOntologiesResponse()
 
   /**
@@ -99,11 +104,15 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     userProfile: UserADM
   ): Future[EntityInfoGetResponseV1] =
     for {
-      response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(
-                                             resourceClassIris.map(_.toSmartIri),
-                                             propertyIris.map(_.toSmartIri),
-                                             userProfile
-                                           )).mapTo[EntityInfoGetResponseV2]
+      response: EntityInfoGetResponseV2 <- appActor
+                                             .ask(
+                                               EntityInfoGetRequestV2(
+                                                 resourceClassIris.map(_.toSmartIri),
+                                                 propertyIris.map(_.toSmartIri),
+                                                 userProfile
+                                               )
+                                             )
+                                             .mapTo[EntityInfoGetResponseV2]
     } yield EntityInfoGetResponseV1(
       resourceClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.classInfoMap),
       propertyInfoMap = ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.propertyInfoMap)
@@ -123,11 +132,15 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     userProfile: UserADM
   ): Future[StandoffEntityInfoGetResponseV1] =
     for {
-      response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(
-                                                     standoffClassIris.map(_.toSmartIri),
-                                                     standoffPropertyIris.map(_.toSmartIri),
-                                                     userProfile
-                                                   )).mapTo[StandoffEntityInfoGetResponseV2]
+      response: StandoffEntityInfoGetResponseV2 <- appActor
+                                                     .ask(
+                                                       StandoffEntityInfoGetRequestV2(
+                                                         standoffClassIris.map(_.toSmartIri),
+                                                         standoffPropertyIris.map(_.toSmartIri),
+                                                         userProfile
+                                                       )
+                                                     )
+                                                     .mapTo[StandoffEntityInfoGetResponseV2]
 
     } yield StandoffEntityInfoGetResponseV1(
       standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.standoffClassInfoMap),
@@ -144,9 +157,13 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     userProfile: UserADM
   ): Future[StandoffClassesWithDataTypeGetResponseV1] =
     for {
-      response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(
-                                                              userProfile
-                                                            )).mapTo[StandoffClassesWithDataTypeGetResponseV2]
+      response: StandoffClassesWithDataTypeGetResponseV2 <- appActor
+                                                              .ask(
+                                                                StandoffClassesWithDataTypeGetRequestV2(
+                                                                  userProfile
+                                                                )
+                                                              )
+                                                              .mapTo[StandoffClassesWithDataTypeGetResponseV2]
     } yield StandoffClassesWithDataTypeGetResponseV1(
       standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.standoffClassInfoMap)
     )
@@ -159,9 +176,13 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    */
   private def getAllStandoffPropertyEntities(userProfile: UserADM): Future[StandoffAllPropertiesGetResponseV1] =
     for {
-      response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(
-                                                              userProfile
-                                                            )).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
+      response: StandoffAllPropertyEntitiesGetResponseV2 <- appActor
+                                                              .ask(
+                                                                StandoffAllPropertyEntitiesGetRequestV2(
+                                                                  userProfile
+                                                                )
+                                                              )
+                                                              .mapTo[StandoffAllPropertyEntitiesGetResponseV2]
     } yield StandoffAllPropertiesGetResponseV1(
       standoffAllPropertiesInfoMap =
         ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.standoffAllPropertiesEntityInfoMap)
@@ -344,11 +365,15 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    */
   private def checkSubClass(checkSubClassRequest: CheckSubClassRequestV1): Future[CheckSubClassResponseV1] =
     for {
-      response: CheckSubClassResponseV2 <- (responderManager ? CheckSubClassRequestV2(
-                                             subClassIri = checkSubClassRequest.subClassIri.toSmartIri,
-                                             superClassIri = checkSubClassRequest.superClassIri.toSmartIri,
-                                             checkSubClassRequest.userProfile
-                                           )).mapTo[CheckSubClassResponseV2]
+      response: CheckSubClassResponseV2 <- appActor
+                                             .ask(
+                                               CheckSubClassRequestV2(
+                                                 subClassIri = checkSubClassRequest.subClassIri.toSmartIri,
+                                                 superClassIri = checkSubClassRequest.superClassIri.toSmartIri,
+                                                 checkSubClassRequest.userProfile
+                                               )
+                                             )
+                                             .mapTo[CheckSubClassResponseV2]
 
     } yield CheckSubClassResponseV1(response.isSubClass)
 
@@ -360,10 +385,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    */
   private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] =
     for {
-      response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(
-                                             getSubClassesRequest.resourceClassIri.toSmartIri,
-                                             getSubClassesRequest.userADM
-                                           )).mapTo[SubClassesGetResponseV2]
+      response: SubClassesGetResponseV2 <- appActor
+                                             .ask(
+                                               SubClassesGetRequestV2(
+                                                 getSubClassesRequest.resourceClassIri.toSmartIri,
+                                                 getSubClassesRequest.userADM
+                                               )
+                                             )
+                                             .mapTo[SubClassesGetResponseV2]
 
       subClasses = response.subClasses.map { subClassInfoV2 =>
                      SubClassInfoV1(
@@ -388,15 +417,23 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
     userProfile: UserADM
   ): Future[NamedGraphsResponseV1] =
     for {
-      projectsResponse <- (responderManager ? ProjectsGetRequestADM(
-                            featureFactoryConfig = featureFactoryConfig,
-                            requestingUser = userProfile
-                          )).mapTo[ProjectsGetResponseADM]
+      projectsResponse <- appActor
+                            .ask(
+                              ProjectsGetRequestADM(
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = userProfile
+                              )
+                            )
+                            .mapTo[ProjectsGetResponseADM]
 
-      readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(
-                                  projectIris = projectIris.map(_.toSmartIri),
-                                  requestingUser = userProfile
-                                )).mapTo[ReadOntologyMetadataV2]
+      readOntologyMetadataV2 <- appActor
+                                  .ask(
+                                    OntologyMetadataGetByProjectRequestV2(
+                                      projectIris = projectIris.map(_.toSmartIri),
+                                      requestingUser = userProfile
+                                    )
+                                  )
+                                  .mapTo[ReadOntologyMetadataV2]
 
       projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map { project =>
                                             project.id -> project
@@ -449,10 +486,14 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
    */
   def getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri: IRI, userProfile: UserADM): Future[NamedGraphEntityInfoV1] =
     for {
-      response: OntologyKnoraEntitiesIriInfoV2 <- (responderManager ? OntologyKnoraEntityIrisGetRequestV2(
-                                                    namedGraphIri.toSmartIri,
-                                                    userProfile
-                                                  )).mapTo[OntologyKnoraEntitiesIriInfoV2]
+      response: OntologyKnoraEntitiesIriInfoV2 <- appActor
+                                                    .ask(
+                                                      OntologyKnoraEntityIrisGetRequestV2(
+                                                        namedGraphIri.toSmartIri,
+                                                        userProfile
+                                                      )
+                                                    )
+                                                    .mapTo[OntologyKnoraEntitiesIriInfoV2]
 
       classIrisForV1    = response.classIris.map(_.toString) -- OntologyConstants.KnoraBase.AbstractResourceClasses
       propertyIrisForV1 = response.propertyIris.map(_.toString) - OntologyConstants.KnoraBase.ResourceProperty

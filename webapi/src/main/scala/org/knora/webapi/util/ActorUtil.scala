@@ -6,7 +6,7 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import org.knora.webapi.config.AppConfig
@@ -22,6 +22,7 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import com.typesafe.scalalogging.Logger
 
 object ActorUtil {
 
@@ -43,7 +44,7 @@ object ActorUtil {
    *
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig): Unit =
     runtime
       .unsafeRunTask(
         zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
@@ -113,9 +114,9 @@ object ActorUtil {
    *
    * @param sender the actor that made the request in the `ask` pattern.
    * @param future a [[Future]] that will provide the result of the sender's request.
-   * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
+   * @param log    a [[Logger]] for logging non-serializable exceptions.
    */
-  def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: LoggingAdapter)(implicit
+  def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: Logger)(implicit
     executionContext: ExecutionContext
   ): Unit =
     future.onComplete { tryObj: Try[ReplyT] =>
@@ -131,9 +132,9 @@ object ActorUtil {
    *
    * @param sender the actor that made the request in the `ask` pattern.
    * @param tryObj a [[Try]] that will provide the result of the sender's request.
-   * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
+   * @param log    a [[Logger]] for logging non-serializable exceptions.
    */
-  def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter)(implicit
+  def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: Logger)(implicit
     executionContext: ExecutionContext
   ): Unit =
     tryObj match {
@@ -166,9 +167,9 @@ object ActorUtil {
    *
    * @param sender  the actor that made the request in the `ask` pattern.
    * @param message the message that was received.
-   * @param log     a [[LoggingAdapter]].
+   * @param log     a [[Logger]].
    */
-  def handleUnexpectedMessage(sender: ActorRef, message: Any, log: LoggingAdapter, who: String)(implicit
+  def handleUnexpectedMessage(sender: ActorRef, message: Any, log: Logger, who: String)(implicit
     executionContext: ExecutionContext
   ): Unit = {
     val unexpectedMessageException = UnexpectedMessageException(

@@ -26,6 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.GroupedProps.ValueLiterals
 import org.knora.webapi.messages.util.GroupedProps.ValueProps
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
+import org.knora.webapi.responders.ResponderManager
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -733,7 +734,7 @@ object PermissionUtilADM extends LazyLogging {
   def validatePermissions(
     permissionLiteral: String,
     featureFactoryConfig: FeatureFactoryConfig,
-    responderManager: ActorRef
+    appActor: ActorRef
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
     val stringFormatter = StringFormatter.getGeneralInstance
 
@@ -759,11 +760,15 @@ object PermissionUtilADM extends LazyLogging {
         )
 
       // Check that those groups exist.
-      _ <- (responderManager ? MultipleGroupsGetRequestADM(
-             groupIris = validatedProjectSpecificGroupIris,
-             featureFactoryConfig = featureFactoryConfig,
-             requestingUser = KnoraSystemInstances.Users.SystemUser
-           )).mapTo[Set[GroupGetResponseADM]]
+      _ <- appActor
+             .ask(
+               MultipleGroupsGetRequestADM(
+                 groupIris = validatedProjectSpecificGroupIris,
+                 featureFactoryConfig = featureFactoryConfig,
+                 requestingUser = KnoraSystemInstances.Users.SystemUser
+               )
+             )
+             .mapTo[Set[GroupGetResponseADM]]
 
       // Reformat the permission literal.
       permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap { case (entityPermission, groupIris) =>

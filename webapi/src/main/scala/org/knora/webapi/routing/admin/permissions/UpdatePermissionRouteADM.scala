@@ -69,7 +69,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -103,7 +103,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -137,7 +137,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -171,7 +171,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }

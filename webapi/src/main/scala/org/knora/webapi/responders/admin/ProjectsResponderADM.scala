@@ -43,6 +43,7 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import org.knora.webapi.responders.ResponderManager
 
 /**
  * Returns information about Knora projects.
@@ -122,10 +123,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                            )
       // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
-      projectsResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                            sparql = sparqlQueryString,
-                            featureFactoryConfig = featureFactoryConfig
-                          )).mapTo[SparqlExtendedConstructResponse]
+      projectsResponse <- appActor
+                            .ask(
+                              SparqlExtendedConstructRequest(
+                                sparql = sparqlQueryString,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+                            )
+                            .mapTo[SparqlExtendedConstructResponse]
       // _ = log.debug(s"projectsGetADM - projectsResponse: $projectsResponse")
 
       statements: List[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = projectsResponse.statements.toList
@@ -158,10 +163,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    */
   private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] =
     for {
-      ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(
-                                                            projectIris = projectIris.map(_.toSmartIri),
-                                                            requestingUser = requestingUser
-                                                          )).mapTo[ReadOntologyMetadataV2]
+      ontologyMetadataResponse: ReadOntologyMetadataV2 <- appActor
+                                                            .ask(
+                                                              OntologyMetadataGetByProjectRequestV2(
+                                                                projectIris = projectIris.map(_.toSmartIri),
+                                                                requestingUser = requestingUser
+                                                              )
+                                                            )
+                                                            .mapTo[ReadOntologyMetadataV2]
     } yield ontologyMetadataResponse.ontologies.map { ontology =>
       val ontologyIri: IRI = ontology.ontologyIri.toString
       val projectIri: IRI = ontology.projectIri
@@ -248,7 +257,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             log.debug("getSingleProjectADM - could not retrieve project: {}", identifier.value)
           }
 
-        _ = storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser)
+        _ = appActor.ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
 
       } yield maybeProjectADM
     }
@@ -332,10 +341,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                            )
       //_ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
 
-      projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                  sparql = sparqlQueryString,
-                                  featureFactoryConfig = featureFactoryConfig
-                                )).mapTo[SparqlExtendedConstructResponse]
+      projectMembersResponse <- appActor
+                                  .ask(
+                                    SparqlExtendedConstructRequest(
+                                      sparql = sparqlQueryString,
+                                      featureFactoryConfig = featureFactoryConfig
+                                    )
+                                  )
+                                  .mapTo[SparqlExtendedConstructResponse]
 
       statements = projectMembersResponse.statements.toList
 
@@ -350,12 +363,17 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
       maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map { userIri =>
-                                                         (responderManager ? UserGetADM(
-                                                           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                                                           userInformationTypeADM = UserInformationTypeADM.Restricted,
-                                                           featureFactoryConfig = featureFactoryConfig,
-                                                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                         )).mapTo[Option[UserADM]]
+                                                         appActor
+                                                           .ask(
+                                                             UserGetADM(
+                                                               identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                                                               userInformationTypeADM =
+                                                                 UserInformationTypeADM.Restricted,
+                                                               featureFactoryConfig = featureFactoryConfig,
+                                                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                             )
+                                                           )
+                                                           .mapTo[Option[UserADM]]
                                                        }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
@@ -407,10 +425,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                            )
       //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-      projectAdminMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                       sparql = sparqlQueryString,
-                                       featureFactoryConfig = featureFactoryConfig
-                                     )).mapTo[SparqlExtendedConstructResponse]
+      projectAdminMembersResponse <- appActor
+                                       .ask(
+                                         SparqlExtendedConstructRequest(
+                                           sparql = sparqlQueryString,
+                                           featureFactoryConfig = featureFactoryConfig
+                                         )
+                                       )
+                                       .mapTo[SparqlExtendedConstructResponse]
       //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
       statements = projectAdminMembersResponse.statements.toList
@@ -424,12 +446,17 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
       maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map { userIri =>
-                                                         (responderManager ? UserGetADM(
-                                                           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-                                                           userInformationTypeADM = UserInformationTypeADM.Restricted,
-                                                           featureFactoryConfig = featureFactoryConfig,
-                                                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                         )).mapTo[Option[UserADM]]
+                                                         appActor
+                                                           .ask(
+                                                             UserGetADM(
+                                                               identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                                                               userInformationTypeADM =
+                                                                 UserInformationTypeADM.Restricted,
+                                                               featureFactoryConfig = featureFactoryConfig,
+                                                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                             )
+                                                           )
+                                                           .mapTo[Option[UserADM]]
                                                        }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
@@ -616,15 +643,17 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       projectSpecificNamedGraphTrigFileWriteFutures: Seq[Future[FileWrittenResponse]] =
         projectSpecificNamedGraphTrigFiles.map { trigFile =>
           for {
-            fileWrittenResponse: FileWrittenResponse <- (
-                                                          storeManager ?
-                                                            NamedGraphFileRequest(
-                                                              graphIri = trigFile.graphIri,
-                                                              outputFile = trigFile.dataFile,
-                                                              outputFormat = TriG,
-                                                              featureFactoryConfig = featureFactoryConfig
-                                                            )
-                                                        ).mapTo[FileWrittenResponse]
+            fileWrittenResponse: FileWrittenResponse <-
+              appActor
+                .ask(
+                  NamedGraphFileRequest(
+                    graphIri = trigFile.graphIri,
+                    outputFile = trigFile.dataFile,
+                    outputFormat = TriG,
+                    featureFactoryConfig = featureFactoryConfig
+                  )
+                )
+                .mapTo[FileWrittenResponse]
           } yield fileWrittenResponse
         }
 
@@ -640,13 +669,17 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                   )
                                   .toString()
 
-      _: FileWrittenResponse <- (storeManager ? SparqlConstructFileRequest(
-                                  sparql = adminDataSparql,
-                                  graphIri = adminDataNamedGraphTrigFile.graphIri,
-                                  outputFile = adminDataNamedGraphTrigFile.dataFile,
-                                  outputFormat = TriG,
-                                  featureFactoryConfig = featureFactoryConfig
-                                )).mapTo[FileWrittenResponse]
+      _: FileWrittenResponse <- appActor
+                                  .ask(
+                                    SparqlConstructFileRequest(
+                                      sparql = adminDataSparql,
+                                      graphIri = adminDataNamedGraphTrigFile.graphIri,
+                                      outputFile = adminDataNamedGraphTrigFile.dataFile,
+                                      outputFormat = TriG,
+                                      featureFactoryConfig = featureFactoryConfig
+                                    )
+                                  )
+                                  .mapTo[FileWrittenResponse]
 
       // Download the project's permission data.
 
@@ -658,13 +691,17 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                        )
                                        .toString()
 
-      _: FileWrittenResponse <- (storeManager ? SparqlConstructFileRequest(
-                                  sparql = permissionDataSparql,
-                                  graphIri = permissionDataNamedGraphTrigFile.graphIri,
-                                  outputFile = permissionDataNamedGraphTrigFile.dataFile,
-                                  outputFormat = TriG,
-                                  featureFactoryConfig = featureFactoryConfig
-                                )).mapTo[FileWrittenResponse]
+      _: FileWrittenResponse <- appActor
+                                  .ask(
+                                    SparqlConstructFileRequest(
+                                      sparql = permissionDataSparql,
+                                      graphIri = permissionDataNamedGraphTrigFile.graphIri,
+                                      outputFile = permissionDataNamedGraphTrigFile.dataFile,
+                                      outputFormat = TriG,
+                                      featureFactoryConfig = featureFactoryConfig
+                                    )
+                                  )
+                                  .mapTo[FileWrittenResponse]
 
       // Stream the combined results into the output file.
 
@@ -701,10 +738,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                          .toString()
                      )
 
-      projectResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                           sparql = sparqlQuery,
-                           featureFactoryConfig = featureFactoryConfig
-                         )).mapTo[SparqlExtendedConstructResponse]
+      projectResponse <- appActor
+                           .ask(
+                             SparqlExtendedConstructRequest(
+                               sparql = sparqlQuery,
+                               featureFactoryConfig = featureFactoryConfig
+                             )
+                           )
+                           .mapTo[SparqlExtendedConstructResponse]
 
       restrictedViewSettings =
         if (projectResponse.statements.nonEmpty) {
@@ -879,7 +920,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
           }
       // we are changing the project, so lets get rid of the cached copy
-      _ = storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser)
+      _ = appActor.ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))
 
       /* Update project */
       updateProjectSparqlString <- Future(
@@ -900,7 +941,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
-      _ <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString))
+      _ <- appActor
+             .ask(SparqlUpdateRequest(updateProjectSparqlString))
              .mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
@@ -1011,61 +1053,77 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
       for {
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
-        _ <- (responderManager ? AdministrativePermissionCreateRequestADM(
-               createRequest = CreateAdministrativePermissionAPIRequestADM(
-                 forProject = projectIri,
-                 forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
-                 hasPermissions =
-                   Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
-               ).prepareHasPermissions,
-               featureFactoryConfig = featureFactoryConfig,
-               requestingUser = requestingUser,
-               apiRequestID = UUID.randomUUID()
-             )).mapTo[AdministrativePermissionCreateResponseADM]
+        _ <- appActor
+               .ask(
+                 AdministrativePermissionCreateRequestADM(
+                   createRequest = CreateAdministrativePermissionAPIRequestADM(
+                     forProject = projectIri,
+                     forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
+                     hasPermissions =
+                       Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+                   ).prepareHasPermissions,
+                   featureFactoryConfig = featureFactoryConfig,
+                   requestingUser = requestingUser,
+                   apiRequestID = UUID.randomUUID()
+                 )
+               )
+               .mapTo[AdministrativePermissionCreateResponseADM]
 
         // Give the members of the new project rights to create resources.
-        _ <- (responderManager ? AdministrativePermissionCreateRequestADM(
-               createRequest = CreateAdministrativePermissionAPIRequestADM(
-                 forProject = projectIri,
-                 forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
-                 hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-               ).prepareHasPermissions,
-               featureFactoryConfig = featureFactoryConfig,
-               requestingUser = requestingUser,
-               apiRequestID = UUID.randomUUID()
-             )).mapTo[AdministrativePermissionCreateResponseADM]
+        _ <- appActor
+               .ask(
+                 AdministrativePermissionCreateRequestADM(
+                   createRequest = CreateAdministrativePermissionAPIRequestADM(
+                     forProject = projectIri,
+                     forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+                     hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+                   ).prepareHasPermissions,
+                   featureFactoryConfig = featureFactoryConfig,
+                   requestingUser = requestingUser,
+                   apiRequestID = UUID.randomUUID()
+                 )
+               )
+               .mapTo[AdministrativePermissionCreateResponseADM]
 
         // Give the admins of the new project rights to change rights, modify, delete, view,
         // and restricted view of all resources and values that belong to the project.
-        _ <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
-               createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-                 forProject = projectIri,
-                 forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                 hasPermissions = Set(
-                   PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                   PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+        _ <- appActor
+               .ask(
+                 DefaultObjectAccessPermissionCreateRequestADM(
+                   createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                     forProject = projectIri,
+                     forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                     hasPermissions = Set(
+                       PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                       PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+                     )
+                   ).prepareHasPermissions,
+                   featureFactoryConfig = featureFactoryConfig,
+                   requestingUser = requestingUser,
+                   apiRequestID = UUID.randomUUID()
                  )
-               ).prepareHasPermissions,
-               featureFactoryConfig = featureFactoryConfig,
-               requestingUser = requestingUser,
-               apiRequestID = UUID.randomUUID()
-             )).mapTo[DefaultObjectAccessPermissionCreateResponseADM]
+               )
+               .mapTo[DefaultObjectAccessPermissionCreateResponseADM]
 
         // Give the members of the new project rights to modify, view, and restricted view of all resources and values
         // that belong to the project.
-        _ <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
-               createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-                 forProject = projectIri,
-                 forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
-                 hasPermissions = Set(
-                   PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-                   PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+        _ <- appActor
+               .ask(
+                 DefaultObjectAccessPermissionCreateRequestADM(
+                   createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+                     forProject = projectIri,
+                     forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+                     hasPermissions = Set(
+                       PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                       PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+                     )
+                   ).prepareHasPermissions,
+                   featureFactoryConfig = featureFactoryConfig,
+                   requestingUser = requestingUser,
+                   apiRequestID = UUID.randomUUID()
                  )
-               ).prepareHasPermissions,
-               featureFactoryConfig = featureFactoryConfig,
-               requestingUser = requestingUser,
-               apiRequestID = UUID.randomUUID()
-             )).mapTo[DefaultObjectAccessPermissionCreateResponseADM]
+               )
+               .mapTo[DefaultObjectAccessPermissionCreateResponseADM]
       } yield ()
 
     def projectCreateTask(
@@ -1133,7 +1191,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                          )
                                          .toString
 
-        _ <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString))
+        _ <- appActor
+               .ask(SparqlUpdateRequest(createNewProjectSparqlString))
                .mapTo[SparqlUpdateResponse]
 
         // try to retrieve newly created project (will also add to cache)
@@ -1228,10 +1287,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                          .toString()
                      )
 
-      projectResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                           sparql = sparqlQuery,
-                           featureFactoryConfig = featureFactoryConfig
-                         )).mapTo[SparqlExtendedConstructResponse]
+      projectResponse <- appActor
+                           .ask(
+                             SparqlExtendedConstructRequest(
+                               sparql = sparqlQuery,
+                               featureFactoryConfig = featureFactoryConfig
+                             )
+                           )
+                           .mapTo[SparqlExtendedConstructResponse]
 
       projectIris = projectResponse.statements.keySet.map(_.toString)
 
@@ -1363,7 +1426,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                    )
       //_ = log.debug("projectExists - query: {}", askString)
 
-      checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
 
     } yield result
@@ -1383,7 +1446,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                    )
       //_ = log.debug("projectExists - query: {}", askString)
 
-      checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
 
     } yield result
@@ -1403,7 +1466,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                    )
       //_ = log.debug("projectExists - query: {}", askString)
 
-      checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
 
     } yield result
@@ -1412,7 +1475,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * Tries to retrieve a [[ProjectADM]] from the cache.
    */
   private def getProjectFromCache(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
-    val result = (storeManager ? CacheServiceGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
+    val result = appActor.ask(CacheServiceGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
     result.map {
       case Some(project) =>
         log.debug("getProjectFromCache - cache hit for: {}", identifier)
@@ -1430,7 +1493,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @return true if writing was successful.
    */
   private def writeProjectADMToCache(project: ProjectADM): Future[Unit] = {
-    val result = (storeManager ? CacheServicePutProjectADM(project)).mapTo[Unit]
+    val result = appActor.ask(CacheServicePutProjectADM(project)).mapTo[Unit]
     result.map { res =>
       log.debug("writeProjectADMToCache - result: {}", result)
       res

@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateVal
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.ExecutionContext
@@ -49,7 +50,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   def makeValueV1(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
@@ -57,31 +58,31 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
     valueTypeIri match {
       case OntologyConstants.KnoraBase.TextValue =>
-        makeTextValue(valueProps, responderManager, featureFactoryConfig, userProfile)
-      case OntologyConstants.KnoraBase.IntValue      => makeIntValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.DecimalValue  => makeDecimalValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.BooleanValue  => makeBooleanValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.UriValue      => makeUriValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.DateValue     => makeDateValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.ColorValue    => makeColorValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.GeomValue     => makeGeomValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.GeonameValue  => makeGeonameValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.ListValue     => makeListValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.TimeValue     => makeTimeValue(valueProps, responderManager, userProfile)
+        makeTextValue(valueProps, appActor, featureFactoryConfig, userProfile)
+      case OntologyConstants.KnoraBase.IntValue      => makeIntValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.DecimalValue  => makeDecimalValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.BooleanValue  => makeBooleanValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.UriValue      => makeUriValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.DateValue     => makeDateValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.ColorValue    => makeColorValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.GeomValue     => makeGeomValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.GeonameValue  => makeGeonameValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.ListValue     => makeListValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.IntervalValue => makeIntervalValue(valueProps, appActor, userProfile)
+      case OntologyConstants.KnoraBase.TimeValue     => makeTimeValue(valueProps, appActor, userProfile)
       case OntologyConstants.KnoraBase.StillImageFileValue =>
-        makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
+        makeStillImageValue(valueProps, projectShortcode, appActor, userProfile)
       case OntologyConstants.KnoraBase.TextFileValue =>
-        makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
+        makeTextFileValue(valueProps, projectShortcode, appActor, userProfile)
       case OntologyConstants.KnoraBase.AudioFileValue =>
-        makeAudioFileValue(valueProps, projectShortcode, responderManager, userProfile)
+        makeAudioFileValue(valueProps, projectShortcode, appActor, userProfile)
       case OntologyConstants.KnoraBase.MovingImageFileValue =>
-        makeVideoFileValue(valueProps, projectShortcode, responderManager, userProfile)
+        makeVideoFileValue(valueProps, projectShortcode, appActor, userProfile)
       case OntologyConstants.KnoraBase.DocumentFileValue =>
-        makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
+        makeDocumentFileValue(valueProps, projectShortcode, appActor, userProfile)
       case OntologyConstants.KnoraBase.ArchiveFileValue =>
-        makeArchiveFileValue(valueProps, projectShortcode, responderManager, userProfile)
-      case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
+        makeArchiveFileValue(valueProps, projectShortcode, appActor, userProfile)
+      case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, appActor, userProfile)
     }
   }
 
@@ -336,18 +337,23 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     propertyIri: IRI,
     valueType: IRI,
     propertyObjectClassConstraint: IRI,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] =
     if (propertyObjectClassConstraint == valueType) {
       Future.successful(())
     } else {
       for {
-        checkSubClassResponse <- (responderManager ? CheckSubClassRequestV1(
-                                   subClassIri = valueType,
-                                   superClassIri = propertyObjectClassConstraint,
-                                   userProfile = userProfile
-                                 )).mapTo[CheckSubClassResponseV1]
+        checkSubClassResponse <-
+          appActor
+            .ask(
+              CheckSubClassRequestV1(
+                subClassIri = valueType,
+                superClassIri = propertyObjectClassConstraint,
+                userProfile = userProfile
+              )
+            )
+            .mapTo[CheckSubClassResponseV1]
 
         _ = if (!checkSubClassResponse.isSubClass) {
               throw OntologyConstraintException(
@@ -575,7 +581,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return an [[IntegerValueV1]].
    */
-  private def makeIntValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeIntValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -590,7 +596,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DecimalValueV1]].
    */
-  private def makeDecimalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeDecimalValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -605,7 +611,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[BooleanValueV1]].
    */
-  private def makeBooleanValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeBooleanValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -620,7 +626,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[UriValueV1]].
    */
-  private def makeUriValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeUriValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -635,7 +641,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[DateValueV1]].
    */
-  private def makeDateValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeDateValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -660,7 +666,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return an [[IntervalValueV1]].
    */
-  private def makeIntervalValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeIntervalValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -680,7 +686,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[TimeValueV1]].
    */
-  private def makeTimeValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeTimeValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -711,7 +717,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     utf8str: String,
     language: Option[String] = None,
     valueProps: ValueProps,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
@@ -731,15 +737,19 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
       // get the mapping and the related standoff entities
       // v2 responder is used here directly, v1 responder would inernally use v2 responder anyway and do unnecessary back and forth conversions
-      mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                                                 mappingIri = mappingIri,
-                                                 featureFactoryConfig = featureFactoryConfig,
-                                                 requestingUser = userProfile
-                                               )).mapTo[GetMappingResponseV2]
+      mappingResponse: GetMappingResponseV2 <- appActor
+                                                 .ask(
+                                                   GetMappingRequestV2(
+                                                     mappingIri = mappingIri,
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     requestingUser = userProfile
+                                                   )
+                                                 )
+                                                 .mapTo[GetMappingResponseV2]
 
       standoffTags: Seq[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(
                                             standoffAssertions = valueProps.standoff,
-                                            responderManager = responderManager,
+                                            appActor = appActor,
                                             requestingUser = userProfile
                                           )
 
@@ -780,7 +790,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    */
   private def makeTextValue(
     valueProps: ValueProps,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
@@ -800,7 +810,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         utf8str = valueHasString,
         language = valueHasLanguage,
         valueProps = valueProps,
-        responderManager = responderManager,
+        appActor = appActor,
         featureFactoryConfig = featureFactoryConfig,
         userProfile = userProfile
       )
@@ -818,7 +828,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[ColorValueV1]].
    */
-  private def makeColorValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeColorValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -833,7 +843,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[GeomValueV1]].
    */
-  private def makeGeomValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeGeomValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -848,7 +858,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[HierarchicalListValueV1]].
    */
-  private def makeListValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeListValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -866,7 +876,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   private def makeStillImageValue(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
@@ -892,7 +902,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   private def makeTextFileValue(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
@@ -916,7 +926,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   private def makeDocumentFileValue(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
@@ -943,7 +953,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   private def makeArchiveFileValue(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
@@ -967,7 +977,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   private def makeAudioFileValue(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
@@ -994,7 +1004,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   private def makeVideoFileValue(
     valueProps: ValueProps,
     projectShortcode: String,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     userProfile: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
@@ -1023,7 +1033,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[LinkValueV1]].
    */
-  private def makeLinkValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeLinkValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {
@@ -1045,7 +1055,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
    * @return a [[GeonameValueV1]].
    */
-  private def makeGeonameValue(valueProps: ValueProps, responderManager: ActorRef, userProfile: UserADM)(implicit
+  private def makeGeonameValue(valueProps: ValueProps, appActor: ActorRef, userProfile: UserADM)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[ApiValueV1] = {

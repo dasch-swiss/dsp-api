@@ -160,7 +160,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                                           userProfile = userADM,
                                                                           featureFactoryConfig = featureFactoryConfig,
                                                                           settings = settings,
-                                                                          responderManager = responderManager,
+                                                                          appActor = appActor,
                                                                           log = log
                                                                         )
 
@@ -385,7 +385,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                                           userProfile = userADM,
                                                                           featureFactoryConfig = featureFactoryConfig,
                                                                           settings = settings,
-                                                                          responderManager = responderManager,
+                                                                          appActor = appActor,
                                                                           log = log
                                                                         )
 
@@ -603,10 +603,14 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, apiRequest.file)
 
       for {
-        fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                                                           filePath = tempFilePath,
-                                                           requestingUser = userADM
-                                                         )).mapTo[GetFileMetadataResponse]
+        fileMetadataResponse: GetFileMetadataResponse <- appActor
+                                                           .ask(
+                                                             GetFileMetadataRequest(
+                                                               filePath = tempFilePath,
+                                                               requestingUser = userADM
+                                                             )
+                                                           )
+                                                           .mapTo[GetFileMetadataResponse]
       } yield ChangeFileValueRequestV1(
         resourceIri = resourceIri,
         file = RouteUtilV1.makeFileValue(
@@ -634,7 +638,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }
@@ -653,7 +657,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessageFuture,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
         }
@@ -671,7 +675,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       } ~ put {
@@ -705,7 +709,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessageFuture,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
         }
@@ -723,7 +727,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }
@@ -740,7 +744,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }
@@ -758,7 +762,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }
@@ -775,11 +779,15 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                             throw BadRequestException(s"Invalid resource IRI: $resIriStr")
                           )
 
-            resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
-                                      iri = resourceIri,
-                                      featureFactoryConfig = featureFactoryConfig,
-                                      userProfile = userADM
-                                    )).mapTo[ResourceInfoResponseV1]
+            resourceInfoResponse <- appActor
+                                      .ask(
+                                        ResourceInfoGetRequestV1(
+                                          iri = resourceIri,
+                                          featureFactoryConfig = featureFactoryConfig,
+                                          userProfile = userADM
+                                        )
+                                      )
+                                      .mapTo[ResourceInfoResponseV1]
 
             projectShortcode = resourceInfoResponse.resource_info
                                  .getOrElse(throw NotFoundException(s"Resource not found: $resourceIri"))
@@ -797,7 +805,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessage,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
         }

@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+import org.knora.webapi.responders.ResponderManager
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -116,18 +117,21 @@ object ResourceUtilV2 {
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,
     requestingUser: UserADM,
-    responderManager: ActorRef
+    appActor: ActorRef
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] =
     for {
-      defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
-        responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = projectIri,
-          resourceClassIri = resourceClassIri.toString,
-          propertyIri = propertyIri.toString,
-          targetUser = requestingUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-      }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+      defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <-
+        appActor
+          .ask(
+            DefaultObjectAccessPermissionsStringForPropertyGetADM(
+              projectIri = projectIri,
+              resourceClassIri = resourceClassIri.toString,
+              propertyIri = propertyIri.toString,
+              targetUser = requestingUser,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+          )
+          .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
 
   /**
@@ -135,7 +139,7 @@ object ResourceUtilV2 {
    *
    * @param listNodeIri the IRI of the list node.
    */
-  def checkListNodeExists(listNodeIri: IRI, storeManager: ActorRef)(implicit
+  def checkListNodeExists(listNodeIri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[Unit] =
@@ -146,7 +150,7 @@ object ResourceUtilV2 {
                        .toString
                    )
 
-      checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkListNodeExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 
       _ = if (!checkListNodeExistsResponse.result) {
             throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
@@ -167,8 +171,7 @@ object ResourceUtilV2 {
     updateFuture: Future[T],
     valueContent: ValueContentV2,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] =
     // Was this a file value update?
@@ -185,7 +188,7 @@ object ResourceUtilV2 {
             )
 
             // If Sipi succeeds, return the future we were given. Otherwise, return a failed future.
-            (storeManager ? sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
+            appActor.ask(sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
 
           case Failure(_) =>
             // The file value update failed. Ask Sipi to delete the temporary file.
@@ -194,7 +197,7 @@ object ResourceUtilV2 {
               requestingUser = requestingUser
             )
 
-            val sipiResponseFuture: Future[SuccessResponseV2] = (storeManager ? sipiRequest).mapTo[SuccessResponseV2]
+            val sipiResponseFuture: Future[SuccessResponseV2] = appActor.ask(sipiRequest).mapTo[SuccessResponseV2]
 
             // Did Sipi successfully delete the temporary file?
             sipiResponseFuture.transformWith {

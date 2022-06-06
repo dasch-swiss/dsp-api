@@ -8,7 +8,7 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.testkit.ImplicitSender
@@ -63,6 +63,8 @@ import scala.language.postfixOps
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import akka.testkit.TestActorRef
+import org.knora.webapi.responders.ResponderManager
 
 abstract class AsyncCoreSpec(_system: ActorSystem)
     extends TestKit(_system)
@@ -113,7 +115,7 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
   StringFormatter.initForTest()
   RdfFeatureFactory.init(settings)
 
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: Logger = Logger(this.getClass)
 
   // The ZIO runtime used to run functional effects
   val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
@@ -153,16 +155,12 @@ abstract class AsyncCoreSpec(_system: ActorSystem)
           )
       )
 
-  // start the Application Actor
+  // start the Application Actor.
   lazy val appActor: ActorRef =
     system.actorOf(
       Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
-
-  // The main application actor forwards messages to the responder manager and the store manager.
-  val responderManager: ActorRef = appActor
-  val storeManager: ActorRef     = appActor
 
   val responderData: ResponderData = ResponderData(
     system = system,

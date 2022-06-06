@@ -6,6 +6,7 @@
 package org.knora.webapi.app
 
 import akka.actor.Actor
+import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.OneForOneStrategy
@@ -13,6 +14,7 @@ import akka.actor.Props
 import akka.actor.Stash
 import akka.actor.SupervisorStrategy._
 import akka.actor.Timers
+import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -32,7 +34,7 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
-import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.ResponderRequest._
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
@@ -44,8 +46,6 @@ import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
-import org.knora.webapi.messages.v2.responder.KnoraRequestV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.ResponderManager
@@ -61,6 +61,7 @@ import org.knora.webapi.store.StoreManager
 import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
 
@@ -88,9 +89,10 @@ class ApplicationActor(
     with AroundDirectives
     with Timers {
 
-  logger.debug("entered the ApplicationManager constructor")
-
   implicit val system: ActorSystem = context.system
+  val log                          = logger
+
+  log.debug("entered the ApplicationManager constructor")
 
   /**
    * The application's configuration.
@@ -123,31 +125,14 @@ class ApplicationActor(
   implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
 
   /**
-   * Route data.
+   * Data used in responders.
    */
-  private val routeData = KnoraRouteData(
-    system = system,
-    appActor = self
-  )
+  val responderData: ResponderData = ResponderData(system, self, knoraSettings, cacheServiceSettings)
 
   /**
-   * The actor that forwards messages to responder actors to handle API requests.
+   * The object that forwards messages to responder instances to handle API requests.
    */
-  lazy val responderManager: ActorRef = context.actorOf(
-    Props(
-      new ResponderManager(
-        appActor = self,
-        responderData = ResponderData(
-          system = context.system,
-          appActor = self,
-          knoraSettings = KnoraSettings(system),
-          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
-        )
-      ) with LiveActorMaker
-    )
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = RESPONDER_MANAGER_ACTOR_NAME
-  )
+  val responderManager: ResponderManager = ResponderManager(responderData)
 
   /**
    * The actor that forwards messages to actors that deal with persistent storage.
@@ -156,6 +141,14 @@ class ApplicationActor(
     Props(new StoreManager(self, cacheServiceManager, iiifServiceManager, appConfig) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
+  )
+
+  /**
+   * Route data.
+   */
+  private val routeData = KnoraRouteData(
+    system = system,
+    appActor = self
   )
 
   /**
@@ -168,13 +161,13 @@ class ApplicationActor(
       case _: NullPointerException     => Restart
       case _: IllegalArgumentException => Stop
       case e: InconsistentRepositoryDataException =>
-        logger.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: {}", e.message)
+        log.info(s"Received a 'InconsistentTriplestoreDataException', will shutdown now. Cause: ${e.message}")
         Stop
       case e: SipiException =>
-        logger.warn(s"Received a 'SipiException', will continue. Cause: {}", e.message)
+        log.warn(s"Received a 'SipiException', will continue. Cause: ${e.message}")
         Resume
       case _: JedisConnectionException =>
-        logger.warn(s"Received a 'JedisConnectionException', will continue. Probably the Redis-Server is not running.")
+        log.warn(s"Received a 'JedisConnectionException', will continue. Probably the Redis-Server is not running.")
         Resume
       case _: Exception => Escalate
     }
@@ -200,13 +193,13 @@ class ApplicationActor(
   def initializing(): Receive = {
     /* Called from main. Initiates application startup. */
     case appStartMsg: AppStart =>
-      logger.info("==> AppStart")
+      log.info("==> AppStart")
       appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService, appStartMsg.retryCnt)
     case AppStop() =>
-      logger.info("==> AppStop")
+      log.info("==> AppStop")
       appStop()
     case AppReady() =>
-      logger.info("==> AppReady")
+      log.info("==> AppReady")
       unstashAll() // unstash any messages, so that they can be processed
       context.become(ready(), discardOld = true)
     case _ =>
@@ -220,7 +213,7 @@ class ApplicationActor(
 
     /* Called from the "appStart" method. Entry point for startup sequence. */
     case initStartUp: InitStartUp =>
-      logger.info("=> InitStartUp")
+      log.info("=> InitStartUp")
 
       if (appState == AppStates.Stopped) {
         ignoreRepository = initStartUp.ignoreRepository
@@ -232,7 +225,7 @@ class ApplicationActor(
     /* Each app state change goes through here */
     case SetAppState(value: AppState) =>
       appState = value
-      logger.debug("appStateChanged - to state: {}", value)
+      log.debug("appStateChanged - to state: {}", value)
       value match {
         case AppStates.Stopped =>
         // do nothing
@@ -305,7 +298,7 @@ class ApplicationActor(
           self ! SetAppState(AppStates.Running)
 
         case AppStates.Running =>
-          logger.info("=> Running")
+          log.info("=> Running")
           printBanner()
 
         case AppStates.MaintenanceMode =>
@@ -319,26 +312,26 @@ class ApplicationActor(
       }
 
     case GetAppState() =>
-      logger.debug("ApplicationStateActor - GetAppState - value: {}", appState)
+      log.debug("ApplicationStateActor - GetAppState - value: {}", appState)
       sender() ! appState
 
     case ActorReady() =>
       sender() ! ActorReadyAck()
 
     case SetAllowReloadOverHTTPState(value) =>
-      logger.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
+      log.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
       allowReloadOverHTTPState = value
 
     case GetAllowReloadOverHTTPState() =>
-      logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
+      log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
       sender() ! (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP)
 
     case SetPrintConfigExtendedState(value) =>
-      logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
+      log.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
       printConfigState = value
 
     case GetPrintConfigExtendedState() =>
-      logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
+      log.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
       sender() ! (printConfigState | knoraSettings.printExtendedConfig)
 
     /* check repository request */
@@ -351,12 +344,12 @@ class ApplicationActor(
         case TriplestoreStatus.ServiceAvailable =>
           self ! SetAppState(AppStates.TriplestoreReady)
         case TriplestoreStatus.NotInitialized =>
-          logger.warn(s"checkRepository - status: {}, message: {}", status, message)
-          logger.warn("Please initialize repository.")
+          log.warn(s"checkRepository - status: $status, message: $message")
+          log.warn("Please initialize repository.")
           timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
         case TriplestoreStatus.ServiceUnavailable =>
-          logger.warn(s"checkRepository - status: {}, message: {}", status, message)
-          logger.warn("Please start repository.")
+          log.warn(s"checkRepository - status: $status, message: $status")
+          log.warn("Please start repository.")
           timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
       }
 
@@ -364,7 +357,7 @@ class ApplicationActor(
       storeManager ! UpdateRepositoryRequest()
 
     case RepositoryUpdatedResponse(message) =>
-      logger.info(message)
+      log.info(message)
       self ! SetAppState(AppStates.RepositoryUpToDate)
 
     /* create caches request */
@@ -380,7 +373,7 @@ class ApplicationActor(
 
     /* load ontologies request */
     case LoadOntologies() =>
-      responderManager ! LoadOntologiesRequestV2(
+      self ! LoadOntologiesRequestV2(
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
@@ -396,7 +389,7 @@ class ApplicationActor(
       self ! SetAppState(AppStates.IIIFServiceReady)
 
     case IIIFServiceStatusNOK if withIIIFService =>
-      logger.warn("Sipi not running. Please start it.")
+      log.warn("Sipi not running. Please start it.")
       timers.startSingleTimer("CheckIIIFService", CheckIIIFService, 5.seconds)
 
     case CheckCacheService =>
@@ -406,19 +399,19 @@ class ApplicationActor(
       self ! SetAppState(AppStates.CacheServiceReady)
 
     case CacheServiceStatusNOK =>
-      logger.warn("Redis server not running. Please start it.")
+      log.warn("Redis server not running. Please start it.")
       timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
     // Forward messages to the responder manager and the store manager.
-    case responderMessage: KnoraRequestV1  => responderManager forward responderMessage
-    case responderMessage: KnoraRequestV2  => responderManager forward responderMessage
-    case responderMessage: KnoraRequestADM => responderManager forward responderMessage
+    case responderMessage: KnoraRequestV1  => future2Message(sender(), responderManager.receive(responderMessage), log)
+    case responderMessage: KnoraRequestV2  => future2Message(sender(), responderManager.receive(responderMessage), log)
+    case responderMessage: KnoraRequestADM => future2Message(sender(), responderManager.receive(responderMessage), log)
     case storeMessage: StoreRequest        => storeManager forward storeMessage
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {
         case MissingLastModificationDateOntologyException(_, _) =>
-          logger.info("Application stopped because of loading ontology into the cache failed.")
+          log.info("Application stopped because of loading ontology into the cache failed.")
           appStop()
         case _ => throw ex
       }
@@ -499,7 +492,7 @@ class ApplicationActor(
 
       case Failure(ex) =>
         if (retryCnt < 5) {
-          logger.error(
+          log.error(
             "Failed to bind to {}:{}! - {} - retryCnt: {}",
             knoraSettings.internalKnoraApiHost,
             knoraSettings.internalKnoraApiPort,
@@ -512,7 +505,7 @@ class ApplicationActor(
             self ! AppStart(ignoreRepository, requiresIIIFService, retryCnt + 1)
           }
         } else {
-          logger.error(
+          log.error(
             "Failed to bind to {}:{}! - {}",
             knoraSettings.internalKnoraApiHost,
             knoraSettings.internalKnoraApiPort,
@@ -527,17 +520,17 @@ class ApplicationActor(
    * Stops Knora-API.
    */
   def appStop(): Unit = {
-    logger.info("ApplicationActor - initiating shutdown ...")
+    log.info("ApplicationActor - initiating shutdown ...")
     context.stop(self)
   }
 
   override def postStop(): Unit = {
     super.postStop()
-    logger.info("ApplicationActor - ... shutdown in progress, initiating post stop cleanup...")
+    log.info("ApplicationActor - ... shutdown in progress, initiating post stop cleanup...")
 
     CacheUtil.removeAllCaches()
 
-    logger.info("ApplicationActor - ... Bye!")
+    log.info("ApplicationActor - ... Bye!")
 
     Http().shutdownAllConnectionPools() andThen { case _ => system.terminate() }
   }

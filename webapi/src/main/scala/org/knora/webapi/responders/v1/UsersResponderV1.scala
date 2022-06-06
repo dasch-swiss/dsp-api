@@ -85,7 +85,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      usersResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       usersResponseRows: Seq[VariableResultsRow] = usersResponse.results.bindings
 
@@ -144,7 +144,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       maybeUserDataV1 <- userDataQueryResponse2UserDataV1(userDataQueryResponse, short)
 
@@ -185,7 +185,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
           // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-          userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+          userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
                                   userDataQueryResponse = userDataQueryResponse,
@@ -267,7 +267,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                )
           //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
-          userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+          userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
           //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
@@ -339,7 +339,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -379,7 +379,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -418,7 +418,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -542,21 +542,30 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       for {
         /* get the user's permission profile from the permissions responder */
-        permissionData <- (responderManager ? PermissionDataGetADM(
-                            projectIris = projectIris,
-                            groupIris = groupIris,
-                            isInProjectAdminGroups = isInProjectAdminGroups,
-                            isInSystemAdminGroup = isInSystemAdminGroup,
-                            featureFactoryConfig = featureFactoryConfig,
-                            requestingUser = KnoraSystemInstances.Users.SystemUser
-                          )).mapTo[PermissionsDataADM]
+        permissionData <- appActor
+                            .ask(
+                              PermissionDataGetADM(
+                                projectIris = projectIris,
+                                groupIris = groupIris,
+                                isInProjectAdminGroups = isInProjectAdminGroups,
+                                isInSystemAdminGroup = isInSystemAdminGroup,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                              )
+                            )
+                            .mapTo[PermissionsDataADM]
 
         maybeProjectInfoFutures: Seq[Future[Option[ProjectInfoV1]]] = projectIris.map { projectIri =>
-                                                                        (responderManager ? ProjectInfoByIRIGetV1(
-                                                                          iri = projectIri,
-                                                                          featureFactoryConfig = featureFactoryConfig,
-                                                                          userProfileV1 = None
-                                                                        )).mapTo[Option[ProjectInfoV1]]
+                                                                        appActor
+                                                                          .ask(
+                                                                            ProjectInfoByIRIGetV1(
+                                                                              iri = projectIri,
+                                                                              featureFactoryConfig =
+                                                                                featureFactoryConfig,
+                                                                              userProfileV1 = None
+                                                                            )
+                                                                          )
+                                                                          .mapTo[Option[ProjectInfoV1]]
                                                                       }
 
         maybeProjectInfos: Seq[Option[ProjectInfoV1]] <- Future.sequence(maybeProjectInfoFutures)
@@ -593,7 +602,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                    )
       // _ = log.debug("userExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -613,7 +622,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                    )
       // _ = log.debug("projectExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -632,7 +641,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         )
       // _ = log.debug("groupExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result

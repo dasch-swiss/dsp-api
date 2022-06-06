@@ -31,6 +31,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.ResponderManager
 
 import java.net.URLEncoder
 import scala.concurrent.Await
@@ -213,7 +214,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                          .ckanDokubib(projectIri, limit)
                          .toString()
                      )
-      response                             <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                             <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       responseRows: Seq[VariableResultsRow] = response.results.bindings
 
       bilder: Seq[String] = responseRows.groupBy(_.rowMap("bild")).keys.toVector
@@ -333,7 +334,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                          .ckanIncunabula(projectIri, limit)
                          .toString()
                      )
-      response                             <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                             <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       responseRows: Seq[VariableResultsRow] = response.results.bindings
 
       booksWithPages: Map[String, Seq[String]] =
@@ -374,11 +375,15 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
       for {
         pName <- projectNames
 
-        projectInfoResponseFuture = (responderManager ? ProjectInfoByShortnameGetRequestV1(
-                                      shortname = pName,
-                                      featureFactoryConfig = featureFactoryConfig,
-                                      userProfileV1 = Some(userProfile.asUserProfileV1)
-                                    )).mapTo[ProjectInfoResponseV1]
+        projectInfoResponseFuture = appActor
+                                      .ask(
+                                        ProjectInfoByShortnameGetRequestV1(
+                                          shortname = pName,
+                                          featureFactoryConfig = featureFactoryConfig,
+                                          userProfileV1 = Some(userProfile.asUserProfileV1)
+                                        )
+                                      )
+                                      .mapTo[ProjectInfoResponseV1]
 
         result = projectInfoResponseFuture.map(_.project_info) map { pInfo =>
                    (pName, pInfo)
@@ -410,7 +415,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                          )
                          .toString()
                      )
-      resourcesResponse                             <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      resourcesResponse                             <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       resourcesResponseRows: Seq[VariableResultsRow] = resourcesResponse.results.bindings
       resIri                                         = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
       result = limit match {
@@ -458,11 +463,16 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     userProfile: UserADM
   ): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
-    val resourceFullResponseFuture = (responderManager ? ResourceFullGetRequestV1(
-      iri = iri,
-      featureFactoryConfig = featureFactoryConfig,
-      userADM = userProfile
-    )).mapTo[ResourceFullResponseV1]
+    val resourceFullResponseFuture =
+      appActor
+        .ask(
+          ResourceFullGetRequestV1(
+            iri = iri,
+            featureFactoryConfig = featureFactoryConfig,
+            userADM = userProfile
+          )
+        )
+        .mapTo[ResourceFullResponseV1]
 
     resourceFullResponseFuture map { case ResourceFullResponseV1(resInfo, _, props, _, _) =>
       (iri, resInfo, props)
@@ -513,12 +523,10 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
             propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
 
           case OntologyConstants.KnoraBase.ListValue =>
-            propertyV1.values.map(literal =>
-              listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderManager)
-            )
+            propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], appActor))
 
           case OntologyConstants.KnoraBase.Resource => // TODO: this could actually be a subclass of knora-base:Resource.
-            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], responderManager))
+            propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1], appActor))
 
           case _ => Vector()
         }
@@ -545,9 +553,9 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
       date.dateval1.toString + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
     }
 
-  private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorRef): String = {
+  private def listValue2String(list: HierarchicalListValueV1, appActor: ActorRef): String = {
 
-    val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
+    val resultFuture = appActor.ask(NodePathGetRequestV1(list.hierarchicalListIri, systemUser))
     val nodePath     = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
     val labels = nodePath.nodelist map { case element =>
@@ -557,7 +565,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     labels.mkString(" / ")
   }
 
-  private def resourceValue2String(resource: LinkV1, responderManager: ActorRef): String =
+  private def resourceValue2String(resource: LinkV1, appActor: ActorRef): String =
     resource.valueLabel.get
 
 }

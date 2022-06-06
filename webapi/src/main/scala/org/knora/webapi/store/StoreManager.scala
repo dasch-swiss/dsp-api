@@ -26,6 +26,7 @@ import org.knora.webapi.store.triplestore.TriplestoreManager
 import org.knora.webapi.util.ActorUtil
 
 import scala.concurrent.ExecutionContext
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This actor receives messages for different stores, and forwards them to the corresponding store manager.
@@ -41,7 +42,7 @@ class StoreManager(
   iiifsm: IIIFServiceManager,
   appConfig: AppConfig
 ) extends Actor
-    with ActorLogging {
+    with LazyLogging {
   this: ActorMaker =>
 
   /**
@@ -80,8 +81,8 @@ class StoreManager(
   )
 
   def receive: Receive = LoggingReceive {
-    case req: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(req), log, appConfig)
-    case req: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifsm.receive(req), log, appConfig)
+    case req: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(req), appConfig)
+    case req: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifsm.receive(req), appConfig)
     case req: TriplestoreRequest  => triplestoreManager forward req
     case other =>
       sender() ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))

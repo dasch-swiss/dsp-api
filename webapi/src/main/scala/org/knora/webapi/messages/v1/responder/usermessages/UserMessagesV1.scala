@@ -12,7 +12,7 @@ import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProtocol

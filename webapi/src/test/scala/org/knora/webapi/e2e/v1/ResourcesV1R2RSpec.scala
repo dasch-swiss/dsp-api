@@ -608,7 +608,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getDirectLinksSPARQL(firstThingIri.get)
 
-      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
         case response: SparqlSelectResult =>
           val ref: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
@@ -625,7 +625,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getRefCountsSPARQL(firstThingIri.get)
 
-      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
         case response: SparqlSelectResult =>
           val refCnt: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
@@ -882,7 +882,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getDirectLinksSPARQL(thirdThingIri.get)
 
-      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
         case response: SparqlSelectResult =>
           val ref1: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
@@ -905,7 +905,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getRefCountsSPARQL(thirdThingIri.get)
 
-      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
         case response: SparqlSelectResult =>
           val refCnt1: Boolean = response.results.bindings.exists { row: VariableResultsRow =>

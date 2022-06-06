@@ -180,7 +180,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                                       userProfile = userProfile,
                                                                       featureFactoryConfig = featureFactoryConfig,
                                                                       settings = settings,
-                                                                      responderManager = responderManager,
+                                                                      appActor = appActor,
                                                                       log = log
                                                                     )
 
@@ -320,11 +320,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       for {
         projectShortcode: String <- for {
                                       projectResponse: ProjectGetResponseADM <-
-                                        (responderManager ? ProjectGetRequestADM(
-                                          ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                          featureFactoryConfig = featureFactoryConfig,
-                                          requestingUser = userADM
-                                        )).mapTo[ProjectGetResponseADM]
+                                        appActor
+                                          .ask(
+                                            ProjectGetRequestADM(
+                                              ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              requestingUser = userADM
+                                            )
+                                          )
+                                          .mapTo[ProjectGetResponseADM]
                                     } yield projectResponse.project.shortcode
 
         file: Option[FileValueV1] <- apiRequest.file match {
@@ -334,10 +338,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                                          for {
                                            fileMetadataResponse: GetFileMetadataResponse <-
-                                             (storeManager ? GetFileMetadataRequest(
-                                               filePath = tempFilePath,
-                                               requestingUser = userADM
-                                             )).mapTo[GetFileMetadataResponse]
+                                             appActor
+                                               .ask(
+                                                 GetFileMetadataRequest(
+                                                   filePath = tempFilePath,
+                                                   requestingUser = userADM
+                                                 )
+                                               )
+                                               .mapTo[GetFileMetadataResponse]
                                          } yield Some(
                                            RouteUtilV1.makeFileValue(
                                              filename = filename,
@@ -394,10 +402,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                              val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, filename)
 
                              for {
-                               fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                                                                                  filePath = tempFilePath,
-                                                                                  requestingUser = userProfile
-                                                                                )).mapTo[GetFileMetadataResponse]
+                               fileMetadataResponse: GetFileMetadataResponse <- appActor
+                                                                                  .ask(
+                                                                                    GetFileMetadataRequest(
+                                                                                      filePath = tempFilePath,
+                                                                                      requestingUser = userProfile
+                                                                                    )
+                                                                                  )
+                                                                                  .mapTo[GetFileMetadataResponse]
                              } yield Some(
                                RouteUtilV1.makeFileValue(
                                  filename = filename,
@@ -443,11 +455,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       for {
         projectShortcode: String <- for {
                                       projectResponse: ProjectGetResponseADM <-
-                                        (responderManager ? ProjectGetRequestADM(
-                                          identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
-                                          featureFactoryConfig = featureFactoryConfig,
-                                          requestingUser = userProfile
-                                        )).mapTo[ProjectGetResponseADM]
+                                        appActor
+                                          .ask(
+                                            ProjectGetRequestADM(
+                                              identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              requestingUser = userProfile
+                                            )
+                                          )
+                                          .mapTo[ProjectGetResponseADM]
                                     } yield projectResponse.project.shortcode
 
         resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
@@ -526,17 +542,26 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         for {
           // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
-          initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(
-                                                             initialOntologyIri,
-                                                             userProfile
-                                                           )).mapTo[NamedGraphEntityInfoV1]
+          initialNamedGraphInfo: NamedGraphEntityInfoV1 <- appActor
+                                                             .ask(
+                                                               NamedGraphEntityInfoRequestV1(
+                                                                 initialOntologyIri,
+                                                                 userProfile
+                                                               )
+                                                             )
+                                                             .mapTo[NamedGraphEntityInfoV1]
 
           // Get details about those classes and properties.
-          entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                                                           resourceClassIris = initialNamedGraphInfo.resourceClasses,
-                                                           propertyIris = initialNamedGraphInfo.propertyIris,
-                                                           userProfile = userProfile
-                                                         )).mapTo[EntityInfoGetResponseV1]
+          entityInfoResponse: EntityInfoGetResponseV1 <-
+            appActor
+              .ask(
+                EntityInfoGetRequestV1(
+                  resourceClassIris = initialNamedGraphInfo.resourceClasses,
+                  propertyIris = initialNamedGraphInfo.propertyIris,
+                  userProfile = userProfile
+                )
+              )
+              .mapTo[EntityInfoGetResponseV1]
 
           // Look at the base classes of all the resource classes in the initial ontology. Make a set of
           // the ontologies containing the definitions of those classes, not including including the initial ontology itself
@@ -614,10 +639,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       for {
         // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
-        knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(
-                                      OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
-                                      userProfile
-                                    )).mapTo[NamedGraphEntityInfoV1]
+        knoraBaseGraphEntityInfo <- appActor
+                                      .ask(
+                                        NamedGraphEntityInfoRequestV1(
+                                          OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
+                                          userProfile
+                                        )
+                                      )
+                                      .mapTo[NamedGraphEntityInfoV1]
 
         // Recursively get NamedGraphEntityInfoV1 instances for the main ontology to be used in the XML import,
         // as well as any other project-specific ontologies it depends on.
@@ -685,11 +714,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entityInfoResponseFutures: immutable.Iterable[Future[(IRI, EntityInfoGetResponseV1)]] =
           namedGraphInfos.map { case (ontologyIri: IRI, namedGraphInfo: NamedGraphEntityInfoV1) =>
             for {
-              entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                                                               resourceClassIris = namedGraphInfo.resourceClasses,
-                                                               propertyIris = namedGraphInfo.propertyIris,
-                                                               userProfile = userProfile
-                                                             )).mapTo[EntityInfoGetResponseV1]
+              entityInfoResponse: EntityInfoGetResponseV1 <- appActor
+                                                               .ask(
+                                                                 EntityInfoGetRequestV1(
+                                                                   resourceClassIris = namedGraphInfo.resourceClasses,
+                                                                   propertyIris = namedGraphInfo.propertyIris,
+                                                                   userProfile = userProfile
+                                                                 )
+                                                               )
+                                                               .mapTo[EntityInfoGetResponseV1]
             } yield ontologyIri -> entityInfoResponse
           }
 
@@ -1251,7 +1284,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
       } ~ post {
@@ -1275,7 +1308,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1302,7 +1335,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1319,7 +1352,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1353,7 +1386,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           viewHandler = ResourceHtmlView.propertiesHtmlView,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -1374,7 +1407,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
 
@@ -1407,7 +1440,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1430,7 +1463,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1450,7 +1483,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           requestMessage = msg,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -1515,7 +1548,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )(timeout = settings.triplestoreUpdateTimeout, executionContext = executionContext)
         }

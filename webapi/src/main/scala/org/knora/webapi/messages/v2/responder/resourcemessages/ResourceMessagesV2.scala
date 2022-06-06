@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
@@ -14,6 +14,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -30,6 +31,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.util._
 
 import java.time.Instant
@@ -692,11 +694,10 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -721,11 +722,15 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                              )
 
       projectInfoResponse: ProjectGetResponseADM <-
-        (responderManager ? ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )).mapTo[ProjectGetResponseADM]
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       _ = maybeCustomResourceIri.foreach { iri =>
             if (!iri.isKnoraResourceIri) {
@@ -758,7 +763,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                                                requestedUserIri = attachedToUserIri.toString,
                                                                projectIri = projectIri.toString,
                                                                featureFactoryConfig = featureFactoryConfig,
-                                                               responderManager = responderManager
+                                                               appActor = appActor
                                                              )
                                                            }
 
@@ -800,8 +805,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
               valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
                                                 jsonLDObject = valueJsonLDObject,
                                                 requestingUser = requestingUser,
-                                                responderManager = responderManager,
-                                                storeManager = storeManager,
+                                                appActor = appActor,
                                                 featureFactoryConfig = featureFactoryConfig,
                                                 settings = settings,
                                                 log = log
@@ -912,11 +916,10 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1110,11 +1113,10 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteOrEraseResourceRequestV2] =
     Future {
       fromJsonLDSync(

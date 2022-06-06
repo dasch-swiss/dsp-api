@@ -34,7 +34,7 @@ trait HealthCheck {
   protected def healthCheck(): Future[HttpResponse] =
     for {
 
-      state: AppState <- (applicationActor ? GetAppState()).mapTo[AppState]
+      state: AppState <- appActor.ask(GetAppState()).mapTo[AppState]
 
       result: HealthCheckResult = state match {
                                     case AppStates.Stopped    => unhealthy("Stopped. Please retry later.")

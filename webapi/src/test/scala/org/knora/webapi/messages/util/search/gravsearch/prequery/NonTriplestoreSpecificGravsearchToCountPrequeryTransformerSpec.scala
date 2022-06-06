@@ -21,6 +21,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import org.knora.webapi.responders.ResponderManager
+import akka.actor.ActorRef
 
 private object CountQueryHandler {
 
@@ -30,13 +32,15 @@ private object CountQueryHandler {
 
   def transformQuery(
     query: String,
+    appActor: ActorRef,
     responderData: ResponderData,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 
-    val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+    val typeInspectionRunner =
+      new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
 
     val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)
 
@@ -340,6 +344,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       val transformedQuery =
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
+          appActor,
           responderData,
           defaultFeatureFactoryConfig
         )
@@ -353,6 +358,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       val transformedQuery =
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
+          appActor,
           responderData,
           defaultFeatureFactoryConfig
         )

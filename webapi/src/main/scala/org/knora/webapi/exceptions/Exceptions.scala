@@ -5,7 +5,7 @@
 
 package org.knora.webapi.exceptions
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.SerializationException
 import org.apache.commons.lang3.SerializationUtils
 
@@ -194,7 +194,7 @@ case class AuthenticationException(
 ) extends InternalServerException(message)
 
 object AuthenticationException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): AuthenticationException =
+  def apply(message: String, e: Throwable, log: Logger): AuthenticationException =
     AuthenticationException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -245,7 +245,7 @@ case class StandoffInternalException(message: String, cause: Option[Throwable] =
     extends InternalServerException(message, cause)
 
 object StandoffInternalException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): StandoffInternalException =
+  def apply(message: String, e: Throwable, log: Logger): StandoffInternalException =
     StandoffInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -259,7 +259,7 @@ case class AssertionException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
 object AssertionException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): AssertionException =
+  def apply(message: String, e: Throwable, log: Logger): AssertionException =
     AssertionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -282,7 +282,7 @@ case class TriplestoreConnectionException(message: String, cause: Option[Throwab
     extends TriplestoreException(message, cause)
 
 object TriplestoreConnectionException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreConnectionException =
+  def apply(message: String, e: Throwable, log: Logger): TriplestoreConnectionException =
     TriplestoreConnectionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -296,7 +296,7 @@ case class TriplestoreTimeoutException(message: String, cause: Option[Throwable]
     extends TriplestoreException(message, cause)
 
 object TriplestoreTimeoutException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreTimeoutException =
+  def apply(message: String, e: Throwable, log: Logger): TriplestoreTimeoutException =
     TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -310,7 +310,7 @@ case class TriplestoreUnsupportedFeatureException(message: String, cause: Option
     extends TriplestoreException(message, cause)
 
 object TriplestoreUnsupportedFeatureException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreUnsupportedFeatureException =
+  def apply(message: String, e: Throwable, log: Logger): TriplestoreUnsupportedFeatureException =
     TriplestoreUnsupportedFeatureException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -324,7 +324,7 @@ case class TriplestoreInternalException(message: String, cause: Option[Throwable
     extends TriplestoreException(message, cause)
 
 object TriplestoreInternalException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreInternalException =
+  def apply(message: String, e: Throwable, log: Logger): TriplestoreInternalException =
     TriplestoreInternalException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -338,7 +338,7 @@ case class TriplestoreResponseException(message: String, cause: Option[Throwable
     extends TriplestoreException(message, cause)
 
 object TriplestoreResponseException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreResponseException =
+  def apply(message: String, e: Throwable, log: Logger): TriplestoreResponseException =
     TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -351,7 +351,7 @@ case class InconsistentRepositoryDataException(message: String, cause: Option[Th
     extends InternalServerException(message, cause)
 
 object InconsistentRepositoryDataException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): InconsistentRepositoryDataException =
+  def apply(message: String, e: Throwable, log: Logger): InconsistentRepositoryDataException =
     InconsistentRepositoryDataException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -368,7 +368,7 @@ case class InvalidApiJsonException(message: String, cause: Option[Throwable] = N
     extends InternalServerException(message, cause)
 
 object InvalidApiJsonException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): InvalidApiJsonException =
+  def apply(message: String, e: Throwable, log: Logger): InvalidApiJsonException =
     InvalidApiJsonException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
@@ -447,7 +447,7 @@ case class SipiException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
 object SipiException {
-  def apply(message: String, e: Throwable, log: LoggingAdapter): SipiException =
+  def apply(message: String, e: Throwable, log: Logger): SipiException =
     SipiException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 
   def apply(message: String, e: Throwable): SipiException =
@@ -533,11 +533,11 @@ object ExceptionUtil {
    * @param e the exception to be checked.
    * @return the same exception, or a [[WrapperException]].
    */
-  def logAndWrapIfNotSerializable(e: Throwable, log: LoggingAdapter): Throwable =
+  def logAndWrapIfNotSerializable(e: Throwable, log: Logger): Throwable =
     if (isSerializable(e)) {
       e
     } else {
-      log.error(e, e.toString)
+      log.error(e.toString)
       WrapperException(e)
     }
 }

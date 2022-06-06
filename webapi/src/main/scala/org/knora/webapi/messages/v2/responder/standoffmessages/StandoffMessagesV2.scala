@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.v2.responder.standoffmessages
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.AssertionException
@@ -20,8 +20,9 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.KnoraRequestV2
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant
@@ -158,11 +159,10 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
     Future {
       fromJsonLDSync(

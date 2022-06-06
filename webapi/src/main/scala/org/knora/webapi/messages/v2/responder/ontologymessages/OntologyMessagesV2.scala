@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi
-package messages.v2.responder.ontologymessages
+package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
 
@@ -16,22 +15,25 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import exceptions.{
+import org.knora.webapi._
+import org.knora.webapi.exceptions.{
   AssertionException,
   BadRequestException,
   DataConversionException,
   InconsistentRepositoryDataException
 }
-import feature.FeatureFactoryConfig
-import messages.IriConversions._
-import messages.admin.responder.usersmessages.UserADM
-import messages.store.triplestoremessages._
-import messages.util.rdf._
-import messages.v2.responder._
-import messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
-import messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import messages.{OntologyConstants, SmartIri, StringFormatter}
-import settings.KnoraSettingsImpl
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.responders.ResponderManager
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -96,11 +98,10 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] =
     Future {
       fromJsonLDSync(
@@ -415,11 +416,10 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] =
     Future {
       fromJsonLDSync(
@@ -520,11 +520,10 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] =
     Future {
       fromJsonLDSync(
@@ -604,11 +603,10 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] =
     Future {
       fromJsonLDSync(
@@ -699,11 +697,10 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] =
     Future {
       fromJsonLDSync(
@@ -775,11 +772,10 @@ object CanDeleteCardinalitiesFromClassRequestV2
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CanDeleteCardinalitiesFromClassRequestV2] =
     Future {
       fromJsonLDSync(
@@ -850,11 +846,10 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteCardinalitiesFromClassRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1003,11 +998,10 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
     Future {
       fromJsonLDSync(
@@ -1111,11 +1105,10 @@ object ChangePropertyLabelsOrCommentsRequestV2
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1179,8 +1172,7 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActor             a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1190,11 +1182,10 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1269,11 +1260,10 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1337,8 +1327,7 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActor             a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1348,11 +1337,10 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1397,11 +1385,10 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1483,11 +1470,10 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] =
     Future {
       fromJsonLDSync(

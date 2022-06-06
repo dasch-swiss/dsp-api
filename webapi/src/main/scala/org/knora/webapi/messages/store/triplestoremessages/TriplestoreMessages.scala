@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi._
@@ -117,13 +117,13 @@ object SparqlExtendedConstructResponse {
    *
    * @param turtleStr     the Turtle document.
    * @param rdfFormatUtil an [[RdfFormatUtil]].
-   * @param log           a [[LoggingAdapter]].
+   * @param log           a [[Logger]].
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(
     turtleStr: String,
     rdfFormatUtil: RdfFormatUtil,
-    log: LoggingAdapter
+    log: Logger
   ): Try[SparqlExtendedConstructResponse] = {
     val parseTry = Try {
       implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -207,7 +207,7 @@ object SparqlExtendedConstructResponse {
     parseTry match {
       case Success(parsed) => Success(parsed)
       case Failure(e) =>
-        log.error(e, s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter")
+        log.error(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter, ${e.toString()}")
         Failure(DataConversionException("Couldn't parse Turtle document"))
     }
   }

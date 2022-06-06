@@ -174,7 +174,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
       // _ = println("================" + pagingSparql)
 
-      searchResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
+      searchResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
 
       // Get the IRIs of all the properties mentioned in the search results.
       propertyIris: Set[IRI] = searchResponse.results.bindings.flatMap(_.rowMap.get("resourceProperty")).toSet
@@ -190,7 +190,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             userProfile = searchGetRequest.userProfile
                           )
 
-      entityInfoResponse <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+      entityInfoResponse <- appActor.ask(entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
       // Group the search results by resource IRI.
       groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings
@@ -354,10 +354,14 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
     for {
       // get information about all the properties involved
-      propertyInfo: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                                                 propertyIris = searchGetRequest.propertyIri.toSet,
-                                                 userProfile = searchGetRequest.userProfile
-                                               )).mapTo[EntityInfoGetResponseV1]
+      propertyInfo: EntityInfoGetResponseV1 <- appActor
+                                                 .ask(
+                                                   EntityInfoGetRequestV1(
+                                                     propertyIris = searchGetRequest.propertyIri.toSet,
+                                                     userProfile = searchGetRequest.userProfile
+                                                   )
+                                                 )
+                                                 .mapTo[EntityInfoGetResponseV1]
 
       /*
        * handle parallel lists here: propertyIri, comparisonOperator, SearchValue
@@ -582,7 +586,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
       // _ = println(searchSparql)
 
-      searchResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
+      searchResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
 
       // Collect all the resource class IRIs mentioned in the search results.
       resourceClassIris: Set[IRI] = searchResponse.results.bindings.map(_.rowMap("resourceClass")).toSet
@@ -594,7 +598,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                             userProfile = searchGetRequest.userProfile
                           )
 
-      entityInfoResponse <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV1]
+      entityInfoResponse <- appActor.ask(entityInfoRequest).mapTo[EntityInfoGetResponseV1]
 
       // Group the search results by resource IRI.
       groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings

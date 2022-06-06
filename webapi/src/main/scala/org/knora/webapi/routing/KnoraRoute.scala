@@ -7,7 +7,7 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.RouteResult
@@ -19,12 +19,14 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.feature.RequestContextFeatureFactoryConfig
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -56,11 +58,9 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
   implicit protected val materializer: Materializer       = Materializer.matFromSystem(system)
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  protected val applicationActor: ActorRef          = routeData.appActor
-  implicit protected val responderManager: ActorRef = routeData.appActor
-  protected val storeManager: ActorRef              = routeData.appActor
-  protected val log: LoggingAdapter                 = akka.event.Logging(system, this.getClass)
-  protected val baseApiUrl: String                  = settings.internalKnoraApiBaseUrl
+  implicit protected val appActor: ActorRef = routeData.appActor
+  protected val log: Logger                 = Logger(this.getClass)
+  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
 
   /**
    * Constructs a route. This can be done:
@@ -142,11 +142,15 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
 
     for {
       projectInfoResponse: ProjectGetResponseADM <-
-        (responderManager ? ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )).mapTo[ProjectGetResponseADM]
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = ProjectIdentifierADM(maybeIri = Some(checkedProjectIri)),
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
     } yield projectInfoResponse.project
   }
 

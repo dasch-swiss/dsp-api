@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.standoff
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.IRI
@@ -26,6 +26,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant
@@ -290,7 +291,7 @@ object StandoffTagUtilV2 {
     xml: String,
     mapping: GetMappingResponseV2,
     acceptStandoffLinksToClientIDs: Boolean,
-    log: LoggingAdapter
+    log: Logger
   ): TextWithStandoffTagsV2 = {
 
     // collect all the `XMLTag` from the given mapping that require a separator
@@ -1026,7 +1027,7 @@ object StandoffTagUtilV2 {
    */
   def createStandoffTagsV2FromConstructResults(
     standoffAssertions: Map[IRI, Map[SmartIri, LiteralV2]],
-    responderManager: ActorRef,
+    appActor: ActorRef,
     requestingUser: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
     val unwrappedStandoffAssertions: Map[IRI, Map[IRI, String]] = standoffAssertions.map {
@@ -1038,7 +1039,7 @@ object StandoffTagUtilV2 {
 
     createStandoffTagsV2FromSelectResults(
       standoffAssertions = unwrappedStandoffAssertions,
-      responderManager = responderManager,
+      appActor = appActor,
       requestingUser = requestingUser
     )
   }
@@ -1051,7 +1052,7 @@ object StandoffTagUtilV2 {
    */
   def createStandoffTagsV2FromSelectResults(
     standoffAssertions: Map[IRI, Map[IRI, String]],
-    responderManager: ActorRef,
+    appActor: ActorRef,
     requestingUser: UserADM
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1067,11 +1068,16 @@ object StandoffTagUtilV2 {
     }.toSet
 
     for {
-      standoffEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(
-                                                             standoffClassIris = standoffClassIris,
-                                                             standoffPropertyIris = standoffPropertyIris,
-                                                             requestingUser = requestingUser
-                                                           )).mapTo[StandoffEntityInfoGetResponseV2]
+      standoffEntities: StandoffEntityInfoGetResponseV2 <-
+        appActor
+          .ask(
+            StandoffEntityInfoGetRequestV2(
+              standoffClassIris = standoffClassIris,
+              standoffPropertyIris = standoffPropertyIris,
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[StandoffEntityInfoGetResponseV2]
 
       standoffTags = standoffAssertions.map { case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
                        val standoffTagSmartIri: SmartIri = standoffTagIri.toSmartIri

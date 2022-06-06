@@ -9,7 +9,7 @@ import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorSystem
 import akka.actor.Status
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.Consts
 import org.apache.http.HttpEntity
@@ -71,7 +71,7 @@ import scala.util.Try
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
  * `application.conf`.
  */
-class HttpTriplestoreConnector extends Actor with ActorLogging with InstrumentationSupport {
+class HttpTriplestoreConnector extends Actor with InstrumentationSupport {
 
   // MIME type constants.
   private val mimeTypeApplicationJson              = "application/json"
@@ -83,7 +83,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
   private implicit val system: ActorSystem        = context.system
   private val settings                            = KnoraSettings(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-  override val log: LoggingAdapter                = akka.event.Logging(system, this.getClass.getName)
+  val log: Logger                                 = Logger(this.getClass)
 
   private val targetHost: HttpHost = new HttpHost(settings.triplestoreHost, settings.triplestorePort, "http")
 
@@ -237,7 +237,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case Success(parsed) => Success(parsed)
         case Failure(e) =>
           if (resultStr.contains("##  Query cancelled due to timeout during execution")) {
-            log.error(e, "Triplestore timed out while sending a response, after sending statuscode 200.")
+            log.error(s"Triplestore timed out while sending a response, after sending statuscode 200. ${e.toString()}")
             Failure(
               TriplestoreTimeoutException(
                 "Triplestore timed out while sending a response, after sending statuscode 200.",
@@ -247,8 +247,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             )
           } else {
             log.error(
-              e,
-              s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
+              s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql. ${e.toString}"
             )
             Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
           }
@@ -316,7 +315,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         case Success(parsed) => Success(parsed)
         case Failure(e) =>
           if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
-            log.error(e, "Triplestore timed out while sending a response, after sending statuscode 200.")
+            log.error(s"Triplestore timed out while sending a response, after sending statuscode 200. ${e.toString()}")
             Failure(
               TriplestoreTimeoutException(
                 "Triplestore timed out while sending a response, after sending statuscode 200.",
@@ -326,8 +325,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
             )
           } else {
             log.error(
-              e,
-              s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql"
+              s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql. ${e.toString}"
             )
             Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
           }
@@ -982,7 +980,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       case socketTimeoutException: java.net.SocketTimeoutException =>
         val message =
           "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
-        log.error(socketTimeoutException, message)
+        log.error(message + socketTimeoutException.toString())
         throw TriplestoreTimeoutException(message = message, e = socketTimeoutException, log = log)
 
       case timeout: TriplestoreTimeoutException => throw timeout
@@ -991,7 +989,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
       case e: Exception =>
         val message = "Failed to connect to triplestore"
-        log.error(e, message)
+        log.error(message + e.toString())
         throw TriplestoreConnectionException(message = message, e = e, log = log)
     }
   }

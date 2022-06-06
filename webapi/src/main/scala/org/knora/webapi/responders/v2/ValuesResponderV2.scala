@@ -90,7 +90,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                   )
 
         propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          (responderManager ? propertyInfoRequestForSubmittedProperty)
+          appActor
+            .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
                                                                  submittedInternalPropertyIri
@@ -168,7 +169,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                              requestingUser = createValueRequest.requestingUser
                            )
 
-        classInfoResponse: ReadOntologyV2 <- (responderManager ? classInfoRequest).mapTo[ReadOntologyV2]
+        classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
 
         // Check that the resource class has a cardinality for the submitted property.
 
@@ -195,7 +196,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, storeManager)
+                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
                case _ => FastFuture.successful(())
              }
 
@@ -257,7 +258,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                              resourceClassIri = resourceInfo.resourceClassIri,
                                              propertyIri = submittedInternalPropertyIri,
                                              requestingUser = createValueRequest.requestingUser,
-                                             responderManager = responderManager
+                                             appActor = appActor
                                            )
 
         // Did the user submit permissions for the new value?
@@ -269,7 +270,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                                            permissionLiteral = permissions,
                                                                            featureFactoryConfig =
                                                                              createValueRequest.featureFactoryConfig,
-                                                                           responderManager = responderManager
+                                                                           appActor = appActor
                                                                          )
 
                                            // Is the requesting user a system admin, or an admin of this project?
@@ -368,8 +369,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       updateFuture = triplestoreUpdateFuture,
       valueContent = createValueRequest.createValue.valueContent,
       requestingUser = createValueRequest.requestingUser,
-      responderManager = responderManager,
-      storeManager = storeManager,
+      appActor = appActor,
       log = log
     )
   }
@@ -524,7 +524,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
       newValueUUID = newValueUUID,
@@ -598,7 +598,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield UnverifiedValueV2(
       newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
       newValueUUID = newValueUUID,
@@ -911,7 +911,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                   )
 
         propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          (responderManager ? propertyInfoRequestForSubmittedProperty)
+          appActor
+            .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
                                                                  submittedInternalPropertyIri
@@ -1019,7 +1020,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(
                                                permissionLiteral = updateValuePermissionsV2.permissions,
                                                featureFactoryConfig = updateValueRequest.featureFactoryConfig,
-                                               responderManager = responderManager
+                                               appActor = appActor
                                              )
 
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
@@ -1070,7 +1071,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                          )
                          .toString()
 
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check that the value was written correctly to the triplestore.
 
@@ -1130,7 +1131,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                 PermissionUtilADM.validatePermissions(
                                                   permissionLiteral = permissions,
                                                   featureFactoryConfig = updateValueRequest.featureFactoryConfig,
-                                                  responderManager = responderManager
+                                                  appActor = appActor
                                                 )
 
                                               case None =>
@@ -1185,7 +1186,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, storeManager)
+                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
                case _ => FastFuture.successful(())
              }
 
@@ -1307,8 +1308,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             updateFuture = triplestoreUpdateFuture,
             valueContent = updateValueContentV2.valueContent,
             requestingUser = updateValueRequest.requestingUser,
-            responderManager = responderManager,
-            storeManager = storeManager,
+            appActor = appActor,
             log = log
           )
 
@@ -1457,7 +1457,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
     } yield UnverifiedValueV2(
       newValueIri = newValueIri,
@@ -1550,7 +1550,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 _ = println("==============================================")
          */
 
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
         newValueUUID = newLinkValueUUID,
@@ -1586,7 +1586,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                          )
                          .toString()
 
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
         newValueUUID = currentLinkValue.valueHasUUID,
@@ -1618,7 +1618,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                   )
 
         propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
-          (responderManager ? propertyInfoRequestForSubmittedProperty)
+          appActor
+            .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
         propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
                                                                  submittedInternalPropertyIri
@@ -1710,7 +1711,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                              requestingUser = deleteValueRequest.requestingUser
                            )
 
-        classInfoResponse: ReadOntologyV2 <- (responderManager ? classInfoRequest).mapTo[ReadOntologyV2]
+        classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
         classInfo: ReadClassInfoV2         = classInfoResponse.classes(resourceInfo.resourceClassIri)
         cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
                                                               submittedInternalPropertyIri,
@@ -1761,7 +1762,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                         )
                         .toString()
 
-        sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
@@ -1899,7 +1900,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                        )
                        .toString()
 
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield sparqlTemplateLinkUpdate.newLinkValueIri
   }
 
@@ -1967,7 +1968,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                        )
                        .toString()
 
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield currentValue.valueIri
   }
 
@@ -2012,7 +2013,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                requestingUser = requestingUser
                                              )
 
-        linkPropertyInfoResponse: ReadOntologyV2 <- (responderManager ? propertyInfoRequestForLinkProperty)
+        linkPropertyInfoResponse: ReadOntologyV2 <- appActor
+                                                      .ask(propertyInfoRequestForLinkProperty)
                                                       .mapTo[ReadOntologyV2]
       } yield linkPropertyInfoResponse.properties(internalLinkPropertyIri)
     } else if (propertyInfoForSubmittedProperty.isLinkProp) {
@@ -2052,7 +2054,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // If any of the resources are not found, or the user doesn't have permission to see them, this will throw an exception.
 
-        _ <- (responderManager ? resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
+        _ <- appActor.ask(resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
       } yield ()
     }
 
@@ -2111,13 +2113,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       // Run the query.
 
       parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
-      searchResponse <- (responderManager ? GravsearchRequestV2(
-                          constructQuery = parsedGravsearchQuery,
-                          targetSchema = ApiV2Complex,
-                          schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                          featureFactoryConfig = featureFactoryConfig,
-                          requestingUser = requestingUser
-                        )).mapTo[ReadResourcesSequenceV2]
+      searchResponse <- appActor
+                          .ask(
+                            GravsearchRequestV2(
+                              constructQuery = parsedGravsearchQuery,
+                              targetSchema = ApiV2Complex,
+                              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                              featureFactoryConfig = featureFactoryConfig,
+                              requestingUser = requestingUser
+                            )
+                          )
+                          .mapTo[ReadResourcesSequenceV2]
     } yield searchResponse.toResource(resourceIri)
 
   /**
@@ -2150,7 +2156,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                             )
                           }
 
-      resourcesResponse <- (responderManager ? resourcesRequest).mapTo[ReadResourcesSequenceV2]
+      resourcesResponse <- appActor.ask(resourcesRequest).mapTo[ReadResourcesSequenceV2]
       resource           = resourcesResponse.toResource(resourceIri)
 
       propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
@@ -2215,7 +2221,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                   )
                                 )
 
-      resourcePreviewResponse <- (responderManager ? resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
+      resourcePreviewResponse <- appActor.ask(resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
 
       // If we get a resource, we know the user has permission to view it.
       resource: ReadResourceV2 = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
@@ -2228,7 +2234,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                           requestingUser = requestingUser
                         )
 
-      subClassResponse <- (responderManager ? subClassRequest).mapTo[CheckSubClassResponseV2]
+      subClassResponse <- appActor.ask(subClassRequest).mapTo[CheckSubClassResponseV2]
 
       // If it isn't, throw an exception.
       _ = if (!subClassResponse.isSubClass) {
@@ -2267,7 +2273,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                              )
                            )
 
-        subClassResponse <- (responderManager ? subClassRequest).mapTo[CheckSubClassResponseV2]
+        subClassResponse <- appActor.ask(subClassRequest).mapTo[CheckSubClassResponseV2]
 
         // If it isn't, throw an exception.
         _ = if (!subClassResponse.isSubClass) {
@@ -2604,7 +2610,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
    * @return the new value IRI.
    */
   private def makeUnusedValueIri(resourceIri: IRI): Future[IRI] =
-    stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), storeManager, loggingAdapter)
+    stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), appActor, logger)
 
   /**
    * Make a new value UUID considering optional custom value UUID and custom value IRI.

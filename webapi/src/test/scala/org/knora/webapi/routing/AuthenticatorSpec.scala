@@ -44,7 +44,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           timeout,
           executionContext
         )
@@ -58,7 +58,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           UserIdentifierADM(maybeEmail = Some("wronguser@example.com")),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           timeout,
           executionContext
         )
@@ -73,7 +73,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
             UserIdentifierADM(),
             defaultFeatureFactoryConfig,
             system,
-            responderManager,
+            appActor,
             timeout,
             executionContext
           )
@@ -92,7 +92,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Some(correctPasswordCreds),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -106,7 +106,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Some(wrongPasswordCreds),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -123,7 +123,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Some(wrongPasswordCreds),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -142,7 +142,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Some(tokenCreds),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -162,7 +162,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Some(tokenCreds),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -175,7 +175,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Some(tokenCreds),
           defaultFeatureFactoryConfig,
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
