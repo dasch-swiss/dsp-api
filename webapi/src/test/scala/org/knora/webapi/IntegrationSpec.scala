@@ -106,10 +106,9 @@ abstract class IntegrationSpec(_config: Config)
     } yield value
 
     Runtime.default.unsafeRun(
-      (checkTriplestore
+      checkTriplestore
         .retry(ScheduleUtil.schedule)
-        .foldZIO(ex => printLine("Exception Failed"), v => printLine(s"Succeeded with $v")))
-        .provide(Console.live)
+        .foldZIO(ex => ZIO.debug("Exception Failed"), v => ZIO.debug(s"Succeeded with $v"))
     )
   }
 

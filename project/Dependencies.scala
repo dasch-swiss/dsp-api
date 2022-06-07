@@ -20,7 +20,7 @@ object Dependencies {
   val jenaVersion       = "4.4.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
-  val ZioVersion        = "2.0.0-RC6"
+  val ZioVersion        = "2.0.0-RC6+87-03727812-SNAPSHOT"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
   val ZioConfigVersion  = "3.0.0-RC9"
