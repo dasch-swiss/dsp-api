@@ -7,10 +7,10 @@ package org.knora.webapi.messages.v1.responder.resourcemessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DataConversionException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.InvalidApiJsonException
+import dsp.errors.BadRequestException
+import dsp.errors.DataConversionException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.InvalidApiJsonException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM

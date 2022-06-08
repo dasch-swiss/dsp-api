@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import dsp.errors.BadRequestException
 
 object Project {
 
@@ -18,12 +19,12 @@ object Project {
   object Shortcode { self =>
     def make(value: String): Validation[Throwable, Shortcode] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       } else {
         val validatedValue: Validation[Throwable, String] = Validation(
           V2ProjectIriValidation.validateProjectShortcode(
             value,
-            throw V2.BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
+            throw BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
           )
         )
         validatedValue.map(new Shortcode(_) {})
@@ -43,12 +44,12 @@ object Project {
   object Shortname { self =>
     def make(value: String): Validation[Throwable, Shortname] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
       } else {
         val validatedValue = Validation(
           V2ProjectIriValidation.validateAndEscapeProjectShortname(
             value,
-            throw V2.BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+            throw BadRequestException(ProjectErrorMessages.ShortnameInvalid)
           )
         )
         validatedValue.map(new Shortname(_) {})
@@ -68,7 +69,7 @@ object Project {
   object Longname { self =>
     def make(value: String): Validation[Throwable, Longname] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.LongnameMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
       } else {
         Validation.succeed(new Longname(value) {})
       }
@@ -87,7 +88,7 @@ object Project {
   object ProjectDescription { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing))
       } else {
         Validation.succeed(new ProjectDescription(value) {})
       }
@@ -106,7 +107,7 @@ object Project {
   object Keywords { self =>
     def make(value: Seq[String]): Validation[Throwable, Keywords] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.KeywordsMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.KeywordsMissing))
       } else {
         Validation.succeed(new Keywords(value) {})
       }
@@ -125,7 +126,7 @@ object Project {
   object Logo { self =>
     def make(value: String): Validation[Throwable, Logo] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ProjectErrorMessages.LogoMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.LogoMissing))
       } else {
         Validation.succeed(new Logo(value) {})
       }

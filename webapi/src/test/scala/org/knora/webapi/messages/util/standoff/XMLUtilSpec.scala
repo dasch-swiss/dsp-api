@@ -6,7 +6,7 @@
 package org.knora.webapi.util.standoff
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.StandoffConversionException
+import dsp.errors.StandoffConversionException
 import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.util.FileUtil
 import org.xmlunit.builder.DiffBuilder

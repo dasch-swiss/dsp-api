@@ -8,6 +8,7 @@ package dsp.valueobjects
 import dsp.valueobjects.Group._
 import zio.prelude.Validation
 import zio.test._
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[Group]] value objects creation.
@@ -24,20 +25,20 @@ object GroupSpec extends ZIOSpecDefault {
 
   private val groupNameTest = suite("GroupSpec - GroupName")(
     test("pass an empty value and throw an error") {
-      assertTrue(GroupName.make("") == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))) &&
+      assertTrue(GroupName.make("") == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))) &&
       assertTrue(
-        GroupName.make(Some("")) == Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))
+        GroupName.make(Some("")) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         GroupName.make(invalidName) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
+          BadRequestException(GroupErrorMessages.GroupNameInvalid)
         )
       ) &&
       assertTrue(
         GroupName.make(Some(invalidName)) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
+          BadRequestException(GroupErrorMessages.GroupNameInvalid)
         )
       )
     },
@@ -56,24 +57,24 @@ object GroupSpec extends ZIOSpecDefault {
     test("pass an empty object and throw an error") {
       assertTrue(
         GroupDescriptions.make(Seq.empty) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
+          BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
         )
       ) &&
       assertTrue(
         GroupDescriptions.make(Some(Seq.empty)) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
+          BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
         )
       )
     },
     test("pass an invalid object and throw an error") {
       assertTrue(
         GroupDescriptions.make(invalidDescription) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
+          BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
         )
       ) &&
       assertTrue(
         GroupDescriptions.make(Some(invalidDescription)) == Validation.fail(
-          V2.BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
+          BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
         )
       )
     },

@@ -8,6 +8,7 @@ package dsp.valueobjects
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[User]] value objects creation.
@@ -36,116 +37,116 @@ object UserSpec extends ZIOSpecDefault {
 
   private val usernameTest = suite("UserSpec - Username")(
     test("pass an empty value and throw an error") {
-      assertTrue(Username.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))) &&
+      assertTrue(Username.make("") == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))) &&
       assertTrue(
-        Username.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
+        Username.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         Username.make(invalidUsername) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsername)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass too short value and throw an error") {
       assertTrue(
         Username.make(tooShortUsername) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(tooShortUsername)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass too long value and throw an error") {
       assertTrue(
         Username.make(tooLongUsername) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(tooLongUsername)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' as the first char and throw an error") {
       assertTrue(
         Username.make(invalidUsernameWithUnderscoreAsFirstChar) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsernameWithUnderscoreAsFirstChar)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' as the last char and throw an error") {
       assertTrue(
         Username.make(invalidUsernameWithUnderscoreAsLastChar) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsernameWithUnderscoreAsLastChar)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '_' used multiple times in a row and throw an error") {
       assertTrue(
         Username.make(invalidUsernameWithMultipleUnderscoresInRow) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsernameWithMultipleUnderscoresInRow)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' as the first char and throw an error") {
       assertTrue(
         Username.make(invalidUsernameWithDotAsFirstChar) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsernameWithDotAsFirstChar)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' as the last char and throw an error") {
       assertTrue(
         Username.make(invalidUsernameWithDotAsLastChar) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsernameWithDotAsLastChar)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
     test("pass an invalid value with '.' used multiple times in a row and throw an error") {
       assertTrue(
         Username.make(invalidUsernameWithMultipleDotsInRow) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       ) &&
       assertTrue(
         Username.make(Some(invalidUsernameWithMultipleDotsInRow)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.UsernameInvalid)
+          BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
     },
@@ -162,20 +163,20 @@ object UserSpec extends ZIOSpecDefault {
 
   private val emailTest = suite("UserSpec - Email")(
     test("pass an empty value and throw an error") {
-      assertTrue(Email.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.EmailMissing))) &&
+      assertTrue(Email.make("") == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))) &&
       assertTrue(
-        Email.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.EmailMissing))
+        Email.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         Email.make(invalidEmailAddress) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.EmailInvalid)
+          BadRequestException(UserErrorMessages.EmailInvalid)
         )
       ) &&
       assertTrue(
         Email.make(Some(invalidEmailAddress)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.EmailInvalid)
+          BadRequestException(UserErrorMessages.EmailInvalid)
         )
       )
     },
@@ -192,9 +193,9 @@ object UserSpec extends ZIOSpecDefault {
 
   private val givenNameTest = suite("UserSpec - GivenName")(
     test("pass an empty value and throw an error") {
-      assertTrue(GivenName.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.GivenNameMissing))) &&
+      assertTrue(GivenName.make("") == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))) &&
       assertTrue(
-        GivenName.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.GivenNameMissing))
+        GivenName.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -210,9 +211,9 @@ object UserSpec extends ZIOSpecDefault {
 
   private val familyNameTest = suite("UserSpec - FamilyName")(
     test("pass an empty value and throw an error") {
-      assertTrue(FamilyName.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.FamilyNameMissing))) &&
+      assertTrue(FamilyName.make("") == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))) &&
       assertTrue(
-        FamilyName.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.FamilyNameMissing))
+        FamilyName.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -228,9 +229,9 @@ object UserSpec extends ZIOSpecDefault {
 
   private val passwordTest = suite("UserSpec - Password")(
     test("pass an empty value and throw an error") {
-      assertTrue(Password.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordMissing))) &&
+      assertTrue(Password.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))) &&
       assertTrue(
-        Password.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordMissing))
+        Password.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -247,21 +248,21 @@ object UserSpec extends ZIOSpecDefault {
   private val languageCodeTest = suite("UserSpec - LanguageCode")(
     test("pass an empty value and throw an error") {
       assertTrue(
-        LanguageCode.make("") == Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeMissing))
+        LanguageCode.make("") == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
       ) &&
       assertTrue(
-        LanguageCode.make(Some("")) == Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeMissing))
+        LanguageCode.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         LanguageCode.make(invalidLanguageCode) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.LanguageCodeInvalid)
+          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
         )
       ) &&
       assertTrue(
         LanguageCode.make(Some(invalidLanguageCode)) == Validation.fail(
-          V2.BadRequestException(UserErrorMessages.LanguageCodeInvalid)
+          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
         )
       )
     },

@@ -13,7 +13,7 @@ import akka.http.scaladsl.server.Route
 import java.util.UUID
 import scala.concurrent.Future
 
-import exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import feature.FeatureFactoryConfig
 import messages.IriConversions._
 import messages.util.rdf.{JsonLDDocument, JsonLDUtil}

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.InconsistentRepositoryDataException
 
 /**
  * Represents the result of a SPARQL SELECT query.

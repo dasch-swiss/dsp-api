@@ -8,8 +8,8 @@ package org.knora.webapi.routing
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadCredentialsException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadCredentialsException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM

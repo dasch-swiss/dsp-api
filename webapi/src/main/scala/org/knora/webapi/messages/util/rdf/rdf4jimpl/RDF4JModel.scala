@@ -7,7 +7,7 @@ package org.knora.webapi.messages.util.rdf.rdf4jimpl
 
 import org.eclipse.rdf4j
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.RdfProcessingException
+import dsp.errors.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._

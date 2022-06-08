@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *@
 
-@import org.knora.webapi.exceptions.SparqlGenerationException
+@import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 

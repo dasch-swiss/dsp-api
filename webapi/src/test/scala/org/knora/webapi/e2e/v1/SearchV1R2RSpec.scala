@@ -9,7 +9,7 @@ import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.InvalidApiJsonException
+import dsp.errors.InvalidApiJsonException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v1.SearchRouteV1
 import org.scalatest.Assertion

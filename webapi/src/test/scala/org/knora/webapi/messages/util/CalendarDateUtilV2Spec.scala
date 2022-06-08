@@ -6,7 +6,7 @@
 package org.knora.webapi.util
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util._
 
 /**

@@ -11,7 +11,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.ITKnoraLiveSpec
-import org.knora.webapi.exceptions.InvalidApiJsonException
+import dsp.errors.InvalidApiJsonException
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol

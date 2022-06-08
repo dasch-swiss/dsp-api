@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.SmartIri
 
 /**
