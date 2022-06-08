@@ -16,12 +16,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import exceptions.{
-  AssertionException,
-  BadRequestException,
-  DataConversionException,
-  InconsistentRepositoryDataException
-}
+import dsp.errors._
 import feature.FeatureFactoryConfig
 import messages.IriConversions._
 import messages.admin.responder.usersmessages.UserADM

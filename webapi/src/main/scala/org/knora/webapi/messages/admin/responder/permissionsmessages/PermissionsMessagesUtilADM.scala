@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ApplicationCacheException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.ApplicationCacheException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.ChangeRightsPermission
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.DeletePermission

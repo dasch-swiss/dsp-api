@@ -6,8 +6,8 @@
 package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.exceptions.FileWriteException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.FileWriteException
+import dsp.errors.NotFoundException
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.io.ByteArrayOutputStream

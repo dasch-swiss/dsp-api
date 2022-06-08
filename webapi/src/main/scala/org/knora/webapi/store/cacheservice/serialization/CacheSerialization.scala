@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cacheservice.serialization
 
-import org.knora.webapi.exceptions.CacheServiceException
+import dsp.errors.CacheServiceException
 import zio._
 
 import java.io.ByteArrayInputStream

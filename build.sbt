@@ -201,7 +201,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(valueObjects)
+  .dependsOn(valueObjects, errors)
 
 lazy val webapiJavaRunOptions = Seq(
   // "-showversion",
@@ -285,9 +285,18 @@ lazy val schemaRepoSearchService = project
   .dependsOn(schemaRepo)
 
 lazy val valueObjects = project
-  .in(file("dsp-value-objects"))
+  .in(file("dsp-shared/valueobjects"))
   .settings(
     name := "valueObjects",
     libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(errors)
+
+lazy val errors = project
+  .in(file("dsp-shared/errors"))
+  .settings(
+    name := "errors",
+    libraryDependencies ++= Dependencies.errorsLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )

@@ -12,6 +12,7 @@ import scala.util.matching.Regex
 import org.apache.commons.validator.routines.UrlValidator
 import org.apache.commons.lang3.StringUtils
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
+import dsp.errors.BadRequestException
 
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order
@@ -38,13 +39,6 @@ object V2 {
    * @param language the language iso.
    */
   case class StringLiteralV2(value: String, language: Option[String])
-
-  /**
-   * An exception indicating that the request parameters did not make sense.
-   *
-   * @param message a description of the error.
-   */
-  case class BadRequestException(message: String, cause: Throwable = null) extends Exception(message, cause)
 }
 
 object V2IriValidation {
@@ -266,7 +260,7 @@ object V2UuidValidation {
    * Calls `decodeUuidWithErr`, throwing [[InconsistentRepositoryDataException]] if the string cannot be parsed.
    */
   def decodeUuid(uuidStr: String): UUID =
-    decodeUuidWithErr(uuidStr, throw V2.BadRequestException(s"Invalid UUID: $uuidStr"))
+    decodeUuidWithErr(uuidStr, throw BadRequestException(s"Invalid UUID: $uuidStr"))
 
   /**
    * Decodes a string representing a UUID in one of two formats:

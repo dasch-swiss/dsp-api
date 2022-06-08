@@ -183,4 +183,9 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
+
+  val errorsLibraryDependencies = Seq(
+    commonsLang3,
+    akkaActor
+  )
 }

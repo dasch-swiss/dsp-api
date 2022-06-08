@@ -6,8 +6,8 @@
 package org.knora.webapi.messages
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM

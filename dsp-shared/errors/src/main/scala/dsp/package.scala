@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.exceptions
+package dsp.errors
 
 package object exceptions {
   def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) =

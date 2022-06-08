@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

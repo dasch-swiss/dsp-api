@@ -12,8 +12,8 @@ import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM

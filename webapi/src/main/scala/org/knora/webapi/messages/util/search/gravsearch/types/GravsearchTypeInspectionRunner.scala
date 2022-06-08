@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
-import org.knora.webapi.exceptions.GravsearchException
+import dsp.errors.GravsearchException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM

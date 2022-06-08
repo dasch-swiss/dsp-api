@@ -8,7 +8,7 @@ package org.knora.webapi.responders.v2
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

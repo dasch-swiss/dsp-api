@@ -10,8 +10,8 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM

@@ -18,9 +18,9 @@ import akka.util.ByteString
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.AuthenticationException
-import org.knora.webapi.exceptions.BadCredentialsException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.AuthenticationException
+import dsp.errors.BadCredentialsException
+import dsp.errors.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.StringFormatter

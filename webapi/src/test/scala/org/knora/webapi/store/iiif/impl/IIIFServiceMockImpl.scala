@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
