@@ -167,8 +167,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                             .asInstanceOf[IriLiteralV2]
                                             .value,
                                           name = name,
-                                          labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                                          comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
+                                          labels = StringLiteralSequenceV2(labels.toVector),
+                                          comments = StringLiteralSequenceV2(comments.toVector)
                                         ).unescape
                                     }
 
@@ -423,8 +423,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                   name = propsMap
                     .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                  comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
+                  labels = StringLiteralSequenceV2(labels.toVector),
+                  comments = StringLiteralSequenceV2(comments.toVector)
                 ).unescape
               } else {
                 ListChildNodeInfoADM(
@@ -432,8 +432,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                   name = propsMap
                     .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                  comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+                  labels = StringLiteralSequenceV2(labels.toVector),
+                  comments = StringLiteralSequenceV2(comments.toVector),
                   position = positionOption.getOrElse(
                     throw InconsistentRepositoryDataException(
                       s"Required position property missing for list node $nodeIri."
@@ -605,8 +605,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                         name = propsMap
                                           .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                                           .map(_.head.asInstanceOf[StringLiteralV2].value),
-                                        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                                        comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+                                        labels = StringLiteralSequenceV2(labels.toVector),
+                                        comments = StringLiteralSequenceV2(comments.toVector),
                                         children = children
                                       )
                                     } else {
@@ -615,8 +615,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                         name = propsMap
                                           .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                                           .map(_.head.asInstanceOf[StringLiteralV2].value),
-                                        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                                        comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
+                                        labels = StringLiteralSequenceV2(labels.toVector),
+                                        comments = Some(StringLiteralSequenceV2(comments.toVector)),
                                         position = positionOption.getOrElse(
                                           throw InconsistentRepositoryDataException(
                                             s"Required position property missing for list node $nodeIri."
@@ -713,8 +713,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       ListChildNodeADM(
         id = nodeIri,
         name = nameOption,
-        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-        comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
+        labels = StringLiteralSequenceV2(labels.toVector),
+        comments = Some(StringLiteralSequenceV2(comments.toVector)),
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode
