@@ -643,7 +643,7 @@ case class ListChildNodeInfoADM(
       id = id,
       name = name,
       labels = labels.sortByLanguage,
-      comments = comments,
+      comments = comments.sortByLanguage,
       position = position,
       hasRootNode = hasRootNode
     )
@@ -849,7 +849,10 @@ case class ListChildNodeADM(
       id = id,
       name = name,
       labels = labels.sortByLanguage,
-      comments = comments,
+      comments = comments match {
+        case None        => None
+        case Some(value) => Some(value.sortByLanguage)
+      },
       position = position,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)
