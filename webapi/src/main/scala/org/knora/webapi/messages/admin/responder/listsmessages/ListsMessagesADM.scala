@@ -850,8 +850,8 @@ case class ListChildNodeADM(
       name = name,
       labels = labels.sortByLanguage,
       comments = comments match {
-        case None        => None
-        case Some(value) => Some(value.sortByLanguage)
+        case None    => None
+        case Some(c) => Some(c.sortByLanguage)
       },
       position = position,
       hasRootNode = hasRootNode,
