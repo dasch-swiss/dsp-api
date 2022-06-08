@@ -124,41 +124,41 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
       statements = listsResponse.statements.toList
 
-      lists: Seq[ListNodeInfoADM] =
-        statements.map { case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-          val name: Option[String] = propsMap
-            .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-            .map(_.head.asInstanceOf[StringLiteralV2].value)
-          val labels: Seq[StringLiteralV2] = propsMap
-            .getOrElse(
-              OntologyConstants.Rdfs.Label.toSmartIri,
-              Seq.empty[StringLiteralV2]
-            )
-            .map(_.asInstanceOf[StringLiteralV2])
-          val comments: Seq[StringLiteralV2] = propsMap
-            .getOrElse(
-              OntologyConstants.Rdfs.Comment.toSmartIri,
-              Seq.empty[StringLiteralV2]
-            )
-            .map(_.asInstanceOf[StringLiteralV2])
+      lists: Seq[ListNodeInfoADM] = statements.map {
+                                      case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+                                        val name: Option[String] = propsMap
+                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .map(_.head.asInstanceOf[StringLiteralV2].value)
+                                        val labels: Seq[StringLiteralV2] = propsMap
+                                          .getOrElse(
+                                            OntologyConstants.Rdfs.Label.toSmartIri,
+                                            Seq.empty[StringLiteralV2]
+                                          )
+                                          .map(_.asInstanceOf[StringLiteralV2])
+                                        val comments: Seq[StringLiteralV2] = propsMap
+                                          .getOrElse(
+                                            OntologyConstants.Rdfs.Comment.toSmartIri,
+                                            Seq.empty[StringLiteralV2]
+                                          )
+                                          .map(_.asInstanceOf[StringLiteralV2])
 
-          ListRootNodeInfoADM(
-            id = listIri.toString,
-            projectIri = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                throw InconsistentRepositoryDataException(
-                  "The required property 'attachedToProject' not found."
-                )
-              )
-              .head
-              .asInstanceOf[IriLiteralV2]
-              .value,
-            name = name,
-            labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-            comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
-          ).unescape
-        }
+                                        ListRootNodeInfoADM(
+                                          id = listIri.toString,
+                                          projectIri = propsMap
+                                            .getOrElse(
+                                              OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
+                                              throw InconsistentRepositoryDataException(
+                                                "The required property 'attachedToProject' not found."
+                                              )
+                                            )
+                                            .head
+                                            .asInstanceOf[IriLiteralV2]
+                                            .value,
+                                          name = name,
+                                          labels = StringLiteralSequenceV2(labels.toVector),
+                                          comments = StringLiteralSequenceV2(comments.toVector)
+                                        ).unescape
+                                    }
 
       // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
@@ -395,8 +395,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                   name = propsMap
                     .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                  comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
+                  labels = StringLiteralSequenceV2(labels.toVector),
+                  comments = StringLiteralSequenceV2(comments.toVector)
                 ).unescape
               } else {
                 ListChildNodeInfoADM(
@@ -404,8 +404,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                   name = propsMap
                     .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
-                  labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                  comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+                  labels = StringLiteralSequenceV2(labels.toVector),
+                  comments = StringLiteralSequenceV2(comments.toVector),
                   position = positionOption.getOrElse(
                     throw InconsistentRepositoryDataException(
                       s"Required position property missing for list node $nodeIri."
@@ -499,100 +499,99 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
             statements = listInfoResponse.statements
 
-            node: ListNodeADM =
-              statements.head match {
-                case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                  val labels: Seq[StringLiteralV2] = propsMap
-                    .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
-                    .map(_.asInstanceOf[StringLiteralV2])
-                  val comments: Seq[StringLiteralV2] = propsMap
-                    .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
-                    .map(_.asInstanceOf[StringLiteralV2])
+            node: ListNodeADM = statements.head match {
+                                  case (nodeIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+                                    val labels: Seq[StringLiteralV2] = propsMap
+                                      .getOrElse(OntologyConstants.Rdfs.Label.toSmartIri, Seq.empty[StringLiteralV2])
+                                      .map(_.asInstanceOf[StringLiteralV2])
+                                    val comments: Seq[StringLiteralV2] = propsMap
+                                      .getOrElse(OntologyConstants.Rdfs.Comment.toSmartIri, Seq.empty[StringLiteralV2])
+                                      .map(_.asInstanceOf[StringLiteralV2])
 
-                  val attachedToProjectOption: Option[IRI] =
-                    propsMap.get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri) match {
-                      case Some(iris: Seq[LiteralV2]) =>
-                        iris.headOption match {
-                          case Some(iri: IriLiteralV2) => Some(iri.value)
-                          case other =>
-                            throw InconsistentRepositoryDataException(
-                              s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
-                            )
-                        }
+                                    val attachedToProjectOption: Option[IRI] =
+                                      propsMap.get(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri) match {
+                                        case Some(iris: Seq[LiteralV2]) =>
+                                          iris.headOption match {
+                                            case Some(iri: IriLiteralV2) => Some(iri.value)
+                                            case other =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                                              )
+                                          }
 
-                      case None => None
-                    }
+                                        case None => None
+                                      }
 
-                  val hasRootNodeOption: Option[IRI] =
-                    propsMap.get(OntologyConstants.KnoraBase.HasRootNode.toSmartIri) match {
-                      case Some(iris: Seq[LiteralV2]) =>
-                        iris.headOption match {
-                          case Some(iri: IriLiteralV2) => Some(iri.value)
-                          case other =>
-                            throw InconsistentRepositoryDataException(
-                              s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
-                            )
-                        }
+                                    val hasRootNodeOption: Option[IRI] =
+                                      propsMap.get(OntologyConstants.KnoraBase.HasRootNode.toSmartIri) match {
+                                        case Some(iris: Seq[LiteralV2]) =>
+                                          iris.headOption match {
+                                            case Some(iri: IriLiteralV2) => Some(iri.value)
+                                            case other =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other"
+                                              )
+                                          }
 
-                      case None => None
-                    }
+                                        case None => None
+                                      }
 
-                  val isRootNode: Boolean =
-                    propsMap.get(OntologyConstants.KnoraBase.IsRootNode.toSmartIri) match {
-                      case Some(values: Seq[LiteralV2]) =>
-                        values.headOption match {
-                          case Some(value: BooleanLiteralV2) => value.value
-                          case Some(other) =>
-                            throw InconsistentRepositoryDataException(
-                              s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other"
-                            )
-                          case None => false
-                        }
+                                    val isRootNode: Boolean =
+                                      propsMap.get(OntologyConstants.KnoraBase.IsRootNode.toSmartIri) match {
+                                        case Some(values: Seq[LiteralV2]) =>
+                                          values.headOption match {
+                                            case Some(value: BooleanLiteralV2) => value.value
+                                            case Some(other) =>
+                                              throw InconsistentRepositoryDataException(
+                                                s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other"
+                                              )
+                                            case None => false
+                                          }
 
-                      case None => false
-                    }
+                                        case None => false
+                                      }
 
-                  val positionOption: Option[Int] = propsMap
-                    .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
-                    .map(_.head.asInstanceOf[IntLiteralV2].value)
+                                    val positionOption: Option[Int] = propsMap
+                                      .get(OntologyConstants.KnoraBase.ListNodePosition.toSmartIri)
+                                      .map(_.head.asInstanceOf[IntLiteralV2].value)
 
-                  if (isRootNode) {
-                    ListRootNodeADM(
-                      id = nodeIri.toString,
-                      projectIri = attachedToProjectOption.getOrElse(
-                        throw InconsistentRepositoryDataException(
-                          s"Required attachedToProject property missing for list node $nodeIri."
-                        )
-                      ),
-                      name = propsMap
-                        .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-                        .map(_.head.asInstanceOf[StringLiteralV2].value),
-                      labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                      comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
-                      children = children
-                    )
-                  } else {
-                    ListChildNodeADM(
-                      id = nodeIri.toString,
-                      name = propsMap
-                        .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-                        .map(_.head.asInstanceOf[StringLiteralV2].value),
-                      labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                      comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
-                      position = positionOption.getOrElse(
-                        throw InconsistentRepositoryDataException(
-                          s"Required position property missing for list node $nodeIri."
-                        )
-                      ),
-                      hasRootNode = hasRootNodeOption.getOrElse(
-                        throw InconsistentRepositoryDataException(
-                          s"Required hasRootNode property missing for list node $nodeIri."
-                        )
-                      ),
-                      children = children
-                    )
-                  }
-              }
+                                    if (isRootNode) {
+                                      ListRootNodeADM(
+                                        id = nodeIri.toString,
+                                        projectIri = attachedToProjectOption.getOrElse(
+                                          throw InconsistentRepositoryDataException(
+                                            s"Required attachedToProject property missing for list node $nodeIri."
+                                          )
+                                        ),
+                                        name = propsMap
+                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .map(_.head.asInstanceOf[StringLiteralV2].value),
+                                        labels = StringLiteralSequenceV2(labels.toVector),
+                                        comments = StringLiteralSequenceV2(comments.toVector),
+                                        children = children
+                                      )
+                                    } else {
+                                      ListChildNodeADM(
+                                        id = nodeIri.toString,
+                                        name = propsMap
+                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+                                          .map(_.head.asInstanceOf[StringLiteralV2].value),
+                                        labels = StringLiteralSequenceV2(labels.toVector),
+                                        comments = Some(StringLiteralSequenceV2(comments.toVector)),
+                                        position = positionOption.getOrElse(
+                                          throw InconsistentRepositoryDataException(
+                                            s"Required position property missing for list node $nodeIri."
+                                          )
+                                        ),
+                                        hasRootNode = hasRootNodeOption.getOrElse(
+                                          throw InconsistentRepositoryDataException(
+                                            s"Required hasRootNode property missing for list node $nodeIri."
+                                          )
+                                        ),
+                                        children = children
+                                      )
+                                    }
+                                }
 
             // _ = log.debug(s"listGetADM - list: {}", MessageUtil.toSource(list))
           } yield Some(node)
@@ -673,8 +672,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       ListChildNodeADM(
         id = nodeIri,
         name = nameOption,
-        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-        comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
+        labels = StringLiteralSequenceV2(labels.toVector),
+        comments = Some(StringLiteralSequenceV2(comments.toVector)),
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode

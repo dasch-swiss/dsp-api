@@ -552,8 +552,8 @@ case class ListRootNodeInfoADM(
       id = id,
       projectIri = projectIri,
       name = name,
-      labels = labels.sortByStringValue,
-      comments = comments.sortByStringValue
+      labels = labels.sortByLanguage,
+      comments = comments.sortByLanguage
     )
 
   /**
@@ -614,8 +614,8 @@ case class ListChildNodeInfoADM(
     ListChildNodeInfoADM(
       id = id,
       name = name,
-      labels = labels.sortByStringValue,
-      comments = comments,
+      labels = labels.sortByLanguage,
+      comments = comments.sortByLanguage,
       position = position,
       hasRootNode = hasRootNode
     )
@@ -741,8 +741,8 @@ case class ListRootNodeADM(
       id = id,
       projectIri = projectIri,
       name = name,
-      labels = labels.sortByStringValue,
-      comments = comments.sortByStringValue,
+      labels = labels.sortByLanguage,
+      comments = comments.sortByLanguage,
       children = children.sortBy(_.position).map(_.sorted)
     )
 
@@ -820,8 +820,11 @@ case class ListChildNodeADM(
     ListChildNodeADM(
       id = id,
       name = name,
-      labels = labels.sortByStringValue,
-      comments = comments,
+      labels = labels.sortByLanguage,
+      comments = comments match {
+        case None    => None
+        case Some(c) => Some(c.sortByLanguage)
+      },
       position = position,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)

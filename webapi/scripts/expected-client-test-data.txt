@@ -18,6 +18,7 @@ test-data/admin/lists/add-child-to-second-child-request.json
 test-data/admin/lists/add-child-to-second-child-response.json
 test-data/admin/lists/add-second-child-to-root-request.json
 test-data/admin/lists/add-second-child-to-root-response.json
+test-data/admin/lists/candeletelist-response.json
 test-data/admin/lists/create-child-node-request.json
 test-data/admin/lists/create-child-node-response.json
 test-data/admin/lists/create-child-node-with-custom-IRI-request.json
@@ -26,6 +27,7 @@ test-data/admin/lists/create-list-request.json
 test-data/admin/lists/create-list-response.json
 test-data/admin/lists/create-list-with-custom-IRI-request.json
 test-data/admin/lists/create-list-with-custom-IRI-response.json
+test-data/admin/lists/delete-list-node-comments-response.json
 test-data/admin/lists/delete-list-node-response.json
 test-data/admin/lists/delete-list-response.json
 test-data/admin/lists/get-anything-project-lists-response.json
@@ -194,7 +196,9 @@ test-data/v2/ontologies/create-ontology-with-comment-request.json
 test-data/v2/ontologies/create-ontology-with-comment-response.json
 test-data/v2/ontologies/create-value-property-request.json
 test-data/v2/ontologies/create-value-property-response.json
+test-data/v2/ontologies/delete-class-comment-response.json
 test-data/v2/ontologies/delete-ontology-response.json
+test-data/v2/ontologies/delete-property-comment-response.json
 test-data/v2/ontologies/get-class-anything-thing-with-allLanguages-response.json
 test-data/v2/ontologies/get-class-image-bild-response.json
 test-data/v2/ontologies/get-class-incunabula-book-response.json
