@@ -74,8 +74,8 @@ object SharedListsTestDataADM {
     name = Some("treelistroot"),
     labels = StringLiteralSequenceV2(
       Vector(
-        StringLiteralV2(value = "Listenwurzel", language = Some("de")),
-        StringLiteralV2(value = "Tree list root", language = Some("en"))
+        StringLiteralV2(value = "Tree list root", language = Some("en")),
+        StringLiteralV2(value = "Listenwurzel", language = Some("de"))
       )
     ),
     comments = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Anything Tree List", language = Some("en"))))
