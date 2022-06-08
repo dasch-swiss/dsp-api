@@ -182,9 +182,11 @@ class E2ESpec(_system: ActorSystem)
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit = {
+  final override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
+
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     runtime.shutdown()
   }
 

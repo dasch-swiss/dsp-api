@@ -207,9 +207,11 @@ abstract class CoreSpec(_system: ActorSystem)
   }
 
   final override def afterAll(): Unit = {
-    runtime.shutdown()
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
+
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    runtime.shutdown()
   }
 
   protected def loadTestData(rdfDataObjects: List[RdfDataObject]): Unit = {

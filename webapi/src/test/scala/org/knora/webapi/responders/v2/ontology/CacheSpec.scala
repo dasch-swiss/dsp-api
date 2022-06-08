@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v2.ontology
 import akka.actor.Props
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.TestContainerFuseki
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

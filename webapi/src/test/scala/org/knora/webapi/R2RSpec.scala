@@ -79,13 +79,7 @@ class R2RSpec
     with LazyLogging {
 
   /* needed by the core trait */
-  implicit lazy val _system: ActorSystem = ActorSystem(
-    actorSystemNameFrom(getClass),
-    TestContainerFuseki.PortConfig.withFallback(
-      ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())
-    )
-  )
-
+  implicit lazy val _system: ActorSystem        = ActorSystem(actorSystemNameFrom(getClass))
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
 
   StringFormatter.initForTest()
@@ -175,6 +169,8 @@ class R2RSpec
   override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
+
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     runtime.shutdown()
   }
 

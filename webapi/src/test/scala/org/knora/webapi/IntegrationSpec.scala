@@ -105,11 +105,13 @@ abstract class IntegrationSpec(_config: Config)
         }
     } yield value
 
-    Runtime.default.unsafeRun(
-      checkTriplestore
-        .retry(ScheduleUtil.schedule)
-        .foldZIO(ex => ZIO.debug("Exception Failed"), v => ZIO.debug(s"Succeeded with $v"))
-    )
+    Runtime.default
+      .unsafeRun(
+        checkTriplestore
+          .retry(ScheduleUtil.schedule)
+          .foldZIO(ex => ZIO.debug("Exception Failed"), v => ZIO.debug(s"Succeeded with $v"))
+          .provide(ZLayer.succeed(Console.ConsoleLive))
+      )
   }
 
   protected def loadTestData(

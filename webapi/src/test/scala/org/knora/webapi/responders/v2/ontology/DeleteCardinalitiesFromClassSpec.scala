@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2.ontology
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.TestContainerFuseki
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
