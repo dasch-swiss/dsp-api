@@ -175,17 +175,13 @@ object Dependencies {
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
-  val valueObjectsLibraryDependencies = Seq(
+  val sharedLibraryDependencies = Seq(
+    akkaActor,
     commonsLang3,
     commonsValidator,
     gwtServlet,
     zioPrelude,
     zioTest    % Test,
     zioTestSbt % Test
-  )
-
-  val errorsLibraryDependencies = Seq(
-    commonsLang3,
-    akkaActor
   )
 }
