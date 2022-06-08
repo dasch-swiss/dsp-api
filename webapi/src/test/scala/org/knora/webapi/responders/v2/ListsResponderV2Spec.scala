@@ -41,9 +41,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val timeout = 10.seconds
 
   "The lists responder v2" should {
-
     "return a list" in {
-
       responderManager ! ListGetRequestV2(
         listIri = "http://rdfh.ch/lists/0001/treeList",
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -52,12 +50,10 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case response: ListGetResponseV2 =>
         assert(response == listsResponderV2SpecFullData.treeList)
-
       }
     }
 
     "return a node" in {
-
       responderManager ! NodeGetRequestV2(
         nodeIri = "http://rdfh.ch/lists/0001/treeList11",
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -67,9 +63,6 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case response: NodeGetResponseV2 =>
         assert(response == listsResponderV2SpecFullData.treeNode)
       }
-
     }
-
   }
-
 }
