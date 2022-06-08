@@ -30,7 +30,7 @@ object ApiStatusCodesV2 {
       case OntologyConstraintException(_) => StatusCodes.BadRequest
       case EditConflictException(_)       => StatusCodes.Conflict
       case RequestRejectedException(_)    => StatusCodes.BadRequest
-      case BadRequestException(_, _)      => StatusCodes.BadRequest
+      case BadRequestException(_)         => StatusCodes.BadRequest
 
       // Subclasses of InternalServerException (which must be last in this group)
       case UpdateNotPerformedException(_)    => StatusCodes.Conflict

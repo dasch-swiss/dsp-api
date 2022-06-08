@@ -79,19 +79,12 @@ object RequestRejectedException {
   def unapply(e: RequestRejectedException): Option[RequestRejectedException] = Option(e)
 }
 
-// /**
-//  * An exception indicating that the request parameters did not make sense.
-//  *
-//  * @param message a description of the error.
-//  */
-// case class BadRequestException(message: String) extends RequestRejectedException(message)
-
 /**
  * An exception indicating that the request parameters did not make sense.
  *
  * @param message a description of the error.
  */
-case class BadRequestException(message: String, cause: Throwable = null) extends Exception(message, cause)
+case class BadRequestException(message: String) extends RequestRejectedException(message)
 
 /**
  * An exception indicating that a user has provided bad credentials.
