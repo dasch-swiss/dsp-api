@@ -17,5 +17,6 @@ workspace {
     }
 
     !adrs decisions
+    !docs flows
 
 }
