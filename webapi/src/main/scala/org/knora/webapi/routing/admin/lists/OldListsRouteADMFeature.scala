@@ -275,56 +275,55 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Creates a new list child node.
    */
-  private def createListChildNode(): Route = path(ListsBasePath / Segment) {
-    iri =>
-      post {
-        entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-          // check if requested ListIri matches the Iri passed in the route
-          val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
-            ListIri.make(apiRequest.parentNodeIri)
-          } else {
-            Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
-          }
-
-          val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
-          val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
-          val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
-          val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
-          val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
-          val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
-          val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
-            Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
-              ListChildNodeCreatePayloadADM
-            )
-
-          val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-            payload        <- toFuture(validatedCreateChildNodePeyload)
-            requestingUser <- getUserADM(requestContext)
-
-            // check if the requesting user is allowed to perform operation
-            _ = if (
-                  !requestingUser.permissions.isProjectAdmin(
-                    projectIri.toOption.get.value
-                  ) && !requestingUser.permissions.isSystemAdmin
-                ) {
-                  // not project or a system admin
-                  throw ForbiddenException(ListErrorMessages.ListCreatePermission)
-                }
-          } yield ListChildNodeCreateRequestADM(
-            createChildNodeRequest = payload,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            settings = settings,
-            responderManager = responderManager,
-            log = log
-          )
+  private def createListChildNode(): Route = path(ListsBasePath / Segment) { iri =>
+    post {
+      entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
+        // check if requested ListIri matches the Iri passed in the route
+        val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
+          ListIri.make(apiRequest.parentNodeIri)
+        } else {
+          Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
         }
+
+        val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
+        val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
+        val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
+        val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
+        val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
+          Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
+            ListChildNodeCreatePayloadADM
+          )
+
+        val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
+          payload        <- toFuture(validatedCreateChildNodePeyload)
+          requestingUser <- getUserADM(requestContext)
+
+          // check if the requesting user is allowed to perform operation
+          _ = if (
+                !requestingUser.permissions.isProjectAdmin(
+                  projectIri.toOption.get.value
+                ) && !requestingUser.permissions.isSystemAdmin
+              ) {
+                // not project or a system admin
+                throw ForbiddenException(ListErrorMessages.ListCreatePermission)
+              }
+        } yield ListChildNodeCreateRequestADM(
+          createChildNodeRequest = payload,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
       }
+    }
   }
 
   @Path("/{IRI}")
