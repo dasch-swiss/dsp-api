@@ -8,7 +8,7 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -61,6 +61,7 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.testkit.TestActorRef
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -142,16 +143,12 @@ class R2RSpec
           )
       )
 
-  // start the Application Actor
+  // start the Application Actor.
   lazy val appActor: ActorRef =
     system.actorOf(
       Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
-
-  // The main application actor forwards messages to the responder manager and the store manager.
-  val responderManager: ActorRef = appActor
-  val storeManager: ActorRef     = appActor
 
   val routeData: KnoraRouteData = KnoraRouteData(
     system = system,
@@ -160,7 +157,7 @@ class R2RSpec
 
   lazy val rdfDataObjects = List.empty[RdfDataObject]
 
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: Logger = Logger(this.getClass)
 
   override def beforeAll(): Unit = {
     // set allow reload over http

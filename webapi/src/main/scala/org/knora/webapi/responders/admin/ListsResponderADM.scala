@@ -34,6 +34,7 @@ import scala.concurrent.Future
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.List.ListName
+import akka.actor.ActorRef
 
 /**
  * A responder that returns information about hierarchical lists.
@@ -121,10 +122,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                          .toString()
                      )
 
-      listsResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                         sparql = sparqlQuery,
-                         featureFactoryConfig = featureFactoryConfig
-                       )).mapTo[SparqlExtendedConstructResponse]
+      listsResponse <- appActor
+                         .ask(
+                           SparqlExtendedConstructRequest(
+                             sparql = sparqlQuery,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         )
+                         .mapTo[SparqlExtendedConstructResponse]
 
       // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
 
@@ -336,10 +341,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       // _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
 
-      listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                            sparql = sparqlQuery,
-                            featureFactoryConfig = featureFactoryConfig
-                          )).mapTo[SparqlExtendedConstructResponse]
+      listNodeResponse <- appActor
+                            .ask(
+                              SparqlExtendedConstructRequest(
+                                sparql = sparqlQuery,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+                            )
+                            .mapTo[SparqlExtendedConstructResponse]
 
       statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
 
@@ -502,10 +511,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                          .toString()
                      )
 
-      listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                            sparql = sparqlQuery,
-                            featureFactoryConfig = featureFactoryConfig
-                          )).mapTo[SparqlExtendedConstructResponse]
+      listInfoResponse <- appActor
+                            .ask(
+                              SparqlExtendedConstructRequest(
+                                sparql = sparqlQuery,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+                            )
+                            .mapTo[SparqlExtendedConstructResponse]
 
       // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
 
@@ -717,10 +730,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                .toString()
                            }
 
-      nodeWithChildrenResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                    sparql = nodeChildrenQuery,
-                                    featureFactoryConfig = featureFactoryConfig
-                                  )).mapTo[SparqlExtendedConstructResponse]
+      nodeWithChildrenResponse <- appActor
+                                    .ask(
+                                      SparqlExtendedConstructRequest(
+                                        sparql = nodeChildrenQuery,
+                                        featureFactoryConfig = featureFactoryConfig
+                                      )
+                                    )
+                                    .mapTo[SparqlExtendedConstructResponse]
 
       statements: Seq[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
@@ -808,7 +825,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                            .toString()
                        }
 
-      nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery))
+      nodePathResponse: SparqlSelectResult <- appActor
+                                                .ask(SparqlSelectRequest(nodePathQuery))
                                                 .mapTo[SparqlSelectResult]
 
       /*
@@ -947,11 +965,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
-      maybeProject <- (responderManager ? ProjectGetADM(
-                        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
-                        featureFactoryConfig = featureFactoryConfig,
-                        KnoraSystemInstances.Users.SystemUser
-                      )).mapTo[Option[ProjectADM]]
+      maybeProject <- appActor
+                        .ask(
+                          ProjectGetADM(
+                            identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
+                            featureFactoryConfig = featureFactoryConfig,
+                            KnoraSystemInstances.Users.SystemUser
+                          )
+                        )
+                        .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
@@ -1039,7 +1061,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                                 .toString
                                           }
 
-      _ <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
     } yield newListNodeIri
   }
 
@@ -1134,7 +1156,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
              )
 
         changeNodeInfoSparqlString <- getUpdateNodeInfoSparqlStatement(changeNodeRequest, featureFactoryConfig)
-        changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeInfoSparqlString))
+        changeResourceResponse <- appActor
+                                    .ask(SparqlUpdateRequest(changeNodeInfoSparqlString))
                                     .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
@@ -1268,7 +1291,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                         featureFactoryConfig = featureFactoryConfig
                                       )
 
-        changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeNameSparqlString))
+        changeResourceResponse <- appActor
+                                    .ask(SparqlUpdateRequest(changeNodeNameSparqlString))
                                     .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
@@ -1345,7 +1369,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                           ),
                                           featureFactoryConfig = featureFactoryConfig
                                         )
-        changeResourceResponse <- (storeManager ? SparqlUpdateRequest(changeNodeLabelsSparqlString))
+        changeResourceResponse <- appActor
+                                    .ask(SparqlUpdateRequest(changeNodeLabelsSparqlString))
                                     .mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
@@ -1424,7 +1449,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                             ),
                                             featureFactoryConfig = featureFactoryConfig
                                           )
-        _ <- (storeManager ? SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(changeNodeCommentsSparqlString)).mapTo[SparqlUpdateResponse]
 
         /* Verify that the node info was updated */
         maybeNodeADM <- listNodeInfoGetADM(
@@ -1820,7 +1845,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                          .toString()
                      )
 
-      response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery))
+      response: SparqlSelectResult <- appActor
+                                        .ask(SparqlSelectRequest(sparqlQuery))
                                         .mapTo[SparqlSelectResult]
 
       canDelete =
@@ -1875,7 +1901,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             .toString()
         )
 
-      _: SparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlQuery))
+      _: SparqlUpdateResponse <- appActor
+                                   .ask(SparqlUpdateRequest(sparqlQuery))
                                    .mapTo[SparqlUpdateResponse]
 
     } yield ListNodeCommentsDeleteResponseADM(iri, !isRootNode)
@@ -2137,7 +2164,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
       //_ = log.debug("projectByIriExists - query: {}", askString)
 
-      askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result       = askResponse.result
 
     } yield result
@@ -2156,7 +2183,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
       // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
-      askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result       = askResponse.result
 
     } yield result
@@ -2174,7 +2201,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                    )
       // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
-      askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result       = askResponse.result
 
     } yield result
@@ -2201,7 +2228,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                        )
           //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
 
-          askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+          askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
           result       = askResponse.result
 
         } yield !result
@@ -2328,7 +2355,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                               .toString()
                           )
 
-      isNodeUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isNodeUsedSparql))
+      isNodeUsedResponse: SparqlSelectResult <- appActor
+                                                  .ask(SparqlSelectRequest(isNodeUsedSparql))
                                                   .mapTo[SparqlSelectResult]
 
       _ = if (isNodeUsedResponse.results.bindings.nonEmpty) {
@@ -2346,13 +2374,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   protected def getDataNamedGraph(projectIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[IRI] =
     for {
       /* Get the project information */
-      maybeProject <- (responderManager ? ProjectGetADM(
-                        ProjectIdentifierADM(
-                          maybeIri = Some(projectIri)
-                        ),
-                        featureFactoryConfig = featureFactoryConfig,
-                        KnoraSystemInstances.Users.SystemUser
-                      )).mapTo[Option[ProjectADM]]
+      maybeProject <- appActor
+                        .ask(
+                          ProjectGetADM(
+                            ProjectIdentifierADM(
+                              maybeIri = Some(projectIri)
+                            ),
+                            featureFactoryConfig = featureFactoryConfig,
+                            KnoraSystemInstances.Users.SystemUser
+                          )
+                        )
+                        .mapTo[Option[ProjectADM]]
 
       project: ProjectADM = maybeProject match {
                               case Some(project: ProjectADM) => project
@@ -2381,10 +2413,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                                .toString
                                            )
 
-      parentNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                              sparql = getParentNodeSparqlString,
-                              featureFactoryConfig = featureFactoryConfig
-                            )).mapTo[SparqlExtendedConstructResponse]
+      parentNodeResponse <- appActor
+                              .ask(
+                                SparqlExtendedConstructRequest(
+                                  sparql = getParentNodeSparqlString,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )
+                              )
+                              .mapTo[SparqlExtendedConstructResponse]
 
       parentStatements = parentNodeResponse.statements.headOption.getOrElse(
                            throw BadRequestException(s"The parent node for $nodeIri not found, report this as a bug.")
@@ -2416,7 +2452,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                   )
 
       // Do the update.
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlDeleteNode)).mapTo[SparqlUpdateResponse]
 
       // Verify that the node was deleted correctly.
       nodeStillExists: Boolean <- nodeByIriExists(nodeIri)
@@ -2454,7 +2490,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                               .toString()
                                           )
 
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdateNodePosition)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdateNodePosition)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the node info was updated */
       maybeNode <- listNodeGetADM(
@@ -2551,7 +2587,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                             .toString()
                                         )
 
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlChangeParentNode)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(sparqlChangeParentNode)).mapTo[SparqlUpdateResponse]
 
       /* verify that parents were updated */
       // get old parent node with its immediate children

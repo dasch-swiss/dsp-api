@@ -37,7 +37,7 @@ object ResourceHtmlView {
    */
   private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
-  def propertiesHtmlView(response: ResourceFullResponseV1, responderManager: ActorRef): String = {
+  def propertiesHtmlView(response: ResourceFullResponseV1, appActor: ActorRef): String = {
 
     val properties = response.props.get.properties
 
@@ -57,9 +57,7 @@ object ResourceHtmlView {
           propertyV1.values.map(literal => dateValue2String(literal.asInstanceOf[DateValueV1]))
 
         case OntologyConstants.KnoraBase.ListValue =>
-          propertyV1.values.map(literal =>
-            listValue2String(literal.asInstanceOf[HierarchicalListValueV1], responderManager)
-          )
+          propertyV1.values.map(literal => listValue2String(literal.asInstanceOf[HierarchicalListValueV1], appActor))
 
         case OntologyConstants.KnoraBase.Resource => // TODO: This could actually be a subclass of knora-base:Resource.
           propertyV1.values.map(literal => resourceValue2String(literal.asInstanceOf[LinkV1]))
@@ -92,9 +90,9 @@ object ResourceHtmlView {
       date.dateval1.toString + " " + date.era1 + ", " + date.dateval2 + ", " + date.calendar.toString + " " + date.era2
     }
 
-  private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorRef): String = {
+  private def listValue2String(list: HierarchicalListValueV1, appActor: ActorRef): String = {
 
-    val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
+    val resultFuture = appActor.ask(NodePathGetRequestV1(list.hierarchicalListIri, systemUser))
     val nodePath     = Await.result(resultFuture, Duration(3, SECONDS)).asInstanceOf[NodePathGetResponseV1]
 
     nodePath.nodelist.foldLeft("") { (z, i) =>

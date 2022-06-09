@@ -56,7 +56,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -89,7 +89,7 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)

@@ -38,7 +38,7 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
       .toString()
 
     implicit val timeout: Timeout = Duration(10, SECONDS)
-    val resF: Future[SparqlConstructResponse] = (storeManager ? SparqlConstructRequest(
+    val resF: Future[SparqlConstructResponse] = (appActor ? SparqlConstructRequest(
       sparql = getMappingSparql,
       featureFactoryConfig = defaultFeatureFactoryConfig
     )).mapTo[SparqlConstructResponse]
@@ -104,7 +104,7 @@ class StandoffResponderV2Spec extends CoreSpec() with ImplicitSender {
         featureFactoryConfig = defaultFeatureFactoryConfig,
         user = SharedTestDataADM.rootUser
       )
-      responderManager ! message
+      appActor ! message
       val response = expectMsgPF(timeout) {
         case res: CreateMappingResponseV2 => res
         case _                            => throw AssertionException("Could not create a mapping")

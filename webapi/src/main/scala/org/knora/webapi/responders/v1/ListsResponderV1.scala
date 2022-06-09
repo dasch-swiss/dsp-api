@@ -150,7 +150,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                        )
                        .toString()
                    }
-      listQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
+      listQueryResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
 
       // Group the results to map each node to the SPARQL query results representing its children.
       groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] =
@@ -232,7 +232,8 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                            )
                            .toString()
                        }
-      nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery))
+      nodePathResponse: SparqlSelectResult <- appActor
+                                                .ask(SparqlSelectRequest(nodePathQuery))
                                                 .mapTo[SparqlSelectResult]
 
       /*

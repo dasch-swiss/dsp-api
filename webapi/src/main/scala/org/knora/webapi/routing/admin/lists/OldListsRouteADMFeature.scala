@@ -93,7 +93,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -131,7 +131,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         requestContext = requestContext,
         featureFactoryConfig = featureFactoryConfig,
         settings = settings,
-        responderManager = responderManager,
+        appActor = appActor,
         log = log
       )
     }
@@ -158,7 +158,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -187,7 +187,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -254,7 +254,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -334,7 +334,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -414,7 +414,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }

@@ -17,7 +17,7 @@ class HttpTriplestoreConnectorSpec extends CoreSpec() with ImplicitSender {
 
   "The HttpTriplestoreConnector" should {
     "report a connection timeout with an appropriate error message" in {
-      storeManager ! SimulateTimeoutRequest()
+      appActor ! SimulateTimeoutRequest()
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[TriplestoreTimeoutException])

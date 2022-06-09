@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.text.StringEscapeUtils
@@ -392,7 +392,7 @@ class XMLToStandoffUtil(
   def xml2TextWithStandoff(
     xmlStr: String,
     tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired],
-    log: LoggingAdapter
+    log: Logger
   ): TextWithStandoff = {
 
     // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But

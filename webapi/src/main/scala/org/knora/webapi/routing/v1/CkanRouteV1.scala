@@ -46,7 +46,7 @@ class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }

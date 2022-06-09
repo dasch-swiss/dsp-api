@@ -104,7 +104,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                            )
       //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
-      projectsResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      projectsResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
 
       projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
@@ -197,11 +197,16 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                             case Some(profile) =>
                               profile.userData.user_id match {
                                 case Some(user_iri) =>
-                                  (responderManager ? UserGetRequestADM(
-                                    identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
-                                    featureFactoryConfig = featureFactoryConfig,
-                                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                                  )).mapTo[UserResponseADM].map(_.user)
+                                  appActor
+                                    .ask(
+                                      UserGetRequestADM(
+                                        identifier = UserIdentifierADM(maybeIri = Some(user_iri)),
+                                        featureFactoryConfig = featureFactoryConfig,
+                                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                                      )
+                                    )
+                                    .mapTo[UserResponseADM]
+                                    .map(_.user)
 
                                 case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
                               }
@@ -211,11 +216,15 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
 
       // Get the ontologies per project.
 
-      namedGraphsResponse <- (responderManager ? NamedGraphsGetRequestV1(
-                               projectIris = projectIris,
-                               featureFactoryConfig = featureFactoryConfig,
-                               userADM = userADM
-                             )).mapTo[NamedGraphsResponseV1]
+      namedGraphsResponse <- appActor
+                               .ask(
+                                 NamedGraphsGetRequestV1(
+                                   projectIris = projectIris,
+                                   featureFactoryConfig = featureFactoryConfig,
+                                   userADM = userADM
+                                 )
+                               )
+                               .mapTo[NamedGraphsResponseV1]
 
     } yield namedGraphsResponse.vocabularies.map { namedGraph: NamedGraphV1 =>
       namedGraph.project_id -> namedGraph.id
@@ -278,7 +287,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                          .toString()
                      )
 
-      projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      projectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(
                                                      projectIris = Set(projectIri),
@@ -331,7 +340,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                            )
       //_ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
 
-      projectResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      projectResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       //_ = log.debug(s"getProjectInfoByShortnameGetRequest - result: $projectResponse")
 
       // get project IRI from results rows
@@ -454,7 +463,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                    )
       //_ = log.debug("projectExists - query: {}", askString)
 
-      checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
 
     } yield result
@@ -474,7 +483,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                    )
       //_ = log.debug("projectExists - query: {}", askString)
 
-      checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
 
     } yield result
@@ -494,7 +503,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                    )
       //_ = log.debug("projectExists - query: {}", askString)
 
-      checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
 
     } yield result

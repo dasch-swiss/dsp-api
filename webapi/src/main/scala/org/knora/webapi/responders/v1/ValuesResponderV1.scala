@@ -106,11 +106,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       response <- maybeValueQueryResult match {
                     case Some(valueQueryResult) =>
                       for {
-                        maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
-                                                      userIri = valueQueryResult.creatorIri,
-                                                      userProfileType = UserProfileTypeV1.RESTRICTED,
-                                                      featureFactoryConfig = featureFactoryConfig
-                                                    )).mapTo[Option[UserProfileV1]]
+                        maybeValueCreatorProfile <- appActor
+                                                      .ask(
+                                                        UserProfileByIRIGetV1(
+                                                          userIri = valueQueryResult.creatorIri,
+                                                          userProfileType = UserProfileTypeV1.RESTRICTED,
+                                                          featureFactoryConfig = featureFactoryConfig
+                                                        )
+                                                      )
+                                                      .mapTo[Option[UserProfileV1]]
 
                         valueCreatorProfile = maybeValueCreatorProfile match {
                                                 case Some(up) => up
@@ -152,10 +156,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     def makeTaskFuture(userIri: IRI): Future[CreateValueResponseV1] =
       for {
         // Check that the submitted value has the correct type for the property.
-        entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                                                         propertyIris = Set(createValueRequest.propertyIri),
-                                                         userProfile = createValueRequest.userProfile
-                                                       )).mapTo[EntityInfoGetResponseV1]
+        entityInfoResponse: EntityInfoGetResponseV1 <- appActor
+                                                         .ask(
+                                                           EntityInfoGetRequestV1(
+                                                             propertyIris = Set(createValueRequest.propertyIri),
+                                                             userProfile = createValueRequest.userProfile
+                                                           )
+                                                         )
+                                                         .mapTo[EntityInfoGetResponseV1]
 
         propertyInfo = entityInfoResponse.propertyInfoMap(createValueRequest.propertyIri)
         propertyObjectClassConstraint = propertyInfo
@@ -179,12 +187,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Check that the user has permission to modify the resource. (We do this as late as possible because it's
         // slower than the other checks, and there's no point in doing it if the other checks fail.)
 
-        resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
-                                  iri = createValueRequest.resourceIri,
-                                  featureFactoryConfig = createValueRequest.featureFactoryConfig,
-                                  userADM = createValueRequest.userProfile,
-                                  getIncoming = false
-                                )).mapTo[ResourceFullResponseV1]
+        resourceFullResponse <- appActor
+                                  .ask(
+                                    ResourceFullGetRequestV1(
+                                      iri = createValueRequest.resourceIri,
+                                      featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                                      userADM = createValueRequest.userProfile,
+                                      getIncoming = false
+                                    )
+                                  )
+                                  .mapTo[ResourceFullResponseV1]
 
         resourcePermissionCode: Option[Int] = resourceFullResponse.resdata.flatMap(resdata => resdata.rights)
 
@@ -248,25 +260,29 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                   )
                                   .restype_id
 
-        defaultObjectAccessPermissions <- {
-          responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-            projectIri = projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = createValueRequest.propertyIri,
-            targetUser = createValueRequest.userProfile,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
-        }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+        defaultObjectAccessPermissions <- appActor
+                                            .ask(
+                                              DefaultObjectAccessPermissionsStringForPropertyGetADM(
+                                                projectIri = projectIri,
+                                                resourceClassIri = resourceClassIri,
+                                                propertyIri = createValueRequest.propertyIri,
+                                                targetUser = createValueRequest.userProfile,
+                                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                              )
+                                            )
+                                            .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
         _ = log.debug(s"createValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
         // Get project info
-        maybeProjectInfo <- {
-          responderManager ? ProjectInfoByIRIGetV1(
-            iri = projectIri,
-            featureFactoryConfig = createValueRequest.featureFactoryConfig,
-            userProfileV1 = Some(createValueRequest.userProfile.asUserProfileV1)
-          )
-        }.mapTo[Option[ProjectInfoV1]]
+        maybeProjectInfo <- appActor
+                              .ask(
+                                ProjectInfoByIRIGetV1(
+                                  iri = projectIri,
+                                  featureFactoryConfig = createValueRequest.featureFactoryConfig,
+                                  userProfileV1 = Some(createValueRequest.userProfile.asUserProfileV1)
+                                )
+                              )
+                              .mapTo[Option[ProjectInfoV1]]
 
         projectInfo = maybeProjectInfo match {
                         case Some(pi) => pi
@@ -763,7 +779,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                 )
                                 .toString()
         //_ = print(getFileValuesSparql)
-        getFileValuesResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(getFileValuesSparql))
+        getFileValuesResponse: SparqlSelectResult <- appActor
+                                                       .ask(SparqlSelectRequest(getFileValuesSparql))
                                                        .mapTo[SparqlSelectResult]
         // _ <- Future(println(getFileValuesResponse))
 
@@ -814,27 +831,34 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         updateFuture = triplestoreUpdateFuture,
         valueContent = fileValueContent,
         requestingUser = changeFileValueRequest.userProfile,
-        responderManager = responderManager,
-        storeManager = storeManager,
+        appActor = appActor,
         log = log
       )
     }
 
     for {
-      resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
-                                iri = changeFileValueRequest.resourceIri,
-                                featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
-                                userProfile = changeFileValueRequest.userProfile
-                              )).mapTo[ResourceInfoResponseV1]
+      resourceInfoResponse <- appActor
+                                .ask(
+                                  ResourceInfoGetRequestV1(
+                                    iri = changeFileValueRequest.resourceIri,
+                                    featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
+                                    userProfile = changeFileValueRequest.userProfile
+                                  )
+                                )
+                                .mapTo[ResourceInfoResponseV1]
 
       // Get project info
-      projectResponse <- {
-        responderManager ? ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(resourceInfoResponse.resource_info.get.project_id)),
-          featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
-          requestingUser = changeFileValueRequest.userProfile
-        )
-      }.mapTo[ProjectGetResponseADM]
+      projectResponse <- appActor
+                           .ask(
+                             ProjectGetRequestADM(
+                               identifier = ProjectIdentifierADM(maybeIri =
+                                 Some(resourceInfoResponse.resource_info.get.project_id)
+                               ),
+                               featureFactoryConfig = changeFileValueRequest.featureFactoryConfig,
+                               requestingUser = changeFileValueRequest.userProfile
+                             )
+                           )
+                           .mapTo[ProjectGetResponseADM]
 
       // Do the preparations of a file value change while already holding an update lock on the resource.
       // This is necessary because in `makeTaskFuture` the current file value Iris for the given resource IRI have to been retrieved.
@@ -929,10 +953,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         // Check that the submitted value has the correct type for the property.
 
-        entityInfoResponse <- (responderManager ? EntityInfoGetRequestV1(
-                                propertyIris = Set(propertyIri),
-                                userProfile = changeValueRequest.userProfile
-                              )).mapTo[EntityInfoGetResponseV1]
+        entityInfoResponse <- appActor
+                                .ask(
+                                  EntityInfoGetRequestV1(
+                                    propertyIris = Set(propertyIri),
+                                    userProfile = changeValueRequest.userProfile
+                                  )
+                                )
+                                .mapTo[EntityInfoGetResponseV1]
 
         propertyInfo = entityInfoResponse.propertyInfoMap(propertyIri)
         propertyObjectClassConstraint = propertyInfo
@@ -967,12 +995,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         // Get details of the resource.  (We do this as late as possible because it's slower than the other checks,
         // and there's no point in doing it if the other checks fail.)
-        resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
-                                  iri = findResourceWithValueResult.resourceIri,
-                                  featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-                                  userADM = changeValueRequest.userProfile,
-                                  getIncoming = false
-                                )).mapTo[ResourceFullResponseV1]
+        resourceFullResponse <- appActor
+                                  .ask(
+                                    ResourceFullGetRequestV1(
+                                      iri = findResourceWithValueResult.resourceIri,
+                                      featureFactoryConfig = changeValueRequest.featureFactoryConfig,
+                                      userADM = changeValueRequest.userProfile,
+                                      getIncoming = false
+                                    )
+                                  )
+                                  .mapTo[ResourceFullResponseV1]
 
         _ = changeValueRequest.value match {
               case _: FileValueV1 => () // It is a file value, do not check for duplicates.
@@ -1015,25 +1047,29 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           log.debug(
             s"changeValueV1 - DefaultObjectAccessPermissionsStringForPropertyGetV1 - projectIri ${findResourceWithValueResult.projectIri}, propertyIri: ${findResourceWithValueResult.propertyIri}, permissions: ${changeValueRequest.userProfile.permissions} "
           )
-        defaultObjectAccessPermissions <- {
-          responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-            projectIri = findResourceWithValueResult.projectIri,
-            resourceClassIri = resourceClassIri,
-            propertyIri = findResourceWithValueResult.propertyIri,
-            targetUser = changeValueRequest.userProfile,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
-        }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+        defaultObjectAccessPermissions <- appActor
+                                            .ask(
+                                              DefaultObjectAccessPermissionsStringForPropertyGetADM(
+                                                projectIri = findResourceWithValueResult.projectIri,
+                                                resourceClassIri = resourceClassIri,
+                                                propertyIri = findResourceWithValueResult.propertyIri,
+                                                targetUser = changeValueRequest.userProfile,
+                                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                              )
+                                            )
+                                            .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
         _ = log.debug(s"changeValueV1 - defaultObjectAccessPermissions: $defaultObjectAccessPermissions")
 
         // Get project info
-        maybeProjectInfo <- {
-          responderManager ? ProjectInfoByIRIGetV1(
-            iri = resourceFullResponse.resinfo.get.project_id,
-            featureFactoryConfig = changeValueRequest.featureFactoryConfig,
-            userProfileV1 = Some(changeValueRequest.userProfile.asUserProfileV1)
-          )
-        }.mapTo[Option[ProjectInfoV1]]
+        maybeProjectInfo <- appActor
+                              .ask(
+                                ProjectInfoByIRIGetV1(
+                                  iri = resourceFullResponse.resinfo.get.project_id,
+                                  featureFactoryConfig = changeValueRequest.featureFactoryConfig,
+                                  userProfileV1 = Some(changeValueRequest.userProfile.asUserProfileV1)
+                                )
+                              )
+                              .mapTo[Option[ProjectInfoV1]]
 
         projectInfo = maybeProjectInfo match {
                         case Some(pi) => pi
@@ -1181,13 +1217,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
 
         // Get project info
-        maybeProjectInfo <- {
-          responderManager ? ProjectInfoByIRIGetV1(
-            findResourceWithValueResult.projectIri,
-            featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
-            None
-          )
-        }.mapTo[Option[ProjectInfoV1]]
+        maybeProjectInfo <- appActor
+                              .ask(
+                                ProjectInfoByIRIGetV1(
+                                  findResourceWithValueResult.projectIri,
+                                  featureFactoryConfig = changeCommentRequest.featureFactoryConfig,
+                                  None
+                                )
+                              )
+                              .mapTo[Option[ProjectInfoV1]]
 
         projectInfo = maybeProjectInfo match {
                         case Some(pi) => pi
@@ -1212,7 +1250,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          .toString()
 
         // Do the update.
-        sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // To find out whether the update succeeded, look for the new value in the triplestore.
         verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -1328,13 +1366,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                                                for {
                                                  // Get project info
-                                                 maybeProjectInfo <- {
-                                                   responderManager ? ProjectInfoByIRIGetV1(
-                                                     iri = findResourceWithValueResult.projectIri,
-                                                     featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-                                                     userProfileV1 = None
-                                                   )
-                                                 }.mapTo[Option[ProjectInfoV1]]
+                                                 maybeProjectInfo <-
+                                                   appActor
+                                                     .ask(
+                                                       ProjectInfoByIRIGetV1(
+                                                         iri = findResourceWithValueResult.projectIri,
+                                                         featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
+                                                         userProfileV1 = None
+                                                       )
+                                                     )
+                                                     .mapTo[Option[ProjectInfoV1]]
 
                                                  projectInfo = maybeProjectInfo match {
                                                                  case Some(pi) => pi
@@ -1403,13 +1444,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                  linkUpdates <- linkUpdatesFuture
 
                                                  // Get project info
-                                                 maybeProjectInfo <- {
-                                                   responderManager ? ProjectInfoByIRIGetV1(
-                                                     iri = findResourceWithValueResult.projectIri,
-                                                     featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
-                                                     userProfileV1 = None
-                                                   )
-                                                 }.mapTo[Option[ProjectInfoV1]]
+                                                 maybeProjectInfo <-
+                                                   appActor
+                                                     .ask(
+                                                       ProjectInfoByIRIGetV1(
+                                                         iri = findResourceWithValueResult.projectIri,
+                                                         featureFactoryConfig = deleteValueRequest.featureFactoryConfig,
+                                                         userProfileV1 = None
+                                                       )
+                                                     )
+                                                     .mapTo[Option[ProjectInfoV1]]
 
                                                  projectInfo = maybeProjectInfo match {
                                                                  case Some(pi) => pi
@@ -1440,7 +1484,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                            }
 
         // Do the update.
-        sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check whether the update succeeded.
         sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1448,7 +1492,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                           valueIri = deletedValueIri
                         )
                         .toString()
-        sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
         rows                  = sparqlSelectResponse.results.bindings
 
         _ = if (
@@ -1533,7 +1577,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          )
                          .toString()
                      }
-      selectResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      selectResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows                                = selectResponse.results.bindings
 
       _ = if (rows.isEmpty) {
@@ -1644,11 +1688,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       linkValueResponse <- maybeValueQueryResult match {
                              case Some(valueQueryResult) =>
                                for {
-                                 maybeValueCreatorProfile <- (responderManager ? UserProfileByIRIGetV1(
-                                                               userIri = valueQueryResult.creatorIri,
-                                                               userProfileType = UserProfileTypeV1.RESTRICTED,
-                                                               featureFactoryConfig = featureFactoryConfig
-                                                             )).mapTo[Option[UserProfileV1]]
+                                 maybeValueCreatorProfile <- appActor
+                                                               .ask(
+                                                                 UserProfileByIRIGetV1(
+                                                                   userIri = valueQueryResult.creatorIri,
+                                                                   userProfileType = UserProfileTypeV1.RESTRICTED,
+                                                                   featureFactoryConfig = featureFactoryConfig
+                                                                 )
+                                                               )
+                                                               .mapTo[Option[UserProfileV1]]
 
                                  valueCreatorProfile = maybeValueCreatorProfile match {
                                                          case Some(up) => up
@@ -1773,7 +1821,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          .toString()
                      )
 
-      response                     <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                     <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       maybeValueQueryResult <- sparqlQueryResults2ValueQueryResult(
@@ -1814,7 +1862,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          .toString()
                      )
 
-      response <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows      = response.results.bindings
 
       _ = if (rows.isEmpty) {
@@ -1879,7 +1927,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          .toString()
                      }
 
-      response                     <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                     <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
@@ -1924,7 +1972,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          .toString()
                      }
 
-      response                     <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+      response                     <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       maybeLinkValueQueryResult <- sparqlQueryResults2LinkValueQueryResult(
@@ -1975,7 +2023,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         value <- valueUtilV1.makeValueV1(
                    valueProps = valueProps,
                    projectShortcode = projectShortcode,
-                   responderManager = responderManager,
+                   appActor = appActor,
                    featureFactoryConfig = featureFactoryConfig,
                    userProfile = userProfile
                  )
@@ -2096,7 +2144,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         linkValueMaybe <- valueUtilV1.makeValueV1(
                             valueProps = valueProps,
                             projectShortcode = projectShortcode,
-                            responderManager = responderManager,
+                            appActor = appActor,
                             featureFactoryConfig = featureFactoryConfig,
                             userProfile = userProfile
                           )
@@ -2266,7 +2314,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                          .toString()
                      }
 
-      updateVerificationResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery))
+      updateVerificationResponse: SparqlSelectResult <- appActor
+                                                          .ask(SparqlSelectRequest(sparqlQuery))
                                                           .mapTo[SparqlSelectResult]
       rows = updateVerificationResponse.results.bindings
 
@@ -2364,7 +2413,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                      )
                                      .toString()
                                  )
-      findResourceResponse <- (storeManager ? SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResult]
+      findResourceResponse <- appActor.ask(SparqlSelectRequest(findResourceSparqlQuery)).mapTo[SparqlSelectResult]
 
       _ = if (findResourceResponse.results.bindings.isEmpty) {
             throw NotFoundException(s"No resource found containing value $valueIri")
@@ -2492,7 +2541,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield UnverifiedValueV1(
       newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
       value = linkUpdateV1
@@ -2580,7 +2629,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
     } yield UnverifiedValueV1(
       newValueIri = newValueIri,
       value = value
@@ -2640,13 +2689,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                             )
 
       // Get project info
-      maybeProjectInfo <- {
-        responderManager ? ProjectInfoByIRIGetV1(
-          iri = projectIri,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfileV1 = None
-        )
-      }.mapTo[Option[ProjectInfoV1]]
+      maybeProjectInfo <- appActor
+                            .ask(
+                              ProjectInfoByIRIGetV1(
+                                iri = projectIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfileV1 = None
+                              )
+                            )
+                            .mapTo[Option[ProjectInfoV1]]
 
       projectInfo = maybeProjectInfo match {
                       case Some(pi) => pi
@@ -2677,7 +2728,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
       // To find out whether the update succeeded, check that the new link is in the triplestore.
       linkValueQueryResult <- verifyLinkUpdate(
@@ -2809,13 +2860,15 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                             }
 
       // Get project info
-      maybeProjectInfo <- {
-        responderManager ? ProjectInfoByIRIGetV1(
-          iri = projectIri,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfileV1 = None
-        )
-      }.mapTo[Option[ProjectInfoV1]]
+      maybeProjectInfo <- appActor
+                            .ask(
+                              ProjectInfoByIRIGetV1(
+                                iri = projectIri,
+                                featureFactoryConfig = featureFactoryConfig,
+                                userProfileV1 = None
+                              )
+                            )
+                            .mapTo[Option[ProjectInfoV1]]
 
       projectInfo = maybeProjectInfo match {
                       case Some(pi) => pi
@@ -2852,7 +2905,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
        */
 
       // Do the update.
-      sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
       // To find out whether the update succeeded, look for the new value in the triplestore.
       verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -3096,12 +3149,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     } else {
       val targetIriCheckFutures: Set[Future[Unit]] = targetIris.map { targetIri =>
         for {
-          checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
-                                        resourceIri = targetIri,
-                                        owlClass = OntologyConstants.KnoraBase.Resource,
-                                        featureFactoryConfig = featureFactoryConfig,
-                                        userProfile = userProfile
-                                      )).mapTo[ResourceCheckClassResponseV1]
+          checkTargetClassResponse <- appActor
+                                        .ask(
+                                          ResourceCheckClassRequestV1(
+                                            resourceIri = targetIri,
+                                            owlClass = OntologyConstants.KnoraBase.Resource,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            userProfile = userProfile
+                                          )
+                                        )
+                                        .mapTo[ResourceCheckClassResponseV1]
 
           _ =
             if (!checkTargetClassResponse.isInClass)
@@ -3139,12 +3196,16 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                   case linkUpdate: LinkUpdateV1 =>
                     // We're creating a link. Ask the resources responder to check the OWL class of the target resource.
                     for {
-                      checkTargetClassResponse <- (responderManager ? ResourceCheckClassRequestV1(
-                                                    resourceIri = linkUpdate.targetResourceIri,
-                                                    owlClass = propertyObjectClassConstraint,
-                                                    featureFactoryConfig = featureFactoryConfig,
-                                                    userProfile = userProfile
-                                                  )).mapTo[ResourceCheckClassResponseV1]
+                      checkTargetClassResponse <- appActor
+                                                    .ask(
+                                                      ResourceCheckClassRequestV1(
+                                                        resourceIri = linkUpdate.targetResourceIri,
+                                                        owlClass = propertyObjectClassConstraint,
+                                                        featureFactoryConfig = featureFactoryConfig,
+                                                        userProfile = userProfile
+                                                      )
+                                                    )
+                                                    .mapTo[ResourceCheckClassResponseV1]
 
                       _ = if (!checkTargetClassResponse.isInClass) {
                             throw OntologyConstraintException(
@@ -3159,7 +3220,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                       propertyIri = propertyIri,
                       propertyObjectClassConstraint = propertyObjectClassConstraint,
                       valueType = otherValue.valueTypeIri,
-                      responderManager = responderManager,
+                      appActor = appActor,
                       userProfile = userProfile
                     )
                 }

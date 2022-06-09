@@ -59,11 +59,15 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
   ): Future[GetXSLTransformationResponseV1] = {
 
     val xslTransformationFuture = for {
-      xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2(
-                              xsltTextRepresentationIri = xslTransformationIri,
-                              featureFactoryConfig = featureFactoryConfig,
-                              requestingUser = userProfile
-                            )).mapTo[GetXSLTransformationResponseV2]
+      xsltTransformation <- appActor
+                              .ask(
+                                GetXSLTransformationRequestV2(
+                                  xsltTextRepresentationIri = xslTransformationIri,
+                                  featureFactoryConfig = featureFactoryConfig,
+                                  requestingUser = userProfile
+                                )
+                              )
+                              .mapTo[GetXSLTransformationResponseV2]
     } yield GetXSLTransformationResponseV1(
       xslt = xsltTransformation.xslt
     )
@@ -109,7 +113,7 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     )
 
     for {
-      mappingResponse <- (responderManager ? createMappingRequest).mapTo[CreateMappingResponseV2]
+      mappingResponse <- appActor.ask(createMappingRequest).mapTo[CreateMappingResponseV2]
     } yield CreateMappingResponseV1(
       mappingResponse.mappingIri
     )
@@ -135,11 +139,15 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
     userProfile: UserADM
   ): Future[GetMappingResponseV1] =
     for {
-      mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                                                 mappingIri = mappingIri,
-                                                 featureFactoryConfig = featureFactoryConfig,
-                                                 requestingUser = userProfile
-                                               )).mapTo[GetMappingResponseV2]
+      mappingResponse: GetMappingResponseV2 <- appActor
+                                                 .ask(
+                                                   GetMappingRequestV2(
+                                                     mappingIri = mappingIri,
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     requestingUser = userProfile
+                                                   )
+                                                 )
+                                                 .mapTo[GetMappingResponseV2]
     } yield GetMappingResponseV1(
       mappingIri = mappingResponse.mappingIri,
       mapping = mappingResponse.mapping,

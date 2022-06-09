@@ -49,7 +49,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        responderManager ! GroupsGetRequestADM(
+        appActor ! GroupsGetRequestADM(
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
@@ -62,7 +62,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
     "asked about a group identified by 'iri' " should {
       "return group info if the group is known " in {
-        responderManager ! GroupGetRequestADM(
+        appActor ! GroupGetRequestADM(
           groupIri = imagesReviewerGroup.id,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
@@ -72,7 +72,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "return 'NotFoundException' when the group is unknown " in {
-        responderManager ! GroupGetRequestADM(
+        appActor ! GroupGetRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
@@ -88,7 +88,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       val newGroupIri = new MutableTestIri
 
       "CREATE the group and return the group's info if the supplied group name is unique" in {
-        responderManager ! GroupCreateRequestADM(
+        appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = None,
             name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
@@ -127,7 +127,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
-        responderManager ! GroupCreateRequestADM(
+        appActor ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(
               GroupIri.make(imagesReviewerGroup.id).fold(e => throw e.head, v => v)
@@ -151,7 +151,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "UPDATE a group" in {
-        responderManager ! GroupChangeRequestADM(
+        appActor ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
             Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
@@ -181,7 +181,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "return 'NotFound' if a not-existing group IRI is submitted during update" in {
-        responderManager ! GroupChangeRequestADM(
+        appActor ! GroupChangeRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
           GroupUpdatePayloadADM(
             Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
@@ -202,7 +202,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "return 'BadRequest' if the new group name already exists inside the project" in {
-        responderManager ! GroupChangeRequestADM(
+        appActor ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
             Some(GroupName.make("Image reviewer").fold(e => throw e.head, v => v)),
@@ -229,7 +229,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
     "used to query members" should {
       "return all members of a group identified by IRI" in {
-        responderManager ! GroupMembersGetRequestADM(
+        appActor ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
@@ -244,7 +244,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "remove all members when group is deactivated" in {
-        responderManager ! GroupMembersGetRequestADM(
+        appActor ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
@@ -253,7 +253,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         val membersBeforeStatusChange: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
         membersBeforeStatusChange.members.size shouldBe 2
 
-        responderManager ! GroupChangeStatusRequestADM(
+        appActor ! GroupChangeStatusRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
           changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -265,7 +265,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         statusChangeResponse.group.status shouldBe false
 
-        responderManager ! GroupMembersGetRequestADM(
+        appActor ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
@@ -275,7 +275,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       }
 
       "return 'NotFound' when the group IRI is unknown" in {
-        responderManager ! GroupMembersGetRequestADM(
+        appActor ! GroupMembersGetRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
