@@ -211,5 +211,13 @@ object Dependencies {
     zioTestSbt % Test
   )
   val sharedLibraryDependencies =
-    Seq(akkaActor, commonsLang3, commonsValidator, gwtServlet, zioPrelude, zioTest % Test, zioTestSbt % Test)
+    Seq(
+      commonsLang3,
+      commonsValidator,
+      gwtServlet,
+      zioPrelude,
+      scalaLogging,
+      zioTest    % Test,
+      zioTestSbt % Test
+    )
 }
