@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import dsp.errors.BadRequestException
 
 sealed trait Iri
 object Iri {
@@ -17,17 +18,17 @@ object Iri {
   object GroupIri { self =>
     def make(value: String): Validation[Throwable, GroupIri] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriMissing))
+        Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
       } else {
         val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraGroupIriStr(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.GroupIriInvalid))
         } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
-            V2IriValidation.validateAndEscapeIri(value, throw V2.BadRequestException(IriErrorMessages.GroupIriInvalid))
+            V2IriValidation.validateAndEscapeIri(value, throw BadRequestException(IriErrorMessages.GroupIriInvalid))
           )
 
           validatedValue.map(new GroupIri(_) {})
@@ -48,19 +49,19 @@ object Iri {
   object ListIri { self =>
     def make(value: String): Validation[Throwable, ListIri] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriMissing))
+        Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
       } else {
         val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraListIriStr(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.ListIriInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.ListIriInvalid))
         } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeIri(
               value,
-              throw V2.BadRequestException(IriErrorMessages.ListIriInvalid)
+              throw BadRequestException(IriErrorMessages.ListIriInvalid)
             )
           )
 
@@ -82,19 +83,19 @@ object Iri {
   object ProjectIri { self =>
     def make(value: String): Validation[Throwable, ProjectIri] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriMissing))
+        Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))
       } else {
         val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraProjectIriStr(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.ProjectIriInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.ProjectIriInvalid))
         } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeProjectIri(
               value,
-              throw V2.BadRequestException(IriErrorMessages.ProjectIriInvalid)
+              throw BadRequestException(IriErrorMessages.ProjectIriInvalid)
             )
           )
 
@@ -116,19 +117,19 @@ object Iri {
   object UserIri { self =>
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriMissing))
+        Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
       } else {
         val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraUserIriStr(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UserIriInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid))
         } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
-          Validation.fail(V2.BadRequestException(IriErrorMessages.UuidVersionInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeUserIri(
               value,
-              throw V2.BadRequestException(IriErrorMessages.UserIriInvalid)
+              throw BadRequestException(IriErrorMessages.UserIriInvalid)
             )
           )
 

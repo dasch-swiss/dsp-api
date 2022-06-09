@@ -7,7 +7,7 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 
 import org.apache.jena
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.RdfProcessingException
+import dsp.errors.RdfProcessingException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap

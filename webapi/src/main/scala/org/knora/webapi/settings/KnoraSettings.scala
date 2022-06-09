@@ -15,8 +15,8 @@ import com.typesafe.scalalogging.Logger
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
-import org.knora.webapi.exceptions.FeatureToggleException
-import org.knora.webapi.exceptions.FileWriteException
+import dsp.errors.FeatureToggleException
+import dsp.errors.FileWriteException
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
 import java.nio.file.Files

@@ -10,7 +10,7 @@ import com.typesafe.scalalogging.Logger
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

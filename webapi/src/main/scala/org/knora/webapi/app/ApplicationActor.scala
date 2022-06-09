@@ -25,11 +25,7 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
-import org.knora.webapi.exceptions.SipiException
-import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.exceptions.UnsupportedValueException
+import dsp.errors._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.http.directives.DSPApiDirectives

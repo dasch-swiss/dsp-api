@@ -6,7 +6,7 @@
 package org.knora.webapi.responders
 
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ApplicationLockException
+import dsp.errors.ApplicationLockException
 import org.knora.webapi.util.JavaUtil
 
 import java.util.UUID

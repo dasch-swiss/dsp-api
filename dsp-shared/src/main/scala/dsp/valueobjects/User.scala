@@ -7,6 +7,7 @@ package dsp.valueobjects
 
 import zio.prelude.Validation
 import scala.util.matching.Regex
+import dsp.errors.BadRequestException
 
 object User {
 
@@ -31,11 +32,11 @@ object User {
     def make(value: String): Validation[Throwable, Username] =
       if (value.isEmpty) {
         // remove exception return just the error
-        Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameMissing))
+        Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
       } else {
         UsernameRegex.findFirstIn(value) match {
           case Some(value) => Validation.succeed(new Username(value) {})
-          case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.UsernameInvalid))
+          case None        => Validation.fail(BadRequestException(UserErrorMessages.UsernameInvalid))
         }
       }
 
@@ -55,11 +56,11 @@ object User {
 
     def make(value: String): Validation[Throwable, Email] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(UserErrorMessages.EmailMissing))
+        Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
       } else {
         EmailRegex.findFirstIn(value) match {
           case Some(value) => Validation.succeed(new Email(value) {})
-          case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.EmailInvalid))
+          case None        => Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
         }
       }
 
@@ -77,7 +78,7 @@ object User {
   object GivenName { self =>
     def make(value: String): Validation[Throwable, GivenName] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(UserErrorMessages.GivenNameMissing))
+        Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
       } else {
         Validation.succeed(new GivenName(value) {})
       }
@@ -96,7 +97,7 @@ object User {
   object FamilyName { self =>
     def make(value: String): Validation[Throwable, FamilyName] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(UserErrorMessages.FamilyNameMissing))
+        Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
       } else {
         Validation.succeed(new FamilyName(value) {})
       }
@@ -117,11 +118,11 @@ object User {
 
     def make(value: String): Validation[Throwable, Password] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordMissing))
+        Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
       } else {
         PasswordRegex.findFirstIn(value) match {
           case Some(value) => Validation.succeed(new Password(value) {})
-          case None        => Validation.fail(V2.BadRequestException(UserErrorMessages.PasswordInvalid))
+          case None        => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
         }
       }
 
@@ -148,9 +149,9 @@ object User {
   object LanguageCode { self =>
     def make(value: String): Validation[Throwable, LanguageCode] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeMissing))
+        Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
       } else if (!V2.SupportedLanguageCodes.contains(value)) {
-        Validation.fail(V2.BadRequestException(UserErrorMessages.LanguageCodeInvalid))
+        Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
       } else {
         Validation.succeed(new LanguageCode(value) {})
       }

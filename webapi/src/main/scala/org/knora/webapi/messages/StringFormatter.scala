@@ -14,7 +14,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.SalsahGui
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM

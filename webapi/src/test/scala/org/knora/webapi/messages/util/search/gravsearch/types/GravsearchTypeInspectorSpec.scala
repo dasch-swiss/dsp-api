@@ -7,7 +7,7 @@ package org.knora.webapi.util.search.gravsearch.types
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.exceptions.GravsearchException
+import dsp.errors.GravsearchException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._

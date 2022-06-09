@@ -12,7 +12,7 @@ import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM

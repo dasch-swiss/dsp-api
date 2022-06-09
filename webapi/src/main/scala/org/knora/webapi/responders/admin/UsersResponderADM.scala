@@ -8,9 +8,9 @@ package org.knora.webapi.responders.admin
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions._
+import dsp.errors.BadRequestException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._

@@ -11,7 +11,7 @@ import net.sf.ehcache.CacheManager
 import net.sf.ehcache.Ehcache
 import net.sf.ehcache.Element
 import net.sf.ehcache.event.CacheEventListener
-import org.knora.webapi.exceptions.ApplicationCacheException
+import dsp.errors.ApplicationCacheException
 import org.slf4j.LoggerFactory
 
 /**

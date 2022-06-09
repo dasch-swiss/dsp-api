@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cacheservice.api
 
-import org.knora.webapi.exceptions.CacheServiceException
+import dsp.errors.CacheServiceException
 
 case class EmptyKey(message: String) extends CacheServiceException(message)
 

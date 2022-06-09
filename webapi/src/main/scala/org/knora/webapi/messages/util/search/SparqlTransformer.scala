@@ -6,10 +6,10 @@
 package org.knora.webapi.messages.util.search
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.GravsearchException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.AssertionException
+import dsp.errors.GravsearchException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

@@ -21,7 +21,7 @@ import akka.util.ByteString
 import io.swagger.annotations._
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.ApiMayChange
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.Authenticator

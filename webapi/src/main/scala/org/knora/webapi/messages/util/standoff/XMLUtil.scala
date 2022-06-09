@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.standoff
 
 import net.sf.saxon.s9api.XsltExecutable
-import org.knora.webapi.exceptions.StandoffConversionException
+import dsp.errors.StandoffConversionException
 
 import java.io.StringReader
 import java.io.StringWriter

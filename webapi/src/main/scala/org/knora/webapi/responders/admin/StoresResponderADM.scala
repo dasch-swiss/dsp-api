@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.admin
 
 import akka.pattern._
-import org.knora.webapi.exceptions.ForbiddenException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM

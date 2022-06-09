@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{
+import dsp.errors.{
   AssertionException,
   BadRequestException,
   DataConversionException,
@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
@@ -87,8 +86,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActor             a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -405,8 +403,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -509,8 +506,7 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -592,8 +588,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -686,8 +681,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -761,8 +755,7 @@ object CanDeleteCardinalitiesFromClassRequestV2
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -835,8 +828,7 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -987,8 +979,7 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1094,8 +1085,7 @@ object ChangePropertyLabelsOrCommentsRequestV2
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1249,8 +1239,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1459,8 +1448,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.exceptions
+package dsp.errors
 
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.lang3.SerializationException

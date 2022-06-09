@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.util
 
 import com.ibm.icu.util._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 
 import java.util.Date

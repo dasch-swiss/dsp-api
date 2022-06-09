@@ -13,9 +13,9 @@ import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.SipiException
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.BadRequestException
+import dsp.errors.SipiException
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
