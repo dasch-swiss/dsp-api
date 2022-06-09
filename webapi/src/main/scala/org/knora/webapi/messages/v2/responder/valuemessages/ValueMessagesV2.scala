@@ -76,8 +76,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -256,8 +255,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -473,8 +471,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1178,8 +1175,7 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1211,8 +1207,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1592,8 +1587,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1994,8 +1988,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.

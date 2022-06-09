@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.util.cache.CacheUtil
 import org.slf4j.LoggerFactory

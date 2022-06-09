@@ -64,7 +64,6 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import akka.testkit.TestActorRef
-import org.knora.webapi.responders.ResponderManager
 
 abstract class AsyncCoreSpec(_system: ActorSystem)
     extends TestKit(_system)

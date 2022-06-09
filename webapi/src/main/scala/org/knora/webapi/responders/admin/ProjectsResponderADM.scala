@@ -43,7 +43,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import org.knora.webapi.responders.ResponderManager
 
 /**
  * Returns information about Knora projects.

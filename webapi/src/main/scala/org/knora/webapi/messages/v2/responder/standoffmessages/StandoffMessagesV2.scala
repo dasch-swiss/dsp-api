@@ -22,7 +22,6 @@ import org.knora.webapi.messages.v2.responder.KnoraJsonLDRequestReaderV2
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant

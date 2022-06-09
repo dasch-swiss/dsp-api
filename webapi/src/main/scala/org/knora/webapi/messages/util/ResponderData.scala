@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 

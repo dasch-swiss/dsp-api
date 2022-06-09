@@ -18,7 +18,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
-import org.knora.webapi.responders.ResponderManager
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await

@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.ResponderManager
 
 import java.net.URLEncoder
 import scala.concurrent.Await

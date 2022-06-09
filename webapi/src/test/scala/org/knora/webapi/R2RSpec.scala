@@ -62,7 +62,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import akka.testkit.TestActorRef
-import org.knora.webapi.responders.ResponderManager
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.

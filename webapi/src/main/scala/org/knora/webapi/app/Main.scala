@@ -17,7 +17,6 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import zio._
 
 import java.util.concurrent.TimeUnit
-import org.knora.webapi.responders.ResponderManager
 
 /**
  * Starts Knora by bringing everything into scope by using the cake pattern.

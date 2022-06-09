@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.util._
 
 import java.time.Instant
@@ -683,8 +682,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -905,8 +903,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1102,8 +1099,7 @@ object DeleteOrEraseResourceRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteO
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.

@@ -21,7 +21,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import org.knora.webapi.responders.ResponderManager
 import akka.actor.ActorRef
 
 private object CountQueryHandler {

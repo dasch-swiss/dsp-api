@@ -29,8 +29,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
-import org.knora.webapi.responders.ResponderManager
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Failure

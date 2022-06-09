@@ -26,7 +26,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant

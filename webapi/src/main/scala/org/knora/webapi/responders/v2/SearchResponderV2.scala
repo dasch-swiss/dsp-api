@@ -48,7 +48,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import org.knora.webapi.responders.ResponderManager
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 

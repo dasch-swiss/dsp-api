@@ -56,7 +56,6 @@ import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import store.cacheservice.settings.CacheServiceSettings
 import util.StartupUtils
 import akka.testkit.TestActorRef
-import org.knora.webapi.responders.ResponderManager
 
 object CoreSpec {
 

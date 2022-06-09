@@ -180,6 +180,7 @@ object Dependencies {
     commonsLang3,
     commonsValidator,
     gwtServlet,
+    scalaLogging,
     zioPrelude,
     zioTest    % Test,
     zioTestSbt % Test

@@ -27,7 +27,6 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future
-import org.knora.webapi.responders.ResponderManager
 
 /**
  * Handles requests for information about ontology entities.

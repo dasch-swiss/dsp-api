@@ -14,7 +14,6 @@ import dsp.errors.ForbiddenException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.responders.ResponderManager
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future

@@ -21,7 +21,6 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
-import org.knora.webapi.responders.ResponderManager
 import akka.actor.ActorRef
 
 private object QueryHandler {

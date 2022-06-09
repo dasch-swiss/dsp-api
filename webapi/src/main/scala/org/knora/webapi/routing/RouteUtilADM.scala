@@ -16,7 +16,6 @@ import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.ExecutionContext

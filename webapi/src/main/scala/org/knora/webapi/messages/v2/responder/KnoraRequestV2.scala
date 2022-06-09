@@ -14,7 +14,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.util.UUID

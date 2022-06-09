@@ -14,7 +14,6 @@ import org.knora.webapi.store.cacheservice.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 
 import scala.concurrent.ExecutionContext
-import org.knora.webapi.responders.ResponderManager
 
 /**
  * Knora Core abstraction.
