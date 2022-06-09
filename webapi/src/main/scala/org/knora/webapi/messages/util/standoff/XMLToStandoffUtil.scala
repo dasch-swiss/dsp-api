@@ -10,7 +10,7 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
 

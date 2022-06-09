@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.http.handler
 
 /**
@@ -85,7 +85,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.NotFound)
 
         responseAs[String] should be(
-          "{\"status\":9,\"error\":\"org.knora.webapi.exceptions.NotFoundException: not found\"}"
+          "{\"status\":9,\"error\":\"dsp.errors.NotFoundException: not found\"}"
         )
       }
 
@@ -94,7 +94,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.NotFound)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.NotFoundException: not found\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.NotFoundException: not found\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -102,7 +102,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
         status should be(StatusCodes.NotFound)
 
-        responseAs[String] should be("{\"error\":\"org.knora.webapi.exceptions.NotFoundException: not found\"}")
+        responseAs[String] should be("{\"error\":\"dsp.errors.NotFoundException: not found\"}")
       }
     }
 
@@ -112,7 +112,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Forbidden)
 
         responseAs[String] should be(
-          "{\"status\":3,\"error\":\"org.knora.webapi.exceptions.ForbiddenException: forbidden\",\"access\":\"NO_ACCESS\"}"
+          "{\"status\":3,\"error\":\"dsp.errors.ForbiddenException: forbidden\",\"access\":\"NO_ACCESS\"}"
         )
       }
 
@@ -121,7 +121,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Forbidden)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.ForbiddenException: forbidden\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.ForbiddenException: forbidden\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -129,7 +129,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
         status should be(StatusCodes.Forbidden)
 
-        responseAs[String] should be("{\"error\":\"org.knora.webapi.exceptions.ForbiddenException: forbidden\"}")
+        responseAs[String] should be("{\"error\":\"dsp.errors.ForbiddenException: forbidden\"}")
       }
     }
 
@@ -139,7 +139,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"status\":28,\"error\":\"org.knora.webapi.exceptions.DuplicateValueException: duplicate value\"}"
+          "{\"status\":28,\"error\":\"dsp.errors.DuplicateValueException: duplicate value\"}"
         )
       }
 
@@ -148,7 +148,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.DuplicateValueException: duplicate value\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.DuplicateValueException: duplicate value\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -157,7 +157,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"error\":\"org.knora.webapi.exceptions.DuplicateValueException: duplicate value\"}"
+          "{\"error\":\"dsp.errors.DuplicateValueException: duplicate value\"}"
         )
       }
     }
@@ -168,7 +168,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"status\":29,\"error\":\"org.knora.webapi.exceptions.OntologyConstraintException: ontology constraint\"}"
+          "{\"status\":29,\"error\":\"dsp.errors.OntologyConstraintException: ontology constraint\"}"
         )
       }
 
@@ -177,7 +177,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.OntologyConstraintException: ontology constraint\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.OntologyConstraintException: ontology constraint\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -186,7 +186,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"error\":\"org.knora.webapi.exceptions.OntologyConstraintException: ontology constraint\"}"
+          "{\"error\":\"dsp.errors.OntologyConstraintException: ontology constraint\"}"
         )
       }
     }
@@ -197,7 +197,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Conflict)
 
         responseAs[String] should be(
-          "{\"status\":27,\"error\":\"org.knora.webapi.exceptions.EditConflictException: edit conflict\"}"
+          "{\"status\":27,\"error\":\"dsp.errors.EditConflictException: edit conflict\"}"
         )
       }
 
@@ -206,7 +206,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Conflict)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.EditConflictException: edit conflict\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.EditConflictException: edit conflict\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -214,7 +214,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
         status should be(StatusCodes.Conflict)
 
-        responseAs[String] should be("{\"error\":\"org.knora.webapi.exceptions.EditConflictException: edit conflict\"}")
+        responseAs[String] should be("{\"error\":\"dsp.errors.EditConflictException: edit conflict\"}")
       }
     }
 
@@ -224,7 +224,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"status\":11,\"error\":\"org.knora.webapi.exceptions.GravsearchException: sparql search\"}"
+          "{\"status\":11,\"error\":\"dsp.errors.GravsearchException: sparql search\"}"
         )
       }
 
@@ -233,7 +233,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.BadRequest)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.GravsearchException: sparql search\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.GravsearchException: sparql search\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -241,7 +241,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
         status should be(StatusCodes.BadRequest)
 
-        responseAs[String] should be("{\"error\":\"org.knora.webapi.exceptions.GravsearchException: sparql search\"}")
+        responseAs[String] should be("{\"error\":\"dsp.errors.GravsearchException: sparql search\"}")
       }
     }
 
@@ -251,7 +251,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Conflict)
 
         responseAs[String] should be(
-          "{\"status\":27,\"error\":\"org.knora.webapi.exceptions.UpdateNotPerformedException: update not performed\"}"
+          "{\"status\":27,\"error\":\"dsp.errors.UpdateNotPerformedException: update not performed\"}"
         )
       }
 
@@ -260,7 +260,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Conflict)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.UpdateNotPerformedException: update not performed\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.UpdateNotPerformedException: update not performed\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -269,7 +269,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.Conflict)
 
         responseAs[String] should be(
-          "{\"error\":\"org.knora.webapi.exceptions.UpdateNotPerformedException: update not performed\"}"
+          "{\"error\":\"dsp.errors.UpdateNotPerformedException: update not performed\"}"
         )
       }
     }
@@ -280,7 +280,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.InternalServerError)
 
         responseAs[String] should be(
-          "{\"status\":4,\"error\":\"org.knora.webapi.exceptions.AuthenticationException: authentication exception\"}"
+          "{\"status\":4,\"error\":\"dsp.errors.AuthenticationException: authentication exception\"}"
         )
       }
 
@@ -289,7 +289,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.InternalServerError)
 
         responseAs[String] should be(
-          "{\"knora-api:error\":\"org.knora.webapi.exceptions.AuthenticationException: authentication exception\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
+          "{\"knora-api:error\":\"dsp.errors.AuthenticationException: authentication exception\",\"@context\":{\"knora-api\":\"http://api.knora.org/ontology/knora-api/v2#\"}}"
         )
       }
 
@@ -298,7 +298,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
         status should be(StatusCodes.InternalServerError)
 
         responseAs[String] should be(
-          "{\"error\":\"org.knora.webapi.exceptions.AuthenticationException: authentication exception\"}"
+          "{\"error\":\"dsp.errors.AuthenticationException: authentication exception\"}"
         )
       }
     }

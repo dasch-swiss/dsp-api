@@ -7,8 +7,8 @@ package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.ForbiddenException
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations

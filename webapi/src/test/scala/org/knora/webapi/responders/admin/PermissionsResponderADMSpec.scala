@@ -10,10 +10,10 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DuplicateValueException
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.StringFormatter

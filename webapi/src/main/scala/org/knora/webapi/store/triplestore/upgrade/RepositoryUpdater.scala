@@ -8,7 +8,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._

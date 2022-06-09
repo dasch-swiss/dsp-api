@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter

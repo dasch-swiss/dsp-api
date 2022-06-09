@@ -10,7 +10,7 @@ import akka.event.LoggingReceive
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.core._
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest

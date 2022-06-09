@@ -9,8 +9,8 @@ import akka.http.scaladsl.model.HttpHeader
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.RequestContext
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.FeatureToggleException
+import dsp.errors.BadRequestException
+import dsp.errors.FeatureToggleException
 import org.knora.webapi.settings.KnoraSettings.FeatureToggleBaseConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
 

@@ -19,7 +19,7 @@ import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import exceptions.{BadRequestException, DuplicateValueException, UnexpectedMessageException}
+import dsp.errors._
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult

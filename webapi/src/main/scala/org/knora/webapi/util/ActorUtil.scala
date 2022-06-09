@@ -11,9 +11,9 @@ import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Logging
-import org.knora.webapi.exceptions.ExceptionUtil
-import org.knora.webapi.exceptions.RequestRejectedException
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.ExceptionUtil
+import dsp.errors.RequestRejectedException
+import dsp.errors.UnexpectedMessageException
 import zio._
 
 import scala.concurrent.ExecutionContext
