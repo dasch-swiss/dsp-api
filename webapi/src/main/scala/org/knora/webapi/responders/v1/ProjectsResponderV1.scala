@@ -8,8 +8,8 @@ package org.knora.webapi.responders.v1
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetRequestADM

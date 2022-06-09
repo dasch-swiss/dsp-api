@@ -13,8 +13,8 @@ import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.BadRequestException
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter

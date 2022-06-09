@@ -8,8 +8,8 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.NotFoundException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation

@@ -8,7 +8,7 @@ package org.knora.webapi.store.triplestore.impl
 import akka.http.javadsl.server.AuthenticationFailedRejection
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.exceptions.TriplestoreTimeoutException
+import dsp.errors.TriplestoreTimeoutException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM

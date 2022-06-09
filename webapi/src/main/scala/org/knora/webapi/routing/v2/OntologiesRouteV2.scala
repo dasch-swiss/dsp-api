@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi
-package routing.v2
+package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
@@ -13,12 +12,13 @@ import akka.http.scaladsl.server.Route
 import java.util.UUID
 import scala.concurrent.Future
 
-import exceptions.BadRequestException
-import messages.IriConversions._
-import messages.util.rdf.{JsonLDDocument, JsonLDUtil}
-import messages.v2.responder.ontologymessages._
-import messages.{OntologyConstants, SmartIri}
-import routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
+import dsp.errors.BadRequestException
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")

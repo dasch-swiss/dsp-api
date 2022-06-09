@@ -12,7 +12,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 import zio._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
 import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
 import org.knora.webapi.messages.store.triplestoremessages.UploadRepositoryRequest

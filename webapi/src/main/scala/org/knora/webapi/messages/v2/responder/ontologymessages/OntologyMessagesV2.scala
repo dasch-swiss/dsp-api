@@ -15,7 +15,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import exceptions.{
+import dsp.errors.{
   AssertionException,
   BadRequestException,
   DataConversionException,

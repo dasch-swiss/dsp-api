@@ -10,7 +10,7 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances

@@ -12,10 +12,10 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

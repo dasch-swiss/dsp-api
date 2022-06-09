@@ -9,7 +9,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

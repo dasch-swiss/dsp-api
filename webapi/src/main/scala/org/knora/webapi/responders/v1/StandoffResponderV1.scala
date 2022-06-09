@@ -7,8 +7,8 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.NotFoundException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
