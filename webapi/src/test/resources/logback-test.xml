@@ -39,6 +39,10 @@
     <logger name="org.apache.http.wire" level="INFO"/>
     <logger name="org.testcontainers" level="INFO"/>
     <logger name="com.github.dockerjava" level="WARN"/>
+    <logger name="org.testcontainers.dockerclient.DockerClientProviderStrategy" level="WARN" />
+    <logger name="org.testcontainers.DockerClientFactory" level="WARN" />
+    <logger name="org.testcontainers.utility.ImageNameSubstitutor" level="WARN" />
+    <logger name="org.testcontainers.utility.RegistryAuthLocator" level="WARN" />
 
     <!-- App -->
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
@@ -50,7 +54,6 @@
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.KnoraExceptionHandler" level="INFO"/>
-    <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="ERROR"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
     <logger name="org.knora.webapi.update.UpdateRepository" level="INFO"/>

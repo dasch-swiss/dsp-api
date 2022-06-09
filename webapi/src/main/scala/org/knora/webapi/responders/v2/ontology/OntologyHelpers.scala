@@ -124,7 +124,7 @@ object OntologyHelpers {
    */
   def loadOntologyMetadata(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit
@@ -145,10 +145,14 @@ object OntologyHelpers {
                                 )
                                 .toString()
 
-      getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(
-                                   sparql = getOntologyInfoSparql,
-                                   featureFactoryConfig = featureFactoryConfig
-                                 )).mapTo[SparqlConstructResponse]
+      getOntologyInfoResponse <- appActor
+                                   .ask(
+                                     SparqlConstructRequest(
+                                       sparql = getOntologyInfoSparql,
+                                       featureFactoryConfig = featureFactoryConfig
+                                     )
+                                   )
+                                   .mapTo[SparqlConstructResponse]
 
       metadata: Option[OntologyMetadataV2] =
         if (getOntologyInfoResponse.statements.isEmpty) {
@@ -1074,7 +1078,7 @@ object OntologyHelpers {
    * @param ontology the ontology.
    * @return the set of subjects that refer to the ontology or its entities.
    */
-  def getSubjectsUsingOntology(settings: KnoraSettingsImpl, storeManager: ActorRef, ontology: ReadOntologyV2)(implicit
+  def getSubjectsUsingOntology(settings: KnoraSettingsImpl, appActor: ActorRef, ontology: ReadOntologyV2)(implicit
     ec: ExecutionContext,
     timeout: Timeout
   ): Future[Set[IRI]] =
@@ -1089,7 +1093,8 @@ object OntologyHelpers {
                                   .toString()
                               )
 
-      isOntologyUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql))
+      isOntologyUsedResponse: SparqlSelectResult <- appActor
+                                                      .ask(SparqlSelectRequest(isOntologyUsedSparql))
                                                       .mapTo[SparqlSelectResult]
 
       subjects = isOntologyUsedResponse.results.bindings.map { row =>
@@ -1128,7 +1133,7 @@ object OntologyHelpers {
    */
   def loadPropertyDefinition(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     propertyIri: SmartIri,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[PropertyInfoContentV2] =
@@ -1141,10 +1146,14 @@ object OntologyHelpers {
                     .toString()
                 )
 
-      constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                             sparql = sparql,
-                             featureFactoryConfig = featureFactoryConfig
-                           )).mapTo[SparqlExtendedConstructResponse]
+      constructResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparql,
+                                 featureFactoryConfig = featureFactoryConfig
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
     } yield constructResponseToPropertyDefinition(
       propertyIri = propertyIri,
       constructResponse = constructResponse
@@ -1571,7 +1580,7 @@ object OntologyHelpers {
    */
   def loadClassDefinition(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     classIri: SmartIri,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ClassInfoContentV2] =
@@ -1584,10 +1593,14 @@ object OntologyHelpers {
                     .toString()
                 )
 
-      constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                             sparql = sparql,
-                             featureFactoryConfig = featureFactoryConfig
-                           )).mapTo[SparqlExtendedConstructResponse]
+      constructResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparql,
+                                 featureFactoryConfig = featureFactoryConfig
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
     } yield constructResponseToClassDefinition(
       classIri = classIri,
       constructResponse = constructResponse
@@ -1751,7 +1764,7 @@ object OntologyHelpers {
    * an error message fitting for the "before update" case.
    *
    * @param settings the application settings.
-   * @param storeManager the store manager actor ref.
+   * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
    * @param featureFactoryConfig the feature factory configuration.
@@ -1759,14 +1772,14 @@ object OntologyHelpers {
    */
   def checkOntologyLastModificationDateBeforeUpdate(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,
-      storeManager,
+      appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
       featureFactoryConfig = featureFactoryConfig,
@@ -1780,7 +1793,7 @@ object OntologyHelpers {
    * an error message fitting for the "after update" case.
    *
    * @param settings the application settings.
-   * @param storeManager the store manager actor ref.
+   * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
    * @param featureFactoryConfig the feature factory configuration.
@@ -1788,14 +1801,14 @@ object OntologyHelpers {
    */
   def checkOntologyLastModificationDateAfterUpdate(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,
-      storeManager,
+      appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
       featureFactoryConfig = featureFactoryConfig,
@@ -1808,7 +1821,7 @@ object OntologyHelpers {
    * Checks that the last modification date of an ontology is the same as the one we expect it to be.
    *
    * @param settings the application settings.
-   * @param storeManager the store manager actor ref.
+   * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
    * @param featureFactoryConfig the feature factory configuration.
@@ -1817,7 +1830,7 @@ object OntologyHelpers {
    */
   private def checkOntologyLastModificationDate(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
     featureFactoryConfig: FeatureFactoryConfig,
@@ -1826,7 +1839,7 @@ object OntologyHelpers {
     for {
       existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
                                                                 settings,
-                                                                storeManager,
+                                                                appActor,
                                                                 internalOntologyIri = internalOntologyIri,
                                                                 featureFactoryConfig = featureFactoryConfig
                                                               )

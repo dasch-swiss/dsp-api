@@ -87,7 +87,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         requestContext = requestContext,
         featureFactoryConfig = featureFactoryConfig,
         settings = settings,
-        responderManager = responderManager,
+        appActor = appActor,
         log = log
       )
     }
@@ -158,7 +158,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -188,7 +188,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -217,7 +217,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -246,7 +246,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -309,7 +309,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -364,7 +364,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -415,7 +415,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -463,7 +463,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -513,7 +513,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -548,7 +548,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -598,7 +598,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -648,7 +648,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -683,7 +683,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -733,7 +733,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -783,7 +783,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -817,7 +817,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -864,7 +864,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -911,7 +911,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestContext = requestContext,
           featureFactoryConfig = featureFactoryConfig,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }

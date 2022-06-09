@@ -37,6 +37,7 @@
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
+    <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
     <logger name="org.knora.webapi.util.cache" level="ERROR"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
     <logger name="org.knora.webapi.update.UpdateRepository" level="INFO"/>

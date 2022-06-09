@@ -71,17 +71,22 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
             )
           }
 
-      resetResponse <- (storeManager ? ResetRepositoryContent(rdfDataObjects, prependDefaults))
+      resetResponse <- appActor
+                         .ask(ResetRepositoryContent(rdfDataObjects, prependDefaults))
                          .mapTo[ResetRepositoryContentACK]
       _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
-      loadOntologiesResponse <- (responderManager ? LoadOntologiesRequestV2(
-                                  featureFactoryConfig = featureFactoryConfig,
-                                  requestingUser = systemUser
-                                )).mapTo[SuccessResponseV2]
+      loadOntologiesResponse <- appActor
+                                  .ask(
+                                    LoadOntologiesRequestV2(
+                                      featureFactoryConfig = featureFactoryConfig,
+                                      requestingUser = systemUser
+                                    )
+                                  )
+                                  .mapTo[SuccessResponseV2]
       _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
-      _ <- (storeManager ? CacheServiceFlushDB(systemUser))
+      _ <- appActor.ask(CacheServiceFlushDB(systemUser))
       _  = log.debug(s"resetTriplestoreContent - flushing Redis store done.")
 
       result = ResetTriplestoreContentResponseADM(message = "success")

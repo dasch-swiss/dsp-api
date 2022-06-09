@@ -97,7 +97,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -155,7 +155,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -213,7 +213,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -268,7 +268,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }

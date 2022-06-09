@@ -6,7 +6,7 @@
 package org.knora.webapi.messages
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -2817,16 +2817,16 @@ class StringFormatter private (
    * Checks whether an IRI already exists in the triplestore.
    *
    * @param iri          the IRI to be checked.
-   * @param storeManager a reference to the store manager.
+   * @param appActor     a reference to the application actor.
    * @return `true` if the IRI already exists, `false` otherwise.
    */
-  def checkIriExists(iri: IRI, storeManager: ActorRef)(implicit
+  def checkIriExists(iri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[Boolean] =
     for {
       askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
-      response  <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      response  <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
     } yield response.result
 
   /**
@@ -2836,7 +2836,7 @@ class StringFormatter private (
    * @param iriFun       a function that generates a random IRI.
    * @param storeManager a reference to the Knora store manager actor.
    */
-  def makeUnusedIri(iriFun: => IRI, storeManager: ActorRef, log: LoggingAdapter)(implicit
+  def makeUnusedIri(iriFun: => IRI, storeManager: ActorRef, log: Logger)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[IRI] = {
@@ -2850,7 +2850,7 @@ class StringFormatter private (
           if (!iriExists) {
             FastFuture.successful(newIri)
           } else if (attempts > 1) {
-            log.warning("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
+            log.warn("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
             makeUnusedIriRec(attempts - 1)
           } else {
             throw UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")

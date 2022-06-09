@@ -160,7 +160,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
   s"The Triplestore ($settings.triplestoreType) Actor " when {
     "started " should {
       "only start answering after initialization has finished " in {
-        storeManager ! CheckTriplestoreRequest()
+        appActor ! CheckTriplestoreRequest()
         val response = expectMsgType[CheckTriplestoreResponse](1.second)
 
         response.triplestoreStatus should be(TriplestoreStatus.ServiceAvailable)
@@ -170,7 +170,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a Hello " should {
       "reply " in {
         within(1.seconds) {
-          storeManager ! HelloTriplestore(settings.triplestoreType)
+          appActor ! HelloTriplestore(settings.triplestoreType)
           expectMsg(HelloTriplestore(settings.triplestoreType))
         }
       }
@@ -178,11 +178,11 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a 'ResetTriplestoreContent' request " should {
       "reset the data " in {
         //println("==>> Reset test case start")
-        storeManager ! ResetRepositoryContent(rdfDataObjects)
+        appActor ! ResetRepositoryContent(rdfDataObjects)
         expectMsg(5 minutes, ResetRepositoryContentACK())
         //println("==>> Reset test case end")
 
-        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        appActor ! SparqlSelectRequest(countTriplesQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println(msg)
           afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
@@ -193,7 +193,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a Named Graph request " should {
       "provide data " in {
         //println("==>> Named Graph test case start")
-        storeManager ! SparqlSelectRequest(namedGraphQuery)
+        appActor ! SparqlSelectRequest(namedGraphQuery)
         //println(result)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println(msg)
@@ -206,22 +206,22 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
       "execute the update " in {
         //println("==>> Update 1 test case start")
 
-        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        appActor ! SparqlSelectRequest(countTriplesQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println("vor insert: " + msg)
           msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
         }
 
-        storeManager ! SparqlUpdateRequest(insertQuery)
+        appActor ! SparqlUpdateRequest(insertQuery)
         expectMsg(SparqlUpdateResponse())
 
-        storeManager ! SparqlSelectRequest(checkInsertQuery)
+        appActor ! SparqlSelectRequest(checkInsertQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println(msg)
           msg.results.bindings.size should ===(3)
         }
 
-        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        appActor ! SparqlSelectRequest(countTriplesQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println("nach instert" + msg)
           afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
@@ -232,22 +232,22 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
       "revert back " in {
         //println("==>> Update 2 test case start")
 
-        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        appActor ! SparqlSelectRequest(countTriplesQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println("vor revert: " + msg)
           msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
         }
 
-        storeManager ! SparqlUpdateRequest(revertInsertQuery)
+        appActor ! SparqlUpdateRequest(revertInsertQuery)
         expectMsg(SparqlUpdateResponse())
 
-        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        appActor ! SparqlSelectRequest(countTriplesQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println("nach revert: " + msg)
           msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
         }
 
-        storeManager ! SparqlSelectRequest(checkInsertQuery)
+        appActor ! SparqlSelectRequest(checkInsertQuery)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
           //println("check: " + msg)
           msg.results.bindings.size should ===(0)
@@ -259,7 +259,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     "receiving a search request " should {
       "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
         within(1000.millis) {
-          storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+          appActor ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
           expectMsgPF(timeout) { case msg: SparqlSelectResult =>
             //println(msg)
             msg.results.bindings.size should ===(3)
@@ -269,7 +269,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
       "execute the search with the lucene index for 'rdfs:label' properties" in {
         within(1000.millis) {
-          storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+          appActor ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
           expectMsgPF(timeout) { case msg: SparqlSelectResult =>
             //println(msg)
             msg.results.bindings.size should ===(1)
@@ -280,7 +280,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
     "receiving insert rdf data objects request" should {
       "insert RDF DataObjects" in {
-        storeManager ! InsertRepositoryContent(rdfDataObjects)
+        appActor ! InsertRepositoryContent(rdfDataObjects)
         expectMsg(5 minutes, InsertTriplestoreContentACK())
       }
 
@@ -288,12 +288,12 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
 
     "receiving named graph data requests" should {
       "put the graph data as turtle" in {
-        storeManager ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
+        appActor ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
         expectMsgType[InsertGraphDataContentResponse](10.second)
       }
 
       "read the graph data as turtle" in {
-        storeManager ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
+        appActor ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
         val response = expectMsgType[NamedGraphDataResponse](1.second)
         response.turtle.length should be > 0
       }

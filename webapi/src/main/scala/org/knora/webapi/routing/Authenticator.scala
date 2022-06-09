@@ -76,7 +76,7 @@ trait Authenticator extends InstrumentationSupport {
    */
   def doLoginV1(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
@@ -136,7 +136,7 @@ trait Authenticator extends InstrumentationSupport {
    */
   def doLoginV2(credentials: KnoraPasswordCredentialsV2, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
@@ -250,7 +250,7 @@ trait Authenticator extends InstrumentationSupport {
    */
   def doAuthenticateV1(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
@@ -288,7 +288,7 @@ trait Authenticator extends InstrumentationSupport {
    */
   def doAuthenticateV2(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[HttpResponse] = {
 
@@ -415,7 +415,7 @@ trait Authenticator extends InstrumentationSupport {
   @deprecated("Please use: getUserADM()", "Knora v1.7.0")
   def getUserProfileV1(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[UserProfileV1] = {
 
@@ -461,7 +461,7 @@ trait Authenticator extends InstrumentationSupport {
    */
   def getUserADM(requestContext: RequestContext, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     executionContext: ExecutionContext
   ): Future[UserADM] = {
 
@@ -531,7 +531,11 @@ object Authenticator extends InstrumentationSupport {
   def authenticateCredentialsV2(
     credentials: Option[KnoraCredentialsV2],
     featureFactoryConfig: FeatureFactoryConfig
-  )(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[Boolean] =
+  )(implicit
+    system: ActorSystem,
+    appActor: ActorRef,
+    executionContext: ExecutionContext
+  ): Future[Boolean] =
     for {
       settings <- FastFuture.successful(KnoraSettings(system))
 
@@ -760,7 +764,11 @@ object Authenticator extends InstrumentationSupport {
   private def getUserADMThroughCredentialsV2(
     credentials: Option[KnoraCredentialsV2],
     featureFactoryConfig: FeatureFactoryConfig
-  )(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
+  )(implicit
+    system: ActorSystem,
+    appActor: ActorRef,
+    executionContext: ExecutionContext
+  ): Future[UserADM] = {
 
     val settings = KnoraSettings(system)
 
@@ -835,17 +843,22 @@ object Authenticator extends InstrumentationSupport {
    */
   private def getUserByIdentifier(identifier: UserIdentifierADM, featureFactoryConfig: FeatureFactoryConfig)(implicit
     system: ActorSystem,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[UserADM] = tracedFuture("authenticator-get-user-by-identifier") {
     for {
-      maybeUserADM <- (responderManager ? UserGetADM(
-                        identifier = identifier,
-                        userInformationTypeADM = UserInformationTypeADM.Full,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                      )).mapTo[Option[UserADM]]
+      maybeUserADM <-
+        appActor
+          .ask(
+            UserGetADM(
+              identifier = identifier,
+              userInformationTypeADM = UserInformationTypeADM.Full,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+          )
+          .mapTo[Option[UserADM]]
 
       user = maybeUserADM match {
                case Some(u) => u
