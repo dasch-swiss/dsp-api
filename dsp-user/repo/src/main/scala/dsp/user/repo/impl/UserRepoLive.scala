@@ -10,9 +10,16 @@ import zio.stm._
 import java.util.UUID
 import dsp.user.domain.User
 import dsp.user.domain.UserId
-import dsp.user.domain.UserValueObjects
 import dsp.user.domain.Iri
 import dsp.user.api.UserRepo
+import dsp.errors.NotFoundException
+import zio.stm.ZSTM.OnFailure
+import zio.stm.ZSTM.SucceedNow
+import zio.stm.ZSTM.Succeed
+import zio.stm.ZSTM.OnRetry
+import zio.stm.ZSTM.Effect
+import zio.stm.ZSTM.OnSuccess
+import zio.stm.ZSTM.Provide
 
 /**
  * User repository live implementation
@@ -31,12 +38,12 @@ final case class UserRepoLive(
    * Stores the user with key UUID in the users map.
    * Stores the username and email with the associated UUID in the lookup table.
    */
-  def storeUser(user: User): UIO[Unit] =
+  def storeUser(user: User): UIO[UserId] =
     (for {
       _ <- users.put(user.id.uuid, user)
       _ <- lookupTable.put(user.username.value, user.id.uuid)
       _ <- lookupTable.put(user.email.value, user.id.uuid)
-    } yield ()).commit.tap(_ => ZIO.logDebug(s"Stored user: ${user.id}"))
+    } yield user.id).commit.tap(_ => ZIO.logDebug(s"Stored user: ${user.id}"))
 
   /**
    * @inheritDoc
@@ -46,27 +53,29 @@ final case class UserRepoLive(
   /**
    * @inheritDoc
    */
-  def getUserById(id: UserId): UIO[Option[User]] =
-    users.get(id.uuid).commit.tap(_ => ZIO.logDebug(s"Found user by ID: ${id}"))
+  def getUserById(id: UserId): IO[Option[Nothing], User] =
+    (for {
+      user <- users.get(id.uuid).some
+    } yield user).commit.tap(_ => ZIO.logDebug(s"Found user by ID: ${id}"))
 
   /**
    * @inheritDoc
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[User]] =
+  def getUserByUsernameOrEmail(usernameOrEmail: String): IO[Option[Nothing], User] =
     (for {
-      iri: UUID  <- lookupTable.get(usernameOrEmail).some
-      user: User <- users.get(iri).some
-    } yield user).commit.unsome.tap(_ => ZIO.logDebug(s"Found user by username or email: ${usernameOrEmail}"))
+      iri  <- lookupTable.get(usernameOrEmail).some
+      user <- users.get(iri).some
+    } yield user).commit.tap(_ => ZIO.logDebug(s"Found user by username or email: ${usernameOrEmail}"))
 
   /**
    * @inheritDoc
    */
-  def deleteUser(id: UserId): IO[Option[Nothing], Unit] =
+  def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
     (for {
-      user: User <- users.get(id.uuid).some
-      _          <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
-      _          <- lookupTable.delete(user.username.value) // remove the user also from the lookup table
-    } yield ()).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
+      user <- users.get(id.uuid).some
+      _    <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
+      _    <- lookupTable.delete(user.username.value) // remove the user also from the lookup table
+    } yield id).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
 }
 
 /**

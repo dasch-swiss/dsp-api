@@ -5,11 +5,17 @@
 
 package dsp.user.handler
 
-import dsp.user.domain._
 import dsp.user.api.UserRepo
 import zio._
 import java.util.UUID
-import dsp.user.error.UserError
+import com.sourcegraph.semanticdb_javac.Semanticdb.Language
+import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import dsp.errors.DuplicateValueException
+import dsp.user.domain.User
+import dsp.user.domain.UserId
+import dsp.valueobjects.User._
+import dsp.errors.RequestRejectedException
 
 /**
  * The user handler.
@@ -32,96 +38,93 @@ final case class UserHandler(repo: UserRepo) {
    * Retrieve the user by ID.
    *
    * @param id  the user's ID
-   * @param userInformationType  the type of the requested profile (restricted or full).
    */
-  def getUserById(id: UserId, userInformationType: UserInformationType): UIO[Option[User]] =
+  def getUserById(id: UserId): IO[NotFoundException, User] =
     for {
-      user <- repo.getUserById(id)
-      _    <- ZIO.debug("yyy", user)
-      _ <- userInformationType match {
-             case UserInformationType.Full       => ZIO.succeed(user)
-             case UserInformationType.Restricted => ZIO.succeed(user.map(u => u.copy(password = None)))
-           }
+      user <- repo.getUserById(id).mapError(_ => NotFoundException("User not found"))
     } yield user
-
-  /**
-   * Retrieve the user by IRI.
-   *
-   * @param iri  the user's IRI
-   * @param userInformationType  the type of the requested profile (restricted or full).
-   */
-  def getUserByIri(iri: Iri.UserIri, userInformationType: UserInformationType): UIO[Option[User]] = {
-    val userId = UserId.fromIri(iri)
-    for {
-      user <- getUserById(userId, userInformationType)
-    } yield user
-  }
-
-  /**
-   * Retrieve the user by UUID.
-   *
-   * @param uuuid  the user's UUID
-   * @param userInformationType  the type of the requested profile (restricted or full).
-   */
-  def getUserByUuid(uuid: UUID, userInformationType: UserInformationType): UIO[Option[User]] = {
-    val userId = UserId.fromUuid(uuid)
-    for {
-      user <- getUserById(userId, userInformationType)
-    } yield user
-  }
 
   /**
    * Retrieve the user by username.
    *
    * @param username  the user's username
-   * @param userInformationType  the type of the requested profile (restricted or full).
    */
-  def getUserByUsername(username: Username, userInformationType: UserInformationType): UIO[Option[User]] =
-    repo.getUserByUsernameOrEmail(username.value)
+  def getUserByUsername(username: Username): IO[NotFoundException, User] =
+    repo
+      .getUserByUsernameOrEmail(username.value)
+      .mapError(_ => NotFoundException(s"User with Username ${username.value} not found"))
 
   /**
    * Retrieve the user by email.
    *
    * @param email  the user's email
-   * @param userInformationType  the type of the requested profile (restricted or full).
    */
-  def getUserByEmail(email: Email, userInformationType: UserInformationType): UIO[Option[User]] =
-    repo.getUserByUsernameOrEmail(email.value)
+  def getUserByEmail(email: Email): IO[NotFoundException, User] =
+    repo
+      .getUserByUsernameOrEmail(email.value)
+      .mapError(_ => NotFoundException(s"User with Email ${email.value} not found"))
 
-  // TODO: ask Ivan how we handle errors
-  def createUser(user: User): IO[Throwable, Unit] = {
-    // check if username and email are not yet used
-    val username = user.username
-    val email    = user.email
-    val users    = repo.getUsers()
-
+  /**
+   * Check if username is already taken
+   *
+   * @param username  the user's username
+   */
+  private def checkUsernameTaken(username: Username): IO[DuplicateValueException, Unit] =
     for {
-      userByUsernameOption <- repo.getUserByUsernameOrEmail(username.value) // discuss naming conventions for options
-      usernameTaken = userByUsernameOption match {
-                        case None    => None
-                        case Some(_) => Some(username)
-                      }
-      userByEmailOption <- repo.getUserByUsernameOrEmail(email.value)
-      emailTaken = userByEmailOption match {
-                     case None    => None
-                     case Some(_) => Some(email)
-                   }
-      _ <- (usernameTaken, emailTaken) match {
-             case (None, None) => repo.storeUser(user)
-             case _            => ZIO.die(UserError.UserAlreadyExists(usernameTaken, emailTaken))
-           }
+      _ <- repo
+             .getUserByUsernameOrEmail(username.value)
+             .mapError(_ => DuplicateValueException(s"Username ${username.value} already taken"))
     } yield ()
 
-  }
-
-  def updateUser(user: User): IO[Option[Nothing], Unit] = // all values should be changed separately
+  /**
+   * Check if email is already taken
+   *
+   * @param email  the user's email
+   */
+  private def checkEmailTaken(email: Email): IO[DuplicateValueException, Unit] =
     for {
-      currentUser <- getUserById(user.id, UserInformationType.Full)
-      _           <- deleteUser(user.id)
-      _           <- createUser(user).orDie
+      _ <- repo
+             .getUserByUsernameOrEmail(email.value)
+             .mapError(_ => DuplicateValueException(s"Email ${email.value} already taken"))
     } yield ()
 
-  def deleteUser(id: UserId): IO[Option[Nothing], Unit] = repo.deleteUser(id) // set state to inactive
+  def createUser(
+    username: Username,
+    email: Email,
+    givenName: GivenName,
+    familyName: FamilyName,
+    password: Password,
+    language: LanguageCode
+    //role: Role
+  ): IO[DuplicateValueException, UserId] =
+    for {
+      _      <- checkUsernameTaken(username) // also lock/reserve username
+      _      <- checkEmailTaken(email) // also lock/reserve email
+      user   <- ZIO.succeed(User.make(givenName, familyName, username, email, password, language))
+      userId <- repo.storeUser(user) // we assume that this can't fail
+    } yield userId
+
+  def updateUsername(id: UserId, value: Username): IO[RequestRejectedException, UserId] =
+    for {
+      _ <- checkUsernameTaken(value)
+      // lock/reserve username
+      // check if user exists and get him, lock user
+      user        <- getUserById(id)
+      userUpdated <- ZIO.succeed(user.updateUsername(value))
+      _           <- repo.storeUser(userUpdated)
+    } yield id
+
+  def updatePassword(id: UserId, newPassword: Password, currentPassword: Password, requestingUser: User) = ???
+  // either the user himself or a sysadmin can change a user's password
+  // in both cases we need the current password of either the user itself or the sysadmin
+
+  def deleteUser(id: UserId): IO[NotFoundException, UserId] =
+    for {
+      _ <- repo
+             .deleteUser(id)
+             .mapError(_ => NotFoundException(s"User with ID ${id} not found"))
+    } yield id
+
 }
 
 /**

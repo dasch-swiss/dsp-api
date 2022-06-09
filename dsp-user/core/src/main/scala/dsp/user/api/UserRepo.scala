@@ -9,6 +9,7 @@ import dsp.user.domain._
 import zio._
 import zio.macros.accessible
 import java.util.UUID
+import dsp.errors._
 
 /**
  * The trait (interface) for the user repository. The user repository is responsible for storing and retrieving users.
@@ -25,7 +26,7 @@ trait UserRepo {
    * @param user the user to write
    * @return     Unit
    */
-  def storeUser(user: User): UIO[Unit]
+  def storeUser(user: User): UIO[UserId]
 
   /**
    * Gets all users from the repository.
@@ -40,7 +41,7 @@ trait UserRepo {
    * @param id the user's ID
    * @return an optional [[User]]
    */
-  def getUserById(id: UserId): UIO[Option[User]]
+  def getUserById(id: UserId): IO[Option[Nothing], User]
 
   /**
    * Retrieves the user from the repository by username or email.
@@ -48,7 +49,7 @@ trait UserRepo {
    * @param usernameOrEmail username or email of the user.
    * @return an optional [[User]].
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): UIO[Option[User]]
+  def getUserByUsernameOrEmail(usernameOrEmail: String): IO[Option[Nothing], User]
 
   /**
    * Deletes a [[User]] from the repository by its [[UserId]].
@@ -56,5 +57,5 @@ trait UserRepo {
    * @param id the user ID
    * @return   Unit or None if not found
    */
-  def deleteUser(id: UserId): IO[Option[Nothing], Unit]
+  def deleteUser(id: UserId): IO[Option[Nothing], UserId]
 }

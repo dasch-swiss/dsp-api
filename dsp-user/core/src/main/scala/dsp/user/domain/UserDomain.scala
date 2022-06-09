@@ -6,6 +6,8 @@
 package dsp.user.domain
 
 import java.util.UUID
+import zio.prelude.Validation
+import dsp.valueobjects.User._
 
 // move this to shared value objects project once we have it
 sealed trait Iri
@@ -83,42 +85,13 @@ object UserId {
    *
    * @return a new UserId instance
    */
+  // TODO should this return a Validation[Throwable, UserId]
   def make(): UserId = {
     val uuid: UUID       = UUID.randomUUID()
     val iri: Iri.UserIri = Iri.UserIri.make("http://rdfh.ch/users/" + uuid.toString)
     new UserId(uuid, iri) {}
   }
 }
-
-/**
- * Username value object.
- */
-sealed abstract case class Username private (value: String)
-object Username {
-  def make(value: String): Username =
-    new Username(value) {}
-}
-
-/**
- * Email value object.
- */
-sealed abstract case class Email private (value: String)
-object Email {
-  def make(value: String): Email =
-    new Email(value) {}
-}
-
-// These are just placeholders for now. Replace this with the real value objects once we have them.
-object UserValueObjects {
-  type GivenName  = String
-  type FamilyName = String
-  type Email      = String
-  type Password   = String
-  type Language   = String
-  type Role       = String
-}
-
-import UserValueObjects._
 
 /**
  * Represents the user domain object.
@@ -132,39 +105,37 @@ import UserValueObjects._
  * @param language    the user's preferred language
  * @param role        the user's role
  */
-final case class User(
+sealed abstract case class User private (
   id: UserId,
   givenName: GivenName,
   familyName: FamilyName,
   username: Username,
   email: Email,
   password: Option[Password],
-  language: Language,
-  role: Role
+  language: LanguageCode
+  //role: Role
 ) extends Ordered[User] { self =>
 
   /**
    * Allows to sort collections of [[User]]s. Sorting is done by the IRI.
    */
   def compare(that: User): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
-}
 
-/**
- * UserInformationTypeADM types:
- * full: everything
- * restricted: everything without sensitive information, i.e. token, password, session.
- * short: like restricted and additionally without groups, projects and permissions.
- * public: temporary: givenName, familyName
- *
- * Mainly used in combination with the 'ofType' method, to make sure that a request receiving this information
- * also returns the user profile of the correct type. Should be used in cases where we don't want to expose
- * sensitive information to the outside world. Since in API Admin [[UserADM]] is returned with some responses,
- * we use 'restricted' in those cases.
- */
-sealed trait UserInformationType
-object UserInformationType {
-  //case object Public     extends UserInformationType // not sure if we need those
-  //case object Short      extends UserInformationType
-  case object Restricted extends UserInformationType
-  case object Full       extends UserInformationType
+  def updateUsername(value: Username): User =
+    new User(self.id, self.givenName, self.familyName, value, self.email, self.password, self.language) {}
+}
+object User {
+  def make(
+    givenName: GivenName,
+    familyName: FamilyName,
+    username: Username,
+    email: Email,
+    password: Password,
+    language: LanguageCode
+    //role: Role
+  ): User = {
+    val id = UserId.make()
+    new User(id, givenName, familyName, username, email, Some(password), language) {}
+  }
+
 }
