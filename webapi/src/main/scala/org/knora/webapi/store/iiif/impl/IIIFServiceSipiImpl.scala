@@ -24,9 +24,9 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -37,7 +37,7 @@ import spray.json._
 import zio._
 
 import java.util
-import org.knora.webapi.exceptions.KnoraException
+import dsp.errors.KnoraException
 
 /**
  * Makes requests to Sipi.

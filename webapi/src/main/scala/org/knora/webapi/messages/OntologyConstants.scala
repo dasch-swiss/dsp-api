@@ -6,7 +6,7 @@
 package org.knora.webapi
 package messages
 
-import exceptions.InconsistentRepositoryDataException
+import dsp.errors._
 
 /**
  * Contains string constants for IRIs from ontologies used by the application.

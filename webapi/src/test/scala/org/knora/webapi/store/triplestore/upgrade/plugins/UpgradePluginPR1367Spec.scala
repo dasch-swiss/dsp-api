@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 

@@ -8,11 +8,11 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.GravsearchException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.TriplestoreTimeoutException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.GravsearchException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.TriplestoreTimeoutException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

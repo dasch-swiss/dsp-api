@@ -9,7 +9,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -599,6 +599,13 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
    */
   def sortByStringValue: StringLiteralSequenceV2 =
     StringLiteralSequenceV2(stringLiterals.sortBy(_.value))
+
+  /**
+   * Sort sequence of [[StringLiteralV2]] by their language value.
+   *
+   * @return a [[StringLiteralSequenceV2]] sorted by language value.
+   */
+  def sortByLanguage: StringLiteralSequenceV2 = StringLiteralSequenceV2(stringLiterals.sortBy(_.language))
 
   /**
    * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.

@@ -9,7 +9,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -983,8 +983,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       Delete(
         s"/v2/ontologies/properties/comment/$propertySegment?lastModificationDate=$lastModificationDate"
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
         val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -1047,9 +1048,12 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         val responseFromJsonLD: InputOntologyV2 =
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
         responseFromJsonLD.properties.head._2.predicates.toSet should ===(
           expectedResponseToCompare.properties.head._2.predicates.toSet
         )
+
+        CollectClientTestData("delete-property-comment-response", responseStr)
       }
     }
 
@@ -1061,8 +1065,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       Delete(
         s"/v2/ontologies/classes/comment/$classSegment?lastModificationDate=$lastModificationDate"
       ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
-        assert(status == StatusCodes.OK, response.toString)
-        val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(responseStr)
         val newFreetestLastModDate = responseJsonDoc.requireDatatypeValueInObject(
           key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
           expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
@@ -1125,6 +1130,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         responseFromJsonLD.classes.head._2.predicates.toSet should ===(
           expectedResponseToCompare.classes.head._2.predicates.toSet
         )
+
+        CollectClientTestData("delete-class-comment-response", responseStr)
       }
     }
 

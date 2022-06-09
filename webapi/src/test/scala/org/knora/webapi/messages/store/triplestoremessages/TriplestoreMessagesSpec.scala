@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike

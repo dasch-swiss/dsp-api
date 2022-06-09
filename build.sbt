@@ -201,7 +201,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(valueObjects)
+  .dependsOn(shared)
 
 lazy val webapiJavaRunOptions = Seq(
   // "-showversion",
@@ -361,3 +361,11 @@ lazy val userRepo = project
   )
   .dependsOn(userCore)
 //.dependsOn(userHandler % "compile->compile;test->test", userDomain)
+
+lazy val shared = project
+  .in(file("dsp-shared"))
+  .settings(
+    name := "shared",
+    libraryDependencies ++= Dependencies.sharedLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )

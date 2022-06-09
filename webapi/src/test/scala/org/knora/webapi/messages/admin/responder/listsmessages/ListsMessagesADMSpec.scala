@@ -11,7 +11,7 @@ import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -129,7 +129,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
-      val caught = intercept[V2.BadRequestException](
+      val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = ListIri.make(exampleListIri).fold(e => throw e.head, v => v),

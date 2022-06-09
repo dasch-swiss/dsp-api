@@ -11,7 +11,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.InvalidApiJsonException
+import dsp.errors.InvalidApiJsonException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages._

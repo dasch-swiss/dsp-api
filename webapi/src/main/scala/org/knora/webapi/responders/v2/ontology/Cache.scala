@@ -15,11 +15,11 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.KnoraBaseVersion
 import org.knora.webapi.OntologySchema
-import org.knora.webapi.exceptions.ApplicationCacheException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.MissingLastModificationDateOntologyException
+import dsp.errors.ApplicationCacheException
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.MissingLastModificationDateOntologyException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

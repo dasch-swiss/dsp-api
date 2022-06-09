@@ -5,7 +5,7 @@
 
 @import java.util.UUID
 @import org.knora.webapi._
-@import org.knora.webapi.exceptions.SparqlGenerationException
+@import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.messages.StringFormatter
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 

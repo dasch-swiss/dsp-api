@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import dsp.errors.BadRequestException
 
 object Group {
 
@@ -16,12 +17,12 @@ object Group {
   object GroupName { self =>
     def make(value: String): Validation[Throwable, GroupName] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupNameMissing))
+        Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
       } else {
         val validatedValue = Validation(
           V2IriValidation.toSparqlEncodedString(
             value,
-            throw V2.BadRequestException(GroupErrorMessages.GroupNameInvalid)
+            throw BadRequestException(GroupErrorMessages.GroupNameInvalid)
           )
         )
 
@@ -42,13 +43,13 @@ object Group {
   object GroupDescriptions { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
+        Validation.fail(BadRequestException(GroupErrorMessages.GroupDescriptionsMissing))
       } else {
         val validatedDescriptions = Validation(value.map { description =>
           val validatedDescription =
             V2IriValidation.toSparqlEncodedString(
               description.value,
-              throw V2.BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
+              throw BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)
             )
           V2.StringLiteralV2(value = validatedDescription, language = description.language)
         })

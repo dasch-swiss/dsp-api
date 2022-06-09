@@ -157,7 +157,7 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
-  
+
   val valueObjectsLibraryDependencies = Seq(
     commonsLang3,
     commonsValidator,
@@ -210,4 +210,6 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
+  val sharedLibraryDependencies =
+    Seq(akkaActor, commonsLang3, commonsValidator, gwtServlet, zioPrelude, zioTest % Test, zioTestSbt % Test)
 }

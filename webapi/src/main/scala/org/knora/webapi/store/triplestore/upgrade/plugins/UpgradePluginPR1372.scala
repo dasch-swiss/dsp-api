@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._

@@ -10,9 +10,9 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.OntologyConstraintException
+import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import dsp.errors.OntologyConstraintException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter

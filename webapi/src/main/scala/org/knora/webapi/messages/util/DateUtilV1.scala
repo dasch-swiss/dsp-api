@@ -6,8 +6,8 @@
 package org.knora.webapi.messages.util
 
 import jodd.datetime.JDateTime
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
