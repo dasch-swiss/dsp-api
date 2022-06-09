@@ -43,7 +43,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate getUserByIdentifier(
           UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
           system,
-          responderManager,
+          appActor,
           timeout,
           executionContext
         )
@@ -56,7 +56,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate getUserByIdentifier(
           UserIdentifierADM(maybeEmail = Some("wronguser@example.com")),
           system,
-          responderManager,
+          appActor,
           timeout,
           executionContext
         )
@@ -70,7 +70,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           Authenticator invokePrivate getUserByIdentifier(
             UserIdentifierADM(),
             system,
-            responderManager,
+            appActor,
             timeout,
             executionContext
           )
@@ -88,7 +88,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(correctPasswordCreds),
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -101,7 +101,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(wrongPasswordCreds),
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -117,7 +117,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(wrongPasswordCreds),
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -135,7 +135,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -154,7 +154,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>
@@ -166,7 +166,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
           system,
-          responderManager,
+          appActor,
           executionContext
         )
         resF map { res =>

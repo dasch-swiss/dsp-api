@@ -254,7 +254,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessage,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }
@@ -271,7 +271,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
               requestMessage,
               requestContext,
               settings,
-              responderManager,
+              appActor,
               log
             )
           }

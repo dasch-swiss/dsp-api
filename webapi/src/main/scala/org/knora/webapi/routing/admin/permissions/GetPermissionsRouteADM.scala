@@ -51,7 +51,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -72,7 +72,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -93,7 +93,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -114,7 +114,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }

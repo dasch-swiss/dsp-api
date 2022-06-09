@@ -16,7 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
-import org.knora.webapi.messages.v2.responder.KnoraRequestV2
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**

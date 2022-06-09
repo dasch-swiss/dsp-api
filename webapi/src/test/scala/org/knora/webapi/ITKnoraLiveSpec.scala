@@ -8,7 +8,7 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
@@ -108,7 +108,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   StringFormatter.initForTest()
   RdfFeatureFactory.init(settings)
 
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: Logger = Logger(this.getClass)
 
   /**
    * The effect for building a cache service manager, a IIIF service manager,

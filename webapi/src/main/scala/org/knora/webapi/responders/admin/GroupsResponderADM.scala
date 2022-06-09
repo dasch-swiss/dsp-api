@@ -9,6 +9,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import dsp.errors._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -28,6 +29,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import java.util.UUID
 import scala.concurrent.Future
 import dsp.valueobjects.Group.GroupStatus
+import akka.actor.ActorRef
 
 /**
  * Returns information about Knora projects.
@@ -41,146 +43,160 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
    */
   def receive(msg: GroupsResponderRequestADM) = msg match {
-    case GroupsGetADM(requestingUser) => groupsGetADM(requestingUser)
-    case GroupsGetRequestADM(requestingUser) =>
-      groupsGetRequestADM(requestingUser)
-    case GroupGetADM(groupIri, requestingUser) =>
-      groupGetADM(groupIri, requestingUser)
-    case MultipleGroupsGetRequestADM(groupIris, requestingUser) =>
-      multipleGroupsGetRequestADM(groupIris, requestingUser)
-    case GroupGetRequestADM(groupIri, requestingUser) =>
-      groupGetRequestADM(groupIri, requestingUser)
-    case GroupMembersGetRequestADM(groupIri, requestingUser) =>
-      groupMembersGetRequestADM(groupIri, requestingUser)
-    case GroupCreateRequestADM(newGroupInfo, requestingUser, apiRequestID) =>
-      createGroupADM(newGroupInfo, requestingUser, apiRequestID)
-    case GroupChangeRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID) =>
+    case GroupsGetADM(featureFactoryConfig, requestingUser) => groupsGetADM(featureFactoryConfig, requestingUser)
+    case GroupsGetRequestADM(featureFactoryConfig, requestingUser) =>
+      groupsGetRequestADM(featureFactoryConfig, requestingUser)
+    case GroupGetADM(groupIri, featureFactoryConfig, requestingUser) =>
+      groupGetADM(groupIri, featureFactoryConfig, requestingUser)
+    case MultipleGroupsGetRequestADM(groupIris, featureFactoryConfig, requestingUser) =>
+      multipleGroupsGetRequestADM(groupIris, featureFactoryConfig, requestingUser)
+    case GroupGetRequestADM(groupIri, featureFactoryConfig, requestingUser) =>
+      groupGetRequestADM(groupIri, featureFactoryConfig, requestingUser)
+    case GroupMembersGetRequestADM(groupIri, featureFactoryConfig, requestingUser) =>
+      groupMembersGetRequestADM(groupIri, featureFactoryConfig, requestingUser)
+    case GroupCreateRequestADM(newGroupInfo, featureFactoryConfig, requestingUser, apiRequestID) =>
+      createGroupADM(newGroupInfo, featureFactoryConfig, requestingUser, apiRequestID)
+    case GroupChangeRequestADM(groupIri, changeGroupRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
       changeGroupBasicInformationRequestADM(
         groupIri,
         changeGroupRequest,
+        featureFactoryConfig,
         requestingUser,
         apiRequestID
       )
     case GroupChangeStatusRequestADM(
           groupIri,
           changeGroupRequest,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      changeGroupStatusRequestADM(groupIri, changeGroupRequest, requestingUser, apiRequestID)
+      changeGroupStatusRequestADM(groupIri, changeGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
    * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
    *
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @return all the groups as a sequence of [[GroupADM]].
    */
   private def groupsGetADM(
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[GroupADM]] = {
 
     log.debug("groupsGetADM")
 
     for {
-      sparqlQuery <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .getGroups(
-              maybeIri = None
-            )
-            .toString()
-        )
+      sparqlQuery <- Future(
+                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                         .getGroups(
+                           maybeIri = None
+                         )
+                         .toString()
+                     )
 
-      groupsResponse <-
-        (storeManager ? SparqlExtendedConstructRequest(
-          sparql = sparqlQuery
-        )).mapTo[SparqlExtendedConstructResponse]
+      groupsResponse <- appActor
+                          .ask(
+                            SparqlExtendedConstructRequest(
+                              sparql = sparqlQuery,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+                          )
+                          .mapTo[SparqlExtendedConstructResponse]
 
       statements = groupsResponse.statements
 
-      groups: Seq[Future[GroupADM]] =
-        statements.map { case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-          val projectIri: IRI = propsMap
-            .getOrElse(
-              OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri,
-              throw InconsistentRepositoryDataException(
-                s"Group $groupIri has no project attached"
-              )
-            )
-            .head
-            .asInstanceOf[IriLiteralV2]
-            .value
+      groups: Seq[Future[GroupADM]] = statements.map {
+                                        case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+                                          val projectIri: IRI = propsMap
+                                            .getOrElse(
+                                              OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri,
+                                              throw InconsistentRepositoryDataException(
+                                                s"Group $groupIri has no project attached"
+                                              )
+                                            )
+                                            .head
+                                            .asInstanceOf[IriLiteralV2]
+                                            .value
 
-          for {
-            maybeProjectADM: Option[ProjectADM] <-
-              (responderManager ? ProjectGetADM(
-                identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                requestingUser = KnoraSystemInstances.Users.SystemUser
-              )).mapTo[Option[ProjectADM]]
+                                          for {
+                                            maybeProjectADM: Option[ProjectADM] <- appActor
+                                                                                     .ask(
+                                                                                       ProjectGetADM(
+                                                                                         identifier =
+                                                                                           ProjectIdentifierADM(
+                                                                                             maybeIri = Some(projectIri)
+                                                                                           ),
+                                                                                         featureFactoryConfig =
+                                                                                           featureFactoryConfig,
+                                                                                         requestingUser =
+                                                                                           KnoraSystemInstances.Users.SystemUser
+                                                                                       )
+                                                                                     )
+                                                                                     .mapTo[Option[ProjectADM]]
 
-            projectADM: ProjectADM =
-              maybeProjectADM match {
-                case Some(project) => project
-                case None =>
-                  throw InconsistentRepositoryDataException(
-                    s"Project $projectIri was referenced by $groupIri but was not found in the triplestore."
-                  )
-              }
+                                            projectADM: ProjectADM = maybeProjectADM match {
+                                                                       case Some(project) => project
+                                                                       case None =>
+                                                                         throw InconsistentRepositoryDataException(
+                                                                           s"Project $projectIri was referenced by $groupIri but was not found in the triplestore."
+                                                                         )
+                                                                     }
 
-            group =
-              GroupADM(
-                id = groupIri.toString,
-                name = propsMap
-                  .getOrElse(
-                    OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
-                    throw InconsistentRepositoryDataException(
-                      s"Group $groupIri has no name attached"
-                    )
-                  )
-                  .head
-                  .asInstanceOf[StringLiteralV2]
-                  .value,
-                descriptions = propsMap
-                  .getOrElse(
-                    OntologyConstants.KnoraAdmin.GroupDescriptions.toSmartIri,
-                    throw InconsistentRepositoryDataException(
-                      s"Group $groupIri has no descriptions attached"
-                    )
-                  )
-                  .map(l =>
-                    l.asStringLiteral(
-                      throw InconsistentRepositoryDataException(
-                        s"Expected StringLiteralV2 but got ${l.getClass}"
-                      )
-                    )
-                  ),
-                project = projectADM,
-                status = propsMap
-                  .getOrElse(
-                    OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                    throw InconsistentRepositoryDataException(
-                      s"Group $groupIri has no status attached"
-                    )
-                  )
-                  .head
-                  .asInstanceOf[BooleanLiteralV2]
-                  .value,
-                selfjoin = propsMap
-                  .getOrElse(
-                    OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
-                    throw InconsistentRepositoryDataException(
-                      s"Group $groupIri has no status attached"
-                    )
-                  )
-                  .head
-                  .asInstanceOf[BooleanLiteralV2]
-                  .value
-              )
+                                            group = GroupADM(
+                                                      id = groupIri.toString,
+                                                      name = propsMap
+                                                        .getOrElse(
+                                                          OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
+                                                          throw InconsistentRepositoryDataException(
+                                                            s"Group $groupIri has no name attached"
+                                                          )
+                                                        )
+                                                        .head
+                                                        .asInstanceOf[StringLiteralV2]
+                                                        .value,
+                                                      descriptions = propsMap
+                                                        .getOrElse(
+                                                          OntologyConstants.KnoraAdmin.GroupDescriptions.toSmartIri,
+                                                          throw InconsistentRepositoryDataException(
+                                                            s"Group $groupIri has no descriptions attached"
+                                                          )
+                                                        )
+                                                        .map(l =>
+                                                          l.asStringLiteral(
+                                                            throw InconsistentRepositoryDataException(
+                                                              s"Expected StringLiteralV2 but got ${l.getClass}"
+                                                            )
+                                                          )
+                                                        ),
+                                                      project = projectADM,
+                                                      status = propsMap
+                                                        .getOrElse(
+                                                          OntologyConstants.KnoraAdmin.Status.toSmartIri,
+                                                          throw InconsistentRepositoryDataException(
+                                                            s"Group $groupIri has no status attached"
+                                                          )
+                                                        )
+                                                        .head
+                                                        .asInstanceOf[BooleanLiteralV2]
+                                                        .value,
+                                                      selfjoin = propsMap
+                                                        .getOrElse(
+                                                          OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
+                                                          throw InconsistentRepositoryDataException(
+                                                            s"Group $groupIri has no status attached"
+                                                          )
+                                                        )
+                                                        .head
+                                                        .asInstanceOf[BooleanLiteralV2]
+                                                        .value
+                                                    )
 
-          } yield group
-        }.toSeq
+                                          } yield group
+                                      }.toSeq
       result: Seq[GroupADM] <- Future.sequence(groups)
     } yield result.sorted
   }
@@ -192,13 +208,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * @return all the groups as a [[GroupsGetResponseADM]].
    */
   private def groupsGetRequestADM(
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[GroupsGetResponseADM] =
     for {
-      maybeGroupsListToReturn <-
-        groupsGetADM(
-          requestingUser = requestingUser
-        )
+      maybeGroupsListToReturn <- groupsGetADM(
+                                   featureFactoryConfig = featureFactoryConfig,
+                                   requestingUser = requestingUser
+                                 )
 
       result = maybeGroupsListToReturn match {
                  case groups: Seq[GroupADM] if groups.nonEmpty => GroupsGetResponseADM(groups = groups)
@@ -215,6 +232,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    */
   private def groupGetADM(
     groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Option[GroupADM]] =
     for {
@@ -226,9 +244,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                          .toString()
                      )
 
-      groupResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                         sparql = sparqlQuery
-                       )).mapTo[SparqlExtendedConstructResponse]
+      groupResponse <- appActor
+                         .ask(
+                           SparqlExtendedConstructRequest(
+                             sparql = sparqlQuery,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         )
+                         .mapTo[SparqlExtendedConstructResponse]
 
       maybeGroup: Option[GroupADM] <-
         if (groupResponse.statements.isEmpty) {
@@ -236,6 +259,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         } else {
           statements2GroupADM(
             statements = groupResponse.statements.head,
+            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
         }
@@ -248,16 +272,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
    *
    * @param groupIri             the IRI of the group requested.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user initiating the request.
    * @return information about the group as a [[GroupGetResponseADM]].
    */
   private def groupGetRequestADM(
     groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[GroupGetResponseADM] =
     for {
       maybeGroupADM: Option[GroupADM] <- groupGetADM(
                                            groupIri = groupIri,
+                                           featureFactoryConfig = featureFactoryConfig,
                                            requestingUser = requestingUser
                                          )
 
@@ -276,11 +303,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    */
   private def multipleGroupsGetRequestADM(
     groupIris: Set[IRI],
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Set[GroupGetResponseADM]] = {
     val groupResponseFutures: Set[Future[GroupGetResponseADM]] = groupIris.map { groupIri =>
       groupGetRequestADM(
         groupIri = groupIri,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -292,11 +321,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
    *
    * @param groupIri             the IRI of the group.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user initiating the request.
    * @return A sequence of [[UserADM]]
    */
   private def groupMembersGetADM(
     groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[UserADM]] = {
 
@@ -305,6 +336,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     for {
       maybeGroupADM: Option[GroupADM] <- groupGetADM(
                                            groupIri = groupIri,
+                                           featureFactoryConfig = featureFactoryConfig,
                                            requestingUser = KnoraSystemInstances.Users.SystemUser
                                          )
 
@@ -323,17 +355,16 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               throw NotFoundException(s"Group <$groupIri> not found")
           }
 
-      sparqlQueryString <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-            .getGroupMembersByIri(
-              groupIri
-            )
-            .toString()
-        )
+      sparqlQueryString <- Future(
+                             org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+                               .getGroupMembersByIri(
+                                 groupIri
+                               )
+                               .toString()
+                           )
       //_ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-      groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      groupMembersResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
       // get project member IRI from results rows
@@ -347,11 +378,17 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
 
       maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map { userIri =>
-                                                          (responderManager ? UserGetADM(
-                                                            UserIdentifierADM(maybeIri = Some(userIri)),
-                                                            userInformationTypeADM = UserInformationTypeADM.Restricted,
-                                                            requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                          )).mapTo[Option[UserADM]]
+                                                          appActor
+                                                            .ask(
+                                                              UserGetADM(
+                                                                UserIdentifierADM(maybeIri = Some(userIri)),
+                                                                userInformationTypeADM =
+                                                                  UserInformationTypeADM.Restricted,
+                                                                featureFactoryConfig = featureFactoryConfig,
+                                                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                              )
+                                                            )
+                                                            .mapTo[Option[UserADM]]
                                                         }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
@@ -366,22 +403,24 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Only project and system admins are allowed to access this information.
    *
    * @param groupIri             the IRI of the group.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user initiating the request.
    * @return A [[GroupMembersGetResponseADM]]
    */
   private def groupMembersGetRequestADM(
     groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[GroupMembersGetResponseADM] = {
 
     log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
 
     for {
-      maybeMembersListToReturn <-
-        groupMembersGetADM(
-          groupIri = groupIri,
-          requestingUser = requestingUser
-        )
+      maybeMembersListToReturn <- groupMembersGetADM(
+                                    groupIri = groupIri,
+                                    featureFactoryConfig = featureFactoryConfig,
+                                    requestingUser = requestingUser
+                                  )
 
       result = maybeMembersListToReturn match {
                  case members: Seq[UserADM] if members.nonEmpty => GroupMembersGetResponseADM(members = members)
@@ -401,6 +440,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    */
   private def createGroupADM(
     createRequest: GroupCreatePayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[GroupOperationResponseADM] = {
@@ -432,20 +472,25 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
             }
 
-        maybeProjectADM: Option[ProjectADM] <-
-          (responderManager ? ProjectGetADM(
-            identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project.value)),
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )).mapTo[Option[ProjectADM]]
+        maybeProjectADM: Option[ProjectADM] <- appActor
+                                                 .ask(
+                                                   ProjectGetADM(
+                                                     identifier = ProjectIdentifierADM(maybeIri =
+                                                       Some(createRequest.project.value)
+                                                     ),
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                   )
+                                                 )
+                                                 .mapTo[Option[ProjectADM]]
 
-        projectADM: ProjectADM =
-          maybeProjectADM match {
-            case Some(p) => p
-            case None =>
-              throw NotFoundException(
-                s"Cannot create group inside project <${createRequest.project}>. The project was not found."
-              )
-          }
+        projectADM: ProjectADM = maybeProjectADM match {
+                                   case Some(p) => p
+                                   case None =>
+                                     throw NotFoundException(
+                                       s"Cannot create group inside project <${createRequest.project}>. The project was not found."
+                                     )
+                                 }
 
         // check the custom IRI; if not given, create an unused IRI
         customGroupIri: Option[SmartIri] = createRequest.id.map(_.value).map(iri => iri.toSmartIri)
@@ -455,29 +500,29 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                          )
 
         /* create the group */
-        createNewGroupSparqlString =
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .createNewGroup(
-              adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-              groupIri,
-              groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
-              name = createRequest.name.value,
-              descriptions = createRequest.descriptions.value,
-              projectIri = createRequest.project.value,
-              status = createRequest.status.value,
-              hasSelfJoinEnabled = createRequest.selfjoin.value
-            )
-            .toString
+        createNewGroupSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                       .createNewGroup(
+                                         adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                         groupIri,
+                                         groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
+                                         name = createRequest.name.value,
+                                         descriptions = createRequest.descriptions.value,
+                                         projectIri = createRequest.project.value,
+                                         status = createRequest.status.value,
+                                         hasSelfJoinEnabled = createRequest.selfjoin.value
+                                       )
+                                       .toString
 
-        _ <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString))
+        _ <- appActor
+               .ask(SparqlUpdateRequest(createNewGroupSparqlString))
                .mapTo[SparqlUpdateResponse]
 
         /* Verify that the group was created and updated  */
-        maybeCreatedGroup <-
-          groupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        maybeCreatedGroup <- groupGetADM(
+                               groupIri = groupIri,
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
 
         createdGroup: GroupADM =
           maybeCreatedGroup.getOrElse(
@@ -501,6 +546,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    *
    * @param groupIri             the IRI of the group we want to change.
    * @param changeGroupRequest   the change request.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]].
@@ -508,6 +554,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   private def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
     changeGroupRequest: GroupUpdatePayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[GroupOperationResponseADM] = {
@@ -528,11 +575,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
              )
 
         /* Get the project IRI which also verifies that the group exists. */
-        maybeGroupADM <-
-          groupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        maybeGroupADM <- groupGetADM(
+                           groupIri = groupIri,
+                           featureFactoryConfig = featureFactoryConfig,
+                           requestingUser = KnoraSystemInstances.Users.SystemUser
+                         )
 
         groupADM: GroupADM = maybeGroupADM.getOrElse(
                                throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
@@ -558,6 +605,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         result <- updateGroupADM(
                     groupIri = groupIri,
                     groupUpdatePayload = groupUpdatePayload,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                   )
 
@@ -579,6 +627,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    *
    * @param groupIri             the IRI of the group we want to change.
    * @param changeGroupRequest   the change request.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]].
@@ -586,6 +635,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   private def changeGroupStatusRequestADM(
     groupIri: IRI,
     changeGroupRequest: ChangeGroupApiRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[GroupOperationResponseADM] = {
@@ -606,11 +656,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
              )
 
         /* Get the project IRI which also verifies that the group exists. */
-        maybeGroupADM <-
-          groupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        maybeGroupADM <- groupGetADM(
+                           groupIri = groupIri,
+                           featureFactoryConfig = featureFactoryConfig,
+                           requestingUser = KnoraSystemInstances.Users.SystemUser
+                         )
 
         groupADM: GroupADM = maybeGroupADM.getOrElse(
                                throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
@@ -625,12 +675,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             throw ForbiddenException("Group's status can only be changed by a project or system admin.")
           }
 
-        maybeStatus: Option[GroupStatus] =
-          changeGroupRequest.status match {
-            case Some(value) =>
-              Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
-            case None => None
-          }
+        maybeStatus: Option[GroupStatus] = changeGroupRequest.status match {
+                                             case Some(value) =>
+                                               Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
+                                             case None => None
+                                           }
 
         /* create the update request */
         groupUpdatePayload = GroupUpdatePayloadADM(
@@ -638,19 +687,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                              )
 
         // update group status
-        updateGroupResult: GroupOperationResponseADM <-
-          updateGroupADM(
-            groupIri = groupIri,
-            groupUpdatePayload = groupUpdatePayload,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        updateGroupResult: GroupOperationResponseADM <- updateGroupADM(
+                                                          groupIri = groupIri,
+                                                          groupUpdatePayload = groupUpdatePayload,
+                                                          featureFactoryConfig = featureFactoryConfig,
+                                                          requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                        )
 
         // remove all members from group if status is false
-        operationResponse <-
-          removeGroupMembersIfNecessary(
-            changedGroup = updateGroupResult.group,
-            apiRequestID = apiRequestID
-          )
+        operationResponse <- removeGroupMembersIfNecessary(
+                               changedGroup = updateGroupResult.group,
+                               featureFactoryConfig = featureFactoryConfig,
+                               apiRequestID = apiRequestID
+                             )
 
       } yield operationResponse
 
@@ -670,12 +719,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    *
    * @param groupIri             the IRI of the group we are updating.
    * @param groupUpdatePayload   the payload holding the information which we want to update.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the profile of the user making the request.
    * @return a [[GroupOperationResponseADM]]
    */
   private def updateGroupADM(
     groupIri: IRI,
     groupUpdatePayload: GroupUpdatePayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[GroupOperationResponseADM] = {
 
@@ -694,6 +745,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       /* Verify that the group exists. */
       maybeGroupADM <- groupGetADM(
                          groupIri = groupIri,
+                         featureFactoryConfig = featureFactoryConfig,
                          requestingUser = KnoraSystemInstances.Users.SystemUser
                        )
 
@@ -716,30 +768,30 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           }
 
       /* Update group */
-      updateGroupSparqlString <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .updateGroup(
-              adminNamedGraphIri = "http://www.knora.org/data/admin",
-              groupIri,
-              maybeName = groupUpdatePayload.name.map(_.value),
-              maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),
-              maybeProject = None, // maybe later we want to allow moving of a group to another project
-              maybeStatus = groupUpdatePayload.status.map(_.value),
-              maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
-            )
-            .toString
-        )
+      updateGroupSparqlString <- Future(
+                                   org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                     .updateGroup(
+                                       adminNamedGraphIri = "http://www.knora.org/data/admin",
+                                       groupIri,
+                                       maybeName = groupUpdatePayload.name.map(_.value),
+                                       maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),
+                                       maybeProject =
+                                         None, // maybe later we want to allow moving of a group to another project
+                                       maybeStatus = groupUpdatePayload.status.map(_.value),
+                                       maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
+                                     )
+                                     .toString
+                                 )
       //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
-      _ <- (storeManager ? SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
-      maybeUpdatedGroup <-
-        groupGetADM(
-          groupIri = groupIri,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+      maybeUpdatedGroup <- groupGetADM(
+                             groupIri = groupIri,
+                             featureFactoryConfig = featureFactoryConfig,
+                             requestingUser = KnoraSystemInstances.Users.SystemUser
+                           )
 
       updatedGroup: GroupADM =
         maybeUpdatedGroup.getOrElse(
@@ -760,11 +812,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Helper method that turns SPARQL result rows into a [[GroupADM]].
    *
    * @param statements           results from the SPARQL query representing information about the group.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user that is making the request.
    * @return a [[GroupADM]] representing information about the group.
    */
   private def statements2GroupADM(
     statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Option[GroupADM]] = {
 
@@ -785,62 +839,66 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     if (propsMap.nonEmpty) {
       for {
         projectIri <- projectIriFuture
-        maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                                              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                              requestingUser = KnoraSystemInstances.Users.SystemUser
-                                            )).mapTo[Option[ProjectADM]]
+        maybeProject: Option[ProjectADM] <- appActor
+                                              .ask(
+                                                ProjectGetADM(
+                                                  identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                                                  featureFactoryConfig = featureFactoryConfig,
+                                                  requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                )
+                                              )
+                                              .mapTo[Option[ProjectADM]]
 
         project: ProjectADM = maybeProject.getOrElse(
                                 throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
                               )
 
-        groupADM: GroupADM =
-          GroupADM(
-            id = groupIri,
-            name = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
-                throw InconsistentRepositoryDataException(
-                  s"Group $groupIri has no groupName attached"
-                )
-              )
-              .head
-              .asInstanceOf[StringLiteralV2]
-              .value,
-            descriptions = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraAdmin.GroupDescriptions.toSmartIri,
-                throw InconsistentRepositoryDataException(
-                  s"Group $groupIri has no descriptions attached"
-                )
-              )
-              .map(l =>
-                l.asStringLiteral(
-                  throw InconsistentRepositoryDataException(
-                    s"Expected StringLiteralV2 but got ${l.getClass}"
-                  )
-                )
-              ),
-            project = project,
-            status = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")
-              )
-              .head
-              .asInstanceOf[BooleanLiteralV2]
-              .value,
-            selfjoin = propsMap
-              .getOrElse(
-                OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
-                throw InconsistentRepositoryDataException(
-                  s"Group $groupIri has no selfJoin attached"
-                )
-              )
-              .head
-              .asInstanceOf[BooleanLiteralV2]
-              .value
-          )
+        groupADM: GroupADM = GroupADM(
+                               id = groupIri,
+                               name = propsMap
+                                 .getOrElse(
+                                   OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
+                                   throw InconsistentRepositoryDataException(
+                                     s"Group $groupIri has no groupName attached"
+                                   )
+                                 )
+                                 .head
+                                 .asInstanceOf[StringLiteralV2]
+                                 .value,
+                               descriptions = propsMap
+                                 .getOrElse(
+                                   OntologyConstants.KnoraAdmin.GroupDescriptions.toSmartIri,
+                                   throw InconsistentRepositoryDataException(
+                                     s"Group $groupIri has no descriptions attached"
+                                   )
+                                 )
+                                 .map(l =>
+                                   l.asStringLiteral(
+                                     throw InconsistentRepositoryDataException(
+                                       s"Expected StringLiteralV2 but got ${l.getClass}"
+                                     )
+                                   )
+                                 ),
+                               project = project,
+                               status = propsMap
+                                 .getOrElse(
+                                   OntologyConstants.KnoraAdmin.Status.toSmartIri,
+                                   throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")
+                                 )
+                                 .head
+                                 .asInstanceOf[BooleanLiteralV2]
+                                 .value,
+                               selfjoin = propsMap
+                                 .getOrElse(
+                                   OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
+                                   throw InconsistentRepositoryDataException(
+                                     s"Group $groupIri has no selfJoin attached"
+                                   )
+                                 )
+                                 .head
+                                 .asInstanceOf[BooleanLiteralV2]
+                                 .value
+                             )
       } yield Some(groupADM)
     } else {
       FastFuture.successful(None)
@@ -860,7 +918,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                    )
       //_ = log.debug("groupExists - query: {}", askString)
 
-      checkGroupExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkGroupExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                    = checkGroupExistsResponse.result
 
     } yield result
@@ -881,7 +939,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                    )
       //_ = log.debug("groupExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
       _ = log.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
@@ -892,11 +950,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * group members need to be removed from the group.
    *
    * @param changedGroup         the group with the new status.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param apiRequestID         the unique request ID.
    * @return a [[GroupOperationResponseADM]]
    */
   private def removeGroupMembersIfNecessary(
     changedGroup: GroupADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[GroupOperationResponseADM] =
     if (changedGroup.status) {
@@ -907,21 +967,26 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       // group deactivated. need to remove members.
       log.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
       for {
-        members: Seq[UserADM] <-
-          groupMembersGetADM(
-            groupIri = changedGroup.id,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        members: Seq[UserADM] <- groupMembersGetADM(
+                                   groupIri = changedGroup.id,
+                                   featureFactoryConfig = featureFactoryConfig,
+                                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                                 )
 
-        seqOfFutures: Seq[Future[UserOperationResponseADM]] =
-          members.map { user: UserADM =>
-            (responderManager ? UserGroupMembershipRemoveRequestADM(
-              userIri = user.id,
-              groupIri = changedGroup.id,
-              requestingUser = KnoraSystemInstances.Users.SystemUser,
-              apiRequestID = apiRequestID
-            )).mapTo[UserOperationResponseADM]
-          }
+        seqOfFutures: Seq[Future[UserOperationResponseADM]] = members.map { user: UserADM =>
+                                                                appActor
+                                                                  .ask(
+                                                                    UserGroupMembershipRemoveRequestADM(
+                                                                      userIri = user.id,
+                                                                      groupIri = changedGroup.id,
+                                                                      featureFactoryConfig = featureFactoryConfig,
+                                                                      requestingUser =
+                                                                        KnoraSystemInstances.Users.SystemUser,
+                                                                      apiRequestID = apiRequestID
+                                                                    )
+                                                                  )
+                                                                  .mapTo[UserOperationResponseADM]
+                                                              }
         userOperationResults: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
 
       } yield GroupOperationResponseADM(group = changedGroup)

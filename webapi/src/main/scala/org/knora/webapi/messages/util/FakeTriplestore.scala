@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import org.apache.commons.io.FileUtils
 import org.knora.webapi.util.FileUtil
 
@@ -64,7 +64,7 @@ object FakeTriplestore {
     )
   }
 
-  def add(sparql: String, result: String, log: LoggingAdapter): Unit =
+  def add(sparql: String, result: String, log: Logger): Unit =
     this.synchronized {
       log.info("Collecting data for fake triplestore")
       val paddedQueryNum = f"$queryNum%04d"

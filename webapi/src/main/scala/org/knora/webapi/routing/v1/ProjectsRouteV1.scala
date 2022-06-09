@@ -37,7 +37,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
             requestMessage,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
       }
@@ -68,7 +68,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
             requestMessage,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
         }

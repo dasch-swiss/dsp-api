@@ -77,7 +77,7 @@ class PermissionsResponderADMSpec
     "ask about the permission profile" should {
 
       "return the permissions profile (root user)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.rootUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.rootUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
@@ -88,7 +88,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (multi group user)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.multiuserUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.multiuserUser.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.INCUNABULA_PROJECT_IRI, SharedTestDataADM.IMAGES_PROJECT_IRI),
@@ -99,7 +99,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (incunabula project admin user)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.incunabulaProjectAdminUser.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.INCUNABULA_PROJECT_IRI),
@@ -110,7 +110,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (incunabula creator user)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.incunabulaCreatorUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
@@ -121,7 +121,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (incunabula normal project member user)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.incunabulaProjectAdminUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.incunabulaMemberUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
@@ -132,7 +132,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (images user 01)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.imagesUser01.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.imagesUser01.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.IMAGES_PROJECT_IRI),
@@ -143,7 +143,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (images-reviewer-user)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.imagesReviewerUser.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.imagesReviewerUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
@@ -154,7 +154,7 @@ class PermissionsResponderADMSpec
       }
 
       "return the permissions profile (anything user 01)" in {
-        responderManager ! PermissionDataGetADM(
+        appActor ! PermissionDataGetADM(
           projectIris = SharedTestDataV1.anythingUser1.projects_info.keys.toSeq,
           groupIris = SharedTestDataV1.anythingUser1.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
@@ -178,7 +178,7 @@ class PermissionsResponderADMSpec
     "ask about administrative permissions " should {
 
       "return all AdministrativePermissions for project " in {
-        responderManager ! AdministrativePermissionsForProjectGetRequestADM(
+        appActor ! AdministrativePermissionsForProjectGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -191,7 +191,7 @@ class PermissionsResponderADMSpec
       }
 
       "return AdministrativePermission for project and group" in {
-        responderManager ! AdministrativePermissionForProjectGroupGetRequestADM(
+        appActor ! AdministrativePermissionForProjectGroupGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
           requestingUser = rootUser
@@ -200,7 +200,7 @@ class PermissionsResponderADMSpec
       }
 
       "return AdministrativePermission for IRI " in {
-        responderManager ! AdministrativePermissionForIriGetRequestADM(
+        appActor ! AdministrativePermissionForIriGetRequestADM(
           administrativePermissionIri = perm002_a1.iri,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -209,7 +209,7 @@ class PermissionsResponderADMSpec
       }
       "throw ForbiddenException for AdministrativePermissionForIriGetRequestADM if requesting user is not system or project admin " in {
         val permissionIri = perm002_a1.iri
-        responderManager ! AdministrativePermissionForIriGetRequestADM(
+        appActor ! AdministrativePermissionForIriGetRequestADM(
           administrativePermissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
@@ -226,7 +226,7 @@ class PermissionsResponderADMSpec
 
     "asked to create an administrative permission" should {
       "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
-        responderManager ! AdministrativePermissionCreateRequestADM(
+        appActor ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
@@ -249,7 +249,7 @@ class PermissionsResponderADMSpec
 
       "create and return an administrative permission with a custom IRI" in {
         val customIri = "http://rdfh.ch/permissions/0001/24RD7QcoTKqEJKrDBE885Q"
-        responderManager ! AdministrativePermissionCreateRequestADM(
+        appActor ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(customIri),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
@@ -282,7 +282,7 @@ class PermissionsResponderADMSpec
             permissionCode = None
           )
         )
-        responderManager ! AdministrativePermissionCreateRequestADM(
+        appActor ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(customIri),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
@@ -303,7 +303,7 @@ class PermissionsResponderADMSpec
 
     "ask to query about object access permissions " should {
       "return object access permissions for a resource" in {
-        responderManager ! ObjectAccessPermissionsForResourceGetADM(
+        appActor ! ObjectAccessPermissionsForResourceGetADM(
           resourceIri = perm003_o1.iri,
           requestingUser = rootUser
         )
@@ -312,7 +312,7 @@ class PermissionsResponderADMSpec
 
       "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForResourceGetADM is not ProjectAdmin" in {
 
-        responderManager ! ObjectAccessPermissionsForResourceGetADM(
+        appActor ! ObjectAccessPermissionsForResourceGetADM(
           resourceIri = perm003_o1.iri,
           requestingUser = SharedTestDataADM.incunabulaMemberUser
         )
@@ -322,7 +322,7 @@ class PermissionsResponderADMSpec
       }
 
       "return object access permissions for a value" in {
-        responderManager ! ObjectAccessPermissionsForValueGetADM(
+        appActor ! ObjectAccessPermissionsForValueGetADM(
           valueIri = perm003_o2.iri,
           requestingUser = rootUser
         )
@@ -331,7 +331,7 @@ class PermissionsResponderADMSpec
 
       "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForValueGetADM is not ProjectAdmin" in {
 
-        responderManager ! ObjectAccessPermissionsForValueGetADM(
+        appActor ! ObjectAccessPermissionsForValueGetADM(
           valueIri = perm003_o2.iri,
           requestingUser = SharedTestDataADM.incunabulaMemberUser
         )
@@ -344,7 +344,7 @@ class PermissionsResponderADMSpec
     "ask to query about default object access permissions " should {
 
       "return all DefaultObjectAccessPermissions for project" in {
-        responderManager ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -358,7 +358,7 @@ class PermissionsResponderADMSpec
       }
 
       "return DefaultObjectAccessPermission for IRI" in {
-        responderManager ! DefaultObjectAccessPermissionForIriGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionForIriGetRequestADM(
           defaultObjectAccessPermissionIri = perm002_d1.iri,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -372,7 +372,7 @@ class PermissionsResponderADMSpec
 
       "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not System or project Admin" in {
         val permissionIri = perm002_d1.iri
-        responderManager ! DefaultObjectAccessPermissionForIriGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionForIriGetRequestADM(
           defaultObjectAccessPermissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
@@ -388,7 +388,7 @@ class PermissionsResponderADMSpec
       }
 
       "return DefaultObjectAccessPermission for project and group" in {
-        responderManager ! DefaultObjectAccessPermissionGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           resourceClassIri = None,
@@ -403,7 +403,7 @@ class PermissionsResponderADMSpec
       }
 
       "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
-        responderManager ! DefaultObjectAccessPermissionGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
           groupIri = None,
           resourceClassIri = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
@@ -418,7 +418,7 @@ class PermissionsResponderADMSpec
       }
 
       "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
-        responderManager ! DefaultObjectAccessPermissionGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
           groupIri = None,
           resourceClassIri = None,
@@ -433,7 +433,7 @@ class PermissionsResponderADMSpec
       }
 
       "cache DefaultObjectAccessPermission" in {
-        responderManager ! DefaultObjectAccessPermissionGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
           groupIri = None,
           resourceClassIri = None,
@@ -456,7 +456,7 @@ class PermissionsResponderADMSpec
     "ask to create a default object access permission" should {
 
       "create a DefaultObjectAccessPermission for project and group" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
@@ -477,7 +477,7 @@ class PermissionsResponderADMSpec
 
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
         val customIri = "http://rdfh.ch/permissions/0001/4PnSvolsTEa86KJ2EG76SQ"
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(customIri),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
@@ -499,7 +499,7 @@ class PermissionsResponderADMSpec
       }
 
       "create a DefaultObjectAccessPermission for project and resource class" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
@@ -523,7 +523,7 @@ class PermissionsResponderADMSpec
       }
 
       "create a DefaultObjectAccessPermission for project and property" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
@@ -545,7 +545,7 @@ class PermissionsResponderADMSpec
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -568,7 +568,7 @@ class PermissionsResponderADMSpec
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
             forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
@@ -594,7 +594,7 @@ class PermissionsResponderADMSpec
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
             forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
@@ -619,7 +619,7 @@ class PermissionsResponderADMSpec
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists" in {
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
             forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
@@ -654,7 +654,7 @@ class PermissionsResponderADMSpec
             permissionCode = Some(1)
           )
         )
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
@@ -688,7 +688,7 @@ class PermissionsResponderADMSpec
             permissionCode = Some(7)
           )
         )
-        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+        appActor ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
@@ -708,7 +708,7 @@ class PermissionsResponderADMSpec
 //    "ask to get all permissions" should {
 //
 //      "return all permissions for 'image' project " in {
-//        responderManager ! PermissionsForProjectGetRequestADM(
+//        appActor ! PermissionsForProjectGetRequestADM(
 //          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
 //          requestingUser = rootUser,
 //          apiRequestID = UUID.randomUUID()
@@ -718,7 +718,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return all permissions for 'incunabula' project " in {
-//        responderManager ! PermissionsForProjectGetRequestADM(
+//        appActor ! PermissionsForProjectGetRequestADM(
 //          projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
 //          requestingUser = rootUser,
 //          apiRequestID = UUID.randomUUID()
@@ -739,7 +739,7 @@ class PermissionsResponderADMSpec
 //    "ask for default object access permissions 'string'" should {
 //
 //      "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 //          projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
 //          resourceClassIri = OntologyConstants.KnoraBase.LinkObj,
 //          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -751,7 +751,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'knora-base:hasStillImageFileValue' property (system property)" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
 //          projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
 //          resourceClassIri = OntologyConstants.KnoraBase.StillImageRepresentation,
 //          propertyIri = OntologyConstants.KnoraBase.HasStillImageFileValue,
@@ -764,7 +764,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 //          projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
 //          resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS,
 //          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -776,7 +776,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'incunabula:page' resource class (project resource class)" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 //          projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
 //          resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS,
 //          targetUser = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -788,7 +788,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'images:jahreszeit' property" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
 //          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
 //          resourceClassIri = s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
 //          propertyIri = s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#jahreszeit",
@@ -801,7 +801,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'anything:hasInterval' property" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
 //          projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
 //          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
 //          propertyIri = "http://www.knora.org/ontology/0001/anything#hasInterval",
@@ -814,7 +814,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'anything:Thing' class" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 //          projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
 //          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
 //          targetUser = SharedTestDataADM.anythingUser2,
@@ -826,7 +826,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'anything:Thing' class and 'anything:hasText' property" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
 //          projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
 //          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
 //          propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
@@ -837,7 +837,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'images:Bild' class and 'anything:hasText' property" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
 //          projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
 //          resourceClassIri = s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild",
 //          propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
@@ -850,7 +850,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return the default object access permissions 'string' for the 'anything:Thing' resource class for the root user (system admin and not member of project)" in {
-//        responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+//        appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
 //          projectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI,
 //          resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
 //          targetUser = SharedTestDataADM.rootUser,
@@ -882,7 +882,7 @@ class PermissionsResponderADMSpec
 //    "ask to get the permission by IRI" should {
 //      "not return the permission if requesting user does not have permission to see it" in {
 //        val permissionIri = perm002_a1.iri
-//        responderManager ! PermissionByIriGetRequestADM(
+//        appActor ! PermissionByIriGetRequestADM(
 //          permissionIri = perm002_a1.iri,
 //          requestingUser = SharedTestDataADM.imagesUser02
 //        )
@@ -892,7 +892,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return an administrative permission" in {
-//        responderManager ! PermissionByIriGetRequestADM(
+//        appActor ! PermissionByIriGetRequestADM(
 //          permissionIri = perm002_a1.iri,
 //          requestingUser = rootUser
 //        )
@@ -900,7 +900,7 @@ class PermissionsResponderADMSpec
 //      }
 //
 //      "return a default object access permission" in {
-//        responderManager ! PermissionByIriGetRequestADM(
+//        appActor ! PermissionByIriGetRequestADM(
 //          permissionIri = perm002_d1.iri,
 //          requestingUser = rootUser
 //        )
@@ -912,7 +912,7 @@ class PermissionsResponderADMSpec
 //      "update group of an administrative permission" in {
 //        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
 //        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
-//        responderManager ! PermissionChangeGroupRequestADM(
+//        appActor ! PermissionChangeGroupRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
 //            forGroup = newGroupIri
@@ -929,7 +929,7 @@ class PermissionsResponderADMSpec
 //      "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin" in {
 //        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
 //        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
-//        responderManager ! PermissionChangeGroupRequestADM(
+//        appActor ! PermissionChangeGroupRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
 //            forGroup = newGroupIri
@@ -945,7 +945,7 @@ class PermissionsResponderADMSpec
 //      "update group of a default object access permission" in {
 //        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
 //        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
-//        responderManager ! PermissionChangeGroupRequestADM(
+//        appActor ! PermissionChangeGroupRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
 //            forGroup = newGroupIri
@@ -963,7 +963,7 @@ class PermissionsResponderADMSpec
 //      "update group of a default object access permission, resource class must be deleted" in {
 //        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
 //        val newGroupIri = "http://www.knora.org/ontology/knora-admin#ProjectMember"
-//        responderManager ! PermissionChangeGroupRequestADM(
+//        appActor ! PermissionChangeGroupRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
 //            forGroup = newGroupIri
@@ -982,7 +982,7 @@ class PermissionsResponderADMSpec
 //      "update group of a default object access permission, property must be deleted" in {
 //        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
 //        val newGroupIri = "http://www.knora.org/ontology/knora-admin#ProjectMember"
-//        responderManager ! PermissionChangeGroupRequestADM(
+//        appActor ! PermissionChangeGroupRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
 //            forGroup = newGroupIri
@@ -1004,7 +1004,7 @@ class PermissionsResponderADMSpec
 //        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
 //        val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 //
-//        responderManager ! PermissionChangeHasPermissionsRequestADM(
+//        appActor ! PermissionChangeHasPermissionsRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
 //            hasPermissions = hasPermissions
@@ -1021,7 +1021,7 @@ class PermissionsResponderADMSpec
 //        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
 //        val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 //
-//        responderManager ! PermissionChangeHasPermissionsRequestADM(
+//        appActor ! PermissionChangeHasPermissionsRequestADM(
 //          permissionIri = permissionIri,
 //          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
 //            hasPermissions = hasPermissions
@@ -1045,7 +1045,7 @@ class PermissionsResponderADMSpec
             permissionCode = Some(1)
           )
         )
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1068,7 +1068,7 @@ class PermissionsResponderADMSpec
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1102,7 +1102,7 @@ class PermissionsResponderADMSpec
           )
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1135,7 +1135,7 @@ class PermissionsResponderADMSpec
           )
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1162,7 +1162,7 @@ class PermissionsResponderADMSpec
           )
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1187,7 +1187,7 @@ class PermissionsResponderADMSpec
           )
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1217,7 +1217,7 @@ class PermissionsResponderADMSpec
           )
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1246,7 +1246,7 @@ class PermissionsResponderADMSpec
           )
         )
 
-        responderManager ! PermissionChangeHasPermissionsRequestADM(
+        appActor ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
             hasPermissions = hasPermissions
@@ -1269,7 +1269,7 @@ class PermissionsResponderADMSpec
         val permissionIri    = "http://rdfh.ch/permissions/0803/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
-        responderManager ! PermissionChangeResourceClassRequestADM(
+        appActor ! PermissionChangeResourceClassRequestADM(
           permissionIri = permissionIri,
           changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
             forResourceClass = resourceClassIri
@@ -1289,7 +1289,7 @@ class PermissionsResponderADMSpec
         val permissionIri    = "http://rdfh.ch/permissions/0803/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
-        responderManager ! PermissionChangeResourceClassRequestADM(
+        appActor ! PermissionChangeResourceClassRequestADM(
           permissionIri = permissionIri,
           changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
             forResourceClass = resourceClassIri
@@ -1308,7 +1308,7 @@ class PermissionsResponderADMSpec
         val permissionIri    = "http://rdfh.ch/permissions/0803/003-d1"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
-        responderManager ! PermissionChangeResourceClassRequestADM(
+        appActor ! PermissionChangeResourceClassRequestADM(
           permissionIri = permissionIri,
           changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
             forResourceClass = resourceClassIri
@@ -1328,7 +1328,7 @@ class PermissionsResponderADMSpec
         val permissionIri    = "http://rdfh.ch/permissions/0803/003-a2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
-        responderManager ! PermissionChangeResourceClassRequestADM(
+        appActor ! PermissionChangeResourceClassRequestADM(
           permissionIri = permissionIri,
           changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
             forResourceClass = resourceClassIri
@@ -1351,7 +1351,7 @@ class PermissionsResponderADMSpec
         val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
-        responderManager ! PermissionChangePropertyRequestADM(
+        appActor ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
           changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
             forProperty = propertyIri
@@ -1372,7 +1372,7 @@ class PermissionsResponderADMSpec
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
-        responderManager ! PermissionChangePropertyRequestADM(
+        appActor ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
           changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
             forProperty = propertyIri
@@ -1392,7 +1392,7 @@ class PermissionsResponderADMSpec
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
         val propertyIri   = OntologyConstants.KnoraBase.TextFileValue
 
-        responderManager ! PermissionChangePropertyRequestADM(
+        appActor ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
           changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
             forProperty = propertyIri
@@ -1411,7 +1411,7 @@ class PermissionsResponderADMSpec
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
         val propertyIri   = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
-        responderManager ! PermissionChangePropertyRequestADM(
+        appActor ! PermissionChangePropertyRequestADM(
           permissionIri = permissionIri,
           changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
             forProperty = propertyIri
@@ -1431,7 +1431,7 @@ class PermissionsResponderADMSpec
     "ask to delete a permission" should {
       "throw BadRequestException if given IRI is not a permission IRI" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1kjhfkj"
-        responderManager ! PermissionDeleteRequestADM(
+        appActor ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -1441,7 +1441,7 @@ class PermissionsResponderADMSpec
 
       "throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
-        responderManager ! PermissionDeleteRequestADM(
+        appActor ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
@@ -1457,7 +1457,7 @@ class PermissionsResponderADMSpec
 
       "erase a permission with given IRI" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
-        responderManager ! PermissionDeleteRequestADM(
+        appActor ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()

@@ -53,7 +53,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
   "The ProjectsResponderADM" when {
     "used to query for project information" should {
       "return information for every project" in {
-        responderManager ! ProjectsGetRequestADM(
+        appActor ! ProjectsGetRequestADM(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val received = expectMsgType[ProjectsGetResponseADM](timeout)
@@ -64,22 +65,25 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "return information about a project identified by IRI" in {
         /* Incunabula project */
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
 
         /* Images project */
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.imagesProject))
 
         /* 'SystemProject' */
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.systemProject.id)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.systemProject))
@@ -87,16 +91,18 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return information about a project identified by shortname" in {
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.incunabulaProject.shortname)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(ProjectGetResponseADM(SharedTestDataADM.incunabulaProject))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
@@ -104,16 +110,18 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFoundException' when the project shortname is unknown " in {
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found")))
       }
 
       "return 'NotFoundException' when the project shortcode is unknown " in {
-        responderManager ! ProjectGetRequestADM(
+        appActor ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortcode = Some("9999")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found")))
@@ -124,48 +132,54 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image"))
 
       "return restricted view settings using project IRI" in {
-        responderManager ! ProjectRestrictedViewSettingsGetADM(
+        appActor ! ProjectRestrictedViewSettingsGetADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Some(expectedResult))
       }
 
       "return restricted view settings using project SHORTNAME" in {
-        responderManager ! ProjectRestrictedViewSettingsGetADM(
+        appActor ! ProjectRestrictedViewSettingsGetADM(
           identifier = ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.imagesProject.shortname)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Some(expectedResult))
       }
 
       "return restricted view settings using project SHORTCODE" in {
-        responderManager ! ProjectRestrictedViewSettingsGetADM(
+        appActor ! ProjectRestrictedViewSettingsGetADM(
           identifier = ProjectIdentifierADM(maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Some(expectedResult))
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-        responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
+        appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
       }
 
       "return 'NotFoundException' when the project SHORTCODE is unknown" in {
-        responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
+        appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortcode = Some("9999")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
       }
 
       "return 'NotFoundException' when the project SHORTNAME is unknown" in {
-        responderManager ! ProjectRestrictedViewSettingsGetRequestADM(
+        appActor ! ProjectRestrictedViewSettingsGetRequestADM(
           identifier = ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
@@ -178,7 +192,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "CREATE a project and return the project info if the supplied shortname is unique" in {
         val shortCode = "111c"
-        responderManager ! ProjectCreateRequestADM(
+        appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortCode).fold(error => throw error.head, value => value), // lower case
@@ -191,6 +205,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
             selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -206,7 +221,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         newProjectIri.set(received.project.id)
 
         // Check Administrative Permissions
-        responderManager ! AdministrativePermissionsForProjectGetRequestADM(
+        appActor ! AdministrativePermissionsForProjectGetRequestADM(
           projectIri = received.project.id,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -231,7 +246,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         hasAPForProjectMember.size shouldBe 1
 
         // Check Default Object Access permissions
-        responderManager ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
+        appActor ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
           projectIri = received.project.id,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -271,7 +286,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
-        responderManager ! ProjectCreateRequestADM(
+        appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
@@ -284,6 +299,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
             selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -303,7 +319,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         val longnameWithSpecialCharacter    = "New \\\"Longname\\\""
         val descriptionWithSpecialCharacter = "project \\\"description\\\""
         val keywordWithSpecialCharacter     = "new \\\"keyword\\\""
-        responderManager ! ProjectCreateRequestADM(
+        appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("project_with_character").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
@@ -317,6 +333,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
             selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -336,7 +353,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
-        responderManager ! ProjectCreateRequestADM(
+        appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
@@ -349,6 +366,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
             selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -356,7 +374,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
-        responderManager ! ProjectCreateRequestADM(
+        appActor ! ProjectCreateRequestADM(
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
@@ -369,6 +387,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
             selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -376,7 +395,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "UPDATE a project" in {
-        responderManager ! ProjectChangeRequestADM(
+        appActor ! ProjectChangeRequestADM(
           projectIri = newProjectIri.get,
           changeProjectRequest = ChangeProjectApiRequestADM(
             shortname = None,
@@ -394,6 +413,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             status = Some(false),
             selfjoin = Some(true)
           ).validateAndEscape,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -416,9 +436,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
-        responderManager ! ProjectChangeRequestADM(
+        appActor ! ProjectChangeRequestADM(
           projectIri = "http://rdfh.ch/projects/notexisting",
           changeProjectRequest = ChangeProjectApiRequestADM(longname = Some("new long name")).validateAndEscape,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
@@ -458,7 +479,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectOntologyAddADM(
                     projectIri = IMAGES_PROJECT_IRI,
                     ontologyIri = "http://wwww.knora.org/ontology/00FF/blabla1",
-
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = UUID.randomUUID()
                 )
@@ -476,8 +497,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
     "used to query members" should {
 
       "return all members of a project identified by IRI" in {
-        responderManager ! ProjectMembersGetRequestADM(
+        appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -494,8 +516,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return all members of a project identified by shortname" in {
-        responderManager ! ProjectMembersGetRequestADM(
+        appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.imagesProject.shortname)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -512,8 +535,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return all members of a project identified by shortcode" in {
-        responderManager ! ProjectMembersGetRequestADM(
+        appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -530,32 +554,36 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFound' when the project IRI is unknown (project membership)" in {
-        responderManager ! ProjectMembersGetRequestADM(
+        appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
       }
 
       "return 'NotFound' when the project shortname is unknown (project membership)" in {
-        responderManager ! ProjectMembersGetRequestADM(
+        appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
       }
 
       "return 'NotFound' when the project shortcode is unknown (project membership)" in {
-        responderManager ! ProjectMembersGetRequestADM(
+        appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortcode = Some("9999")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
       }
 
       "return all project admin members of a project identified by IRI" in {
-        responderManager ! ProjectAdminMembersGetRequestADM(
+        appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.imagesProject.id)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -570,8 +598,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return all project admin members of a project identified by shortname" in {
-        responderManager ! ProjectAdminMembersGetRequestADM(
+        appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortname = Some(SharedTestDataADM.imagesProject.shortname)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -586,8 +615,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return all project admin members of a project identified by shortcode" in {
-        responderManager ! ProjectAdminMembersGetRequestADM(
+        appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortcode = Some(SharedTestDataADM.imagesProject.shortcode)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -602,24 +632,27 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFound' when the project IRI is unknown (project admin membership)" in {
-        responderManager ! ProjectAdminMembersGetRequestADM(
+        appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found.")))
       }
 
       "return 'NotFound' when the project shortname is unknown (project admin membership)" in {
-        responderManager ! ProjectAdminMembersGetRequestADM(
+        appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortname = Some("wrongshortname")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project 'wrongshortname' not found.")))
       }
 
       "return 'NotFound' when the project shortcode is unknown (project admin membership)" in {
-        responderManager ! ProjectAdminMembersGetRequestADM(
+        appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeShortcode = Some("9999")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         expectMsg(Failure(NotFoundException(s"Project '9999' not found.")))
@@ -629,7 +662,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
     "used to query keywords" should {
 
       "return all unique keywords for all projects" in {
-        responderManager ! ProjectsKeywordsGetRequestADM(
+        appActor ! ProjectsKeywordsGetRequestADM(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser
         )
         val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
@@ -637,8 +671,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return all keywords for a single project" in {
-        responderManager ! ProjectKeywordsGetRequestADM(
+        appActor ! ProjectKeywordsGetRequestADM(
           projectIri = SharedTestDataADM.incunabulaProject.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
@@ -646,8 +681,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return empty list for a project without keywords" in {
-        responderManager ! ProjectKeywordsGetRequestADM(
+        appActor ! ProjectKeywordsGetRequestADM(
           projectIri = SharedTestDataADM.dokubibProject.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser
         )
         val received: ProjectKeywordsGetResponseADM = expectMsgType[ProjectKeywordsGetResponseADM](timeout)
@@ -655,8 +691,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFound' when the project IRI is unknown" in {
-        responderManager ! ProjectKeywordsGetRequestADM(
+        appActor ! ProjectKeywordsGetRequestADM(
           projectIri = "http://rdfh.ch/projects/notexisting",
+          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser
         )
 

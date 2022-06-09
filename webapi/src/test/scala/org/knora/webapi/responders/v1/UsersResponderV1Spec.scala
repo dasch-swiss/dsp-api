@@ -52,7 +52,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
     "asked about all users" should {
       "return a list" in {
-        responderManager ! UsersGetRequestV1(rootUser)
+        appActor ! UsersGetRequestV1(rootUser)
         val response = expectMsgType[UsersGetResponseV1](timeout)
         // println(response.users)
         response.users.nonEmpty should be(true)
@@ -63,7 +63,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "asked about an user identified by 'iri' " should {
 
       "return a profile if the user (root user) is known" in {
-        responderManager ! UserProfileByIRIGetV1(
+        appActor ! UserProfileByIRIGetV1(
           userIri = rootUserIri,
           UserProfileTypeV1.FULL
         )
@@ -73,7 +73,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       }
 
       "return a profile if the user (incunabula user) is known" in {
-        responderManager ! UserProfileByIRIGetV1(
+        appActor ! UserProfileByIRIGetV1(
           incunabulaUserIri,
           UserProfileTypeV1.FULL
         )
@@ -81,7 +81,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       }
 
       "return 'NotFoundException' when the user is unknown " in {
-        responderManager ! UserProfileByIRIGetRequestV1(
+        appActor ! UserProfileByIRIGetRequestV1(
           userIri = "http://rdfh.ch/users/notexisting",
           userProfileType = UserProfileTypeV1.RESTRICTED,
           userProfile = rootUser
@@ -90,7 +90,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       }
 
       "return 'None' when the user is unknown " in {
-        responderManager ! UserProfileByIRIGetV1(
+        appActor ! UserProfileByIRIGetV1(
           userIri = "http://rdfh.ch/users/notexisting",
           userProfileType = UserProfileTypeV1.RESTRICTED
         )
@@ -101,7 +101,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     "asked about an user identified by 'email'" should {
 
       "return a profile if the user (root user) is known" in {
-        responderManager ! UserProfileByEmailGetV1(
+        appActor ! UserProfileByEmailGetV1(
           email = rootUserEmail,
           userProfileType = UserProfileTypeV1.RESTRICTED
         )
@@ -109,7 +109,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       }
 
       "return a profile if the user (incunabula user) is known" in {
-        responderManager ! UserProfileByEmailGetV1(
+        appActor ! UserProfileByEmailGetV1(
           email = incunabulaUserEmail,
           userProfileType = UserProfileTypeV1.RESTRICTED
         )
@@ -117,7 +117,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       }
 
       "return 'NotFoundException' when the user is unknown" in {
-        responderManager ! UserProfileByEmailGetRequestV1(
+        appActor ! UserProfileByEmailGetRequestV1(
           email = "userwrong@example.com",
           userProfileType = UserProfileTypeV1.RESTRICTED,
           userProfile = rootUser
@@ -126,7 +126,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
       }
 
       "return 'None' when the user is unknown" in {
-        responderManager ! UserProfileByEmailGetV1(
+        appActor ! UserProfileByEmailGetV1(
           email = "userwrong@example.com",
           userProfileType = UserProfileTypeV1.RESTRICTED
         )

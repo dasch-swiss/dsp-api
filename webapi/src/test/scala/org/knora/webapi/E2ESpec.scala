@@ -8,7 +8,7 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.stream.Materializer
@@ -22,6 +22,7 @@ import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
 import dsp.errors.FileWriteException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.feature.TestFeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
@@ -33,8 +34,8 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
@@ -65,10 +66,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 import app.ApplicationActor
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
+import akka.testkit.TestActorRef
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -93,16 +91,16 @@ class E2ESpec(_system: ActorSystem)
 
   /* constructors */
   def this(name: String, config: Config) =
-    this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
+    this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
   def this(config: Config) =
     this(
-      ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig))
+      ActorSystem("E2ETest", TestContainerFuseki.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig)))
     )
 
-  def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
+  def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-  def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
+  def this() = this(ActorSystem("E2ETest", TestContainerFuseki.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
   /* needed by the core trait */
   implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
@@ -116,53 +114,64 @@ class E2ESpec(_system: ActorSystem)
   StringFormatter.initForTest()
   RdfFeatureFactory.init(settings)
 
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: Logger = Logger(this.getClass)
+
+  // The ZIO runtime used to run functional effects
+  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
 
   // The effect for building a cache service manager and a IIIF service manager.
   lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
-    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, tssm, appConfig)
+  } yield (csm, iiifsm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      SipiTestContainer.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer,
-      Logging.fromInfo
+      // FusekiTestContainer.layer,
+      SipiTestContainer.layer
     )
-
-  // The ZIO runtime used to run functional effects
-  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
   /**
    * Create both managers by unsafe running them.
    */
-  lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime.unsafeRun(managers)
+  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
+    runtime
+      .unsafeRun(
+        managers
+          .provide(
+            effectLayers
+          )
+      )
 
-  // start the Application Actor
+  // start the Application Actor.
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
+  val routeData: KnoraRouteData = KnoraRouteData(
+    system = system,
+    appActor = appActor
+  )
+
   protected val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
+
+  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+    testToggles = Set.empty,
+    parent = new KnoraSettingsFeatureFactoryConfig(settings)
+  )
 
   override def beforeAll(): Unit = {
 
@@ -182,13 +191,9 @@ class E2ESpec(_system: ActorSystem)
     loadTestData(rdfDataObjects)
   }
 
-  final override def afterAll(): Unit = {
+  override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
-
-    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    runtime.shutdown()
-  }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
     runtime.unsafeRunTask(
@@ -266,17 +271,17 @@ class E2ESpec(_system: ActorSystem)
   }
 
   protected def parseTrig(trigStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
     rdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
   }
 
   protected def parseTurtle(turtleStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
     rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
   }
 
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
   }
 
@@ -316,8 +321,4 @@ class E2ESpec(_system: ActorSystem)
     }
   }
 
-  val routeData: KnoraRouteData = KnoraRouteData(
-    system = system,
-    appActor = appActor
-  )
 }

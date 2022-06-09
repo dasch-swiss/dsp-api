@@ -94,7 +94,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -150,7 +150,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -206,7 +206,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -259,7 +259,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }

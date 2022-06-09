@@ -195,7 +195,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = RouteUtilV2.getOntologySchema(requestContext),
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -258,7 +258,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log,
           targetSchema = targetSchema,
           schemaOptions = schemaOptions
@@ -283,7 +283,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = RouteUtilV2.getOntologySchema(requestContext),
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -308,7 +308,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
               requestMessageF = requestMessage,
               requestContext = requestContext,
               settings = settings,
-              responderManager = responderManager,
+              appActor = appActor,
               log = log,
               targetSchema = RouteUtilV2.getOntologySchema(requestContext),
               schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -339,7 +339,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         requestMessageF = requestMessage,
         requestContext = requestContext,
         settings = settings,
-        responderManager = responderManager,
+        appActor = appActor,
         log = log,
         targetSchema = targetSchema,
         schemaOptions = schemaOptions
@@ -368,7 +368,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = targetSchema,
             schemaOptions = schemaOptions
@@ -413,7 +413,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = RouteUtilV2.getOntologySchema(requestContext),
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
@@ -462,7 +462,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         requestMessageF = requestMessage,
         requestContext = requestContext,
         settings = settings,
-        responderManager = responderManager,
+        appActor = appActor,
         log = log,
         targetSchema = RouteUtilV2.getOntologySchema(requestContext),
         schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)

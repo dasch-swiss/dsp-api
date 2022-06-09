@@ -11,6 +11,7 @@ import org.knora.webapi._
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -52,87 +53,96 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
   def receive(msg: UsersResponderRequestADM): Future[Equals] = msg match {
-    case UsersGetADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADM(userInformationTypeADM, requestingUser)
-    case UsersGetRequestADM(userInformationTypeADM, requestingUser) =>
-      getAllUserADMRequest(userInformationTypeADM, requestingUser)
-    case UserGetADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADM(identifier, userInformationTypeADM, requestingUser)
-    case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) =>
-      getSingleUserADMRequest(identifier, userInformationTypeADM, requestingUser)
-    case UserCreateRequestADM(userCreatePayloadADM, requestingUser, apiRequestID) =>
-      createNewUserADM(userCreatePayloadADM, requestingUser, apiRequestID)
+    case UsersGetADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
+      getAllUserADM(userInformationTypeADM, featureFactoryConfig, requestingUser)
+    case UsersGetRequestADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
+      getAllUserADMRequest(userInformationTypeADM, featureFactoryConfig, requestingUser)
+    case UserGetADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser) =>
+      getSingleUserADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
+    case UserGetRequestADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser) =>
+      getSingleUserADMRequest(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
+    case UserCreateRequestADM(userCreatePayloadADM, featureFactoryConfig, requestingUser, apiRequestID) =>
+      createNewUserADM(userCreatePayloadADM, featureFactoryConfig, requestingUser, apiRequestID)
     case UserChangeBasicInformationRequestADM(
           userIri,
           userUpdateBasicInformationPayload,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
       changeBasicUserInformationADM(
         userIri,
         userUpdateBasicInformationPayload,
+        featureFactoryConfig,
         requestingUser,
         apiRequestID
       )
     case UserChangePasswordRequestADM(
           userIri,
           userUpdatePasswordPayload,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      changePasswordADM(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
-    case UserChangeStatusRequestADM(userIri, status, requestingUser, apiRequestID) =>
-      changeUserStatusADM(userIri, status, requestingUser, apiRequestID)
+      changePasswordADM(userIri, userUpdatePasswordPayload, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserChangeStatusRequestADM(userIri, status, featureFactoryConfig, requestingUser, apiRequestID) =>
+      changeUserStatusADM(userIri, status, featureFactoryConfig, requestingUser, apiRequestID)
     case UserChangeSystemAdminMembershipStatusRequestADM(
           userIri,
           changeSystemAdminMembershipStatusRequest,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
       changeUserSystemAdminMembershipStatusADM(
         userIri,
         changeSystemAdminMembershipStatusRequest,
+        featureFactoryConfig,
         requestingUser,
         apiRequestID
       )
-    case UserProjectMembershipsGetRequestADM(userIri, requestingUser) =>
-      userProjectMembershipsGetRequestADM(userIri, requestingUser)
-    case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+    case UserProjectMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser) =>
+      userProjectMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser)
+    case UserProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+      userProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
     case UserProjectMembershipRemoveRequestADM(
           userIri,
           projectIri,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) =>
-      userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
+      userProjectMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserProjectAdminMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+      userProjectAdminMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser, apiRequestID)
     case UserProjectAdminMembershipAddRequestADM(
           userIri,
           projectIri,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      userProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+      userProjectAdminMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
     case UserProjectAdminMembershipRemoveRequestADM(
           userIri,
           projectIri,
+          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
       userProjectAdminMembershipRemoveRequestADM(
         userIri,
         projectIri,
+        featureFactoryConfig,
         requestingUser,
         apiRequestID
       )
-    case UserGroupMembershipsGetRequestADM(userIri, requestingUser) =>
-      userGroupMembershipsGetRequestADM(userIri, requestingUser)
-    case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) =>
-      userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+    case UserGroupMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser) =>
+      userGroupMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser)
+    case UserGroupMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+      userGroupMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+      userGroupMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -140,11 +150,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Gets all the users and returns them as a sequence of [[UserADM]].
    *
    * @param userInformationType  the extent of the information returned.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user initiating the request.
    * @return all the users as a sequence of [[UserADM]].
    */
   private def getAllUserADM(
     userInformationType: UserInformationTypeADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[UserADM]] =
     for {
@@ -167,9 +179,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                .toString()
                            )
 
-      usersResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                         sparql = sparqlQueryString
-                       )).mapTo[SparqlExtendedConstructResponse]
+      usersResponse <- appActor
+                         .ask(
+                           SparqlExtendedConstructRequest(
+                             sparql = sparqlQueryString,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         )
+                         .mapTo[SparqlExtendedConstructResponse]
 
       statements = usersResponse.statements.toList
 
@@ -243,19 +260,21 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Gets all the users and returns them as a [[UsersGetResponseADM]].
    *
    * @param userInformationType  the extent of the information returned.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user initiating the request.
    * @return all the users as a [[UsersGetResponseV1]].
    */
   private def getAllUserADMRequest(
     userInformationType: UserInformationTypeADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[UsersGetResponseADM] =
     for {
-      maybeUsersListToReturn <-
-        getAllUserADM(
-          userInformationType = userInformationType,
-          requestingUser = requestingUser
-        )
+      maybeUsersListToReturn <- getAllUserADM(
+                                  userInformationType = userInformationType,
+                                  featureFactoryConfig = featureFactoryConfig,
+                                  requestingUser = requestingUser
+                                )
 
       result = maybeUsersListToReturn match {
                  case users: Seq[UserADM] if users.nonEmpty =>
@@ -275,6 +294,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * @param identifier           the IRI, email, or username of the user.
    * @param userInformationType  the type of the requested profile (restricted
    *                             of full).
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user initiating the request.
    * @param skipCache            the flag denotes to skip the cache and instead
    *                             get data from the triplestore
@@ -283,6 +303,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def getSingleUserADM(
     identifier: UserIdentifierADM,
     userInformationType: UserInformationTypeADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     skipCache: Boolean = false
   ): Future[Option[UserADM]] = tracedFuture("admin-user-get-single-user") {
@@ -299,10 +320,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       maybeUserADM <-
         if (skipCache) {
           // getting directly from triplestore
-          getUserFromTriplestore(identifier)
+          getUserFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
         } else {
           // getting from cache or triplestore
-          getUserFromCacheOrTriplestore(identifier)
+          getUserFromCacheOrTriplestore(identifier, featureFactoryConfig)
         }
 
       // return the correct amount of information depending on either the request or user permission
@@ -339,17 +360,19 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def getSingleUserADMRequest(
     identifier: UserIdentifierADM,
     userInformationType: UserInformationTypeADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[UserResponseADM] =
     for {
       maybeUserADM <- getSingleUserADM(
                         identifier = identifier,
                         userInformationType = userInformationType,
+                        featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser
                       )
 
       result = maybeUserADM match {
-                 case Some(user) => UserResponseADM(user)
+                 case Some(user) => UserResponseADM(user = user)
                  case None       => throw NotFoundException(s"User '${identifier.value}' not found")
                }
     } yield result
@@ -360,6 +383,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param userUpdateBasicInformationPayload    the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -369,6 +393,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def changeBasicUserInformationADM(
     userIri: IRI,
     userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -398,6 +423,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         currentUserInformation: Option[UserADM] <- getSingleUserADM(
                                                      identifier = UserIdentifierADM(maybeIri = Some(userIri)),
                                                      userInformationType = UserInformationTypeADM.Full,
+                                                     featureFactoryConfig = featureFactoryConfig,
                                                      requestingUser = KnoraSystemInstances.Users.SystemUser
                                                    )
 
@@ -429,6 +455,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                       familyName = userUpdateBasicInformationPayload.familyName,
                       lang = userUpdateBasicInformationPayload.lang
                     ),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -450,6 +477,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param userUpdatePasswordPayload    the current password of the requesting user and the new password.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -461,6 +489,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def changePasswordADM(
     userIri: IRI,
     userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -499,6 +528,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserPasswordADM(
                     userIri = userIri,
                     password = newHashedPassword,
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -520,6 +550,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param status               the new status.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -529,6 +560,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def changeUserStatusADM(
     userIri: IRI,
     status: UserStatus,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -557,6 +589,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(status = Some(status)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -578,6 +611,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param systemAdmin    the new status.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user profile of the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -587,6 +621,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def changeUserSystemAdminMembershipStatusADM(
     userIri: IRI,
     systemAdmin: SystemAdmin,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -613,6 +648,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -639,12 +675,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def userProjectMembershipsGetADM(
     userIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[ProjectADM]] =
     for {
       maybeUser <- getSingleUserADM(
                      identifier = UserIdentifierADM(maybeIri = Some(userIri)),
                      userInformationType = UserInformationTypeADM.Full,
+                     featureFactoryConfig = featureFactoryConfig,
                      requestingUser = KnoraSystemInstances.Users.SystemUser
                    )
 
@@ -664,6 +702,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def userProjectMembershipsGetRequestADM(
     userIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[UserProjectMembershipsGetResponseADM] =
     for {
@@ -674,6 +713,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
       projects: Seq[ProjectADM] <- userProjectMembershipsGetADM(
                                      userIri = userIri,
+                                     featureFactoryConfig = featureFactoryConfig,
                                      requestingUser = requestingUser
                                    )
     } yield UserProjectMembershipsGetResponseADM(projects)
@@ -683,6 +723,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
@@ -690,6 +731,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def userProjectMembershipAddRequestADM(
     userIri: IRI,
     projectIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -725,11 +767,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectMemberships <-
-          userProjectMembershipsGetRequestADM(
-            userIri = userIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )
+        currentProjectMemberships <- userProjectMembershipsGetRequestADM(
+                                       userIri = userIri,
+                                       featureFactoryConfig = featureFactoryConfig,
+                                       requestingUser = KnoraSystemInstances.Users.SystemUser
+                                     )
 
         currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects.map(_.id)
 
@@ -744,13 +786,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           }
 
         // create the update request
-        updateUseResult <-
-          updateUserADM(
-            userIri = userIri,
-            userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
-            requestingUser = requestingUser,
-            apiRequestID = apiRequestID
-          )
+        updateUseResult <- updateUserADM(
+                             userIri = userIri,
+                             userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                             featureFactoryConfig = featureFactoryConfig,
+                             requestingUser = requestingUser,
+                             apiRequestID = apiRequestID
+                           )
       } yield updateUseResult
 
     for {
@@ -769,6 +811,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
@@ -776,6 +819,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def userProjectMembershipRemoveRequestADM(
     userIri: IRI,
     projectIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -811,6 +855,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // get users current project membership list
         currentProjectMemberships <- userProjectMembershipsGetADM(
                                        userIri = userIri,
+                                       featureFactoryConfig = featureFactoryConfig,
                                        requestingUser = KnoraSystemInstances.Users.SystemUser
                                      )
         currentProjectMembershipIris = currentProjectMemberships.map(_.id)
@@ -829,6 +874,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -848,12 +894,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Returns the user's project admin group memberships as a sequence of [[IRI]]
    *
    * @param userIri              the user's IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectMembershipsGetResponseV1]].
    */
   private def userProjectAdminMembershipsGetADM(
     userIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[Seq[ProjectADM]] =
@@ -868,7 +916,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                .toString()
                            )
 
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -880,13 +928,20 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                 case None           => Seq.empty[IRI]
                               }
 
-      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
-        projectIris.map { projectIri =>
-          (responderManager ? ProjectGetADM(
-            identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )).mapTo[Option[ProjectADM]]
-        }
+      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
+                                                               appActor
+                                                                 .ask(
+                                                                   ProjectGetADM(
+                                                                     identifier = ProjectIdentifierADM(maybeIri =
+                                                                       Some(projectIri)
+                                                                     ),
+                                                                     featureFactoryConfig = featureFactoryConfig,
+                                                                     requestingUser =
+                                                                       KnoraSystemInstances.Users.SystemUser
+                                                                   )
+                                                                 )
+                                                                 .mapTo[Option[ProjectADM]]
+                                                             }
       maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
       projects: Seq[ProjectADM]               = maybeProjects.flatten
 
@@ -897,12 +952,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * is a member of the project admin group.
    *
    * @param userIri              the user's IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserProjectMembershipsGetResponseV1]].
    */
   private def userProjectAdminMembershipsGetRequestADM(
     userIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserProjectAdminMembershipsGetResponseADM] =
@@ -916,6 +973,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
       projects: Seq[ProjectADM] <- userProjectAdminMembershipsGetADM(
                                      userIri = userIri,
+                                     featureFactoryConfig = featureFactoryConfig,
                                      requestingUser = KnoraSystemInstances.Users.SystemUser,
                                      apiRequestID = apiRequestID
                                    )
@@ -926,6 +984,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
@@ -933,6 +992,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def userProjectAdminMembershipAddRequestADM(
     userIri: IRI,
     projectIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -966,12 +1026,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _              = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
 
         // get users current project membership list
-        currentProjectAdminMemberships <-
-          userProjectAdminMembershipsGetADM(
-            userIri = userIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser,
-            apiRequestID = apiRequestID
-          )
+        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
+                                            userIri = userIri,
+                                            featureFactoryConfig = featureFactoryConfig,
+                                            requestingUser = KnoraSystemInstances.Users.SystemUser,
+                                            apiRequestID = apiRequestID
+                                          )
 
         currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
 
@@ -989,6 +1049,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -1010,6 +1071,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param projectIri           the project's IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return
@@ -1017,6 +1079,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def userProjectAdminMembershipRemoveRequestADM(
     userIri: IRI,
     projectIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -1052,6 +1115,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // get users current project membership list
         currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
                                             userIri = userIri,
+                                            featureFactoryConfig = featureFactoryConfig,
                                             requestingUser = KnoraSystemInstances.Users.SystemUser,
                                             apiRequestID = apiRequestID
                                           )
@@ -1072,6 +1136,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -1092,33 +1157,34 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Returns the user's group memberships as a sequence of [[GroupADM]]
    *
    * @param userIri              the IRI of the user.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @return a sequence of [[GroupADM]].
    */
   private def userGroupMembershipsGetADM(
     userIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[GroupADM]] =
     for {
-      maybeUserADM: Option[UserADM] <-
-        getSingleUserADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationType = UserInformationTypeADM.Full,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
+      maybeUserADM: Option[UserADM] <- getSingleUserADM(
+                                         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                                         userInformationType = UserInformationTypeADM.Full,
+                                         featureFactoryConfig = featureFactoryConfig,
+                                         requestingUser = KnoraSystemInstances.Users.SystemUser
+                                       )
 
-      groups: Seq[GroupADM] =
-        maybeUserADM match {
-          case Some(user) =>
-            log.debug(
-              "userGroupMembershipsGetADM - user found. Returning his groups: {}.",
-              user.groups
-            )
-            user.groups
-          case None =>
-            log.debug("userGroupMembershipsGetADM - user not found. Returning empty seq.")
-            Seq.empty[GroupADM]
-        }
+      groups: Seq[GroupADM] = maybeUserADM match {
+                                case Some(user) =>
+                                  log.debug(
+                                    "userGroupMembershipsGetADM - user found. Returning his groups: {}.",
+                                    user.groups
+                                  )
+                                  user.groups
+                                case None =>
+                                  log.debug("userGroupMembershipsGetADM - user not found. Returning empty seq.")
+                                  Seq.empty[GroupADM]
+                              }
 
     } yield groups
 
@@ -1132,11 +1198,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def userGroupMembershipsGetRequestADM(
     userIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[UserGroupMembershipsGetResponseADM] =
     for {
       groups: Seq[GroupADM] <- userGroupMembershipsGetADM(
                                  userIri = userIri,
+                                 featureFactoryConfig = featureFactoryConfig,
                                  requestingUser = requestingUser
                                )
     } yield UserGroupMembershipsGetResponseADM(groups = groups)
@@ -1146,6 +1214,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the user's IRI.
    * @param groupIri             the group IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a [[UserOperationResponseADM]].
@@ -1153,6 +1222,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def userGroupMembershipAddRequestADM(
     userIri: IRI,
     groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -1171,6 +1241,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         maybeUser <- getSingleUserADM(
                        UserIdentifierADM(maybeIri = Some(userIri)),
                        UserInformationTypeADM.Full,
+                       featureFactoryConfig = featureFactoryConfig,
                        KnoraSystemInstances.Users.SystemUser,
                        skipCache = true
                      )
@@ -1185,10 +1256,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _            = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
         // get group's info. we need the project IRI.
-        maybeGroupADM <- (responderManager ? GroupGetADM(
-                           groupIri = groupIri,
-                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                         )).mapTo[Option[GroupADM]]
+        maybeGroupADM <- appActor
+                           .ask(
+                             GroupGetADM(
+                               groupIri = groupIri,
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
+                           )
+                           .mapTo[Option[GroupADM]]
 
         projectIri = maybeGroupADM
                        .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
@@ -1219,6 +1295,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = KnoraSystemInstances.Users.SystemUser,
                     apiRequestID = apiRequestID
                   )
@@ -1238,6 +1315,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def userGroupMembershipRemoveRequestADM(
     userIri: IRI,
     groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -1261,11 +1339,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _              = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
         // get group's info. we need the project IRI.
-        maybeGroupADM <-
-          (responderManager ? GroupGetADM(
-            groupIri = groupIri,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )).mapTo[Option[GroupADM]]
+        maybeGroupADM <- appActor
+                           .ask(
+                             GroupGetADM(
+                               groupIri = groupIri,
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
+                           )
+                           .mapTo[Option[GroupADM]]
 
         projectIri = maybeGroupADM
                        .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
@@ -1284,6 +1366,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // get users current project membership list
         currentGroupMemberships <- userGroupMembershipsGetRequestADM(
                                      userIri = userIri,
+                                     featureFactoryConfig = featureFactoryConfig,
                                      requestingUser = KnoraSystemInstances.Users.SystemUser
                                    )
 
@@ -1301,6 +1384,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         result <- updateUserADM(
                     userIri = userIri,
                     userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
+                    featureFactoryConfig = featureFactoryConfig,
                     requestingUser = requestingUser,
                     apiRequestID = apiRequestID
                   )
@@ -1321,6 +1405,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param userUpdatePayload    the updated information.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -1330,6 +1415,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def updateUserADM(
     userIri: IRI,
     userUpdatePayload: UserChangeRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -1348,13 +1434,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     for {
 
       // get current user
-      maybeCurrentUser <-
-        getSingleUserADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          requestingUser = requestingUser,
-          userInformationType = UserInformationTypeADM.Full,
-          skipCache = true
-        )
+      maybeCurrentUser <- getSingleUserADM(
+                            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser,
+                            userInformationType = UserInformationTypeADM.Full,
+                            skipCache = true
+                          )
 
       _ = if (maybeCurrentUser.isEmpty) {
             throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
@@ -1440,16 +1526,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // write the updated user to the triplestore
-      _ <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the user was updated */
-      maybeUpdatedUserADM <-
-        getSingleUserADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          requestingUser = requestingUser,
-          userInformationType = UserInformationTypeADM.Full,
-          skipCache = true
-        )
+      maybeUpdatedUserADM <- getSingleUserADM(
+                               identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = requestingUser,
+                               userInformationType = UserInformationTypeADM.Full,
+                               skipCache = true
+                             )
 
       updatedUserADM: UserADM =
         maybeUpdatedUserADM.getOrElse(
@@ -1531,6 +1617,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param userIri              the IRI of the existing user that we want to update.
    * @param password             the new password.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the unique api request ID.
    * @return a future containing a [[UserOperationResponseADM]].
@@ -1540,6 +1627,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def updateUserPasswordADM(
     userIri: IRI,
     password: Password,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -1554,13 +1642,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     }
 
     for {
-      maybeCurrentUser <-
-        getSingleUserADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          requestingUser = requestingUser,
-          userInformationType = UserInformationTypeADM.Full,
-          skipCache = true
-        )
+      maybeCurrentUser <- getSingleUserADM(
+                            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                            featureFactoryConfig = featureFactoryConfig,
+                            requestingUser = requestingUser,
+                            userInformationType = UserInformationTypeADM.Full,
+                            skipCache = true
+                          )
 
       _ = if (maybeCurrentUser.isEmpty) {
             throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
@@ -1579,16 +1667,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                     .toString
                                 )
 
-      updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+      updateResult <- appActor.ask(SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the password was updated. */
-      maybeUpdatedUserADM <-
-        getSingleUserADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          requestingUser = requestingUser,
-          userInformationType = UserInformationTypeADM.Full,
-          skipCache = true
-        )
+      maybeUpdatedUserADM <- getSingleUserADM(
+                               identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = requestingUser,
+                               userInformationType = UserInformationTypeADM.Full,
+                               skipCache = true
+                             )
 
       updatedUserADM: UserADM =
         maybeUpdatedUserADM.getOrElse(
@@ -1616,6 +1704,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def createNewUserADM(
     userCreatePayloadADM: UserCreatePayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[UserOperationResponseADM] = {
@@ -1652,61 +1741,61 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.
-        createNewUserSparqlString =
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .createNewUser(
-              adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
-              userIri = userIri,
-              userClassIri = OntologyConstants.KnoraAdmin.User,
-              username = stringFormatter.toSparqlEncodedString(
-                userCreatePayloadADM.username.value,
-                errorFun = throw BadRequestException(
-                  s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
-                )
-              ),
-              email = stringFormatter.toSparqlEncodedString(
-                userCreatePayloadADM.email.value,
-                errorFun = throw BadRequestException(
-                  s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
-                )
-              ),
-              password = hashedPassword,
-              givenName = stringFormatter.toSparqlEncodedString(
-                userCreatePayloadADM.givenName.value,
-                errorFun = throw BadRequestException(
-                  s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
-                )
-              ),
-              familyName = stringFormatter.toSparqlEncodedString(
-                userCreatePayloadADM.familyName.value,
-                errorFun = throw BadRequestException(
-                  s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
-                )
-              ),
-              status = userCreatePayloadADM.status.value,
-              preferredLanguage = stringFormatter.toSparqlEncodedString(
-                userCreatePayloadADM.lang.value,
-                errorFun = throw BadRequestException(
-                  s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
-                )
-              ),
-              systemAdmin = userCreatePayloadADM.systemAdmin.value
-            )
-            .toString
+        createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                                      .createNewUser(
+                                        adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+                                        userIri = userIri,
+                                        userClassIri = OntologyConstants.KnoraAdmin.User,
+                                        username = stringFormatter.toSparqlEncodedString(
+                                          userCreatePayloadADM.username.value,
+                                          errorFun = throw BadRequestException(
+                                            s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
+                                          )
+                                        ),
+                                        email = stringFormatter.toSparqlEncodedString(
+                                          userCreatePayloadADM.email.value,
+                                          errorFun = throw BadRequestException(
+                                            s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
+                                          )
+                                        ),
+                                        password = hashedPassword,
+                                        givenName = stringFormatter.toSparqlEncodedString(
+                                          userCreatePayloadADM.givenName.value,
+                                          errorFun = throw BadRequestException(
+                                            s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
+                                          )
+                                        ),
+                                        familyName = stringFormatter.toSparqlEncodedString(
+                                          userCreatePayloadADM.familyName.value,
+                                          errorFun = throw BadRequestException(
+                                            s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
+                                          )
+                                        ),
+                                        status = userCreatePayloadADM.status.value,
+                                        preferredLanguage = stringFormatter.toSparqlEncodedString(
+                                          userCreatePayloadADM.lang.value,
+                                          errorFun = throw BadRequestException(
+                                            s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
+                                          )
+                                        ),
+                                        systemAdmin = userCreatePayloadADM.systemAdmin.value
+                                      )
+                                      .toString
 
         _ = log.debug(s"createNewUser: $createNewUserSparqlString")
 
-        createNewUserResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString))
+        createNewUserResponse <- appActor
+                                   .ask(SparqlUpdateRequest(createNewUserSparqlString))
                                    .mapTo[SparqlUpdateResponse]
 
         // try to retrieve newly created user (will also add to cache)
-        maybeNewUserADM: Option[UserADM] <-
-          getSingleUserADM(
-            identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-            requestingUser = KnoraSystemInstances.Users.SystemUser,
-            userInformationType = UserInformationTypeADM.Full,
-            skipCache = true
-          )
+        maybeNewUserADM: Option[UserADM] <- getSingleUserADM(
+                                              identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+                                              featureFactoryConfig = featureFactoryConfig,
+                                              requestingUser = KnoraSystemInstances.Users.SystemUser,
+                                              userInformationType = UserInformationTypeADM.Full,
+                                              skipCache = true
+                                            )
 
         // check to see if we could retrieve the new user
         newUserADM =
@@ -1738,14 +1827,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * If user is not found in cache but in triplestore, then user is written to cache.
    */
   private def getUserFromCacheOrTriplestore(
-    identifier: UserIdentifierADM
+    identifier: UserIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig
   ): Future[Option[UserADM]] = tracedFuture("admin-user-get-user-from-cache-or-triplestore") {
     if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getUserFromCache(identifier).flatMap {
         case None =>
           // none found in cache. getting from triplestore.
-          getUserFromTriplestore(identifier).flatMap {
+          getUserFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig).flatMap {
             case None =>
               // also none found in triplestore. finally returning none.
               log.debug("getUserFromCacheOrTriplestore - not found in cache and in triplestore")
@@ -1766,7 +1856,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     } else {
       // caching disabled
       log.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
-      getUserFromTriplestore(identifier)
+      getUserFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
     }
   }
 
@@ -1774,29 +1864,35 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Tries to retrieve a [[UserADM]] from the triplestore.
    */
   private def getUserFromTriplestore(
-    identifier: UserIdentifierADM
+    identifier: UserIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig
   ): Future[Option[UserADM]] =
     for {
-      sparqlQueryString <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .getUsers(
-              maybeIri = identifier.toIriOption,
-              maybeUsername = identifier.toUsernameOption,
-              maybeEmail = identifier.toEmailOption
-            )
-            .toString()
-        )
+      sparqlQueryString <- Future(
+                             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                               .getUsers(
+                                 maybeIri = identifier.toIriOption,
+                                 maybeUsername = identifier.toUsernameOption,
+                                 maybeEmail = identifier.toEmailOption
+                               )
+                               .toString()
+                           )
 
-      userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                             sparql = sparqlQueryString
-                           )).mapTo[SparqlExtendedConstructResponse]
+      userQueryResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparqlQueryString,
+                                 featureFactoryConfig = featureFactoryConfig
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
 
       maybeUserADM: Option[UserADM] <-
         if (userQueryResponse.statements.nonEmpty) {
           log.debug("getUserFromTriplestore - triplestore hit for: {}", identifier)
           statements2UserADM(
-            statements = userQueryResponse.statements.head
+            statements = userQueryResponse.statements.head,
+            featureFactoryConfig = featureFactoryConfig
           )
         } else {
           log.debug("getUserFromTriplestore - no triplestore hit for: {}", identifier)
@@ -1808,10 +1904,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * Helper method used to create a [[UserADM]] from the [[SparqlExtendedConstructResponse]] containing user data.
    *
    * @param statements           result from the SPARQL query containing user data.
+   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[UserADM]] containing the user's data.
    */
   private def statements2UserADM(
-    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]])
+    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
+    featureFactoryConfig: FeatureFactoryConfig
   ): Future[Option[UserADM]] = {
 
     // log.debug("statements2UserADM - statements: {}", statements)
@@ -1851,34 +1949,50 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
       for {
         /* get the user's permission profile from the permissions responder */
-        permissionData <-
-          (responderManager ? PermissionDataGetADM(
-            projectIris = projectIris,
-            groupIris = groupIris,
-            isInProjectAdminGroups = isInProjectAdminGroups,
-            isInSystemAdminGroup = isInSystemAdminGroup,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )).mapTo[PermissionsDataADM]
+        permissionData <- appActor
+                            .ask(
+                              PermissionDataGetADM(
+                                projectIris = projectIris,
+                                groupIris = groupIris,
+                                isInProjectAdminGroups = isInProjectAdminGroups,
+                                isInSystemAdminGroup = isInSystemAdminGroup,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                              )
+                            )
+                            .mapTo[PermissionsDataADM]
 
-        maybeGroupFutures: Seq[Future[Option[GroupADM]]] =
-          groupIris.map { groupIri =>
-            (responderManager ? GroupGetADM(
-              groupIri = groupIri,
-              requestingUser = KnoraSystemInstances.Users.SystemUser
-            )).mapTo[Option[GroupADM]]
-          }
+        maybeGroupFutures: Seq[Future[Option[GroupADM]]] = groupIris.map { groupIri =>
+                                                             appActor
+                                                               .ask(
+                                                                 GroupGetADM(
+                                                                   groupIri = groupIri,
+                                                                   featureFactoryConfig = featureFactoryConfig,
+                                                                   requestingUser =
+                                                                     KnoraSystemInstances.Users.SystemUser
+                                                                 )
+                                                               )
+                                                               .mapTo[Option[GroupADM]]
+                                                           }
         maybeGroups: Seq[Option[GroupADM]] <- Future.sequence(maybeGroupFutures)
         groups: Seq[GroupADM]               = maybeGroups.flatten
 
         // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
 
-        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] =
-          projectIris.map { projectIri =>
-            (responderManager ? ProjectGetADM(
-              ProjectIdentifierADM(maybeIri = Some(projectIri)),
-              requestingUser = KnoraSystemInstances.Users.SystemUser
-            )).mapTo[Option[ProjectADM]]
-          }
+        maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
+                                                                 appActor
+                                                                   .ask(
+                                                                     ProjectGetADM(
+                                                                       ProjectIdentifierADM(maybeIri =
+                                                                         Some(projectIri)
+                                                                       ),
+                                                                       featureFactoryConfig = featureFactoryConfig,
+                                                                       requestingUser =
+                                                                         KnoraSystemInstances.Users.SystemUser
+                                                                     )
+                                                                   )
+                                                                   .mapTo[Option[ProjectADM]]
+                                                               }
         maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
         projects: Seq[ProjectADM]               = maybeProjects.flatten
 
@@ -1965,7 +2079,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       askString <-
         Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
       // _ = log.debug("userExists - query: {}", askString)
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
     } yield checkUserExistsResponse.result
 
   /**
@@ -1997,7 +2111,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                          )
             // _ = log.debug("userExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
           } yield checkUserExistsResponse.result
         }
 
@@ -2030,7 +2144,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                          )
             // _ = log.debug("userExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
           } yield checkUserExistsResponse.result
         }
 
@@ -2052,7 +2166,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                    )
       // _ = log.debug("projectExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -2071,7 +2185,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         )
       // _ = log.debug("groupExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -2081,7 +2195,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] =
     tracedFuture("admin-user-get-user-from-cache") {
-      val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
+      val result = appActor.ask(CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
       result.map {
         case Some(user) =>
           log.debug("getUserFromCache - cache hit for: {}", identifier)
@@ -2100,7 +2214,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
   private def writeUserADMToCache(user: UserADM): Future[Unit] = for {
-    _ <- (storeManager ? CacheServicePutUserADM(user))
+    _ <- appActor.ask(CacheServicePutUserADM(user))
     _ <- Future(log.debug(s"writeUserADMToCache done - user: ${user.id}"))
   } yield ()
 
@@ -2112,7 +2226,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
       // only send to Redis if keys are not empty
       if (keys.nonEmpty) {
-        val result = (storeManager ? CacheServiceRemoveValues(keys))
+        val result = appActor.ask(CacheServiceRemoveValues(keys))
         result.map { res =>
           log.debug("invalidateCachedUserADM - result: {}", res)
         }

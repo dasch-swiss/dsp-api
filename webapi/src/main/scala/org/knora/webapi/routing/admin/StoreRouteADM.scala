@@ -60,7 +60,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
               requestMessageF = requestMessage,
               requestContext = requestContext,
               settings = settings,
-              responderManager = responderManager,
+              appActor = appActor,
               log = log
             )(timeout = 479999.milliseconds, executionContext = executionContext)
           }

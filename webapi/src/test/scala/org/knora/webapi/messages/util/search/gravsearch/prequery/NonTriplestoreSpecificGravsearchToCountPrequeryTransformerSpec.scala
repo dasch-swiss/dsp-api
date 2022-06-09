@@ -3,6 +3,7 @@ package org.knora.webapi.util.search.gravsearch.prequery
 import akka.actor.ActorSystem
 import org.knora.webapi.CoreSpec
 import dsp.errors.AssertionException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -20,6 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import akka.actor.ActorRef
 
 private object CountQueryHandler {
 
@@ -29,12 +31,15 @@ private object CountQueryHandler {
 
   def transformQuery(
     query: String,
-    responderData: ResponderData
+    appActor: ActorRef,
+    responderData: ResponderData,
+    featureFactoryConfig: FeatureFactoryConfig
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 
-    val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+    val typeInspectionRunner =
+      new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
 
     val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)
 
@@ -55,7 +60,8 @@ private object CountQueryHandler {
       new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
-        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
+        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
+        featureFactoryConfig = featureFactoryConfig
       )
 
     val nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -337,7 +343,9 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       val transformedQuery =
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
-          responderData
+          appActor,
+          responderData,
+          defaultFeatureFactoryConfig
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -349,7 +357,9 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       val transformedQuery =
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
-          responderData
+          appActor,
+          responderData,
+          defaultFeatureFactoryConfig
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)

@@ -16,6 +16,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import dsp.errors._
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -118,12 +119,14 @@ object OntologyHelpers {
    * Reads an ontology's metadata.
    *
    * @param internalOntologyIri  the ontology's internal IRI.
+   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
    */
   def loadOntologyMetadata(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
-    internalOntologyIri: SmartIri
+    appActor: ActorRef,
+    internalOntologyIri: SmartIri,
+    featureFactoryConfig: FeatureFactoryConfig
   )(implicit
     executionContext: ExecutionContext,
     stringFormatter: StringFormatter,
@@ -142,9 +145,14 @@ object OntologyHelpers {
                                 )
                                 .toString()
 
-      getOntologyInfoResponse <- (storeManager ? SparqlConstructRequest(
-                                   sparql = getOntologyInfoSparql
-                                 )).mapTo[SparqlConstructResponse]
+      getOntologyInfoResponse <- appActor
+                                   .ask(
+                                     SparqlConstructRequest(
+                                       sparql = getOntologyInfoSparql,
+                                       featureFactoryConfig = featureFactoryConfig
+                                     )
+                                   )
+                                   .mapTo[SparqlConstructResponse]
 
       metadata: Option[OntologyMetadataV2] =
         if (getOntologyInfoResponse.statements.isEmpty) {
@@ -1070,7 +1078,7 @@ object OntologyHelpers {
    * @param ontology the ontology.
    * @return the set of subjects that refer to the ontology or its entities.
    */
-  def getSubjectsUsingOntology(settings: KnoraSettingsImpl, storeManager: ActorRef, ontology: ReadOntologyV2)(implicit
+  def getSubjectsUsingOntology(settings: KnoraSettingsImpl, appActor: ActorRef, ontology: ReadOntologyV2)(implicit
     ec: ExecutionContext,
     timeout: Timeout
   ): Future[Set[IRI]] =
@@ -1085,7 +1093,8 @@ object OntologyHelpers {
                                   .toString()
                               )
 
-      isOntologyUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql))
+      isOntologyUsedResponse: SparqlSelectResult <- appActor
+                                                      .ask(SparqlSelectRequest(isOntologyUsedSparql))
                                                       .mapTo[SparqlSelectResult]
 
       subjects = isOntologyUsedResponse.results.bindings.map { row =>
@@ -1119,12 +1128,14 @@ object OntologyHelpers {
    * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
    *
    * @param propertyIri the IRI of the property to be loaded.
+   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[PropertyInfoContentV2]] representing the property definition.
    */
   def loadPropertyDefinition(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
-    propertyIri: SmartIri
+    appActor: ActorRef,
+    propertyIri: SmartIri,
+    featureFactoryConfig: FeatureFactoryConfig
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[PropertyInfoContentV2] =
     for {
       sparql <- Future(
@@ -1135,9 +1146,14 @@ object OntologyHelpers {
                     .toString()
                 )
 
-      constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                             sparql = sparql
-                           )).mapTo[SparqlExtendedConstructResponse]
+      constructResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparql,
+                                 featureFactoryConfig = featureFactoryConfig
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
     } yield constructResponseToPropertyDefinition(
       propertyIri = propertyIri,
       constructResponse = constructResponse
@@ -1327,95 +1343,94 @@ object OntologyHelpers {
 
       // See if any of the requested entities are unavailable in the requested schema.
 
-      classesUnavailableInSchema: Set[SmartIri] =
-        classIris.foldLeft(Set.empty[SmartIri]) { case (acc, classIri) =>
-          // Is this class IRI hard-coded in the requested schema?
-          if (
-            KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd
-              .contains(classIri) ||
-            KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd
-              .contains(classIri)
-          ) {
-            // Yes, so it's available.
-            acc
-          } else {
-            // No. Is it among the classes removed from the internal ontology in the requested schema?
-            classIri.getOntologySchema.get match {
-              case apiV2Schema: ApiV2Schema =>
-                val internalClassIri =
-                  classIri.toOntologySchema(InternalSchema)
-                val knoraBaseClassesToRemove = OntologyTransformationRules
-                  .getTransformationRules(
-                    classIri.getOntologyFromEntity,
-                    apiV2Schema
-                  )
-                  .internalClassesToRemove
+      classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) { case (acc, classIri) =>
+                                                    // Is this class IRI hard-coded in the requested schema?
+                                                    if (
+                                                      KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd
+                                                        .contains(classIri) ||
+                                                      KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd
+                                                        .contains(classIri)
+                                                    ) {
+                                                      // Yes, so it's available.
+                                                      acc
+                                                    } else {
+                                                      // No. Is it among the classes removed from the internal ontology in the requested schema?
+                                                      classIri.getOntologySchema.get match {
+                                                        case apiV2Schema: ApiV2Schema =>
+                                                          val internalClassIri =
+                                                            classIri.toOntologySchema(InternalSchema)
+                                                          val knoraBaseClassesToRemove = OntologyTransformationRules
+                                                            .getTransformationRules(
+                                                              classIri.getOntologyFromEntity,
+                                                              apiV2Schema
+                                                            )
+                                                            .internalClassesToRemove
 
-                if (knoraBaseClassesToRemove.contains(internalClassIri)) {
-                  // Yes. Include it in the set of unavailable classes.
-                  acc + classIri
-                } else {
-                  // No. It's available.
-                  acc
-                }
+                                                          if (knoraBaseClassesToRemove.contains(internalClassIri)) {
+                                                            // Yes. Include it in the set of unavailable classes.
+                                                            acc + classIri
+                                                          } else {
+                                                            // No. It's available.
+                                                            acc
+                                                          }
 
-              case InternalSchema => acc
-            }
-          }
-        }
+                                                        case InternalSchema => acc
+                                                      }
+                                                    }
+                                                  }
 
-      propertiesUnavailableInSchema: Set[SmartIri] =
-        propertyIris.foldLeft(Set.empty[SmartIri]) { case (acc, propertyIri) =>
-          // Is this property IRI hard-coded in the requested schema?
-          if (
-            KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd
-              .contains(propertyIri) ||
-            KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd
-              .contains(propertyIri)
-          ) {
-            // Yes, so it's available.
-            acc
-          } else {
-            // No. See if it's available in the requested schema.
-            propertyIri.getOntologySchema.get match {
-              case apiV2Schema: ApiV2Schema =>
-                val internalPropertyIri =
-                  propertyIri.toOntologySchema(InternalSchema)
+      propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
+                                                       case (acc, propertyIri) =>
+                                                         // Is this property IRI hard-coded in the requested schema?
+                                                         if (
+                                                           KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd
+                                                             .contains(propertyIri) ||
+                                                           KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd
+                                                             .contains(propertyIri)
+                                                         ) {
+                                                           // Yes, so it's available.
+                                                           acc
+                                                         } else {
+                                                           // No. See if it's available in the requested schema.
+                                                           propertyIri.getOntologySchema.get match {
+                                                             case apiV2Schema: ApiV2Schema =>
+                                                               val internalPropertyIri =
+                                                                 propertyIri.toOntologySchema(InternalSchema)
 
-                // If it's a link value property and it's requested in the simple schema, it's unavailable.
-                if (
-                  apiV2Schema == ApiV2Simple && OntologyHelpers
-                    .isLinkValueProp(internalPropertyIri, cacheData)
-                ) {
-                  acc + propertyIri
-                } else {
-                  // Is it among the properties removed from the internal ontology in the requested schema?
+                                                               // If it's a link value property and it's requested in the simple schema, it's unavailable.
+                                                               if (
+                                                                 apiV2Schema == ApiV2Simple && OntologyHelpers
+                                                                   .isLinkValueProp(internalPropertyIri, cacheData)
+                                                               ) {
+                                                                 acc + propertyIri
+                                                               } else {
+                                                                 // Is it among the properties removed from the internal ontology in the requested schema?
 
-                  val knoraBasePropertiesToRemove =
-                    OntologyTransformationRules
-                      .getTransformationRules(
-                        propertyIri.getOntologyFromEntity,
-                        apiV2Schema
-                      )
-                      .internalPropertiesToRemove
+                                                                 val knoraBasePropertiesToRemove =
+                                                                   OntologyTransformationRules
+                                                                     .getTransformationRules(
+                                                                       propertyIri.getOntologyFromEntity,
+                                                                       apiV2Schema
+                                                                     )
+                                                                     .internalPropertiesToRemove
 
-                  if (
-                    knoraBasePropertiesToRemove.contains(
-                      internalPropertyIri
-                    )
-                  ) {
-                    // Yes. Include it in the set of unavailable properties.
-                    acc + propertyIri
-                  } else {
-                    // No. It's available.
-                    acc
-                  }
-                }
+                                                                 if (
+                                                                   knoraBasePropertiesToRemove.contains(
+                                                                     internalPropertyIri
+                                                                   )
+                                                                 ) {
+                                                                   // Yes. Include it in the set of unavailable properties.
+                                                                   acc + propertyIri
+                                                                 } else {
+                                                                   // No. It's available.
+                                                                   acc
+                                                                 }
+                                                               }
 
-              case InternalSchema => acc
-            }
-          }
-        }
+                                                             case InternalSchema => acc
+                                                           }
+                                                         }
+                                                     }
 
       entitiesUnavailableInSchema = classesUnavailableInSchema ++ propertiesUnavailableInSchema
 
@@ -1560,12 +1575,14 @@ object OntologyHelpers {
    * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
    *
    * @param classIri the IRI of the class to be loaded.
+   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[ClassInfoContentV2]] representing the class definition.
    */
   def loadClassDefinition(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
-    classIri: SmartIri
+    appActor: ActorRef,
+    classIri: SmartIri,
+    featureFactoryConfig: FeatureFactoryConfig
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ClassInfoContentV2] =
     for {
       sparql <- Future(
@@ -1576,9 +1593,14 @@ object OntologyHelpers {
                     .toString()
                 )
 
-      constructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                             sparql = sparql
-                           )).mapTo[SparqlExtendedConstructResponse]
+      constructResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparql,
+                                 featureFactoryConfig = featureFactoryConfig
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
     } yield constructResponseToClassDefinition(
       classIri = classIri,
       constructResponse = constructResponse
@@ -1742,22 +1764,25 @@ object OntologyHelpers {
    * an error message fitting for the "before update" case.
    *
    * @param settings the application settings.
-   * @param storeManager the store manager actor ref.
+   * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+   * @param featureFactoryConfig the feature factory configuration.
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateBeforeUpdate(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant
+    expectedLastModificationDate: Instant,
+    featureFactoryConfig: FeatureFactoryConfig
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,
-      storeManager,
+      appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
+      featureFactoryConfig = featureFactoryConfig,
       errorFun = throw EditConflictException(
         s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again."
       )
@@ -1768,22 +1793,25 @@ object OntologyHelpers {
    * an error message fitting for the "after update" case.
    *
    * @param settings the application settings.
-   * @param storeManager the store manager actor ref.
+   * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
+   * @param featureFactoryConfig the feature factory configuration.
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateAfterUpdate(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant
+    expectedLastModificationDate: Instant,
+    featureFactoryConfig: FeatureFactoryConfig
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,
-      storeManager,
+      appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
+      featureFactoryConfig = featureFactoryConfig,
       errorFun = throw UpdateNotPerformedException(
         s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug."
       )
@@ -1793,26 +1821,28 @@ object OntologyHelpers {
    * Checks that the last modification date of an ontology is the same as the one we expect it to be.
    *
    * @param settings the application settings.
-   * @param storeManager the store manager actor ref.
+   * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
+   * @param featureFactoryConfig the feature factory configuration.
    * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
    * @return a failed Future if the expected last modification date is not found.
    */
   private def checkOntologyLastModificationDate(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
+    featureFactoryConfig: FeatureFactoryConfig,
     errorFun: => Nothing
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     for {
-      existingOntologyMetadata: Option[OntologyMetadataV2] <-
-        loadOntologyMetadata(
-          settings,
-          storeManager,
-          internalOntologyIri = internalOntologyIri
-        )
+      existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
+                                                                settings,
+                                                                appActor,
+                                                                internalOntologyIri = internalOntologyIri,
+                                                                featureFactoryConfig = featureFactoryConfig
+                                                              )
 
       _ = existingOntologyMetadata match {
             case Some(metadata) =>

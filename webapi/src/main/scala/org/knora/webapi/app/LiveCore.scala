@@ -16,6 +16,7 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
 
 import scala.concurrent.ExecutionContext
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 
 /**
  * The applications actor system.

@@ -49,7 +49,7 @@ class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }

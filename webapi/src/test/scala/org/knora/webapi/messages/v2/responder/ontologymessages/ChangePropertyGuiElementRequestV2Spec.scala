@@ -6,7 +6,8 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import akka.util.Timeout
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.AsyncCoreSpec
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -19,7 +20,7 @@ import scala.concurrent.Future
 /**
  * Tests [[ChangePropertyGuiElementRequestV2Spec]].
  */
-class ChangePropertyGuiElementRequestV2Spec extends CoreSpec {
+class ChangePropertyGuiElementRequestV2Spec extends AsyncCoreSpec {
 
   "ChangePropertyGuiElementRequest" should {
     "should parse the request message correctly" in {
@@ -52,6 +53,8 @@ class ChangePropertyGuiElementRequestV2Spec extends CoreSpec {
 
       implicit val timeout: Timeout = settings.defaultTimeout
 
+      val featureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
+
       val requestingUser = SharedTestDataADM.anythingUser1
 
       val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
@@ -64,8 +67,8 @@ class ChangePropertyGuiElementRequestV2Spec extends CoreSpec {
               jsonLDDocument = requestDoc,
               apiRequestID = UUID.randomUUID,
               requestingUser = requestingUser,
-              responderManager = responderManager,
-              storeManager = storeManager,
+              appActor = appActor,
+              featureFactoryConfig = featureFactoryConfig,
               settings = settings,
               log = log
             )

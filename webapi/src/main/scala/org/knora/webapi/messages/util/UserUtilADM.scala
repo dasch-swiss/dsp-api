@@ -37,7 +37,7 @@ object UserUtilADM {
     requestingUser: UserADM,
     requestedUserIri: IRI,
     projectIri: IRI,
-    responderManager: ActorRef
+    appActor: ActorRef
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -52,11 +52,15 @@ object UserUtilADM {
     } else {
       for {
         userResponse: UserResponseADM <-
-          (responderManager ? UserGetRequestADM(
-            identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
-            userInformationTypeADM = UserInformationTypeADM.Full,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-          )).mapTo[UserResponseADM]
+          appActor
+            .ask(
+              UserGetRequestADM(
+                identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
+                userInformationTypeADM = UserInformationTypeADM.Full,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+            )
+            .mapTo[UserResponseADM]
       } yield userResponse.user
     }
   }

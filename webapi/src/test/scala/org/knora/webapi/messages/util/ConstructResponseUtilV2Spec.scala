@@ -60,7 +60,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = incunabulaUser
@@ -97,7 +97,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = anythingAdminUser
@@ -135,7 +135,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = incunabulaUser
@@ -173,7 +173,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = anythingAdminUser
@@ -211,7 +211,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = anonymousUser
@@ -249,7 +249,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = anythingAdminUser
@@ -317,7 +317,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = incunabulaUser
@@ -386,7 +386,7 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
         queryStandoff = false,
         versionDate = None,
         calculateMayHaveMoreResults = false,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = ApiV2Complex,
         settings = settings,
         requestingUser = incunabulaUser

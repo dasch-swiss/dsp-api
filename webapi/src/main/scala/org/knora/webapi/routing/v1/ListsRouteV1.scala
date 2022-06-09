@@ -47,7 +47,7 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
           requestMessageFuture,
           requestContext,
           settings,
-          responderManager,
+          appActor,
           log
         )
       }
@@ -72,7 +72,7 @@ class ListsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             requestMessageFuture,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
         }

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi._
@@ -114,7 +114,7 @@ object SparqlExtendedConstructResponse {
    *
    * @param turtleStr     the Turtle document.
    * @param rdfFormatUtil an [[RdfFormatUtil]].
-   * @param log           a [[LoggingAdapter]].
+   * @param log           a [[Logger]].
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(

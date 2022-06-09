@@ -44,7 +44,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform a fulltext search for 'Narr'" in {
 
-      responderManager ! FulltextSearchRequestV2(
+      appActor ! FulltextSearchRequestV2(
         searchValue = "Narr",
         offset = 0,
         limitToProject = None,
@@ -66,7 +66,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform a fulltext search for 'Dinge'" in {
 
-      responderManager ! FulltextSearchRequestV2(
+      appActor ! FulltextSearchRequestV2(
         searchValue = "Dinge",
         offset = 0,
         limitToProject = None,
@@ -89,7 +89,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return files attached to full-text search results" in {
 
-      responderManager ! FulltextSearchRequestV2(
+      appActor ! FulltextSearchRequestV2(
         searchValue = "p7v",
         offset = 0,
         limitToProject = None,
@@ -117,7 +117,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
-      responderManager ! GravsearchRequestV2(
+      appActor ! GravsearchRequestV2(
         constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
@@ -136,7 +136,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
 
-      responderManager ! GravsearchRequestV2(
+      appActor ! GravsearchRequestV2(
         constructQuery = searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
@@ -153,7 +153,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
 
-      responderManager ! SearchResourceByLabelRequestV2(
+      appActor ! SearchResourceByLabelRequestV2(
         searchValue = "Narrenschiff",
         offset = 0,
         limitToProject = None,
@@ -170,7 +170,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform a search by label for incunabula:book that contain 'Das Narrenschiff'" in {
 
-      responderManager ! SearchResourceByLabelRequestV2(
+      appActor ! SearchResourceByLabelRequestV2(
         searchValue = "Das Narrenschiff",
         offset = 0,
         limitToProject = None,
@@ -187,7 +187,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform a count search query by label for incunabula:book that contain 'Narrenschiff'" in {
 
-      responderManager ! SearchResourceByLabelCountRequestV2(
+      appActor ! SearchResourceByLabelCountRequestV2(
         searchValue = "Narrenschiff",
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
@@ -202,7 +202,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "perform a a count search query by label for incunabula:book that contain 'Das Narrenschiff'" in {
 
-      responderManager ! SearchResourceByLabelCountRequestV2(
+      appActor ! SearchResourceByLabelCountRequestV2(
         searchValue = "Das Narrenschiff",
         limitToProject = None,
         limitToResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri), // internal Iri!
@@ -216,7 +216,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "search by project and resource class" in {
-      responderManager ! SearchResourcesByProjectAndClassRequestV2(
+      appActor ! SearchResourcesByProjectAndClassRequestV2(
         projectIri = SharedTestDataADM.incunabulaProject.id.toSmartIri,
         resourceClass = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
         orderByProperty = Some("http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri),
@@ -233,7 +233,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "search for list label" in {
 
-      responderManager ! FulltextSearchRequestV2(
+      appActor ! FulltextSearchRequestV2(
         searchValue = "non fiction",
         offset = 0,
         limitToProject = None,
@@ -255,7 +255,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "search for list label and find sub-nodes" in {
 
-      responderManager ! FulltextSearchRequestV2(
+      appActor ! FulltextSearchRequestV2(
         searchValue = "novel",
         offset = 0,
         limitToProject = None,
@@ -279,7 +279,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val query = searchResponderV2SpecFullData.constructQueryForIncunabulaCompundObject
 
-      responderManager ! GravsearchRequestV2(
+      appActor ! GravsearchRequestV2(
         constructQuery = query,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,

@@ -322,12 +322,12 @@ class StandoffTagUtilV2Spec extends CoreSpec {
       val anythingUserProfile = SharedTestDataADM.anythingUser2
 
       val standoffTagsV1: Vector[StandoffTagV2] = Await.result(
-        StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV1, responderManager, anythingUserProfile),
+        StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV1, appActor, anythingUserProfile),
         10.seconds
       )
 
       val standoffTagsV2: Vector[StandoffTagV2] = Await.result(
-        StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV2, responderManager, anythingUserProfile),
+        StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV2, appActor, anythingUserProfile),
         10.seconds
       )
 

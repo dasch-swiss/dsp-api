@@ -20,6 +20,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.MissingLastModificationDateOntologyException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -101,12 +102,14 @@ object Cache extends LazyLogging {
   /**
    * Loads and caches all ontology information.
    *
+   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @return a [[SuccessResponseV2]].
    */
   def loadOntologies(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {
     val loadOntologiesFuture: Future[SuccessResponseV2] = for {
@@ -124,7 +127,8 @@ object Cache extends LazyLogging {
                                        .getAllOntologyMetadata()
                                        .toString()
                                    )
-      allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
+      allOntologyMetadataResponse: SparqlSelectResult <- appActor
+                                                           .ask(SparqlSelectRequest(allOntologyMetadataSparql))
                                                            .mapTo[SparqlSelectResult]
       allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = OntologyHelpers.buildOntologyMetadata(
                                                                  allOntologyMetadataResponse
@@ -180,14 +184,20 @@ object Cache extends LazyLogging {
               )
               .toString
 
-          (storeManager ? SparqlExtendedConstructRequest(
-            sparql = ontologyGraphConstructQuery
-          )).mapTo[SparqlExtendedConstructResponse].map { response =>
-            OntologyGraph(
-              ontologyIri = ontologyIri,
-              constructResponse = response
+          appActor
+            .ask(
+              SparqlExtendedConstructRequest(
+                sparql = ontologyGraphConstructQuery,
+                featureFactoryConfig = featureFactoryConfig
+              )
             )
-          }
+            .mapTo[SparqlExtendedConstructResponse]
+            .map { response =>
+              OntologyGraph(
+                ontologyIri = ontologyIri,
+                constructResponse = response
+              )
+            }
         }
 
       ontologyGraphs: Iterable[OntologyGraph] <- Future.sequence(ontologyGraphResponseFutures)
