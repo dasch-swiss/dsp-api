@@ -9,7 +9,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import dsp.errors._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -56,7 +55,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           groupIris,
           isInProjectAdminGroup,
           isInSystemAdminGroup,
-          featureFactoryConfig,
           requestingUser
         ) =>
       permissionsDataGetADM(
@@ -64,7 +62,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         groupIris,
         isInProjectAdminGroup,
         isInSystemAdminGroup,
-        featureFactoryConfig,
         requestingUser
       )
     case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser, apiRequestID) =>
@@ -77,13 +74,11 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
     case AdministrativePermissionCreateRequestADM(
           newAdministrativePermission,
-          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
       administrativePermissionCreateRequestADM(
         newAdministrativePermission.prepareHasPermissions,
-        featureFactoryConfig,
         requestingUser,
         apiRequestID
       )
@@ -664,14 +659,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    * Adds a new administrative permission (internal use).
    *
    * @param createRequest        the administrative permission to add.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the requesting user.
    * @param apiRequestID         the API request ID.
    * @return an optional [[AdministrativePermissionADM]]
    */
   private def administrativePermissionCreateRequestADM(
     createRequest: CreateAdministrativePermissionAPIRequestADM,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[AdministrativePermissionCreateResponseADM] = {
@@ -705,16 +698,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             }
 
         // get project
-        maybeProject: Option[ProjectADM] <- appActor
-                                              .ask(
-                                                ProjectGetADM(
-                                                  identifier =
-                                                    ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                                                  featureFactoryConfig = featureFactoryConfig,
-                                                  requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                )
-                                              )
-                                              .mapTo[Option[ProjectADM]]
+        maybeProject: Option[ProjectADM] <-
+          appActor
+            .ask(
+              ProjectGetADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+            )
+            .mapTo[Option[ProjectADM]]
 
         // if it doesnt exist then throw an error
         project: ProjectADM =
@@ -728,15 +720,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             Future.successful(createRequest.forGroup)
           } else {
             for {
-              maybeGroup <- appActor
-                              .ask(
-                                GroupGetADM(
-                                  groupIri = createRequest.forGroup,
-                                  featureFactoryConfig = featureFactoryConfig,
-                                  requestingUser = KnoraSystemInstances.Users.SystemUser
-                                )
-                              )
-                              .mapTo[Option[GroupADM]]
+              maybeGroup <-
+                appActor
+                  .ask(
+                    GroupGetADM(
+                      groupIri = createRequest.forGroup,
+                      requestingUser = KnoraSystemInstances.Users.SystemUser
+                    )
+                  )
+                  .mapTo[Option[GroupADM]]
 
               // if it does not exist then throw an error
               group: GroupADM =
@@ -747,27 +739,27 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri: IRI <- checkOrCreateEntityIri(
-                                   customPermissionIri,
-                                   stringFormatter.makeRandomPermissionIri(project.shortcode)
-                                 )
+        newPermissionIri: IRI <-
+          checkOrCreateEntityIri(
+            customPermissionIri,
+            stringFormatter.makeRandomPermissionIri(project.shortcode)
+          )
 
         // Create the administrative permission.
-        createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                                                       .createNewAdministrativePermission(
-                                                         namedGraphIri =
-                                                           OntologyConstants.NamedGraphs.PermissionNamedGraph,
-                                                         permissionClassIri =
-                                                           OntologyConstants.KnoraAdmin.AdministrativePermission,
-                                                         permissionIri = newPermissionIri,
-                                                         projectIri = project.id,
-                                                         groupIri = groupIri,
-                                                         permissions = PermissionUtilADM.formatPermissionADMs(
-                                                           createRequest.hasPermissions,
-                                                           PermissionType.AP
-                                                         )
-                                                       )
-                                                       .toString
+        createAdministrativePermissionSparqlString =
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .createNewAdministrativePermission(
+              namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+              permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
+              permissionIri = newPermissionIri,
+              projectIri = project.id,
+              groupIri = groupIri,
+              permissions = PermissionUtilADM.formatPermissionADMs(
+                createRequest.hasPermissions,
+                PermissionType.AP
+              )
+            )
+            .toString
 
         // _ = log.debug("projectCreateRequestADM - create query: {}", createNewProjectSparqlString)
 
@@ -776,11 +768,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                .mapTo[SparqlUpdateResponse]
 
         // try to retrieve the newly created permission
-        maybePermission <- administrativePermissionForIriGetRequestADM(
-                             administrativePermissionIri = newPermissionIri,
-                             requestingUser = requestingUser,
-                             apiRequestID = apiRequestID
-                           )
+        maybePermission <-
+          administrativePermissionForIriGetRequestADM(
+            administrativePermissionIri = newPermissionIri,
+            requestingUser = requestingUser,
+            apiRequestID = apiRequestID
+          )
         newAdminPermission: AdministrativePermissionADM = maybePermission.administrativePermission
       } yield AdministrativePermissionCreateResponseADM(administrativePermission = newAdminPermission)
 
@@ -1645,16 +1638,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             }
 
         // get project
-        maybeProject: Option[ProjectADM] <- appActor
-                                              .ask(
-                                                ProjectGetADM(
-                                                  identifier =
-                                                    ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
-                                                  featureFactoryConfig = featureFactoryConfig,
-                                                  requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                )
-                                              )
-                                              .mapTo[Option[ProjectADM]]
+        maybeProject: Option[ProjectADM] <-
+          appActor
+            .ask(
+              ProjectGetADM(
+                identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.forProject)),
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+            )
+            .mapTo[Option[ProjectADM]]
 
         // if it doesnt exist then throw an error
         project: ProjectADM =
@@ -1663,25 +1655,26 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           )
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri: IRI <- checkOrCreateEntityIri(
-                                   customPermissionIri,
-                                   stringFormatter.makeRandomPermissionIri(project.shortcode)
-                                 )
+        newPermissionIri: IRI <-
+          checkOrCreateEntityIri(
+            customPermissionIri,
+            stringFormatter.makeRandomPermissionIri(project.shortcode)
+          )
         // verify group, if any given.
         // Is a group given that is not a built-in one?
         maybeGroupIri: Option[IRI] <-
           if (createRequest.forGroup.exists(!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(_))) {
             // Yes. Check if it is a known group.
             for {
-              maybeGroup <- appActor
-                              .ask(
-                                GroupGetADM(
-                                  groupIri = createRequest.forGroup.get,
-                                  featureFactoryConfig = featureFactoryConfig,
-                                  requestingUser = KnoraSystemInstances.Users.SystemUser
-                                )
-                              )
-                              .mapTo[Option[GroupADM]]
+              maybeGroup <-
+                appActor
+                  .ask(
+                    GroupGetADM(
+                      groupIri = createRequest.forGroup.get,
+                      requestingUser = KnoraSystemInstances.Users.SystemUser
+                    )
+                  )
+                  .mapTo[Option[GroupADM]]
 
               group: GroupADM =
                 maybeGroup.getOrElse(
@@ -1696,23 +1689,22 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           }
 
         // Create the default object access permission.
-        createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                                                               .createNewDefaultObjectAccessPermission(
-                                                                 namedGraphIri =
-                                                                   OntologyConstants.NamedGraphs.PermissionNamedGraph,
-                                                                 permissionIri = newPermissionIri,
-                                                                 permissionClassIri =
-                                                                   OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
-                                                                 projectIri = project.id,
-                                                                 maybeGroupIri = maybeGroupIri,
-                                                                 maybeResourceClassIri = createRequest.forResourceClass,
-                                                                 maybePropertyIri = createRequest.forProperty,
-                                                                 permissions = PermissionUtilADM.formatPermissionADMs(
-                                                                   createRequest.hasPermissions,
-                                                                   PermissionType.OAP
-                                                                 )
-                                                               )
-                                                               .toString
+        createNewDefaultObjectAccessPermissionSparqlString =
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .createNewDefaultObjectAccessPermission(
+              namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+              permissionIri = newPermissionIri,
+              permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
+              projectIri = project.id,
+              maybeGroupIri = maybeGroupIri,
+              maybeResourceClassIri = createRequest.forResourceClass,
+              maybePropertyIri = createRequest.forProperty,
+              permissions = PermissionUtilADM.formatPermissionADMs(
+                createRequest.hasPermissions,
+                PermissionType.OAP
+              )
+            )
+            .toString
 
         _ <- appActor
                .ask(SparqlUpdateRequest(createNewDefaultObjectAccessPermissionSparqlString))
@@ -1771,14 +1763,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                .toString()
                            )
 
-      permissionsQueryResponse <- appActor
-                                    .ask(
-                                      SparqlConstructRequest(
-                                        sparql = sparqlQueryString,
-                                        featureFactoryConfig = featureFactoryConfig
-                                      )
-                                    )
-                                    .mapTo[SparqlConstructResponse]
+      permissionsQueryResponse <-
+        appActor
+          .ask(
+            SparqlConstructRequest(
+              sparql = sparqlQueryString,
+            )
+          )
+          .mapTo[SparqlConstructResponse]
 
       /* extract response statements */
       permissionsQueryResponseStatements: Map[IRI, Seq[(IRI, String)]] = permissionsQueryResponse.statements

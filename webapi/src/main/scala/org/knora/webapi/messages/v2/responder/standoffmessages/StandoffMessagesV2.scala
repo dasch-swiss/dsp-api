@@ -65,7 +65,6 @@ case class GetStandoffPageRequestV2(
 case class GetRemainingStandoffFromTextValueRequestV2(
   resourceIri: IRI,
   valueIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends StandoffResponderRequestV2
 
@@ -257,7 +256,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the the user making the request.
  */
-case class GetMappingRequestV2(mappingIri: IRI, featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
+case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM)
     extends StandoffResponderRequestV2
 
 /**

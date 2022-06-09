@@ -7,7 +7,6 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 
 import org.apache.jena
 import org.knora.webapi.IRI
-import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
 import java.io.InputStream
@@ -62,8 +61,7 @@ class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends 
  * An implementation of [[RdfFormatUtil]] that uses the Jena API.
  */
 class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nodeFactory: JenaNodeFactory)
-    extends RdfFormatUtil
-    with Feature {
+    extends RdfFormatUtil {
   override def getRdfModelFactory: RdfModelFactory = modelFactory
 
   override def getRdfNodeFactory: RdfNodeFactory = nodeFactory

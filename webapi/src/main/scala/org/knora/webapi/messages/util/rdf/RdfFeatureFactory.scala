@@ -6,14 +6,13 @@
 package org.knora.webapi.messages.util.rdf
 
 import dsp.errors.AssertionException
-import org.knora.webapi.feature.FeatureFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl._
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * A feature factory that creates RDF processing tools.
  */
-object RdfFeatureFactory extends FeatureFactory {
+object RdfFeatureFactory {
 
   /**
    * The name of the feature toggle that enables the Jena implementation of the RDF façade.

@@ -11,7 +11,6 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import dsp.errors._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -285,13 +284,12 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 case class TEIHeader(
   headerInfo: ReadResourceV2,
   headerXSLT: Option[String],
-  featureFactoryConfig: FeatureFactoryConfig,
   settings: KnoraSettingsImpl
 ) {
 
   def toXML: String =
     if (headerXSLT.nonEmpty) {
-      val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+      val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
       // Convert the resource to a JsonLDDocument.
       val headerJsonLD: JsonLDDocument =
@@ -724,7 +722,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
           .ask(
             ProjectGetRequestADM(
               identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.toString)),
-              featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser
             )
           )

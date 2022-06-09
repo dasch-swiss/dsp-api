@@ -48,52 +48,49 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
    */
   def receive(msg: ListsResponderRequestADM) = msg match {
-    case ListsGetRequestADM(projectIri, featureFactoryConfig, requestingUser) =>
-      listsGetRequestADM(projectIri, featureFactoryConfig, requestingUser)
-    case ListGetRequestADM(listIri, featureFactoryConfig, requestingUser) =>
-      listGetRequestADM(listIri, featureFactoryConfig, requestingUser)
-    case ListNodeInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser) =>
-      listNodeInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser)
-    case NodePathGetRequestADM(iri, featureFactoryConfig, requestingUser) =>
+    case ListsGetRequestADM(projectIri, requestingUser) =>
+      listsGetRequestADM(projectIri, requestingUser)
+    case ListGetRequestADM(listIri, requestingUser) =>
+      listGetRequestADM(listIri, requestingUser)
+    case ListNodeInfoGetRequestADM(listIri, requestingUser) =>
+      listNodeInfoGetRequestADM(listIri, requestingUser)
+    case NodePathGetRequestADM(iri, requestingUser) =>
       nodePathGetAdminRequest(iri, requestingUser)
-    case ListRootNodeCreateRequestADM(createRootNode, featureFactoryConfig, requestingUser, apiRequestID) =>
-      listCreateRequestADM(createRootNode, featureFactoryConfig, apiRequestID)
-    case ListChildNodeCreateRequestADM(createChildNodeRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      listChildNodeCreateRequestADM(createChildNodeRequest, featureFactoryConfig, apiRequestID)
-    case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      nodeInfoChangeRequest(nodeIri, changeNodeRequest, featureFactoryConfig, apiRequestID)
-    case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      nodeNameChangeRequest(nodeIri, changeNodeNameRequest, featureFactoryConfig, requestingUser, apiRequestID)
+    case ListRootNodeCreateRequestADM(createRootNode, requestingUser, apiRequestID) =>
+      listCreateRequestADM(createRootNode, apiRequestID)
+    case ListChildNodeCreateRequestADM(createChildNodeRequest, requestingUser, apiRequestID) =>
+      listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
+    case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, requestingUser, apiRequestID) =>
+      nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
+    case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) =>
+      nodeNameChangeRequest(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
     case NodeLabelsChangeRequestADM(
           nodeIri,
           changeNodeLabelsRequest,
-          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+      nodeLabelsChangeRequest(nodeIri, changeNodeLabelsRequest, requestingUser, apiRequestID)
     case NodeCommentsChangeRequestADM(
           nodeIri,
           changeNodeCommentsRequest,
-          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+      nodeCommentsChangeRequest(nodeIri, changeNodeCommentsRequest, requestingUser, apiRequestID)
     case NodePositionChangeRequestADM(
           nodeIri,
           changeNodePositionRequest,
-          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
-      nodePositionChangeRequest(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID)
-    case ListItemDeleteRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID) =>
-      deleteListItemRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
-    case CanDeleteListRequestADM(iri, featureFactoryConfig, requestingUser) =>
+      nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
+    case ListItemDeleteRequestADM(nodeIri, requestingUser, apiRequestID) =>
+      deleteListItemRequestADM(nodeIri, requestingUser, apiRequestID)
+    case CanDeleteListRequestADM(iri, requestingUser) =>
       canDeleteListRequestADM(iri)
-    case ListNodeCommentsDeleteRequestADM(iri, featureFactoryConfig, requestingUser) =>
-      deleteListNodeCommentsADM(iri, featureFactoryConfig, requestingUser)
+    case ListNodeCommentsDeleteRequestADM(iri, requestingUser) =>
+      deleteListNodeCommentsADM(iri, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -114,63 +111,64 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   ): Future[ListsGetResponseADM] =
     // log.debug("listsGetRequestV2")
     for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getLists(
-                           maybeProjectIri = projectIri
-                         )
-                         .toString()
-                     )
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getLists(
+              maybeProjectIri = projectIri
+            )
+            .toString()
+        )
 
-      listsResponse <- appActor
-                         .ask(
-                           SparqlExtendedConstructRequest(
-                             sparql = sparqlQuery,
-                             featureFactoryConfig = featureFactoryConfig
-                           )
-                         )
-                         .mapTo[SparqlExtendedConstructResponse]
+      listsResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
 
       // _ = log.debug("listsGetAdminRequest - listsResponse: {}", listsResponse )
 
       // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
       statements = listsResponse.statements.toList
 
-      lists: Seq[ListNodeInfoADM] = statements.map {
-                                      case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
-                                        val name: Option[String] = propsMap
-                                          .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
-                                          .map(_.head.asInstanceOf[StringLiteralV2].value)
-                                        val labels: Seq[StringLiteralV2] = propsMap
-                                          .getOrElse(
-                                            OntologyConstants.Rdfs.Label.toSmartIri,
-                                            Seq.empty[StringLiteralV2]
-                                          )
-                                          .map(_.asInstanceOf[StringLiteralV2])
-                                        val comments: Seq[StringLiteralV2] = propsMap
-                                          .getOrElse(
-                                            OntologyConstants.Rdfs.Comment.toSmartIri,
-                                            Seq.empty[StringLiteralV2]
-                                          )
-                                          .map(_.asInstanceOf[StringLiteralV2])
+      lists: Seq[ListNodeInfoADM] =
+        statements.map { case (listIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
+          val name: Option[String] = propsMap
+            .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
+            .map(_.head.asInstanceOf[StringLiteralV2].value)
+          val labels: Seq[StringLiteralV2] = propsMap
+            .getOrElse(
+              OntologyConstants.Rdfs.Label.toSmartIri,
+              Seq.empty[StringLiteralV2]
+            )
+            .map(_.asInstanceOf[StringLiteralV2])
+          val comments: Seq[StringLiteralV2] = propsMap
+            .getOrElse(
+              OntologyConstants.Rdfs.Comment.toSmartIri,
+              Seq.empty[StringLiteralV2]
+            )
+            .map(_.asInstanceOf[StringLiteralV2])
 
-                                        ListRootNodeInfoADM(
-                                          id = listIri.toString,
-                                          projectIri = propsMap
-                                            .getOrElse(
-                                              OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
-                                              throw InconsistentRepositoryDataException(
-                                                "The required property 'attachedToProject' not found."
-                                              )
-                                            )
-                                            .head
-                                            .asInstanceOf[IriLiteralV2]
-                                            .value,
-                                          name = name,
-                                          labels = StringLiteralSequenceV2(labels.toVector),
-                                          comments = StringLiteralSequenceV2(comments.toVector)
-                                        ).unescape
-                                    }
+          ListRootNodeInfoADM(
+            id = listIri.toString,
+            projectIri = propsMap
+              .getOrElse(
+                OntologyConstants.KnoraBase.AttachedToProject.toSmartIri,
+                throw InconsistentRepositoryDataException(
+                  "The required property 'attachedToProject' not found."
+                )
+              )
+              .head
+              .asInstanceOf[IriLiteralV2]
+              .value,
+            name = name,
+            labels = StringLiteralSequenceV2(labels.toVector),
+            comments = StringLiteralSequenceV2(comments.toVector)
+          ).unescape
+        }
 
       // _ = log.debug("listsGetAdminRequest - items: {}", items)
 
@@ -199,18 +197,18 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         if (exists) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListChildNodeADM] <- getChildren(
-                                                 ofNodeIri = rootNodeIri,
-                                                 shallow = false,
-                                                 featureFactoryConfig = featureFactoryConfig,
-                                                 KnoraSystemInstances.Users.SystemUser
-                                               )
+            children: Seq[ListChildNodeADM] <-
+              getChildren(
+                ofNodeIri = rootNodeIri,
+                shallow = false,
+                KnoraSystemInstances.Users.SystemUser
+              )
 
-            maybeRootNodeInfo <- listNodeInfoGetADM(
-                                   nodeIri = rootNodeIri,
-                                   featureFactoryConfig = featureFactoryConfig,
-                                   requestingUser = KnoraSystemInstances.Users.SystemUser
-                                 )
+            maybeRootNodeInfo <-
+              listNodeInfoGetADM(
+                nodeIri = rootNodeIri,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
 
             // _ = log.debug(s"listGetADM - maybeRootNodeInfo: {}", maybeRootNodeInfo)
 
@@ -245,18 +243,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def listGetRequestADM(
     nodeIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ListItemGetResponseADM] = {
 
     def getNodeADM(
-      childNode: ListChildNodeADM,
-      featureFactoryConfig: FeatureFactoryConfig
+      childNode: ListChildNodeADM
     ): Future[ListNodeGetResponseADM] =
       for {
         maybeNodeInfo <- listNodeInfoGetADM(
                            nodeIri = nodeIri,
-                           featureFactoryConfig = featureFactoryConfig,
                            requestingUser = requestingUser
                          )
 
@@ -283,7 +278,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             // Yes. Get the entire list
             maybeList <- listGetADM(
                            rootNodeIri = nodeIri,
-                           featureFactoryConfig = featureFactoryConfig,
                            requestingUser = requestingUser
                          )
 
@@ -299,7 +293,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             maybeNode <- listNodeGetADM(
                            nodeIri = nodeIri,
                            shallow = true,
-                           featureFactoryConfig = featureFactoryConfig,
                            requestingUser = requestingUser
                          )
 
@@ -327,7 +320,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def listNodeInfoGetADM(
     nodeIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Option[ListNodeInfoADM]] = {
     for {
@@ -344,8 +336,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       listNodeResponse <- appActor
                             .ask(
                               SparqlExtendedConstructRequest(
-                                sparql = sparqlQuery,
-                                featureFactoryConfig = featureFactoryConfig
+                                sparql = sparqlQuery
                               )
                             )
                             .mapTo[SparqlExtendedConstructResponse]
@@ -469,13 +460,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def listNodeInfoGetRequestADM(
     nodeIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[NodeInfoGetResponseADM] =
     for {
       maybeListNodeInfoADM <- listNodeInfoGetADM(
                                 nodeIri = nodeIri,
-                                featureFactoryConfig = featureFactoryConfig,
                                 requestingUser = requestingUser
                               )
 
@@ -498,27 +487,27 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   private def listNodeGetADM(
     nodeIri: IRI,
     shallow: Boolean,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Option[ListNodeADM]] = {
     for {
       // this query will give us only the information about the root node.
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                         .getListNode(
-                           nodeIri = nodeIri
-                         )
-                         .toString()
-                     )
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getListNode(
+              nodeIri = nodeIri
+            )
+            .toString()
+        )
 
-      listInfoResponse <- appActor
-                            .ask(
-                              SparqlExtendedConstructRequest(
-                                sparql = sparqlQuery,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
-                            )
-                            .mapTo[SparqlExtendedConstructResponse]
+      listInfoResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
 
       // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
 
@@ -526,12 +515,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         if (listInfoResponse.statements.nonEmpty) {
           for {
             // here we know that the list exists and it is fine if children is an empty list
-            children: Seq[ListChildNodeADM] <- getChildren(
-                                                 ofNodeIri = nodeIri,
-                                                 shallow = shallow,
-                                                 featureFactoryConfig = featureFactoryConfig,
-                                                 requestingUser = requestingUser
-                                               )
+            children: Seq[ListChildNodeADM] <-
+              getChildren(
+                ofNodeIri = nodeIri,
+                shallow = shallow,
+                requestingUser = requestingUser
+              )
 
             // _ = log.debug(s"listGetADM - children count: {}", children.size)
 
@@ -647,14 +636,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    *
    * @param ofNodeIri            the IRI of the node for which children are to be returned.
    * @param shallow              denotes if all children or only the immediate children will be returned.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @return a sequence of [[ListChildNodeADM]].
    */
   private def getChildren(
     ofNodeIri: IRI,
     shallow: Boolean,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[ListChildNodeADM]] = {
 
@@ -734,7 +721,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                     .ask(
                                       SparqlExtendedConstructRequest(
                                         sparql = nodeChildrenQuery,
-                                        featureFactoryConfig = featureFactoryConfig
                                       )
                                     )
                                     .mapTo[SparqlExtendedConstructResponse]
@@ -969,7 +955,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                         .ask(
                           ProjectGetADM(
                             identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
-                            featureFactoryConfig = featureFactoryConfig,
                             KnoraSystemInstances.Users.SystemUser
                           )
                         )

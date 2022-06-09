@@ -22,7 +22,6 @@ import dsp.errors.{
   DataConversionException,
   InconsistentRepositoryDataException
 }
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -49,7 +48,7 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class LoadOntologiesRequestV2(featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
+case class LoadOntologiesRequestV2(requestingUser: UserADM)
     extends OntologiesResponderRequestV2
 
 /**
@@ -71,7 +70,6 @@ case class CreateOntologyRequestV2(
   label: String,
   comment: Option[String] = None,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -97,7 +95,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] =
@@ -105,7 +102,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -113,7 +109,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): CreateOntologyRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -139,7 +134,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
       label = label,
       comment = comment,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -149,12 +143,10 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
  * Checks whether an ontology can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
  * @param ontologyIri the ontology IRI.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser the user making the request.
  */
 case class CanDeleteOntologyRequestV2(
   ontologyIri: SmartIri,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -170,7 +162,6 @@ case class DeleteOntologyRequestV2(
   ontologyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -388,7 +379,6 @@ case class CreatePropertyRequestV2(
   propertyInfoContent: PropertyInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -404,7 +394,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[CreatePropertyRequestV2]] representing the input.
@@ -414,7 +403,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] =
@@ -422,7 +410,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -430,7 +417,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): CreatePropertyRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -473,7 +459,6 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
       propertyInfoContent = propertyInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -491,7 +476,6 @@ case class CreateClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -507,7 +491,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[CreateClassRequestV2]] representing the input.
@@ -517,7 +500,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] =
@@ -525,7 +507,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -533,7 +514,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): CreateClassRequestV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -555,7 +535,6 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -573,7 +552,6 @@ case class AddCardinalitiesToClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -589,7 +567,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
@@ -599,7 +576,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] =
@@ -607,7 +583,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -615,7 +590,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): AddCardinalitiesToClassRequestV2 = {
     // Get the class definition and the ontology's last modification date from the JSON-LD.
@@ -635,7 +609,6 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -645,12 +618,10 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
  * Checks whether the cardinalities of a class can be replaced. A successful response will be a [[CanDoResponseV2]].
  *
  * @param classIri the class IRI.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser the user making the request.
  */
 case class CanChangeCardinalitiesRequestV2(
   classIri: SmartIri,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -666,7 +637,6 @@ case class ChangeCardinalitiesRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -682,7 +652,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
@@ -692,7 +661,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] =
@@ -700,7 +668,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -708,7 +675,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeCardinalitiesRequestV2 = {
     val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -720,7 +686,6 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -739,7 +704,6 @@ final case class CanDeleteCardinalitiesFromClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -756,7 +720,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
@@ -766,7 +729,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CanDeleteCardinalitiesFromClassRequestV2] =
@@ -774,7 +736,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -782,7 +743,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): CanDeleteCardinalitiesFromClassRequestV2 = {
     val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -794,7 +754,6 @@ object CanDeleteCardinalitiesFromClassRequestV2
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -813,7 +772,6 @@ final case class DeleteCardinalitiesFromClassRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -829,7 +787,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
@@ -839,7 +796,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteCardinalitiesFromClassRequestV2] =
@@ -847,7 +803,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -855,7 +810,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeleteCardinalitiesFromClassRequestV2 = {
     val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -867,7 +821,6 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -885,7 +838,6 @@ case class DeleteClassRequestV2(
   classIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -898,7 +850,6 @@ case class DeleteClassRequestV2(
  */
 case class CanDeleteClassRequestV2(
   classIri: SmartIri,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -914,7 +865,6 @@ case class DeletePropertyRequestV2(
   propertyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -922,12 +872,10 @@ case class DeletePropertyRequestV2(
  * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
  * @param propertyIri          the IRI of the property to be deleted.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class CanDeletePropertyRequestV2(
   propertyIri: SmartIri,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -955,7 +903,6 @@ sealed trait ChangeLabelsOrCommentsRequest {
  * @param newGuiAttributes     the new GUI attributes to be used with the property, or `None` if no GUI element should be specified.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ChangePropertyGuiElementRequest(
@@ -964,7 +911,6 @@ case class ChangePropertyGuiElementRequest(
   newGuiAttributes: Set[String],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -980,7 +926,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
@@ -990,7 +935,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
@@ -998,7 +942,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1006,7 +949,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangePropertyGuiElementRequest = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1046,7 +988,6 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
       newGuiAttributes = newGuiAttributes,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1068,7 +1009,6 @@ case class ChangePropertyLabelsOrCommentsRequestV2(
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
     with ChangeLabelsOrCommentsRequest
@@ -1086,7 +1026,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
@@ -1096,7 +1035,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] =
@@ -1104,7 +1042,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1112,7 +1049,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangePropertyLabelsOrCommentsRequestV2 = {
     val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -1129,7 +1065,6 @@ object ChangePropertyLabelsOrCommentsRequestV2
       },
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1147,7 +1082,6 @@ case class DeletePropertyCommentRequestV2(
   propertyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -1163,7 +1097,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeletePropertyCommentRequestV2]] representing the input.
@@ -1173,7 +1106,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeletePropertyCommentRequestV2] =
@@ -1181,7 +1113,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1189,7 +1120,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeletePropertyCommentRequestV2 = {
     val inputOntologyV2      = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -1201,7 +1131,6 @@ object DeletePropertyCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteP
       propertyIri = propertyInfoContent.propertyIri,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1223,7 +1152,6 @@ case class ChangeClassLabelsOrCommentsRequestV2(
   newObjects: Seq[StringLiteralV2],
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
     with ChangeLabelsOrCommentsRequest
@@ -1240,7 +1168,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
@@ -1250,7 +1177,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] =
@@ -1258,7 +1184,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1266,7 +1191,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeClassLabelsOrCommentsRequestV2 = {
     val inputOntologiesV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -1283,7 +1207,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
       },
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1301,7 +1224,6 @@ case class DeleteClassCommentRequestV2(
   classIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -1317,7 +1239,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[DeleteClassCommentRequestV2]] representing the input.
@@ -1327,7 +1248,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteClassCommentRequestV2] =
@@ -1335,7 +1255,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1343,7 +1262,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeleteClassCommentRequestV2 = {
     val inputOntologyV2: InputOntologyV2     = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -1355,7 +1273,6 @@ object DeleteClassCommentRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteClas
       classIri = classInfoContent.classIri,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1365,7 +1282,6 @@ case class ChangeGuiOrderRequestV2(
   classInfoContent: ClassInfoContentV2,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -1375,7 +1291,6 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] =
@@ -1383,7 +1298,6 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1391,7 +1305,6 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeGuiOrderRequestV2 = {
     // Get the class definition and the ontology's last modification date from the JSON-LD.
@@ -1411,7 +1324,6 @@ object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrder
       classInfoContent = classInfoContent,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1433,7 +1345,6 @@ case class ChangeOntologyMetadataRequestV2(
   comment: Option[String] = None,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
@@ -1459,7 +1370,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] =
@@ -1467,7 +1377,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
       fromJsonLDSync(
         jsonLDDocument = jsonLDDocument,
         apiRequestID = apiRequestID,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
     }
@@ -1475,7 +1384,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
   private def fromJsonLDSync(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): ChangeOntologyMetadataRequestV2 = {
     val inputOntologyV2         = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -1493,7 +1401,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
       comment = comment,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     )
   }
@@ -1511,7 +1418,6 @@ case class DeleteOntologyCommentRequestV2(
   ontologyIri: SmartIri,
   lastModificationDate: Instant,
   apiRequestID: UUID,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends OntologiesResponderRequestV2
 
