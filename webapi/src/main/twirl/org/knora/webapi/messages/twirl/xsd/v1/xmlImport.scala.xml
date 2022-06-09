@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.exceptions.{AssertionException, InconsistentRepositoryDataException, SparqlGenerationException}
+@import dsp.errors.{AssertionException, InconsistentRepositoryDataException, SparqlGenerationException}
 @import org.knora.webapi.messages.v1.responder.ontologymessages._
 @import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 @import org.knora.webapi.messages.OntologyConstants

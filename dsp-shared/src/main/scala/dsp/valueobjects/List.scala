@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import dsp.errors.BadRequestException
 
 object List {
 
@@ -16,10 +17,10 @@ object List {
   object ListName { self =>
     def make(value: String): Validation[Throwable, ListName] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ListErrorMessages.ListNameMissing))
+        Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
       } else {
         val validatedValue = Validation(
-          V2IriValidation.toSparqlEncodedString(value, throw V2.BadRequestException(ListErrorMessages.ListNameInvalid))
+          V2IriValidation.toSparqlEncodedString(value, throw BadRequestException(ListErrorMessages.ListNameInvalid))
         )
 
         validatedValue.map(new ListName(_) {})
@@ -39,7 +40,7 @@ object List {
   object Position { self =>
     def make(value: Int): Validation[Throwable, Position] =
       if (value < -1) {
-        Validation.fail(V2.BadRequestException(ListErrorMessages.InvalidPosition))
+        Validation.fail(BadRequestException(ListErrorMessages.InvalidPosition))
       } else {
         Validation.succeed(new Position(value) {})
       }
@@ -58,13 +59,13 @@ object List {
   object Labels { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, Labels] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ListErrorMessages.LabelsMissing))
+        Validation.fail(BadRequestException(ListErrorMessages.LabelsMissing))
       } else {
         val validatedLabels = Validation(value.map { label =>
           val validatedLabel =
             V2IriValidation.toSparqlEncodedString(
               label.value,
-              throw V2.BadRequestException(ListErrorMessages.LabelsInvalid)
+              throw BadRequestException(ListErrorMessages.LabelsInvalid)
             )
           V2.StringLiteralV2(value = validatedLabel, language = label.language)
         })
@@ -86,13 +87,13 @@ object List {
   object Comments { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, Comments] =
       if (value.isEmpty) {
-        Validation.fail(V2.BadRequestException(ListErrorMessages.CommentsMissing))
+        Validation.fail(BadRequestException(ListErrorMessages.CommentsMissing))
       } else {
         val validatedComments = Validation(value.map { comment =>
           val validatedComment =
             V2IriValidation.toSparqlEncodedString(
               comment.value,
-              throw V2.BadRequestException(ListErrorMessages.CommentsInvalid)
+              throw BadRequestException(ListErrorMessages.CommentsInvalid)
             )
           V2.StringLiteralV2(value = validatedComment, language = comment.language)
         })

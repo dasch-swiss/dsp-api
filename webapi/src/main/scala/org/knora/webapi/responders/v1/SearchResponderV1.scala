@@ -7,8 +7,8 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.BadRequestException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest

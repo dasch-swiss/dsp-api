@@ -10,8 +10,8 @@ import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Directives.extractRequest
 import akka.http.scaladsl.server.ExceptionHandler
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.exceptions.InternalServerException
-import org.knora.webapi.exceptions.RequestRejectedException
+import dsp.errors.InternalServerException
+import dsp.errors.RequestRejectedException
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.http.status.ApiStatusCodesV2
 import org.knora.webapi.messages.OntologyConstants
@@ -23,7 +23,7 @@ import spray.json.JsNumber
 import spray.json.JsObject
 import spray.json.JsString
 import spray.json.JsValue
-import dsp.valueobjects.V2
+import dsp.errors.BadRequestException
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
@@ -43,8 +43,6 @@ object KnoraExceptionHandler extends LazyLogging {
       extractRequest { request =>
         val url = request.uri.path.toString
 
-        // println(s"KnoraExceptionHandler - case: rre - url: $url")
-
         if (url.startsWith("/v1")) {
           complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
         } else if (url.startsWith("/v2")) {
@@ -59,7 +57,6 @@ object KnoraExceptionHandler extends LazyLogging {
         val uri = request.uri
         val url = uri.path.toString
 
-        // println(s"KnoraExceptionHandler - case: ise - url: $url")
         logger.error(s"Unable to run route $url", ise)
 
         if (url.startsWith("/v1")) {
@@ -68,19 +65,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV2(ise, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
-        }
-      }
-
-    case bre: V2.BadRequestException =>
-      extractRequest { request =>
-        val url = request.uri.path.toString
-
-        if (url.startsWith("/v1")) {
-          complete(exceptionToJsonHttpResponseV1(bre, settingsImpl))
-        } else if (url.startsWith("/v2")) {
-          complete(exceptionToJsonHttpResponseV2(bre, settingsImpl))
-        } else {
-          complete(exceptionToJsonHttpResponseADM(bre, settingsImpl))
         }
       }
 

@@ -9,9 +9,9 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.NotImplementedException
-import org.knora.webapi.exceptions.OntologyConstraintException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.NotImplementedException
+import dsp.errors.OntologyConstraintException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM

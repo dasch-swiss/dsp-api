@@ -11,7 +11,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions.FileWriteException
+import dsp.errors.FileWriteException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceValueV1

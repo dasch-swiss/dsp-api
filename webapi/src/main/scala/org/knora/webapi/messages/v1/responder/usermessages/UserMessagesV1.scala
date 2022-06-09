@@ -7,8 +7,8 @@ package org.knora.webapi.messages.v1.responder.usermessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.BadRequestException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1

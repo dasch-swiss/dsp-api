@@ -1,7 +1,7 @@
 package org.knora.webapi.responders
 
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ApplicationLockException
+import dsp.errors.ApplicationLockException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 

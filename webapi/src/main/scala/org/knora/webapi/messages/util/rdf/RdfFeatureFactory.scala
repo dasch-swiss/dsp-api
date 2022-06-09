@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.feature.FeatureFactory
 import org.knora.webapi.messages.util.rdf.jenaimpl._
 import org.knora.webapi.settings.KnoraSettingsImpl

@@ -17,9 +17,9 @@ import dsp.valueobjects.Group._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DuplicateValueException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2

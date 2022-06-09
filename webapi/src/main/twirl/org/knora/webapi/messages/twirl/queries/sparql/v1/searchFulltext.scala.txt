@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi.IRI
-@import org.knora.webapi.exceptions.SparqlGenerationException
+@import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 @*

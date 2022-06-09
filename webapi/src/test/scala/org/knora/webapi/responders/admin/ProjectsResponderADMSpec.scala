@@ -17,9 +17,9 @@ import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DuplicateValueException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages._

@@ -8,6 +8,7 @@ package dsp.valueobjects
 import dsp.valueobjects.List._
 import zio.prelude.Validation
 import zio.test._
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[List]] value objects creation.
@@ -26,20 +27,20 @@ object ListSpec extends ZIOSpecDefault {
 
   private val listNameTest = suite("ListSpec - ListName")(
     test("pass an empty value and throw an error") {
-      assertTrue(ListName.make("") == Validation.fail(V2.BadRequestException(ListErrorMessages.ListNameMissing))) &&
+      assertTrue(ListName.make("") == Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))) &&
       assertTrue(
-        ListName.make(Some("")) == Validation.fail(V2.BadRequestException(ListErrorMessages.ListNameMissing))
+        ListName.make(Some("")) == Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         ListName.make(invalidName) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.ListNameInvalid)
+          BadRequestException(ListErrorMessages.ListNameInvalid)
         )
       ) &&
       assertTrue(
         ListName.make(Some(invalidName)) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.ListNameInvalid)
+          BadRequestException(ListErrorMessages.ListNameInvalid)
         )
       )
     },
@@ -58,12 +59,12 @@ object ListSpec extends ZIOSpecDefault {
     test("pass an invalid value and throw an error") {
       assertTrue(
         Position.make(invalidPosition) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.InvalidPosition)
+          BadRequestException(ListErrorMessages.InvalidPosition)
         )
       ) &&
       assertTrue(
         Position.make(Some(invalidPosition)) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.InvalidPosition)
+          BadRequestException(ListErrorMessages.InvalidPosition)
         )
       )
     },
@@ -82,24 +83,24 @@ object ListSpec extends ZIOSpecDefault {
     test("pass an empty object and throw an error") {
       assertTrue(
         Labels.make(Seq.empty) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.LabelsMissing)
+          BadRequestException(ListErrorMessages.LabelsMissing)
         )
       ) &&
       assertTrue(
         Labels.make(Some(Seq.empty)) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.LabelsMissing)
+          BadRequestException(ListErrorMessages.LabelsMissing)
         )
       )
     },
     test("pass an invalid object and throw an error") {
       assertTrue(
         Labels.make(invalidLabel) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.LabelsInvalid)
+          BadRequestException(ListErrorMessages.LabelsInvalid)
         )
       ) &&
       assertTrue(
         Labels.make(Some(invalidLabel)) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.LabelsInvalid)
+          BadRequestException(ListErrorMessages.LabelsInvalid)
         )
       )
     },
@@ -118,24 +119,24 @@ object ListSpec extends ZIOSpecDefault {
     test("pass an empty object and throw an error") {
       assertTrue(
         Comments.make(Seq.empty) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.CommentsMissing)
+          BadRequestException(ListErrorMessages.CommentsMissing)
         )
       ) &&
       assertTrue(
         Comments.make(Some(Seq.empty)) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.CommentsMissing)
+          BadRequestException(ListErrorMessages.CommentsMissing)
         )
       )
     },
     test("pass an invalid object and throw an error") {
       assertTrue(
         Comments.make(invalidComment) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.CommentsInvalid)
+          BadRequestException(ListErrorMessages.CommentsInvalid)
         )
       ) &&
       assertTrue(
         Comments.make(Some(invalidComment)) == Validation.fail(
-          V2.BadRequestException(ListErrorMessages.CommentsInvalid)
+          BadRequestException(ListErrorMessages.CommentsInvalid)
         )
       )
     },

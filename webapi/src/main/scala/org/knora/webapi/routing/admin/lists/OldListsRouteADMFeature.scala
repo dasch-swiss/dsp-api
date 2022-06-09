@@ -10,8 +10,8 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.ForbiddenException
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM

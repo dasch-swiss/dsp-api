@@ -10,8 +10,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.RdfMediaTypes
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.InvalidRdfException
+import dsp.errors.BadRequestException
+import dsp.errors.InvalidRdfException
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream

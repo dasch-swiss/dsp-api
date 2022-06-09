@@ -7,7 +7,7 @@ package org.knora.webapi.util.rdf
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._

@@ -11,10 +11,10 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.NotImplementedException
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.NotImplementedException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

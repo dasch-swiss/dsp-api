@@ -2,7 +2,7 @@ package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2

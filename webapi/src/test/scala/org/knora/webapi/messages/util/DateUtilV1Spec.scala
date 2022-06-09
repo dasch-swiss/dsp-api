@@ -5,7 +5,7 @@
 
 package org.knora.webapi.util
 
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.DateUtilV1.DateRange
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1

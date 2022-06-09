@@ -7,7 +7,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2

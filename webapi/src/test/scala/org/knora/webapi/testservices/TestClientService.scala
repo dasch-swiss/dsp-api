@@ -17,10 +17,10 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject

@@ -12,10 +12,10 @@ import com.typesafe.config.ConfigFactory
 import dsp.valueobjects.User._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DuplicateValueException
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetResponseADM

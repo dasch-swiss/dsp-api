@@ -8,6 +8,7 @@ package dsp.valueobjects
 import dsp.valueobjects.Project._
 import zio.prelude.Validation
 import zio.test._
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[Project]] value objects creation.
@@ -30,21 +31,21 @@ object ProjectSpec extends ZIOSpecDefault {
   private val shortcodeTest = suite("ProjectSpec - Shortcode")(
     test("pass an empty value and throw an error") {
       assertTrue(
-        Shortcode.make("") == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+        Shortcode.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       ) &&
       assertTrue(
-        Shortcode.make(Some("")) == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+        Shortcode.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         Shortcode.make(invalidShortcode) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
+          BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
         )
       ) &&
       assertTrue(
         Shortcode.make(Some(invalidShortcode)) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
+          BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
         )
       )
     },
@@ -62,21 +63,21 @@ object ProjectSpec extends ZIOSpecDefault {
   private val shortnameTest = suite("ProjectSpec - Shortname")(
     test("pass an empty value and throw an error") {
       assertTrue(
-        Shortname.make("") == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        Shortname.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
       ) &&
       assertTrue(
-        Shortname.make(Some("")) == Validation.fail(V2.BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        Shortname.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
       )
     },
     test("pass an invalid value and throw an error") {
       assertTrue(
         Shortname.make(invalidShortname) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+          BadRequestException(ProjectErrorMessages.ShortnameInvalid)
         )
       ) &&
       assertTrue(
         Shortname.make(Some(invalidShortname)) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+          BadRequestException(ProjectErrorMessages.ShortnameInvalid)
         )
       )
     },
@@ -93,9 +94,9 @@ object ProjectSpec extends ZIOSpecDefault {
 
   private val longnameTest = suite("ProjectSpec - Longname")(
     test("pass an empty value and throw an error") {
-      assertTrue(Longname.make("") == Validation.fail(V2.BadRequestException(ProjectErrorMessages.LongnameMissing))) &&
+      assertTrue(Longname.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))) &&
       assertTrue(
-        Longname.make(Some("")) == Validation.fail(V2.BadRequestException(ProjectErrorMessages.LongnameMissing))
+        Longname.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -113,12 +114,12 @@ object ProjectSpec extends ZIOSpecDefault {
     test("pass an empty object and throw an error") {
       assertTrue(
         ProjectDescription.make(Seq.empty) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing)
+          BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing)
         )
       ) &&
       assertTrue(
         ProjectDescription.make(Some(Seq.empty)) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing)
+          BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing)
         )
       )
     },
@@ -137,12 +138,12 @@ object ProjectSpec extends ZIOSpecDefault {
     test("pass an empty object and throw an error") {
       assertTrue(
         Keywords.make(Seq.empty) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.KeywordsMissing)
+          BadRequestException(ProjectErrorMessages.KeywordsMissing)
         )
       ) &&
       assertTrue(
         Keywords.make(Some(Seq.empty)) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.KeywordsMissing)
+          BadRequestException(ProjectErrorMessages.KeywordsMissing)
         )
       )
     },
@@ -161,12 +162,12 @@ object ProjectSpec extends ZIOSpecDefault {
     test("pass an empty object and throw an error") {
       assertTrue(
         Logo.make("") == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.LogoMissing)
+          BadRequestException(ProjectErrorMessages.LogoMissing)
         )
       ) &&
       assertTrue(
         Logo.make(Some("")) == Validation.fail(
-          V2.BadRequestException(ProjectErrorMessages.LogoMissing)
+          BadRequestException(ProjectErrorMessages.LogoMissing)
         )
       )
     },

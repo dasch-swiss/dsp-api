@@ -202,7 +202,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(valueObjects)
+  .dependsOn(shared)
 
 lazy val webapiJavaRunOptions = Seq(
   // "-showversion",
@@ -291,11 +291,10 @@ lazy val schemaRepoSearchService = project
   )
   .dependsOn(schemaRepo)
 
-lazy val valueObjects = project
-  .in(file("dsp-value-objects"))
+lazy val shared = project
+  .in(file("dsp-shared"))
   .settings(
-    name := "valueObjects",
-    libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
-    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
+    name := "shared",
+    libraryDependencies ++= Dependencies.sharedLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )

@@ -10,9 +10,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.annotation.ServerUnique
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DataConversionException
-import org.knora.webapi.exceptions.OntologyConstraintException
+import dsp.errors.BadRequestException
+import dsp.errors.DataConversionException
+import dsp.errors.OntologyConstraintException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM

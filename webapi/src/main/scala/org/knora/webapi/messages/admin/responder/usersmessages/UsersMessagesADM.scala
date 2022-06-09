@@ -7,8 +7,8 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DataConversionException
+import dsp.errors.BadRequestException
+import dsp.errors.DataConversionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM

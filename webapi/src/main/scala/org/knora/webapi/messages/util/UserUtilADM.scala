@@ -10,7 +10,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ForbiddenException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 

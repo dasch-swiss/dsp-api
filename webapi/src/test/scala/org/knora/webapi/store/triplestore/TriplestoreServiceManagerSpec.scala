@@ -7,7 +7,7 @@ package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.TriplestoreTimeoutException
+import dsp.errors.TriplestoreTimeoutException
 import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
 
 import scala.concurrent.duration._

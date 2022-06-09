@@ -5,7 +5,7 @@
 
 package org.knora.webapi.store.cache.impl
 
-import org.knora.webapi.exceptions.ForbiddenException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType

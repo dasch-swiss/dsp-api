@@ -11,10 +11,10 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.InvalidApiJsonException
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.TriplestoreResponseException
+import dsp.errors.AssertionException
+import dsp.errors.InvalidApiJsonException
+import dsp.errors.NotFoundException
+import dsp.errors.TriplestoreResponseException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages._
