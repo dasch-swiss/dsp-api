@@ -8,7 +8,6 @@ package dsp.user.handler
 import dsp.user.api.UserRepo
 import zio._
 import java.util.UUID
-import com.sourcegraph.semanticdb_javac.Semanticdb.Language
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.errors.DuplicateValueException
@@ -73,7 +72,13 @@ final case class UserHandler(repo: UserRepo) {
     for {
       _ <- repo
              .getUserByUsernameOrEmail(username.value)
-             .mapError(_ => DuplicateValueException(s"Username ${username.value} already taken"))
+             .fold(
+               _ => ZIO.succeed(()),
+               _ =>
+                 ZIO.fail(
+                   DuplicateValueException(s"Username ${username.value} already taken")
+                 ) // if a username is found, it means the username is already taken
+             )
     } yield ()
 
   /**
@@ -85,7 +90,13 @@ final case class UserHandler(repo: UserRepo) {
     for {
       _ <- repo
              .getUserByUsernameOrEmail(email.value)
-             .mapError(_ => DuplicateValueException(s"Email ${email.value} already taken"))
+             .fold(
+               _ => ZIO.succeed(()),
+               _ =>
+                 ZIO.fail(
+                   DuplicateValueException(s"Email ${email.value} already taken")
+                 ) // if an email is found, it means the email is already taken
+             )
     } yield ()
 
   def createUser(

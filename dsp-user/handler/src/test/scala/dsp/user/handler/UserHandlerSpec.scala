@@ -20,70 +20,98 @@ object UserHandlerSpec extends ZIOSpecDefault {
 
   def spec = (userTests)
 
-  private val testUser1 = (for {
-    givenName  <- GivenName.make("GivenName1")
-    familyName <- FamilyName.make("familyName1")
-    username   <- Username.make("username1")
-    email      <- Email.make("email1@email.com")
-    password   <- Password.make("password1")
-    language   <- LanguageCode.make("en")
-    user = User.make(
-             givenName,
-             familyName,
-             username,
-             email,
-             password,
-             language
-           )
-  } yield (user)).toZIO
+  private val givenNameZio  = GivenName.make("GivenName1").toZIO
+  private val familyNameZio = FamilyName.make("familyName1").toZIO
+  private val usernameZio   = Username.make("username1").toZIO
+  private val emailZio      = Email.make("email1@email.com").toZIO
+  private val passwordZio   = Password.make("password1").toZIO
+  private val languageZio   = LanguageCode.make("en").toZIO
 
   val userTests = suite("UserHandler")(
     test("store a user and retrieve by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        testUser    <- testUser1
+
+        givenName  <- givenNameZio
+        familyName <- familyNameZio
+        username   <- usernameZio
+        email      <- emailZio
+        password   <- passwordZio
+        language   <- languageZio
+
         userId <- userHandler.createUser(
-                    testUser.username,
-                    testUser.email,
-                    testUser.givenName,
-                    testUser.familyName,
-                    testUser.password.get,
-                    testUser.language
+                    username = username,
+                    email = email,
+                    givenName = givenName,
+                    familyName = familyName,
+                    password = password,
+                    language = language
                   )
 
         retrievedUser <- userHandler.getUserById(userId)
         _             <- ZIO.debug(retrievedUser)
-      } yield assertTrue(retrievedUser == testUser)
+      } yield assertTrue(retrievedUser.username == username) &&
+        assertTrue(retrievedUser.email == email) &&
+        assertTrue(retrievedUser.givenName == givenName) &&
+        assertTrue(retrievedUser.familyName == familyName) &&
+        assertTrue(retrievedUser.password == Some(password)) &&
+        assertTrue(retrievedUser.language == language)
     },
     test("store a user and retrieve by username") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        testUser    <- testUser1
+
+        givenName  <- givenNameZio
+        familyName <- familyNameZio
+        username   <- usernameZio
+        email      <- emailZio
+        password   <- passwordZio
+        language   <- languageZio
+
         userId <- userHandler.createUser(
-                    testUser.username,
-                    testUser.email,
-                    testUser.givenName,
-                    testUser.familyName,
-                    testUser.password.get,
-                    testUser.language
+                    username = username,
+                    email = email,
+                    givenName = givenName,
+                    familyName = familyName,
+                    password = password,
+                    language = language
                   )
-        retrievedUser <- userHandler.getUserByUsername(testUser.username)
-      } yield assertTrue(retrievedUser == testUser)
+
+        retrievedUser <- userHandler.getUserByUsername(username)
+      } yield assertTrue(retrievedUser.username == username) &&
+        assertTrue(retrievedUser.email == email) &&
+        assertTrue(retrievedUser.givenName == givenName) &&
+        assertTrue(retrievedUser.familyName == familyName) &&
+        assertTrue(retrievedUser.password == Some(password)) &&
+        assertTrue(retrievedUser.language == language)
     },
     test("store a user and retrieve by email") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        testUser    <- testUser1
+
+        givenName  <- givenNameZio
+        familyName <- familyNameZio
+        username   <- usernameZio
+        email      <- emailZio
+        password   <- passwordZio
+        language   <- languageZio
+
         userId <- userHandler.createUser(
-                    testUser.username,
-                    testUser.email,
-                    testUser.givenName,
-                    testUser.familyName,
-                    testUser.password.get,
-                    testUser.language
+                    username = username,
+                    email = email,
+                    givenName = givenName,
+                    familyName = familyName,
+                    password = password,
+                    language = language
                   )
-        retrievedUser <- userHandler.getUserByEmail(testUser.email)
-      } yield assertTrue(retrievedUser == testUser)
+
+        retrievedUser <- userHandler.getUserByEmail(email)
+      } yield assertTrue(retrievedUser.username == username) &&
+        assertTrue(retrievedUser.email == email) &&
+        assertTrue(retrievedUser.givenName == givenName) &&
+        assertTrue(retrievedUser.familyName == familyName) &&
+        assertTrue(retrievedUser.password == Some(password)) &&
+        assertTrue(retrievedUser.language == language)
     }
   ).provide(UserRepoMock.layer, UserHandler.layer)
 }
