@@ -179,10 +179,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                .toString()
                            )
 
-      usersResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                         sparql = sparqlQueryString,
-                         featureFactoryConfig = featureFactoryConfig
-                       )).mapTo[SparqlExtendedConstructResponse]
+      usersResponse <- appActor
+                         .ask(
+                           SparqlExtendedConstructRequest(
+                             sparql = sparqlQueryString,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         )
+                         .mapTo[SparqlExtendedConstructResponse]
 
       statements = usersResponse.statements.toList
 
@@ -912,7 +916,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                .toString()
                            )
 
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
                                                     case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
@@ -925,12 +929,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                               }
 
       maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                               (responderManager ? ProjectGetADM(
-                                                                 identifier =
-                                                                   ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                                                 featureFactoryConfig = featureFactoryConfig,
-                                                                 requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                               )).mapTo[Option[ProjectADM]]
+                                                               appActor
+                                                                 .ask(
+                                                                   ProjectGetADM(
+                                                                     identifier = ProjectIdentifierADM(maybeIri =
+                                                                       Some(projectIri)
+                                                                     ),
+                                                                     featureFactoryConfig = featureFactoryConfig,
+                                                                     requestingUser =
+                                                                       KnoraSystemInstances.Users.SystemUser
+                                                                   )
+                                                                 )
+                                                                 .mapTo[Option[ProjectADM]]
                                                              }
       maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
       projects: Seq[ProjectADM]               = maybeProjects.flatten
@@ -1246,11 +1256,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _            = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
         // get group's info. we need the project IRI.
-        maybeGroupADM <- (responderManager ? GroupGetADM(
-                           groupIri = groupIri,
-                           featureFactoryConfig = featureFactoryConfig,
-                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                         )).mapTo[Option[GroupADM]]
+        maybeGroupADM <- appActor
+                           .ask(
+                             GroupGetADM(
+                               groupIri = groupIri,
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
+                           )
+                           .mapTo[Option[GroupADM]]
 
         projectIri = maybeGroupADM
                        .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
@@ -1325,11 +1339,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _              = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
 
         // get group's info. we need the project IRI.
-        maybeGroupADM <- (responderManager ? GroupGetADM(
-                           groupIri = groupIri,
-                           featureFactoryConfig = featureFactoryConfig,
-                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                         )).mapTo[Option[GroupADM]]
+        maybeGroupADM <- appActor
+                           .ask(
+                             GroupGetADM(
+                               groupIri = groupIri,
+                               featureFactoryConfig = featureFactoryConfig,
+                               requestingUser = KnoraSystemInstances.Users.SystemUser
+                             )
+                           )
+                           .mapTo[Option[GroupADM]]
 
         projectIri = maybeGroupADM
                        .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
@@ -1508,7 +1526,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ <- invalidateCachedUserADM(maybeCurrentUser)
 
       // write the updated user to the triplestore
-      _ <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the user was updated */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1649,7 +1667,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                     .toString
                                 )
 
-      updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+      updateResult <- appActor.ask(SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the password was updated. */
       maybeUpdatedUserADM <- getSingleUserADM(
@@ -1766,7 +1784,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         _ = log.debug(s"createNewUser: $createNewUserSparqlString")
 
-        createNewUserResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString))
+        createNewUserResponse <- appActor
+                                   .ask(SparqlUpdateRequest(createNewUserSparqlString))
                                    .mapTo[SparqlUpdateResponse]
 
         // try to retrieve newly created user (will also add to cache)
@@ -1859,10 +1878,14 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                .toString()
                            )
 
-      userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                             sparql = sparqlQueryString,
-                             featureFactoryConfig = featureFactoryConfig
-                           )).mapTo[SparqlExtendedConstructResponse]
+      userQueryResponse <- appActor
+                             .ask(
+                               SparqlExtendedConstructRequest(
+                                 sparql = sparqlQueryString,
+                                 featureFactoryConfig = featureFactoryConfig
+                               )
+                             )
+                             .mapTo[SparqlExtendedConstructResponse]
 
       maybeUserADM: Option[UserADM] <-
         if (userQueryResponse.statements.nonEmpty) {
@@ -1926,21 +1949,30 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
       for {
         /* get the user's permission profile from the permissions responder */
-        permissionData <- (responderManager ? PermissionDataGetADM(
-                            projectIris = projectIris,
-                            groupIris = groupIris,
-                            isInProjectAdminGroups = isInProjectAdminGroups,
-                            isInSystemAdminGroup = isInSystemAdminGroup,
-                            featureFactoryConfig = featureFactoryConfig,
-                            requestingUser = KnoraSystemInstances.Users.SystemUser
-                          )).mapTo[PermissionsDataADM]
+        permissionData <- appActor
+                            .ask(
+                              PermissionDataGetADM(
+                                projectIris = projectIris,
+                                groupIris = groupIris,
+                                isInProjectAdminGroups = isInProjectAdminGroups,
+                                isInSystemAdminGroup = isInSystemAdminGroup,
+                                featureFactoryConfig = featureFactoryConfig,
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                              )
+                            )
+                            .mapTo[PermissionsDataADM]
 
         maybeGroupFutures: Seq[Future[Option[GroupADM]]] = groupIris.map { groupIri =>
-                                                             (responderManager ? GroupGetADM(
-                                                               groupIri = groupIri,
-                                                               featureFactoryConfig = featureFactoryConfig,
-                                                               requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                             )).mapTo[Option[GroupADM]]
+                                                             appActor
+                                                               .ask(
+                                                                 GroupGetADM(
+                                                                   groupIri = groupIri,
+                                                                   featureFactoryConfig = featureFactoryConfig,
+                                                                   requestingUser =
+                                                                     KnoraSystemInstances.Users.SystemUser
+                                                                 )
+                                                               )
+                                                               .mapTo[Option[GroupADM]]
                                                            }
         maybeGroups: Seq[Option[GroupADM]] <- Future.sequence(maybeGroupFutures)
         groups: Seq[GroupADM]               = maybeGroups.flatten
@@ -1948,12 +1980,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // _ = log.debug("statements2UserADM - groups: {}", MessageUtil.toSource(groups))
 
         maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-                                                                 (responderManager ? ProjectGetADM(
-                                                                   ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                                                   featureFactoryConfig = featureFactoryConfig,
-                                                                   requestingUser =
-                                                                     KnoraSystemInstances.Users.SystemUser
-                                                                 )).mapTo[Option[ProjectADM]]
+                                                                 appActor
+                                                                   .ask(
+                                                                     ProjectGetADM(
+                                                                       ProjectIdentifierADM(maybeIri =
+                                                                         Some(projectIri)
+                                                                       ),
+                                                                       featureFactoryConfig = featureFactoryConfig,
+                                                                       requestingUser =
+                                                                         KnoraSystemInstances.Users.SystemUser
+                                                                     )
+                                                                   )
+                                                                   .mapTo[Option[ProjectADM]]
                                                                }
         maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
         projects: Seq[ProjectADM]               = maybeProjects.flatten
@@ -2041,7 +2079,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       askString <-
         Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
       // _ = log.debug("userExists - query: {}", askString)
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
     } yield checkUserExistsResponse.result
 
   /**
@@ -2073,7 +2111,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                          )
             // _ = log.debug("userExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
           } yield checkUserExistsResponse.result
         }
 
@@ -2106,7 +2144,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                          )
             // _ = log.debug("userExists - query: {}", askString)
 
-            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
           } yield checkUserExistsResponse.result
         }
 
@@ -2128,7 +2166,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                    )
       // _ = log.debug("projectExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -2147,7 +2185,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         )
       // _ = log.debug("groupExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
     } yield result
@@ -2157,7 +2195,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] =
     tracedFuture("admin-user-get-user-from-cache") {
-      val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
+      val result = appActor.ask(CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
       result.map {
         case Some(user) =>
           log.debug("getUserFromCache - cache hit for: {}", identifier)
@@ -2176,7 +2214,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
    */
   private def writeUserADMToCache(user: UserADM): Future[Unit] = for {
-    _ <- (storeManager ? CacheServicePutUserADM(user))
+    _ <- appActor.ask(CacheServicePutUserADM(user))
     _ <- Future(log.debug(s"writeUserADMToCache done - user: ${user.id}"))
   } yield ()
 
@@ -2188,7 +2226,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
       // only send to Redis if keys are not empty
       if (keys.nonEmpty) {
-        val result = (storeManager ? CacheServiceRemoveValues(keys))
+        val result = appActor.ask(CacheServiceRemoveValues(keys))
         result.map { res =>
           log.debug("invalidateCachedUserADM - result: {}", res)
         }

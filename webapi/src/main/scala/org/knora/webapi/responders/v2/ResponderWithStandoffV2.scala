@@ -51,11 +51,15 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
     // get all the mappings
     val mappingResponsesFuture: Vector[Future[GetMappingResponseV2]] = mappingIris.map { mappingIri: IRI =>
       for {
-        mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                                                   mappingIri = mappingIri,
-                                                   featureFactoryConfig = featureFactoryConfig,
-                                                   requestingUser = requestingUser
-                                                 )).mapTo[GetMappingResponseV2]
+        mappingResponse: GetMappingResponseV2 <- appActor
+                                                   .ask(
+                                                     GetMappingRequestV2(
+                                                       mappingIri = mappingIri,
+                                                       featureFactoryConfig = featureFactoryConfig,
+                                                       requestingUser = requestingUser
+                                                     )
+                                                   )
+                                                   .mapTo[GetMappingResponseV2]
       } yield mappingResponse
     }.toVector
 
@@ -71,11 +75,15 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
               if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
                 val xslTransformationFuture = for {
                   xslTransformation: GetXSLTransformationResponseV2 <-
-                    (responderManager ? GetXSLTransformationRequestV2(
-                      mapping.mapping.defaultXSLTransformation.get,
-                      featureFactoryConfig = featureFactoryConfig,
-                      requestingUser = requestingUser
-                    )).mapTo[GetXSLTransformationResponseV2]
+                    appActor
+                      .ask(
+                        GetXSLTransformationRequestV2(
+                          mapping.mapping.defaultXSLTransformation.get,
+                          featureFactoryConfig = featureFactoryConfig,
+                          requestingUser = requestingUser
+                        )
+                      )
+                      .mapTo[GetXSLTransformationResponseV2]
                 } yield Some(xslTransformation.xslt)
 
                 xslTransformationFuture.recover {

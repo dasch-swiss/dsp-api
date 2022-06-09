@@ -31,8 +31,13 @@ trait StartupUtils extends LazyLogging {
    */
   def applicationStateRunning(): Unit = {
 
-    implicit val timeout: Timeout = Timeout(10.second)
-    val state: AppState           = Await.result(appActor ? GetAppState(), timeout.duration).asInstanceOf[AppState]
+    val state: AppState =
+      Await
+        .result(
+          appActor.ask(GetAppState())(Timeout(5.second)),
+          Timeout(10.second).duration
+        )
+        .asInstanceOf[AppState]
 
     if (state != AppStates.Running) {
       // not in running state

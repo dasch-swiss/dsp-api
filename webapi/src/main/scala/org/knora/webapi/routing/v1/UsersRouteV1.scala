@@ -46,7 +46,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
             requestMessage,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
       }
@@ -90,7 +90,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               requestMessage,
               requestContext,
               settings,
-              responderManager,
+              appActor,
               log
             )
           }
@@ -119,7 +119,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               requestMessage,
               requestContext,
               settings,
-              responderManager,
+              appActor,
               log
             )
         }
@@ -147,7 +147,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               requestMessage,
               requestContext,
               settings,
-              responderManager,
+              appActor,
               log
             )
         }
@@ -175,7 +175,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               requestMessage,
               requestContext,
               settings,
-              responderManager,
+              appActor,
               log
             )
         }

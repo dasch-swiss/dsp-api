@@ -6,7 +6,6 @@
 package org.knora.webapi.store.triplestore
 
 import akka.actor.Actor
-import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.Props
 import akka.event.LoggingReceive
@@ -21,6 +20,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.ExecutionContext
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
@@ -35,7 +35,7 @@ class TriplestoreManager(
   settings: KnoraSettingsImpl,
   defaultFeatureFactoryConfig: FeatureFactoryConfig
 ) extends Actor
-    with ActorLogging {
+    with LazyLogging {
   this: ActorMaker =>
 
   protected implicit val executionContext: ExecutionContext =
@@ -48,17 +48,17 @@ class TriplestoreManager(
 
   if (settings.useFakeTriplestore) {
     FakeTriplestore.load()
-    log.info("Loaded fake triplestore")
+    logger.info("Loaded fake triplestore")
   } else {
-    log.debug(s"Using triplestore: ${settings.triplestoreType}")
+    logger.debug(s"Using triplestore: ${settings.triplestoreType}")
   }
 
   if (settings.prepareFakeTriplestore) {
     FakeTriplestore.clear()
-    log.info("About to prepare fake triplestore")
+    logger.info("About to prepare fake triplestore")
   }
 
-  log.debug(settings.triplestoreType)
+  logger.debug(settings.triplestoreType)
 
   // A RepositoryUpdater for processing requests to update the repository.
   private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
@@ -69,18 +69,18 @@ class TriplestoreManager(
   )
 
   override def preStart(): Unit = {
-    log.debug("TriplestoreManagerActor: start with preStart")
+    logger.debug("TriplestoreManagerActor: start with preStart")
 
     storeActorRef = makeActor(
       FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
       name = HttpTriplestoreActorName
     )
 
-    log.debug("TriplestoreManagerActor: finished with preStart")
+    logger.debug("TriplestoreManagerActor: finished with preStart")
   }
 
   def receive: Receive = LoggingReceive {
-    case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, log)
+    case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, logger)
     case other                     => storeActorRef.forward(other)
   }
 }

@@ -108,7 +108,7 @@ object Cache extends LazyLogging {
    */
   def loadOntologies(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {
@@ -127,7 +127,8 @@ object Cache extends LazyLogging {
                                        .getAllOntologyMetadata()
                                        .toString()
                                    )
-      allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
+      allOntologyMetadataResponse: SparqlSelectResult <- appActor
+                                                           .ask(SparqlSelectRequest(allOntologyMetadataSparql))
                                                            .mapTo[SparqlSelectResult]
       allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = OntologyHelpers.buildOntologyMetadata(
                                                                  allOntologyMetadataResponse
@@ -183,15 +184,20 @@ object Cache extends LazyLogging {
               )
               .toString
 
-          (storeManager ? SparqlExtendedConstructRequest(
-            sparql = ontologyGraphConstructQuery,
-            featureFactoryConfig = featureFactoryConfig
-          )).mapTo[SparqlExtendedConstructResponse].map { response =>
-            OntologyGraph(
-              ontologyIri = ontologyIri,
-              constructResponse = response
+          appActor
+            .ask(
+              SparqlExtendedConstructRequest(
+                sparql = ontologyGraphConstructQuery,
+                featureFactoryConfig = featureFactoryConfig
+              )
             )
-          }
+            .mapTo[SparqlExtendedConstructResponse]
+            .map { response =>
+              OntologyGraph(
+                ontologyIri = ontologyIri,
+                constructResponse = response
+              )
+            }
         }
 
       ontologyGraphs: Iterable[OntologyGraph] <- Future.sequence(ontologyGraphResponseFutures)

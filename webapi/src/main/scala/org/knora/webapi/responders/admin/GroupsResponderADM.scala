@@ -29,6 +29,7 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import java.util.UUID
 import scala.concurrent.Future
 import dsp.valueobjects.Group.GroupStatus
+import akka.actor.ActorRef
 
 /**
  * Returns information about Knora projects.
@@ -97,10 +98,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                          .toString()
                      )
 
-      groupsResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                          sparql = sparqlQuery,
-                          featureFactoryConfig = featureFactoryConfig
-                        )).mapTo[SparqlExtendedConstructResponse]
+      groupsResponse <- appActor
+                          .ask(
+                            SparqlExtendedConstructRequest(
+                              sparql = sparqlQuery,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+                          )
+                          .mapTo[SparqlExtendedConstructResponse]
 
       statements = groupsResponse.statements
 
@@ -118,16 +123,20 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                                             .value
 
                                           for {
-                                            maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                                                                                     identifier =
-                                                                                       ProjectIdentifierADM(maybeIri =
-                                                                                         Some(projectIri)
-                                                                                       ),
-                                                                                     featureFactoryConfig =
-                                                                                       featureFactoryConfig,
-                                                                                     requestingUser =
-                                                                                       KnoraSystemInstances.Users.SystemUser
-                                                                                   )).mapTo[Option[ProjectADM]]
+                                            maybeProjectADM: Option[ProjectADM] <- appActor
+                                                                                     .ask(
+                                                                                       ProjectGetADM(
+                                                                                         identifier =
+                                                                                           ProjectIdentifierADM(
+                                                                                             maybeIri = Some(projectIri)
+                                                                                           ),
+                                                                                         featureFactoryConfig =
+                                                                                           featureFactoryConfig,
+                                                                                         requestingUser =
+                                                                                           KnoraSystemInstances.Users.SystemUser
+                                                                                       )
+                                                                                     )
+                                                                                     .mapTo[Option[ProjectADM]]
 
                                             projectADM: ProjectADM = maybeProjectADM match {
                                                                        case Some(project) => project
@@ -235,10 +244,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                          .toString()
                      )
 
-      groupResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                         sparql = sparqlQuery,
-                         featureFactoryConfig = featureFactoryConfig
-                       )).mapTo[SparqlExtendedConstructResponse]
+      groupResponse <- appActor
+                         .ask(
+                           SparqlExtendedConstructRequest(
+                             sparql = sparqlQuery,
+                             featureFactoryConfig = featureFactoryConfig
+                           )
+                         )
+                         .mapTo[SparqlExtendedConstructResponse]
 
       maybeGroup: Option[GroupADM] <-
         if (groupResponse.statements.isEmpty) {
@@ -351,7 +364,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                            )
       //_ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
-      groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      groupMembersResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
       // get project member IRI from results rows
@@ -365,12 +378,17 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
 
       maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map { userIri =>
-                                                          (responderManager ? UserGetADM(
-                                                            UserIdentifierADM(maybeIri = Some(userIri)),
-                                                            userInformationTypeADM = UserInformationTypeADM.Restricted,
-                                                            featureFactoryConfig = featureFactoryConfig,
-                                                            requestingUser = KnoraSystemInstances.Users.SystemUser
-                                                          )).mapTo[Option[UserADM]]
+                                                          appActor
+                                                            .ask(
+                                                              UserGetADM(
+                                                                UserIdentifierADM(maybeIri = Some(userIri)),
+                                                                userInformationTypeADM =
+                                                                  UserInformationTypeADM.Restricted,
+                                                                featureFactoryConfig = featureFactoryConfig,
+                                                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                              )
+                                                            )
+                                                            .mapTo[Option[UserADM]]
                                                         }
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
@@ -454,12 +472,17 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
             }
 
-        maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                                                 identifier =
-                                                   ProjectIdentifierADM(maybeIri = Some(createRequest.project.value)),
-                                                 featureFactoryConfig = featureFactoryConfig,
-                                                 requestingUser = KnoraSystemInstances.Users.SystemUser
-                                               )).mapTo[Option[ProjectADM]]
+        maybeProjectADM: Option[ProjectADM] <- appActor
+                                                 .ask(
+                                                   ProjectGetADM(
+                                                     identifier = ProjectIdentifierADM(maybeIri =
+                                                       Some(createRequest.project.value)
+                                                     ),
+                                                     featureFactoryConfig = featureFactoryConfig,
+                                                     requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                   )
+                                                 )
+                                                 .mapTo[Option[ProjectADM]]
 
         projectADM: ProjectADM = maybeProjectADM match {
                                    case Some(p) => p
@@ -490,7 +513,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                                        )
                                        .toString
 
-        _ <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString))
+        _ <- appActor
+               .ask(SparqlUpdateRequest(createNewGroupSparqlString))
                .mapTo[SparqlUpdateResponse]
 
         /* Verify that the group was created and updated  */
@@ -760,7 +784,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                                  )
       //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
-      _ <- (storeManager ? SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
       maybeUpdatedGroup <- groupGetADM(
@@ -815,11 +839,15 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     if (propsMap.nonEmpty) {
       for {
         projectIri <- projectIriFuture
-        maybeProject: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-                                              identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                              featureFactoryConfig = featureFactoryConfig,
-                                              requestingUser = KnoraSystemInstances.Users.SystemUser
-                                            )).mapTo[Option[ProjectADM]]
+        maybeProject: Option[ProjectADM] <- appActor
+                                              .ask(
+                                                ProjectGetADM(
+                                                  identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                                                  featureFactoryConfig = featureFactoryConfig,
+                                                  requestingUser = KnoraSystemInstances.Users.SystemUser
+                                                )
+                                              )
+                                              .mapTo[Option[ProjectADM]]
 
         project: ProjectADM = maybeProject.getOrElse(
                                 throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
@@ -890,7 +918,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                    )
       //_ = log.debug("groupExists - query: {}", askString)
 
-      checkGroupExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkGroupExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                    = checkGroupExistsResponse.result
 
     } yield result
@@ -911,7 +939,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                    )
       //_ = log.debug("groupExists - query: {}", askString)
 
-      checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result
 
       _ = log.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
@@ -946,14 +974,18 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                                  )
 
         seqOfFutures: Seq[Future[UserOperationResponseADM]] = members.map { user: UserADM =>
-                                                                (responderManager ? UserGroupMembershipRemoveRequestADM(
-                                                                  userIri = user.id,
-                                                                  groupIri = changedGroup.id,
-                                                                  featureFactoryConfig = featureFactoryConfig,
-                                                                  requestingUser =
-                                                                    KnoraSystemInstances.Users.SystemUser,
-                                                                  apiRequestID = apiRequestID
-                                                                )).mapTo[UserOperationResponseADM]
+                                                                appActor
+                                                                  .ask(
+                                                                    UserGroupMembershipRemoveRequestADM(
+                                                                      userIri = user.id,
+                                                                      groupIri = changedGroup.id,
+                                                                      featureFactoryConfig = featureFactoryConfig,
+                                                                      requestingUser =
+                                                                        KnoraSystemInstances.Users.SystemUser,
+                                                                      apiRequestID = apiRequestID
+                                                                    )
+                                                                  )
+                                                                  .mapTo[UserOperationResponseADM]
                                                               }
         userOperationResults: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
 

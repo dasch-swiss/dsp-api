@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -18,6 +18,7 @@ import dsp.errors.SipiException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -33,6 +34,7 @@ import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
 
@@ -74,8 +76,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -85,11 +86,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -111,8 +111,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                           valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
                                                                             jsonLDObject = jsonLDObject,
                                                                             requestingUser = requestingUser,
-                                                                            responderManager = responderManager,
-                                                                            storeManager = storeManager,
+                                                                            appActor = appActor,
                                                                             featureFactoryConfig = featureFactoryConfig,
                                                                             settings = settings,
                                                                             log = log
@@ -256,8 +255,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -267,11 +265,10 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -363,15 +360,15 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                           // No. This is a request to change the value content.
 
                                           for {
-                                            valueContent: ValueContentV2 <- ValueContentV2.fromJsonLDObject(
-                                                                              jsonLDObject = jsonLDObject,
-                                                                              requestingUser = requestingUser,
-                                                                              responderManager = responderManager,
-                                                                              storeManager = storeManager,
-                                                                              featureFactoryConfig: FeatureFactoryConfig,
-                                                                              settings = settings,
-                                                                              log = log
-                                                                            )
+                                            valueContent: ValueContentV2 <-
+                                              ValueContentV2.fromJsonLDObject(
+                                                jsonLDObject = jsonLDObject,
+                                                requestingUser = requestingUser,
+                                                appActor = appActor,
+                                                featureFactoryConfig: FeatureFactoryConfig,
+                                                settings = settings,
+                                                log = log
+                                              )
 
                                             maybePermissions: Option[String] =
                                               jsonLDObject.maybeStringWithValidation(
@@ -474,8 +471,7 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -485,11 +481,10 @@ object DeleteValueRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteValueReques
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DeleteValueRequestV2] =
     Future {
       fromJsonLDSync(
@@ -1180,8 +1175,7 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1190,11 +1184,10 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
   def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
   protected def getComment(jsonLDObject: JsonLDObject)(implicit stringFormatter: StringFormatter): Option[String] =
@@ -1214,8 +1207,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1224,11 +1216,10 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -1243,8 +1234,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           TextValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1254,8 +1244,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           IntegerValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1265,8 +1254,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           DecimalValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1276,8 +1264,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           BooleanValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1287,8 +1274,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           DateValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1298,8 +1284,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           GeomValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1309,8 +1294,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           IntervalValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1320,8 +1304,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           TimeValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1331,8 +1314,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           LinkValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1342,8 +1324,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           HierarchicalListValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1353,8 +1334,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           UriValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1364,8 +1344,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           GeonameValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1375,8 +1354,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           ColorValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1386,8 +1364,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           StillImageFileValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1397,8 +1374,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           DocumentFileValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1408,8 +1384,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           TextFileValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1419,8 +1394,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           AudioFileValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1430,8 +1404,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           MovingImageFileValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1441,8 +1414,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                                           ArchiveFileValueContentV2.fromJsonLDObject(
                                             jsonLDObject = jsonLDObject,
                                             requestingUser = requestingUser,
-                                            responderManager = responderManager,
-                                            storeManager = storeManager,
+                                            appActor = appActor,
                                             featureFactoryConfig = featureFactoryConfig,
                                             settings = settings,
                                             log = log
@@ -1615,8 +1587,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -1625,11 +1596,10 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2018,8 +1988,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
    *
    * @param jsonLDObject         the JSON-LD object.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActror            a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -2028,11 +1997,10 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -2058,11 +2026,16 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
       maybeMappingFuture: Option[Future[GetMappingResponseV2]] = maybeMappingIri.map { mappingIri =>
                                                                    for {
                                                                      mappingResponse: GetMappingResponseV2 <-
-                                                                       (responderManager ? GetMappingRequestV2(
-                                                                         mappingIri = mappingIri,
-                                                                         featureFactoryConfig = featureFactoryConfig,
-                                                                         requestingUser = requestingUser
-                                                                       )).mapTo[GetMappingResponseV2]
+                                                                       appActor
+                                                                         .ask(
+                                                                           GetMappingRequestV2(
+                                                                             mappingIri = mappingIri,
+                                                                             featureFactoryConfig =
+                                                                               featureFactoryConfig,
+                                                                             requestingUser = requestingUser
+                                                                           )
+                                                                         )
+                                                                         .mapTo[GetMappingResponseV2]
                                                                    } yield mappingResponse
                                                                  }
 
@@ -2185,11 +2158,10 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2285,11 +2257,10 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2381,11 +2352,10 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2479,11 +2449,10 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2599,11 +2568,10 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2717,11 +2685,10 @@ object TimeValueContentV2 extends ValueContentReaderV2[TimeValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TimeValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2834,11 +2801,10 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -2938,11 +2904,10 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -3040,11 +3005,10 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -3147,11 +3111,10 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 
@@ -3196,10 +3159,9 @@ object FileValueWithSipiMetadata {
   def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueWithSipiMetadata] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3214,10 +3176,14 @@ object FileValueWithSipiMetadata {
 
       // Ask Sipi about the rest of the file's metadata.
       tempFilePath = stringFormatter.makeSipiTempFilePath(settings, internalFilename)
-      fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                                                         filePath = tempFilePath,
-                                                         requestingUser = requestingUser
-                                                       )).mapTo[GetFileMetadataResponse]
+      fileMetadataResponse: GetFileMetadataResponse <- appActor
+                                                         .ask(
+                                                           GetFileMetadataRequest(
+                                                             filePath = tempFilePath,
+                                                             requestingUser = requestingUser
+                                                           )
+                                                         )
+                                                         .mapTo[GetFileMetadataResponse]
 
       fileValue = FileValueV2(
                     internalFilename = internalFilename,
@@ -3340,11 +3306,10 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3352,8 +3317,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
                                      jsonLDObject = jsonLDObject,
                                      requestingUser = requestingUser,
-                                     responderManager = responderManager,
-                                     storeManager = storeManager,
+                                     appActor = appActor,
                                      settings = settings,
                                      log = log
                                    )
@@ -3521,11 +3485,10 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DocumentFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3533,8 +3496,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
                                      jsonLDObject = jsonLDObject,
                                      requestingUser = requestingUser,
-                                     responderManager = responderManager,
-                                     storeManager = storeManager,
+                                     appActor = appActor,
                                      settings = settings,
                                      log = log
                                    )
@@ -3562,11 +3524,10 @@ object ArchiveFileValueContentV2 extends ValueContentReaderV2[ArchiveFileValueCo
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ArchiveFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3574,8 +3535,7 @@ object ArchiveFileValueContentV2 extends ValueContentReaderV2[ArchiveFileValueCo
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
                                      jsonLDObject = jsonLDObject,
                                      requestingUser = requestingUser,
-                                     responderManager = responderManager,
-                                     storeManager = storeManager,
+                                     appActor = appActor,
                                      settings = settings,
                                      log = log
                                    )
@@ -3658,11 +3618,10 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3670,8 +3629,7 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
                                      jsonLDObject = jsonLDObject,
                                      requestingUser = requestingUser,
-                                     responderManager = responderManager,
-                                     storeManager = storeManager,
+                                     appActor = appActor,
                                      settings = settings,
                                      log = log
                                    )
@@ -3754,11 +3712,10 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AudioFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3766,8 +3723,7 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
                                      jsonLDObject = jsonLDObject,
                                      requestingUser = requestingUser,
-                                     responderManager = responderManager,
-                                     storeManager = storeManager,
+                                     appActor = appActor,
                                      settings = settings,
                                      log = log
                                    )
@@ -3852,11 +3808,10 @@ object MovingImageFileValueContentV2 extends ValueContentReaderV2[MovingImageFil
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[MovingImageFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -3864,8 +3819,7 @@ object MovingImageFileValueContentV2 extends ValueContentReaderV2[MovingImageFil
       fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
                                      jsonLDObject = jsonLDObject,
                                      requestingUser = requestingUser,
-                                     responderManager = responderManager,
-                                     storeManager = storeManager,
+                                     appActor = appActor,
                                      settings = settings,
                                      log = log
                                    )
@@ -4001,11 +3955,10 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] =
     Future(fromJsonLDObjectSync(jsonLDObject))
 

@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.v2.responder
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -19,11 +19,6 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
-/**
- * A tagging trait for messages that can be sent to Knora API v2 responders.
- */
-trait KnoraRequestV2
 
 /**
  * A trait for request messages that are constructed as an [[RdfModel]].
@@ -61,8 +56,7 @@ trait KnoraJsonLDRequestReaderV2[C] {
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param responderManager     a reference to the responder manager.
-   * @param storeManager         a reference to the store manager.
+   * @param appActor             a reference to the application actor.
    * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
@@ -72,10 +66,9 @@ trait KnoraJsonLDRequestReaderV2[C] {
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    log: LoggingAdapter
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

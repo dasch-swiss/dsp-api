@@ -11,7 +11,7 @@ import akka.actor.ExtendedActorSystem
 import akka.actor.Extension
 import akka.actor.ExtensionId
 import akka.actor.ExtensionIdProvider
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
@@ -32,7 +32,7 @@ import scala.util.Try
 /**
  * Reads application settings that come from `application.conf`.
  */
-class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
+class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
 
   import KnoraSettings._
 
@@ -313,7 +313,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
             val definedExpirationDate: Instant = Instant.parse(featureConfig.getString(expirationDateKey))
 
             if (Instant.ofEpochMilli(System.currentTimeMillis).isAfter(definedExpirationDate)) {
-              log.warning(s"Feature toggle $featureName has expired")
+              log.warn(s"Feature toggle $featureName has expired")
             }
 
             Some(definedExpirationDate)
@@ -354,7 +354,7 @@ object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProv
   override def lookup: KnoraSettings.type = KnoraSettings
 
   override def createExtension(system: ExtendedActorSystem) =
-    new KnoraSettingsImpl(system.settings.config, akka.event.Logging(system, this.getClass))
+    new KnoraSettingsImpl(system.settings.config, Logger(this.getClass))
 
   /**
    * Java API: retrieve the Settings extension for the given system.

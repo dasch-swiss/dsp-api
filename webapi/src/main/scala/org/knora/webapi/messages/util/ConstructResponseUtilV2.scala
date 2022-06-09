@@ -36,6 +36,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetStandoffRespon
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.ActorUtil
 
@@ -928,7 +929,7 @@ object ConstructResponseUtilV2 {
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   )(implicit
@@ -952,7 +953,7 @@ object ConstructResponseUtilV2 {
       for {
         standoff: Vector[StandoffTagV2] <- StandoffTagUtilV2.createStandoffTagsV2FromConstructResults(
                                              standoffAssertions = valueObject.standoff,
-                                             responderManager = responderManager,
+                                             appActor = appActor,
                                              requestingUser = requestingUser
                                            )
 
@@ -969,12 +970,17 @@ object ConstructResponseUtilV2 {
             // concatenated together and returned in a GetStandoffResponseV2.
 
             for {
-              standoffResponse <- (responderManager ? GetRemainingStandoffFromTextValueRequestV2(
-                                    resourceIri = resourceIri,
-                                    valueIri = valueObject.subjectIri,
-                                    featureFactoryConfig = featureFactoryConfig,
-                                    requestingUser = requestingUser
-                                  )).mapTo[GetStandoffResponseV2]
+              standoffResponse <-
+                appActor
+                  .ask(
+                    GetRemainingStandoffFromTextValueRequestV2(
+                      resourceIri = resourceIri,
+                      valueIri = valueObject.subjectIri,
+                      featureFactoryConfig = featureFactoryConfig,
+                      requestingUser = requestingUser
+                    )
+                  )
+                  .mapTo[GetStandoffResponseV2]
             } yield standoff ++ standoffResponse.standoff
           } else {
             // We're not supposed to get any more standoff here, either because we have all of it already,
@@ -1023,7 +1029,7 @@ object ConstructResponseUtilV2 {
     valueObjectValueHasString: String,
     valueCommentOption: Option[String],
     mappings: Map[IRI, MappingAndXSLTransformation],
-    responderManager: ActorRef,
+    appActor: ActorRef,
     requestingUser: UserADM
   )(implicit
     stringFormatter: StringFormatter,
@@ -1124,7 +1130,7 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
-    responderManager: ActorRef,
+    appActor: ActorRef,
     targetSchema: ApiV2Schema,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
@@ -1159,7 +1165,7 @@ object ConstructResponseUtilV2 {
                               mappings = mappings,
                               queryStandoff = queryStandoff,
                               versionDate = versionDate,
-                              responderManager = responderManager,
+                              appActor = appActor,
                               requestingUser = requestingUser,
                               targetSchema = targetSchema,
                               featureFactoryConfig = featureFactoryConfig,
@@ -1195,7 +1201,7 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant] = None,
-    responderManager: ActorRef,
+    appActor: ActorRef,
     targetSchema: ApiV2Schema,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
@@ -1224,7 +1230,7 @@ object ConstructResponseUtilV2 {
           valueCommentOption = valueCommentOption,
           mappings = mappings,
           queryStandoff = queryStandoff,
-          responderManager = responderManager,
+          appActor = appActor,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
@@ -1337,11 +1343,16 @@ object ConstructResponseUtilV2 {
         targetSchema match {
           case ApiV2Simple =>
             for {
-              nodeResponse <- (responderManager ? NodeGetRequestV2(
-                                nodeIri = listNodeIri,
-                                featureFactoryConfig = featureFactoryConfig,
-                                requestingUser = requestingUser
-                              )).mapTo[NodeGetResponseV2]
+              nodeResponse <-
+                appActor
+                  .ask(
+                    NodeGetRequestV2(
+                      nodeIri = listNodeIri,
+                      featureFactoryConfig = featureFactoryConfig,
+                      requestingUser = requestingUser
+                    )
+                  )
+                  .mapTo[NodeGetResponseV2]
             } yield listNode.copy(
               listNodeLabel = nodeResponse.node
                 .getLabelInPreferredLanguage(userLang = requestingUser.lang, fallbackLang = settings.fallbackLanguage)
@@ -1382,7 +1393,7 @@ object ConstructResponseUtilV2 {
           mappings = mappings,
           queryStandoff = queryStandoff,
           versionDate = versionDate,
-          responderManager = responderManager,
+          appActor = appActor,
           requestingUser = requestingUser,
           targetSchema = targetSchema,
           featureFactoryConfig = featureFactoryConfig,
@@ -1398,7 +1409,7 @@ object ConstructResponseUtilV2 {
           ),
           valueCommentOption = valueCommentOption,
           mappings = mappings,
-          responderManager = responderManager,
+          appActor = appActor,
           requestingUser = requestingUser
         )
 
@@ -1427,7 +1438,7 @@ object ConstructResponseUtilV2 {
     mappings: Map[IRI, MappingAndXSLTransformation],
     queryStandoff: Boolean,
     versionDate: Option[Instant],
-    responderManager: ActorRef,
+    appActor: ActorRef,
     targetSchema: ApiV2Schema,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
@@ -1490,17 +1501,18 @@ object ConstructResponseUtilV2 {
           }
           .map { valObj: ValueRdfData =>
             for {
-              valueContent: ValueContentV2 <- createValueContentV2FromValueRdfData(
-                                                resourceIri = resourceIri,
-                                                valueObject = valObj,
-                                                mappings = mappings,
-                                                queryStandoff = queryStandoff,
-                                                responderManager = responderManager,
-                                                requestingUser = requestingUser,
-                                                targetSchema = targetSchema,
-                                                featureFactoryConfig = featureFactoryConfig,
-                                                settings = settings
-                                              )
+              valueContent: ValueContentV2 <-
+                createValueContentV2FromValueRdfData(
+                  resourceIri = resourceIri,
+                  valueObject = valObj,
+                  mappings = mappings,
+                  queryStandoff = queryStandoff,
+                  appActor = appActor,
+                  requestingUser = requestingUser,
+                  targetSchema = targetSchema,
+                  featureFactoryConfig = featureFactoryConfig,
+                  settings = settings
+                )
 
               attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
               permissions    = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
@@ -1570,11 +1582,15 @@ object ConstructResponseUtilV2 {
 
     for {
       projectResponse: ProjectGetResponseADM <-
-        (responderManager ? ProjectGetRequestADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )).mapTo[ProjectGetResponseADM]
+        appActor
+          .ask(
+            ProjectGetRequestADM(
+              identifier = ProjectIdentifierADM(maybeIri = Some(resourceAttachedToProject)),
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[ProjectGetResponseADM]
 
       valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
     } yield ReadResourceV2(
@@ -1620,7 +1636,7 @@ object ConstructResponseUtilV2 {
     queryStandoff: Boolean,
     calculateMayHaveMoreResults: Boolean,
     versionDate: Option[Instant],
-    responderManager: ActorRef,
+    appActor: ActorRef,
     targetSchema: ApiV2Schema,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
@@ -1643,7 +1659,7 @@ object ConstructResponseUtilV2 {
         mappings = mappings,
         queryStandoff = queryStandoff,
         versionDate = versionDate,
-        responderManager = responderManager,
+        appActor = appActor,
         targetSchema = targetSchema,
         featureFactoryConfig = featureFactoryConfig,
         settings = settings,

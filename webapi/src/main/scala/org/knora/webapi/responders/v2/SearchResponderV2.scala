@@ -52,7 +52,7 @@ import scala.util.Try
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
   // A Gravsearch type inspection runner.
-  private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
+  private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(appActor, responderData)
 
   /**
    * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
@@ -198,7 +198,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             .toString()
         )
 
-      countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
+      countResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
       _ = if (countResponse.results.bindings.length != 1) {
@@ -262,7 +262,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             .toString()
         )
 
-      prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql))
+      prequeryResponseNotMerged: SparqlSelectResult <- appActor
+                                                         .ask(SparqlSelectRequest(searchSparql))
                                                          .mapTo[SparqlSelectResult]
 
       mainResourceVar = QueryVariable("resource")
@@ -318,10 +319,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           for {
             searchResponse: SparqlExtendedConstructResponse <-
-              (storeManager ? SparqlExtendedConstructRequest(
-                sparql = triplestoreSpecificQuery.toSparql,
-                featureFactoryConfig = featureFactoryConfig
-              )).mapTo[SparqlExtendedConstructResponse]
+              appActor
+                .ask(
+                  SparqlExtendedConstructRequest(
+                    sparql = triplestoreSpecificQuery.toSparql,
+                    featureFactoryConfig = featureFactoryConfig
+                  )
+                )
+                .mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and value objects
             queryResultsSep: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -367,7 +372,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           queryStandoff = queryStandoff,
           calculateMayHaveMoreResults = true,
           versionDate = None,
-          responderManager = responderManager,
+          appActor = appActor,
           settings = settings,
           targetSchema = targetSchema,
           featureFactoryConfig = featureFactoryConfig,
@@ -446,7 +451,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       ontologiesForInferenceMaybe <-
         QueryTraverser.getOntologiesRelevantForInference(
           inputQuery.whereClause,
-          storeManager
+          appActor
         )
 
       triplestoreSpecificCountQuery =
@@ -457,7 +462,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
       countResponse: SparqlSelectResult <-
-        (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
+        appActor
+          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
           .mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -527,7 +533,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       ontologiesForInferenceMaybe <-
         QueryTraverser.getOntologiesRelevantForInference(
           inputQuery.whereClause,
-          storeManager
+          appActor
         )
       nonTriplestoreSpecificPrequery: SelectQuery =
         QueryTraverser.transformConstructToSelect(
@@ -557,7 +563,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
       start                        = System.currentTimeMillis()
-      tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
+      tryPrequeryResponseNotMerged = Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql)))
       prequeryResponseNotMerged <-
         (tryPrequeryResponseNotMerged match {
           case Failure(exception) => {
@@ -665,10 +671,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           for {
             mainQueryResponse: SparqlExtendedConstructResponse <-
-              (storeManager ? SparqlExtendedConstructRequest(
-                sparql = triplestoreSpecificMainQuerySparql,
-                featureFactoryConfig = featureFactoryConfig
-              )).mapTo[SparqlExtendedConstructResponse]
+              appActor
+                .ask(
+                  SparqlExtendedConstructRequest(
+                    sparql = triplestoreSpecificMainQuerySparql,
+                    featureFactoryConfig = featureFactoryConfig
+                  )
+                )
+                .mapTo[SparqlExtendedConstructResponse]
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -729,7 +739,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           queryStandoff = queryStandoff,
           versionDate = None,
           calculateMayHaveMoreResults = true,
-          responderManager = responderManager,
+          appActor = appActor,
           settings = settings,
           targetSchema = targetSchema,
           featureFactoryConfig = featureFactoryConfig,
@@ -754,13 +764,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       // Get information about the resource class, and about the ORDER BY property if specified.
-      entityInfoResponse: EntityInfoGetResponseV2 <- {
-        responderManager ? EntityInfoGetRequestV2(
-          classIris = Set(internalClassIri),
-          propertyIris = maybeInternalOrderByPropertyIri.toSet,
-          requestingUser = resourcesInProjectGetRequestV2.requestingUser
-        )
-      }.mapTo[EntityInfoGetResponseV2]
+      entityInfoResponse: EntityInfoGetResponseV2 <-
+        appActor
+          .ask(
+            EntityInfoGetRequestV2(
+              classIris = Set(internalClassIri),
+              propertyIris = maybeInternalOrderByPropertyIri.toSet,
+              requestingUser = resourcesInProjectGetRequestV2.requestingUser
+            )
+          )
+          .mapTo[EntityInfoGetResponseV2]
 
       classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)
 
@@ -842,7 +855,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                    )
                    .toString
 
-      sparqlSelectResponse      <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      sparqlSelectResponse      <- appActor.ask(SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -885,10 +898,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               )
 
             resourceRequestResponse: SparqlExtendedConstructResponse <-
-              (storeManager ? SparqlExtendedConstructRequest(
-                sparql = resourceRequestSparql,
-                featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig
-              )).mapTo[SparqlExtendedConstructResponse]
+              appActor
+                .ask(
+                  SparqlExtendedConstructRequest(
+                    sparql = resourceRequestSparql,
+                    featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig
+                  )
+                )
+                .mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
             mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -920,7 +937,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
                 versionDate = None,
                 calculateMayHaveMoreResults = true,
-                responderManager = responderManager,
+                appActor = appActor,
                 targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                 settings = settings,
                 featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig,
@@ -967,7 +984,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             .toString()
         )
 
-      countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
+      countResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
       _ = if (countResponse.results.bindings.length != 1) {
@@ -1024,10 +1041,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
       searchResourceByLabelResponse: SparqlExtendedConstructResponse <-
-        (storeManager ? SparqlExtendedConstructRequest(
-          sparql = searchResourceByLabelSparql,
-          featureFactoryConfig = featureFactoryConfig
-        )).mapTo[SparqlExtendedConstructResponse]
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = searchResourceByLabelSparql,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
 
       // collect the IRIs of main resources returned
       mainResourceIris: Set[IRI] =
@@ -1067,7 +1088,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           queryStandoff = false,
           versionDate = None,
           calculateMayHaveMoreResults = true,
-          responderManager = responderManager,
+          appActor = appActor,
           targetSchema = targetSchema,
           settings = settings,
           featureFactoryConfig = featureFactoryConfig,

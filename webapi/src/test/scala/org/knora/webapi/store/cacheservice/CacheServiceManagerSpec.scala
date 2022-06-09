@@ -36,42 +36,42 @@ class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
   "The CacheManager" should {
 
     "successfully store a user" in {
-      storeManager ! CacheServicePutUserADM(user)
+      appActor ! CacheServicePutUserADM(user)
       expectMsg(())
     }
 
     "successfully retrieve a user by IRI" in {
-      storeManager ! CacheServiceGetUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+      appActor ! CacheServiceGetUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
       expectMsg(Some(user))
     }
 
     "successfully retrieve a user by USERNAME" in {
-      storeManager ! CacheServiceGetUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+      appActor ! CacheServiceGetUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
       expectMsg(Some(user))
     }
 
     "successfully retrieve a user by EMAIL" in {
-      storeManager ! CacheServiceGetUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+      appActor ! CacheServiceGetUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
       expectMsg(Some(user))
     }
 
     "successfully store a project" in {
-      storeManager ! CacheServicePutProjectADM(project)
+      appActor ! CacheServicePutProjectADM(project)
       expectMsg(())
     }
 
     "successfully retrieve a project by IRI" in {
-      storeManager ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
       expectMsg(Some(project))
     }
 
     "successfully retrieve a project by SHORTNAME" in {
-      storeManager ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
       expectMsg(Some(project))
     }
 
     "successfully retrieve a project by SHORTCODE" in {
-      storeManager ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
+      appActor ! CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
       expectMsg(Some(project))
     }
   }

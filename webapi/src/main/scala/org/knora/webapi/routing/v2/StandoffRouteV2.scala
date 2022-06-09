@@ -80,7 +80,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = schemaOptions
@@ -99,17 +99,17 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           val allPartsFuture: Future[Map[Name, String]] = formData.parts
             .mapAsync[(Name, String)](1) {
               case b: BodyPart if b.name == JSON_PART =>
-                //loggingAdapter.debug(s"inside allPartsFuture - processing $JSON_PART")
+                //Logger.debug(s"inside allPartsFuture - processing $JSON_PART")
                 b.toStrict(2.seconds).map { strict =>
-                  //loggingAdapter.debug(strict.entity.data.utf8String)
+                  //Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 
               case b: BodyPart if b.name == XML_PART =>
-                //loggingAdapter.debug(s"inside allPartsFuture - processing $XML_PART")
+                //Logger.debug(s"inside allPartsFuture - processing $XML_PART")
 
                 b.toStrict(2.seconds).map { strict =>
-                  //loggingAdapter.debug(strict.entity.data.utf8String)
+                  //Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 
@@ -142,8 +142,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                                                           jsonLDDocument = jsonldDoc,
                                                           apiRequestID = apiRequestID,
                                                           requestingUser = requestingUser,
-                                                          responderManager = responderManager,
-                                                          storeManager = storeManager,
+                                                          appActor = appActor,
                                                           featureFactoryConfig = featureFactoryConfig,
                                                           settings = settings,
                                                           log = log
@@ -169,7 +168,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log,
             targetSchema = ApiV2Complex,
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)

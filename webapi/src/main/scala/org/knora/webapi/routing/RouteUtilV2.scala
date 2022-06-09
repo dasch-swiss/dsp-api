@@ -6,7 +6,7 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
@@ -23,9 +23,10 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfFormat
 import org.knora.webapi.messages.util.rdf.RdfModel
-import org.knora.webapi.messages.v2.responder.KnoraRequestV2
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.ExecutionContext
@@ -217,8 +218,8 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter,
+    appActor: ActorRef,
+    log: Logger,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -229,7 +230,7 @@ object RouteUtilV2 {
 
     val httpResponse: Future[HttpResponse] = for {
       // Make sure the responder sent a reply of type KnoraResponseV2.
-      knoraResponse <- (responderManager ? requestMessage).map {
+      knoraResponse <- (appActor.ask(requestMessage)).map {
                          case replyMessage: KnoraResponseV2 => replyMessage
 
                          case other =>
@@ -294,8 +295,8 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter,
+    appActor: ActorRef,
+    log: Logger,
     targetSchema: ApiV2Schema
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
@@ -305,7 +306,7 @@ object RouteUtilV2 {
 
       requestMessage <- requestMessageF
 
-      teiResponse <- (responderManager ? requestMessage).map {
+      teiResponse <- (appActor.ask(requestMessage)).map {
                        case replyMessage: ResourceTEIGetResponseV2 => replyMessage
 
                        case other =>
@@ -349,8 +350,8 @@ object RouteUtilV2 {
     requestContext: RequestContext,
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter,
+    appActor: ActorRef,
+    log: Logger,
     targetSchema: OntologySchema,
     schemaOptions: Set[SchemaOption]
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] =
@@ -361,7 +362,7 @@ object RouteUtilV2 {
                        requestContext = requestContext,
                        featureFactoryConfig = featureFactoryConfig,
                        settings = settings,
-                       responderManager = responderManager,
+                       appActor = appActor,
                        log = log,
                        targetSchema = targetSchema,
                        schemaOptions = schemaOptions
