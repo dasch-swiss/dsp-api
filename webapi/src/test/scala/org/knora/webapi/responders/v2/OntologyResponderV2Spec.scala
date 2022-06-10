@@ -38,7 +38,7 @@ import scala.language.postfixOps
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  override lazy val rdfDataObjects: Seq[RdfDataObject] =
+  override lazy val rdfDataObjects: List[RdfDataObject] =
     List(exampleSharedOntology, anythingData, freeTestOntology, freeTestData)
   private val imagesUser           = SharedTestDataADM.imagesUser01
   private val imagesProjectIri     = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri

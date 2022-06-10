@@ -106,8 +106,6 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   /* Needs to be initialized before any responders */
   StringFormatter.initForTest()
-  RdfFeatureFactory.init(settings)
-
   val log: Logger = Logger(this.getClass)
 
   /**

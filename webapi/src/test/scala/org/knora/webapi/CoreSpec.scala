@@ -8,7 +8,6 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.testkit.ImplicitSender
@@ -16,6 +15,7 @@ import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
@@ -133,9 +133,7 @@ abstract class CoreSpec(_system: ActorSystem)
 
   // needs to be initialized early on
   StringFormatter.initForTest()
-  RdfFeatureFactory.init(settings)
-
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: Logger = Logger(this.getClass())
 
   // The effect for building a cache service manager and a IIIF service manager.
   lazy val managers = for {

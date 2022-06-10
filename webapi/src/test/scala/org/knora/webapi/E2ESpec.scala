@@ -86,8 +86,7 @@ class E2ESpec(_system: ActorSystem)
     with Matchers
     with ScalaFutures
     with BeforeAndAfterAll
-    with RequestBuilding
-    with LazyLogging {
+    with RequestBuilding {
 
   /* constructors */
   def this(name: String, config: Config) =
@@ -112,8 +111,6 @@ class E2ESpec(_system: ActorSystem)
 
   /* Needs to be initialized before any responders */
   StringFormatter.initForTest()
-  RdfFeatureFactory.init(settings)
-
   val log: Logger = Logger(this.getClass)
 
   // The effect for building a cache service manager and a IIIF service manager.

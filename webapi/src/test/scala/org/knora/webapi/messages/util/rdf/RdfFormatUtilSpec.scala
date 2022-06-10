@@ -7,7 +7,7 @@ package org.knora.webapi.util.rdf
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
-import org.knora.webapi.feature._
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
@@ -22,11 +22,7 @@ import java.nio.file.Paths
 /**
  * Tests implementations of [[RdfFormatUtil]].
  */
-abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
-  private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set(featureToggle),
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
+abstract class RdfFormatUtilSpec() extends CoreSpec {
 
   private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
   private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()

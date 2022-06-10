@@ -21,7 +21,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
-
 import org.knora.webapi.http.handler
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.AppStart
@@ -38,6 +37,9 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
@@ -72,8 +74,7 @@ class R2RSpec
     with ScalatestRouteTest
     with AnyWordSpecLike
     with Matchers
-    with BeforeAndAfterAll
-    with LazyLogging {
+    with BeforeAndAfterAll {
 
   /* needed by the core trait */
   implicit lazy val _system: ActorSystem = ActorSystem(
@@ -84,6 +85,7 @@ class R2RSpec
 
   StringFormatter.initForTest()
 
+  val log: Logger                             = Logger(this.getClass())
   lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // override so that we can use our own system
@@ -95,48 +97,47 @@ class R2RSpec
 
   implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
-
   // The effect for building a cache service manager and a IIIF service manager.
   lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  } yield (csm, iiifsm, tssm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
+      SipiTestContainer.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      Logging.fromInfo
     )
+
+  // The ZIO runtime used to run functional effects
+  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
   /**
    * Create both managers by unsafe running them.
    */
-  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-          .provide(
-            effectLayers
-          )
-      )
+  lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
+    runtime.unsafeRun(managers)
 
-  // start the Application Actor.
+  // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
 
@@ -146,8 +147,6 @@ class R2RSpec
   )
 
   lazy val rdfDataObjects = List.empty[RdfDataObject]
-
-  val log: Logger = Logger(this.getClass)
 
   override def beforeAll(): Unit = {
     // set allow reload over http

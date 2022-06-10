@@ -5,10 +5,9 @@
 
 package org.knora.webapi.util.rdf.jenaimpl
 
-import org.knora.webapi.feature.ToggleStateOn
 import org.knora.webapi.util.rdf.KnoraResponseV2Spec
 
 /**
  * Tests [[org.knora.webapi.messages.v2.responder.KnoraResponseV2]] with the Jena API.
  */
-class JenaKnoraResponseV2Spec extends KnoraResponseV2Spec(FeatureToggle("jena-rdf-library", ToggleStateOn(1)))
+class JenaKnoraResponseV2Spec extends KnoraResponseV2Spec()

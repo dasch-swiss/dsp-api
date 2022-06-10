@@ -8,7 +8,7 @@ package org.knora.webapi.util.rdf
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import dsp.errors.AssertionException
-import org.knora.webapi.feature._
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
@@ -27,18 +27,8 @@ object ShaclValidatorSpec {
 
 /**
  * Tests implementations of [[ShaclValidator]].
- *
- * @param featureToggle a feature toggle specifying which implementation of [[ShaclValidator]] should
- *                      be used for the test.
  */
-abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
-    extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
-
-  private val featureFactoryConfig: FeatureFactoryConfig =
-    new TestFeatureFactoryConfig(
-      testToggles = Set(featureToggle),
-      parent = new KnoraSettingsFeatureFactoryConfig(settings)
-    )
+abstract class ShaclValidatorSpec() extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
 
   private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil()
   private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()

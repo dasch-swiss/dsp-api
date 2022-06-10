@@ -6,7 +6,7 @@
 package org.knora.webapi.util.rdf
 
 import org.knora.webapi._
-import org.knora.webapi.feature._
+
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.KnoraJsonLDResponseV2
 import org.knora.webapi.messages.v2.responder.KnoraTurtleResponseV2
@@ -18,11 +18,7 @@ import java.nio.file.Paths
 /**
  * Tests the formatting of Knora API v2 responses.
  */
-abstract class KnoraResponseV2Spec(featureToggle: FeatureToggle) extends CoreSpec {
-  private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set(featureToggle),
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
+abstract class KnoraResponseV2Spec() extends CoreSpec {
 
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 

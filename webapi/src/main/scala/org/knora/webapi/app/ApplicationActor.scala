@@ -22,7 +22,7 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import dsp.errors.InconsistentRepositoryDataException
@@ -87,12 +87,11 @@ class ApplicationActor(
   appConfig: AppConfig
 ) extends Actor
     with Stash
-    with LazyLogging
     with AroundDirectives
     with Timers {
 
   implicit val system: ActorSystem = context.system
-  val log                          = logger
+  val log: Logger                  = Logger(this.getClass())
 
   log.debug("entered the ApplicationManager constructor")
 

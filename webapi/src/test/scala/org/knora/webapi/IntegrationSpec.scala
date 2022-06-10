@@ -12,7 +12,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.settings.KnoraDispatchers
@@ -59,11 +59,7 @@ object IntegrationSpec {
  * Defines a base class used in tests where only a running Fuseki Container is needed.
  * Does not start the DSP-API server.
  */
-abstract class IntegrationSpec(_config: Config)
-    extends AsyncWordSpecLike
-    with Matchers
-    with BeforeAndAfterAll
-    with LazyLogging {
+abstract class IntegrationSpec(_config: Config) extends AsyncWordSpecLike with Matchers with BeforeAndAfterAll {
 
   def this() =
     this(IntegrationSpec.defaultConfig)
@@ -79,11 +75,13 @@ abstract class IntegrationSpec(_config: Config)
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
   implicit val timeout: Timeout = settings.defaultTimeout
 
+  val log: Logger = Logger(this.getClass())
+
   // needs to be initialized early on
   StringFormatter.initForTest()
 
   protected def waitForReadyTriplestore(actorRef: ActorRef): Unit = {
-    logger.info("Waiting for triplestore to be ready ...")
+    log.info("Waiting for triplestore to be ready ...")
     implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     val checkTriplestore: Task[Unit] = for {
       checkResult <-
@@ -95,7 +93,7 @@ abstract class IntegrationSpec(_config: Config)
 
       value <-
         if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
-          ZIO.succeed(logger.info("... triplestore is ready."))
+          ZIO.succeed(log.info("... triplestore is ready."))
         } else {
           ZIO.fail(
             new Exception(
@@ -118,11 +116,11 @@ abstract class IntegrationSpec(_config: Config)
     actorRef: ActorRef,
     rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
   ): Unit = {
-    logger.info("Loading test data started ...")
+    log.info("Loading test data started ...")
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
     Try(Await.result(actorRef ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds.asScala)) match {
-      case Success(res) => logger.info("... loading test data done.")
-      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
+      case Success(res) => log.info("... loading test data done.")
+      case Failure(e)   => log.error(s"Loading test data failed: ${e.getMessage}")
     }
   }
 }
