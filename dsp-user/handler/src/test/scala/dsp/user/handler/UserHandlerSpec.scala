@@ -20,24 +20,17 @@ object UserHandlerSpec extends ZIOSpecDefault {
 
   def spec = (userTests)
 
-  private val givenNameZio  = GivenName.make("GivenName1").toZIO
-  private val familyNameZio = FamilyName.make("familyName1").toZIO
-  private val usernameZio   = Username.make("username1").toZIO
-  private val emailZio      = Email.make("email1@email.com").toZIO
-  private val passwordZio   = Password.make("password1").toZIO
-  private val languageZio   = LanguageCode.make("en").toZIO
+  private val givenName  = GivenName.make("GivenName1").fold(e => throw e.head, v => v)
+  private val familyName = FamilyName.make("familyName1").fold(e => throw e.head, v => v)
+  private val username   = Username.make("username1").fold(e => throw e.head, v => v)
+  private val email      = Email.make("email1@email.com").fold(e => throw e.head, v => v)
+  private val password   = Password.make("password1").fold(e => throw e.head, v => v)
+  private val language   = LanguageCode.make("en").fold(e => throw e.head, v => v)
 
   val userTests = suite("UserHandler")(
     test("store a user and retrieve by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
-
-        givenName  <- givenNameZio
-        familyName <- familyNameZio
-        username   <- usernameZio
-        email      <- emailZio
-        password   <- passwordZio
-        language   <- languageZio
 
         userId <- userHandler.createUser(
                     username = username,
@@ -61,13 +54,6 @@ object UserHandlerSpec extends ZIOSpecDefault {
       for {
         userHandler <- ZIO.service[UserHandler]
 
-        givenName  <- givenNameZio
-        familyName <- familyNameZio
-        username   <- usernameZio
-        email      <- emailZio
-        password   <- passwordZio
-        language   <- languageZio
-
         userId <- userHandler.createUser(
                     username = username,
                     email = email,
@@ -88,13 +74,6 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("store a user and retrieve by email") {
       for {
         userHandler <- ZIO.service[UserHandler]
-
-        givenName  <- givenNameZio
-        familyName <- familyNameZio
-        username   <- usernameZio
-        email      <- emailZio
-        password   <- passwordZio
-        language   <- languageZio
 
         userId <- userHandler.createUser(
                     username = username,
