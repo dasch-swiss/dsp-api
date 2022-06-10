@@ -71,14 +71,8 @@ final case class UserHandler(repo: UserRepo) {
   private def checkUsernameTaken(username: Username): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .getUserByUsernameOrEmail(username.value)
-             .fold(
-               _ => ZIO.succeed(()),
-               _ =>
-                 ZIO.fail(
-                   DuplicateValueException(s"Username ${username.value} already taken")
-                 ) // if a username is found, it means the username is already taken
-             )
+             .checkUsernameOrEmailExists(username.value)
+             .mapError(_ => DuplicateValueException(s"Username ${username.value} already exists"))
     } yield ()
 
   /**
@@ -89,14 +83,8 @@ final case class UserHandler(repo: UserRepo) {
   private def checkEmailTaken(email: Email): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .getUserByUsernameOrEmail(email.value)
-             .fold(
-               _ => ZIO.succeed(()),
-               _ =>
-                 ZIO.fail(
-                   DuplicateValueException(s"Email ${email.value} already taken")
-                 ) // if an email is found, it means the email is already taken
-             )
+             .checkUsernameOrEmailExists(email.value)
+             .mapError(_ => DuplicateValueException(s"Email ${email.value} already exists"))
     } yield ()
 
   def createUser(

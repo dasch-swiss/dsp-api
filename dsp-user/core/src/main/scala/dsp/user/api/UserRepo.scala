@@ -52,6 +52,14 @@ trait UserRepo {
   def getUserByUsernameOrEmail(usernameOrEmail: String): IO[Option[Nothing], User]
 
   /**
+   * Checks if a username or email exists in the repo.
+   *
+   * @param usernameOrEmail username or email of the user.
+   * @return Unit in case of success
+   */
+  def checkUsernameOrEmailExists(usernameOrEmail: String): IO[Option[Nothing], Unit]
+
+  /**
    * Deletes a [[User]] from the repository by its [[UserId]].
    *
    * @param id the user ID

@@ -71,6 +71,18 @@ final case class UserRepoMock(
   /**
    * @inheritDoc
    */
+  def checkUsernameOrEmailExists(usernameOrEmail: String): IO[Option[Nothing], Unit] =
+    (for {
+      iriOption: Option[UUID] <- lookupTable.get(usernameOrEmail)
+      _ = iriOption match {
+            case None    => ZIO.succeed(()) // username or email does not exist
+            case Some(_) => ZIO.fail(None)  // username or email does exist
+          }
+    } yield ()).commit.tap(_ => ZIO.logInfo(s"Username/email '${usernameOrEmail}' was checked"))
+
+  /**
+   * @inheritDoc
+   */
   def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
     (for {
       user: User <- users.get(id.uuid).some
