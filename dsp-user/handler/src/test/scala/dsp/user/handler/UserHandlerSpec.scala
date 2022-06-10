@@ -5,13 +5,13 @@
 
 package dsp.user.handler
 
+import dsp.user.domain.User
+import dsp.user.domain._
+import dsp.user.repo.impl.UserRepoMock
+import dsp.valueobjects.User._
 import zio.ZLayer
 import zio._
 import zio.test._
-import dsp.user.domain._
-import dsp.user.repo.impl.UserRepoMock
-import dsp.user.domain.User
-import dsp.valueobjects.User._
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].

@@ -5,18 +5,16 @@
 
 package dsp.user.repo.impl
 
-import zio.ZLayer
-import zio._
-import zio.test._
+import dsp.errors.BadRequestException
+import dsp.user.api.UserRepo
 import dsp.user.domain.User
 import dsp.user.repo.impl.UserRepoLive
 import dsp.user.repo.impl.UserRepoMock
-import zio.test.ZIOSpecDefault
-import dsp.user.api.UserRepo
 import dsp.valueobjects.User._
-import dsp.errors.BadRequestException
+import zio._
 import zio.prelude.Validation
 import zio.prelude.ZValidation
+import zio.test._
 
 /**
  * This spec is used to test all [[dsp.user.repo.UserRepo]] implementations.

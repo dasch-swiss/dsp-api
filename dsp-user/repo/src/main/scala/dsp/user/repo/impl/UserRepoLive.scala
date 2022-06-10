@@ -5,21 +5,15 @@
 
 package dsp.user.repo.impl
 
-import zio._
-import zio.stm._
-import java.util.UUID
+import dsp.errors.NotFoundException
+import dsp.user.api.UserRepo
+import dsp.user.domain.Iri
 import dsp.user.domain.User
 import dsp.user.domain.UserId
-import dsp.user.domain.Iri
-import dsp.user.api.UserRepo
-import dsp.errors.NotFoundException
-import zio.stm.ZSTM.OnFailure
-import zio.stm.ZSTM.SucceedNow
-import zio.stm.ZSTM.Succeed
-import zio.stm.ZSTM.OnRetry
-import zio.stm.ZSTM.Effect
-import zio.stm.ZSTM.OnSuccess
-import zio.stm.ZSTM.Provide
+import zio._
+import zio.stm.TMap
+
+import java.util.UUID
 
 /**
  * User repository live implementation

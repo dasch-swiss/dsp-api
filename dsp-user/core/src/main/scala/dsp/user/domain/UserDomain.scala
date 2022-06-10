@@ -5,9 +5,10 @@
 
 package dsp.user.domain
 
-import java.util.UUID
-import zio.prelude.Validation
 import dsp.valueobjects.User._
+import zio.prelude.Validation
+
+import java.util.UUID
 
 // move this to shared value objects project once we have it
 sealed trait Iri

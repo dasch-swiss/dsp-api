@@ -5,13 +5,14 @@
 
 package dsp.user.repo.impl
 
-import zio._
-import zio.stm._
-import java.util.UUID
+import dsp.user.api.UserRepo
+import dsp.user.domain.Iri
 import dsp.user.domain.User
 import dsp.user.domain.UserId
-import dsp.user.domain.Iri
-import dsp.user.api.UserRepo
+import zio._
+import zio.stm.TMap
+
+import java.util.UUID
 
 /**
  * User repo test implementation. Mocks the user repo for tests.

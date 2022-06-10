@@ -5,16 +5,17 @@
 
 package dsp.user.handler
 
-import dsp.user.api.UserRepo
-import zio._
-import java.util.UUID
 import dsp.errors.BadRequestException
-import dsp.errors.NotFoundException
 import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
+import dsp.errors.RequestRejectedException
+import dsp.user.api.UserRepo
 import dsp.user.domain.User
 import dsp.user.domain.UserId
 import dsp.valueobjects.User._
-import dsp.errors.RequestRejectedException
+import zio._
+
+import java.util.UUID
 
 /**
  * The user handler.
