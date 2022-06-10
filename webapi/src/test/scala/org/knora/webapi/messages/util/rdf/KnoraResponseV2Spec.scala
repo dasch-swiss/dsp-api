@@ -18,7 +18,7 @@ import java.nio.file.Paths
 /**
  * Tests the formatting of Knora API v2 responses.
  */
-abstract class KnoraResponseV2Spec() extends CoreSpec {
+class KnoraResponseV2Spec() extends CoreSpec {
 
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 

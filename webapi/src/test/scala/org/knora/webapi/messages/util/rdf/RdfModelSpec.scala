@@ -18,7 +18,7 @@ import java.io.FileInputStream
 /**
  * Tests implementations of [[RdfModel]].
  */
-abstract class RdfModelSpec() extends CoreSpec {
+class RdfModelSpec() extends CoreSpec {
 
   private val model: RdfModel              = RdfFeatureFactory.getRdfModelFactory().makeEmptyModel
   private val nodeFactory: RdfNodeFactory  = RdfFeatureFactory.getRdfNodeFactory()

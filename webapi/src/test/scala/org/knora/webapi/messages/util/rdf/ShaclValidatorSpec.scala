@@ -28,8 +28,9 @@ object ShaclValidatorSpec {
 /**
  * Tests implementations of [[ShaclValidator]].
  */
-abstract class ShaclValidatorSpec() extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
+class ShaclValidatorSpec() extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
 
+  RdfFeatureFactory.init(settings)
   private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil()
   private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()
   private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator()

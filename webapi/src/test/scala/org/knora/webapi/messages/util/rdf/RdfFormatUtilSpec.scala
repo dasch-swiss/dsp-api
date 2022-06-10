@@ -22,7 +22,7 @@ import java.nio.file.Paths
 /**
  * Tests implementations of [[RdfFormatUtil]].
  */
-abstract class RdfFormatUtilSpec() extends CoreSpec {
+class RdfFormatUtilSpec() extends CoreSpec {
 
   private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
   private val rdfNodeFactory: RdfNodeFactory   = RdfFeatureFactory.getRdfNodeFactory()

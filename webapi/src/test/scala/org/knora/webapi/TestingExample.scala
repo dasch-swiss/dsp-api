@@ -2,7 +2,7 @@ package org.knora.webapi
 
 import zio._
 
-object Example extends scala.App {
+object TestingExample extends scala.App {
 
   val layer =
     ZLayer.scoped {

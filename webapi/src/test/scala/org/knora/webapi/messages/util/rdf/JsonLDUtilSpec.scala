@@ -16,7 +16,7 @@ import java.nio.file.Paths
 /**
  * Tests [[JsonLDUtil]].
  */
-abstract class JsonLDUtilSpec() extends CoreSpec {
+class JsonLDUtilSpec() extends CoreSpec {
 
   private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
   private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
