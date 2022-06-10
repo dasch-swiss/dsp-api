@@ -161,9 +161,13 @@ class R2RSpec
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit =
+  override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
+
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    runtime.shutdown()
+  }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
     runtime.unsafeRunTask(

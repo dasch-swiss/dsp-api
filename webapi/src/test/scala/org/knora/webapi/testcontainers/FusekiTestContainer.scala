@@ -31,17 +31,17 @@ object FusekiTestContainer {
     fusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
     fusekiContainer.start()
     fusekiContainer
-  }.orDie.tap(_ => ZIO.debug(">>> Acquire Fuseki TestContainer executed <<<"))
+  }.orDie.tap(_ => ZIO.debug(">>> Acquire Fuseki TestContainer <<<"))
 
   def release(container: GenericContainer[Nothing]): UIO[Unit] = ZIO.attemptBlocking {
     container.stop()
-  }.orDie.tap(_ => ZIO.debug(">>> Release Fuseki TestContainer executed <<<"))
+  }.orDie.tap(_ => ZIO.debug(">>> Release Fuseki TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, FusekiTestContainer] = {
     ZLayer.scoped {
       for {
         tc <- ZIO.acquireRelease(acquire)(release(_)).orDie
       } yield FusekiTestContainer(tc)
-    }.tap(_ => ZIO.debug(">>> Fuseki Test Container Initialized <<<"))
+    }
   }
 }
