@@ -67,6 +67,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testservices.TestActorSystemService
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -126,7 +127,7 @@ class E2ESpec(_system: ActorSystem)
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -138,11 +139,14 @@ class E2ESpec(_system: ActorSystem)
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      Logging.fromInfo
+      Logging.fromInfo,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   // The ZIO runtime used to run functional effects
-  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
+  lazy val runtime =
+    Runtime.unsafeFromLayer(effectLayers)
 
   /**
    * Create both managers by unsafe running them.
@@ -195,7 +199,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.loadTestData(rdfDataObjects)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
@@ -203,7 +207,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.singleAwaitingRequest(request, duration)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def getResponseAsString(request: HttpRequest): String =
@@ -211,7 +215,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseString(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def checkResponseOK(request: HttpRequest): Unit =
@@ -219,7 +223,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.checkResponseOK(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def getResponseAsJson(request: HttpRequest): JsObject =
@@ -227,7 +231,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseJson(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
@@ -235,7 +239,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseJsonLD(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
@@ -243,7 +247,7 @@ class E2ESpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {

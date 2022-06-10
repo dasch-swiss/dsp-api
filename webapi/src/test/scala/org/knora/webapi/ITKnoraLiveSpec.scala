@@ -37,6 +37,7 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
@@ -124,7 +125,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -136,7 +137,9 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      Logging.fromInfo
+      Logging.fromInfo,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   // The ZIO runtime used to run functional effects
@@ -187,7 +190,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.loadTestData(rdfDataObjects)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def getResponseStringOrThrow(request: HttpRequest): String =
@@ -195,7 +198,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseString(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def checkResponseOK(request: HttpRequest): Unit =
@@ -203,7 +206,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.checkResponseOK(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def getResponseJson(request: HttpRequest): JsObject =
@@ -211,7 +214,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseJson(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
@@ -219,7 +222,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.singleAwaitingRequest(request, duration)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument =
@@ -227,7 +230,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.getResponseJsonLD(request)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
@@ -235,7 +238,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
 }

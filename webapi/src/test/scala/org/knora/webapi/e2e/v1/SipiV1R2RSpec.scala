@@ -35,6 +35,9 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorIm
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestActorSystemService
+import org.knora.webapi.core.Logging
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -63,7 +66,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -72,7 +75,10 @@ class SipiV1R2RSpec extends R2RSpec {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      Logging.fromInfo,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   object RequestParams {

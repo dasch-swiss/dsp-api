@@ -40,6 +40,9 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestActorSystemService
+import org.knora.webapi.core.Logging
 
 /**
  * Tests creating a still image file value using a mock Sipi.
@@ -62,7 +65,7 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -71,7 +74,10 @@ class ValuesV2R2RSpec extends R2RSpec {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      Logging.fromInfo,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"

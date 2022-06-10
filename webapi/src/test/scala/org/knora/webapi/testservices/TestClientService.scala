@@ -357,14 +357,14 @@ object TestClientService {
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
-  def layer(config: AppConfig, actorSystem: ActorSystem): ZLayer[Any, Nothing, TestClientService] = {
-    implicit val system = actorSystem
-
+  val layer: ZLayer[AppConfig & TestActorSystemService, Nothing, TestClientService] = {
     ZLayer.scoped {
       for {
         // _          <- ZIO.debug(config.sipi)
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-      } yield TestClientService(config, httpClient, actorSystem)
+        config     <- ZIO.service[AppConfig]
+        tass       <- ZIO.service[TestActorSystemService]
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_)(tass.getActorSystem))
+      } yield TestClientService(config, httpClient, tass.getActorSystem)
     }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
   }
 

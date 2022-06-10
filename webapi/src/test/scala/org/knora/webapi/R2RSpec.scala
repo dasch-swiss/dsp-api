@@ -43,6 +43,7 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
@@ -110,7 +111,7 @@ class R2RSpec
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -122,7 +123,9 @@ class R2RSpec
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      Logging.fromInfo
+      Logging.fromInfo,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   // The ZIO runtime used to run functional effects
@@ -174,7 +177,7 @@ class R2RSpec
       (for {
         testClient <- ZIO.service[TestClientService]
         result     <- testClient.loadTestData(rdfDataObjects)
-      } yield result).provide(TestClientService.layer(appConfig, system))
+      } yield result)
     )
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
