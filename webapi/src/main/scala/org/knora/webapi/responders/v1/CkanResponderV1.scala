@@ -9,7 +9,7 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
@@ -52,8 +52,8 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
    * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
    */
   def receive(msg: CkanResponderRequestV1) = msg match {
-    case CkanRequestV1(projects, limit, info, featureFactoryConfig, userProfile) =>
-      getCkanResponseV1(projects, limit, info, featureFactoryConfig, userProfile)
+    case CkanRequestV1(projects, limit, info, userProfile) =>
+      getCkanResponseV1(projects, limit, info, userProfile)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -61,7 +61,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
     project: Option[Seq[String]],
     limit: Option[Int],
     info: Boolean,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[CkanResponseV1] = {
 
@@ -78,7 +77,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         val allowedProjects = projectList.filter(defaultProjectList.contains(_))
         getProjectInfos(
           projectNames = allowedProjects,
-          featureFactoryConfig = featureFactoryConfig,
           userProfile = userProfile
         )
 
@@ -86,7 +84,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         // return our default project map, containing all projects that we want to serve over the Ckan endpoint
         getProjectInfos(
           projectNames = defaultProjectList,
-          featureFactoryConfig = featureFactoryConfig,
           userProfile = userProfile
         )
     }
@@ -99,7 +96,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                                                        getDokubibCkanProject(
                                                          pinfo = projectFullInfo,
                                                          limit = limit,
-                                                         featureFactoryConfig = featureFactoryConfig,
                                                          userProfile = userProfile
                                                        )
                                                      )
@@ -109,7 +105,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                                                        getIncunabulaCkanProject(
                                                          pinfo = projectFullInfo,
                                                          limit = limit,
-                                                         featureFactoryConfig = featureFactoryConfig,
                                                          userProfile = userProfile
                                                        )
                                                      )
@@ -136,7 +131,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
   private def getDokubibCkanProject(
     pinfo: ProjectInfoV1,
     limit: Option[Int],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[CkanProjectV1] = {
 
@@ -164,7 +158,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
       bilderMitPropsFuture = getResources(
                                iris = bilder,
-                               featureFactoryConfig = featureFactoryConfig,
                                userProfile = userProfile
                              )
 
@@ -236,14 +229,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
    *
    * @param pinfo
    * @param limit
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param userProfile
    * @return
    */
   private def getIncunabulaCkanProject(
     pinfo: ProjectInfoV1,
     limit: Option[Int],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[CkanProjectV1] = {
 
@@ -274,7 +266,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
       val bookDataset = singleBook map { case (bookIri: IRI, pageIris: Seq[IRI]) =>
         val bookResourceFuture = getResource(
           iri = bookIri,
-          featureFactoryConfig = featureFactoryConfig,
           userProfile = userProfile
         )
 
@@ -284,7 +275,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
           val files = pageIris map { pageIri =>
             getResource(
               iri = pageIri,
-              featureFactoryConfig = featureFactoryConfig,
               userProfile = userProfile
             ) map { case (pIri, pInfo, pProps) =>
               val pInfoMap  = flattenInfo(pInfo)
@@ -361,13 +351,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
    * Get detailed information about the projects
    *
    * @param projectNames
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param userProfile
    * @return
    */
   private def getProjectInfos(
     projectNames: Seq[String],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Seq[(String, ProjectInfoV1)]] =
     Future.sequence {
@@ -378,7 +367,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                                       .ask(
                                         ProjectInfoByShortnameGetRequestV1(
                                           shortname = pName,
-                                          featureFactoryConfig = featureFactoryConfig,
                                           userProfileV1 = Some(userProfile.asUserProfileV1)
                                         )
                                       )
@@ -427,13 +415,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
    * Get all information there is about these resources
    *
    * @param iris
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param userProfile
    * @return
    */
   private def getResources(
     iris: Seq[IRI],
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[Seq[(String, Option[ResourceInfoV1], Option[PropsV1])]] =
     Future.sequence {
@@ -442,7 +429,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
         resource = getResource(
                      iri = iri,
-                     featureFactoryConfig = featureFactoryConfig,
                      userProfile = userProfile
                    )
       } yield resource
@@ -452,13 +438,12 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
    * Get all information there is about this one resource
    *
    * @param iri
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param userProfile
    * @return
    */
   private def getResource(
     iri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     userProfile: UserADM
   ): Future[(String, Option[ResourceInfoV1], Option[PropsV1])] = {
 
@@ -467,7 +452,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         .ask(
           ResourceFullGetRequestV1(
             iri = iri,
-            featureFactoryConfig = featureFactoryConfig,
             userADM = userProfile
           )
         )

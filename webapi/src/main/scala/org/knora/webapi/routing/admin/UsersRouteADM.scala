@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
 import dsp.errors.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -43,26 +43,26 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    getUsers(featureFactoryConfig) ~
-      addUser(featureFactoryConfig) ~
-      getUserByIri(featureFactoryConfig) ~
-      getUserByEmail(featureFactoryConfig) ~
-      getUserByUsername(featureFactoryConfig) ~
-      changeUserBasicInformation(featureFactoryConfig) ~
-      changeUserPassword(featureFactoryConfig) ~
-      changeUserStatus(featureFactoryConfig) ~
-      deleteUser(featureFactoryConfig) ~
-      changeUserSystemAdminMembership(featureFactoryConfig) ~
-      getUsersProjectMemberships(featureFactoryConfig) ~
-      addUserToProjectMembership(featureFactoryConfig) ~
-      removeUserFromProjectMembership(featureFactoryConfig) ~
-      getUsersProjectAdminMemberships(featureFactoryConfig) ~
-      addUserToProjectAdminMembership(featureFactoryConfig) ~
-      removeUserFromProjectAdminMembership(featureFactoryConfig) ~
-      getUsersGroupMemberships(featureFactoryConfig) ~
-      addUserToGroupMembership(featureFactoryConfig) ~
-      removeUserFromGroupMembership(featureFactoryConfig)
+  override def makeRoute(): Route =
+    getUsers() ~
+      addUser() ~
+      getUserByIri() ~
+      getUserByEmail() ~
+      getUserByUsername() ~
+      changeUserBasicInformation() ~
+      changeUserPassword() ~
+      changeUserStatus() ~
+      deleteUser() ~
+      changeUserSystemAdminMembership() ~
+      getUsersProjectMemberships() ~
+      addUserToProjectMembership() ~
+      removeUserFromProjectMembership() ~
+      getUsersProjectAdminMemberships() ~
+      addUserToProjectAdminMembership() ~
+      removeUserFromProjectAdminMembership() ~
+      getUsersGroupMemberships() ~
+      addUserToGroupMembership() ~
+      removeUserFromGroupMembership()
   @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
   @ApiResponses(
     Array(
@@ -70,22 +70,19 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
   )
   /* return all users */
-  def getUsers(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
+  def getUsers(): Route = path(UsersBasePath) {
     get { requestContext =>
       val requestMessage: Future[UsersGetRequestADM] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
+                            requestContext = requestContext
                           )
       } yield UsersGetRequestADM(
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
 
       RouteUtilADM.runJsonRoute(
         requestMessageF = requestMessage,
         requestContext = requestContext,
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings,
         appActor = appActor,
         log = log
@@ -116,7 +113,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
   )
   /* create a new user */
-  def addUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
+  def addUser(): Route = path(UsersBasePath) {
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
@@ -145,10 +142,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserCreateRequestADM] = for {
           payload        <- toFuture(validatedUserCreatePayload)
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield UserCreateRequestADM(
           userCreatePayloadADM = payload,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -156,7 +152,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -168,54 +163,47 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * return a single user identified by iri
    */
-  private def getUserByIri(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) {
-    userIri =>
-      get { requestContext =>
-        val requestMessage: Future[UserGetRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
-                            )
-        } yield UserGetRequestADM(
-          identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.Restricted,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )
+  private def getUserByIri(): Route = path(UsersBasePath / "iri" / Segment) { userIri =>
+    get { requestContext =>
+      val requestMessage: Future[UserGetRequestADM] = for {
+        requestingUser <- getUserADM(
+                            requestContext = requestContext
+                          )
+      } yield UserGetRequestADM(
+        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+        userInformationTypeADM = UserInformationTypeADM.Restricted,
+        requestingUser = requestingUser
+      )
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
-          settings = settings,
-          appActor = appActor,
-          log = log
-        )
-      }
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        settings = settings,
+        appActor = appActor,
+        log = log
+      )
+    }
   }
 
   /**
    * return a single user identified by email
    */
-  private def getUserByEmail(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getUserByEmail(): Route =
     path(UsersBasePath / "email" / Segment) { userIri =>
       get { requestContext =>
         val requestMessage: Future[UserGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeEmail = Some(userIri)),
           userInformationTypeADM = UserInformationTypeADM.Restricted,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -226,25 +214,22 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * return a single user identified by username
    */
-  private def getUserByUsername(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getUserByUsername(): Route =
     path(UsersBasePath / "username" / Segment) { userIri =>
       get { requestContext =>
         val requestMessage: Future[UserGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeUsername = Some(userIri)),
           userInformationTypeADM = UserInformationTypeADM.Restricted,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -256,7 +241,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: Change existing user's basic information.
    */
   @ApiMayChange
-  private def changeUserBasicInformation(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def changeUserBasicInformation(): Route =
     path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
@@ -293,13 +278,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           /* the api request is already checked at time of creation. see case class. */
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
+                                requestContext = requestContext
                               )
           } yield UserChangeBasicInformationRequestADM(
             userIri = checkedUserIri,
             userUpdateBasicInformationPayload = userUpdatePayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -307,7 +290,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             appActor = appActor,
             log = log
@@ -320,7 +302,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: Change user's password.
    */
   @ApiMayChange
-  private def changeUserPassword(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def changeUserPassword(): Route =
     path(UsersBasePath / "iri" / Segment / "Password") { userIri =>
       put {
         entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
@@ -348,13 +330,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
+                                requestContext = requestContext
                               )
           } yield UserChangePasswordRequestADM(
             userIri = checkedUserIri,
             userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(requesterPassword, changedPassword),
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -362,7 +342,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             appActor = appActor,
             log = log
@@ -375,7 +354,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: Change user's status.
    */
   @ApiMayChange
-  private def changeUserStatus(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def changeUserStatus(): Route =
     path(UsersBasePath / "iri" / Segment / "Status") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
@@ -399,13 +378,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
+                                requestContext = requestContext
                               )
           } yield UserChangeStatusRequestADM(
             userIri = checkedUserIri,
             status = newStatus,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -413,7 +390,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             appActor = appActor,
             log = log
@@ -426,54 +402,50 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: delete a user identified by iri (change status to false).
    */
   @ApiMayChange
-  private def deleteUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) {
-    userIri =>
-      delete { requestContext =>
-        if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+  private def deleteUser(): Route = path(UsersBasePath / "iri" / Segment) { userIri =>
+    delete { requestContext =>
+      if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
-        val checkedUserIri =
-          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+      val checkedUserIri =
+        stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-        if (
-          checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
-            KnoraSystemInstances.Users.AnonymousUser.id
-          )
-        ) {
-          throw BadRequestException("Changes to built-in users are not allowed.")
-        }
-
-        /* update existing user's status to false */
-        val status = UserStatus.make(false).fold(error => throw error.head, value => value)
-
-        val requestMessage: Future[UserChangeStatusRequestADM] = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
-                            )
-        } yield UserChangeStatusRequestADM(
-          userIri = checkedUserIri,
-          status = status,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
+      if (
+        checkedUserIri.equals(KnoraSystemInstances.Users.SystemUser.id) || checkedUserIri.equals(
+          KnoraSystemInstances.Users.AnonymousUser.id
         )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
-          settings = settings,
-          appActor = appActor,
-          log = log
-        )
+      ) {
+        throw BadRequestException("Changes to built-in users are not allowed.")
       }
+
+      /* update existing user's status to false */
+      val status = UserStatus.make(false).fold(error => throw error.head, value => value)
+
+      val requestMessage: Future[UserChangeStatusRequestADM] = for {
+        requestingUser <- getUserADM(
+                            requestContext = requestContext
+                          )
+      } yield UserChangeStatusRequestADM(
+        userIri = checkedUserIri,
+        status = status,
+        requestingUser = requestingUser,
+        apiRequestID = UUID.randomUUID()
+      )
+
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        settings = settings,
+        appActor = appActor,
+        log = log
+      )
+    }
   }
 
   /**
    * API MAY CHANGE: Change user's SystemAdmin membership.
    */
   @ApiMayChange
-  private def changeUserSystemAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def changeUserSystemAdminMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
@@ -497,13 +469,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
+                                requestContext = requestContext
                               )
           } yield UserChangeSystemAdminMembershipStatusRequestADM(
             userIri = checkedUserIri,
             systemAdmin = newSystemAdmin,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -511,7 +481,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             appActor = appActor,
             log = log
@@ -524,7 +493,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: get user's project memberships
    */
   @ApiMayChange
-  private def getUsersProjectMemberships(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getUsersProjectMemberships(): Route =
     path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -534,19 +503,16 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserProjectMembershipsGetRequestADM(
           userIri = checkedUserIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -558,7 +524,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: add user to project
    */
   @ApiMayChange
-  private def addUserToProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def addUserToProjectMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -582,13 +548,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserProjectMembershipAddRequestADM(
           userIri = checkedUserIri,
           projectIri = checkedProjectIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -596,7 +560,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -608,7 +571,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: remove user from project (and all groups belonging to this project)
    */
   @ApiMayChange
-  private def removeUserFromProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def removeUserFromProjectMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -632,13 +595,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserProjectMembershipRemoveRequestADM(
           userIri = checkedUserIri,
           projectIri = checkedProjectIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -646,7 +607,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -658,7 +618,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: get user's project admin memberships
    */
   @ApiMayChange
-  private def getUsersProjectAdminMemberships(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getUsersProjectAdminMemberships(): Route =
     path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -668,12 +628,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserProjectAdminMembershipsGetRequestADM(
           userIri = checkedUserIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -681,7 +639,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -693,7 +650,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: add user to project admin
    */
   @ApiMayChange
-  private def addUserToProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def addUserToProjectAdminMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -717,13 +674,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserProjectAdminMembershipAddRequestADM(
           userIri = checkedUserIri,
           projectIri = checkedProjectIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -731,7 +686,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -743,7 +697,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: remove user from project admin membership
    */
   @ApiMayChange
-  private def removeUserFromProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def removeUserFromProjectAdminMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -767,13 +721,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserProjectAdminMembershipRemoveRequestADM(
           userIri = checkedUserIri,
           projectIri = checkedProjectIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -781,7 +733,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -793,7 +744,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: get user's group memberships
    */
   @ApiMayChange
-  private def getUsersGroupMemberships(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getUsersGroupMemberships(): Route =
     path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -803,19 +754,16 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserGroupMembershipsGetRequestADM(
           userIri = checkedUserIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -827,7 +775,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: add user to group
    */
   @ApiMayChange
-  private def addUserToGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def addUserToGroupMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       post { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -848,13 +796,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserGroupMembershipAddRequestADM(
           userIri = checkedUserIri,
           groupIri = checkedGroupIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -862,7 +808,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -874,7 +819,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: remove user from group
    */
   @ApiMayChange
-  private def removeUserFromGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def removeUserFromGroupMembership(): Route =
     path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       delete { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -895,13 +840,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
         val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield UserGroupMembershipRemoveRequestADM(
           userIri = checkedUserIri,
           groupIri = checkedGroupIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -909,7 +852,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log

@@ -96,7 +96,7 @@ trait TriplestoreService {
    * @param graphIri             the IRI of the named graph.
    * @param outputFile           the file to be written.
    * @param outputFormat         the output file format.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return a string containing the contents of the graph in N-Quads format.
    */
   def sparqlHttpGraphFile(

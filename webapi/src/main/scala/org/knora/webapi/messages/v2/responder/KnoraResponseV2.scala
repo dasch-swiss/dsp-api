@@ -31,7 +31,6 @@ trait KnoraResponseV2 {
    * @param targetSchema         the response schema.
    * @param schemaOptions        the schema options.
    * @param settings             the application settings.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a formatted string representing this response message.
    */
   def format(

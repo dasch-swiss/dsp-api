@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.serialization
+package org.knora.webapi.store.cache.serialization
 
 import dsp.errors.CacheServiceException
 import zio._

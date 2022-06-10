@@ -18,7 +18,7 @@ import zio.test._
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 
 /**
- * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl]].
+ * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
  */
 object CacheInMemImplSpec extends ZIOSpec[CacheService] {
 

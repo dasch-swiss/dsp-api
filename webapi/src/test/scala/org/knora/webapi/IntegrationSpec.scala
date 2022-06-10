@@ -46,7 +46,7 @@ object IntegrationSpec {
   /* Copied from: akka/akka-testkit/src/test/scala/akka/testkit/AkkaSpec.scala */
   def getCallerName(clazz: Class[_]): String = {
     val s = (Thread.currentThread.getStackTrace map (_.getClassName) drop 1)
-      .dropWhile(_ matches "(java.lang.Thread|.*UnitSpec.?$)")
+      .dropWhile(_ matches "(java.lang.Thread|.*IntegrationSpec.?$)")
     val reduced = s.lastIndexWhere(_ == clazz.getName) match {
       case -1 => s
       case z  => s drop (z + 1)

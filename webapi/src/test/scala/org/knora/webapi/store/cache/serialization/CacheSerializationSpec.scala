@@ -11,7 +11,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio.test.Assertion._
 import zio.test.TestAspect.ignore
 import zio.test._
-import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
+import org.knora.webapi.store.cache.serialization.CacheSerialization
 
 /**
  * This spec is used to test [[CacheSerialization]].

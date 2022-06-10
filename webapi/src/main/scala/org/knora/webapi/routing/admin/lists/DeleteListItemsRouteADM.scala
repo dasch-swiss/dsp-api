@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import dsp.errors.BadRequestException
-import org.knora.webapi.feature.Feature
+
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -30,7 +30,6 @@ object DeleteListItemsRouteADM {
  */
 class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
-    with Feature
     with Authenticator
     with ListADMJsonProtocol {
 

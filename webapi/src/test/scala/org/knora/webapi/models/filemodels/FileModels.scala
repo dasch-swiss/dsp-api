@@ -225,7 +225,6 @@ sealed abstract case class ChangeFileRequest private (
   }
 
   /**
-   * @param featureFactoryConfig the featureFactoryConfig
    * @param internalMimeType     internal mimetype, as provided by SIPI. Optional.
    * @param originalFilename     original filename before the upload. Optional.
    * @param originalMimeType     file mimetype before the upload. Optional.

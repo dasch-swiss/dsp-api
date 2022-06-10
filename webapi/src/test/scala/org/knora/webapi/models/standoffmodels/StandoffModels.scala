@@ -48,7 +48,7 @@ sealed abstract case class DefineStandoffMapping private (
    * Create a [[CreateMappingRequestV2]] message representation of the request. This can be used in unit tests.
    *
    * @param xml                  the mapping XML.
-   * @param featureFactoryConfig the [[FeatureFactoryConfig]].
+   *
    * @param user                 the user issuing the request.
    * @return a [[CreateMappingRequestV2]] message representation of the request that can be processed by an Akka actor.
    */

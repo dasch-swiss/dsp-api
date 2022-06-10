@@ -381,7 +381,6 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
  * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
  *                                         in values) to the IRIs that will be used for those resources.
  * @param creationDate                     an xsd:dateTimeStamp that will be attached to the values.
- * @param featureFactoryConfig             the feature factory configuration.
  * @param userProfile                      the user that is creating the values.
  */
 case class GenerateSparqlToCreateMultipleValuesRequestV1(

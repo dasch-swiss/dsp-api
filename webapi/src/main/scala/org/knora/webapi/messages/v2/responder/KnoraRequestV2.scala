@@ -56,7 +56,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.

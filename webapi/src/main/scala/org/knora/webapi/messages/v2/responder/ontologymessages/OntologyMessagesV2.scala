@@ -45,11 +45,9 @@ sealed trait OntologiesResponderRequestV2 extends KnoraRequestV2 {
  * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
  * starts, before it accepts any API requests. A successful response will be a [[SuccessResponseV2]].
  *
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class LoadOntologiesRequestV2(requestingUser: UserADM)
-    extends OntologiesResponderRequestV2
+case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
  * Requests the creation of an empty ontology. A successful response will be a [[ReadOntologyV2]].
@@ -60,7 +58,6 @@ case class LoadOntologiesRequestV2(requestingUser: UserADM)
  * @param label                the label of the ontology.
  * @param comment              the optional comment that described the ontology to be created.
  * @param apiRequestID         the ID of the API request.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class CreateOntologyRequestV2(
@@ -85,7 +82,6 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[CreateOntologyRequestV2]] representing the input.
@@ -845,7 +841,6 @@ case class DeleteClassRequestV2(
  * Asks whether a class can be deleted. A successful response will be a [[CanDoResponseV2]].
  *
  * @param classIri             the IRI of the class to be deleted.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class CanDeleteClassRequestV2(
@@ -1360,7 +1355,6 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActror            a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.

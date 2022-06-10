@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.store.cacheservice.settings
+package org.knora.webapi.store.cache.settings
 
 import com.typesafe.config.Config
 

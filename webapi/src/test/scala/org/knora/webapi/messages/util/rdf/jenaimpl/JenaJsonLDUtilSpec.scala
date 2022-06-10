@@ -5,7 +5,6 @@
 
 package org.knora.webapi.util.rdf.jenaimpl
 
-import org.knora.webapi.feature.FeatureToggle
 import org.knora.webapi.feature.ToggleStateOn
 import org.knora.webapi.util.rdf.JsonLDUtilSpec
 

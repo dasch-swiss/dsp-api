@@ -13,7 +13,7 @@ import org.knora.webapi._
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
@@ -41,7 +41,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+  override def makeRoute(): Route = {
 
     def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {
       if (iris.length != 3)
@@ -93,7 +93,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         subjectIri = subjectIri,
         predicateIri = predicateIri,
         objectIri = objectIri,
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM
       )
     }
@@ -158,7 +157,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                                           mappingIri = mappingIri,
                                                                           acceptStandoffLinksToClientIDs = false,
                                                                           userProfile = userADM,
-                                                                          featureFactoryConfig = featureFactoryConfig,
                                                                           settings = settings,
                                                                           appActor = appActor,
                                                                           log = log
@@ -322,7 +320,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         comment = commentStr.map(str =>
           stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))
         ),
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
@@ -383,7 +380,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                                                           mappingIri = mappingIri,
                                                                           acceptStandoffLinksToClientIDs = false,
                                                                           userProfile = userADM,
-                                                                          featureFactoryConfig = featureFactoryConfig,
                                                                           settings = settings,
                                                                           appActor = appActor,
                                                                           log = log
@@ -546,7 +542,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         comment = commentStr.map(str =>
           stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))
         ),
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
@@ -563,7 +558,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         comment = comment.map(str =>
           stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))
         ),
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
@@ -579,7 +573,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         deleteComment = deleteComment.map(comment =>
           stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))
         ),
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
@@ -588,7 +581,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       ValueGetRequestV1(
         valueIri = stringFormatter
           .validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM
       )
 
@@ -619,7 +611,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           projectShortcode = projectShortcode
         ),
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM
       )
     }
@@ -629,8 +620,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
+                       requestContext = requestContext
                      )
         } yield makeVersionHistoryRequestMessage(iris = iris, userADM = userADM)
 
@@ -647,8 +637,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         entity(as[CreateValueApiRequestV1]) { apiRequest => requestContext =>
           val requestMessageFuture = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
             request <- makeCreateValueRequestMessage(apiRequest = apiRequest, userADM = userADM)
           } yield request
@@ -666,8 +655,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
+                       requestContext = requestContext
                      )
         } yield makeGetValueRequest(valueIriStr = valueIriStr, userADM = userADM)
 
@@ -684,8 +672,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           // we are getting a request to change either the value or the comment, but not both.
           val requestMessageFuture = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
             request <- apiRequest match {
                          case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
@@ -716,8 +703,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       } ~ delete { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
+                       requestContext = requestContext
                      )
           params        = requestContext.request.uri.query().toMap
           deleteComment = params.get("deleteComment")
@@ -735,8 +721,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       delete { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
+                       requestContext = requestContext
                      )
         } yield makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userADM = userADM)
 
@@ -753,8 +738,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
+                       requestContext = requestContext
                      )
         } yield makeLinkValueGetRequestMessage(iris = iris, userADM = userADM)
 
@@ -771,8 +755,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         entity(as[ChangeFileValueApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
             resourceIri = stringFormatter.validateAndEscapeIri(
                             resIriStr,
@@ -783,7 +766,6 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                                       .ask(
                                         ResourceInfoGetRequestV1(
                                           iri = resourceIri,
-                                          featureFactoryConfig = featureFactoryConfig,
                                           userProfile = userADM
                                         )
                                       )

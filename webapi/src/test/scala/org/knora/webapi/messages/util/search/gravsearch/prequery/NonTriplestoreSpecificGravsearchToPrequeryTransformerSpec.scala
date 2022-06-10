@@ -2,7 +2,7 @@ package org.knora.webapi.util.search.gravsearch.prequery
 
 import org.knora.webapi.CoreSpec
 import dsp.errors.AssertionException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -33,8 +33,7 @@ private object QueryHandler {
     query: String,
     appActor: ActorRef,
     responderData: ResponderData,
-    settings: KnoraSettingsImpl,
-    featureFactoryConfig: FeatureFactoryConfig
+    settings: KnoraSettingsImpl
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
@@ -62,8 +61,7 @@ private object QueryHandler {
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
         querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        settings = settings,
-        featureFactoryConfig = featureFactoryConfig
+        settings = settings
       )
 
     val nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -3208,8 +3206,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryWithOptional,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
       assert(transformedQuery === TransformedQueryWithOptional)
     }
@@ -3221,8 +3218,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateNonOptionalSortCriterion,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
@@ -3236,8 +3232,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateNonOptionalSortCriterionComplex,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
@@ -3251,8 +3246,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateNonOptionalSortCriterionAndFilter,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
@@ -3266,8 +3260,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateNonOptionalSortCriterionAndFilterComplex,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
@@ -3281,8 +3274,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateOptionalSortCriterion,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
@@ -3296,8 +3288,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateOptionalSortCriterionComplex,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
@@ -3311,8 +3302,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateOptionalSortCriterionAndFilter,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
@@ -3326,8 +3316,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDateOptionalSortCriterionAndFilterComplex,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
@@ -3341,8 +3330,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDecimalOptionalSortCriterion,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
@@ -3355,8 +3343,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDecimalOptionalSortCriterionComplex,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
@@ -3369,8 +3356,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -3383,8 +3369,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
@@ -3397,8 +3382,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithRdfsLabelAndLiteralInSimpleSchema,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery == TransformedQueryWithRdfsLabelAndLiteral)
@@ -3410,8 +3394,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithRdfsLabelAndLiteralInComplexSchema,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
@@ -3423,8 +3406,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithRdfsLabelAndVariableInSimpleSchema,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
@@ -3436,8 +3418,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithRdfsLabelAndVariableInComplexSchema,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
@@ -3449,8 +3430,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithRdfsLabelAndRegexInSimpleSchema,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
@@ -3462,8 +3442,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithRdfsLabelAndRegexInComplexSchema,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
@@ -3475,8 +3454,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           InputQueryWithUnionScopes,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithUnionScopes)
@@ -3488,8 +3466,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryWithStandoffTagHasStartAncestor,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithStandoffTagHasStartAncestor)
@@ -3501,8 +3478,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryToReorder,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryToReorder)
@@ -3514,8 +3490,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryToReorderWithUnion,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryToReorderWithUnion)
@@ -3527,8 +3502,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryWithOptional,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithOptional)
@@ -3540,8 +3514,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryToReorderWithMinus,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery == transformedQueryToReorderWithMinus)
@@ -3553,8 +3526,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryToReorderWithCycle,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery == transformedQueryToReorderWithCycle)
@@ -3566,8 +3538,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           queryWithKnoraApiResource,
           appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(

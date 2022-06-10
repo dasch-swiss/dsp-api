@@ -20,7 +20,7 @@ import zio.test.TestAspect._
 import zio.test._
 
 /**
- * This spec is used to test [[org.knora.webapi.store.cacheservice.impl.CacheServiceRedisImpl]].
+ * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceRedisImpl]].
  */
 object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
 

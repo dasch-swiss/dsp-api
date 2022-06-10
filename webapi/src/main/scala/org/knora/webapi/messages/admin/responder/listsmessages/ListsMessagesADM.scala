@@ -316,7 +316,6 @@ case class CanDeleteListRequestADM(iri: IRI, requestingUser: UserADM) extends Li
  * Requests deletion of all list node comments. A successful response will be a [[ListNodeCommentsDeleteADM]]
  *
  * @param iri                  the IRI of the list node (root or child).
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ListNodeCommentsDeleteRequestADM(

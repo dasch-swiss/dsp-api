@@ -21,9 +21,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
-import org.knora.webapi.feature.TestFeatureFactoryConfig
+
 import org.knora.webapi.http.handler
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.AppStart
@@ -36,10 +34,11 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
@@ -78,21 +77,12 @@ class R2RSpec
 
   /* needed by the core trait */
   implicit lazy val _system: ActorSystem = ActorSystem(
-    actorSystemNameFrom(getClass),
-    TestContainerFuseki.PortConfig.withFallback(
-      ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())
-    )
+    actorSystemNameFrom(getClass)
   )
 
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
 
   StringFormatter.initForTest()
-  RdfFeatureFactory.init(settings)
-
-  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set.empty,
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
 
   lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
@@ -127,7 +117,7 @@ class R2RSpec
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      // FusekiTestContainer.layer,
+      FusekiTestContainer.layer,
       SipiTestContainer.layer
     )
 
@@ -191,12 +181,12 @@ class R2RSpec
   }
 
   protected def parseTurtle(turtleStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
   }
 
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
   }
 

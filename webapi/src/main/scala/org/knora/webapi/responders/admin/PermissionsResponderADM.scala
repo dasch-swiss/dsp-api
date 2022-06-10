@@ -133,18 +133,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       )
     case DefaultObjectAccessPermissionCreateRequestADM(
           createRequest,
-          featureFactoryConfig,
           requestingUser,
           apiRequestID
         ) =>
       defaultObjectAccessPermissionCreateRequestADM(
         createRequest.prepareHasPermissions,
-        featureFactoryConfig,
         requestingUser,
         apiRequestID
       )
-    case PermissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser) =>
-      permissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser)
+    case PermissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser) =>
+      permissionsForProjectGetRequestADM(projectIri, groupIri, requestingUser)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
       permissionByIriGetRequestADM(permissionIri, requestingUser)
     case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID) =>
@@ -196,7 +194,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    * @param groupIris              the groups the user is member of (without ProjectMember, ProjectAdmin, SystemAdmin)
    * @param isInProjectAdminGroups the projects in which the user is member of the ProjectAdmin group.
    * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
-   * @param featureFactoryConfig   the feature factory configuration.
    * @return
    */
   private def permissionsDataGetADM(
@@ -204,7 +201,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     groupIris: Seq[IRI],
     isInProjectAdminGroups: Seq[IRI],
     isInSystemAdminGroup: Boolean,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[PermissionsDataADM] = {
     // find out which project each group belongs to
@@ -217,7 +213,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                           .ask(
                             GroupGetADM(
                               groupIri = groupIri,
-                              featureFactoryConfig = featureFactoryConfig,
                               requestingUser = KnoraSystemInstances.Users.SystemUser
                             )
                           )
@@ -1594,7 +1589,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
   private def defaultObjectAccessPermissionCreateRequestADM(
     createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[DefaultObjectAccessPermissionCreateResponseADM] = {
@@ -1743,14 +1737,12 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    * Gets all permissions defined inside a project.
    *
    * @param projectIRI           the IRI of the project.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the [[UserADM]] of the requesting user.
    * @param apiRequestID         the API request ID.
    * @return a list of of [[PermissionInfoADM]] objects.
    */
   private def permissionsForProjectGetRequestADM(
     projectIRI: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[PermissionsForProjectGetResponseADM] =
@@ -1767,7 +1759,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         appActor
           .ask(
             SparqlConstructRequest(
-              sparql = sparqlQueryString,
+              sparql = sparqlQueryString
             )
           )
           .mapTo[SparqlConstructResponse]

@@ -10,7 +10,6 @@ import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
 import org.knora.webapi._
 import dsp.errors.AssertionException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -42,7 +41,6 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
  * @param valueIri             the IRI of the value.
  * @param offset               the start index of the first standoff tag to be returned.
  * @param targetSchema         the schema of the response.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class GetStandoffPageRequestV2(
@@ -50,7 +48,6 @@ case class GetStandoffPageRequestV2(
   valueIri: IRI,
   offset: Int,
   targetSchema: ApiV2Schema,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends StandoffResponderRequestV2
 
@@ -59,7 +56,6 @@ case class GetStandoffPageRequestV2(
  *
  * @param resourceIri          the IRI of the resource containing the text value.
  * @param valueIri             the IRI of the text value.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class GetRemainingStandoffFromTextValueRequestV2(
@@ -129,14 +125,12 @@ case class GetStandoffResponseV2(valueIri: IRI, standoff: Seq[StandoffTagV2], ne
  *
  * @param metadata             the metadata describing the mapping.
  * @param xml                  the mapping in XML syntax.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the the user making the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class CreateMappingRequestV2(
   metadata: CreateMappingRequestMetadataV2,
   xml: CreateMappingRequestXMLV2,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends StandoffResponderRequestV2
@@ -158,7 +152,6 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] =
@@ -253,11 +246,9 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
  * Represents a request to get a mapping from XML elements and attributes to standoff entities.
  *
  * @param mappingIri           the IRI of the mapping.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the the user making the request.
  */
-case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM)
-    extends StandoffResponderRequestV2
+case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
  * Represents a response to a [[GetMappingRequestV2]].
@@ -276,12 +267,10 @@ case class GetMappingResponseV2(
  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
  *
  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
- * @param featureFactoryConfig      the feature factory configuration.
  * @param requestingUser            the the user making the request.
  */
 case class GetXSLTransformationRequestV2(
   xsltTextRepresentationIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends StandoffResponderRequestV2
 

@@ -12,7 +12,7 @@ import org.knora.webapi.messages.app.appmessages.ActorReady
 import org.knora.webapi.messages.app.appmessages.ActorReadyAck
 import scala.concurrent.duration._
 
-object ExampleCoreSpec {
+object TestingCoreSpec {
 
   val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
@@ -20,11 +20,11 @@ object ExampleCoreSpec {
         """.stripMargin)
 }
 
-class ExampleCoreSpec extends CoreSpec(ExampleCoreSpec.config) with ImplicitSender {
+class TestingCoreSpec extends CoreSpec(TestingCoreSpec.config) with ImplicitSender {
 
   private val timeout = 5.seconds
 
-  "The ExampleCoreSpec " when {
+  "The TestingCoreSpec " when {
     "testing something" should {
       "return true" in {
         appActor ! ActorReady()

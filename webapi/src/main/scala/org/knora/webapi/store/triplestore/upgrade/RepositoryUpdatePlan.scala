@@ -10,8 +10,6 @@ object RepositoryUpdatePlan {
 
   /**
    * Constructs list of all repository update plugins in chronological order.
-   *
-   * @param featureFactoryConfig the feature factor configuration.
    */
   def makePluginsForVersions(log: Logger): Seq[PluginForKnoraBaseVersion] =
     Seq(

@@ -19,7 +19,7 @@ import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
 import org.knora.webapi.store.cache.config.RedisConfig
-import org.knora.webapi.store.cacheservice.serialization.CacheSerialization
+import org.knora.webapi.store.cache.serialization.CacheSerialization
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig

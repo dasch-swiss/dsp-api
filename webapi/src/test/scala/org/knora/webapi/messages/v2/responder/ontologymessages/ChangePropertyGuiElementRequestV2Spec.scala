@@ -7,7 +7,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import akka.util.Timeout
 import org.knora.webapi.AsyncCoreSpec
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -68,7 +68,6 @@ class ChangePropertyGuiElementRequestV2Spec extends AsyncCoreSpec {
               apiRequestID = UUID.randomUUID,
               requestingUser = requestingUser,
               appActor = appActor,
-              featureFactoryConfig = featureFactoryConfig,
               settings = settings,
               log = log
             )
