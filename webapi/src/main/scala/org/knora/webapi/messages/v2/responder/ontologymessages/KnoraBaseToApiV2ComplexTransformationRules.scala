@@ -1437,28 +1437,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     )
   )
 
-  private val AudioFileValueHasDuration: ReadPropertyInfoV2 = makeProperty(
-    propertyIri = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
-    propertyType = OntologyConstants.Owl.DatatypeProperty,
-    subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.ValueHas),
-    subjectType = Some(OntologyConstants.KnoraApiV2Complex.AudioFileValue),
-    objectType = Some(OntologyConstants.Xsd.Decimal),
-    predicates = Seq(
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Label,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "Audio file value has duration"
-        )
-      ),
-      makePredicate(
-        predicateIri = OntologyConstants.Rdfs.Comment,
-        objectsWithLang = Map(
-          LanguageCodes.EN -> "The duration of an audio file value."
-        )
-      )
-    )
-  )
-
   private val ResourceCardinalities = Map(
     OntologyConstants.KnoraApiV2Complex.HasIncomingLinkValue -> Cardinality.MayHaveMany,
     OntologyConstants.KnoraApiV2Complex.ArkUrl               -> Cardinality.MustHaveOne,
@@ -1566,10 +1544,6 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY      -> Cardinality.MayHaveOne
   )
 
-  private val AudioFileValueCardinalities = Map(
-    OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration -> Cardinality.MustHaveOne
-  )
-
   /**
    * Properties to remove from `knora-base` before converting it to the [[ApiV2Complex]] schema.
    * See also [[OntologyConstants.CorrespondingIris]].
@@ -1675,8 +1649,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     OntologyConstants.KnoraApiV2Complex.GeonameValue        -> GeonameValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.FileValue           -> FileValueCardinalities,
     OntologyConstants.KnoraApiV2Complex.StillImageFileValue -> StillImageFileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.DocumentFileValue   -> DocumentFileValueCardinalities,
-    OntologyConstants.KnoraApiV2Complex.AudioFileValue      -> AudioFileValueCardinalities
+    OntologyConstants.KnoraApiV2Complex.DocumentFileValue   -> DocumentFileValueCardinalities
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri -> cardinalities.map { case (propertyIri, cardinality) =>
       propertyIri.toSmartIri -> Cardinality.KnoraCardinalityInfo(cardinality)
@@ -1759,8 +1732,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     StillImageFileValueHasIIIFBaseUrl,
     DocumentFileValueHasDimX,
     DocumentFileValueHasDimY,
-    DocumentFileValueHasPageCount,
-    AudioFileValueHasDuration
+    DocumentFileValueHasPageCount
   ).map { propertyInfo =>
     propertyInfo.entityInfoContent.propertyIri -> propertyInfo
   }.toMap

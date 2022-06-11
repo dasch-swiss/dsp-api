@@ -3589,13 +3589,11 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
  * Represents audio file metadata.
  *
  * @param fileValue the basic metadata about the file value.
- * @param duration the duration of the audio file in seconds.
  * @param comment a comment on this [[AudioFileValueContentV2]], if any.
  */
 case class AudioFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
-  duration: Option[BigDecimal] = None,
   comment: Option[String] = None
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
@@ -3675,7 +3673,6 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
     } yield AudioFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
-      duration = fileValueWithSipiMetadata.sipiFileMetadata.duration,
       comment = getComment(jsonLDObject)
     )
   }
@@ -3685,10 +3682,6 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
  * Represents video file metadata.
  *
  * @param fileValue the basic metadata about the file value.
- * @param dimX      the with of the the image in pixels.
- * @param dimY      the height of the the image in pixels.
- * @param fps       the frame rate of the video.
- * @param duration  the duration of the video file in seconds.
  * @param comment a comment on this [[MovingImageFileValueContentV2]], if any.
  */
 case class MovingImageFileValueContentV2(
