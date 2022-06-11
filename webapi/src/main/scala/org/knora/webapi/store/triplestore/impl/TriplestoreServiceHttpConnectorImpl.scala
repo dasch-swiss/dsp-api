@@ -1104,7 +1104,7 @@ object TriplestoreServiceHttpConnectorImpl {
         // _          <- ZIO.debug(config)
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
-    }.tap(_ => ZIO.debug(">>> Triplestore Service Http Connector Initialized <<<"))
+    }
   }
 
 }

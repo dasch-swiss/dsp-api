@@ -73,7 +73,7 @@ object AppConfigForTestContainers {
         sipiContainer   <- ZIO.service[SipiTestContainer]
         alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> app config for fuseki and sipi testcontainers initialized <<<"))
+    }.tap(_ => ZIO.debug(">>> App Config for Fuseki and Sipi Testcontainers Initialized <<<"))
 
   /**
    * Altered AppConfig with ports from TestContainers for Fuseki and Sipi.
@@ -85,5 +85,5 @@ object AppConfigForTestContainers {
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
       } yield alteredConfig
-    }.tap(_ => ZIO.debug(">>> app config for fuseki only testcontainers initialized <<<"))
+    }.tap(_ => ZIO.debug(">>> App Config for Fuseki only Testcontainers Initialized <<<"))
 }

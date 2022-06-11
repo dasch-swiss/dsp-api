@@ -8,6 +8,7 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import com.typesafe.config.ConfigFactory
+import dsp.errors.InternalServerException
 
 final case class TestActorSystemService(actorSystem: ActorSystem) {
 
@@ -22,10 +23,13 @@ object TestActorSystemService {
   /**
    * Acquires an ActorSystem
    */
-  private def acquire() = ZIO.attemptBlocking {
-    ActorSystem("Test Actor System Service", ConfigFactory.load())
-  }.tap(_ => ZIO.logDebug(">>> Acquire Test Actor System Service <<<")).orDie
+  private def acquire() = (for {
+    ec <- ZIO.executor.map(_.asExecutionContext)
+    system <- ZIO.attempt(
+                ActorSystem("TestActorSystemService", Some(ConfigFactory.load()), None, Some(ec))
+              )
 
+  } yield system).tap(_ => ZIO.logDebug(">>> Acquire Test Actor System Service <<<")).orDie
   /**
    * Releases the ActorSystem
    */
