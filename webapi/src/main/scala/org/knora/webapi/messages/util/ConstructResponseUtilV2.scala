@@ -1081,9 +1081,6 @@ object ConstructResponseUtilV2 {
           AudioFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            duration = valueObject
-              .maybeStringObject(OntologyConstants.KnoraBase.Duration.toSmartIri)
-              .map(definedDuration => BigDecimal(definedDuration)),
             comment = valueCommentOption
           )
         )

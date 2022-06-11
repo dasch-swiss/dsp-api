@@ -1721,8 +1721,7 @@ case class AudioFileValueV1(
         internalMimeType = internalMimeType,
         originalFilename = originalFilename,
         originalMimeType = Some(internalMimeType)
-      ),
-      duration = duration
+      )
     )
 }
 
