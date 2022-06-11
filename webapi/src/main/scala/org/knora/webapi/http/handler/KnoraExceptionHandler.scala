@@ -57,7 +57,7 @@ object KnoraExceptionHandler extends LazyLogging {
         val uri = request.uri
         val url = uri.path.toString
 
-        logger.error(s"Unable to run route $url", ise)
+        logger.error(s"ISE: Unable to run route $url", ise)
 
         if (url.startsWith("/v1")) {
           complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
@@ -74,7 +74,7 @@ object KnoraExceptionHandler extends LazyLogging {
         val url = uri.path.toString
 
         logger.debug(s"KnoraExceptionHandler - case: other - url: $url")
-        logger.error(s"Unable to run route $url", other)
+        logger.error(s"Other: Unable to run route $url", other)
 
         if (url.startsWith("/v1")) {
           complete(exceptionToJsonHttpResponseV1(other, settingsImpl))

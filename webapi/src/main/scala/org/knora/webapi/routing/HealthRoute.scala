@@ -19,6 +19,7 @@ import spray.json.JsString
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.http.scaladsl.util.FastFuture
 
 case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
@@ -33,7 +34,11 @@ trait HealthCheck {
   protected def healthCheck(): Future[HttpResponse] =
     for {
 
-      state: AppState <- appActor.ask(GetAppState()).mapTo[AppState]
+      state: AppState <-
+        appActor
+          .ask(GetAppState())
+          .mapTo[AppState]
+          .fallbackTo(FastFuture.successful(AppStates.Stopped))
 
       result: HealthCheckResult =
         state match {

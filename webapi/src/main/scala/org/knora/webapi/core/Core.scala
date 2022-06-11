@@ -36,5 +36,7 @@ trait Core {
 
   val appConfig: AppConfig
 
+  val runtime: zio.Runtime[Any]
+
   val appActor: ActorRef
 }

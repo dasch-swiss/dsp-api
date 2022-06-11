@@ -29,11 +29,29 @@ import java.util.concurrent.TimeUnit
 object Main extends scala.App with LiveCore {
 
   /**
+   * The effect layers which will be used to run the managers effect.
+   * Can be overriden in specs that need other implementations.
+   */
+  lazy val effectLayers =
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer,
+      AppConfig.live,
+      JWTService.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      Logging.fromInfo
+    )
+
+  /**
    * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be
    * allocated immediately, and not released until the `Runtime` is shut down or
    * the end of the application.
    */
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
+  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
   // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
   val managers = for {
@@ -50,17 +68,6 @@ object Main extends scala.App with LiveCore {
     runtime
       .unsafeRun(
         managers
-          .provide(
-            CacheServiceInMemImpl.layer,
-            CacheServiceManager.layer,
-            AppConfig.live,
-            IIIFServiceManager.layer,
-            IIIFServiceSipiImpl.layer,
-            JWTService.layer,
-            TriplestoreServiceManager.layer,
-            TriplestoreServiceHttpConnectorImpl.layer,
-            RepositoryUpdater.layer
-          )
       )
 
   /**
@@ -78,6 +85,7 @@ object Main extends scala.App with LiveCore {
       import scala.concurrent.duration._
       val terminate: Future[Terminated] = system.terminate()
       Await.result(terminate, Duration(30.toLong, TimeUnit.SECONDS))
+      runtime.shutdown()
     })
   )
 
