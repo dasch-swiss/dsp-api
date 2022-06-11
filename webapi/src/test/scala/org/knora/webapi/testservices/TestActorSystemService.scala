@@ -30,6 +30,7 @@ object TestActorSystemService {
               )
 
   } yield system).tap(_ => ZIO.logDebug(">>> Acquire Test Actor System Service <<<")).orDie
+
   /**
    * Releases the ActorSystem
    */
