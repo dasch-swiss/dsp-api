@@ -512,7 +512,7 @@ class ApplicationActor(
    */
   private def printBanner(): Unit = {
 
-    var msg =
+    val logo =
       """
         |  ____  ____  ____         _    ____ ___
         | |  _ \/ ___||  _ \       / \  |  _ \_ _|
@@ -521,33 +521,28 @@ class ApplicationActor(
         | |____/|____/|_|       /_/   \_\_|  |___|
             """.stripMargin
 
-    msg += "\n"
-    msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
-    msg += "------------------------------------------------\n"
+    log.info(logo)
+    log.info(
+      s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}"
+    )
 
     if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
-      msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
-      msg += "------------------------------------------------\n"
+      log.warn("Resetting DB over HTTP is turned ON")
     }
 
     // which repository are we using
-    msg += s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}\n"
-    msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
+    log.info(s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}")
+    log.info(s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}")
 
     if (printConfigState | knoraSettings.printExtendedConfig) {
+      log.info(s"DB User: ${knoraSettings.triplestoreUsername}")
+      log.info(s"DB Password: ${knoraSettings.triplestorePassword}")
 
-      msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
-      msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"
-
-      msg += s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
-      msg += s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}\n"
-      msg += s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}\n"
-      msg += s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}\n"
-      msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
+      log.info(s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json")
+      log.info(s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}")
+      log.info(s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}")
+      log.info(s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}")
+      log.info(s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}")
     }
-
-    msg += "================================================\n"
-
-    println(msg)
   }
 }
