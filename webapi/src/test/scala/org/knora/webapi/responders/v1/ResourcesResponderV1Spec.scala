@@ -38,6 +38,7 @@ import org.knora.webapi.util._
 import spray.json.JsValue
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.util.UUID
 import scala.concurrent.duration._
@@ -46,6 +47,7 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorIm
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
@@ -667,7 +669,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,

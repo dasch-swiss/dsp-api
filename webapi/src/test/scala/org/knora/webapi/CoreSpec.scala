@@ -28,15 +28,10 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import zio.&
-import zio.Runtime
-import zio.ZEnvironment
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Failure
 import scala.util.Success
@@ -58,6 +53,7 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object CoreSpec {
 
@@ -135,20 +131,13 @@ abstract class CoreSpec(_system: ActorSystem)
   StringFormatter.initForTest()
   val log: Logger = Logger(this.getClass())
 
-  // The effect for building a cache service manager and a IIIF service manager.
-  lazy val managers = for {
-    csm       <- ZIO.service[CacheServiceManager]
-    iiifsm    <- ZIO.service[IIIFServiceManager]
-    tssm      <- ZIO.service[TriplestoreServiceManager]
-    appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, tssm, appConfig)
-
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & TriplestoreService & AppConfig](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -166,8 +155,16 @@ abstract class CoreSpec(_system: ActorSystem)
   // The ZIO runtime used to run functional effects
   lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
 
+  // The effect for building managers and config.
+  lazy val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, tssm, appConfig)
+
   /**
-   * Create both managers by unsafe running them.
+   * Create managers and config by unsafe running them.
    */
   val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
     runtime.unsafeRun(managers)
@@ -196,7 +193,7 @@ abstract class CoreSpec(_system: ActorSystem)
     // waits until knora is up and running
     applicationStateRunning()
 
-    loadTestData(rdfDataObjects)
+    prepareRepository(rdfDataObjects)
   }
 
   final override def afterAll(): Unit = {
@@ -207,29 +204,30 @@ abstract class CoreSpec(_system: ActorSystem)
     runtime.shutdown()
   }
 
-  protected def loadTestData(rdfDataObjects: List[RdfDataObject]): Unit = {
-    logger.info("Loading test data started ...")
-    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Try(Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)) match {
-      case Success(res) => logger.info("... loading test data done.")
-      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
+  private def prepareRepository(rdfDataObjects: List[RdfDataObject]): Unit =
+    runtime.unsafeRun {
+      for {
+        ec  <- ZIO.executor.map(_.asExecutionContext)
+        _   <- ZIO.logInfo("Loading test data started ...")
+        tss <- ZIO.service[TriplestoreService]
+        _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
+        _   <- ZIO.logInfo("... loading test data done.")
+        _   <- ZIO.logInfo("Loading load ontologies into cache started ...")
+        _ <- ZIO
+               .fromFuture(implicit ec =>
+                 appActor.ask(LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser))(
+                   akka.util.Timeout.create(2.minutes)
+                 )
+               )
+               .timeout(60.seconds)
+        _ <- ZIO.logInfo("... loading ontologies into cache done.")
+        _ <- ZIO.logInfo("CacheServiceFlushDB started ...")
+        _ <- ZIO
+               .fromFuture(implicit ec =>
+                 appActor.ask(ResetRepositoryContent(rdfDataObjects))(akka.util.Timeout.create(30.seconds))
+               )
+               .timeout(15.seconds)
+        _ <- ZIO.logInfo("... CacheServiceFlushDB done.")
+      } yield ()
     }
-
-    logger.info("Loading load ontologies into cache started ...")
-    Try(
-      Await.result(
-        appActor ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser),
-        1 minute
-      )
-    ) match {
-      case Success(res) => logger.info("... loading ontologies into cache done.")
-      case Failure(e)   => logger.error(s"Loading ontologies into cache failed: ${e.getMessage}")
-    }
-
-    logger.info("CacheServiceFlushDB started ...")
-    Try(Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 15 seconds)) match {
-      case Success(res) => logger.info("... CacheServiceFlushDB done.")
-      case Failure(e)   => logger.error(s"CacheServiceFlushDB failed: ${e.getMessage}")
-    }
-  }
 }

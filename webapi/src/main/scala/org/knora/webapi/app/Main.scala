@@ -34,6 +34,7 @@ object Main extends scala.App with LiveCore {
    */
   lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,

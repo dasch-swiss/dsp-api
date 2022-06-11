@@ -26,6 +26,7 @@ import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -67,6 +68,7 @@ class SipiV1R2RSpec extends R2RSpec {
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,

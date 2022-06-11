@@ -33,6 +33,7 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import scala.concurrent.ExecutionContextExecutor
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
@@ -66,6 +67,7 @@ class ValuesV2R2RSpec extends R2RSpec {
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,

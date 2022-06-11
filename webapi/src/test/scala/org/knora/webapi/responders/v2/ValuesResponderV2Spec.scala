@@ -36,6 +36,7 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.time.Instant
 import java.util.UUID
@@ -45,6 +46,7 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorIm
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -69,7 +71,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
