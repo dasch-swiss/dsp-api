@@ -210,6 +210,34 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
+
+  // project project dependencies
+  val projectInterfaceLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val projectHandlerLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val projectCoreLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val projectRepoLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+
+  // shared project dependencies
   val sharedLibraryDependencies =
     Seq(
       commonsLang3,
