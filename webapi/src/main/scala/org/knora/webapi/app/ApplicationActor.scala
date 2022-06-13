@@ -474,9 +474,10 @@ class ApplicationActor(
    */
   def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
 
-    val bindingFuture: Future[Http.ServerBinding] = Http()
-      .newServerAt(knoraSettings.internalKnoraApiHost, knoraSettings.internalKnoraApiPort)
-      .bindFlow(Route.toFlow(apiRoutes))
+    val bindingFuture: Future[Http.ServerBinding] =
+      Http()
+        .newServerAt(knoraSettings.internalKnoraApiHost, knoraSettings.internalKnoraApiPort)
+        .bindFlow(Route.toFlow(apiRoutes))
 
     bindingFuture onComplete {
       case Success(_) =>

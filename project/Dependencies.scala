@@ -158,11 +158,21 @@ object Dependencies {
     zioTestSbt % Test
   )
 
+  val valueObjectsLibraryDependencies = Seq(
+    commonsLang3,
+    commonsValidator,
+    gwtServlet,
+    zioPrelude,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+
   val dspApiMainLibraryDependencies = Seq(
     zio,
     zioMacros
   )
 
+  // schema project dependencies
   val schemaApiLibraryDependencies = Seq(
     zioHttp
   )
@@ -175,14 +185,39 @@ object Dependencies {
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
-  val sharedLibraryDependencies = Seq(
-    akkaActor,
-    commonsLang3,
-    commonsValidator,
-    gwtServlet,
-    scalaLogging,
-    zioPrelude,
+  // user project dependencies
+  val userInterfaceLibraryDependencies = Seq(
+    zio,
+    zioMacros,
     zioTest    % Test,
     zioTestSbt % Test
   )
+  val userHandlerLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val userCoreLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val userRepoLibraryDependencies = Seq(
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val sharedLibraryDependencies =
+    Seq(
+      commonsLang3,
+      commonsValidator,
+      gwtServlet,
+      zioPrelude,
+      scalaLogging,
+      zioTest    % Test,
+      zioTestSbt % Test
+    )
 }
