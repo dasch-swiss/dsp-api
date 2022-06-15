@@ -11,7 +11,7 @@ import zio._
 import zio.stm.TMap
 
 import java.util.UUID
-import dsp.valueobjects.UserId
+import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.User._
 
 /**

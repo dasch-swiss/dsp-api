@@ -7,12 +7,12 @@ package dsp.user.api
 
 import dsp.errors._
 import dsp.user.domain._
-import dsp.valueobjects.UserId
+import dsp.valueobjects.Id.UserId
+import dsp.valueobjects.User._
 import zio._
 import zio.macros.accessible
 
 import java.util.UUID
-import dsp.valueobjects.User._
 
 /**
  * The trait (interface) for the user repository. The user repository is responsible for storing and retrieving users.
