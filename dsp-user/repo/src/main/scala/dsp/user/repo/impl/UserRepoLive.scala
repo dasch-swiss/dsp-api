@@ -7,13 +7,12 @@ package dsp.user.repo.impl
 
 import dsp.errors.NotFoundException
 import dsp.user.api.UserRepo
-import dsp.user.domain.Iri
 import dsp.user.domain.User
-import dsp.user.domain.UserId
 import zio._
 import zio.stm.TMap
 
 import java.util.UUID
+import dsp.valueobjects.UserId
 
 /**
  * User repository live implementation

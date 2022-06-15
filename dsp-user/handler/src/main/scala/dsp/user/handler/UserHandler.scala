@@ -11,11 +11,11 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.user.api.UserRepo
 import dsp.user.domain.User
-import dsp.user.domain.UserId
 import dsp.valueobjects.User._
 import zio._
 
 import java.util.UUID
+import dsp.valueobjects.UserId
 
 /**
  * The user handler.
