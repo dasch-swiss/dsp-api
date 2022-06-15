@@ -185,7 +185,7 @@ object Dependencies {
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
-  // user project dependencies
+  // user slice dependencies
   val userInterfaceLibraryDependencies = Seq(
     zio,
     zioMacros,
@@ -193,12 +193,16 @@ object Dependencies {
     zioTestSbt % Test
   )
   val userHandlerLibraryDependencies = Seq(
+    springSecurityCore,
+    bouncyCastle,
     zio,
     zioMacros,
     zioTest    % Test,
     zioTestSbt % Test
   )
   val userCoreLibraryDependencies = Seq(
+    springSecurityCore,
+    bouncyCastle,
     zio,
     zioMacros,
     zioTest    % Test,

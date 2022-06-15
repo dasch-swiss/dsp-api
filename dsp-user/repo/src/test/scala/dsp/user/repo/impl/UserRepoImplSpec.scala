@@ -30,13 +30,15 @@ object UserRepoImplSpec extends ZIOSpecDefault {
     email      <- Email.make("email1@email.com")
     password   <- Password.make("password1")
     language   <- LanguageCode.make("en")
+    status     <- UserStatus.make(true)
     user = User.make(
              givenName,
              familyName,
              username,
              email,
              password,
-             language
+             language,
+             status
            )
   } yield (user)).toZIO
 
@@ -47,13 +49,15 @@ object UserRepoImplSpec extends ZIOSpecDefault {
     email      <- Email.make("email2@email.com")
     password   <- Password.make("password2")
     language   <- LanguageCode.make("en")
+    status     <- UserStatus.make(true)
     user = User.make(
              givenName,
              familyName,
              username,
              email,
              password,
-             language
+             language,
+             status
            )
   } yield (user)).toZIO
 
@@ -65,19 +69,19 @@ object UserRepoImplSpec extends ZIOSpecDefault {
         retrievedUser <- UserRepo.getUserById(user.id)
       } yield assertTrue(retrievedUser == user)
     } +
-      test("retrieve the user by username") {
+      test("store a user and retrieve the user by username") {
         for {
           user          <- testUser1
           _             <- UserRepo.storeUser(user)
-          retrievedUser <- UserRepo.getUserByUsernameOrEmail(user.username.value)
+          retrievedUser <- UserRepo.getUserByUsername(user.username)
         } yield assertTrue(retrievedUser == user)
       } +
-      test("retrieve the user by email") {
+      test("store a user and retrieve the user by email") {
         for {
           user1         <- testUser1
           user2         <- testUser2
           _             <- UserRepo.storeUser(user1)
-          retrievedUser <- UserRepo.getUserByUsernameOrEmail(user1.email.value)
+          retrievedUser <- UserRepo.getUserByEmail(user1.email)
         } yield {
           assertTrue(retrievedUser == user1) &&
           assertTrue(retrievedUser != user2)

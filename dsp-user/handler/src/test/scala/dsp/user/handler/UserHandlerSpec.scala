@@ -26,6 +26,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
   private val email      = Email.make("email1@email.com").fold(e => throw e.head, v => v)
   private val password   = Password.make("password1").fold(e => throw e.head, v => v)
   private val language   = LanguageCode.make("en").fold(e => throw e.head, v => v)
+  private val status     = UserStatus.make(true).fold(e => throw e.head, v => v)
 
   val userTests = suite("UserHandler")(
     test("store a user and retrieve by ID") {
@@ -38,7 +39,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     givenName = givenName,
                     familyName = familyName,
                     password = password,
-                    language = language
+                    language = language,
+                    status = status
                   )
 
         retrievedUser <- userHandler.getUserById(userId)
@@ -48,7 +50,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.givenName == givenName) &&
         assertTrue(retrievedUser.familyName == familyName) &&
         assertTrue(retrievedUser.password == Some(password)) &&
-        assertTrue(retrievedUser.language == language)
+        assertTrue(retrievedUser.language == language) &&
+        assertTrue(retrievedUser.status == status)
     },
     test("store a user and retrieve by username") {
       for {
@@ -60,7 +63,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     givenName = givenName,
                     familyName = familyName,
                     password = password,
-                    language = language
+                    language = language,
+                    status = status
                   )
 
         retrievedUser <- userHandler.getUserByUsername(username)
@@ -69,7 +73,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.givenName == givenName) &&
         assertTrue(retrievedUser.familyName == familyName) &&
         assertTrue(retrievedUser.password == Some(password)) &&
-        assertTrue(retrievedUser.language == language)
+        assertTrue(retrievedUser.language == language) &&
+        assertTrue(retrievedUser.status == status)
     },
     test("store a user and retrieve by email") {
       for {
@@ -81,7 +86,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     givenName = givenName,
                     familyName = familyName,
                     password = password,
-                    language = language
+                    language = language,
+                    status = status
                   )
 
         retrievedUser <- userHandler.getUserByEmail(email)
@@ -90,7 +96,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.givenName == givenName) &&
         assertTrue(retrievedUser.familyName == familyName) &&
         assertTrue(retrievedUser.password == Some(password)) &&
-        assertTrue(retrievedUser.language == language)
+        assertTrue(retrievedUser.language == language) &&
+        assertTrue(retrievedUser.status == status)
     }
   ).provide(UserRepoMock.layer, UserHandler.layer)
 }
