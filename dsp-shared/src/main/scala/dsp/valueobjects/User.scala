@@ -9,6 +9,8 @@ import zio.prelude.Validation
 import scala.util.matching.Regex
 import dsp.errors.BadRequestException
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+
 object User {
 
   // TODO-mpro: password, givenname, familyname are missing enhanced validation
@@ -130,6 +132,46 @@ object User {
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
+      }
+  }
+
+  /**
+   * PasswordHash value object. Takes a string as input and hashes it.
+   */
+  sealed abstract case class PasswordHash private (value: String) { self =>
+    def matches(other: PasswordHash): Boolean =
+      // check which type of hash we have
+      if (other.value.startsWith("$e0801$")) {
+        // SCrypt
+        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+        val encoder = new SCryptPasswordEncoder()
+        encoder.matches(self.value, other.value)
+      } else if (other.value.startsWith("$2a$")) {
+        // BCrypt
+        import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+        val encoder = new BCryptPasswordEncoder()
+        encoder.matches(self.value, other.value)
+      } else { // TODO do we still need this SHA-1 validation?
+        // SHA-1
+        val md = java.security.MessageDigest.getInstance("SHA-1")
+        md.digest(self.value.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(other.value)
+      }
+
+  }
+  object PasswordHash { self =>
+    private val PasswordRegex: Regex = """^[\s\S]*$""".r
+
+    def make(value: String): Validation[Throwable, PasswordHash] =
+      if (value.isEmpty) {
+        Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+      } else {
+        PasswordRegex.findFirstIn(value) match {
+          case Some(value) =>
+            val encoder     = new BCryptPasswordEncoder(12) // TOOD replace this value with value from settings
+            val hashedValue = encoder.encode(value)
+            Validation.succeed(new PasswordHash(hashedValue) {})
+          case None => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
+        }
       }
   }
 

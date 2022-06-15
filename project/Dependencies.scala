@@ -214,14 +214,15 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
-  val sharedLibraryDependencies =
-    Seq(
-      commonsLang3,
-      commonsValidator,
-      gwtServlet,
-      zioPrelude,
-      scalaLogging,
-      zioTest    % Test,
-      zioTestSbt % Test
-    )
+  val sharedLibraryDependencies = Seq(
+    springSecurityCore,
+    bouncyCastle,
+    commonsLang3,
+    commonsValidator,
+    gwtServlet,
+    zioPrelude,
+    scalaLogging,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
 }

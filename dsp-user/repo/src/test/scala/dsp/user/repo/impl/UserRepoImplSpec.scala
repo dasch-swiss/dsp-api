@@ -28,7 +28,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
     familyName <- FamilyName.make("familyName1")
     username   <- Username.make("username1")
     email      <- Email.make("email1@email.com")
-    password   <- Password.make("password1")
+    password   <- PasswordHash.make("password1")
     language   <- LanguageCode.make("en")
     status     <- UserStatus.make(true)
     user = User.make(
@@ -47,7 +47,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
     familyName <- FamilyName.make("familyName2")
     username   <- Username.make("username2")
     email      <- Email.make("email2@email.com")
-    password   <- Password.make("password2")
+    password   <- PasswordHash.make("password2")
     language   <- LanguageCode.make("en")
     status     <- UserStatus.make(true)
     user = User.make(

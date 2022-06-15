@@ -15,7 +15,7 @@ import dsp.valueobjects.User._
 import zio._
 
 import java.util.UUID
-import dsp.valueobjects.UserId
+import dsp.valueobjects.Id.UserId
 import dsp.errors.ForbiddenException
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -41,7 +41,7 @@ final case class UserHandler(repo: UserRepo) {
    */
   def getUserById(id: UserId): IO[NotFoundException, User] =
     for {
-      user <- repo.getUserById(id).mapError(_ => NotFoundException("User not found"))
+      user <- repo.getUserById(id).mapError(_ => NotFoundException(s"User with ID ${id} not found"))
     } yield user
 
   /**
@@ -95,7 +95,7 @@ final case class UserHandler(repo: UserRepo) {
    *  @param email  the user's email
    *  @param givenName  the user's givenName
    *  @param familyName  the user's familyName
-   *  @param password  the user's password
+   *  @param password  the user's password (hashed)
    *  @param language  the user's language
    *  @param role  the user's role
    */
@@ -104,7 +104,7 @@ final case class UserHandler(repo: UserRepo) {
     email: Email,
     givenName: GivenName,
     familyName: FamilyName,
-    password: Password,
+    password: PasswordHash,
     language: LanguageCode,
     status: UserStatus
     //role: Role
@@ -184,23 +184,21 @@ final case class UserHandler(repo: UserRepo) {
    *  @param currentPassword  the user's current password
    *  @param requestingUser  the requesting user
    */
-  def updatePassword(id: UserId, newPassword: Password, currentPassword: Password, requestingUser: User) = {
+  def updatePassword(
+    id: UserId,
+    newPassword: PasswordHash,
+    currentPassword: PasswordHash,
+    requestingUser: User
+  ): IO[RequestRejectedException, UserId] = {
     // either the user himself or a sysadmin can change a user's password
     if (!requestingUser.id.equals(id)) { // TODO check role, user needs to be himself or sysadmin, i.e. sth like requestingUser.role.equals(SysAdmin)
       ZIO.fail(ForbiddenException("User's password can only be changed by the user itself or a system administrator"))
     }
 
     // check if the provided current password (of either the user or the sysadmin) is correct
-    if (!requestingUser.passwordMatch(currentPassword)) {
+    if (!requestingUser.password.matches(currentPassword)) {
       ZIO.fail(ForbiddenException("The supplied password does not match the requesting user's password"))
     }
-
-    // hash the new password
-    // encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength), TODO read this from the settings, like so: config.getInt("app.bcrypt-password-strength")
-    val encoder = new BCryptPasswordEncoder(12)
-    val newHashedPassword = Password
-      .make(encoder.encode(newPassword.value))
-      .fold(e => throw e.head, value => value)
 
     for {
       // check if user exists and get him, lock user

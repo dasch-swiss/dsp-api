@@ -37,7 +37,9 @@ object UserSpec extends ZIOSpecDefault {
 
   private val usernameTest = suite("UserSpec - Username")(
     test("pass an empty value and throw an error") {
-      assertTrue(Username.make("") == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))) &&
+      assertTrue(
+        Username.make("") == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
+      ) &&
       assertTrue(
         Username.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
       )
@@ -193,7 +195,9 @@ object UserSpec extends ZIOSpecDefault {
 
   private val givenNameTest = suite("UserSpec - GivenName")(
     test("pass an empty value and throw an error") {
-      assertTrue(GivenName.make("") == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))) &&
+      assertTrue(
+        GivenName.make("") == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
+      ) &&
       assertTrue(
         GivenName.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
       )
@@ -211,9 +215,13 @@ object UserSpec extends ZIOSpecDefault {
 
   private val familyNameTest = suite("UserSpec - FamilyName")(
     test("pass an empty value and throw an error") {
-      assertTrue(FamilyName.make("") == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))) &&
       assertTrue(
-        FamilyName.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
+        FamilyName.make("") == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
+      ) &&
+      assertTrue(
+        FamilyName.make(Some("")) == Validation.fail(
+          BadRequestException(UserErrorMessages.FamilyNameMissing)
+        )
       )
     },
     test("pass a valid value and successfully create value object") {
@@ -229,7 +237,9 @@ object UserSpec extends ZIOSpecDefault {
 
   private val passwordTest = suite("UserSpec - Password")(
     test("pass an empty value and throw an error") {
-      assertTrue(Password.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))) &&
+      assertTrue(
+        Password.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+      ) &&
       assertTrue(
         Password.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
       )
@@ -245,13 +255,35 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
+  private val passwordHashTest = suite("UserSpec - PasswordHash")(
+    test("pass an empty value and throw an error") {
+      assertTrue(
+        PasswordHash.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+      )
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(PasswordHash.make(validPassword).toOption.get.value == validPassword)
+    },
+    test("test if two passwords match") {
+      val password         = PasswordHash.make("password1").fold(e => throw e.head, v => v)
+      val passwordEqual    = PasswordHash.make("password1").fold(e => throw e.head, v => v)
+      val passwordNotEqual = PasswordHash.make("password1").fold(e => throw e.head, v => v)
+
+      assertTrue(password.matches(password) == true) &&
+      assertTrue(password.matches(passwordEqual) == true) &&
+      assertTrue(password.matches(passwordNotEqual) == false)
+    }
+  )
+
   private val languageCodeTest = suite("UserSpec - LanguageCode")(
     test("pass an empty value and throw an error") {
       assertTrue(
         LanguageCode.make("") == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
       ) &&
       assertTrue(
-        LanguageCode.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
+        LanguageCode.make(Some("")) == Validation.fail(
+          BadRequestException(UserErrorMessages.LanguageCodeMissing)
+        )
       )
     },
     test("pass an invalid value and throw an error") {
