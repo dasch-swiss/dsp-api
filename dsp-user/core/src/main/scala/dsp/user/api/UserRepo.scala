@@ -7,6 +7,7 @@ package dsp.user.api
 
 import dsp.errors._
 import dsp.user.domain._
+import dsp.valueobjects.UserId
 import zio._
 import zio.macros.accessible
 
