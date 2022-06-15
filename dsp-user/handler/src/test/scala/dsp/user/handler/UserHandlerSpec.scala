@@ -57,6 +57,14 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.language == language) &&
         assertTrue(retrievedUser.status == status)
     },
+    test("return a NotFoundException if user not found by ID") {
+
+      val newUserId = UserId.make()
+      for {
+        userHandler <- ZIO.service[UserHandler]
+        error       <- userHandler.getUserById(newUserId).exit
+      } yield assert(error)(fails(equalTo(NotFoundException(s"User with ID ${newUserId} not found"))))
+    },
     test("store a user and retrieve by username") {
       for {
         userHandler <- ZIO.service[UserHandler]
@@ -80,6 +88,13 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.password == password) &&
         assertTrue(retrievedUser.language == language) &&
         assertTrue(retrievedUser.status == status)
+    },
+    test("return a NotFoundException if user not found by username") {
+      val username = Username.make("usernameThatDoesNotExist").fold(e => throw e.head, v => v)
+      for {
+        userHandler <- ZIO.service[UserHandler]
+        error       <- userHandler.getUserByUsername(username).exit
+      } yield assert(error)(fails(equalTo(NotFoundException(s"User with Username ${username.value} not found"))))
     },
     test("store a user and retrieve by email") {
       for {
@@ -105,22 +120,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.language == language) &&
         assertTrue(retrievedUser.status == status)
     },
-    test("return a NotFoundError if user not found by ID") {
-
-      val newUserId = UserId.make()
-      for {
-        userHandler <- ZIO.service[UserHandler]
-        error       <- userHandler.getUserById(newUserId).exit
-      } yield assert(error)(fails(equalTo(NotFoundException(s"User with ID ${newUserId} not found"))))
-    },
-    test("return a NotFoundError if user not found by username") {
-      val username = Username.make("usernameThatDoesNotExist").fold(e => throw e.head, v => v)
-      for {
-        userHandler <- ZIO.service[UserHandler]
-        error       <- userHandler.getUserByUsername(username).exit
-      } yield assert(error)(fails(equalTo(NotFoundException(s"User with Username ${username.value} not found"))))
-    },
-    test("return a NotFoundError if user not found by email") {
+    test("return a NotFoundException if user not found by email") {
 
       val email = Email.make("emailThat@DoesNotExi.st").fold(e => throw e.head, v => v)
       for {
