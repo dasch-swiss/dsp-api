@@ -9,16 +9,16 @@ import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
-class UpgradePluginPR2078Spec extends UpgradePluginSpec {
+class UpgradePluginPR2079Spec extends UpgradePluginSpec {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
-  "Upgrade plugin PR2078" should {
+  "Upgrade plugin PR2079" should {
     "fix the missing datatype of valueHasUri" in {
       // Parse the input file.
-      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2078.trig")
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2078(defaultFeatureFactoryConfig)
+      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig)
       plugin.transform(model)
 
       // Check that the datatype was fixed.
@@ -48,10 +48,10 @@ class UpgradePluginPR2078Spec extends UpgradePluginSpec {
 
     "fix value valueHasUri etered ad node w/o datatype" in {
       // Parse the input file.
-      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2078.trig")
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2078(defaultFeatureFactoryConfig)
+      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig)
       plugin.transform(model)
 
       // Check that the value amd datatype was fixed.

@@ -11,10 +11,10 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
- * Transforms a repository for Knora PR 2078.
+ * Transforms a repository for Knora PR 2079.
  * Adds missing data type ^^<http://www.w3.org/2001/XMLSchema#anyURI> for valueHasUri
  */
-class UpgradePluginPR2078(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
+class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
   override def transform(model: RdfModel): Unit = {
@@ -25,7 +25,6 @@ class UpgradePluginPR2078(featureFactoryConfig: FeatureFactoryConfig) extends Up
       if (statement.pred.iri == OntologyConstants.KnoraBase.ValueHasUri) {
         statement.obj match {
           case literal: DatatypeLiteral =>
-            println(333, literal)
             if (literal.datatype != OntologyConstants.Xsd.Uri) {
               statementsToRemove += statement
 
@@ -35,7 +34,6 @@ class UpgradePluginPR2078(featureFactoryConfig: FeatureFactoryConfig) extends Up
                 obj = nodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Uri),
                 context = statement.context
               )
-              println("FOUND3", statementsToAdd)
             }
 
           case node: IriNode =>
