@@ -214,7 +214,6 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
-  val userSharedTestDataLibraryDependencies = Seq()
   val sharedLibraryDependencies = Seq(
     springSecurityCore,
     bouncyCastle,

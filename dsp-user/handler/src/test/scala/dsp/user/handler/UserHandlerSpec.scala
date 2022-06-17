@@ -16,6 +16,8 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 import dsp.valueobjects.UserErrorMessages
+import dsp.errors.DuplicateValueException
+import dsp.user.sharedtestdata.SharedTestData
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].
@@ -24,40 +26,103 @@ object UserHandlerSpec extends ZIOSpecDefault {
 
   def spec = (userTests)
 
-  private val givenName  = GivenName.make("GivenName1").fold(e => throw e.head, v => v)
-  private val familyName = FamilyName.make("familyName1").fold(e => throw e.head, v => v)
-  private val username   = Username.make("username1").fold(e => throw e.head, v => v)
-  private val email      = Email.make("email1@email.com").fold(e => throw e.head, v => v)
-  private val password   = PasswordHash.make("password1").fold(e => throw e.head, v => v)
-  private val language   = LanguageCode.make("en").fold(e => throw e.head, v => v)
-  private val status     = UserStatus.make(true).fold(e => throw e.head, v => v)
-
   val userTests = suite("UserHandler")(
+    test("store several users and retrieve all") {
+      for {
+        userHandler <- ZIO.service[UserHandler]
+
+        _ <- userHandler.createUser(
+               username = SharedTestData.simpleUsername1,
+               email = SharedTestData.simpleEmail1,
+               givenName = SharedTestData.simpleGivenName1,
+               familyName = SharedTestData.simpleFamilyName1,
+               password = SharedTestData.simplePassword1,
+               language = SharedTestData.languageEn,
+               status = SharedTestData.statusTrue
+             )
+
+        _ <- userHandler.createUser(
+               username = SharedTestData.simpleUsername2,
+               email = SharedTestData.simpleEmail2,
+               givenName = SharedTestData.simpleGivenName1,
+               familyName = SharedTestData.simpleFamilyName1,
+               password = SharedTestData.simplePassword1,
+               language = SharedTestData.languageEn,
+               status = SharedTestData.statusTrue
+             )
+
+        _ <- userHandler.createUser(
+               username = SharedTestData.simpleUsername3,
+               email = SharedTestData.simpleEmail3,
+               givenName = SharedTestData.simpleGivenName1,
+               familyName = SharedTestData.simpleFamilyName1,
+               password = SharedTestData.simplePassword1,
+               language = SharedTestData.languageEn,
+               status = SharedTestData.statusTrue
+             )
+
+        retrievedUsers <- userHandler.getUsers()
+        _              <- ZIO.debug(retrievedUsers)
+      } yield assertTrue(retrievedUsers.size == 3)
+    },
+    test("return an Error when creating a user if a username is already taken") {
+      for {
+        userHandler <- ZIO.service[UserHandler]
+
+        _ <- userHandler
+               .createUser(
+                 username = SharedTestData.simpleUsername1,
+                 email = SharedTestData.simpleEmail1,
+                 givenName = SharedTestData.simpleGivenName1,
+                 familyName = SharedTestData.simpleFamilyName1,
+                 password = SharedTestData.simplePassword1,
+                 language = SharedTestData.languageEn,
+                 status = SharedTestData.statusTrue
+               )
+               .tap(ZIO.debug(_))
+
+        error <- userHandler
+                   .createUser(
+                     username = SharedTestData.simpleUsername1,
+                     email = SharedTestData.simpleEmail2,
+                     givenName = SharedTestData.simpleGivenName2,
+                     familyName = SharedTestData.simpleFamilyName2,
+                     password = SharedTestData.simplePassword2,
+                     language = SharedTestData.languageEn,
+                     status = SharedTestData.statusTrue
+                   )
+                   .exit
+
+        _ <- ZIO.debug(error)
+      } yield assert(error)(
+        fails(equalTo(DuplicateValueException(s"Username ${SharedTestData.simpleUsername1.value} already exists")))
+      )
+    },
     test("store a user and retrieve by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         retrievedUser <- userHandler.getUserById(userId)
         _             <- ZIO.debug(retrievedUser)
-      } yield assertTrue(retrievedUser.username == username) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+      } yield assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
-    test("return a NotFoundException if user not found by ID") {
+    test("return an Error if user not found by ID") {
 
       val newUserId = UserId.make()
       for {
@@ -70,26 +135,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
-        retrievedUser <- userHandler.getUserByUsername(username)
+        retrievedUser <- userHandler.getUserByUsername(SharedTestData.simpleUsername1)
         _             <- ZIO.debug(retrievedUser)
-      } yield assertTrue(retrievedUser.username == username) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+      } yield assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
-    test("return a NotFoundException if user not found by username") {
+    test("return an Error if user not found by username") {
       val username = Username.make("usernameThatDoesNotExist").fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
@@ -101,26 +166,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
-        retrievedUser <- userHandler.getUserByEmail(email)
+        retrievedUser <- userHandler.getUserByEmail(SharedTestData.simpleEmail1)
         _             <- ZIO.debug(retrievedUser)
-      } yield assertTrue(retrievedUser.username == username) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+      } yield assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
-    test("return a NotFoundException if user not found by email") {
+    test("return an Error if user not found by email") {
 
       val email = Email.make("emailThat@DoesNotExi.st").fold(e => throw e.head, v => v)
       for {
@@ -134,26 +199,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
-        user          <- userHandler.getUserByEmail(email)
+        user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updateUsername(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.username == newValue) &&
-        assertTrue(retrievedUser.username != username) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+        assertTrue(retrievedUser.username != SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the email") {
       val newValue = Email.make("new.mail1@email.com").fold(e => throw e.head, v => v)
@@ -161,25 +226,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updateEmail(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.email == newValue) &&
-        assertTrue(retrievedUser.email != email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+        assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email != SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the givenName") {
       val newValue = GivenName.make("newGivenName").fold(e => throw e.head, v => v)
@@ -187,25 +253,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updateGivenName(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.givenName == newValue) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName != givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+        assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName != SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the familyName") {
       val newValue = FamilyName.make("newFamilyName").fold(e => throw e.head, v => v)
@@ -213,25 +280,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updateFamilyName(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.familyName == newValue) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName != familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+        assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName != SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the password") {
       val newValue = PasswordHash.make("newPassword1").fold(e => throw e.head, v => v)
@@ -239,25 +307,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updatePassword(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.password == newValue) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password != password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status == status)
+        assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password != SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the language") {
       val newValue = LanguageCode.make("fr").fold(e => throw e.head, v => v)
@@ -265,25 +334,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updateLanguage(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.language == newValue) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language != language) &&
-        assertTrue(retrievedUser.status == status)
+        assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language != SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the status") {
       val newValue = UserStatus.make(false).fold(e => throw e.head, v => v)
@@ -291,25 +361,26 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
 
         userId <- userHandler.createUser(
-                    username = username,
-                    email = email,
-                    givenName = givenName,
-                    familyName = familyName,
-                    password = password,
-                    language = language,
-                    status = status
+                    username = SharedTestData.simpleUsername1,
+                    email = SharedTestData.simpleEmail1,
+                    givenName = SharedTestData.simpleGivenName1,
+                    familyName = SharedTestData.simpleFamilyName1,
+                    password = SharedTestData.simplePassword1,
+                    language = SharedTestData.languageEn,
+                    status = SharedTestData.statusTrue
                   )
 
         user          <- userHandler.getUserById(userId)
         retrievedUser <- ZIO.succeed(user.updateStatus(newValue))
         _             <- ZIO.debug(retrievedUser)
       } yield assertTrue(retrievedUser.status == newValue) &&
-        assertTrue(retrievedUser.email == email) &&
-        assertTrue(retrievedUser.givenName == givenName) &&
-        assertTrue(retrievedUser.familyName == familyName) &&
-        assertTrue(retrievedUser.password == password) &&
-        assertTrue(retrievedUser.language == language) &&
-        assertTrue(retrievedUser.status != status)
+        assertTrue(retrievedUser.username == SharedTestData.simpleUsername1) &&
+        assertTrue(retrievedUser.email == SharedTestData.simpleEmail1) &&
+        assertTrue(retrievedUser.givenName == SharedTestData.simpleGivenName1) &&
+        assertTrue(retrievedUser.familyName == SharedTestData.simpleFamilyName1) &&
+        assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
+        assertTrue(retrievedUser.language == SharedTestData.languageEn) &&
+        assertTrue(retrievedUser.status != SharedTestData.statusTrue)
     }
   ).provide(UserRepoMock.layer, UserHandler.layer)
 }

@@ -15,6 +15,9 @@ import zio._
 import zio.prelude.Validation
 import zio.prelude.ZValidation
 import zio.test._
+import zio.test.Assertion._
+import dsp.errors.DuplicateValueException
+import dsp.user.sharedtestdata.SharedTestData
 
 /**
  * This spec is used to test all [[dsp.user.repo.UserRepo]] implementations.
@@ -23,69 +26,45 @@ object UserRepoImplSpec extends ZIOSpecDefault {
 
   def spec = (userRepoMockTests + userRepoLiveTests)
 
-  private val testUser1 = (for {
-    givenName  <- GivenName.make("GivenName1")
-    familyName <- FamilyName.make("familyName1")
-    username   <- Username.make("username1")
-    email      <- Email.make("email1@email.com")
-    password   <- PasswordHash.make("password1")
-    language   <- LanguageCode.make("en")
-    status     <- UserStatus.make(true)
-    user = User.make(
-             givenName,
-             familyName,
-             username,
-             email,
-             password,
-             language,
-             status
-           )
-  } yield (user)).toZIO
-
-  private val testUser2 = (for {
-    givenName  <- GivenName.make("GivenName2")
-    familyName <- FamilyName.make("familyName2")
-    username   <- Username.make("username2")
-    email      <- Email.make("email2@email.com")
-    password   <- PasswordHash.make("password2")
-    language   <- LanguageCode.make("en")
-    status     <- UserStatus.make(true)
-    user = User.make(
-             givenName,
-             familyName,
-             username,
-             email,
-             password,
-             language,
-             status
-           )
-  } yield (user)).toZIO
+  private val user1: User = SharedTestData.simpleUser1
+  private val user2: User = SharedTestData.simpleUser2
 
   val userTests =
-    test("store a user and retrieve by ID") {
+    test("store several users and retrieve all") {
       for {
-        user          <- testUser1
-        _             <- UserRepo.storeUser(user)
-        retrievedUser <- UserRepo.getUserById(user.id)
-      } yield assertTrue(retrievedUser == user)
+        _              <- UserRepo.storeUser(user1)
+        _              <- UserRepo.storeUser(user2)
+        retrievedUsers <- UserRepo.getUsers()
+      } yield assertTrue(retrievedUsers.size == 2)
     } +
+      test("store a user and retrieve by ID") {
+        for {
+          _             <- UserRepo.storeUser(user1)
+          retrievedUser <- UserRepo.getUserById(user1.id)
+        } yield assertTrue(retrievedUser == user1)
+      } +
       test("store a user and retrieve the user by username") {
         for {
-          user          <- testUser1
-          _             <- UserRepo.storeUser(user)
-          retrievedUser <- UserRepo.getUserByUsername(user.username)
-        } yield assertTrue(retrievedUser == user)
+          _             <- UserRepo.storeUser(user1)
+          retrievedUser <- UserRepo.getUserByUsername(user1.username)
+        } yield assertTrue(retrievedUser == user1)
       } +
       test("store a user and retrieve the user by email") {
         for {
-          user1         <- testUser1
-          user2         <- testUser2
           _             <- UserRepo.storeUser(user1)
           retrievedUser <- UserRepo.getUserByEmail(user1.email)
         } yield {
           assertTrue(retrievedUser == user1) &&
           assertTrue(retrievedUser != user2)
         }
+      } +
+      test("return an Error if a username already exists") {
+        for {
+          _     <- UserRepo.storeUser(user1)
+          error <- UserRepo.checkIfUsernameExists(user1.username).exit
+        } yield assert(error)(
+          fails(equalTo(None))
+        )
       }
 
   val userRepoMockTests = suite("UserRepoMock")(

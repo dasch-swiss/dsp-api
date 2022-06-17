@@ -68,7 +68,7 @@ trait UserRepo {
    * @param username username of the user.
    * @return Unit in case of success
    */
-  def checkUsernameExists(username: Username): IO[Option[Nothing], Unit]
+  def checkIfUsernameExists(username: Username): IO[Option[Nothing], Unit]
 
   /**
    * Checks if an email exists in the repo.
@@ -76,7 +76,7 @@ trait UserRepo {
    * @param email email of the user.
    * @return Unit in case of success
    */
-  def checkEmailExists(email: Email): IO[Option[Nothing], Unit]
+  def checkIfEmailExists(email: Email): IO[Option[Nothing], Unit]
 
   /**
    * Deletes a [[User]] from the repository by its [[UserId]].

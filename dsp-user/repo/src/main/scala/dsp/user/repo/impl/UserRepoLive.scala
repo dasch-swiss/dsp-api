@@ -86,7 +86,7 @@ final case class UserRepoLive(
   /**
    * @inheritDoc
    */
-  def checkUsernameExists(username: Username): IO[Option[Nothing], Unit] =
+  def checkIfUsernameExists(username: Username): IO[Option[Nothing], Unit] =
     (for {
       iriOption: Option[UUID] <- lookupTableUsernameUuid.get(username)
       _ = iriOption match {
@@ -98,7 +98,7 @@ final case class UserRepoLive(
   /**
    * @inheritDoc
    */
-  def checkEmailExists(email: Email): IO[Option[Nothing], Unit] =
+  def checkIfEmailExists(email: Email): IO[Option[Nothing], Unit] =
     (for {
       iriOption: Option[UUID] <- lookupTableEmailUuid.get(email)
       _ = iriOption match {

@@ -72,7 +72,7 @@ final case class UserHandler(repo: UserRepo) {
   private def checkUsernameTaken(username: Username): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .checkUsernameExists(username)
+             .checkIfUsernameExists(username)
              .mapError(_ => DuplicateValueException(s"Username ${username.value} already exists"))
     } yield ()
 
@@ -84,7 +84,8 @@ final case class UserHandler(repo: UserRepo) {
   private def checkEmailTaken(email: Email): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .checkEmailExists(email)
+             .checkIfEmailExists(email)
+             .tapError(ZIO.debug(_))
              .mapError(_ => DuplicateValueException(s"Email ${email.value} already exists"))
     } yield ()
 

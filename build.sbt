@@ -328,7 +328,27 @@ lazy val userHandler = project
     libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, userCore, userRepo % "test->test") //userHandler tests need mock implementation of UserRepo
+  .dependsOn(
+    shared,
+    userCore % "compile->compile;test->test",
+    userRepo % "test->test" //userHandler tests need mock implementation of UserRepo
+  )
+
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, userCore % "compile->compile;test->test")
 
 lazy val userCore = project
   .in(file("dsp-user/core"))
@@ -345,31 +365,6 @@ lazy val userCore = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)
-
-lazy val userRepo = project
-  .in(file("dsp-user/repo"))
-  .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
-    name := "userRepo",
-    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, userCore, userSharedTestData % "compile->compile;test->test")
-
-lazy val userSharedTestData = project
-  .in(file("dsp-user/shared-test-data"))
-  .settings(
-    name := "sharedTestData",
-    libraryDependencies ++= Dependencies.userSharedTestDataLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, userCore)
 
 lazy val shared = project
   .in(file("dsp-shared"))

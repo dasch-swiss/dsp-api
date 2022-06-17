@@ -18,8 +18,20 @@ object User {
   /**
    * Username value object.
    */
-  sealed abstract case class Username private (value: String)
+  sealed abstract case class Username private (value: String) { self =>
+
+    /**
+     * Allows to check two [[Username]]s for equality based on their value.
+     */
+    def equals(that: Username): Boolean = self.value.equals(that.value)
+  }
   object Username { self =>
+
+    /**
+     * Allows to check two [[Username]]s for equality based on their value.
+     */
+    override def equals(that: Any): Boolean = that.asInstanceOf[AnyRef] eq self
+    //override def equals(o: Any) = { o.asInstanceOf[AnyRef] eq this }
 
     /**
      * A regex that matches a valid username
