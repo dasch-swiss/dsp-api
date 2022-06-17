@@ -38,7 +38,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = Username.make("newUsername").fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updateUsername(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.username == newValue) &&
         assertTrue(updatedUser.username != user.username) &&
         assertTrue(updatedUser.email == user.email) &&
@@ -53,7 +52,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = Email.make("newEmail@mail.com").fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updateEmail(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.email == newValue) &&
         assertTrue(updatedUser.email != user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
@@ -67,7 +65,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = GivenName.make("newGivenName").fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updateGivenName(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.givenName == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName != user.givenName) &&
@@ -81,7 +78,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = FamilyName.make("newFamilyName").fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updateFamilyName(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.familyName == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
@@ -95,7 +91,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = PasswordHash.make("newPassword1").fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updatePassword(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.password == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
@@ -109,7 +104,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = LanguageCode.make("fr").fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updateLanguage(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.language == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
@@ -123,7 +117,6 @@ object UserDomainSpec extends ZIOSpecDefault {
       val newValue = UserStatus.make(false).fold(e => throw e.head, v => v)
       for {
         updatedUser <- ZIO.succeed(user.updateStatus(newValue))
-        _           <- ZIO.debug(updatedUser)
       } yield assertTrue(updatedUser.status == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
