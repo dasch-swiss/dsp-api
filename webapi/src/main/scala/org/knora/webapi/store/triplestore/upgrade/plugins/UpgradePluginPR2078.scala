@@ -25,6 +25,7 @@ class UpgradePluginPR2078(featureFactoryConfig: FeatureFactoryConfig) extends Up
       if (statement.pred.iri == OntologyConstants.KnoraBase.ValueHasUri) {
         statement.obj match {
           case literal: DatatypeLiteral =>
+            println(333, literal)
             if (literal.datatype != OntologyConstants.Xsd.Uri) {
               statementsToRemove += statement
 
@@ -34,7 +35,18 @@ class UpgradePluginPR2078(featureFactoryConfig: FeatureFactoryConfig) extends Up
                 obj = nodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Uri),
                 context = statement.context
               )
+              println("FOUND3", statementsToAdd)
             }
+
+          case node: IriNode =>
+            statementsToRemove += statement
+
+            statementsToAdd += nodeFactory.makeStatement(
+              subj = statement.subj,
+              pred = statement.pred,
+              obj = nodeFactory.makeDatatypeLiteral(node.iri, OntologyConstants.Xsd.Uri),
+              context = statement.context
+            )
 
           case _ => ()
         }

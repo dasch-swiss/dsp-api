@@ -13,7 +13,7 @@ class UpgradePluginPR2078Spec extends UpgradePluginSpec {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
   "Upgrade plugin PR2078" should {
-    "fix the missing datatypes of URI literals" in {
+    "fix the missing datatype of valueHasUri" in {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2078.trig")
 
@@ -23,6 +23,40 @@ class UpgradePluginPR2078Spec extends UpgradePluginSpec {
 
       // Check that the datatype was fixed.
       val subj = nodeFactory.makeIriNode("http://rdfh.ch/0103/fN89IUgvSSyMxJ7XWssP9w/values/Rl2rfjDlRBWeuRr-EgIgCw")
+      val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUri)
+
+      model
+        .find(
+          subj = Some(subj),
+          pred = Some(pred),
+          obj = None
+        )
+        .toSet
+        .headOption match {
+        case Some(statement: Statement) =>
+          statement.obj match {
+            case datatypeLiteral: DatatypeLiteral =>
+              assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Uri)
+
+            case other =>
+              throw AssertionException(s"Unexpected object for $pred: $other")
+          }
+
+        case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
+      }
+    }
+
+    "fix value valueHasUri etered ad node w/o datatype" in {
+      // Parse the input file.
+      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2078.trig")
+
+      // Use the plugin to transform the input.
+      val plugin = new UpgradePluginPR2078(defaultFeatureFactoryConfig)
+      plugin.transform(model)
+
+      // Check that the value amd datatype was fixed.
+      val subj =
+        nodeFactory.makeIriNode("http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2")
       val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUri)
 
       model

@@ -8,12 +8,23 @@
 
 # value with missing valueHasUri datatype
 <http://rdfh.ch/0103/fN89IUgvSSyMxJ7XWssP9w/values/Rl2rfjDlRBWeuRr-EgIgCw>
-        rdf:type                      knora-base:UriValue ;
-        knora-base:attachedToUser     <http://rdfh.ch/users/user-unil-valentina-ponzetto> ;
-        knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" ;
-        knora-base:isDeleted          false ;
-        knora-base:valueCreationDate  "2018-01-12T19:21:37.991+00:00"^^xsd:dateTime ;
-        knora-base:valueHasOrder      1 ;
-        knora-base:valueHasString     "https://viaf.org/viaf/2571146" ;
-        knora-base:valueHasUUID       "PYQ5mqH8TYOKCytMozecWw" ;
-        knora-base:valueHasUri        "https://viaf.org/viaf/2571146" .
+    rdf:type                      knora-base:UriValue ;
+    knora-base:attachedToUser     <http://rdfh.ch/users/user-unil-valentina-ponzetto> ;
+    knora-base:hasPermissions     "CR knora-admin:ProjectAdmin|D knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser" ;
+    knora-base:isDeleted          false ;
+    knora-base:valueCreationDate  "2018-01-12T19:21:37.991+00:00"^^xsd:dateTime ;
+    knora-base:valueHasOrder      1 ;
+    knora-base:valueHasString     "https://viaf.org/viaf/2571146" ;
+    knora-base:valueHasUUID       "PYQ5mqH8TYOKCytMozecWw" ;
+    knora-base:valueHasUri        "https://viaf.org/viaf/2571146" .
+
+# bad valueHasUri value and missing datatype
+<http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2>
+    rdf:type                                knora-base:StandoffUriTag ;
+    knora-base:standoffTagHasEnd            50 ;
+    knora-base:standoffTagHasStart          20 ;
+    knora-base:standoffTagHasStartIndex     2 ;
+    knora-base:standoffTagHasStartParent     <http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/1> ;
+    knora-base:standoffTagHasUUID           "dd2e785b-041e-4bcb-a77d-570efe8a068c" ;
+    knora-base:valueHasUri                  <http://www.maison-george-sand.fr/> .
+            
