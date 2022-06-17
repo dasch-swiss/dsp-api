@@ -5,6 +5,7 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
@@ -12,9 +13,9 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
  * Transforms a repository for Knora PR 2079.
- * Adds missing data type ^^<http://www.w3.org/2001/XMLSchema#anyURI> for valueHasUri
+ * Adds missing datatype ^^<http://www.w3.org/2001/XMLSchema#anyURI> and/or value to valueHasUri
  */
-class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
+class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
   override def transform(model: RdfModel): Unit = {
@@ -34,6 +35,11 @@ class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig) extends Up
                 obj = nodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Uri),
                 context = statement.context
               )
+
+              log.info(
+                s"Transformed valueHasIri: $literal to ${nodeFactory
+                  .makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Uri)}."
+              )
             }
 
           case node: IriNode =>
@@ -44,6 +50,10 @@ class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig) extends Up
               pred = statement.pred,
               obj = nodeFactory.makeDatatypeLiteral(node.iri, OntologyConstants.Xsd.Uri),
               context = statement.context
+            )
+
+            log.info(
+              s"Transformed valueHasIri $node to ${nodeFactory.makeDatatypeLiteral(node.iri, OntologyConstants.Xsd.Uri)}."
             )
 
           case _ => ()

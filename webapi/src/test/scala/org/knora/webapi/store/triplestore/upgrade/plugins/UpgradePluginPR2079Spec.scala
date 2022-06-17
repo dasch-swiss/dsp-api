@@ -5,11 +5,12 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.LazyLogging
 import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
-class UpgradePluginPR2079Spec extends UpgradePluginSpec {
+class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
   "Upgrade plugin PR2079" should {
@@ -18,7 +19,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig)
+      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig, log)
       plugin.transform(model)
 
       // Check that the datatype was fixed.
@@ -51,7 +52,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig)
+      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig, log)
       plugin.transform(model)
 
       // Check that the value amd datatype was fixed.
