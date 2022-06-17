@@ -18,24 +18,45 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
             arkResolver     = softwaresystem "ARK Resolver"         "Forwards ARK URLs to DSP-APP URLs"
             dspApi          = softwareSystem "DSP-API"   "api.dasch.swiss" {
                 # container <name> [description] [technology] [tags]
-                userSlice       = container "User Slice" "The slice that handles users" {
-                    userCore        = component "User Core"
-                    userRepo        = component "User Repo"
-                    userDomain      = component "User Domain"
-                    userHandler     = component "User Handler"
-                    userRepoLive    = component "User Repo Live Implementation"
-                    userRepoMock    = component "User Repo Mock Implementation for Tests"
-                    userRoute       = component "User Route"
-                }
+                
                 eventStoreService = container "Event Store Service"
                 eventListener     = container "Event Listener"
+                triplestoreService   = container "Triplestore Service"
+                arkService           = container "ARK Service"
+                elasticSearchService = container "Elastic Search Service"
+
+                webapiProject     = container "Webapi" "The project that wraps webapi V2"
+                
                 projectSlice      = container "Project Slice" "The slice that handles projects"
                 roleSlice         = container "Role Slice" "The slice that handles roles"
+                schemaSlice       = container "Schema Slice" "The slice that handles schemas"
+                resourceSlice     = container "Resource Slice" "The slice that handles resources"
+                listSlice         = container "List Slice" "The slice that handles lists"
+                routes            = container "Routes" "The slice that provides all routes"
+                
+                sharedProject           = container "Shared Project" "The project that handles shared entities" {
+                    valueObjectsProject     = component "ValueObjects Project" "The package that provides value objects"
+                    errorProject            = component "Error Project" "The package that provides errors"
+                }
+
+                userSlice         = container "User Slice" "The slice that handles users" {
+                    userCore        = component "User Core"
+                    userDomain      = component "User Domain"
+                    userHandler     = component "User Handler"
+
+                    userRepo        = component "User Repo (API)"
+                    userRepoLive    = component "User Repo Live (Implementation)"
+                    userRepoMock    = component "User Repo Mock (Implementation for Tests)"
+                    
+                    userRoute       = component "User Route"
+                }
+                
             }
         }
 
-        # relationships between people and software systems
+        # relationships between users and software systems
         user             -> dspApp       "Uses [Browser]"
+        user             -> arkResolver  "Uses [Browser]"
         user             -> dspTools     "Uses [CLI]"
 
         # relationships to/from software systems
@@ -47,13 +68,27 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
         dspTools    -> sipi
         
         # relationships to/from containers
+        webapiProject -> sharedProject "depends on"
+        projectSlice  -> sharedProject "depends on"
+        roleSlice     -> sharedProject "depends on"
+        schemaSlice   -> sharedProject "depends on"
+        resourceSlice -> sharedProject "depends on"
+        listSlice     -> sharedProject "depends on"
+        routes        -> sharedProject "depends on"
+        userSlice     -> sharedProject "depends on"
 
         # relationships to/from components
-        userHandler -> userDomain "depends on"
-        userRepo -> userDomain "depends on"
-        userRepoLive -> userDomain "depends on"
-        userRepoMock -> userDomain "depends on"
-        userRoute -> userDomain "depends on"
+        userRepo        -> userCore "depends on"
+        userRepoLive    -> userCore "depends on"
+        userRepoMock    -> userCore "depends on"
+        userRoute       -> userCore "depends on"
+
+        userRepoLive    -> userRepo "implements"
+        userRepoMock    -> userRepo "implements"
+
+        userCore        -> userDomain  "contains"
+        userCore        -> userHandler "contains"
+
     }
 
     views {
@@ -75,13 +110,18 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
         }
 
         # component <container identifier> [key] [description]
-        component userSlice "ComponentUserSlice" "User Slice" {
+        component userSlice "ComponentsOfUserSlice" "Components of the User Slice" {
+            include *
+            autoLayout
+        }
+
+        component SharedProject "ComponentsOfSharedProject" "Components of the Shared Project" {
             include *
             autoLayout
         }
 
         # dynamic <*|software system identifier|container identifier> [key] [description]
-        dynamic userSlice "AB" {
+        dynamic userSlice "HttpRequestWithEventsCreateUser" "Example workflow for a HTTP request with events (create user)" {
             user -> userRoute "sends HTTP request to"
             userRoute -> userRoute "validates input and creates value objects"
             userRoute -> userHandler "createUser(vo)"
@@ -89,6 +129,45 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
             userRepo -> eventStoreService "reserve username"
             eventStoreService -> eventStoreService "check if username exists"
             eventStoreService -> eventStoreService "reserve username"
+            userHandler -> userDomain ".make(vo)"
+            userDomain -> userDomain "create user domain entity + userCreatedEvent(who, what)"
+            userDomain -> userHandler "return (userDomainEntity + userCreatedEvent)"
+            userHandler -> userRepo "storeUser(userDomainEntity + userCreatedEvent)"
+            userRepo -> eventStoreService "storeUser(userDomainEntity + userCreatedEvent)"
+            eventStoreService -> eventStoreService "store event(s), userCreatedEvent(who, what, when(!))"
+            eventStoreService -> eventListener "publishEvent(userCreatedEvent)"
+            eventListener -> triplestoreService "writeToTsService(E)"
+            triplestoreService -> triplestoreService "SPARQL Update"
+            eventListener -> arkService "writeToArkService(E)"
+            arkService -> arkService "create ARK(URL)"
+            eventListener -> elasticSearchService "writeToEsService(E)"
+
+            autoLayout
+        }
+
+        dynamic userSlice "HttpRequestWithEventsUpdateUser" "Example workflow for a HTTP request with events (update username)" {
+            user -> userRoute "sends HTTP request to"
+            userRoute -> userRoute "validates input and creates value objects"
+            userRoute -> userHandler "updateUsername(vo)"
+            userHandler -> userRepo "getUser(userId)"
+            userRepo -> eventStoreService "getUser(userId)"
+            eventStoreService -> eventStoreService "get all events for this user"
+            eventStoreService -> userDomain "createUserFromEvents(E,E,E,...)"
+            userDomain -> userHandler "return User"
+            userHandler -> userDomain "updateUsername(vo)"
+            userDomain -> userDomain "updateUser(userDomainEntity + userUpdatedEvent(who, what))"
+            userDomain -> userHandler "return userDomainEntity + userUpdatedEvent(who, what)"
+            userHandler -> userRepo "storeUser(userDomainEntity + userUpdatedEvent(who, what, when(!))"
+
+            userRepo -> eventStoreService "storeUser(userDomainEntity + userCreatedEvent)"
+            eventStoreService -> eventStoreService "store event(s), userCreatedEvent(who, what, when(!))"
+            eventStoreService -> eventListener "publishEvent(userCreatedEvent)"
+            eventListener -> triplestoreService "writeToTsService(E)"
+            triplestoreService -> triplestoreService "SPARQL Update"
+            eventListener -> arkService "writeToArkService(E)"
+            arkService -> arkService "create ARK(URL)"
+            eventListener -> elasticSearchService "writeToEsService(E)"
+
             autoLayout
         }
 
