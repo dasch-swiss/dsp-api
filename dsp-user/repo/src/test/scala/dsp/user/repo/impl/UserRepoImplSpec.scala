@@ -58,13 +58,49 @@ object UserRepoImplSpec extends ZIOSpecDefault {
           assertTrue(retrievedUser != user2)
         }
       } +
-      test("return an Error if a username already exists") {
+      test("return None if a username already exists") {
         for {
           _     <- UserRepo.storeUser(user1)
           error <- UserRepo.checkIfUsernameExists(user1.username).exit
         } yield assert(error)(
           fails(equalTo(None))
         )
+      } +
+      test("return success (Unit) if a username is unique") {
+        for {
+          _      <- UserRepo.storeUser(user1)
+          result <- UserRepo.checkIfUsernameExists(SharedTestData.simpleUser2.username)
+        } yield assertTrue(result == ())
+      } +
+      test("return None if an email already exists") {
+        for {
+          _     <- UserRepo.storeUser(user1)
+          error <- UserRepo.checkIfEmailExists(user1.email).exit
+        } yield assert(error)(
+          fails(equalTo(None))
+        )
+      } +
+      test("return success (Unit) if an email is unique") {
+        for {
+          _      <- UserRepo.storeUser(user1)
+          result <- UserRepo.checkIfEmailExists(SharedTestData.simpleUser2.email)
+        } yield assertTrue(result == ())
+      } +
+      test("store and delete a user") {
+        for {
+          userId                           <- UserRepo.storeUser(user1)
+          userIdOfDeletedUser              <- UserRepo.deleteUser(userId)
+          idIsDeleted                      <- UserRepo.getUserById(userIdOfDeletedUser).exit
+          usernameIsDeleted                <- UserRepo.getUserByUsername(user1.username).exit
+          emailIsDeleted                   <- UserRepo.getUserByEmail(user1.email).exit
+          usernameIsDeletedFromLookupTable <- UserRepo.checkIfUsernameExists(user1.username)
+          emailIsDeletedFromLookupTable    <- UserRepo.checkIfEmailExists(user1.email)
+        } yield assertTrue(userId == user1.id) &&
+          assert(idIsDeleted)(fails(equalTo(None))) &&
+          assert(usernameIsDeleted)(fails(equalTo(None))) &&
+          assert(emailIsDeleted)(fails(equalTo(None))) &&
+          assertTrue(usernameIsDeletedFromLookupTable == ()) &&
+          assertTrue(emailIsDeletedFromLookupTable == ())
       }
 
   val userRepoMockTests = suite("UserRepoMock")(

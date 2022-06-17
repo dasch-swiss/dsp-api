@@ -28,7 +28,11 @@ object SharedTestData {
   val simplePassword3   = PasswordHash.make("password3").fold(e => throw e.head, v => v)
 
   val languageEn = LanguageCode.make("en").fold(e => throw e.head, v => v)
-  val statusTrue = UserStatus.make(true).fold(e => throw e.head, v => v)
+  val languageFr = LanguageCode.make("fr").fold(e => throw e.head, v => v)
+  val languageDe = LanguageCode.make("de").fold(e => throw e.head, v => v)
+
+  val statusTrue  = UserStatus.make(true).fold(e => throw e.head, v => v)
+  val statusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
 
   val simpleUser1 =
     User.make(

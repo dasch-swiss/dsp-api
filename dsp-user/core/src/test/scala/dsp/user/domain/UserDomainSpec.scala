@@ -21,6 +21,18 @@ object UserDomainSpec extends ZIOSpecDefault {
   def spec = (userDomainTests)
 
   val userDomainTests = suite("UserDomain")(
+    test("compare two users") {
+      val user         = SharedTestData.simpleUser1
+      val userEqual    = SharedTestData.simpleUser1 // same as user, i.e. has same UserId
+      val userNotEqual = SharedTestData.simpleUser2
+      for {
+        isEqualtoItself        <- ZIO.succeed(user.equals(user))
+        isEqualtoEqualUser     <- ZIO.succeed(user.equals(userEqual))
+        isEqualtoDifferentUser <- ZIO.succeed(user.equals(userNotEqual))
+      } yield assertTrue(isEqualtoItself == true) &&
+        assertTrue(isEqualtoEqualUser == true) &&
+        assertTrue(isEqualtoDifferentUser == false)
+    },
     test("update the username") {
       val user     = SharedTestData.simpleUser1
       val newValue = Username.make("newUsername").fold(e => throw e.head, v => v)
@@ -35,18 +47,6 @@ object UserDomainSpec extends ZIOSpecDefault {
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language == user.language) &&
         assertTrue(updatedUser.status == user.status)
-    },
-    test("compare two usernames") {
-      val username         = Username.make("username").fold(e => throw e.head, v => v)
-      val usernameEqual    = Username.make("username").fold(e => throw e.head, v => v)
-      val usernameNotEqual = Username.make("username2").fold(e => throw e.head, v => v)
-      for {
-        isEqualtoItself            <- ZIO.succeed(username.equals(username))
-        isEqualtoEqualUsername     <- ZIO.succeed(username.equals(usernameEqual))
-        isEqualtoDifferentUsername <- ZIO.succeed(username.equals(usernameNotEqual))
-      } yield assertTrue(isEqualtoItself == true) &&
-        assertTrue(isEqualtoEqualUsername == true) &&
-        assertTrue(isEqualtoDifferentUsername == false)
     },
     test("update the email") {
       val user     = SharedTestData.simpleUser1

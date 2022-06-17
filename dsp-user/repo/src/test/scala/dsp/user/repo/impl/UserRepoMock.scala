@@ -38,13 +38,13 @@ final case class UserRepoMock(
       _ <- users.put(user.id.uuid, user)
       _ <- lookupTableUsernameToUuid.put(user.username, user.id.uuid)
       _ <- lookupTableEmailToUuid.put(user.email, user.id.uuid)
-    } yield user.id).commit.tap(_ => ZIO.logInfo(s"Stored user: ${user.id.uuid}"))
+    } yield user.id).commit.tap(_ => ZIO.logInfo(s"Stored user with ID '${user.id.uuid}'"))
 
   /**
    * @inheritDoc
    */
   def getUsers(): UIO[List[User]] =
-    users.values.commit.tap(userList => ZIO.logInfo(s"Looked up all users, found ${userList.size}"))
+    users.values.commit.tap(userList => ZIO.logInfo(s"Looked up all users, found ${userList.size} users"))
 
   /**
    * @inheritDoc
@@ -88,11 +88,11 @@ final case class UserRepoMock(
    */
   def checkIfUsernameExists(username: Username): IO[Option[Nothing], Unit] =
     (for {
-      usernameExists <- lookupTableUsernameToUuid.contains(username).commit.debug
-      _ = usernameExists match {
-            case false => ZIO.succeed(()) // username does not exist
-            case true  => ZIO.fail(None)  // username does exist
-          }
+      usernameExists <- lookupTableUsernameToUuid.contains(username).commit
+      _ <- usernameExists match {
+             case false => ZIO.succeed(()) // username does not exist
+             case true  => ZIO.fail(None)  // username does exist
+           }
     } yield ()).tap(_ => ZIO.logInfo(s"Username '${username.value}' was checked"))
 
   /**
@@ -100,23 +100,28 @@ final case class UserRepoMock(
    */
   def checkIfEmailExists(email: Email): IO[Option[Nothing], Unit] =
     (for {
-      uuid <- lookupTableEmailToUuid.get(email).commit.debug
-      _ <- uuid match {
-             case None    => ZIO.succeed(()) // email does not exist
-             case Some(_) => ZIO.fail(None)  // email does exist
+      emailExists <- lookupTableEmailToUuid.contains(email).commit
+      _ <- emailExists match {
+             case false => ZIO.succeed(()) // email does not exist
+             case true  => ZIO.fail(None)  // email does exist
            }
     } yield ()).tap(_ => ZIO.logInfo(s"Email '${email.value}' was checked"))
 
   /**
    * @inheritDoc
    */
-  def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
+  def deleteUser(id: UserId): IO[Option[Nothing], UserId] = {
+    val userStatusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
+
     (for {
       user: User <- users.get(id.uuid).some
-      _          <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
-      _          <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
-      _          <- lookupTableEmailToUuid.delete(user.email) // remove the user also from the lookup table
+      //_          <- ZIO.succeed(user.updateStatus(userStatusFalse)) TODO how do we deal deleted users?
+      _ <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
+      _ <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
+      _ <- lookupTableEmailToUuid.delete(user.email) // remove the user also from the lookup table
     } yield id).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
+  }
+
 }
 
 /**

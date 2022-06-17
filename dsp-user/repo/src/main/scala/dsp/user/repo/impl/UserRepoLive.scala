@@ -18,13 +18,13 @@ import dsp.valueobjects.User._
  * User repository live implementation
  *
  * @param users       a map of users (UUID -> User).
- * @param lookupTableUsernameUuid a map of users (Username -> UUID).
- * @param lookupTableEmailUuid a map of users (Email -> UUID).
+ * @param lookupTableUsernameToUuid a map of users (Username -> UUID).
+ * @param lookupTableEmailToUuid a map of users (Email -> UUID).
  */
 final case class UserRepoLive(
   users: TMap[UUID, User],
-  lookupTableUsernameUuid: TMap[Username, UUID],
-  lookupTableEmailUuid: TMap[Email, UUID]
+  lookupTableUsernameToUuid: TMap[Username, UUID],
+  lookupTableEmailToUuid: TMap[Email, UUID]
 ) extends UserRepo {
 
   /**
@@ -36,8 +36,8 @@ final case class UserRepoLive(
   def storeUser(user: User): UIO[UserId] =
     (for {
       _ <- users.put(user.id.uuid, user)
-      _ <- lookupTableUsernameUuid.put(user.username, user.id.uuid)
-      _ <- lookupTableEmailUuid.put(user.email, user.id.uuid)
+      _ <- lookupTableUsernameToUuid.put(user.username, user.id.uuid)
+      _ <- lookupTableEmailToUuid.put(user.email, user.id.uuid)
     } yield user.id).commit.tap(_ => ZIO.logInfo(s"Stored user: ${user.id.uuid}"))
 
   /**
@@ -64,7 +64,7 @@ final case class UserRepoLive(
    */
   def getUserByUsername(username: Username): IO[Option[Nothing], User] =
     (for {
-      iri: UUID  <- lookupTableUsernameUuid.get(username).some
+      iri: UUID  <- lookupTableUsernameToUuid.get(username).some
       user: User <- users.get(iri).some
     } yield user).commit.tapBoth(
       _ => ZIO.logInfo(s"Couldn't find user with username '${username.value}'"),
@@ -76,7 +76,7 @@ final case class UserRepoLive(
    */
   def getUserByEmail(email: Email): IO[Option[Nothing], User] =
     (for {
-      iri: UUID  <- lookupTableEmailUuid.get(email).some
+      iri: UUID  <- lookupTableEmailToUuid.get(email).some
       user: User <- users.get(iri).some
     } yield user).commit.tapBoth(
       _ => ZIO.logInfo(s"Couldn't find user with email '${email.value}'"),
@@ -88,24 +88,24 @@ final case class UserRepoLive(
    */
   def checkIfUsernameExists(username: Username): IO[Option[Nothing], Unit] =
     (for {
-      iriOption: Option[UUID] <- lookupTableUsernameUuid.get(username)
-      _ = iriOption match {
-            case None    => ZIO.succeed(()) // username does not exist
-            case Some(_) => ZIO.fail(None)  // username does exist
-          }
-    } yield ()).commit.tap(_ => ZIO.logInfo(s"Username '${username.value}' was checked"))
+      usernameExists <- lookupTableUsernameToUuid.contains(username).commit
+      _ <- usernameExists match {
+             case false => ZIO.succeed(()) // username does not exist
+             case true  => ZIO.fail(None)  // username does exist
+           }
+    } yield ()).tap(_ => ZIO.logInfo(s"Username '${username.value}' was checked"))
 
   /**
    * @inheritDoc
    */
   def checkIfEmailExists(email: Email): IO[Option[Nothing], Unit] =
     (for {
-      iriOption: Option[UUID] <- lookupTableEmailUuid.get(email)
-      _ = iriOption match {
-            case None    => ZIO.succeed(()) // email does not exist
-            case Some(_) => ZIO.fail(None)  // email does exist
-          }
-    } yield ()).commit.tap(_ => ZIO.logInfo(s"Email '${email.value}' was checked"))
+      emailExists <- lookupTableEmailToUuid.contains(email).commit
+      _ <- emailExists match {
+             case false => ZIO.succeed(()) // email does not exist
+             case true  => ZIO.fail(None)  // email does exist
+           }
+    } yield ()).tap(_ => ZIO.logInfo(s"Email '${email.value}' was checked"))
 
   /**
    * @inheritDoc
@@ -114,8 +114,8 @@ final case class UserRepoLive(
     (for {
       user: User <- users.get(id.uuid).some
       _          <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
-      _          <- lookupTableUsernameUuid.delete(user.username) // remove the user also from the lookup table
-      _          <- lookupTableEmailUuid.delete(user.email) // remove the user also from the lookup table
+      _          <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
+      _          <- lookupTableEmailToUuid.delete(user.email) // remove the user also from the lookup table
     } yield id).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
 }
 
