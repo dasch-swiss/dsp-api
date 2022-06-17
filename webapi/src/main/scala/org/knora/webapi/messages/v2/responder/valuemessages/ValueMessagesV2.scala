@@ -2955,6 +2955,8 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
       datatype = OntologyConstants.Xsd.Uri.toSmartIri
     )
 
+    println(77777, uriAsJsonLDObject)
+
     targetSchema match {
       case ApiV2Simple => uriAsJsonLDObject
 
