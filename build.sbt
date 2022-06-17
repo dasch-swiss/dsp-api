@@ -360,8 +360,16 @@ lazy val userRepo = project
     libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
+  .dependsOn(shared, userCore, userSharedTestData % "compile->compile;test->test")
+
+lazy val userSharedTestData = project
+  .in(file("dsp-user/shared-test-data"))
+  .settings(
+    name := "sharedTestData",
+    libraryDependencies ++= Dependencies.userSharedTestDataLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
   .dependsOn(shared, userCore)
-//.dependsOn(userHandler % "compile->compile;test->test", userDomain)
 
 lazy val shared = project
   .in(file("dsp-shared"))
