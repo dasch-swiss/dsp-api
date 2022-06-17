@@ -27,4 +27,3 @@
     knora-base:standoffTagHasStartParent     <http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/1> ;
     knora-base:standoffTagHasUUID           "dd2e785b-041e-4bcb-a77d-570efe8a068c" ;
     knora-base:valueHasUri                  <http://www.maison-george-sand.fr/> .
-            
