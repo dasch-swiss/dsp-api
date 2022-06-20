@@ -56,7 +56,7 @@ object RepositoryUpdatePlan {
         prBasedVersionString = Some("PR 2018")
       ),
       PluginForKnoraBaseVersion(
-        versionNumber = 20,
+        versionNumber = 21,
         plugin = new UpgradePluginPR2079(featureFactoryConfig, log),
         prBasedVersionString = Some("PR 2079")
       )

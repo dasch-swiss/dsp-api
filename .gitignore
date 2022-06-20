@@ -36,11 +36,10 @@ sipi/test
 *.bak
 *.rdb
 .sbtrc
-.trig
+*.trig
 
 dependencies.txt
 /client-test-data.zip
-/db_ls_test_server_dump.trig
 /sipi/images/082E/*
 /sipi/images/originals/082E/*
 sipi/images/1111/*

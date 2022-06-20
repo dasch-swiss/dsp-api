@@ -21,6 +21,8 @@ class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig, log: Logge
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
+    val newObjectValue: String => DatatypeLiteral = (value: String) =>
+      nodeFactory.makeDatatypeLiteral(value, OntologyConstants.Xsd.Uri)
 
     for (statement: Statement <- model) {
       if (statement.pred.iri == OntologyConstants.KnoraBase.ValueHasUri) {
@@ -32,13 +34,12 @@ class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig, log: Logge
               statementsToAdd += nodeFactory.makeStatement(
                 subj = statement.subj,
                 pred = statement.pred,
-                obj = nodeFactory.makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Uri),
+                obj = newObjectValue(literal.value),
                 context = statement.context
               )
 
               log.info(
-                s"Transformed valueHasIri: $literal to ${nodeFactory
-                  .makeDatatypeLiteral(literal.value, OntologyConstants.Xsd.Uri)}."
+                s"Transformed valueHasIri: $literal to ${newObjectValue(literal.value)}."
               )
             }
 
@@ -48,12 +49,12 @@ class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig, log: Logge
             statementsToAdd += nodeFactory.makeStatement(
               subj = statement.subj,
               pred = statement.pred,
-              obj = nodeFactory.makeDatatypeLiteral(node.iri, OntologyConstants.Xsd.Uri),
+              obj = newObjectValue(node.iri),
               context = statement.context
             )
 
             log.info(
-              s"Transformed valueHasIri $node to ${nodeFactory.makeDatatypeLiteral(node.iri, OntologyConstants.Xsd.Uri)}."
+              s"Transformed valueHasIri $node to ${newObjectValue(node.iri)}."
             )
 
           case _ => ()

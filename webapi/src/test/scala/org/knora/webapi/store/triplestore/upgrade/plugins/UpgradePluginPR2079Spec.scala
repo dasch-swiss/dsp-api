@@ -14,7 +14,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
   "Upgrade plugin PR2079" should {
-    "fix the missing datatype of valueHasUri" in {
+    "fix the missing valueHasUri datatype" in {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
@@ -47,7 +47,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
       }
     }
 
-    "fix value valueHasUri etered ad node w/o datatype" in {
+    "fix valueHasUri value added as node w/o datatype" in {
       // Parse the input file.
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
@@ -55,7 +55,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
       val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig, log)
       plugin.transform(model)
 
-      // Check that the value amd datatype was fixed.
+      // Check that the value amd datatype were fixed.
       val subj =
         nodeFactory.makeIriNode("http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2")
       val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUri)
