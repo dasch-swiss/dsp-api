@@ -19,11 +19,16 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
             dspApi          = softwareSystem "DSP-API"   "api.dasch.swiss" {
                 # container <name> [description] [technology] [tags]
                 
-                eventStoreService = container "Event Store Service"
-                eventListener     = container "Event Listener"
+                eventStoreService    = container "Event Store Service"
+                eventListener        = container "Event Listener"
                 triplestoreService   = container "Triplestore Service"
                 arkService           = container "ARK Service"
                 elasticSearchService = container "Elastic Search Service"
+
+                sharedProject           = container "Shared Project" "The project that handles shared entities" {
+                    valueObjectsPackage     = component "ValueObjects Package" "The package that provides value objects"
+                    errorPackage            = component "Error Package" "The package that provides errors"
+                }
 
                 webapiProject     = container "Webapi" "The project that wraps webapi V2"
                 
@@ -34,11 +39,6 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
                 listSlice         = container "List Slice" "The slice that handles lists"
                 routes            = container "Routes" "The slice that provides all routes"
                 
-                sharedProject           = container "Shared Project" "The project that handles shared entities" {
-                    valueObjectsProject     = component "ValueObjects Project" "The package that provides value objects"
-                    errorProject            = component "Error Project" "The package that provides errors"
-                }
-
                 userSlice         = container "User Slice" "The slice that handles users" {
                     userCore        = component "User Core"
                     userDomain      = component "User Domain"
@@ -112,7 +112,7 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
         # component <container identifier> [key] [description]
         component userSlice "ComponentsOfUserSlice" "Components of the User Slice" {
             include *
-            autoLayout
+
         }
 
         component SharedProject "ComponentsOfSharedProject" "Components of the Shared Project" {
@@ -142,7 +142,6 @@ workspace "Architecture Diagrams for DSP" "This is a collection of diagrams for 
             arkService -> arkService "create ARK(URL)"
             eventListener -> elasticSearchService "writeToEsService(E)"
 
-            autoLayout
         }
 
         dynamic userSlice "HttpRequestWithEventsUpdateUser" "Example workflow for a HTTP request with events (update username)" {
