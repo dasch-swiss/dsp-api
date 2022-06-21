@@ -46,39 +46,5 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
         case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
       }
     }
-
-    "fix valueHasUri value added as node w/o datatype" in {
-      // Parse the input file.
-      val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
-
-      // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig, log)
-      plugin.transform(model)
-
-      // Check that the value amd datatype were fixed.
-      val subj =
-        nodeFactory.makeIriNode("http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2")
-      val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUri)
-
-      model
-        .find(
-          subj = Some(subj),
-          pred = Some(pred),
-          obj = None
-        )
-        .toSet
-        .headOption match {
-        case Some(statement: Statement) =>
-          statement.obj match {
-            case datatypeLiteral: DatatypeLiteral =>
-              assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Uri)
-
-            case other =>
-              throw AssertionException(s"Unexpected object for $pred: $other")
-          }
-
-        case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
-      }
-    }
   }
 }

@@ -43,20 +43,6 @@ class UpgradePluginPR2079(featureFactoryConfig: FeatureFactoryConfig, log: Logge
               )
             }
 
-          case node: IriNode =>
-            statementsToRemove += statement
-
-            statementsToAdd += nodeFactory.makeStatement(
-              subj = statement.subj,
-              pred = statement.pred,
-              obj = newObjectValue(node.iri),
-              context = statement.context
-            )
-
-            log.info(
-              s"Transformed valueHasIri $node to ${newObjectValue(node.iri)}."
-            )
-
           case _ => ()
         }
       }

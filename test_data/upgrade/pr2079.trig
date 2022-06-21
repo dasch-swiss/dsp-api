@@ -1,10 +1,6 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
-@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
-@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 
 # value with missing valueHasUri datatype
 <http://rdfh.ch/0103/fN89IUgvSSyMxJ7XWssP9w/values/Rl2rfjDlRBWeuRr-EgIgCw>
@@ -17,13 +13,3 @@
     knora-base:valueHasString     "https://viaf.org/viaf/2571146" ;
     knora-base:valueHasUUID       "PYQ5mqH8TYOKCytMozecWw" ;
     knora-base:valueHasUri        "https://viaf.org/viaf/2571146" .
-
-# bad valueHasUri value and missing datatype
-<http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/2>
-    rdf:type                                knora-base:StandoffUriTag ;
-    knora-base:standoffTagHasEnd            50 ;
-    knora-base:standoffTagHasStart          20 ;
-    knora-base:standoffTagHasStartIndex     2 ;
-    knora-base:standoffTagHasStartParent     <http://rdfh.ch/0103/5LE8P57nROClWUxEPJhiug/values/fEbt5NzaSe6GnCqKoF4Nhg/standoff/1> ;
-    knora-base:standoffTagHasUUID           "dd2e785b-041e-4bcb-a77d-570efe8a068c" ;
-    knora-base:valueHasUri                  <http://www.maison-george-sand.fr/> .
