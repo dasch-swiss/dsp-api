@@ -44,7 +44,6 @@ sealed abstract case class User private (
   /**
    * Update the username of a user
    *
-   *  @param id  the user's ID
    *  @param newValue  the new username
    *  @return the updated [[User]]
    */
@@ -63,7 +62,6 @@ sealed abstract case class User private (
   /**
    * Update the email of a user
    *
-   *  @param id  the user's ID
    *  @param newValue  the new email
    *  @return the updated [[User]]
    */
@@ -82,7 +80,6 @@ sealed abstract case class User private (
   /**
    * Update the given name of a user
    *
-   *  @param id  the user's ID
    *  @param newValue  the new given name
    *  @return the updated [[User]]
    */
@@ -101,7 +98,6 @@ sealed abstract case class User private (
   /**
    * Update the family name of a user
    *
-   *  @param id  the user's ID
    *  @param newValue  the new family name
    *  @return the updated [[User]]
    */
@@ -120,18 +116,17 @@ sealed abstract case class User private (
   /**
    * Update the password of a user
    *
-   *  @param id  the user's ID
    *  @param newValue  the new password
    *  @return the updated [[User]]
    */
-  def updatePassword(newPassword: PasswordHash): User =
+  def updatePassword(newValue: PasswordHash): User =
     new User(
       self.id,
       self.givenName,
       self.familyName,
       self.username,
       self.email,
-      newPassword,
+      newValue,
       self.language,
       self.status
     ) {}
@@ -139,7 +134,6 @@ sealed abstract case class User private (
   /**
    * Update the language of a user
    *
-   *  @param id  the user's ID
    *  @param newValue  the new language
    *  @return the updated [[User]]
    */

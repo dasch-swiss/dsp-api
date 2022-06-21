@@ -24,7 +24,6 @@ import java.util.UUID
  * @param repo  the user repository
  */
 final case class UserHandler(repo: UserRepo) {
-  // implement all possible requests from V2, but divide things up into smaller functions to keep it cleaner than before
 
   /**
    * Retrieves all users (sorted by IRI).
