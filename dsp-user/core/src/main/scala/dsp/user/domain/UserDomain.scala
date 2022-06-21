@@ -5,12 +5,11 @@
 
 package dsp.user.domain
 
-import dsp.valueobjects.User._
 import dsp.valueobjects.Id.UserId
+import dsp.valueobjects.User._
 import zio.prelude.Validation
 
 import java.util.UUID
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 /**
  * Represents the user domain object.

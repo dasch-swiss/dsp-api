@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
-import scala.util.matching.Regex
 import dsp.errors.BadRequestException
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import zio.prelude.Validation
+
+import scala.util.matching.Regex
 
 object User {
 
@@ -143,12 +144,10 @@ object User {
       // check which type of hash we have
       if (other.value.startsWith("$e0801$")) {
         // SCrypt
-        import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
         val encoder = new SCryptPasswordEncoder()
         encoder.matches(self.value, other.value)
       } else if (other.value.startsWith("$2a$")) {
         // BCrypt
-        import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
         val encoder = new BCryptPasswordEncoder()
         encoder.matches(self.value, other.value)
       } else { // TODO do we still need this SHA-1 validation?

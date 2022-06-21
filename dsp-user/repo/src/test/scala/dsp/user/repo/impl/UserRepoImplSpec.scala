@@ -58,7 +58,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
           assertTrue(retrievedUser != user2)
         }
       } +
-      test("return None if a username already exists") {
+      test("return failure (None) if a username already exists") {
         for {
           _     <- UserRepo.storeUser(user1)
           error <- UserRepo.checkIfUsernameExists(user1.username).exit
@@ -72,7 +72,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
           result <- UserRepo.checkIfUsernameExists(SharedTestData.simpleUser2.username)
         } yield assertTrue(result == ())
       } +
-      test("return None if an email already exists") {
+      test("return failure (None) if an email already exists") {
         for {
           _     <- UserRepo.storeUser(user1)
           error <- UserRepo.checkIfEmailExists(user1.email).exit

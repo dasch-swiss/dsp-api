@@ -5,10 +5,8 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
 import dsp.errors.BadRequestException
-
-import java.util.UUID
+import zio.prelude.Validation
 
 sealed trait Iri
 object Iri {

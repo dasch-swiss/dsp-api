@@ -7,18 +7,16 @@ package dsp.user.handler
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.user.api.UserRepo
 import dsp.user.domain.User
+import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.User._
 import zio._
 
 import java.util.UUID
-import dsp.valueobjects.Id.UserId
-import dsp.errors.ForbiddenException
-
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
 /**
  * The user handler.
