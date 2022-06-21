@@ -1,5 +1,22 @@
 # Changelog
 
+### [20.4.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.0...v20.4.1) (2022-06-16)
+
+
+### Bug Fixes
+
+* **admin:** return list labels and comments sorted by language ([#2074](https://www.github.com/dasch-swiss/dsp-api/issues/2074)) ([f3a66cb](https://www.github.com/dasch-swiss/dsp-api/commit/f3a66cb2ada71177ce5c256b36001b4b33072e2d))
+
+
+### Maintenance
+
+* add missing client test data (DEV-979) ([#2072](https://www.github.com/dasch-swiss/dsp-api/issues/2072)) ([54446bc](https://www.github.com/dasch-swiss/dsp-api/commit/54446bcae2e920581d3d4a6848bdcfa8706d6b22))
+* **audio:** remove not required properties ([#2070](https://www.github.com/dasch-swiss/dsp-api/issues/2070)) ([96362f4](https://www.github.com/dasch-swiss/dsp-api/commit/96362f448d0b2ef93cc840685028a79e59026881))
+* **exceptions:** Create sbt project "shared" and move exceptions (DEV-990) ([#2075](https://www.github.com/dasch-swiss/dsp-api/issues/2075)) ([c09392d](https://www.github.com/dasch-swiss/dsp-api/commit/c09392d7741caecfb21c8fe63e9922ccc912e7de))
+* move value objects to separate project (DEV-615) ([#2069](https://www.github.com/dasch-swiss/dsp-api/issues/2069)) ([b55eb12](https://www.github.com/dasch-swiss/dsp-api/commit/b55eb1228414729dc5b53c6cfc952a5305c7dbcd))
+* responder manager as plain case class ([#2073](https://www.github.com/dasch-swiss/dsp-api/issues/2073)) ([7f55697](https://www.github.com/dasch-swiss/dsp-api/commit/7f55697923cfdb6dbcfc6aa35673e3936648572c))
+* **user:** add user project (DEV-586) ([#2063](https://www.github.com/dasch-swiss/dsp-api/issues/2063)) ([0c5ec03](https://www.github.com/dasch-swiss/dsp-api/commit/0c5ec03239b28ed2075622825695c7475d248e6b))
+
 ## [20.4.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.3.1...v20.4.0) (2022-05-25)
 
 
