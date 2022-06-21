@@ -26,8 +26,8 @@ object UserRepoImplSpec extends ZIOSpecDefault {
 
   def spec = (userRepoMockTests + userRepoLiveTests)
 
-  private val user1: User = SharedTestData.simpleUser1
-  private val user2: User = SharedTestData.simpleUser2
+  private val user1: User = SharedTestData.normalUser1
+  private val user2: User = SharedTestData.normalUser2
 
   val userTests =
     test("store several users and retrieve all") {
@@ -69,7 +69,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
       test("return success (Unit) if a username is unique") {
         for {
           _      <- UserRepo.storeUser(user1)
-          result <- UserRepo.checkIfUsernameExists(SharedTestData.simpleUser2.username)
+          result <- UserRepo.checkIfUsernameExists(SharedTestData.normalUser2.username)
         } yield assertTrue(result == ())
       } +
       test("return failure (None) if an email already exists") {
@@ -83,7 +83,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
       test("return success (Unit) if an email is unique") {
         for {
           _      <- UserRepo.storeUser(user1)
-          result <- UserRepo.checkIfEmailExists(SharedTestData.simpleUser2.email)
+          result <- UserRepo.checkIfEmailExists(SharedTestData.normalUser2.email)
         } yield assertTrue(result == ())
       } +
       test("store and delete a user") {

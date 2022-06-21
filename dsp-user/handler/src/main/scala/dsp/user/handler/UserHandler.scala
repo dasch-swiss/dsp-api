@@ -30,7 +30,7 @@ final case class UserHandler(repo: UserRepo) {
    * Retrieves all users (sorted by IRI).
    */
   def getUsers(): UIO[List[User]] =
-    repo.getUsers().map(_.sorted).tap(_ => ZIO.logDebug(s"Got all users"))
+    repo.getUsers().map(_.sorted).tap(_ => ZIO.logInfo(s"Got all users"))
 
   /**
    * Retrieves the user by ID.
@@ -41,7 +41,7 @@ final case class UserHandler(repo: UserRepo) {
     for {
       user <- repo
                 .getUserById(id)
-                .tap(_ => ZIO.logDebug(s"Looked up user by ID '${id}'"))
+                .tap(_ => ZIO.logInfo(s"Looked up user by ID '${id}'"))
                 .mapError(_ => NotFoundException(s"User with ID '${id}' not found"))
     } yield user
 
@@ -53,7 +53,7 @@ final case class UserHandler(repo: UserRepo) {
   def getUserByUsername(username: Username): IO[NotFoundException, User] =
     repo
       .getUserByUsername(username)
-      .tap(_ => ZIO.logDebug(s"Looked up user by username '${username.value}'"))
+      .tap(_ => ZIO.logInfo(s"Looked up user by username '${username.value}'"))
       .mapError(_ => NotFoundException(s"User with Username '${username.value}' not found"))
 
   /**
@@ -64,7 +64,7 @@ final case class UserHandler(repo: UserRepo) {
   def getUserByEmail(email: Email): IO[NotFoundException, User] =
     repo
       .getUserByEmail(email)
-      .tap(_ => ZIO.logDebug(s"Looked up user by email '${email.value}'"))
+      .tap(_ => ZIO.logInfo(s"Looked up user by email '${email.value}'"))
       .mapError(_ => NotFoundException(s"User with Email '${email.value}' not found"))
 
   /**
@@ -76,7 +76,7 @@ final case class UserHandler(repo: UserRepo) {
     for {
       _ <- repo
              .checkIfUsernameExists(username)
-             .tap(_ => ZIO.logDebug(s"Checked if username '${username.value}' is already taken"))
+             .tap(_ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken"))
              .mapError(_ => DuplicateValueException(s"Username '${username.value}' already taken"))
     } yield ()
 
@@ -89,7 +89,7 @@ final case class UserHandler(repo: UserRepo) {
     for {
       _ <- repo
              .checkIfEmailExists(email)
-             .tap(_ => ZIO.logDebug(s"Checked if email '${email.value}' is already taken"))
+             .tap(_ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken"))
              .mapError(_ => DuplicateValueException(s"Email '${email.value}' already taken"))
     } yield ()
 
@@ -119,7 +119,7 @@ final case class UserHandler(repo: UserRepo) {
       _      <- checkIfEmailTaken(email) // TODO reserve email
       user   <- ZIO.succeed(User.make(givenName, familyName, username, email, password, language, status))
       userId <- repo.storeUser(user) // we assume that this can't fail because all validations have passed
-    } yield userId).tap(userId => ZIO.logDebug(s"Created user with ID '${userId}'"))
+    } yield userId).tap(userId => ZIO.logInfo(s"Created user with ID '${userId}'"))
 
   /**
    * Updates the username of a user
@@ -135,7 +135,7 @@ final case class UserHandler(repo: UserRepo) {
       user        <- getUserById(id)
       userUpdated <- ZIO.succeed(user.updateUsername(newValue))
       _           <- repo.storeUser(userUpdated)
-    } yield id).tap(_ => ZIO.logDebug(s"Updated username with new value '${newValue.value}'"))
+    } yield id).tap(_ => ZIO.logInfo(s"Updated username with new value '${newValue.value}'"))
 
   /**
    * Updates the email of a user
@@ -151,7 +151,7 @@ final case class UserHandler(repo: UserRepo) {
       user        <- getUserById(id)
       userUpdated <- ZIO.succeed(user.updateEmail(newValue))
       _           <- repo.storeUser(userUpdated)
-    } yield id).tap(_ => ZIO.logDebug(s"Updated email with new value '${newValue.value}'"))
+    } yield id).tap(_ => ZIO.logInfo(s"Updated email with new value '${newValue.value}'"))
 
   /**
    * Updates the given name of a user
@@ -165,7 +165,7 @@ final case class UserHandler(repo: UserRepo) {
       user        <- getUserById(id)
       userUpdated <- ZIO.succeed(user.updateGivenName(newValue))
       _           <- repo.storeUser(userUpdated)
-    } yield id).tap(_ => ZIO.logDebug(s"Updated givenName with new value '${newValue.value}'"))
+    } yield id).tap(_ => ZIO.logInfo(s"Updated givenName with new value '${newValue.value}'"))
 
   /**
    * Updates the family name of a user
@@ -179,7 +179,7 @@ final case class UserHandler(repo: UserRepo) {
       user        <- getUserById(id)
       userUpdated <- ZIO.succeed(user.updateFamilyName(newValue))
       _           <- repo.storeUser(userUpdated)
-    } yield id).tap(_ => ZIO.logDebug(s"Updated familyName with new value '${newValue.value}'"))
+    } yield id).tap(_ => ZIO.logInfo(s"Updated familyName with new value '${newValue.value}'"))
 
   /**
    * Updates the password of a user
@@ -212,7 +212,7 @@ final case class UserHandler(repo: UserRepo) {
       user        <- getUserById(id)
       userUpdated <- ZIO.succeed(user.updatePassword(newPassword))
       _           <- repo.storeUser(userUpdated)
-    } yield id).tap(_ => ZIO.logDebug(s"Updated password"))
+    } yield id).tap(_ => ZIO.logInfo(s"Updated password"))
   }
 
   /**
@@ -227,7 +227,7 @@ final case class UserHandler(repo: UserRepo) {
       user        <- getUserById(id)
       userUpdated <- ZIO.succeed(user.updateLanguage(newValue))
       _           <- repo.storeUser(userUpdated)
-    } yield id).tap(_ => ZIO.logDebug(s"Updated language with new value '${newValue.value}'"))
+    } yield id).tap(_ => ZIO.logInfo(s"Updated language with new value '${newValue.value}'"))
 
   /**
    * Deletes the user which means that it is marked as deleted.
@@ -239,7 +239,7 @@ final case class UserHandler(repo: UserRepo) {
       _ <- repo
              .deleteUser(id)
              .mapError(_ => NotFoundException(s"User with ID '${id}' not found"))
-    } yield id).tap(_ => ZIO.logDebug(s"Deleted user with ID '${id}'"))
+    } yield id).tap(_ => ZIO.logInfo(s"Deleted user with ID '${id}'"))
 
 }
 
@@ -252,6 +252,6 @@ object UserHandler {
       for {
         repo <- ZIO.service[UserRepo]
       } yield UserHandler(repo)
-    }.tap(_ => ZIO.debug(">>> User handler initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
   }
 }

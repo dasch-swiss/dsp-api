@@ -119,7 +119,7 @@ final case class UserRepoMock(
       _ <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
       _ <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
       _ <- lookupTableEmailToUuid.delete(user.email) // remove the user also from the lookup table
-    } yield id).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
+    } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted user: ${id}"))
   }
 
 }
@@ -135,6 +135,6 @@ object UserRepoMock {
         lutUsername <- TMap.empty[Username, UUID].commit
         lutEmail    <- TMap.empty[Email, UUID].commit
       } yield UserRepoMock(users, lutUsername, lutEmail)
-    }.tap(_ => ZIO.debug(">>> In-memory user repository initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> In-memory user repository initialized <<<"))
   }
 }

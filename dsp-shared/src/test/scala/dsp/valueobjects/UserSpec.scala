@@ -33,9 +33,9 @@ object UserSpec extends ZIOSpecDefault {
   private val invalidLanguageCode                         = "00"
 
   def spec =
-    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + languageCodeTest + systemAdminTest)
+    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + languageCodeTest + systemAdminTest)
 
-  private val usernameTest = suite("UserSpec - Username")(
+  private val usernameTest = suite("Username")(
     test("pass an empty value and throw an error") {
       assertTrue(
         Username.make("") == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
@@ -163,7 +163,7 @@ object UserSpec extends ZIOSpecDefault {
       }
   )
 
-  private val emailTest = suite("UserSpec - Email")(
+  private val emailTest = suite("Email")(
     test("pass an empty value and throw an error") {
       assertTrue(Email.make("") == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))) &&
       assertTrue(
@@ -193,7 +193,7 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  private val givenNameTest = suite("UserSpec - GivenName")(
+  private val givenNameTest = suite("GivenName")(
     test("pass an empty value and throw an error") {
       assertTrue(
         GivenName.make("") == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
@@ -213,7 +213,7 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  private val familyNameTest = suite("UserSpec - FamilyName")(
+  private val familyNameTest = suite("FamilyName")(
     test("pass an empty value and throw an error") {
       assertTrue(
         FamilyName.make("") == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
@@ -235,7 +235,7 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  private val passwordTest = suite("UserSpec - Password")(
+  private val passwordTest = suite("Password")(
     test("pass an empty value and throw an error") {
       assertTrue(
         Password.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
@@ -255,7 +255,7 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  private val passwordHashTest = suite("UserSpec - PasswordHash")(
+  private val passwordHashTest = suite("PasswordHash")(
     test("pass an empty value and throw an error") {
       assertTrue(
         PasswordHash.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
@@ -267,15 +267,15 @@ object UserSpec extends ZIOSpecDefault {
     test("test if two passwords match") {
       val password         = PasswordHash.make("password1").fold(e => throw e.head, v => v)
       val passwordEqual    = PasswordHash.make("password1").fold(e => throw e.head, v => v)
-      val passwordNotEqual = PasswordHash.make("password1").fold(e => throw e.head, v => v)
+      val passwordNotEqual = PasswordHash.make("password2").fold(e => throw e.head, v => v)
 
-      assertTrue(password.matches(password) == true) &&
-      assertTrue(password.matches(passwordEqual) == true) &&
-      assertTrue(password.matches(passwordNotEqual) == false)
+      assertTrue(password.matches(password)) &&
+      assertTrue(password.matches(passwordEqual)) &&
+      assertTrue(!password.matches(passwordNotEqual))
     }
   )
 
-  private val languageCodeTest = suite("UserSpec - LanguageCode")(
+  private val languageCodeTest = suite("LanguageCode")(
     test("pass an empty value and throw an error") {
       assertTrue(
         LanguageCode.make("") == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
@@ -309,7 +309,7 @@ object UserSpec extends ZIOSpecDefault {
     }
   )
 
-  private val systemAdminTest = suite("GroupSpec - SystemAdmin")(
+  private val systemAdminTest = suite("SystemAdmin")(
     test("pass a valid object and successfully create value object") {
       assertTrue(SystemAdmin.make(true).toOption.get.value == true)
     }

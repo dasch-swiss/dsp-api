@@ -25,9 +25,9 @@ import dsp.errors.ForbiddenException
  */
 object UserHandlerSpec extends ZIOSpecDefault {
 
-  def spec = (userTests)
+  def spec = (getAllUsersTests + createUserTest + getUserByTest + updateUserTest + deleteUserTest)
 
-  val userTests = suite("UserHandler")(
+  private val getAllUsersTests = suite("getAllUsers")(
     test("return an empty map when trying to get all users but there are none") {
       for {
         userHandler <- ZIO.service[UserHandler]
@@ -71,7 +71,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
 
         retrievedUsers <- userHandler.getUsers()
       } yield assertTrue(retrievedUsers.size == 3)
-    },
+    }
+  ).provide(UserRepoMock.layer, UserHandler.layer)
+
+  private val createUserTest = suite("createUser")(
     test("return an Error when creating a user if a username is already taken") {
       for {
         userHandler <- ZIO.service[UserHandler]
@@ -133,7 +136,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
       } yield assert(error)(
         fails(equalTo(DuplicateValueException(s"Email '${SharedTestData.simpleEmail1.value}' already taken")))
       )
-    },
+    }
+  ).provide(UserRepoMock.layer, UserHandler.layer)
+
+  private val getUserByTest = suite("getUserBy")(
     test("store a user and retrieve by ID") {
       for {
         userHandler <- ZIO.service[UserHandler]
@@ -225,7 +231,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
         userHandler <- ZIO.service[UserHandler]
         error       <- userHandler.getUserByEmail(email).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with Email '${email.value}' not found"))))
-    },
+    }
+  ).provide(UserRepoMock.layer, UserHandler.layer)
+
+  private val updateUserTest = suite("updateUser")(
     test("store a user and update the username") {
       val newValue = Username.make("newUsername").fold(e => throw e.head, v => v)
       for {
@@ -421,7 +430,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
       "return an error when the requesting user is not the user whose password is asked to be changed when trying to update the password"
     ) {
       val newValue  = PasswordHash.make("newPassword1").fold(e => throw e.head, v => v)
-      val otherUser = SharedTestData.simpleUser2
+      val otherUser = SharedTestData.normalUser2
       for {
         userHandler <- ZIO.service[UserHandler]
 
@@ -470,7 +479,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.password == SharedTestData.simplePassword1) &&
         assertTrue(retrievedUser.language != SharedTestData.languageEn) &&
         assertTrue(retrievedUser.status == SharedTestData.statusTrue)
-    },
+    }
+  ).provide(UserRepoMock.layer, UserHandler.layer)
+
+  private val deleteUserTest = suite("deleteUser")(
     test("delete a user") {
       for {
         userHandler <- ZIO.service[UserHandler]
@@ -513,9 +525,9 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test("return an error if the ID of a user is not found when trying to delete the user") {
       for {
         userHandler <- ZIO.service[UserHandler]
-        error       <- userHandler.deleteUser(SharedTestData.simpleUser2.id).exit
+        error       <- userHandler.deleteUser(SharedTestData.normalUser2.id).exit
       } yield assert(error)(
-        fails(equalTo(NotFoundException(s"User with ID '${SharedTestData.simpleUser2.id}' not found")))
+        fails(equalTo(NotFoundException(s"User with ID '${SharedTestData.normalUser2.id}' not found")))
       )
     }
   ).provide(UserRepoMock.layer, UserHandler.layer)

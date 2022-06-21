@@ -34,7 +34,7 @@ object SharedTestData {
   val statusTrue  = UserStatus.make(true).fold(e => throw e.head, v => v)
   val statusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
 
-  val simpleUser1 =
+  val normalUser1 =
     User.make(
       simpleGivenName1,
       simpleFamilyName1,
@@ -45,7 +45,7 @@ object SharedTestData {
       statusTrue
     )
 
-  val simpleUser2 =
+  val normalUser2 =
     User.make(
       simpleGivenName2,
       simpleFamilyName2,

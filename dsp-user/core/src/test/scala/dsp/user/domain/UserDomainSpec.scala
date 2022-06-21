@@ -20,110 +20,138 @@ object UserDomainSpec extends ZIOSpecDefault {
 
   def spec = (userDomainTests)
 
-  val userDomainTests = suite("UserDomain")(
+  private val userDomainTests = suite("UserDomain")(
     test("compare two users") {
-      val user         = SharedTestData.simpleUser1
-      val userEqual    = SharedTestData.simpleUser1 // same as user, i.e. has same UserId
-      val userNotEqual = SharedTestData.simpleUser2
-      for {
-        isEqualtoItself        <- ZIO.succeed(user.equals(user))
-        isEqualtoEqualUser     <- ZIO.succeed(user.equals(userEqual))
-        isEqualtoDifferentUser <- ZIO.succeed(user.equals(userNotEqual))
-      } yield assertTrue(isEqualtoItself == true) &&
-        assertTrue(isEqualtoEqualUser == true) &&
-        assertTrue(isEqualtoDifferentUser == false)
+      val user         = SharedTestData.normalUser1
+      val userEqual    = SharedTestData.normalUser1 // same as user, i.e. has same UserId
+      val userNotEqual = SharedTestData.normalUser2
+
+      val isEqualtoItself        = user.equals(user)
+      val isEqualtoEqualUser     = user.equals(userEqual)
+      val isEqualtoDifferentUser = user.equals(userNotEqual)
+
+      assertTrue(isEqualtoItself) &&
+      assertTrue(isEqualtoEqualUser) &&
+      assertTrue(!isEqualtoDifferentUser)
+    },
+    test("create a user") {
+      val user =
+        User.make(
+          SharedTestData.simpleGivenName1,
+          SharedTestData.simpleFamilyName1,
+          SharedTestData.simpleUsername1,
+          SharedTestData.simpleEmail1,
+          SharedTestData.simplePassword1,
+          SharedTestData.languageEn,
+          SharedTestData.statusTrue
+        )
+
+      assertTrue(user.username == SharedTestData.simpleUsername1) &&
+      assertTrue(user.email == SharedTestData.simpleEmail1) &&
+      assertTrue(user.givenName == SharedTestData.simpleGivenName1) &&
+      assertTrue(user.familyName == SharedTestData.simpleFamilyName1) &&
+      assertTrue(user.password == SharedTestData.simplePassword1) &&
+      assertTrue(user.language == SharedTestData.languageEn) &&
+      assertTrue(user.status == SharedTestData.statusTrue)
     },
     test("update the username") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = Username.make("newUsername").fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updateUsername(newValue))
-      } yield assertTrue(updatedUser.username == newValue) &&
-        assertTrue(updatedUser.username != user.username) &&
-        assertTrue(updatedUser.email == user.email) &&
-        assertTrue(updatedUser.givenName == user.givenName) &&
-        assertTrue(updatedUser.familyName == user.familyName) &&
-        assertTrue(updatedUser.password == user.password) &&
-        assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+
+      val updatedUser = user.updateUsername(newValue)
+
+      assertTrue(updatedUser.username == newValue) &&
+      assertTrue(updatedUser.username != user.username) &&
+      assertTrue(updatedUser.email == user.email) &&
+      assertTrue(updatedUser.givenName == user.givenName) &&
+      assertTrue(updatedUser.familyName == user.familyName) &&
+      assertTrue(updatedUser.password == user.password) &&
+      assertTrue(updatedUser.language == user.language) &&
+      assertTrue(updatedUser.status == user.status)
     },
     test("update the email") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = Email.make("newEmail@mail.com").fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updateEmail(newValue))
-      } yield assertTrue(updatedUser.email == newValue) &&
-        assertTrue(updatedUser.email != user.email) &&
-        assertTrue(updatedUser.givenName == user.givenName) &&
-        assertTrue(updatedUser.familyName == user.familyName) &&
-        assertTrue(updatedUser.password == user.password) &&
-        assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+
+      val updatedUser = user.updateEmail(newValue)
+
+      assertTrue(updatedUser.email == newValue) &&
+      assertTrue(updatedUser.email != user.email) &&
+      assertTrue(updatedUser.givenName == user.givenName) &&
+      assertTrue(updatedUser.familyName == user.familyName) &&
+      assertTrue(updatedUser.password == user.password) &&
+      assertTrue(updatedUser.language == user.language) &&
+      assertTrue(updatedUser.status == user.status)
     },
     test("update the givenName") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = GivenName.make("newGivenName").fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updateGivenName(newValue))
-      } yield assertTrue(updatedUser.givenName == newValue) &&
-        assertTrue(updatedUser.email == user.email) &&
-        assertTrue(updatedUser.givenName != user.givenName) &&
-        assertTrue(updatedUser.familyName == user.familyName) &&
-        assertTrue(updatedUser.password == user.password) &&
-        assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+
+      val updatedUser = user.updateGivenName(newValue)
+
+      assertTrue(updatedUser.givenName == newValue) &&
+      assertTrue(updatedUser.email == user.email) &&
+      assertTrue(updatedUser.givenName != user.givenName) &&
+      assertTrue(updatedUser.familyName == user.familyName) &&
+      assertTrue(updatedUser.password == user.password) &&
+      assertTrue(updatedUser.language == user.language) &&
+      assertTrue(updatedUser.status == user.status)
     },
     test("update the familyName") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = FamilyName.make("newFamilyName").fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updateFamilyName(newValue))
-      } yield assertTrue(updatedUser.familyName == newValue) &&
-        assertTrue(updatedUser.email == user.email) &&
-        assertTrue(updatedUser.givenName == user.givenName) &&
-        assertTrue(updatedUser.familyName != user.familyName) &&
-        assertTrue(updatedUser.password == user.password) &&
-        assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+
+      val updatedUser = user.updateFamilyName(newValue)
+
+      assertTrue(updatedUser.familyName == newValue) &&
+      assertTrue(updatedUser.email == user.email) &&
+      assertTrue(updatedUser.givenName == user.givenName) &&
+      assertTrue(updatedUser.familyName != user.familyName) &&
+      assertTrue(updatedUser.password == user.password) &&
+      assertTrue(updatedUser.language == user.language) &&
+      assertTrue(updatedUser.status == user.status)
     },
     test("update the password") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = PasswordHash.make("newPassword1").fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updatePassword(newValue))
-      } yield assertTrue(updatedUser.password == newValue) &&
-        assertTrue(updatedUser.email == user.email) &&
-        assertTrue(updatedUser.givenName == user.givenName) &&
-        assertTrue(updatedUser.familyName == user.familyName) &&
-        assertTrue(updatedUser.password != user.password) &&
-        assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+
+      val updatedUser = user.updatePassword(newValue)
+
+      assertTrue(updatedUser.password == newValue) &&
+      assertTrue(updatedUser.email == user.email) &&
+      assertTrue(updatedUser.givenName == user.givenName) &&
+      assertTrue(updatedUser.familyName == user.familyName) &&
+      assertTrue(updatedUser.password != user.password) &&
+      assertTrue(updatedUser.language == user.language) &&
+      assertTrue(updatedUser.status == user.status)
     },
     test("update the language") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = LanguageCode.make("fr").fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updateLanguage(newValue))
-      } yield assertTrue(updatedUser.language == newValue) &&
-        assertTrue(updatedUser.email == user.email) &&
-        assertTrue(updatedUser.givenName == user.givenName) &&
-        assertTrue(updatedUser.familyName == user.familyName) &&
-        assertTrue(updatedUser.password == user.password) &&
-        assertTrue(updatedUser.language != user.language) &&
-        assertTrue(updatedUser.status == user.status)
+
+      val updatedUser = user.updateLanguage(newValue)
+
+      assertTrue(updatedUser.language == newValue) &&
+      assertTrue(updatedUser.email == user.email) &&
+      assertTrue(updatedUser.givenName == user.givenName) &&
+      assertTrue(updatedUser.familyName == user.familyName) &&
+      assertTrue(updatedUser.password == user.password) &&
+      assertTrue(updatedUser.language != user.language) &&
+      assertTrue(updatedUser.status == user.status)
     },
     test("update the status") {
-      val user     = SharedTestData.simpleUser1
+      val user     = SharedTestData.normalUser1
       val newValue = UserStatus.make(false).fold(e => throw e.head, v => v)
-      for {
-        updatedUser <- ZIO.succeed(user.updateStatus(newValue))
-      } yield assertTrue(updatedUser.status == newValue) &&
-        assertTrue(updatedUser.email == user.email) &&
-        assertTrue(updatedUser.givenName == user.givenName) &&
-        assertTrue(updatedUser.familyName == user.familyName) &&
-        assertTrue(updatedUser.password == user.password) &&
-        assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status != user.status)
+
+      val updatedUser = user.updateStatus(newValue)
+
+      assertTrue(updatedUser.status == newValue) &&
+      assertTrue(updatedUser.email == user.email) &&
+      assertTrue(updatedUser.givenName == user.givenName) &&
+      assertTrue(updatedUser.familyName == user.familyName) &&
+      assertTrue(updatedUser.password == user.password) &&
+      assertTrue(updatedUser.language == user.language) &&
+      assertTrue(updatedUser.status != user.status)
     }
   )
 }
