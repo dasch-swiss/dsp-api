@@ -140,20 +140,28 @@ object User {
    * PasswordHash value object. Takes a string as input and hashes it.
    */
   sealed abstract case class PasswordHash private (value: String) { self =>
-    def matches(other: PasswordHash): Boolean =
+
+    /**
+     * Check password (in clear text). The password supplied in clear text is compared against the
+     * stored hash.
+     *
+     * @param passwordString Password (clear text) to be checked
+     * @return true if password matches, false otherwise
+     */
+    def matches(passwordString: String): Boolean =
       // check which type of hash we have
-      if (other.value.startsWith("$e0801$")) {
+      if (self.value.startsWith("$e0801$")) {
         // SCrypt
         val encoder = new SCryptPasswordEncoder()
-        encoder.matches(self.value, other.value)
-      } else if (other.value.startsWith("$2a$")) {
+        encoder.matches(passwordString, self.value)
+      } else if (self.value.startsWith("$2a$")) {
         // BCrypt
         val encoder = new BCryptPasswordEncoder()
-        encoder.matches(self.value, other.value)
+        encoder.matches(passwordString, self.value)
       } else { // TODO do we still need this SHA-1 validation?
         // SHA-1
         val md = java.security.MessageDigest.getInstance("SHA-1")
-        md.digest(self.value.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(other.value)
+        md.digest(self.value.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(self.value)
       }
 
   }

@@ -262,16 +262,20 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(PasswordHash.make(validPassword).toOption.get.value == validPassword)
-    },
-    test("test if two passwords match") {
-      val password         = PasswordHash.make("password1").fold(e => throw e.head, v => v)
-      val passwordEqual    = PasswordHash.make("password1").fold(e => throw e.head, v => v)
-      val passwordNotEqual = PasswordHash.make("password2").fold(e => throw e.head, v => v)
+      val passwordString = "password1"
+      val password       = PasswordHash.make(passwordString).fold(e => throw e.head, v => v)
 
-      assertTrue(password.matches(password)) &&
-      assertTrue(password.matches(passwordEqual)) &&
-      assertTrue(!password.matches(passwordNotEqual))
+      assertTrue(password.matches(passwordString))
+    },
+    test("test if a password matches it hashed value") {
+      val passwordString         = "password1"
+      val passwordEqualString    = "password1"
+      val passwordNotEqualString = "password2"
+
+      val password = PasswordHash.make(passwordString).fold(e => throw e.head, v => v)
+
+      assertTrue(password.matches(passwordEqualString)) &&
+      assertTrue(!password.matches(passwordNotEqualString))
     }
   )
 
