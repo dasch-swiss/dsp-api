@@ -89,6 +89,18 @@
 
 
 
+:hasListValue
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "Listenwert"@de,
+                                      "List value"@en ;
+    knora-base:subjectClassConstraint :FreeTestWithListValue ;
+    knora-base:objectClassConstraint  knora-base:ListValue ;
+    salsah-gui:guiElement             salsah-gui:List ;
+    salsah-gui:guiAttribute           "hlist=<http://rdfh.ch/lists/0001/free-test-list>" .
+
+
+
 :FreeTest
     rdf:type                owl:Class ;
     rdfs:subClassOf         knora-base:Resource,
@@ -407,3 +419,14 @@
     knora-base:subjectClassConstraint :Book ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
+
+:FreeTestWithListValue
+    rdf:type        owl:Class ;
+    rdfs:subClassOf knora-base:Resource ,
+                    [ rdf:type            owl:Restriction ;
+                      owl:onProperty      :hasListValue ;
+                      owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ] ;
+    rdfs:label      "Listenobjekt"@de,
+                    "Object with a list value"@en ;
+    rdfs:comment    """A comment for object with a list value"""@en .
