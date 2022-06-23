@@ -1,5 +1,16 @@
 # Changelog
 
+## [21.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.1...v21.0.0) (2022-06-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* fix valueHasUri bad values and missing types (DEV-1036) (#2079)
+
+### Bug Fixes
+
+* fix valueHasUri bad values and missing types (DEV-1036) ([#2079](https://www.github.com/dasch-swiss/dsp-api/issues/2079)) ([de1e5a4](https://www.github.com/dasch-swiss/dsp-api/commit/de1e5a4e2ce83ad395a76b33b6e2044db6d3003d))
+
 ### [20.4.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.0...v20.4.1) (2022-06-16)
 
 
