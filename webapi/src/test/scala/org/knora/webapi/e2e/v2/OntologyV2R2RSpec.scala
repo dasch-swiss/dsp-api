@@ -1738,8 +1738,6 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}
       """.stripMargin
 
-      // TODO: there should not be any `xsd:dateTimeStamp` in our codebase anymore. This has been deprecated a long time ago.
-
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
       ) ~> ontologiesPath ~> check {
