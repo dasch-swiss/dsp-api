@@ -57,11 +57,21 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
       val newResource3DeletionDate         = getDateValue(model, resource3, deletionDate)
 
       // Check that the dates were fixed.
-      // Resource 1: only one value needs to be updated
       newResource1CreationDate should not equal (resource1CreationDate)
       newResource1CreationDate should endWith("Z")
 
-      // TODO: finish test case
+      newResource2CreationDate should not equal (resource2CreationDate)
+      newResource2CreationDate should endWith("Z")
+      newResource2LastModificationDate should not equal (resource2CreationDate)
+      newResource2LastModificationDate should endWith("Z")
+
+      newResource3CreationDate should equal(resource3CreationDate) // is equal!
+      newResource3CreationDate should endWith("Z")
+      newResource3LastModificationDate should not equal (resource3CreationDate)
+      newResource3LastModificationDate should endWith("Z")
+      newResource3DeletionDate should not equal (resource3CreationDate)
+      newResource3DeletionDate should endWith("Z")
+
       // TODO: look into template, if it could be made more robust
       // TODO: see if test can be made real unit test
     }

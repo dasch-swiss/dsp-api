@@ -33,7 +33,7 @@ class UpgradePluginPR2081(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       statement.obj match {
         case literal: DatatypeLiteral if shouldTransform(literal) =>
           val newValue = newObjectValue(literal.value)
-          println(s"Transformed ${literal.value} => ${newValue.value}")
+          log.debug(s"Transformed ${literal.value} => ${newValue.value}")
           statementsToRemove += statement
           statementsToAdd += nodeFactory.makeStatement(
             subj = statement.subj,
