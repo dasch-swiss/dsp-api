@@ -278,6 +278,12 @@ init-db-test-from-ls-test-server: db_ls_test_server_dump.trig init-db-test-empty
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
+.PHONY: init-db-test-from-ls-test-server-trig-file
+init-db-test-from-ls-test-server-trig-file: init-db-test-empty ## init local database with data from a local ls-test-server dump
+	@echo $@
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+
 #################################
 ## Other
 #################################
