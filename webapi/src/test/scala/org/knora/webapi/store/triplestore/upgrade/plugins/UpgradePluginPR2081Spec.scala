@@ -71,9 +71,6 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
       newResource3LastModificationDate should endWith("Z")
       newResource3DeletionDate should not equal (resource3CreationDate)
       newResource3DeletionDate should endWith("Z")
-
-      // TODO: look into template, if it could be made more robust
-      // TODO: see if test can be made real unit test
     }
   }
 }
