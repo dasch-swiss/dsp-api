@@ -13,8 +13,8 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 import java.time.Instant
 
 /**
- * Transforms a repository for Knora PR 2079.
- * Adds missing datatype ^^<http://www.w3.org/2001/XMLSchema#anyURI> and/or value to valueHasUri
+ * Transforms a repository for Knora PR 2081.
+ * Fixes wrong date serialisations (all `xsd:dateTime` in the database should end on `Z` rather than specifying a time zone).
  */
 class UpgradePluginPR2081(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
