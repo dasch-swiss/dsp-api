@@ -1,5 +1,12 @@
 # Changelog
 
+### [21.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.0...v21.0.1) (2022-06-23)
+
+
+### Bug Fixes
+
+* fix RepositoryUpdater by removing old way of adding plugins ([#2082](https://www.github.com/dasch-swiss/dsp-api/issues/2082)) ([6599b68](https://www.github.com/dasch-swiss/dsp-api/commit/6599b684da0e6d6506a311441a0214f50e5fb3d6))
+
 ## [21.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.1...v21.0.0) (2022-06-23)
 
 
