@@ -20,7 +20,7 @@ import java.time.Instant
 /**
  * Transforms a repository for DSP-API PR 2018.
  */
-class UpgradePluginPR2018() extends UpgradePlugin {
+class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   private val newModificationDate         = Instant.now.toString
   private val ontologyType: IriNode       = nodeFactory.makeIriNode(Ontology)
@@ -37,7 +37,7 @@ class UpgradePluginPR2018() extends UpgradePlugin {
         context = Some(ontology.iri)
       )
 
-      println(s"Updated ontology: ${ontology.iri} with LastModificationDate")
+      log.info(s"Updated ontology: ${ontology.iri} with LastModificationDate")
     }
 
   private def getOntologiesToTransform(model: RdfModel): Iterator[IriNode] = {

@@ -8,11 +8,12 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import com.typesafe.scalalogging.Logger
 
 /**
  * Transforms a repository for Knora PR 1921.
  */
-class UpgradePluginPR1921() extends UpgradePlugin {
+class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   // Group descriptions without language attribute get language attribute defined in DEFAULT_LANG
   private val DEFAULT_LANG = "en"
@@ -40,7 +41,7 @@ class UpgradePluginPR1921() extends UpgradePlugin {
             context = statement.context
           )
 
-          println(
+          log.info(
             s"Updated <${statement.subj}> <${statement.pred}> to <${newPredicateLabel.stringValue}> with <${groupDescriptionWithLanguage}>"
           )
 
@@ -54,7 +55,7 @@ class UpgradePluginPR1921() extends UpgradePlugin {
             obj = statement.obj,
             context = statement.context
           )
-          println(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
+          log.info(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
       }
 
     for (statement: Statement <- model) {
