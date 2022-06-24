@@ -242,6 +242,18 @@ lazy val apiMain = project
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
 
+// Value Objects project
+
+lazy val valueObjects = project
+  .in(file("dsp-value-objects"))
+  .settings(
+    name := "valueObjects",
+    libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+
+// Schema projects
+
 lazy val schemaApi = project
   .in(file("dsp-schema/api"))
   .settings(
@@ -290,6 +302,73 @@ lazy val schemaRepoSearchService = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
+
+// User projects
+
+lazy val userInterface = project
+  .in(file("dsp-user/interface"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userInterface",
+    libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, userHandler)
+
+lazy val userHandler = project
+  .in(file("dsp-user/handler"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userHandler",
+    libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, userCore, userRepo % "test->test") //userHandler tests need mock implementation of UserRepo
+
+lazy val userCore = project
+  .in(file("dsp-user/core"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userCore",
+    libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, userCore)
+//.dependsOn(userHandler % "compile->compile;test->test", userDomain)
 
 lazy val shared = project
   .in(file("dsp-shared"))

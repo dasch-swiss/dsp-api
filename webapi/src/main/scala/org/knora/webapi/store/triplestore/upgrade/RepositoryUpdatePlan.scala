@@ -33,25 +33,24 @@ object RepositoryUpdatePlan {
         plugin = new UpgradePluginPR1372(),
         prBasedVersionString = Some("PR 1372")
       ),
-      PluginForKnoraBaseVersion(versionNumber = 5, plugin = new NoopPlugin, prBasedVersionString = Some("PR 1440")),
+      PluginForKnoraBaseVersion(
+        versionNumber = 5,
+        plugin = new NoopPlugin,
+        prBasedVersionString = Some("PR 1440")
+      ),
       PluginForKnoraBaseVersion(versionNumber = 6, plugin = new NoopPlugin), // PR 1206
       PluginForKnoraBaseVersion(versionNumber = 7, plugin = new NoopPlugin), // PR 1403
       PluginForKnoraBaseVersion(versionNumber = 8, plugin = new UpgradePluginPR1615()),
-      PluginForKnoraBaseVersion(versionNumber = 9, plugin = new UpgradePluginPR1746()),
+      PluginForKnoraBaseVersion(versionNumber = 9, plugin = new UpgradePluginPR1746(log)),
       PluginForKnoraBaseVersion(versionNumber = 10, plugin = new NoopPlugin), // PR 1808
       PluginForKnoraBaseVersion(versionNumber = 11, plugin = new NoopPlugin), // PR 1813
       PluginForKnoraBaseVersion(versionNumber = 12, plugin = new NoopPlugin), // PR 1891
-      PluginForKnoraBaseVersion(
-        versionNumber = 13,
-        plugin = new UpgradePluginPR1921(),
-        prBasedVersionString = Some("PR 1921")
-      ),
+      PluginForKnoraBaseVersion(versionNumber = 13, plugin = new UpgradePluginPR1921(log)),
       PluginForKnoraBaseVersion(versionNumber = 14, plugin = new NoopPlugin), // PR 1992
-      PluginForKnoraBaseVersion(
-        versionNumber = 20,
-        plugin = new UpgradePluginPR2018(),
-        prBasedVersionString = Some("PR 2018")
-      )
+      PluginForKnoraBaseVersion(versionNumber = 20, plugin = new UpgradePluginPR2018(log)),
+      PluginForKnoraBaseVersion(versionNumber = 21, plugin = new UpgradePluginPR2079(log))
+      // KEEP IT ON THE BOTTOM
+      // From "versionNumber = 6" don't use prBasedVersionString!
     )
 
   /**

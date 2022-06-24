@@ -3,7 +3,7 @@ resolvers ++= Seq(
 )
 
 // please don't remove or merge uncommented to main
-addDependencyTreePlugin
+//addDependencyTreePlugin
 
 addSbtPlugin("com.typesafe.sbt"  % "sbt-git"             % "1.0.2")
 addSbtPlugin("com.github.sbt"    % "sbt-native-packager" % "1.9.9")
