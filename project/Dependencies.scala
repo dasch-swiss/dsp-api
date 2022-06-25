@@ -20,12 +20,12 @@ object Dependencies {
   val jenaVersion       = "4.4.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
-  val ZioVersion        = "2.0.0-RC6+92-983fe668-SNAPSHOT"
+  val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
   val ZioConfigVersion  = "3.0.0-RC9"
   val ZioSchemaVersion  = "0.2.0-RC5"
-  val ZioLoggingVersion = "2.0.0-RC9"
+  val ZioLoggingVersion = "2.0.0-RC10"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC13"
 
@@ -36,6 +36,7 @@ object Dependencies {
   val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
   val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
   val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
+  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
@@ -152,6 +153,7 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioLogging,
+    zioLoggingSlf4j,
     zioMacros,
     zioPrelude,
     zioTest    % Test,

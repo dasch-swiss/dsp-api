@@ -18,6 +18,9 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
+import zio.Runtime
+import zio.Runtime._
+import zio.logging.backend.SLF4J
 
 import java.util.concurrent.TimeUnit
 
@@ -34,7 +37,6 @@ object Main extends scala.App with LiveCore {
    */
   lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig](
-      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -52,7 +54,8 @@ object Main extends scala.App with LiveCore {
    * allocated immediately, and not released until the `Runtime` is shut down or
    * the end of the application.
    */
-  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
+  lazy val runtime =
+    Runtime.unsafeFromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
 
   // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
   val managers = for {
