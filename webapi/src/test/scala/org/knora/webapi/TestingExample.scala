@@ -13,9 +13,17 @@ object TestingExample extends scala.App {
       }
     }
 
-  val runtime = Runtime.unsafeFromLayer(layer)
+  // The ZIO runtime used to run functional effects
+  lazy val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(layer)
+    }
 
   println("before shutdown")
-  runtime.shutdown()
+
+  Unsafe.unsafe { implicit u =>
+    runtime.unsafe.shutdown()
+  }
+
   println("after shutdown")
 }

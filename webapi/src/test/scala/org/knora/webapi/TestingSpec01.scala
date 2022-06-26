@@ -16,7 +16,10 @@ class TestingSpec01 extends AnyWordSpecLike with Matchers with BeforeAndAfterAll
       }
     }
 
-  val runtime = Runtime.unsafeFromLayer(layer)
+  lazy val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(layer)
+    }
 
   override def afterAll() =
     println("after all TestingSpec01")

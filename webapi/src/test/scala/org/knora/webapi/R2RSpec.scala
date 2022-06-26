@@ -50,15 +50,12 @@ import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import zio.&
-import zio.Runtime
-import zio.ZEnvironment
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -112,7 +109,6 @@ class R2RSpec
    */
   lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
-      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -130,13 +126,18 @@ class R2RSpec
     )
 
   // The ZIO runtime used to run functional effects
-  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
+  lazy val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
+    }
 
   /**
    * Create both managers by unsafe running them.
    */
   lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime.unsafeRun(managers)
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(managers).getOrElse(c => throw FiberFailure(c))
+    }
 
   // start the Application Actor
   lazy val appActor: ActorRef =
@@ -170,20 +171,28 @@ class R2RSpec
     appActor ! AppStop()
 
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    runtime.shutdown()
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
   }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.loadTestData(rdfDataObjects)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(
+        (for {
+          testClient <- ZIO.service[TestClientService]
+          result     <- testClient.loadTestData(rdfDataObjects)
+        } yield result)
+      )
+    }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity
+        .toStrict(scala.concurrent.duration.Duration(5.toLong, TimeUnit.SECONDS))
+        .map(_.data.decodeString("UTF-8"))
+    val responseBodyStr =
+      Await.result(responseBodyFuture, scala.concurrent.duration.Duration(5.toLong, TimeUnit.SECONDS))
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 

@@ -128,7 +128,6 @@ class E2ESpec(_system: ActorSystem)
    */
   lazy val effectLayers =
     ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
-      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -147,13 +146,17 @@ class E2ESpec(_system: ActorSystem)
 
   // The ZIO runtime used to run functional effects
   lazy val runtime =
-    Runtime.unsafeFromLayer(effectLayers)
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
+    }
 
   /**
    * Create both managers by unsafe running them.
    */
   lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime.unsafeRun(managers)
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(managers).getOrElse(c => throw FiberFailure(c))
+    }
 
   // start the Application Actor
   lazy val appActor: ActorRef =
@@ -192,64 +195,94 @@ class E2ESpec(_system: ActorSystem)
     TestKit.shutdownActorSystem(system)
 
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    runtime.shutdown()
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
   }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.loadTestData(rdfDataObjects)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.loadTestData(rdfDataObjects)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.singleAwaitingRequest(request, duration)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.singleAwaitingRequest(request, duration)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def getResponseAsString(request: HttpRequest): String =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.getResponseString(request)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.getResponseString(request)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def checkResponseOK(request: HttpRequest): Unit =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.checkResponseOK(request)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.checkResponseOK(request)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def getResponseAsJson(request: HttpRequest): JsObject =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.getResponseJson(request)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.getResponseJson(request)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.getResponseJsonLD(request)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.getResponseJsonLD(request)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-      } yield result)
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          (for {
+            testClient <- ZIO.service[TestClientService]
+            result     <- testClient.uploadToSipi(loginToken, filesToUpload)
+          } yield result)
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =

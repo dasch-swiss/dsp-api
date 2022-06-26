@@ -153,7 +153,10 @@ abstract class CoreSpec(_system: ActorSystem)
     )
 
   // The ZIO runtime used to run functional effects
-  lazy val runtime = Runtime.unsafeFromLayer(effectLayers)
+  lazy val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(effectLayers)
+    }
 
   // The effect for building managers and config.
   lazy val managers = for {
@@ -167,7 +170,13 @@ abstract class CoreSpec(_system: ActorSystem)
    * Create managers and config by unsafe running them.
    */
   val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime.unsafeRun(managers)
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          managers
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   // start the Application Actor
   lazy val appActor: ActorRef =
@@ -201,36 +210,41 @@ abstract class CoreSpec(_system: ActorSystem)
     TestKit.shutdownActorSystem(system)
 
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    runtime.shutdown()
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
+
   }
 
   private def prepareRepository(rdfDataObjects: List[RdfDataObject]): Unit =
-    runtime.unsafeRun {
-      for {
-        ec  <- ZIO.executor.map(_.asExecutionContext)
-        _   <- ZIO.logInfo("Loading test data started ...")
-        tss <- ZIO.service[TriplestoreService]
-        _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
-        _   <- ZIO.logInfo("... loading test data done.")
-        _   <- ZIO.logInfo("Loading load ontologies into cache started ...")
-        _ <- ZIO
-               .fromFuture(implicit ec =>
-                 appActor
-                   .ask(LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser))(
-                     akka.util.Timeout.create(2.minutes)
-                   )
-               )
-               .timeout(60.seconds)
-        _ <- ZIO.logInfo("... loading ontologies into cache done.")
-        _ <- ZIO.logInfo("CacheServiceFlushDB started ...")
-        _ <-
-          ZIO
-            .fromFuture(implicit ec =>
-              appActor
-                .ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))(akka.util.Timeout.create(30.seconds))
-            )
-            .timeout(15.seconds)
-        _ <- ZIO.logInfo("... CacheServiceFlushDB done.")
-      } yield ()
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run {
+        for {
+          ec  <- ZIO.executor.map(_.asExecutionContext)
+          _   <- ZIO.logInfo("Loading test data started ...")
+          tss <- ZIO.service[TriplestoreService]
+          _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
+          _   <- ZIO.logInfo("... loading test data done.")
+          _   <- ZIO.logInfo("Loading load ontologies into cache started ...")
+          _ <- ZIO
+                 .fromFuture(implicit ec =>
+                   appActor
+                     .ask(LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser))(
+                       akka.util.Timeout.create(2.minutes)
+                     )
+                 )
+                 .timeout(60.seconds)
+          _ <- ZIO.logInfo("... loading ontologies into cache done.")
+          _ <- ZIO.logInfo("CacheServiceFlushDB started ...")
+          _ <-
+            ZIO
+              .fromFuture(implicit ec =>
+                appActor
+                  .ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))(akka.util.Timeout.create(30.seconds))
+              )
+              .timeout(15.seconds)
+          _ <- ZIO.logInfo("... CacheServiceFlushDB done.")
+        } yield ()
+      }
     }
 }

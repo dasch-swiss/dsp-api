@@ -15,6 +15,7 @@ import dsp.errors.ExceptionUtil
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 import zio._
+import zio.Unsafe.unsafe
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -31,7 +32,10 @@ object ActorUtil {
    * allocated immediately, and not released until the `Runtime` is shut down or
    * the end of the application.
    */
-  private val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
+  private val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(Logging.fromInfo)
+    }
 
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
@@ -45,10 +49,11 @@ object ActorUtil {
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig): Unit =
-    runtime
-      .unsafeRunTask(
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(
         zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
       )
+    }
 
   /**
    * The "cause" handling part of `zio2Message`. It analyses the kind of failures and defects

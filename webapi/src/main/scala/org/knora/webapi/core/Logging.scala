@@ -11,7 +11,7 @@ object Logging {
 
   val textFormat: LogFormat =
     timestamp.fixed(32).color(LogColor.BLUE) |-| level.highlight.fixed(14) |-| line.highlight
-  
+
   val colored: LogFormat =
     label("timestamp", timestamp.fixed(32)).color(LogColor.BLUE) |-|
       label("level", level).highlight |-|

@@ -18,9 +18,6 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
-import zio.Runtime
-import zio.Runtime._
-import zio.logging.backend.SLF4J
 
 import java.util.concurrent.TimeUnit
 
@@ -55,7 +52,9 @@ object Main extends scala.App with LiveCore {
    * the end of the application.
    */
   lazy val runtime =
-    Runtime.unsafeFromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
+    }
 
   // The effect for building a cache service manager, a IIIF service manager, and AppConfig.
   val managers = for {
@@ -69,10 +68,13 @@ object Main extends scala.App with LiveCore {
    * Create both managers by unsafe running them.
    */
   val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-      )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          managers
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   /**
    * Start server initialisation
@@ -89,7 +91,7 @@ object Main extends scala.App with LiveCore {
       import scala.concurrent.duration._
       val terminate: Future[Terminated] = system.terminate()
       Await.result(terminate, Duration(30.toLong, TimeUnit.SECONDS))
-      runtime.shutdown()
+      runtime.shutdown0()
     })
   )
 
