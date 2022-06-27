@@ -2820,11 +2820,20 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] =
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val listValueAsListNode: SmartIri = jsonLDObject.requireIriInObject(
+      OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
+      stringFormatter.toSmartIriWithErr
+    )
+
+    if (!listValueAsListNode.isKnoraDataIri) {
+      throw BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI")
+    }
+
     for {
       isRootNode <- checkIfNodeIsRoot(
                       jsonLDObject = jsonLDObject,
-                      requestingUser = requestingUser,
                       appActor = appActor,
                       featureFactoryConfig = featureFactoryConfig
                     )
@@ -2833,12 +2842,19 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
             throw BadRequestException("Root nodes cannot be set as values.")
           }
 
-      listValueContent <- Future(fromJsonLDObjectSync(jsonLDObject))
+      listValueContent <-
+        Future(
+          HierarchicalListValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasListNode = listValueAsListNode.toString,
+            comment = getComment(jsonLDObject)
+          )
+        )
     } yield listValueContent
+  }
 
   private def checkIfNodeIsRoot(
     jsonLDObject: JsonLDObject,
-    requestingUser: UserADM,
     appActor: ActorRef,
     featureFactoryConfig: FeatureFactoryConfig
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Boolean] = {
@@ -2874,25 +2890,6 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
       statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
       isRootNode: Boolean                                       = statements.map(_._2.contains(OntologyConstants.KnoraBase.IsRootNode.toSmartIri)).head
     } yield isRootNode
-  }
-
-  private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val listValueAsListNode: SmartIri = jsonLDObject.requireIriInObject(
-      OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
-      stringFormatter.toSmartIriWithErr
-    )
-
-    if (!listValueAsListNode.isKnoraDataIri) {
-      throw BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI")
-    }
-
-    HierarchicalListValueContentV2(
-      ontologySchema = ApiV2Complex,
-      valueHasListNode = listValueAsListNode.toString,
-      comment = getComment(jsonLDObject)
-    )
   }
 }
 
