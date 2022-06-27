@@ -2677,7 +2677,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                   }
                 case Some(newGuiElement) if newGuiElement == guiElementSlider =>
                   changePropertyGuiElementRequest.newGuiAttributes.map { guiAttribute: String =>
-                    println(guiAttribute)
                     if (!guiAttribute.startsWith("max=") && !guiAttribute.startsWith("min=")) {
                       throw BadRequestException(
                         s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to provide 'min' and 'max' parameters but found $guiAttribute"
