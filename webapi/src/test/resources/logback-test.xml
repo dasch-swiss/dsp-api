@@ -45,7 +45,7 @@
     <logger name="org.testcontainers.utility.RegistryAuthLocator" level="WARN" />
 
     <!-- Logging inside ZIO -->
-    <logger name="zio-slf4j-logger" level="DEBUG"/>
+    <logger name="zio-slf4j-logger" level="INFO"/>
 
     <!-- App -->
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>
