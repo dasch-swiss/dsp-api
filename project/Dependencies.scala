@@ -25,17 +25,17 @@ object Dependencies {
   val ZioJsonVersion    = "0.3.0-RC3"
   val ZioConfigVersion  = "3.0.0-RC9"
   val ZioSchemaVersion  = "0.2.0-RC5"
-  val ZioLoggingVersion = "2.0.0-RC10"
+  val ZioLoggingVersion = "2.0.0-RC10+5-1a69ebf6-SNAPSHOT"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC13"
 
   // ZIO - all Scala 3 compatible
-  val zio        = "dev.zio" %% "zio"         % ZioVersion
-  val zioMacros  = "dev.zio" %% "zio-macros"  % ZioVersion
-  val zioHttp    = "io.d11"  %% "zhttp"       % ZioHttpVersion
-  val zioJson    = "dev.zio" %% "zio-json"    % ZioJsonVersion
-  val zioPrelude = "dev.zio" %% "zio-prelude" % ZioPreludeVersion
-  val zioLogging = "dev.zio" %% "zio-logging" % ZioLoggingVersion
+  val zio               = "dev.zio" %% "zio"                 % ZioVersion
+  val zioMacros         = "dev.zio" %% "zio-macros"          % ZioVersion
+  val zioHttp           = "io.d11"  %% "zhttp"               % ZioHttpVersion
+  val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
+  val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
+  val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
   val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
