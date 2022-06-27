@@ -4122,6 +4122,26 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "not change a list property if the salsah-gui:guiAttribute is missing" in {
+      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasListValue")
+
+      appActor ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#List".toSmartIri),
+        newGuiAttributes = Set(),
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        if (printErrorMessages) println(msg.cause.getMessage)
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+
+    }
+
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
 

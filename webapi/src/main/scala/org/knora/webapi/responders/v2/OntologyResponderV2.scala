@@ -7,8 +7,10 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
 import dsp.errors._
+import org.knora.webapi._
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import org.knora.webapi.feature.TestFeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -20,8 +22,8 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import scala.concurrent.duration._
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -37,11 +39,9 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.util._
 
 import java.time.Instant
-import scala.concurrent.Future
 import scala.concurrent.Await
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.feature.TestFeatureFactoryConfig
-import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * Responds to requests dealing with ontologies.
@@ -2640,6 +2640,22 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                expectedLastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
              )
+
+        // If this is a list property, check if a GUI attribute was provided
+
+        objectClassConstraints: Seq[OntologyLiteralV2] =
+          currentReadPropertyInfo.entityInfoContent
+            .predicates(
+              OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
+            )
+            .objects
+
+        listValue: SmartIriLiteralV2 = SmartIriLiteralV2(OntologyConstants.KnoraBase.ListValue.toSmartIri)
+
+        _ =
+          if (objectClassConstraints.contains(listValue) && changePropertyGuiElementRequest.newGuiAttributes.isEmpty) {
+            throw BadRequestException(s"Missing guiAttribute")
+          }
 
         // If this is a link property, also change the GUI element and attribute of the corresponding link value property.
 
