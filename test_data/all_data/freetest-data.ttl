@@ -15,7 +15,7 @@
     a                            knora-base:ListNode ;
     knora-base:isRootNode        true ;
     knora-base:listNodeName      "freetestlist" ;
-    rdfs:label                   "Free Test List Rootnode"@en
+    rdfs:label                   "Free Test List Rootnode"@en ;
     rdfs:comment                 "Free Test List"@en ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasSubListNode    <http://rdfh.ch/lists/0001/free-test-list-node-01> .
