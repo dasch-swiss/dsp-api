@@ -4122,7 +4122,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not change a list property if the salsah-gui:guiAttribute is missing" in {
+    "not change a property with GUI element List if the salsah-gui:guiAttribute is missing" in {
       val propertyIri = FreeTestOntologyIri.makeEntityIri("hasListValue")
 
       appActor ! ChangePropertyGuiElementRequest(
@@ -4140,6 +4140,44 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
+    }
+
+    "throw Bad Request Exception when changing a property with GUI element List and the salsah-gui:guiAttribute doesn't start with 'hlist='" in {
+      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasListValue")
+
+      appActor ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#List".toSmartIri),
+        newGuiAttributes = Set("size=80"),
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        if (printErrorMessages) println(msg.cause.getMessage)
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+    }
+
+    "throw Bad Request Exception when changing a property with GUI element Slider and one of the salsah-gui:guiAttributes doesn't start with 'min=' or 'max='" in {
+      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasInteger")
+
+      appActor ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#Slider".toSmartIri),
+        newGuiAttributes = Set("min=1", "size=80"),
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        if (printErrorMessages) println(msg.cause.getMessage)
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
     }
 
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
@@ -7171,6 +7209,5 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       loadInvalidTestData(invalidOnto)
     }
-
   }
 }
