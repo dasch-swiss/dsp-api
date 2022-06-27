@@ -2642,21 +2642,24 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
              )
 
-        // If this is a list property, check if a GUI attribute was provided
+        // If this is a list, radio, pulldown or slider property, check if a GUI attribute is provided
 
-        objectClassConstraints: Seq[OntologyLiteralV2] =
-          currentReadPropertyInfo.entityInfoContent
-            .predicates(
-              OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
-            )
-            .objects
+        guiElementList     = OntologyConstants.SalsahGui.List.toSmartIri
+        guiElementRadio    = OntologyConstants.SalsahGui.Radio.toSmartIri
+        guiElementPulldown = OntologyConstants.SalsahGui.Pulldown.toSmartIri
+        guiElementSlider   = OntologyConstants.SalsahGui.Slider.toSmartIri
 
-        listValue: SmartIriLiteralV2 = SmartIriLiteralV2(OntologyConstants.KnoraBase.ListValue.toSmartIri)
+        needsGuiAttribute = changePropertyGuiElementRequest.newGuiElement == Some(guiElementList) ||
+                              changePropertyGuiElementRequest.newGuiElement == Some(guiElementRadio) ||
+                              changePropertyGuiElementRequest.newGuiElement == Some(guiElementPulldown) ||
+                              changePropertyGuiElementRequest.newGuiElement == Some(guiElementSlider)
 
-        _ =
-          if (objectClassConstraints.contains(listValue) && changePropertyGuiElementRequest.newGuiAttributes.isEmpty) {
-            throw BadRequestException(s"Missing guiAttribute")
-          }
+        _ = if (
+              needsGuiAttribute &&
+              changePropertyGuiElementRequest.newGuiAttributes.isEmpty
+            ) {
+              throw BadRequestException(s"Missing GUI attribute (salsah-gui:guiAttribute)")
+            }
 
         // If this is a link property, also change the GUI element and attribute of the corresponding link value property.
 
