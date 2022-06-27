@@ -27,6 +27,7 @@
     knora-base:listNodePosition 0 ;
     rdfs:label                  "Free Test Node 01"@en .
 
+# Resources and Values
 <http://rdfh.ch/0001/free-test-with-list-value>
     a                            freetest:FreeTestWithListValue ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
@@ -37,7 +38,6 @@
     rdfs:label                   "an object with a list value"@en ;
     knora-base:isDeleted         false .
 
-# Resources and Values
 <http://rdfh.ch/0001/free-test-instance-01>
     a                            freetest:FreeTest ;
     knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
