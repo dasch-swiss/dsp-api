@@ -297,7 +297,9 @@ object OntologyUpdateHelper {
     }
 
     if (inputOntologyV2.properties.size != 1) {
-      throw BadRequestException(s"Only one property can be created or modified per request")
+      throw BadRequestException(
+        s"Only one property can be created or modified per request. Requested to update ${inputOntologyV2.properties.size} properties."
+      )
     }
 
     val propertyInfoContent = inputOntologyV2.properties.values.head
