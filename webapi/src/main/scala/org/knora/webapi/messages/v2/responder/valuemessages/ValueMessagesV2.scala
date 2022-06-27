@@ -43,6 +43,19 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import dsp.valueobjects.IriErrorMessages
+import com.fasterxml.jackson.module.scala.deser.overrides
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRequestADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeInfoADM
+import org.knora.webapi.messages.admin.responder.listsmessages.RootNodeInfoGetResponseADM
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
+import dsp.errors.NotFoundException
+import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -92,6 +105,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    println(7777777)
 
     for {
       // Get the IRI of the resource that the value is to be created in.
@@ -2806,7 +2821,60 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] =
-    Future(fromJsonLDObjectSync(jsonLDObject))
+    for {
+      isRootNode <- checkIfNodeIsRoot(
+                      jsonLDObject = jsonLDObject,
+                      requestingUser = requestingUser,
+                      appActor = appActor,
+                      featureFactoryConfig = featureFactoryConfig
+                    )
+
+      _ = if (isRootNode) {
+            throw BadRequestException("Root nodes cannot be set as values.")
+          }
+
+      listValueContent <- Future(fromJsonLDObjectSync(jsonLDObject))
+    } yield listValueContent
+
+  private def checkIfNodeIsRoot(
+    jsonLDObject: JsonLDObject,
+    requestingUser: UserADM,
+    appActor: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Boolean] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val nodeIri = jsonLDObject
+      .requireIriInObject(
+        OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
+        stringFormatter.toSmartIriWithErr
+      )
+      .toString()
+
+    for {
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getListNode(
+              nodeIri = nodeIri
+            )
+            .toString()
+        )
+
+      listNodeResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
+
+      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
+      isRootNode: Boolean                                       = statements.map(_._2.contains(OntologyConstants.KnoraBase.IsRootNode.toSmartIri)).head
+    } yield isRootNode
+  }
 
   private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
