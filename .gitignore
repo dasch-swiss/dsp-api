@@ -36,7 +36,7 @@ sipi/test
 *.bak
 *.rdb
 .sbtrc
-*.trig
+/*.trig
 
 dependencies.txt
 /client-test-data.zip

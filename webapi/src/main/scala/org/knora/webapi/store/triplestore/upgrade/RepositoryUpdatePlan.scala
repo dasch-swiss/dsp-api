@@ -51,7 +51,8 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 13, plugin = new UpgradePluginPR1921(featureFactoryConfig, log)),
       PluginForKnoraBaseVersion(versionNumber = 14, plugin = new NoopPlugin), // PR 1992
       PluginForKnoraBaseVersion(versionNumber = 20, plugin = new UpgradePluginPR2018(featureFactoryConfig, log)),
-      PluginForKnoraBaseVersion(versionNumber = 21, plugin = new UpgradePluginPR2079(featureFactoryConfig, log))
+      PluginForKnoraBaseVersion(versionNumber = 21, plugin = new UpgradePluginPR2079(featureFactoryConfig, log)),
+      PluginForKnoraBaseVersion(versionNumber = 22, plugin = new UpgradePluginPR2081(featureFactoryConfig, log))
       // KEEP IT ON THE BOTTOM
       // From "versionNumber = 6" don't use prBasedVersionString!
     )
