@@ -4,6 +4,7 @@ import zio.LogLevel
 import zio.logging.LogFormat._
 import zio.logging._
 import zio.ZLayer
+import zio.logging.backend.SLF4J
 
 object Logging {
   val logFormat             = "[correlation-id = %s] %s"
@@ -30,5 +31,8 @@ object Logging {
       format = colored
     )
   }
+
+  val slf4j =
+    SLF4J.slf4j(LogLevel.Debug, textFormat, _ => "zio-slf4j-logger")
 
 }

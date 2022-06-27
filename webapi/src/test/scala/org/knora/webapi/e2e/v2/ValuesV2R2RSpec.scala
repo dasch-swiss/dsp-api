@@ -77,7 +77,7 @@ class ValuesV2R2RSpec extends R2RSpec {
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      Logging.fromInfo,
+      Logging.slf4j,
       TestClientService.layer,
       TestActorSystemService.layer
     )

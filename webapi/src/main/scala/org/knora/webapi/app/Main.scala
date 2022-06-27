@@ -43,7 +43,7 @@ object Main extends scala.App with LiveCore {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      Logging.fromInfo
+      Logging.slf4j
     )
 
   /**

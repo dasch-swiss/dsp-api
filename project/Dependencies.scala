@@ -36,7 +36,7 @@ object Dependencies {
   val zioJson    = "dev.zio" %% "zio-json"    % ZioJsonVersion
   val zioPrelude = "dev.zio" %% "zio-prelude" % ZioPreludeVersion
   val zioLogging = "dev.zio" %% "zio-logging" % ZioLoggingVersion
-  // val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
+  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
@@ -102,7 +102,7 @@ object Dependencies {
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.2"         // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.16.3"
+  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -153,7 +153,7 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioLogging,
-    // zioLoggingSlf4j,
+    zioLoggingSlf4j,
     zioMacros,
     zioPrelude,
     zioTest    % Test,

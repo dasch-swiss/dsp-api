@@ -132,7 +132,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      Logging.fromInfo,
+      Logging.slf4j,
       TestClientService.layer,
       TestActorSystemService.layer
     )

@@ -149,7 +149,7 @@ abstract class CoreSpec(_system: ActorSystem)
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
       FusekiTestContainer.layer,
-      Logging.fromInfo
+      Logging.slf4j
     )
 
   // The ZIO runtime used to run functional effects
