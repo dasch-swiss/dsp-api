@@ -19,10 +19,10 @@ object Id {
    * @param uuid the UUID of the user
    * @param iri the IRI of the user
    */
-  abstract case class UserId private (
+  sealed abstract case class UserId private (
     uuid: UUID,
     iri: Iri.UserIri
-  )
+  ) extends Id
 
   /**
    * Companion object for UserId. Contains factory methods for creating UserId instances.
