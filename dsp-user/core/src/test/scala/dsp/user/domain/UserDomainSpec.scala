@@ -37,20 +37,20 @@ object UserDomainSpec extends ZIOSpecDefault {
     test("create a user") {
       val user =
         User.make(
-          SharedTestData.simpleGivenName1,
-          SharedTestData.simpleFamilyName1,
-          SharedTestData.simpleUsername1,
-          SharedTestData.simpleEmail1,
-          SharedTestData.simplePassword1,
+          SharedTestData.givenName1,
+          SharedTestData.familyName1,
+          SharedTestData.username1,
+          SharedTestData.email1,
+          SharedTestData.password1,
           SharedTestData.languageEn,
           SharedTestData.statusTrue
         )
 
-      assertTrue(user.username == SharedTestData.simpleUsername1) &&
-      assertTrue(user.email == SharedTestData.simpleEmail1) &&
-      assertTrue(user.givenName == SharedTestData.simpleGivenName1) &&
-      assertTrue(user.familyName == SharedTestData.simpleFamilyName1) &&
-      assertTrue(user.password == SharedTestData.simplePassword1) &&
+      assertTrue(user.username == SharedTestData.username1) &&
+      assertTrue(user.email == SharedTestData.email1) &&
+      assertTrue(user.givenName == SharedTestData.givenName1) &&
+      assertTrue(user.familyName == SharedTestData.familyName1) &&
+      assertTrue(user.password == SharedTestData.password1) &&
       assertTrue(user.language == SharedTestData.languageEn) &&
       assertTrue(user.status == SharedTestData.statusTrue)
     },
@@ -113,7 +113,7 @@ object UserDomainSpec extends ZIOSpecDefault {
     },
     test("update the password") {
       val user     = SharedTestData.normalUser1
-      val newValue = PasswordHash.make("newPassword1").fold(e => throw e.head, v => v)
+      val newValue = PasswordHash.make("newPassword1", 12).fold(e => throw e.head, v => v)
 
       val updatedUser = user.updatePassword(newValue)
 
