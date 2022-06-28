@@ -6,15 +6,16 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
+import com.typesafe.scalalogging.Logger
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
 import dsp.errors.SipiException
+import dsp.valueobjects.IriErrorMessages
+import org.knora.webapi._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -25,6 +26,10 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
@@ -42,20 +47,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import dsp.valueobjects.IriErrorMessages
-import com.fasterxml.jackson.module.scala.deser.overrides
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeInfoGetRequestADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListRootNodeInfoADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListChildNodeInfoADM
-import org.knora.webapi.messages.admin.responder.listsmessages.RootNodeInfoGetResponseADM
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeInfoGetResponseADM
-import dsp.errors.NotFoundException
-import org.knora.webapi.messages.store.triplestoremessages.IriSubjectV2
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -105,8 +96,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    println(7777777)
 
     for {
       // Get the IRI of the resource that the value is to be created in.
