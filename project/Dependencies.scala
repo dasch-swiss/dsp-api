@@ -23,9 +23,9 @@ object Dependencies {
   val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
-  val ZioConfigVersion  = "3.0.0-RC9"
-  val ZioSchemaVersion  = "0.2.0-RC5"
-  val ZioLoggingVersion = "2.0.0-RC10+5-1a69ebf6-SNAPSHOT"
+  val ZioConfigVersion  = "3.0.0"
+  val ZioSchemaVersion  = "0.2.0"
+  val ZioLoggingVersion = "2.0.0"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC13"
 
@@ -40,8 +40,8 @@ object Dependencies {
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0-RC6"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0-RC6"
+  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
+  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % akkaVersion     // Scala 3 compatible
