@@ -264,7 +264,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
             result     <- testClient.uploadToSipi(loginToken, filesToUpload)
           } yield result)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrow()
     }
 
 }
