@@ -113,7 +113,7 @@ object UserDomainSpec extends ZIOSpecDefault {
     },
     test("update the password") {
       val user     = SharedTestData.normalUser1
-      val newValue = PasswordHash.make("newPassword1", 12).fold(e => throw e.head, v => v)
+      val newValue = PasswordHash.make("newPassword1", SharedTestData.passwordStrength).fold(e => throw e.head, v => v)
 
       val updatedUser = user.updatePassword(newValue)
 

@@ -378,7 +378,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.status == SharedTestData.statusTrue)
     },
     test("store a user and update the password") {
-      val newValue = PasswordHash.make("newPassword1", 12).fold(e => throw e.head, v => v)
+      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
+      val newValue         = PasswordHash.make("newPassword1", passwordStrength).fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
 
@@ -406,8 +407,9 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test(
       "return an error when the supplied password does not match the requesting user's password when trying to update the password"
     ) {
-      val newValue      = PasswordHash.make("newPassword1", 12).fold(e => throw e.head, v => v)
-      val wrongPassword = PasswordHash.make("wrongPassword1", 12).fold(e => throw e.head, v => v)
+      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
+      val newValue         = PasswordHash.make("newPassword1", passwordStrength).fold(e => throw e.head, v => v)
+      val wrongPassword    = PasswordHash.make("wrongPassword1", passwordStrength).fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
 
@@ -429,8 +431,9 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test(
       "return an error when the requesting user is not the user whose password is asked to be changed when trying to update the password"
     ) {
-      val newValue  = PasswordHash.make("newPassword1", 12).fold(e => throw e.head, v => v)
-      val otherUser = SharedTestData.normalUser2
+      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
+      val newValue         = PasswordHash.make("newPassword1", passwordStrength).fold(e => throw e.head, v => v)
+      val otherUser        = SharedTestData.normalUser2
       for {
         userHandler <- ZIO.service[UserHandler]
 

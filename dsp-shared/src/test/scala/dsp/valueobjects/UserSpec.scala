@@ -257,13 +257,17 @@ object UserSpec extends ZIOSpecDefault {
 
   private val passwordHashTest = suite("PasswordHash")(
     test("pass an empty value and throw an error") {
+      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
       assertTrue(
-        PasswordHash.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+        PasswordHash.make("", passwordStrength) == Validation.fail(
+          BadRequestException(UserErrorMessages.PasswordMissing)
+        )
       )
     },
     test("pass a valid value and successfully create value object") {
-      val passwordString = "password1"
-      val password       = PasswordHash.make(passwordString).fold(e => throw e.head, v => v)
+      val passwordString   = "password1"
+      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
+      val password         = PasswordHash.make(passwordString, passwordStrength).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordString))
     },
@@ -272,7 +276,8 @@ object UserSpec extends ZIOSpecDefault {
       val passwordEqualString    = "password1"
       val passwordNotEqualString = "password2"
 
-      val password = PasswordHash.make(passwordString).fold(e => throw e.head, v => v)
+      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
+      val password         = PasswordHash.make(passwordString, passwordStrength).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordEqualString)) &&
       assertTrue(!password.matches(passwordNotEqualString))

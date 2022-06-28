@@ -8,9 +8,11 @@ package dsp.valueobjects
 import dsp.errors.BadRequestException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import zio._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
+import java.security.SecureRandom
 
 object User {
 
@@ -47,6 +49,18 @@ object User {
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
+      }
+
+    /**
+     * Creates a value object
+     */
+    def unsafeMake(value: String): Validation[Throwable, Username] =
+      UsernameRegex.findFirstIn(value) match {
+        case Some(value) => Username.make(value)
+        case None => {
+          ZIO.logError(UserErrorMessages.UsernameInvalid)
+          Validation.succeed(new Username(value) {})
+        }
       }
   }
 
@@ -139,7 +153,7 @@ object User {
   /**
    * PasswordHash value object. Takes a string as input and hashes it.
    */
-  sealed abstract case class PasswordHash private (value: String) { self =>
+  sealed abstract case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
 
     /**
      * Check password (in clear text). The password supplied in clear text is compared against the
@@ -165,20 +179,37 @@ object User {
       }
 
   }
-  object PasswordHash { self =>
+  object PasswordHash {
     private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
-    def make(value: String): Validation[Throwable, PasswordHash] =
+    def make(value: String, passwordStrength: PasswordStrength): Validation[Throwable, PasswordHash] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
       } else {
         PasswordRegex.findFirstIn(value) match {
           case Some(value) =>
-            val encoder     = new BCryptPasswordEncoder(12) // TOOD replace this value with value from settings
+            val encoder =
+              new BCryptPasswordEncoder(
+                passwordStrength.value,
+                new SecureRandom()
+              )
             val hashedValue = encoder.encode(value)
-            Validation.succeed(new PasswordHash(hashedValue) {})
+            Validation.succeed(new PasswordHash(hashedValue, passwordStrength) {})
           case None => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
         }
+      }
+  }
+
+  /**
+   * PasswordStrength value object.
+   */
+  sealed abstract case class PasswordStrength private (value: Int)
+  object PasswordStrength { self =>
+    def make(value: Int): Validation[Throwable, PasswordStrength] =
+      if (value < 4 || value > 31) {
+        Validation.fail(BadRequestException(UserErrorMessages.PasswordStrengthInvalid))
+      } else {
+        Validation.succeed(new PasswordStrength(value) {})
       }
   }
 
@@ -223,16 +254,17 @@ object User {
 }
 
 object UserErrorMessages {
-  val UsernameMissing     = "Username cannot be empty."
-  val UsernameInvalid     = "Username is invalid."
-  val EmailMissing        = "Email cannot be empty."
-  val EmailInvalid        = "Email is invalid."
-  val PasswordMissing     = "Password cannot be empty."
-  val PasswordInvalid     = "Password is invalid."
-  val GivenNameMissing    = "GivenName cannot be empty."
-  val GivenNameInvalid    = "GivenName is invalid."
-  val FamilyNameMissing   = "FamilyName cannot be empty."
-  val FamilyNameInvalid   = "FamilyName is invalid."
-  val LanguageCodeMissing = "LanguageCode cannot be empty."
-  val LanguageCodeInvalid = "LanguageCode is invalid."
+  val UsernameMissing         = "Username cannot be empty."
+  val UsernameInvalid         = "Username is invalid."
+  val EmailMissing            = "Email cannot be empty."
+  val EmailInvalid            = "Email is invalid."
+  val PasswordMissing         = "Password cannot be empty."
+  val PasswordInvalid         = "Password is invalid."
+  val PasswordStrengthInvalid = "PasswordStrength is invalid."
+  val GivenNameMissing        = "GivenName cannot be empty."
+  val GivenNameInvalid        = "GivenName is invalid."
+  val FamilyNameMissing       = "FamilyName cannot be empty."
+  val FamilyNameInvalid       = "FamilyName is invalid."
+  val LanguageCodeMissing     = "LanguageCode cannot be empty."
+  val LanguageCodeInvalid     = "LanguageCode is invalid."
 }
