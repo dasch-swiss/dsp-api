@@ -26,13 +26,10 @@ object UserDomainSpec extends ZIOSpecDefault {
       val userEqual    = SharedTestData.normalUser1 // same as user, i.e. has same UserId
       val userNotEqual = SharedTestData.normalUser2
 
-      val isEqualtoItself        = user.equals(user)
-      val isEqualtoEqualUser     = user.equals(userEqual)
-      val isEqualtoDifferentUser = user.equals(userNotEqual)
-
-      assertTrue(isEqualtoItself) &&
-      assertTrue(isEqualtoEqualUser) &&
-      assertTrue(!isEqualtoDifferentUser)
+      assertTrue(user.equals(userEqual)) &&
+      assertTrue(user == userEqual) &&
+      assertTrue(!user.equals(userNotEqual)) &&
+      assertTrue(user != userNotEqual)
     },
     test("create a user") {
       val user =
