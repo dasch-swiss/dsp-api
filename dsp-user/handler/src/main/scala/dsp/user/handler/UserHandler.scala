@@ -40,8 +40,8 @@ final case class UserHandler(repo: UserRepo) {
     for {
       user <- repo
                 .getUserById(id)
-                .tap(_ => ZIO.logInfo(s"Looked up user by ID '${id}'"))
                 .mapError(_ => NotFoundException(s"User with ID '${id}' not found"))
+                .tap(_ => ZIO.logInfo(s"Looked up user by ID '${id}'"))
     } yield user
 
   /**
@@ -52,8 +52,8 @@ final case class UserHandler(repo: UserRepo) {
   def getUserByUsername(username: Username): IO[NotFoundException, User] =
     repo
       .getUserByUsername(username)
-      .tap(_ => ZIO.logInfo(s"Looked up user by username '${username.value}'"))
       .mapError(_ => NotFoundException(s"User with Username '${username.value}' not found"))
+      .tap(_ => ZIO.logInfo(s"Looked up user by username '${username.value}'"))
 
   /**
    * Retrieves the user by email.
@@ -63,8 +63,8 @@ final case class UserHandler(repo: UserRepo) {
   def getUserByEmail(email: Email): IO[NotFoundException, User] =
     repo
       .getUserByEmail(email)
-      .tap(_ => ZIO.logInfo(s"Looked up user by email '${email.value}'"))
       .mapError(_ => NotFoundException(s"User with Email '${email.value}' not found"))
+      .tap(_ => ZIO.logInfo(s"Looked up user by email '${email.value}'"))
 
   /**
    * Checks if username is already taken
@@ -75,8 +75,8 @@ final case class UserHandler(repo: UserRepo) {
     for {
       _ <- repo
              .checkIfUsernameExists(username)
-             .tap(_ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken"))
              .mapError(_ => DuplicateValueException(s"Username '${username.value}' already taken"))
+             .tap(_ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken"))
     } yield ()
 
   /**
@@ -88,8 +88,8 @@ final case class UserHandler(repo: UserRepo) {
     for {
       _ <- repo
              .checkIfEmailExists(email)
-             .tap(_ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken"))
              .mapError(_ => DuplicateValueException(s"Email '${email.value}' already taken"))
+             .tap(_ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken"))
     } yield ()
 
   /**
