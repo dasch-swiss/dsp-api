@@ -11,25 +11,36 @@ import dsp.errors.BadRequestException
 import zio.prelude.Validation
 
 object SharedTestData {
-  val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
 
   val givenName1  = GivenName.make("GivenName1")
   val familyName1 = FamilyName.make("FamilyName1")
   val username1   = Username.make("username1")
   val email1      = Email.make("email1@email.com")
-  val password1   = PasswordHash.make("password1", passwordStrength)
+
+  val password1 = for {
+    passwordStrength <- PasswordStrength.make(12)
+    password         <- PasswordHash.make("password1", passwordStrength)
+  } yield password
 
   val givenName2  = GivenName.make("GivenName2")
   val familyName2 = FamilyName.make("FamilyName2")
   val username2   = Username.make("username2")
   val email2      = Email.make("email2@email.com")
-  val password2   = PasswordHash.make("password2", passwordStrength)
+
+  val password2 = for {
+    passwordStrength <- PasswordStrength.make(12)
+    password         <- PasswordHash.make("password2", passwordStrength)
+  } yield password
 
   val givenName3  = GivenName.make("GivenName3")
   val familyName3 = FamilyName.make("FamilyName3")
   val username3   = Username.make("username3")
   val email3      = Email.make("email3@email.com")
-  val password3   = PasswordHash.make("password3", passwordStrength)
+
+  val password3 = for {
+    passwordStrength <- PasswordStrength.make(12)
+    password         <- PasswordHash.make("password3", passwordStrength)
+  } yield password
 
   val languageEn = LanguageCode.make("en")
   val languageFr = LanguageCode.make("fr")
@@ -38,7 +49,7 @@ object SharedTestData {
   val statusTrue  = UserStatus.make(true)
   val statusFalse = UserStatus.make(false)
 
-  val user1 = (for {
+  val user1 = for {
     givenName  <- givenName1
     familyName <- familyName1
     username   <- username1
@@ -46,19 +57,19 @@ object SharedTestData {
     password   <- password1
     language   <- languageEn
     status     <- statusTrue
-    user = User
-             .make(
-               givenName,
-               familyName,
-               username,
-               email,
-               password,
-               language,
-               status
-             )
-  } yield user).fold(e => throw e.head, v => v)
+    user <- User
+              .make(
+                givenName,
+                familyName,
+                username,
+                email,
+                password,
+                language,
+                status
+              )
+  } yield user
 
-  val user2 = (for {
+  val user2 = for {
     givenName  <- givenName2
     familyName <- familyName2
     username   <- username2
@@ -66,16 +77,15 @@ object SharedTestData {
     password   <- password2
     language   <- languageEn
     status     <- statusTrue
-    user = User
-             .make(
-               givenName,
-               familyName,
-               username,
-               email,
-               password,
-               language,
-               status
-             )
-  } yield user).fold(e => throw e.head, v => v)
-
+    user <- User
+              .make(
+                givenName,
+                familyName,
+                username,
+                email,
+                password,
+                language,
+                status
+              )
+  } yield user
 }
