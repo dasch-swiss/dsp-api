@@ -55,7 +55,6 @@ object UserDomainSpec extends ZIOSpecDefault {
                   )
                   .toZIO
       } yield assertTrue(user.username == username) &&
-        assertTrue(user.username == username) &&
         assertTrue(user.email == email) &&
         assertTrue(user.givenName == givenName) &&
         assertTrue(user.familyName == familyName) &&
