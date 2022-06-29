@@ -178,13 +178,15 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   }
 
   final override def afterAll(): Unit = {
-    /* Stop the server when everything else has finished */
-    TestKit.shutdownActorSystem(system)
 
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
+
+    /* Stop the server when everything else has finished */
+    TestKit.shutdownActorSystem(system)
+
   }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
