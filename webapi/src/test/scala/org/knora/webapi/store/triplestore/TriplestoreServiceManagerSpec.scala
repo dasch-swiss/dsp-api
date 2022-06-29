@@ -32,9 +32,6 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
 
   private val timeout = 30.seconds
 
-  // println(system.settings.config.getConfig("app").root().render())
-  // println(system.settings.config.getConfig("app.triplestore").root().render())
-
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -156,36 +153,26 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
     }
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {
-      //println("==>> Reset test case start")
       appActor ! ResetRepositoryContent(rdfDataObjects)
       expectMsg(5.minutes, ResetRepositoryContentACK())
-      //println("==>> Reset test case end")
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println(msg)
         afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
         (afterLoadCount > 0) should ===(true)
       }
     }
 
     "provide data receiving a Named Graph request" in {
-      //println("==>> Named Graph test case start")
       appActor ! SparqlSelectRequest(namedGraphQuery)
-      //println(result)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println(msg)
         msg.results.bindings.nonEmpty should ===(true)
       }
-      //println("==>> Named Graph test case end")
     }
 
     "execute an update" in {
-      //println("==>> Update 1 test case start")
-
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println("vor insert: " + msg)
         msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
       }
 
@@ -194,25 +181,19 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
 
       appActor ! SparqlSelectRequest(checkInsertQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println(msg)
         msg.results.bindings.size should ===(3)
       }
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println("nach instert" + msg)
         afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
         (afterChangeCount - afterLoadCount) should ===(3)
       }
-      //println("==>> Update 1 test case end")
     }
 
     "revert back " in {
-      //println("==>> Update 2 test case start")
-
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println("vor revert: " + msg)
         msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
       }
 
@@ -221,24 +202,19 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
 
       appActor ! SparqlSelectRequest(countTriplesQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println("nach revert: " + msg)
         msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
       }
 
       appActor ! SparqlSelectRequest(checkInsertQuery)
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-        //println("check: " + msg)
         msg.results.bindings.size should ===(0)
       }
-
-      //println("==>> Update 2 test case end")
     }
 
     "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
       within(1000.millis) {
         appActor ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-          //println(msg)
           msg.results.bindings.size should ===(3)
         }
       }
@@ -248,7 +224,6 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
       within(1000.millis) {
         appActor ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
         expectMsgPF(timeout) { case msg: SparqlSelectResult =>
-          //println(msg)
           msg.results.bindings.size should ===(1)
         }
       }
