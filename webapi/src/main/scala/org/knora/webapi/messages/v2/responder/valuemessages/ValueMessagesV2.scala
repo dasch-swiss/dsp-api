@@ -26,10 +26,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
@@ -2809,8 +2805,12 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] =
+    Future(fromJsonLDObjectSync(jsonLDObject))
+
+  private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     val listValueAsListNode: SmartIri = jsonLDObject.requireIriInObject(
       OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
       stringFormatter.toSmartIriWithErr
@@ -2820,65 +2820,11 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
       throw BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI")
     }
 
-    for {
-      isRootNode <- checkIfNodeIsRoot(
-                      jsonLDObject = jsonLDObject,
-                      appActor = appActor,
-                      featureFactoryConfig = featureFactoryConfig
-                    )
-
-      _ = if (isRootNode) {
-            throw BadRequestException("Root nodes cannot be set as values.")
-          }
-
-      listValueContent <-
-        Future(
-          HierarchicalListValueContentV2(
-            ontologySchema = ApiV2Complex,
-            valueHasListNode = listValueAsListNode.toString,
-            comment = getComment(jsonLDObject)
-          )
-        )
-    } yield listValueContent
-  }
-
-  private def checkIfNodeIsRoot(
-    jsonLDObject: JsonLDObject,
-    appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Boolean] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val nodeIri = jsonLDObject
-      .requireIriInObject(
-        OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
-        stringFormatter.toSmartIriWithErr
-      )
-      .toString()
-
-    for {
-      sparqlQuery <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .getListNode(
-              nodeIri = nodeIri
-            )
-            .toString()
-        )
-
-      listNodeResponse <-
-        appActor
-          .ask(
-            SparqlExtendedConstructRequest(
-              sparql = sparqlQuery,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          )
-          .mapTo[SparqlExtendedConstructResponse]
-
-      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
-      isRootNode: Boolean                                       = statements.map(_._2.contains(OntologyConstants.KnoraBase.IsRootNode.toSmartIri)).head
-    } yield isRootNode
+    HierarchicalListValueContentV2(
+      ontologySchema = ApiV2Complex,
+      valueHasListNode = listValueAsListNode.toString,
+      comment = getComment(jsonLDObject)
+    )
   }
 }
 
