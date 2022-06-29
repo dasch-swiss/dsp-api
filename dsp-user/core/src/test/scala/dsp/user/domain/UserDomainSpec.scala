@@ -121,9 +121,10 @@ object UserDomainSpec extends ZIOSpecDefault {
     },
     test("update the password") {
       for {
-        user       <- SharedTestData.user1.toZIO
-        newValue   <- PasswordHash.make("newPassword1", SharedTestData.passwordStrength).toZIO
-        updatedUser = user.updatePassword(newValue)
+        user             <- SharedTestData.user1.toZIO
+        passwordStrength <- SharedTestData.passwordStrength.toZIO
+        newValue         <- PasswordHash.make("newPassword1", passwordStrength).toZIO
+        updatedUser       = user.updatePassword(newValue)
       } yield assertTrue(updatedUser.password == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&

@@ -11,6 +11,7 @@ import dsp.errors.BadRequestException
 import zio.prelude.Validation
 
 object SharedTestData {
+  val passwordStrength = PasswordStrength.make(12)
 
   val givenName1  = GivenName.make("GivenName1")
   val familyName1 = FamilyName.make("FamilyName1")
