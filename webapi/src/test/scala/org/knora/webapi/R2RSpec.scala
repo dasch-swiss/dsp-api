@@ -65,7 +65,7 @@ import akka.testkit.TestActorRef
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
  */
-class R2RSpec
+abstract class R2RSpec
     extends Core
     with StartupUtils
     with Suite

@@ -61,7 +61,7 @@ object ITKnoraLiveSpec {
  * This class can be used in End-to-End testing. It starts the Knora server and
  * provides access to settings and logging.
  */
-class ITKnoraLiveSpec(_system: ActorSystem)
+abstract class ITKnoraLiveSpec(_system: ActorSystem)
     extends TestKit(_system)
     with Core
     with StartupUtils

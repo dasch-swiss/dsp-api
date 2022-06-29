@@ -77,7 +77,7 @@ object E2ESpec {
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-class E2ESpec(_system: ActorSystem)
+abstract class E2ESpec(_system: ActorSystem)
     extends TestKit(_system)
     with Core
     with StartupUtils
