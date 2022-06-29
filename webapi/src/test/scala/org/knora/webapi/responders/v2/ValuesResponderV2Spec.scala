@@ -6,9 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -1777,6 +1777,32 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[NotFoundException])
+      }
+    }
+
+    "not create a list value that is a root list node" in {
+      val resourceIri           = "http://rdfh.ch/0001/a-blue-thing"
+      val resourceClassIri      = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+      val valueHasListNode      = "http://rdfh.ch/lists/0001/otherTreeList"
+
+      appActor ! CreateValueRequestV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = resourceClassIri,
+          propertyIri = propertyIri,
+          valueContent = HierarchicalListValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasListNode = valueHasListNode
+          )
+        ),
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUser1,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 

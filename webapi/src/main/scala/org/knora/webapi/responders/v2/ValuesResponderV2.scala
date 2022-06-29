@@ -193,10 +193,20 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
              )
 
         // If this is a list value, check that it points to a real list node.
-
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
                  ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
+               case _ => FastFuture.successful(())
+             }
+
+        //  If this is a list value, check if list value is not root list node.
+        _ <- submittedInternalValueContent match {
+               case listValue: HierarchicalListValueContentV2 =>
+                 ResourceUtilV2.checkIfNodeIsRoot(
+                   listValue.valueHasListNode,
+                   appActor,
+                   createValueRequest.featureFactoryConfig
+                 )
                case _ => FastFuture.successful(())
              }
 
@@ -331,6 +341,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                             featureFactoryConfig = createValueRequest.featureFactoryConfig,
                                             requestingUser = createValueRequest.requestingUser
                                           )
+
+        // _ = println(111, createValueRequest.createValue.resourceIri, resourceInfo.resourceClassIri)
+
       } yield CreateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
         valueType = verifiedValue.value.valueType,
