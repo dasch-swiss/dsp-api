@@ -245,10 +245,9 @@ object User {
         // BCrypt
         val encoder = new BCryptPasswordEncoder()
         encoder.matches(passwordString, self.value)
-      } else { // TODO do we still need this SHA-1 validation?
-        // SHA-1
-        val md = java.security.MessageDigest.getInstance("SHA-1")
-        md.digest(self.value.getBytes("UTF-8")).map("%02x".format(_)).mkString.equals(self.value)
+      } else {
+        ZIO.logError(UserErrorMessages.PasswordHashUnknown)
+        false
       }
 
   }
@@ -351,6 +350,7 @@ object UserErrorMessages {
   val PasswordMissing         = "Password cannot be empty."
   val PasswordInvalid         = "Password is invalid."
   val PasswordStrengthInvalid = "PasswordStrength is invalid."
+  val PasswordHashUnknown     = "The provided PasswordHash has an unknown format."
   val GivenNameMissing        = "GivenName cannot be empty."
   val GivenNameInvalid        = "GivenName is invalid."
   val FamilyNameMissing       = "FamilyName cannot be empty."
