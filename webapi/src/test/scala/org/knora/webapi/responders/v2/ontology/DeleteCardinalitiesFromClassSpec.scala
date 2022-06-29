@@ -22,19 +22,6 @@ class DeleteCardinalitiesFromClassSpec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout                 = settings.defaultTimeout
 
-  // override lazy val rdfDataObjects = List(
-  //   RdfDataObject(
-  //     path = "test_data/ontologies/freetest-onto.ttl",
-  //     name = "http://www.knora.org/ontology/0001/freetest"
-  //   ),
-  //   RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
-  //   RdfDataObject(
-  //     path = "test_data/ontologies/anything-onto.ttl",
-  //     name = "http://www.knora.org/ontology/0001/anything"
-  //   ),
-  //   RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-  // )
-
   val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
 
   // use started actor in tests instead of the store manager
