@@ -26,12 +26,14 @@ object UserRepoImplSpec extends ZIOSpecDefault {
 
   def spec = (userRepoMockTests + userRepoLiveTests)
 
-  private val user1: User = SharedTestData.normalUser1
-  private val user2: User = SharedTestData.normalUser2
+  private val user1 = SharedTestData.user1
+  private val user2 = SharedTestData.user2
 
   val userTests =
     test("store several users and retrieve all") {
       for {
+        user1          <- user1.toZIO
+        user2          <- user2.toZIO
         _              <- UserRepo.storeUser(user1)
         _              <- UserRepo.storeUser(user2)
         retrievedUsers <- UserRepo.getUsers()
@@ -39,18 +41,22 @@ object UserRepoImplSpec extends ZIOSpecDefault {
     } +
       test("store a user and retrieve by ID") {
         for {
+          user1         <- user1.toZIO
           _             <- UserRepo.storeUser(user1)
           retrievedUser <- UserRepo.getUserById(user1.id)
         } yield assertTrue(retrievedUser == user1)
       } +
       test("store a user and retrieve the user by username") {
         for {
+          user1         <- user1.toZIO
           _             <- UserRepo.storeUser(user1)
           retrievedUser <- UserRepo.getUserByUsername(user1.username)
         } yield assertTrue(retrievedUser == user1)
       } +
       test("store a user and retrieve the user by email") {
         for {
+          user1         <- user1.toZIO
+          user2         <- user2.toZIO
           _             <- UserRepo.storeUser(user1)
           retrievedUser <- UserRepo.getUserByEmail(user1.email)
         } yield {
@@ -60,6 +66,7 @@ object UserRepoImplSpec extends ZIOSpecDefault {
       } +
       test("return failure (None) if a username already exists") {
         for {
+          user1 <- user1.toZIO
           _     <- UserRepo.storeUser(user1)
           error <- UserRepo.checkIfUsernameExists(user1.username).exit
         } yield assert(error)(
@@ -68,12 +75,15 @@ object UserRepoImplSpec extends ZIOSpecDefault {
       } +
       test("return success (Unit) if a username is unique") {
         for {
+          user1  <- user1.toZIO
+          user2  <- user2.toZIO
           _      <- UserRepo.storeUser(user1)
-          result <- UserRepo.checkIfUsernameExists(SharedTestData.normalUser2.username)
+          result <- UserRepo.checkIfUsernameExists(user2.username)
         } yield assertTrue(result == ())
       } +
       test("return failure (None) if an email already exists") {
         for {
+          user1 <- user1.toZIO
           _     <- UserRepo.storeUser(user1)
           error <- UserRepo.checkIfEmailExists(user1.email).exit
         } yield assert(error)(
@@ -82,12 +92,15 @@ object UserRepoImplSpec extends ZIOSpecDefault {
       } +
       test("return success (Unit) if an email is unique") {
         for {
+          user1  <- user1.toZIO
+          user2  <- user2.toZIO
           _      <- UserRepo.storeUser(user1)
-          result <- UserRepo.checkIfEmailExists(SharedTestData.normalUser2.email)
+          result <- UserRepo.checkIfEmailExists(user2.email)
         } yield assertTrue(result == ())
       } +
       test("store and delete a user") {
         for {
+          user1                            <- user1.toZIO
           userId                           <- UserRepo.storeUser(user1)
           userIdOfDeletedUser              <- UserRepo.deleteUser(userId)
           idIsDeleted                      <- UserRepo.getUserById(userIdOfDeletedUser).exit

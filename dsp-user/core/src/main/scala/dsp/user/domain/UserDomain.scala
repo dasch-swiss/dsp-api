@@ -10,6 +10,7 @@ import dsp.valueobjects.User._
 import zio.prelude.Validation
 
 import java.util.UUID
+import dsp.errors.BadRequestException
 
 /**
  * Represents the user domain object.
@@ -179,9 +180,9 @@ object User {
     language: LanguageCode,
     status: UserStatus
     //role: Role
-  ): User = {
+  ): Validation[BadRequestException, User] = {
     val id = UserId.make()
-    new User(id, givenName, familyName, username, email, password, language, status) {}
+    Validation.succeed(new User(id, givenName, familyName, username, email, password, language, status) {})
   }
 
 }

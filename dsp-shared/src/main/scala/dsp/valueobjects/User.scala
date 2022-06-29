@@ -52,16 +52,21 @@ object User {
       }
 
     /**
-     * Creates a value object
+     * Creates a value object even if it doesn't pass the validation. It logs an error in case of an invalid input.
+     * Only use this in the repo layer when creating value objects from possibly deprecated data that can't be updated or in tests.
+     *
+     * @param value the String the username should be created from
      */
     def unsafeMake(value: String): Validation[Throwable, Username] =
-      UsernameRegex.findFirstIn(value) match {
-        case Some(value) => Username.make(value)
-        case None => {
-          ZIO.logError(UserErrorMessages.UsernameInvalid)
-          Validation.succeed(new Username(value) {})
-        }
-      }
+      Username
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(UserErrorMessages.UsernameInvalid)
+            Validation.succeed(new Username(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
@@ -86,6 +91,23 @@ object User {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
       }
+
+    /**
+     * Creates a value object even if it doesn't pass the validation. It logs an error in case of an invalid input.
+     * Only use this in the repo layer when creating value objects from possibly deprecated data that can't be updated or in tests.
+     *
+     * @param value the String the email should be created from
+     */
+    def unsafeMake(value: String): Validation[Throwable, Email] =
+      Email
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(UserErrorMessages.EmailInvalid)
+            Validation.succeed(new Email(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
@@ -105,6 +127,23 @@ object User {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
       }
+
+    /**
+     * Creates a value object even if it doesn't pass the validation. It logs an error in case of an invalid input.
+     * Only use this in the repo layer when creating value objects from possibly deprecated data that can't be updated or in tests.
+     *
+     * @param value the String the GivenName should be created from
+     */
+    def unsafeMake(value: String): Validation[Throwable, GivenName] =
+      GivenName
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(UserErrorMessages.GivenNameInvalid)
+            Validation.succeed(new GivenName(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
@@ -124,6 +163,23 @@ object User {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
       }
+
+    /**
+     * Creates a value object even if it doesn't pass the validation. It logs an error in case of an invalid input.
+     * Only use this in the repo layer when creating value objects from possibly deprecated data that can't be updated or in tests.
+     *
+     * @param value the String the FamilyName should be created from
+     */
+    def unsafeMake(value: String): Validation[Throwable, FamilyName] =
+      FamilyName
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(UserErrorMessages.FamilyNameInvalid)
+            Validation.succeed(new FamilyName(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
@@ -148,6 +204,23 @@ object User {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
       }
+
+    /**
+     * Creates a value object even if it doesn't pass the validation. It logs an error in case of an invalid input.
+     * Only use this in the repo layer when creating value objects from possibly deprecated data that can't be updated or in tests.
+     *
+     * @param value the String the Password should be created from
+     */
+    def unsafeMake(value: String): Validation[Throwable, Password] =
+      Password
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(UserErrorMessages.PasswordInvalid)
+            Validation.succeed(new Password(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
@@ -198,6 +271,23 @@ object User {
           case None => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
         }
       }
+
+    /**
+     * Creates a value object even if it doesn't pass the validation. It logs an error in case of an invalid input.
+     * Only use this in the repo layer when creating value objects from possibly deprecated data that can't be updated or in tests.
+     *
+     * @param value the String the Password should be created from
+     */
+    def unsafeMake(value: String, passwordStrength: PasswordStrength): Validation[Throwable, PasswordHash] =
+      PasswordHash
+        .make(value, passwordStrength)
+        .fold(
+          e => {
+            ZIO.logError(UserErrorMessages.PasswordInvalid)
+            Validation.succeed(new PasswordHash(value, passwordStrength) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**

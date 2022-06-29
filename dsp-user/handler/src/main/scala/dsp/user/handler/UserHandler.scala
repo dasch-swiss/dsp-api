@@ -17,6 +17,7 @@ import dsp.valueobjects.User._
 import zio._
 
 import java.util.UUID
+import dsp.errors.KnoraException
 
 /**
  * The user handler.
@@ -112,12 +113,12 @@ final case class UserHandler(repo: UserRepo) {
     language: LanguageCode,
     status: UserStatus
     //role: Role
-  ): IO[DuplicateValueException, UserId] =
+  ): IO[KnoraException, UserId] =
     (for {
       _      <- checkIfUsernameTaken(username) // TODO reserve username
       _      <- checkIfEmailTaken(email) // TODO reserve email
-      user   <- ZIO.succeed(User.make(givenName, familyName, username, email, password, language, status))
-      userId <- repo.storeUser(user) // we assume that this can't fail because all validations have passed
+      user   <- User.make(givenName, familyName, username, email, password, language, status).toZIO
+      userId <- repo.storeUser(user)
     } yield userId).tap(userId => ZIO.logInfo(s"Created user with ID '${userId}'"))
 
   /**

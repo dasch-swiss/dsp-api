@@ -153,14 +153,20 @@ object UserSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Username.make(validUsername).toOption.get.value == validUsername)
+      assertTrue(Username.make(validUsername).toOption.get.value == validUsername) &&
       assertTrue(Username.make(Option(validUsername)).getOrElse(null).get.value == validUsername)
-    } +
-      test("successfully validate passing None") {
-        assertTrue(
-          Username.make(None) == Validation.succeed(None)
-        )
-      }
+    },
+    test("successfully validate passing None") {
+      assertTrue(
+        Username.make(None) == Validation.succeed(None)
+      )
+    },
+    test("pass an invalid value to unsafeMake and successfully create value object") {
+      assertTrue(Username.unsafeMake(invalidUsername).toOption.get.value == invalidUsername)
+    },
+    test("pass a valid value to unsafeMake and successfully create value object") {
+      assertTrue(Username.unsafeMake(validUsername).toOption.get.value == validUsername)
+    }
   )
 
   private val emailTest = suite("Email")(
