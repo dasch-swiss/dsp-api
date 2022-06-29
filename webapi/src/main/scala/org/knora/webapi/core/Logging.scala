@@ -32,7 +32,9 @@ object Logging {
     )
   }
 
+  val slf4jFormat = line
+
   val slf4j =
-    SLF4J.slf4j(LogLevel.Debug, textFormat, _ => "zio-slf4j-logger")
+    SLF4J.slf4j(LogLevel.Debug, slf4jFormat, _ => "zio-slf4j-logger")
 
 }
