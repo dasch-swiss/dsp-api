@@ -1,0 +1,36 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+# resources with old date serialization
+
+<http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9ma>
+    a                            knora-base:Resource ;
+    knora-base:attachedToUser    <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate      "2019-11-29T10:00:00.673298+00:00"^^xsd:dateTime ;
+    rdfs:label                   "a thing" ;
+    knora-base:isDeleted         false .
+
+<http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mb>
+    a                               knora-base:Resource ;
+    knora-base:attachedToUser       <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions       "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate         "2018-08-07T13:27:18.518+00:00"^^xsd:dateTime ;
+    knora-base:lastModificationDate "2019-11-29T10:00:01.673298+00:00"^^xsd:dateTime ;
+    rdfs:label                      "a thing" ;
+    knora-base:isDeleted            false .
+
+<http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mc>
+    a                               knora-base:Resource ;
+    knora-base:attachedToUser       <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+    knora-base:attachedToProject    <http://rdfh.ch/projects/0001> ;
+    knora-base:hasPermissions       "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
+    knora-base:creationDate         "2018-08-07T13:27:18.518123Z"^^xsd:dateTime ;
+    knora-base:lastModificationDate "2019-11-29T10:00:01.673298+02:00"^^xsd:dateTime ;
+    knora-base:deleteDate           "2020-04-07T14:59:28.960124+00:00"^^xsd:dateTime ;
+    rdfs:label                      "a thing" ;
+    knora-base:isDeleted            false .
