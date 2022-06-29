@@ -29,7 +29,7 @@ object Id {
    */
   object UserId {
 
-    private val UserIriPrefix = "http://rdfh.ch/users/"
+    private val userIriPrefix = "http://rdfh.ch/users/"
 
     /**
      * Generates a UserId instance with a new (random) UUID and a given IRI which is created from a prefix and the UUID.
@@ -47,7 +47,7 @@ object Id {
      * @return a new UserId instance
      */
     def fromUuid(uuid: UUID): UserId = {
-      val iri = Iri.UserIri.make(UserIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
       new UserId(uuid, iri) {}
     }
 
@@ -58,7 +58,7 @@ object Id {
      */
     def make(): UserId = {
       val uuid: UUID = UUID.randomUUID()
-      val iri        = Iri.UserIri.make(UserIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      val iri        = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
       new UserId(uuid, iri) {}
     }
   }
