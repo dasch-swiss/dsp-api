@@ -153,7 +153,7 @@ class R2RSpec
 
   lazy val rdfDataObjects = List.empty[RdfDataObject]
 
-  override def beforeAll(): Unit = {
+  final override def beforeAll(): Unit = {
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
 
@@ -166,7 +166,7 @@ class R2RSpec
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit = {
+  final override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
 

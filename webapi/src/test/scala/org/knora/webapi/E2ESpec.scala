@@ -172,7 +172,7 @@ class E2ESpec(_system: ActorSystem)
 
   protected val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
 
-  override def beforeAll(): Unit = {
+  final override def beforeAll(): Unit = {
 
     // create temp data dir if not present
     createTmpFileDir()

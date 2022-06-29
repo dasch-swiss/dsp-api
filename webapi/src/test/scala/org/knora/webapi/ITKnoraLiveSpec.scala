@@ -162,7 +162,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   protected val baseInternalSipiUrl: String = appConfig.sipi.internalBaseUrl
   protected val baseExternalSipiUrl: String = appConfig.sipi.externalBaseUrl
 
-  override def beforeAll(): Unit = {
+  final override def beforeAll(): Unit = {
 
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)

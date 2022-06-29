@@ -41,10 +41,10 @@ class CacheUtilSpec
   private val cacheName = Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
   private val sessionId = System.currentTimeMillis().toString
 
-  override protected def beforeAll(): Unit =
+  final override def beforeAll(): Unit =
     CacheUtil.createCaches(settings.caches)
 
-  override def afterAll(): Unit = {
+  final override def afterAll(): Unit = {
     CacheUtil.removeAllCaches()
     TestKit.shutdownActorSystem(system)
   }
