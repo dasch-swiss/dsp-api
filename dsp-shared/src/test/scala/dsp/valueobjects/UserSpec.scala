@@ -160,12 +160,6 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(
         Username.make(None) == Validation.succeed(None)
       )
-    },
-    test("pass an invalid value to unsafeMake and successfully create value object") {
-      assertTrue(Username.unsafeMake(invalidUsername).toOption.get.value == invalidUsername)
-    },
-    test("pass a valid value to unsafeMake and successfully create value object") {
-      assertTrue(Username.unsafeMake(validUsername).toOption.get.value == validUsername)
     }
   )
 
