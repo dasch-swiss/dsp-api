@@ -1,5 +1,22 @@
 # Changelog
 
+## [22.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.1...v22.0.0) (2022-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* add upgrade plugin that fixes invalid date serialisations (#2081)
+
+### Bug Fixes
+
+* add upgrade plugin that fixes invalid date serialisations ([#2081](https://www.github.com/dasch-swiss/dsp-api/issues/2081)) ([3a0902e](https://www.github.com/dasch-swiss/dsp-api/commit/3a0902ea9b44860bcb73e4ef25888f5ac8a5dc21))
+* **ontology:** link value property is not editable after editing the property metadata (DEV-1037) ([#2084](https://www.github.com/dasch-swiss/dsp-api/issues/2084)) ([09688f5](https://www.github.com/dasch-swiss/dsp-api/commit/09688f5d4bd85e9544807328ee51b222d8b4732b))
+
+
+### Maintenance
+
+* temporarily ignore KnoraSipiIntegrationV2ITSpec ([#2085](https://www.github.com/dasch-swiss/dsp-api/issues/2085)) ([59f93b3](https://www.github.com/dasch-swiss/dsp-api/commit/59f93b318115c204ec3a20da23c97251575084bd))
+
 ### [21.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.0...v21.0.1) (2022-06-23)
 
 
