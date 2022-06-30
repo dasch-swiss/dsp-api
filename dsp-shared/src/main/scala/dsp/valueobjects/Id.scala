@@ -5,8 +5,8 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
 import dsp.errors.BadRequestException
+import zio.prelude.Validation
 
 import java.util.UUID
 
@@ -36,9 +36,9 @@ object Id {
      *
      * @return a new UserId instance
      */
-    def fromIri(iri: Iri.UserIri): UserId = {
+    def fromIri(iri: Iri.UserIri): Validation[Throwable, UserId] = {
       val uuid: UUID = UUID.fromString(iri.value.split("/").last)
-      new UserId(uuid, iri) {}
+      Validation.succeed(new UserId(uuid, iri) {})
     }
 
     /**
@@ -46,9 +46,9 @@ object Id {
      *
      * @return a new UserId instance
      */
-    def fromUuid(uuid: UUID): UserId = {
+    def fromUuid(uuid: UUID): Validation[Throwable, UserId] = {
       val iri = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
-      new UserId(uuid, iri) {}
+      Validation.succeed(new UserId(uuid, iri) {})
     }
 
     /**
@@ -56,10 +56,10 @@ object Id {
      *
      * @return a new UserId instance
      */
-    def make(): UserId = {
+    def make(): Validation[Throwable, UserId] = {
       val uuid: UUID = UUID.randomUUID()
       val iri        = Iri.UserIri.make(userIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
-      new UserId(uuid, iri) {}
+      Validation.succeed(new UserId(uuid, iri) {})
     }
   }
 }

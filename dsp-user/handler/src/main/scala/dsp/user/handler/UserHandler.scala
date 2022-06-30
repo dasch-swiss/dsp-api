@@ -113,11 +113,12 @@ final case class UserHandler(repo: UserRepo) {
     language: LanguageCode,
     status: UserStatus
     //role: Role
-  ): IO[KnoraException, UserId] =
+  ): IO[Throwable, UserId] =
     (for {
       _      <- checkIfUsernameTaken(username) // TODO reserve username
       _      <- checkIfEmailTaken(email) // TODO reserve email
-      user   <- User.make(givenName, familyName, username, email, password, language, status).toZIO
+      id     <- UserId.make().toZIO
+      user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
       userId <- repo.storeUser(user)
     } yield userId).tap(userId => ZIO.logInfo(s"Created user with ID '${userId}'"))
 
@@ -133,7 +134,7 @@ final case class UserHandler(repo: UserRepo) {
       // TODO reserve new username because it has to be unique
       // check if user exists and get him
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updateUsername(newValue))
+      userUpdated <- user.updateUsername(newValue).toZIO
       _           <- repo.storeUser(userUpdated)
     } yield id).tap(_ => ZIO.logInfo(s"Updated username with new value '${newValue.value}'"))
 
@@ -149,7 +150,7 @@ final case class UserHandler(repo: UserRepo) {
       _ <- checkIfEmailTaken(newValue)
       // check if user exists and get him
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updateEmail(newValue))
+      userUpdated <- user.updateEmail(newValue).toZIO
       _           <- repo.storeUser(userUpdated)
     } yield id).tap(_ => ZIO.logInfo(s"Updated email with new value '${newValue.value}'"))
 
@@ -163,7 +164,7 @@ final case class UserHandler(repo: UserRepo) {
     (for {
       // check if user exists and get him
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updateGivenName(newValue))
+      userUpdated <- user.updateGivenName(newValue).toZIO
       _           <- repo.storeUser(userUpdated)
     } yield id).tap(_ => ZIO.logInfo(s"Updated givenName with new value '${newValue.value}'"))
 
@@ -177,7 +178,7 @@ final case class UserHandler(repo: UserRepo) {
     (for {
       // check if user exists and get him, lock user
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updateFamilyName(newValue))
+      userUpdated <- user.updateFamilyName(newValue).toZIO
       _           <- repo.storeUser(userUpdated)
     } yield id).tap(_ => ZIO.logInfo(s"Updated familyName with new value '${newValue.value}'"))
 
@@ -210,7 +211,7 @@ final case class UserHandler(repo: UserRepo) {
     (for {
       // check if user exists and get him, lock user
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updatePassword(newPassword))
+      userUpdated <- user.updatePassword(newPassword).toZIO
       _           <- repo.storeUser(userUpdated)
     } yield id).tap(_ => ZIO.logInfo(s"Updated password"))
   }
@@ -225,7 +226,7 @@ final case class UserHandler(repo: UserRepo) {
     (for {
       // check if user exists and get him, lock user
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updateLanguage(newValue))
+      userUpdated <- user.updateLanguage(newValue).toZIO
       _           <- repo.storeUser(userUpdated)
     } yield id).tap(_ => ZIO.logInfo(s"Updated language with new value '${newValue.value}'"))
 

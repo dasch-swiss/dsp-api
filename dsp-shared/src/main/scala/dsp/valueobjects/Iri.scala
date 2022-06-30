@@ -114,7 +114,7 @@ object Iri {
    * UserIri value object.
    */
   sealed abstract case class UserIri private (value: String) extends Iri
-  object UserIri { self =>
+  object UserIri {
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
@@ -135,12 +135,6 @@ object Iri {
 
           validatedValue.map(new UserIri(_) {})
         }
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[UserIri]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
       }
   }
 }

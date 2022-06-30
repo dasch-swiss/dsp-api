@@ -11,7 +11,7 @@ import zio.test._
 import dsp.errors.BadRequestException
 
 /**
- * This spec is used to test the [[User]] value objects creation.
+ * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
  */
 object UserSpec extends ZIOSpecDefault {
   private val validUsername                               = "user008"
@@ -39,19 +39,11 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(
         Username.make("") == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
-      ) &&
-      assertTrue(
-        Username.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.UsernameMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         Username.make(invalidUsername) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsername)) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
@@ -61,21 +53,11 @@ object UserSpec extends ZIOSpecDefault {
         Username.make(tooShortUsername) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
-      ) &&
-      assertTrue(
-        Username.make(Some(tooShortUsername)) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
       )
     },
     test("pass too long value and return an error") {
       assertTrue(
         Username.make(tooLongUsername) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
-      ) &&
-      assertTrue(
-        Username.make(Some(tooLongUsername)) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
@@ -85,21 +67,11 @@ object UserSpec extends ZIOSpecDefault {
         Username.make(invalidUsernameWithUnderscoreAsFirstChar) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsernameWithUnderscoreAsFirstChar)) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
       )
     },
     test("pass an invalid value with '_' as the last char and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithUnderscoreAsLastChar) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsernameWithUnderscoreAsLastChar)) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
@@ -109,21 +81,11 @@ object UserSpec extends ZIOSpecDefault {
         Username.make(invalidUsernameWithMultipleUnderscoresInRow) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsernameWithMultipleUnderscoresInRow)) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
       )
     },
     test("pass an invalid value with '.' as the first char and return an error") {
       assertTrue(
         Username.make(invalidUsernameWithDotAsFirstChar) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsernameWithDotAsFirstChar)) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
       )
@@ -133,11 +95,6 @@ object UserSpec extends ZIOSpecDefault {
         Username.make(invalidUsernameWithDotAsLastChar) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsernameWithDotAsLastChar)) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
       )
     },
     test("pass an invalid value with '.' used multiple times in a row and return an error") {
@@ -145,51 +102,26 @@ object UserSpec extends ZIOSpecDefault {
         Username.make(invalidUsernameWithMultipleDotsInRow) == Validation.fail(
           BadRequestException(UserErrorMessages.UsernameInvalid)
         )
-      ) &&
-      assertTrue(
-        Username.make(Some(invalidUsernameWithMultipleDotsInRow)) == Validation.fail(
-          BadRequestException(UserErrorMessages.UsernameInvalid)
-        )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Username.make(validUsername).toOption.get.value == validUsername) &&
-      assertTrue(Username.make(Option(validUsername)).getOrElse(null).get.value == validUsername)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Username.make(None) == Validation.succeed(None)
-      )
+      assertTrue(Username.make(validUsername).toOption.get.value == validUsername)
     }
   )
 
   private val emailTest = suite("Email")(
     test("pass an empty value and return an error") {
-      assertTrue(Email.make("") == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))) &&
-      assertTrue(
-        Email.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing))
-      )
+      assertTrue(Email.make("") == Validation.fail(BadRequestException(UserErrorMessages.EmailMissing)))
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         Email.make(invalidEmailAddress) == Validation.fail(
           BadRequestException(UserErrorMessages.EmailInvalid)
         )
-      ) &&
-      assertTrue(
-        Email.make(Some(invalidEmailAddress)) == Validation.fail(
-          BadRequestException(UserErrorMessages.EmailInvalid)
-        )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Email.make(validEmailAddress).toOption.get.value == validEmailAddress) &&
-      assertTrue(Email.make(Option(validEmailAddress)).getOrElse(null).get.value == validEmailAddress)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Email.make(None) == Validation.succeed(None)
-      )
+      assertTrue(Email.make(validEmailAddress).toOption.get.value == validEmailAddress)
     }
   )
 
@@ -197,19 +129,10 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(
         GivenName.make("") == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
-      ) &&
-      assertTrue(
-        GivenName.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.GivenNameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(GivenName.make(validGivenName).toOption.get.value == validGivenName) &&
-      assertTrue(GivenName.make(Option(validGivenName)).getOrElse(null).get.value == validGivenName)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        GivenName.make(None) == Validation.succeed(None)
-      )
+      assertTrue(GivenName.make(validGivenName).toOption.get.value == validGivenName)
     }
   )
 
@@ -217,21 +140,10 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(
         FamilyName.make("") == Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
-      ) &&
-      assertTrue(
-        FamilyName.make(Some("")) == Validation.fail(
-          BadRequestException(UserErrorMessages.FamilyNameMissing)
-        )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(FamilyName.make(validFamilyName).toOption.get.value == validFamilyName) &&
-      assertTrue(FamilyName.make(Option(validFamilyName)).getOrElse(null).get.value == validFamilyName)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        FamilyName.make(None) == Validation.succeed(None)
-      )
+      assertTrue(FamilyName.make(validFamilyName).toOption.get.value == validFamilyName)
     }
   )
 
@@ -239,19 +151,10 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(
         Password.make("") == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
-      ) &&
-      assertTrue(
-        Password.make(Some("")) == Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Password.make(validPassword).toOption.get.value == validPassword) &&
-      assertTrue(Password.make(Option(validPassword)).getOrElse(null).get.value == validPassword)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        Password.make(None) == Validation.succeed(None)
-      )
+      assertTrue(Password.make(validPassword).toOption.get.value == validPassword)
     }
   )
 
@@ -288,11 +191,6 @@ object UserSpec extends ZIOSpecDefault {
     test("pass an empty value and return an error") {
       assertTrue(
         LanguageCode.make("") == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
-      ) &&
-      assertTrue(
-        LanguageCode.make(Some("")) == Validation.fail(
-          BadRequestException(UserErrorMessages.LanguageCodeMissing)
-        )
       )
     },
     test("pass an invalid value and return an error") {
@@ -300,21 +198,10 @@ object UserSpec extends ZIOSpecDefault {
         LanguageCode.make(invalidLanguageCode) == Validation.fail(
           BadRequestException(UserErrorMessages.LanguageCodeInvalid)
         )
-      ) &&
-      assertTrue(
-        LanguageCode.make(Some(invalidLanguageCode)) == Validation.fail(
-          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
-        )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(LanguageCode.make(validLanguageCode).toOption.get.value == validLanguageCode) &&
-      assertTrue(LanguageCode.make(Option(validLanguageCode)).getOrElse(null).get.value == validLanguageCode)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        LanguageCode.make(None) == Validation.succeed(None)
-      )
+      assertTrue(LanguageCode.make(validLanguageCode).toOption.get.value == validLanguageCode)
     }
   )
 

@@ -221,10 +221,9 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.status == status)
     },
     test("return an Error if user not found by ID") {
-
-      val newUserId = UserId.make()
       for {
         userHandler <- ZIO.service[UserHandler]
+        newUserId   <- UserId.make().toZIO
         error       <- userHandler.getUserById(newUserId).exit
       } yield assert(error)(fails(equalTo(NotFoundException(s"User with ID '${newUserId}' not found"))))
     },
@@ -309,9 +308,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
 
   private val updateUserTest = suite("updateUser")(
     test("store a user and update the username") {
-      val newValue = Username.make("newUsername").fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        newValue <- Username.make("newUsername").toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -330,7 +330,6 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     language,
                     status
                   )
-
         idOfUpdatedUser <- userHandler.updateUsername(userId, newValue)
         retrievedUser   <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.username == newValue) &&
@@ -370,9 +369,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
       )
     },
     test("store a user and update the email") {
-      val newValue = Email.make("new.mail1@email.com").fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        newValue <- Email.make("new.mail1@email.com").toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -431,9 +431,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
       )
     },
     test("store a user and update the givenName") {
-      val newValue = GivenName.make("newGivenName").fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        newValue <- GivenName.make("newGivenName").toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -465,9 +466,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.status == status)
     },
     test("store a user and update the familyName") {
-      val newValue = FamilyName.make("newFamilyName").fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        newValue <- FamilyName.make("newFamilyName").toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -499,10 +501,11 @@ object UserHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedUser.status == status)
     },
     test("store a user and update the password") {
-      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
-      val newValue         = PasswordHash.make("newPassword1", passwordStrength).fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        passwordStrength <- PasswordStrength.make(12).toZIO
+        newValue         <- PasswordHash.make("newPassword1", passwordStrength).toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -536,11 +539,12 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test(
       "return an error when the supplied password does not match the requesting user's password when trying to update the password"
     ) {
-      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
-      val newValue         = PasswordHash.make("newPassword1", passwordStrength).fold(e => throw e.head, v => v)
-      val wrongPassword    = PasswordHash.make("wrongPassword1", passwordStrength).fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        passwordStrength <- PasswordStrength.make(12).toZIO
+        newValue         <- PasswordHash.make("newPassword1", passwordStrength).toZIO
+        wrongPassword    <- PasswordHash.make("wrongPassword1", passwordStrength).toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -568,11 +572,11 @@ object UserHandlerSpec extends ZIOSpecDefault {
     test(
       "return an error when the requesting user is not the user whose password is asked to be changed when trying to update the password"
     ) {
-      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
-      val newValue         = PasswordHash.make("newPassword1", passwordStrength).fold(e => throw e.head, v => v)
-      val otherUser        = SharedTestData.user2
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        passwordStrength <- PasswordStrength.make(12).toZIO
+        newValue         <- PasswordHash.make("newPassword1", passwordStrength).toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -593,7 +597,7 @@ object UserHandlerSpec extends ZIOSpecDefault {
                   )
 
         storedUser <- userHandler.getUserById(userId)
-        otherUser  <- otherUser.toZIO
+        otherUser  <- SharedTestData.user2.toZIO
         error      <- userHandler.updatePassword(userId, newValue, storedUser.password, otherUser).exit
       } yield assert(error)(
         fails(
@@ -604,9 +608,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
       )
     },
     test("store a user and update the language") {
-      val newValue = LanguageCode.make("fr").fold(e => throw e.head, v => v)
       for {
         userHandler <- ZIO.service[UserHandler]
+
+        newValue <- LanguageCode.make("fr").toZIO
 
         username1   <- SharedTestData.username1.toZIO
         email1      <- SharedTestData.email1.toZIO
@@ -689,11 +694,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
         )
     },
     test("return an error if the ID of a user is not found when trying to delete the user") {
-      val userId = UserId.make()
       for {
         userHandler <- ZIO.service[UserHandler]
-
-        error <- userHandler.deleteUser(userId).exit
+        userId      <- UserId.make().toZIO
+        error       <- userHandler.deleteUser(userId).exit
       } yield assert(error)(
         fails(equalTo(NotFoundException(s"User with ID '${userId}' not found")))
       )

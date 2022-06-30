@@ -44,12 +44,6 @@ object User {
           case None        => Validation.fail(BadRequestException(UserErrorMessages.UsernameInvalid))
         }
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[Username]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
@@ -68,12 +62,6 @@ object User {
           case None        => Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
         }
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[Email]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
@@ -87,13 +75,6 @@ object User {
       } else {
         Validation.succeed(new GivenName(value) {})
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[GivenName]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-
   }
 
   /**
@@ -107,13 +88,6 @@ object User {
       } else {
         Validation.succeed(new FamilyName(value) {})
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[FamilyName]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-
   }
 
   /**
@@ -132,13 +106,6 @@ object User {
           case None        => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
         }
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[Password]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-
   }
 
   /**
@@ -188,7 +155,6 @@ object User {
           case None => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
         }
       }
-
   }
 
   /**
@@ -225,12 +191,6 @@ object User {
         Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
       } else {
         Validation.succeed(new LanguageCode(value) {})
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[LanguageCode]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
       }
   }
 
