@@ -29,7 +29,7 @@ object ProjectSpec extends ZIOSpecDefault {
     (shortcodeTest + shortnameTest + longnameTest + projectDescriptionsTest + keywordsTest + logoTest + projectStatusTest + projectSelfJoinTest)
 
   private val shortcodeTest = suite("ProjectSpec - Shortcode")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(
         Shortcode.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       ) &&
@@ -37,7 +37,7 @@ object ProjectSpec extends ZIOSpecDefault {
         Shortcode.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         Shortcode.make(invalidShortcode) == Validation.fail(
           BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
@@ -61,7 +61,7 @@ object ProjectSpec extends ZIOSpecDefault {
   )
 
   private val shortnameTest = suite("ProjectSpec - Shortname")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(
         Shortname.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
       ) &&
@@ -69,7 +69,7 @@ object ProjectSpec extends ZIOSpecDefault {
         Shortname.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         Shortname.make(invalidShortname) == Validation.fail(
           BadRequestException(ProjectErrorMessages.ShortnameInvalid)
@@ -93,7 +93,7 @@ object ProjectSpec extends ZIOSpecDefault {
   )
 
   private val longnameTest = suite("ProjectSpec - Longname")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(Longname.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))) &&
       assertTrue(
         Longname.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
@@ -111,7 +111,7 @@ object ProjectSpec extends ZIOSpecDefault {
   )
 
   private val projectDescriptionsTest = suite("ProjectSpec - ProjectDescriptions")(
-    test("pass an empty object and throw an error") {
+    test("pass an empty object and return an error") {
       assertTrue(
         ProjectDescription.make(Seq.empty) == Validation.fail(
           BadRequestException(ProjectErrorMessages.ProjectDescriptionsMissing)
@@ -135,7 +135,7 @@ object ProjectSpec extends ZIOSpecDefault {
   )
 
   private val keywordsTest = suite("ProjectSpec - Keywords")(
-    test("pass an empty object and throw an error") {
+    test("pass an empty object and return an error") {
       assertTrue(
         Keywords.make(Seq.empty) == Validation.fail(
           BadRequestException(ProjectErrorMessages.KeywordsMissing)
@@ -159,7 +159,7 @@ object ProjectSpec extends ZIOSpecDefault {
   )
 
   private val logoTest = suite("ProjectSpec - Logo")(
-    test("pass an empty object and throw an error") {
+    test("pass an empty object and return an error") {
       assertTrue(
         Logo.make("") == Validation.fail(
           BadRequestException(ProjectErrorMessages.LogoMissing)
