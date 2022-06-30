@@ -44,6 +44,25 @@ object User {
           case None        => Validation.fail(BadRequestException(UserErrorMessages.UsernameInvalid))
         }
       }
+
+    /**
+     * Makes a Username value object even if the input is not valid. Instead of returning an Error, it
+     *     just logs the Error message and returns the Username. This is needed when the input value
+     *     was created at a time where the validation was different and couldn't be updated. Only use
+     *     this method in the repo layer or in tests!
+     *
+     * @param value The value the value object is created from
+     */
+    def unsafeMake(value: String): Validation[Throwable, Username] =
+      Username
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(e.head.getMessage())
+            Validation.succeed(new Username(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
