@@ -120,9 +120,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        val id: Validation[Throwable, Option[UserIri]] = apiRequest.id match {
-          case Some(id) => UserIri.make(id).map(Some(_))
-          case None     => Validation.succeed(None)
+        val iri: Validation[Throwable, Option[UserIri]] = apiRequest.id match {
+          case Some(iri) => UserIri.make(iri).map(Some(_))
+          case None      => Validation.succeed(None)
         }
         val username: Validation[Throwable, Username]         = Username.make(apiRequest.username)
         val email: Validation[Throwable, Email]               = Email.make(apiRequest.email)
@@ -133,9 +133,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val languageCode: Validation[Throwable, LanguageCode] = LanguageCode.make(apiRequest.lang)
         val systemAdmin: Validation[Throwable, SystemAdmin]   = SystemAdmin.make(apiRequest.systemAdmin)
 
+        // TODO try this out with ZIO.collectAllPar (https://zio.github.io/zio-prelude/docs/functionaldatatypes/validation#accumulating-errors)
         val validatedUserCreatePayload: Validation[Throwable, UserCreatePayloadADM] =
           Validation.validateWith(
-            id,
+            iri,
             username,
             email,
             givenName,
