@@ -11,12 +11,18 @@ import org.knora.webapi.messages.util.rdf._
 
 import java.io.BufferedInputStream
 import java.io.FileInputStream
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.matchers.should.Matchers
+import com.typesafe.scalalogging.Logger
 
 /**
  * Provides helper methods for specs that test upgrade plugins.
  */
-abstract class UpgradePluginSpec extends CoreSpec() {
+abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
+
   protected val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
+
+  val log: Logger = Logger(this.getClass())
 
   /**
    * Parses a TriG file and returns it as an [[RdfModel]].
