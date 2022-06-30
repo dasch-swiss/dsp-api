@@ -8,8 +8,8 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
-import org.knora.webapi._
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -1198,7 +1198,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     Future
       .sequence(
         listNodesThatShouldExist
-          .map(listNodeIri => ResourceUtilV2.checkListNodeExists(listNodeIri, appActor))
+          .map(listNodeIri => ResourceUtilV2.checkListNodeExistsAndHasRootNode(listNodeIri, appActor))
           .toSeq
       )
       .map(_ => ())

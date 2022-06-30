@@ -9,25 +9,17 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
-import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
-import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
@@ -142,64 +134,25 @@ object ResourceUtilV2 {
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
 
   /**
-   * Checks whether a list node is not a list root node, and throws [[BadRequestException]] otherwise.
-   *
-   * @param nodeIri the IRI of the list node.
-   */
-  def checkIfNodeIsRoot(nodeIri: IRI, appActor: ActorRef, featureFactoryConfig: FeatureFactoryConfig)(implicit
-    timeout: Timeout,
-    executionContext: ExecutionContext
-  ): Future[Unit] = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    for {
-      sparqlQuery <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .getListNode(nodeIri = nodeIri)
-            .toString()
-        )
-
-      listNodeResponse <-
-        appActor
-          .ask(
-            SparqlExtendedConstructRequest(
-              sparql = sparqlQuery,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          )
-          .mapTo[SparqlExtendedConstructResponse]
-
-      ontoConstAsSmartIri: SmartIri                             = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsRootNode)
-      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
-      isRootNode: Boolean                                       = statements.map(_._2.contains(ontoConstAsSmartIri)).head
-
-      _ = if (isRootNode) {
-            throw BadRequestException("Root nodes cannot be set as values.")
-          }
-    } yield ()
-  }
-
-  /**
-   * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
+   * Checks whether a list node exists and has a root node, otherwise throws [[NotFoundException]].
    *
    * @param listNodeIri the IRI of the list node.
    */
-  def checkListNodeExists(listNodeIri: IRI, appActor: ActorRef)(implicit
+  def checkListNodeExistsAndHasRootNode(listNodeIri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[Unit] =
     for {
       askString <- Future(
                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkListNodeExistsByIri(listNodeIri = listNodeIri)
+                       .checkListNodeExistsAndHasRootNode(listNodeIri = listNodeIri)
                        .toString
                    )
 
-      checkListNodeExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      response <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 
-      _ = if (!checkListNodeExistsResponse.result) {
-            throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
+      _ = if (!response.result) {
+            throw NotFoundException(s"<$listNodeIri> does not exist, is not a ListNode or is a root node.")
           }
     } yield ()
 

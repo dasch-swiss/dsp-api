@@ -7,8 +7,8 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -192,21 +192,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                requestingUser = createValueRequest.requestingUser
              )
 
-        // If this is a list value, check that it points to a real list node.
+        // If it is a list value, check that it points to a real list node which is not a root node.
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
-               case _ => FastFuture.successful(())
-             }
-
-        //  If this is a list value, check if list value is not root list node.
-        _ <- submittedInternalValueContent match {
-               case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkIfNodeIsRoot(
-                   listValue.valueHasListNode,
-                   appActor,
-                   createValueRequest.featureFactoryConfig
-                 )
+                 ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
                case _ => FastFuture.successful(())
              }
 
@@ -1195,11 +1184,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                requestingUser = updateValueRequest.requestingUser
              )
 
-        // If this is a list value, check that it points to a real list node.
-
+        // If it is a list value, check that it points to a real list node which is not a root node.
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
+                 ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
                case _ => FastFuture.successful(())
              }
 

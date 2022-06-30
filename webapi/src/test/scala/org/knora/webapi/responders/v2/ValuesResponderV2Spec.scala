@@ -1802,7 +1802,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        assert(msg.cause.isInstanceOf[BadRequestException])
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
