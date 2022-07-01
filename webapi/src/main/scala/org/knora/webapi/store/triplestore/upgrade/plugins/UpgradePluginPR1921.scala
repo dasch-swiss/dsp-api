@@ -5,17 +5,16 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import com.typesafe.scalalogging.Logger
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
+import com.typesafe.scalalogging.Logger
 
 /**
  * Transforms a repository for Knora PR 1921.
  */
-class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   // Group descriptions without language attribute get language attribute defined in DEFAULT_LANG
   private val DEFAULT_LANG = "en"
 

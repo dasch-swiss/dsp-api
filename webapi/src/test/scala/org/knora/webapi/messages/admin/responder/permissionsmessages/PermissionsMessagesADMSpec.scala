@@ -105,7 +105,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -122,7 +121,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = groupIri,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -140,7 +138,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -158,7 +155,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -182,7 +178,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -201,7 +196,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set.empty[PermissionADM]
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -217,7 +211,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesReviewerUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -502,7 +495,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -519,7 +511,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(groupIri),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -537,7 +528,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -555,7 +545,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -571,7 +560,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM]
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -595,7 +583,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -623,7 +610,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -652,7 +638,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -676,7 +661,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -703,7 +687,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -722,7 +705,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser2,
           apiRequestID = UUID.randomUUID()
         )
@@ -739,7 +721,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -756,7 +737,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -772,7 +752,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProperty = Some(SharedTestDataADM.customValueIRI),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -788,7 +767,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -803,7 +781,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = ANYTHING_PROJECT_IRI,
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -820,7 +797,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val caught = intercept[BadRequestException](
         PermissionsForProjectGetRequestADM(
           projectIri = projectIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
@@ -832,7 +808,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val caught = intercept[ForbiddenException](
         PermissionsForProjectGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
         )

@@ -5,7 +5,6 @@
 
 package org.knora.webapi.models.filemodels
 
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -226,7 +225,6 @@ sealed abstract case class ChangeFileRequest private (
   }
 
   /**
-   * @param featureFactoryConfig the featureFactoryConfig
    * @param internalMimeType     internal mimetype, as provided by SIPI. Optional.
    * @param originalFilename     original filename before the upload. Optional.
    * @param originalMimeType     file mimetype before the upload. Optional.
@@ -239,7 +237,6 @@ sealed abstract case class ChangeFileRequest private (
    * @return
    */
   def toMessage(
-    featureFactoryConfig: FeatureFactoryConfig,
     internalMimeType: Option[String] = None,
     originalFilename: Option[String] = None,
     originalMimeType: Option[String] = None,
@@ -274,7 +271,6 @@ sealed abstract case class ChangeFileRequest private (
         valueCreationDate = valueCreationDate,
         newValueVersionIri = newValueVersionIri
       ),
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser,
       apiRequestID = UUID.randomUUID
     )

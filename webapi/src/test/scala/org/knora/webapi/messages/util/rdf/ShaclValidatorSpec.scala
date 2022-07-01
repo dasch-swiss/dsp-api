@@ -8,7 +8,7 @@ package org.knora.webapi.util.rdf
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import dsp.errors.AssertionException
-import org.knora.webapi.feature._
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
@@ -27,22 +27,13 @@ object ShaclValidatorSpec {
 
 /**
  * Tests implementations of [[ShaclValidator]].
- *
- * @param featureToggle a feature toggle specifying which implementation of [[ShaclValidator]] should
- *                      be used for the test.
  */
-abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
-    extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
+class ShaclValidatorSpec() extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
 
-  private val featureFactoryConfig: FeatureFactoryConfig =
-    new TestFeatureFactoryConfig(
-      testToggles = Set(featureToggle),
-      parent = new KnoraSettingsFeatureFactoryConfig(settings)
-    )
-
-  private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-  private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-  private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator(featureFactoryConfig)
+  RdfFeatureFactory.init(settings)
+  private val rdfFormatUtil: RdfFormatUtil   = RdfFeatureFactory.getRdfFormatUtil()
+  private val nodeFactory: RdfNodeFactory    = RdfFeatureFactory.getRdfNodeFactory()
+  private val shaclValidator: ShaclValidator = RdfFeatureFactory.getShaclValidator()
 
   private val conformsIri: IriNode =
     nodeFactory

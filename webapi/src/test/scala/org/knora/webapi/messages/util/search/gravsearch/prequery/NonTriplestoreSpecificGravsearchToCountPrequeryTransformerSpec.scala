@@ -3,7 +3,7 @@ package org.knora.webapi.util.search.gravsearch.prequery
 import akka.actor.ActorSystem
 import org.knora.webapi.CoreSpec
 import dsp.errors.AssertionException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -32,8 +32,7 @@ private object CountQueryHandler {
   def transformQuery(
     query: String,
     appActor: ActorRef,
-    responderData: ResponderData,
-    featureFactoryConfig: FeatureFactoryConfig
+    responderData: ResponderData
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
@@ -60,8 +59,7 @@ private object CountQueryHandler {
       new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
-        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        featureFactoryConfig = featureFactoryConfig
+        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
       )
 
     val nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -344,8 +342,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
           appActor,
-          responderData,
-          defaultFeatureFactoryConfig
+          responderData
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -358,8 +355,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
         CountQueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
           appActor,
-          responderData,
-          defaultFeatureFactoryConfig
+          responderData
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)

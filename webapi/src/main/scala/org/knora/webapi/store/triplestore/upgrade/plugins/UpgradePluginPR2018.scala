@@ -7,7 +7,6 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.AttachedToProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.LastModificationDate
@@ -21,8 +20,8 @@ import java.time.Instant
 /**
  * Transforms a repository for DSP-API PR 2018.
  */
-class UpgradePluginPR2018(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+class UpgradePluginPR2018(log: Logger) extends UpgradePlugin {
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
   private val newModificationDate         = Instant.now.toString
   private val ontologyType: IriNode       = nodeFactory.makeIriNode(Ontology)
 

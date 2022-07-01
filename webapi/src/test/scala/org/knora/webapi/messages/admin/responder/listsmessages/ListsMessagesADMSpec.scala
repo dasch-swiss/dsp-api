@@ -144,7 +144,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
