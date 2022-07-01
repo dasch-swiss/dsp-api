@@ -49,5 +49,5 @@ object TriplestoreServiceHttpConnectorImplZSpec extends ZIOSpecDefault {
         )
       )
     }
-  ).provideLayer(testLayer)
+  ).provideLayer(testLayer) @@ TestAspect.sequential
 }

@@ -214,7 +214,7 @@ abstract class E2ESpec(_system: ActorSystem)
         .getOrElse(c => throw FiberFailure(c))
     }
 
-  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 15.seconds): HttpResponse =
+  protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 30.seconds): HttpResponse =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe
         .run(

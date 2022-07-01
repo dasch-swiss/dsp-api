@@ -41,7 +41,7 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
     RedisTestContainer.layer
   )
 
-  def spec = (userTests + projectTests).provideLayerShared(testLayers)
+  def spec = (userTests + projectTests).provideLayerShared(testLayers) @@ TestAspect.sequential
 
   val userTests = suite("CacheRedisImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {

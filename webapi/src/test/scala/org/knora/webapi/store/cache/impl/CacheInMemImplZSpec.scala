@@ -44,9 +44,9 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
    */
   val testLayers = ZLayer.make[CacheService](CacheServiceInMemImpl.layer)
 
-  def spec = (userTests + projectTests + otherTests).provideLayerShared(testLayers)
+  def spec = (userTests + projectTests + otherTests).provideLayerShared(testLayers) @@ TestAspect.sequential
 
-  val userTests = suite("CacheInMemImplSpec - user")(
+  val userTests = suite("CacheInMemImplZSpec - user")(
     test("successfully store a user and retrieve by IRI") {
       for {
         _             <- CacheService.putUserADM(user)
@@ -73,7 +73,7 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
       )
   )
 
-  val projectTests = suite("CacheInMemImplSpec - project")(
+  val projectTests = suite("CacheInMemImplZSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
         _                <- CacheService.putProjectADM(project)
@@ -96,7 +96,7 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
       )
   )
 
-  val otherTests = suite("CacheInMemImplSpec - other")(
+  val otherTests = suite("CacheInMemImplZSpec - other")(
     test("successfully store string value")(
       for {
         _              <- CacheService.putStringValue("my-new-key", "my-new-value")
