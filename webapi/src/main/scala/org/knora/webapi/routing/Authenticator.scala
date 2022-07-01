@@ -48,6 +48,8 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import scala.annotation.tailrec
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -102,7 +104,7 @@ trait Authenticator extends InstrumentationSupport {
                        headers = List(
                          headers.`Set-Cookie`(
                            HttpCookie(
-                             KNORA_AUTHENTICATION_COOKIE_NAME,
+                             calculateCookieName(settings),
                              sessionToken,
                              domain = cookieDomain,
                              path = Some("/"),
@@ -165,7 +167,7 @@ trait Authenticator extends InstrumentationSupport {
                        headers = List(
                          headers.`Set-Cookie`(
                            HttpCookie(
-                             KNORA_AUTHENTICATION_COOKIE_NAME,
+                             calculateCookieName(settings),
                              token,
                              domain = cookieDomain,
                              path = Some("/"),
@@ -334,7 +336,7 @@ trait Authenticator extends InstrumentationSupport {
           headers = List(
             headers.`Set-Cookie`(
               HttpCookie(
-                KNORA_AUTHENTICATION_COOKIE_NAME,
+                calculateCookieName(settings),
                 "",
                 domain = cookieDomain,
                 path = Some("/"),
@@ -360,7 +362,7 @@ trait Authenticator extends InstrumentationSupport {
           headers = List(
             headers.`Set-Cookie`(
               HttpCookie(
-                KNORA_AUTHENTICATION_COOKIE_NAME,
+                calculateCookieName(settings),
                 "",
                 domain = cookieDomain,
                 path = Some("/"),
@@ -498,7 +500,6 @@ object Authenticator extends InstrumentationSupport {
   val BAD_CRED_USER_INACTIVE      = "bad credentials: user inactive"
   val BAD_CRED_NOT_VALID          = "bad credentials: not valid"
 
-  val KNORA_AUTHENTICATION_COOKIE_NAME       = "KnoraAuthentication"
   val AUTHENTICATION_INVALIDATION_CACHE_NAME = "authenticationInvalidationCache"
 
   val sessionStore: scala.collection.mutable.Map[String, UserADM] = scala.collection.mutable.Map()
@@ -855,6 +856,12 @@ object Authenticator extends InstrumentationSupport {
       // _ = log.debug(s"getUserByIdentifier - user: $user")
     } yield user
   }
+
+  private def calculateCookieName(settings: KnoraSettingsImpl): String = {
+    "KnoraAuthentication" + Adler32Checksum.calc(settings.externalKnoraApiHostPort)
+  }
+
+
 }
 
 /**
@@ -1011,5 +1018,29 @@ object JWTHelper {
         log.debug("Invalid JWT")
         None
     }
+  }
+}
+
+/**
+ * Calculating the Adler-32 checksum.
+ * @see http://en.wikipedia.org/wiki/Adler-32
+ */
+object Adler32Checksum {
+  def calc(s: String): Int = {
+
+    val ModAdler = 65521
+
+    @tailrec
+    def loop(s: List[Char], a: Int, b: Int): Int =
+      s match {
+        case Nil => b * 65536 + a
+        case head :: cons => {
+          val _a = (head + a) % ModAdler
+          val _b = (b + _a)   % ModAdler
+          loop(cons, _a, _b)
+        }
+      }
+
+    loop(s.toList, 1, 0)
   }
 }
