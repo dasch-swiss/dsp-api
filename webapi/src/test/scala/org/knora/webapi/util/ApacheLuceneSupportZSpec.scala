@@ -10,7 +10,7 @@ import zio.test.ZIOSpecDefault
 import zio._
 import zio.test._
 
-object ApacheLuceneSupportSpec extends ZIOSpecDefault {
+object ApacheLuceneSupportZSpec extends ZIOSpecDefault {
 
   def spec: Spec[TestEnvironment with Scope, Any] =
     suite("The ApacheLuceneSupport class")(

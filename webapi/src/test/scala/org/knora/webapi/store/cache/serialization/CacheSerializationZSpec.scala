@@ -16,7 +16,7 @@ import org.knora.webapi.store.cache.serialization.CacheSerialization
 /**
  * This spec is used to test [[CacheSerialization]].
  */
-object CacheSerializationSpec extends ZIOSpecDefault {
+object CacheSerializationZSpec extends ZIOSpecDefault {
 
   private val user    = SharedTestDataADM.imagesUser01
   private val project = SharedTestDataADM.imagesProject

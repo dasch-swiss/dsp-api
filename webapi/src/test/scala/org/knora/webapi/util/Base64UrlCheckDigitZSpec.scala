@@ -14,12 +14,12 @@ import zio.test.TestEnvironment
 /**
  * Tests [[Base64UrlCheckDigit]].
  */
-object Base64UrlCheckDigitSpec extends ZIOSpecDefault {
+object Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
   private val base64UrlCheckDigit         = new Base64UrlCheckDigit
   private val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
   private val correctResourceIDCheckDigit = "n"
 
-  def spec = suite("Base64UrlCheckDigit")(
+  def spec = suite("Base64UrlCheckDigitZSpec")(
     test("reject a string without a check digit") {
       assertTrue(!base64UrlCheckDigit.isValid(correctResourceID))
     } +

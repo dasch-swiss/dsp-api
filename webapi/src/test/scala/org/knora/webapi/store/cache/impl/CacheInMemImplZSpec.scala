@@ -12,59 +12,68 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.config.RedisTestConfig
-import org.knora.webapi.testcontainers.RedisTestContainer
-import zio._
+import zio.ZLayer
 import zio.test.Assertion._
-import zio.test.TestAspect._
 import zio.test._
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 
 /**
- * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceRedisImpl]].
+ * This spec is used to test [[org.knora.webapi.store.cache.impl.CacheServiceInMemImpl]].
  */
-object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
+object CacheInMemImplZSpec extends ZIOSpecDefault {
 
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val user: UserADM       = SharedTestDataADM.imagesUser01
+  private val user: UserADM = SharedTestDataADM.imagesUser01
+  private val userWithApostrophe = UserADM(
+    id = "http://rdfh.ch/users/aaaaaab71e7b0e01",
+    username = "user_with_apostrophe",
+    email = "userWithApostrophe@example.org",
+    givenName = """M\\"Given 'Name""",
+    familyName = """M\\tFamily Name""",
+    status = true,
+    lang = "en"
+  )
+
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
-   * for running the tests. `bootstrap` overrides the base layer of ZIOApp.
+   * running the tests.
    */
-  val bootstrap = ZLayer.make[CacheService & zio.test.Annotations](
-    CacheServiceRedisImpl.layer,
-    RedisTestConfig.redisTestContainer,
-    zio.test.Annotations.live,
-    RedisTestContainer.layer
-  )
+  val testLayers = ZLayer.make[CacheService](CacheServiceInMemImpl.layer)
 
-  def spec = (userTests + projectTests)
+  def spec = (userTests + projectTests + otherTests).provideLayerShared(testLayers)
 
-  val userTests = suite("CacheRedisImplSpec - user")(
+  val userTests = suite("CacheInMemImplSpec - user")(
     test("successfully store a user and retrieve by IRI") {
       for {
         _             <- CacheService.putUserADM(user)
         retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
-      } yield assert(retrievedUser)(equalTo(Some(user)))
-    } @@ ignore +
+      } yield assertTrue(retrievedUser == Some(user))
+    } +
       test("successfully store a user and retrieve by USERNAME")(
         for {
           _             <- CacheService.putUserADM(user)
           retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
         } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) @@ ignore +
+      ) +
       test("successfully store a user and retrieve by EMAIL")(
         for {
           _             <- CacheService.putUserADM(user)
           retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
         } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) @@ ignore
+      ) +
+      test("successfully store and retrieve a user with special characters in his name")(
+        for {
+          _             <- CacheService.putUserADM(userWithApostrophe)
+          retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(userWithApostrophe.id)))
+        } yield assert(retrievedUser)(equalTo(Some(userWithApostrophe)))
+      )
   )
 
-  val projectTests = suite("CacheRedisImplSpec - project")(
+  val projectTests = suite("CacheInMemImplSpec - project")(
     test("successfully store a project and retrieve by IRI")(
       for {
         _                <- CacheService.putProjectADM(project)
@@ -84,6 +93,22 @@ object CacheRedisImplSpec extends ZIOSpec[CacheService & zio.test.Annotations] {
           retrievedProject <-
             CacheService.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
         } yield assert(retrievedProject)(equalTo(Some(project)))
+      )
+  )
+
+  val otherTests = suite("CacheInMemImplSpec - other")(
+    test("successfully store string value")(
+      for {
+        _              <- CacheService.putStringValue("my-new-key", "my-new-value")
+        retrievedValue <- CacheService.getStringValue("my-new-key")
+      } yield assert(retrievedValue)(equalTo(Some("my-new-value")))
+    ) +
+      test("successfully delete stored value")(
+        for {
+          _              <- CacheService.putStringValue("my-new-key", "my-new-value")
+          _              <- CacheService.removeValues(Set("my-new-key"))
+          retrievedValue <- CacheService.getStringValue("my-new-key")
+        } yield assert(retrievedValue)(equalTo(None))
       )
   )
 }

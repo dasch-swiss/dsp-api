@@ -26,13 +26,13 @@ import zio.test._
 /**
  * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl]].
  */
-object TriplestoreServiceHttpConnectorImplSpec extends ZIOSpec[TriplestoreService] {
+object TriplestoreServiceHttpConnectorImplZSpec extends ZIOSpecDefault {
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
    * running the tests. `bootstrap` overrides the base layer of ZIOApp.
    */
-  val bootstrap =
+  val testLayer =
     ZLayer.make[TriplestoreService](
       TriplestoreServiceHttpConnectorImpl.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
@@ -49,5 +49,5 @@ object TriplestoreServiceHttpConnectorImplSpec extends ZIOSpec[TriplestoreServic
         )
       )
     }
-  )
+  ).provideLayer(testLayer)
 }

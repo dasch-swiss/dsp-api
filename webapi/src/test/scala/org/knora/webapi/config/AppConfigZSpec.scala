@@ -6,7 +6,7 @@ import zio.test._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 
-object AppConfigSpec extends ZIOSpec[AppConfig] {
+object AppConfigZSpec extends ZIOSpec[AppConfig] {
 
   val bootstrap = ZLayer.make[AppConfig](AppConfig.live)
 

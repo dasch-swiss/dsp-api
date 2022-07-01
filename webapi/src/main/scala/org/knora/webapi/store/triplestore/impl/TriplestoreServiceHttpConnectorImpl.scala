@@ -195,7 +195,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       resultStr <-
-        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout).tapDefect(ZIO.debug(_))
+        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout)
 
       // Parse the response as a JSON object and generate a response message.
       responseMessage <- parseJsonResponse(sparql, resultStr).orDie
@@ -857,7 +857,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     def checkSimulateTimeout(): UIO[Unit] =
       if (simulateTimeout) {
-        ZIO.debug("simulate timeout true") *> ZIO.die(
+        ZIO.die(
           TriplestoreTimeoutException(
             "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
           )
