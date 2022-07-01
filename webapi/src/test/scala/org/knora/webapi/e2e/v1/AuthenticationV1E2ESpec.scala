@@ -17,11 +17,12 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
-import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.knora.webapi.routing.Adler32Checksum
+import org.knora.webapi.routing.Authenticator
 
 object AuthenticationV1E2ESpec {
   val config: Config = ConfigFactory.parseString("""
@@ -52,6 +53,8 @@ class AuthenticationV1E2ESpec
   private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
   private val testPass      = java.net.URLEncoder.encode("test", "utf-8")
   private val wrongPass     = java.net.URLEncoder.encode("wrong", "utf-8")
+
+  val KNORA_AUTHENTICATION_COOKIE_NAME = Authenticator.calculateCookieName(settings)
 
   "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters" should {
 

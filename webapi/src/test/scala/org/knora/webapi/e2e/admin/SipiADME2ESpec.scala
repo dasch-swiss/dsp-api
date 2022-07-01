@@ -19,11 +19,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
-import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.knora.webapi.routing.Authenticator
 
 object SipiADME2ESpec {
   val config: Config = ConfigFactory.parseString("""
@@ -46,6 +46,8 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
   private val normalUserEmail       = SharedTestDataV1.normalUser.userData.email.get
   private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
   private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
+
+  val KNORA_AUTHENTICATION_COOKIE_NAME = Authenticator.calculateCookieName(settings)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

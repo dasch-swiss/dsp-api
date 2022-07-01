@@ -857,10 +857,8 @@ object Authenticator extends InstrumentationSupport {
     } yield user
   }
 
-  private def calculateCookieName(settings: KnoraSettingsImpl): String = {
+  def calculateCookieName(settings: KnoraSettingsImpl): String =
     "KnoraAuthentication" + Adler32Checksum.calc(settings.externalKnoraApiHostPort)
-  }
-
 
 }
 
