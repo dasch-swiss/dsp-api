@@ -16,7 +16,6 @@ import org.knora.webapi.store.cache.config.RedisTestConfig
 import org.knora.webapi.testcontainers.RedisTestContainer
 import zio._
 import zio.test.Assertion._
-import zio.test.TestAspect._
 import zio.test._
 
 /**
@@ -49,19 +48,19 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
         _             <- CacheService.putUserADM(user)
         retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
       } yield assert(retrievedUser)(equalTo(Some(user)))
-    } @@ ignore +
+    } @@ TestAspect.ignore +
       test("successfully store a user and retrieve by USERNAME")(
         for {
           _             <- CacheService.putUserADM(user)
           retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
         } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) @@ ignore +
+      ) @@ TestAspect.ignore +
       test("successfully store a user and retrieve by EMAIL")(
         for {
           _             <- CacheService.putUserADM(user)
           retrievedUser <- CacheService.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
         } yield assert(retrievedUser)(equalTo(Some(user)))
-      ) @@ ignore
+      ) @@ TestAspect.ignore
   )
 
   val projectTests = suite("CacheRedisImplSpec - project")(
