@@ -59,7 +59,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     "asked about all users" should {
       "return a list if asked by SystemAdmin" in {
         appActor ! UsersGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val response = expectMsgType[UsersGetResponseADM](timeout)
@@ -69,7 +68,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "return a list if asked by ProjectAdmin" in {
         appActor ! UsersGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = anythingAdminUser
         )
         val response = expectMsgType[UsersGetResponseADM](timeout)
@@ -79,7 +77,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "return 'ForbiddenException' if asked by normal user'" in {
         appActor ! UsersGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = normalUser
         )
         expectMsg(timeout, Failure(ForbiddenException("ProjectAdmin or SystemAdmin permissions are required.")))
@@ -87,7 +84,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "not return the system and anonymous users" in {
         appActor ! UsersGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val response = expectMsgType[UsersGetResponseADM](timeout)
@@ -103,7 +99,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some(rootUser.id)),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
@@ -113,7 +108,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some(incunabulaUser.id)),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
@@ -123,7 +117,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetRequestADM(
           identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Failure(NotFoundException(s"User 'http://rdfh.ch/users/notexisting' not found")))
@@ -133,7 +126,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(None)
@@ -145,7 +137,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeEmail = Some(rootUser.email)),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
@@ -155,7 +146,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeEmail = Some(incunabulaUser.email)),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
@@ -165,7 +155,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetRequestADM(
           identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
@@ -175,7 +164,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(None)
@@ -187,7 +175,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeUsername = Some(rootUser.username)),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
@@ -197,7 +184,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeUsername = Some(incunabulaUser.username)),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
@@ -207,7 +193,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetRequestADM(
           identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
@@ -217,7 +202,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGetADM(
           identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
           userInformationTypeADM = UserInformationTypeADM.Full,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(None)
@@ -237,7 +221,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             lang = LanguageCode.make("en").fold(e => throw e.head, v => v),
             systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anonymousUser,
           apiRequestID = UUID.randomUUID
         )
@@ -262,7 +245,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             lang = LanguageCode.make("en").fold(e => throw e.head, v => v),
             systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.anonymousUser,
           UUID.randomUUID
         )
@@ -281,7 +263,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             lang = LanguageCode.make("en").fold(e => throw e.head, v => v),
             systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.anonymousUser,
           UUID.randomUUID
         )
@@ -297,7 +278,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             givenName = Some(GivenName.make("Donald").fold(e => throw e.head, v => v))
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           apiRequestID = UUID.randomUUID
         )
@@ -311,7 +291,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             familyName = Some(FamilyName.make("Duck").fold(e => throw e.head, v => v))
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           apiRequestID = UUID.randomUUID
         )
@@ -326,7 +305,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             givenName = Some(GivenName.make(SharedTestDataADM.normalUser.givenName).fold(e => throw e.head, v => v)),
             familyName = Some(FamilyName.make(SharedTestDataADM.normalUser.familyName).fold(e => throw e.head, v => v))
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           apiRequestID = UUID.randomUUID
         )
@@ -344,7 +322,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             username = duplicateUsername
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.superUser,
           UUID.randomUUID
         )
@@ -364,7 +341,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
           userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             email = duplicateEmail
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.superUser,
           UUID.randomUUID
         )
@@ -384,7 +360,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             requesterPassword = requesterPassword,
             newPassword = newPassword
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -394,8 +369,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         // need to be able to authenticate credentials with new password
         val resF = Authenticator.authenticateCredentialsV2(
           credentials =
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456")),
-          featureFactoryConfig = defaultFeatureFactoryConfig
+            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test123456"))
         )(system, appActor, executionContext)
 
         resF map { res =>
@@ -413,7 +387,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             requesterPassword = requesterPassword,
             newPassword = newPassword
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -423,8 +396,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         // need to be able to authenticate credentials with new password
         val resF = Authenticator.authenticateCredentialsV2(
           credentials =
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321")),
-          featureFactoryConfig = defaultFeatureFactoryConfig
+            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(normalUser.email)), "test654321"))
         )(system, appActor, executionContext)
 
         resF map { res =>
@@ -436,7 +408,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           status = UserStatus.make(false).fold(error => throw error.head, value => value),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -447,7 +418,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           status = UserStatus.make(true).fold(error => throw error.head, value => value),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -460,7 +430,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           systemAdmin = SystemAdmin.make(true).fold(e => throw e.head, v => v),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -471,7 +440,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -490,7 +458,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             familyName = None,
             lang = None
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID
         )
@@ -508,7 +475,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             requesterPassword = Password.make("test").fold(e => throw e.head, v => v),
             newPassword = Password.make("test123456").fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID
         )
@@ -523,7 +489,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.superUser.id,
           status = UserStatus.make(false).fold(error => throw error.head, value => value),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID
         )
@@ -536,7 +501,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeSystemAdminMembershipStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           systemAdmin = SystemAdmin.make(true).fold(e => throw e.head, v => v),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID()
         )
@@ -550,7 +514,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeStatusRequestADM(
           userIri = KnoraSystemInstances.Users.SystemUser.id,
           status = UserStatus.make(false).fold(error => throw error.head, value => value),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -562,7 +525,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserChangeStatusRequestADM(
           userIri = KnoraSystemInstances.Users.AnonymousUser.id,
           status = UserStatus.make(false).fold(error => throw error.head, value => value),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
         )
@@ -575,7 +537,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "ADD user to project" in {
 
         // get current project memberships
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.projects should equal(Seq())
 
@@ -583,19 +545,17 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectMembershipAddRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
         val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.projects should equal(Seq(imagesProject))
 
         appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -604,26 +564,24 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       }
 
       "DELETE user from project" in {
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.projects should equal(Seq(imagesProject))
 
         appActor ! UserProjectMembershipRemoveRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.projects should equal(Seq())
 
         appActor ! ProjectMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
@@ -636,7 +594,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectMembershipAddRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           normalUser,
           UUID.randomUUID()
         )
@@ -651,7 +608,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectMembershipRemoveRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           normalUser,
           UUID.randomUUID()
         )
@@ -669,7 +625,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "ADD user to project admin group" in {
         appActor ! UserProjectAdminMembershipsGetRequestADM(
           normalUser.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
@@ -679,7 +634,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectAdminMembershipAddRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
@@ -687,7 +641,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         appActor ! UserProjectAdminMembershipsGetRequestADM(
           normalUser.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
@@ -696,7 +649,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -707,7 +659,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "DELETE user from project admin group" in {
         appActor ! UserProjectAdminMembershipsGetRequestADM(
           normalUser.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
@@ -717,7 +668,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectAdminMembershipRemoveRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
@@ -725,7 +675,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         appActor ! UserProjectAdminMembershipsGetRequestADM(
           normalUser.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
@@ -734,7 +683,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         appActor ! ProjectAdminMembersGetRequestADM(
           ProjectIdentifierADM(maybeIri = Some(imagesProject.id)),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
@@ -747,7 +695,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectAdminMembershipAddRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           normalUser,
           UUID.randomUUID()
         )
@@ -764,7 +711,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserProjectAdminMembershipRemoveRequestADM(
           normalUser.id,
           imagesProject.id,
-          defaultFeatureFactoryConfig,
           normalUser,
           UUID.randomUUID()
         )
@@ -782,26 +728,24 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
     "asked to update the user's group membership" should {
       "ADD user to group" in {
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.groups should equal(Seq())
 
         appActor ! UserGroupMembershipAddRequestADM(
           normalUser.id,
           imagesReviewerGroup.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.groups.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! GroupMembersGetRequestADM(
           groupIri = imagesReviewerGroup.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
@@ -810,26 +754,24 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       }
 
       "DELETE user from group" in {
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
         membershipsBeforeUpdate.groups.map(_.id) should equal(Seq(imagesReviewerGroup.id))
 
         appActor ! UserGroupMembershipRemoveRequestADM(
           normalUser.id,
           imagesReviewerGroup.id,
-          defaultFeatureFactoryConfig,
           rootUser,
           UUID.randomUUID()
         )
         expectMsgType[UserOperationResponseADM](timeout)
 
-        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, defaultFeatureFactoryConfig, rootUser)
+        appActor ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
         membershipsAfterUpdate.groups should equal(Seq())
 
         appActor ! GroupMembersGetRequestADM(
           groupIri = imagesReviewerGroup.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
         )
         val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
@@ -842,7 +784,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGroupMembershipAddRequestADM(
           normalUser.id,
           imagesReviewerGroup.id,
-          defaultFeatureFactoryConfig,
           normalUser,
           UUID.randomUUID()
         )
@@ -857,7 +798,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         appActor ! UserGroupMembershipRemoveRequestADM(
           normalUser.id,
           imagesReviewerGroup.id,
-          defaultFeatureFactoryConfig,
           normalUser,
           UUID.randomUUID()
         )

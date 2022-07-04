@@ -12,8 +12,7 @@ import io.swagger.annotations._
 import org.knora.webapi.IRI
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
@@ -43,21 +42,20 @@ object OldListsRouteADMFeature {
 @Path("/admin/lists")
 class OldListsRouteADMFeature(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
-    with Feature
     with Authenticator
     with ListADMJsonProtocol {
 
   import OldListsRouteADMFeature._
 
-  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    getLists(featureFactoryConfig) ~
-      getListNode(featureFactoryConfig) ~
-      getListOrNodeInfo(featureFactoryConfig, "infos") ~
-      getListOrNodeInfo(featureFactoryConfig, "nodes") ~
-      getListInfo(featureFactoryConfig) ~
-      createListRootNode(featureFactoryConfig) ~
-      createListChildNode(featureFactoryConfig) ~
-      updateList(featureFactoryConfig)
+  def makeRoute(): Route =
+    getLists() ~
+      getListNode() ~
+      getListOrNodeInfo("infos") ~
+      getListOrNodeInfo("nodes") ~
+      getListInfo() ~
+      createListRootNode() ~
+      createListChildNode() ~
+      updateList()
 
   @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
   @ApiResponses(
@@ -68,7 +66,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns all lists optionally filtered by project.
    */
-  private def getLists(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
+  private def getLists(): Route = path(ListsBasePath) {
     get {
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val projectIri =
@@ -79,19 +77,16 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListsGetRequestADM] = for {
           requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
+                              requestContext = requestContext
                             )
         } yield ListsGetRequestADM(
           projectIri = projectIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -110,26 +105,23 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns a list node, root or child, with children (if exist).
    */
-  private def getListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+  private def getListNode(): Route = path(ListsBasePath / Segment) { iri =>
     get { requestContext =>
       val listIri =
         stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
       val requestMessage: Future[ListGetRequestADM] = for {
         requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
+                            requestContext = requestContext
                           )
       } yield ListGetRequestADM(
         iri = listIri,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
 
       RouteUtilADM.runJsonRoute(
         requestMessageF = requestMessage,
         requestContext = requestContext,
-        featureFactoryConfig = featureFactoryConfig,
         settings = settings,
         appActor = appActor,
         log = log
@@ -140,23 +132,21 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns basic information about list node, root or child, w/o children (if exist).
    */
-  private def getListOrNodeInfo(featureFactoryConfig: FeatureFactoryConfig, routeSwitch: String): Route =
+  private def getListOrNodeInfo(routeSwitch: String): Route =
     path(ListsBasePath / routeSwitch / Segment) { iri =>
       get { requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -167,7 +157,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Returns basic information about a node, root or child, w/o children.
    */
-  private def getListInfo(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getListInfo(): Route =
 //  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
     path(ListsBasePath / Segment / "info") { iri =>
       get { requestContext =>
@@ -175,17 +165,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
         val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListNodeInfoGetRequestADM(
           iri = listIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -218,7 +206,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Creates a new list (root node).
    */
-  private def createListRootNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
+  private def createListRootNode(): Route = path(ListsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
         val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
@@ -231,7 +219,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListRootNodeCreateRequestADM] = for {
           payload        <- toFuture(validatedListRootNodeCreatePayload)
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
           _ = if (
@@ -244,7 +232,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
               }
         } yield ListRootNodeCreateRequestADM(
           createRootNode = payload,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -252,7 +239,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -287,58 +273,55 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Creates a new list child node.
    */
-  private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) {
-    iri =>
-      post {
-        entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-          // check if requested ListIri matches the Iri passed in the route
-          val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
-            ListIri.make(apiRequest.parentNodeIri)
-          } else {
-            Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
-          }
-
-          val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
-          val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
-          val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
-          val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
-          val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
-          val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
-          val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
-            Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
-              ListChildNodeCreatePayloadADM
-            )
-
-          val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
-            payload        <- toFuture(validatedCreateChildNodePeyload)
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-
-            // check if the requesting user is allowed to perform operation
-            _ = if (
-                  !requestingUser.permissions.isProjectAdmin(
-                    projectIri.toOption.get.value
-                  ) && !requestingUser.permissions.isSystemAdmin
-                ) {
-                  // not project or a system admin
-                  throw ForbiddenException(ListErrorMessages.ListCreatePermission)
-                }
-          } yield ListChildNodeCreateRequestADM(
-            createChildNodeRequest = payload,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            appActor = appActor,
-            log = log
-          )
+  private def createListChildNode(): Route = path(ListsBasePath / Segment) { iri =>
+    post {
+      entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
+        // check if requested ListIri matches the Iri passed in the route
+        val parentNodeIri: Validation[Throwable, ListIri] = if (iri == apiRequest.parentNodeIri) {
+          ListIri.make(apiRequest.parentNodeIri)
+        } else {
+          Validation.fail(throw BadRequestException("Route and payload parentNodeIri mismatch."))
         }
+
+        val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
+        val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
+        val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
+        val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
+        val validatedCreateChildNodePeyload: Validation[Throwable, ListChildNodeCreatePayloadADM] =
+          Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
+            ListChildNodeCreatePayloadADM
+          )
+
+        val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
+          payload        <- toFuture(validatedCreateChildNodePeyload)
+          requestingUser <- getUserADM(requestContext)
+
+          // check if the requesting user is allowed to perform operation
+          _ = if (
+                !requestingUser.permissions.isProjectAdmin(
+                  projectIri.toOption.get.value
+                ) && !requestingUser.permissions.isSystemAdmin
+              ) {
+                // not project or a system admin
+                throw ForbiddenException(ListErrorMessages.ListCreatePermission)
+              }
+        } yield ListChildNodeCreateRequestADM(
+          createChildNodeRequest = payload,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          settings = settings,
+          appActor = appActor,
+          log = log
+        )
       }
+    }
   }
 
   @Path("/{IRI}")
@@ -367,7 +350,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   /**
    * Updates existing list node, either root or child.
    */
-  private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+  private def updateList(): Route = path(ListsBasePath / Segment) { iri =>
     put {
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
         // check if requested Iri matches the route Iri
@@ -391,7 +374,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           payload        <- toFuture(validatedChangeNodeInfoPayload)
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
           // check if the requesting user is allowed to perform operation
           _ = if (
                 !requestingUser.permissions.isProjectAdmin(
@@ -404,7 +387,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         } yield NodeInfoChangeRequestADM(
           listIri = listIri.toOption.get.value,
           changeNodeRequest = payload,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -412,7 +394,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log

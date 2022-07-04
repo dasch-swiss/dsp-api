@@ -10,7 +10,7 @@ import akka.pattern._
 import org.knora.webapi.IRI
 import dsp.errors.NotFoundException
 import dsp.errors.SipiException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
@@ -33,13 +33,12 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
    *
    * @param queryResultsSeparated query results referring to mappings.
-   * @param featureFactoryConfig  the feature factory configuration.
+   *
    * @param requestingUser        the user making the request.
    * @return the referred mappings.
    */
   protected def getMappingsFromQueryResultsSeparated(
     queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
@@ -55,7 +54,6 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
                                                    .ask(
                                                      GetMappingRequestV2(
                                                        mappingIri = mappingIri,
-                                                       featureFactoryConfig = featureFactoryConfig,
                                                        requestingUser = requestingUser
                                                      )
                                                    )
@@ -79,7 +77,6 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
                       .ask(
                         GetXSLTransformationRequestV2(
                           mapping.mapping.defaultXSLTransformation.get,
-                          featureFactoryConfig = featureFactoryConfig,
                           requestingUser = requestingUser
                         )
                       )

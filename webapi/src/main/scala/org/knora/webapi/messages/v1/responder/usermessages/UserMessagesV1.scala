@@ -9,7 +9,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
@@ -61,12 +60,10 @@ case class UserDataByIriGetV1(userIri: IRI, short: Boolean = true) extends Users
  *
  * @param userIri              the IRI of the user to be queried.
  * @param userProfileType      the extent of the information returned.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class UserProfileByIRIGetRequestV1(
   userIri: IRI,
   userProfileType: UserProfileType,
-  featureFactoryConfig: FeatureFactoryConfig,
   userProfile: UserProfileV1
 ) extends UsersResponderRequestV1
 
@@ -78,8 +75,7 @@ case class UserProfileByIRIGetRequestV1(
  */
 case class UserProfileByIRIGetV1(
   userIri: IRI,
-  userProfileType: UserProfileType,
-  featureFactoryConfig: FeatureFactoryConfig
+  userProfileType: UserProfileType
 ) extends UsersResponderRequestV1
 
 /**
@@ -87,13 +83,11 @@ case class UserProfileByIRIGetV1(
  *
  * @param email                the email of the user to be queried.
  * @param userProfileType      the extent of the information returned.
- * @param featureFactoryConfig the feature factory configuration.
  * @param userProfile          the requesting user's profile.
  */
 case class UserProfileByEmailGetRequestV1(
   email: String,
   userProfileType: UserProfileType,
-  featureFactoryConfig: FeatureFactoryConfig,
   userProfile: UserProfileV1
 ) extends UsersResponderRequestV1
 
@@ -102,12 +96,10 @@ case class UserProfileByEmailGetRequestV1(
  *
  * @param email                the email of the user to be queried.
  * @param userProfileType      the extent of the information returned.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class UserProfileByEmailGetV1(
   email: String,
-  userProfileType: UserProfileType,
-  featureFactoryConfig: FeatureFactoryConfig
+  userProfileType: UserProfileType
 ) extends UsersResponderRequestV1
 
 /**

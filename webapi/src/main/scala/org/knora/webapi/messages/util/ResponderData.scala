@@ -8,7 +8,7 @@ package org.knora.webapi.messages.util
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 /**
  * Data needed to be passed to each responder.

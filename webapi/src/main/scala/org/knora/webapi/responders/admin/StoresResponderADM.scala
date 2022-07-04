@@ -7,7 +7,7 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import dsp.errors.ForbiddenException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -41,11 +41,10 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    */
   def receive(msg: StoreResponderRequestADM) = msg match {
     case ResetTriplestoreContentRequestADM(
-          rdfDataObjects: Seq[RdfDataObject],
-          prependDefaults: Boolean,
-          featureFactoryConfig: FeatureFactoryConfig
+          rdfDataObjects: List[RdfDataObject],
+          prependDefaults: Boolean
         ) =>
-      resetTriplestoreContent(rdfDataObjects, prependDefaults, featureFactoryConfig)
+      resetTriplestoreContent(rdfDataObjects, prependDefaults)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -56,9 +55,8 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    * @return a future containing a [[ResetTriplestoreContentResponseADM]].
    */
   private def resetTriplestoreContent(
-    rdfDataObjects: Seq[RdfDataObject],
-    prependDefaults: Boolean = true,
-    featureFactoryConfig: FeatureFactoryConfig
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean = true
   ): Future[ResetTriplestoreContentResponseADM] = {
 
     log.debug(s"resetTriplestoreContent - called")
@@ -79,7 +77,6 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       loadOntologiesResponse <- appActor
                                   .ask(
                                     LoadOntologiesRequestV2(
-                                      featureFactoryConfig = featureFactoryConfig,
                                       requestingUser = systemUser
                                     )
                                   )

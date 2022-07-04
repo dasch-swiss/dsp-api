@@ -23,17 +23,24 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Static data for testing [[ValuesResponderV1]].
@@ -65,12 +72,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   override lazy val rdfDataObjects = List(
@@ -302,7 +314,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1(utf8str = utf8str),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -324,7 +335,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1(utf8str = utf8str),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -338,7 +348,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     "query a text value without Standoff" in {
       appActor ! ValueGetRequestV1(
         valueIri = commentIri.get,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -350,7 +359,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     "query a text value containing Standoff" in {
       appActor ! ValueGetRequestV1(
         valueIri = "http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -362,7 +370,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     "query a standoff link as an ordinary value" in {
       appActor ! ValueGetRequestV1(
         valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser
       )
 
@@ -376,7 +383,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/8a0b1e75",
         predicateIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -404,7 +410,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = commentIri.get,
         value = TextValueSimpleV1(utf8str = utf8str),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -452,7 +457,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = commentIri.get,
         value = TextValueSimpleV1(utf8str = utf8str),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -469,7 +473,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1(utf8str = utf8str),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -485,7 +488,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = "http://rdfh.ch/0803/c5058f3a/values/184e99ca01",
         value = TextValueSimpleV1(utf8str = utf8str),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -500,7 +502,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1("Comment 2"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -511,7 +512,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ResourceFullGetRequestV1(
         iri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = incunabulaUser
       )
 
@@ -538,7 +538,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! DeleteValueRequestV1(
         valueIri = commentIri.get,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -549,7 +548,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ValueGetRequestV1(
         valueIri = commentIri.get,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -567,7 +565,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/nonexistent",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1("Comment 1"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -582,7 +579,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/9935159f67",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1("Comment 1"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -596,7 +592,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = commentIri.get,
         value = TextValueSimpleV1("Comment 1c"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -611,7 +606,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/e41ab5695c",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1("Comment 1"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -626,7 +620,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/21abac2162",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#pubdate",
         value = TextValueSimpleV1("this is not a date"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -640,7 +633,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
         value = TextValueSimpleV1("Zeitglöcklein des Lebens und Leidens Christi modified"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -654,7 +646,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = "http://rdfh.ch/0803/c5058f3a/values/cfd09f1e01",
         value = TextValueSimpleV1("this is not a date"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -670,7 +661,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/4f11adaf",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
         value = LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0803/e41ab5695c"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -684,7 +674,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/4f11adaf",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum",
         value = IntegerValueV1(1),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -702,7 +691,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = miscResourceIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#miscHasColor",
         value = ColorValueV1(color),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -719,7 +707,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ChangeValueRequestV1(
         value = ColorValueV1(color),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         valueIri = currentColorValueIri.get,
         apiRequestID = UUID.randomUUID
@@ -740,7 +727,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = miscResourceIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#miscHasGeometry",
         value = GeomValueV1(geom),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -760,7 +746,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         value = GeomValueV1(geom),
         valueIri = currentGeomValueIri.get,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -784,7 +769,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
           mapping = dummyMapping,
           mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -807,7 +791,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
           mapping = dummyMapping,
           mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -830,7 +813,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
           mapping = dummyMapping,
           mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -852,7 +834,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
           mapping = dummyMapping,
           mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -892,7 +873,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/21abac2162",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = textValueWithResourceRef,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -906,7 +886,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/21abac2162",
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -991,7 +970,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = firstValueIriWithResourceRef.get,
         value = textValueWithResourceRef,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1005,7 +983,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/21abac2162",
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -1074,7 +1051,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/21abac2162",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = textValueWithResourceRef,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1088,7 +1064,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/21abac2162",
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -1135,7 +1110,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = firstValueIriWithResourceRef.get,
         value = textValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1149,7 +1123,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/21abac2162",
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -1208,7 +1181,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = secondValueIriWithResourceRef.get,
         value = textValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1224,7 +1196,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/21abac2162",
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -1286,7 +1257,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! ChangeValueRequestV1(
         valueIri = firstValueIriWithResourceRef.get,
         value = textValueWithResourceRef,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1300,7 +1270,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = "http://rdfh.ch/0803/21abac2162",
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = zeitglöckleinIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -1346,7 +1315,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/8a0b1e75",
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum",
         value = IntegerValueV1(seqnum),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1363,7 +1331,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ChangeValueRequestV1(
         value = IntegerValueV1(seqnum),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         valueIri = currentSeqnumValueIri.get,
         apiRequestID = UUID.randomUUID
@@ -1382,7 +1349,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0001/a-thing",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
         value = TimeValueV1(timeStamp),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1399,7 +1365,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ChangeValueRequestV1(
         value = TimeValueV1(timeStamp),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         valueIri = currentTimeValueIri.get,
         apiRequestID = UUID.randomUUID
@@ -1424,7 +1389,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
           dateprecision2 = KnoraPrecisionV1.DAY,
           calendar = KnoraCalendarV1.GREGORIAN
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1445,7 +1409,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
           dateprecision2 = KnoraPrecisionV1.DAY,
           calendar = KnoraCalendarV1.JULIAN
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         valueIri = currentPubdateValueIri.get,
         apiRequestID = UUID.randomUUID
@@ -1468,7 +1431,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         value = LinkUpdateV1(
           targetResourceIri = zeitglöckleinIri
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1512,7 +1474,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         value = LinkUpdateV1(
           targetResourceIri = zeitglöckleinIri
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1532,7 +1493,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         value = LinkUpdateV1(
           targetResourceIri = "http://rdfh.ch/0803/8a0b1e75" // an incunabula:page, not an incunabula:book
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1551,7 +1511,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         value = LinkUpdateV1(
           targetResourceIri = linkTargetIri
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         valueIri = linkObjLinkValueIri.get,
         apiRequestID = UUID.randomUUID
@@ -1623,7 +1582,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       appActor ! DeleteValueRequestV1(
         valueIri = linkObjLinkValueIri.get,
         deleteComment = Some(comment),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1676,7 +1634,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         value = LinkUpdateV1(
           targetResourceIri = linkTargetIri
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = userProfile,
         valueIri = partOfLinkValueIri.get,
         apiRequestID = UUID.randomUUID
@@ -1703,7 +1660,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         value = LinkUpdateV1(
           targetResourceIri = linkTargetIri
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = userProfile,
         valueIri = partOfLinkValueIri.get, // use valueIri from previous test
         apiRequestID = UUID.randomUUID
@@ -1726,7 +1682,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = TextValueSimpleV1(utf8str = comment),
         comment = Some(metaComment),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1745,7 +1700,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       val changeCommentRequest = ChangeCommentRequestV1(
         valueIri = "http://rdfh.ch/0803/c5058f3a/values/8653a672",
         comment = comment,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1778,7 +1732,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = "http://rdfh.ch/0803/8a0b1e75",
         file = fileValue,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser
       )
 
@@ -1796,7 +1749,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ChangeValueRequestV1(
         value = HierarchicalListValueV1(winter),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = imagesUser,
         valueIri = "http://rdfh.ch/00FF/d208fb9357d5/values/bc90a9c5091004",
         apiRequestID = UUID.randomUUID
@@ -1814,7 +1766,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = HierarchicalListValueV1(summer),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = imagesUser,
         propertyIri = s"$IMAGES_ONTOLOGY_IRI#jahreszeit",
         resourceIri = "http://rdfh.ch/00FF/691e7e2244d5",
@@ -1832,7 +1783,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = decimalValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasDecimal",
         resourceIri = aThingIri,
@@ -1852,7 +1802,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = intervalValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasInterval",
         resourceIri = aThingIri,
@@ -1869,7 +1818,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = colorValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasColor",
         resourceIri = aThingIri,
@@ -1923,7 +1871,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = booleanValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasBoolean",
         resourceIri = aThingIri,
@@ -1940,7 +1887,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = uriValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasUri",
         resourceIri = aThingIri,
@@ -1964,7 +1910,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = thingWithTextValues,
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = aThingIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser
       )
 
@@ -2004,7 +1949,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! DeleteValueRequestV1(
         valueIri = firstTextValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2015,7 +1959,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ValueGetRequestV1(
         valueIri = deletedFirstTextValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser
       )
 
@@ -2033,7 +1976,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = thingWithTextValues,
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = aThingIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser
       )
 
@@ -2073,7 +2015,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! DeleteValueRequestV1(
         valueIri = secondTextValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2084,7 +2025,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! ValueGetRequestV1(
         valueIri = deletedSecondTextValue,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser
       )
 
@@ -2102,7 +2042,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         subjectIri = thingWithTextValues,
         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
         objectIri = aThingIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser
       )
 
@@ -2167,7 +2106,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
         value = textValueWithResourceRef,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2181,7 +2119,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       appActor ! CreateValueRequestV1(
         value = TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = anythingUser,
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
         resourceIri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",

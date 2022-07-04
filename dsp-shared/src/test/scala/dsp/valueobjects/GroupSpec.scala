@@ -24,13 +24,13 @@ object GroupSpec extends ZIOSpecDefault {
   def spec = (groupNameTest + groupDescriptionsTest + groupStatusTest + groupSelfJoinTest)
 
   private val groupNameTest = suite("GroupSpec - GroupName")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(GroupName.make("") == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))) &&
       assertTrue(
         GroupName.make(Some("")) == Validation.fail(BadRequestException(GroupErrorMessages.GroupNameMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         GroupName.make(invalidName) == Validation.fail(
           BadRequestException(GroupErrorMessages.GroupNameInvalid)
@@ -54,7 +54,7 @@ object GroupSpec extends ZIOSpecDefault {
   )
 
   private val groupDescriptionsTest = suite("GroupSpec - GroupDescriptions")(
-    test("pass an empty object and throw an error") {
+    test("pass an empty object and return an error") {
       assertTrue(
         GroupDescriptions.make(Seq.empty) == Validation.fail(
           BadRequestException(GroupErrorMessages.GroupDescriptionsMissing)
@@ -66,7 +66,7 @@ object GroupSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid object and throw an error") {
+    test("pass an invalid object and return an error") {
       assertTrue(
         GroupDescriptions.make(invalidDescription) == Validation.fail(
           BadRequestException(GroupErrorMessages.GroupDescriptionsInvalid)

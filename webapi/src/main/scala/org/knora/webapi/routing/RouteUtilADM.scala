@@ -13,7 +13,6 @@ import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -31,7 +30,7 @@ object RouteUtilADM {
    *
    * @param requestMessageF      a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param featureFactoryConfig the per-request feature factory configuration.
+   *
    * @param settings             the application's settings.
    * @param appActor             a reference to the application actor.
    * @param log                  a logging adapter.
@@ -42,7 +41,6 @@ object RouteUtilADM {
   def runJsonRoute(
     requestMessageF: Future[KnoraRequestADM],
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger
@@ -75,13 +73,11 @@ object RouteUtilADM {
           }
 
       jsonResponse = knoraResponse.toJsValue.asJsObject
-    } yield featureFactoryConfig.addHeaderToHttpResponse(
-      HttpResponse(
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          ContentTypes.`application/json`,
-          jsonResponse.compactPrint
-        )
+    } yield HttpResponse(
+      status = StatusCodes.OK,
+      entity = HttpEntity(
+        ContentTypes.`application/json`,
+        jsonResponse.compactPrint
       )
     )
 

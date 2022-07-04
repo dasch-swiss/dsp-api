@@ -11,7 +11,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   private def getDateValue(model: RdfModel, subj: IriNode, pred: IriNode): String = {
     val statement = model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet.head
@@ -44,7 +44,7 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
       val resource3DeletionDate         = getDateValue(model, resource3, deletionDate)
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2081(defaultFeatureFactoryConfig, log)
+      val plugin = new UpgradePluginPR2081(log)
       plugin.transform(model)
 
       // get the new values after transformation

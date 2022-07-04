@@ -25,8 +25,7 @@ object MessageUtil {
       "base64Decoder",
       "knoraIdUtil",
       "standoffLinkTagTargetResourceIris",
-      "knoraSettings",
-      "featureFactoryConfig"
+      "knoraSettings"
     )
 
   /**

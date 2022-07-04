@@ -8,7 +8,6 @@ package org.knora.webapi.messages.v2.responder
 import akka.actor.ActorRef
 import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
@@ -33,9 +32,9 @@ trait KnoraRdfModelRequestV2 {
   /**
    * Returns a Turtle representation of the graph.
    */
-  def toTurtle(featureFactoryConfig: FeatureFactoryConfig): String =
+  def toTurtle(): String =
     RdfFeatureFactory
-      .getRdfFormatUtil(featureFactoryConfig)
+      .getRdfFormatUtil()
       .format(
         rdfModel = rdfModel,
         rdfFormat = Turtle,
@@ -57,7 +56,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
    * @param appActor             a reference to the application actor.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a case class instance representing the input.
@@ -67,7 +65,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
     apiRequestID: UUID,
     requestingUser: UserADM,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]

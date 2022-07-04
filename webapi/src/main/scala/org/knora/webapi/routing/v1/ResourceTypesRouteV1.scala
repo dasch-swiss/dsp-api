@@ -8,7 +8,6 @@ package org.knora.webapi.routing.v1
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import dsp.errors.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -23,21 +22,19 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+  override def makeRoute(): Route = {
 
     path("v1" / "resourcetypes" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userProfile <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
-                         )
+          userProfile <- getUserADM(requestContext)
 
           // TODO: Check that this is the IRI of a resource type and not just any IRI
-          resourceTypeIri = stringFormatter.validateAndEscapeIri(
-                              iri,
-                              throw BadRequestException(s"Invalid resource class IRI: $iri")
-                            )
+          resourceTypeIri =
+            stringFormatter.validateAndEscapeIri(
+              iri,
+              throw BadRequestException(s"Invalid resource class IRI: $iri")
+            )
 
         } yield ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
@@ -52,11 +49,8 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "resourcetypes") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
-          params = requestContext.request.uri.query().toMap
+          userADM <- getUserADM(requestContext)
+          params   = requestContext.request.uri.query().toMap
 
           vocabularyId = params.getOrElse(
                            "vocabulary",
@@ -76,7 +70,6 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
 
         } yield ResourceTypesForNamedGraphGetRequestV1(
           namedGraph = namedGraphIri,
-          featureFactoryConfig = featureFactoryConfig,
           userADM = userADM
         )
 
@@ -92,11 +85,8 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "propertylists") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
-          params = requestContext.request.uri.query().toMap
+          userADM <- getUserADM(requestContext)
+          params   = requestContext.request.uri.query().toMap
 
           vocabularyId: Option[String]   = params.get("vocabulary")
           resourcetypeId: Option[String] = params.get("restype")
@@ -108,7 +98,6 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
           case Some("0") => // 0 means that all named graphs should be queried
             PropertyTypesForNamedGraphGetRequestV1(
               namedGraph = None,
-              featureFactoryConfig = featureFactoryConfig,
               userADM = userADM
             )
 
@@ -119,7 +108,6 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
             )
             PropertyTypesForNamedGraphGetRequestV1(
               namedGraph = Some(namedGraphIri),
-              featureFactoryConfig = featureFactoryConfig,
               userADM = userADM
             )
 
@@ -134,7 +122,6 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
               case None => // no params given, get all property types (behaves like vocbulary=0)
                 PropertyTypesForNamedGraphGetRequestV1(
                   namedGraph = None,
-                  featureFactoryConfig = featureFactoryConfig,
                   userADM = userADM
                 )
             }
@@ -152,14 +139,8 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "vocabularies") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
-        } yield NamedGraphsGetRequestV1(
-          featureFactoryConfig = featureFactoryConfig,
-          userADM = userADM
-        )
+          userADM <- getUserADM(requestContext)
+        } yield NamedGraphsGetRequestV1(userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
@@ -173,14 +154,8 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "vocabularies" / "reload") {
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
-        } yield LoadOntologiesRequestV1(
-          featureFactoryConfig = featureFactoryConfig,
-          userADM = userADM
-        )
+          userADM <- getUserADM(requestContext)
+        } yield LoadOntologiesRequestV1(userADM = userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
@@ -193,10 +168,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
     } ~ path("v1" / "subclasses" / Segment) { iri =>
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
+          userADM <- getUserADM(requestContext)
 
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceClassIri = stringFormatter.validateAndEscapeIri(

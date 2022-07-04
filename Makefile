@@ -203,7 +203,15 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 
 .PHONY: test
 test: build ## runs all tests
-	sbt -v +test
+	sbt -v "shared/test"
+	sbt -v "sipi/test"
+	sbt -v "userCore/test"
+	sbt -v "userHandler/test"
+	sbt -v "userInterface/test"
+	sbt -v "userRepo/test"
+	sbt -v "valueObjects/test"
+	sbt -v "webapi/test"
+
 
 #################################
 ## Database Management

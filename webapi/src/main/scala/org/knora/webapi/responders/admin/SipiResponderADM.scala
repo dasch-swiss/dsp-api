@@ -72,8 +72,7 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
       queryResponse: SparqlExtendedConstructResponse <- appActor
                                                           .ask(
                                                             SparqlExtendedConstructRequest(
-                                                              sparql = sparqlQuery,
-                                                              featureFactoryConfig = request.featureFactoryConfig
+                                                              sparql = sparqlQuery
                                                             )
                                                           )
                                                           .mapTo[SparqlExtendedConstructResponse]
@@ -118,16 +117,15 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
       response <- permissionCode match {
                     case 1 =>
                       for {
-                        maybeRVSettings <- appActor
-                                             .ask(
-                                               ProjectRestrictedViewSettingsGetADM(
-                                                 identifier =
-                                                   ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
-                                                 featureFactoryConfig = request.featureFactoryConfig,
-                                                 requestingUser = KnoraSystemInstances.Users.SystemUser
-                                               )
-                                             )
-                                             .mapTo[Option[ProjectRestrictedViewSettingsADM]]
+                        maybeRVSettings <-
+                          appActor
+                            .ask(
+                              ProjectRestrictedViewSettingsGetADM(
+                                identifier = ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                              )
+                            )
+                            .mapTo[Option[ProjectRestrictedViewSettingsADM]]
                       } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
 
                     case _ =>

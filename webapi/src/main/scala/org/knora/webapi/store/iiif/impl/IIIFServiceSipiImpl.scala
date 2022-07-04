@@ -60,9 +60,9 @@ case class IIIFServiceSipiImpl(
     import SipiKnoraJsonResponseProtocol._
 
     for {
-      url             <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
-      request         <- ZIO.succeed(new HttpGet(url))
-      _               <- ZIO.debug(request)
+      url     <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      request <- ZIO.succeed(new HttpGet(url))
+      // _               <- ZIO.debug(request)
       sipiResponseStr <- doSipiRequest(request)
       sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse])
     } yield GetFileMetadataResponse(
@@ -332,7 +332,7 @@ object IIIFServiceSipiImpl {
     }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
 
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
-    ZLayer {
+    ZLayer.scoped {
       for {
         config <- ZIO.service[AppConfig]
         // _          <- ZIO.debug(config)
@@ -340,8 +340,8 @@ object IIIFServiceSipiImpl {
         // HINT: Scope does not work when used together with unsafeRun to
         // bridge over to Akka. Need to change this as soon Akka is removed
         // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-        httpClient <- acquire(config)
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
-    }.tap(_ => ZIO.debug(">>> Sipi IIIF Service Initialized <<<"))
+    }
   }
 }

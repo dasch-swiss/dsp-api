@@ -22,12 +22,14 @@ import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.typesafe.scalalogging.LazyLogging
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
-import dsp.errors._
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.MissingLastModificationDateOntologyException
+import dsp.errors.SipiException
+import dsp.errors.UnexpectedMessageException
+import dsp.errors.UnsupportedValueException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.ResponderRequest._
@@ -53,9 +55,8 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
-import org.knora.webapi.store.StoreManager
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.cache.CacheUtil
@@ -66,6 +67,10 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
+import org.knora.webapi.messages.store.sipimessages.IIIFRequest
+import org.knora.webapi.util.ActorUtil
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 /**
  * This is the first actor in the application. All other actors are children
@@ -78,15 +83,15 @@ import scala.util.Success
 class ApplicationActor(
   cacheServiceManager: CacheServiceManager,
   iiifServiceManager: IIIFServiceManager,
+  triplestoreManager: TriplestoreServiceManager,
   appConfig: AppConfig
 ) extends Actor
     with Stash
-    with LazyLogging
     with AroundDirectives
     with Timers {
 
   implicit val system: ActorSystem = context.system
-  val log                          = logger
+  val log: Logger                  = Logger(this.getClass())
 
   log.debug("entered the ApplicationManager constructor")
 
@@ -99,11 +104,6 @@ class ApplicationActor(
    * The Cache Service's configuration.
    */
   implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
-
-  /**
-   * The default feature factory configuration, which is used during startup.
-   */
-  val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(knoraSettings)
 
   /**
    * Provides the actor materializer (akka-http)
@@ -129,15 +129,6 @@ class ApplicationActor(
    * The object that forwards messages to responder instances to handle API requests.
    */
   val responderManager: ResponderManager = ResponderManager(responderData)
-
-  /**
-   * The actor that forwards messages to actors that deal with persistent storage.
-   */
-  lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(self, cacheServiceManager, iiifServiceManager, appConfig) with LiveActorMaker)
-      .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = StoreManagerActorName
-  )
 
   /**
    * Route data.
@@ -249,16 +240,6 @@ class ApplicationActor(
           self ! CreateCaches()
 
         case AppStates.CachesReady =>
-          self ! SetAppState(AppStates.UpdatingSearchIndex)
-
-        case AppStates.UpdatingSearchIndex =>
-          if (ignoreRepository) {
-            self ! SetAppState(AppStates.SearchIndexReady)
-          } else {
-            self ! UpdateSearchIndex()
-          }
-
-        case AppStates.SearchIndexReady =>
           self ! SetAppState(AppStates.LoadingOntologies)
 
         case AppStates.LoadingOntologies =>
@@ -332,7 +313,7 @@ class ApplicationActor(
 
     /* check repository request */
     case CheckTriplestore() =>
-      storeManager ! CheckTriplestoreRequest()
+      self ! CheckTriplestoreRequest()
 
     /* check repository response */
     case CheckTriplestoreResponse(status, message) =>
@@ -350,7 +331,7 @@ class ApplicationActor(
       }
 
     case UpdateRepository() =>
-      storeManager ! UpdateRepositoryRequest()
+      self ! UpdateRepositoryRequest()
 
     case RepositoryUpdatedResponse(message) =>
       log.info(message)
@@ -361,16 +342,9 @@ class ApplicationActor(
       CacheUtil.createCaches(knoraSettings.caches)
       self ! SetAppState(AppStates.CachesReady)
 
-    case UpdateSearchIndex() =>
-      storeManager ! SearchIndexUpdateRequest()
-
-    case SparqlUpdateResponse() =>
-      self ! SetAppState(AppStates.SearchIndexReady)
-
     /* load ontologies request */
     case LoadOntologies() =>
       self ! LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -398,11 +372,13 @@ class ApplicationActor(
       log.warn("Redis server not running. Please start it.")
       timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
-    // Forward messages to the responder manager and the store manager.
-    case responderMessage: KnoraRequestV1  => future2Message(sender(), responderManager.receive(responderMessage), log)
-    case responderMessage: KnoraRequestV2  => future2Message(sender(), responderManager.receive(responderMessage), log)
-    case responderMessage: KnoraRequestADM => future2Message(sender(), responderManager.receive(responderMessage), log)
-    case storeMessage: StoreRequest        => storeManager forward storeMessage
+    // Forward messages to the responder manager and the different store managers.
+    case msg: KnoraRequestV1      => future2Message(sender(), responderManager.receive(msg), log)
+    case msg: KnoraRequestV2      => future2Message(sender(), responderManager.receive(msg), log)
+    case msg: KnoraRequestADM     => future2Message(sender(), responderManager.receive(msg), log)
+    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig)
+    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig)
+    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig)
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {
@@ -537,7 +513,7 @@ class ApplicationActor(
    */
   private def printBanner(): Unit = {
 
-    var msg =
+    val logo =
       """
         |  ____  ____  ____         _    ____ ___
         | |  _ \/ ___||  _ \       / \  |  _ \_ _|
@@ -546,38 +522,28 @@ class ApplicationActor(
         | |____/|____/|_|       /_/   \_\_|  |___|
             """.stripMargin
 
-    msg += "\n"
-    msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
-    msg += "------------------------------------------------\n"
-
-    defaultFeatureFactoryConfig.makeToggleSettingsString match {
-      case Some(toggleSettingsString) => msg += s"Default feature toggle settings: $toggleSettingsString\n"
-      case None                       => ()
-    }
+    log.info(logo)
+    log.info(
+      s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}"
+    )
 
     if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
-      msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
-      msg += "------------------------------------------------\n"
+      log.warn("Resetting DB over HTTP is turned ON")
     }
 
     // which repository are we using
-    msg += s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}\n"
-    msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
+    log.info(s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}")
+    log.info(s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}")
 
     if (printConfigState | knoraSettings.printExtendedConfig) {
+      log.info(s"DB User: ${knoraSettings.triplestoreUsername}")
+      log.info(s"DB Password: ${knoraSettings.triplestorePassword}")
 
-      msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
-      msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"
-
-      msg += s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
-      msg += s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}\n"
-      msg += s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}\n"
-      msg += s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}\n"
-      msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
+      log.info(s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json")
+      log.info(s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}")
+      log.info(s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}")
+      log.info(s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}")
+      log.info(s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}")
     }
-
-    msg += "================================================\n"
-
-    println(msg)
   }
 }

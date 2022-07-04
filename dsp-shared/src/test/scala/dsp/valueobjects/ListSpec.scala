@@ -26,13 +26,13 @@ object ListSpec extends ZIOSpecDefault {
   def spec = (listNameTest + positionTest + labelsTest + commentsTest)
 
   private val listNameTest = suite("ListSpec - ListName")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(ListName.make("") == Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))) &&
       assertTrue(
         ListName.make(Some("")) == Validation.fail(BadRequestException(ListErrorMessages.ListNameMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         ListName.make(invalidName) == Validation.fail(
           BadRequestException(ListErrorMessages.ListNameInvalid)
@@ -56,7 +56,7 @@ object ListSpec extends ZIOSpecDefault {
   )
 
   private val positionTest = suite("ListSpec - Position")(
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         Position.make(invalidPosition) == Validation.fail(
           BadRequestException(ListErrorMessages.InvalidPosition)
@@ -80,7 +80,7 @@ object ListSpec extends ZIOSpecDefault {
   )
 
   private val labelsTest = suite("ListSpec - Labels")(
-    test("pass an empty object and throw an error") {
+    test("pass an empty object and return an error") {
       assertTrue(
         Labels.make(Seq.empty) == Validation.fail(
           BadRequestException(ListErrorMessages.LabelsMissing)
@@ -92,7 +92,7 @@ object ListSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid object and throw an error") {
+    test("pass an invalid object and return an error") {
       assertTrue(
         Labels.make(invalidLabel) == Validation.fail(
           BadRequestException(ListErrorMessages.LabelsInvalid)
@@ -116,7 +116,7 @@ object ListSpec extends ZIOSpecDefault {
   )
 
   private val commentsTest = suite("ListSpec - Comments")(
-    test("pass an empty object and throw an error") {
+    test("pass an empty object and return an error") {
       assertTrue(
         Comments.make(Seq.empty) == Validation.fail(
           BadRequestException(ListErrorMessages.CommentsMissing)
@@ -128,7 +128,7 @@ object ListSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid object and throw an error") {
+    test("pass an invalid object and return an error") {
       assertTrue(
         Comments.make(invalidComment) == Validation.fail(
           BadRequestException(ListErrorMessages.CommentsInvalid)
