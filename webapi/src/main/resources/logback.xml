@@ -33,6 +33,9 @@
     <logger name="org.apache.http" level="INFO"/>
     <logger name="org.apache.http.wire" level="INFO"/>
 
+    <!-- Logging inside ZIO -->
+    <logger name="zio-slf4j-logger" level="INFO"/>
+
     <!-- V1 -->
 
     <logger name="org.knora" level="INFO"/>

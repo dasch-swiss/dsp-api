@@ -11,7 +11,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   "Upgrade plugin PR2079" should {
     "fix the missing valueHasUri datatype" in {
@@ -19,7 +19,7 @@ class UpgradePluginPR2079Spec extends UpgradePluginSpec with LazyLogging {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2079.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR2079(defaultFeatureFactoryConfig, log)
+      val plugin = new UpgradePluginPR2079(log)
       plugin.transform(model)
 
       // Check that the datatype was fixed.

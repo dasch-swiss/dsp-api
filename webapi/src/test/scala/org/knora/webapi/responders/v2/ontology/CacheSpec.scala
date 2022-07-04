@@ -6,11 +6,9 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.Props
-import org.knora.webapi.IntegrationSpec
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.TestContainerFuseki
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -23,7 +21,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoConte
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.cache.CacheUtil
 
 import java.time.Instant
@@ -31,15 +28,17 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import akka.util.Timeout
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
  */
-class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
+class CacheSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val timeout: Timeout                 = settings.defaultTimeout
 
-  val additionalTestData = List(
+  override lazy val rdfDataObjects = List(
     RdfDataObject(
       path = "test_data/ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books"
@@ -50,36 +49,12 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     )
   )
 
-  val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
-
-  // start fuseki http connector actor
-  private val fusekiActor = system.actorOf(
-    Props(new HttpTriplestoreConnector()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = "httpTriplestoreConnector"
-  )
-
-  override def beforeAll(): Unit = {
-    CacheUtil.createCaches(settings.caches)
-    waitForReadyTriplestore(fusekiActor)
-    loadTestData(fusekiActor, additionalTestData)
-  }
-
-  override protected def afterAll(): Unit =
-    CacheUtil.removeAllCaches()
-
   "The basic functionality of the ontology cache" should {
 
-    "successfully load all ontologies" in {
+    "successfully get the ontology cache" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
-        _ <- Cache.loadOntologies(
-               settings,
-               fusekiActor,
-               defaultFeatureFactoryConfig,
-               KnoraSystemInstances.Users.SystemUser
-             )
-        cacheData: Cache.OntologyCacheData       <- Cache.getCacheData
-        ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
-      } yield ontologies
+        cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+      } yield cacheData.ontologies
 
       ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
         res.size should equal(13)
@@ -94,13 +69,14 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
-        val iri: SmartIri       = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasTitle")
+        val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-        val previousCacheDataFuture = Cache.getCacheData
-        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+        val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData
+        val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
 
         val previousBooksMaybe = previousCacheData.ontologies.get(iri)
+
         previousBooksMaybe match {
           case Some(previousBooks) =>
             // copy books-onto but remove :hasTitle property
@@ -136,10 +112,10 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
                 previousBooks.properties should contain key hasTitlePropertyIri
                 newCachedBooks.properties should not contain key(hasTitlePropertyIri)
 
-              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+              case None => fail("no books found in cache after update")
             }
 
-          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+          case None => fail("no books found in cache before update")
         }
       }
     }
@@ -148,8 +124,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
       "add a value property to the cache." in {
 
-        val iri: SmartIri             = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
+        val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
         val previousCacheDataFuture = Cache.getCacheData
         val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)

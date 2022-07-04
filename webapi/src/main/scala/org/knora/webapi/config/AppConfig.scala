@@ -8,6 +8,7 @@ import scala.concurrent.duration
 
 import typesafe._
 import magnolia._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 /**
  * Represents (eventually) the complete configuration as defined in application.conf.
@@ -90,10 +91,28 @@ final case class Triplestore(
   host: String,
   queryTimeout: String,
   updateTimeout: String,
-  autoInit: Boolean
+  autoInit: Boolean,
+  profileQueries: Boolean,
+  fuseki: Fuseki
 ) {
+  val queryTimeoutAsDuration  = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
   val updateTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(updateTimeout))
 }
+
+/**
+ * Fuseki specific configuration.
+ *
+ * @param port
+ * @param repositoryName
+ * @param username
+ * @param password
+ */
+final case class Fuseki(
+  port: Int,
+  repositoryName: String,
+  username: String,
+  password: String
+)
 
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading

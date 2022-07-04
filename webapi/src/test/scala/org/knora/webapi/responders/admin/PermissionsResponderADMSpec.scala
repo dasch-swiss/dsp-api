@@ -82,7 +82,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.rootUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = true,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.rootUser.permissionData)
@@ -94,7 +93,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.multiuserUser.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.INCUNABULA_PROJECT_IRI, SharedTestDataADM.IMAGES_PROJECT_IRI),
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.multiuserUser.permissionData)
@@ -106,7 +104,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.incunabulaProjectAdminUser.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.INCUNABULA_PROJECT_IRI),
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.incunabulaProjectAdminUser.permissionData)
@@ -118,7 +115,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.incunabulaCreatorUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.incunabulaCreatorUser.permissionData)
@@ -130,7 +126,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.incunabulaMemberUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.incunabulaMemberUser.permissionData)
@@ -142,7 +137,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.imagesUser01.groups,
           isInProjectAdminGroups = Seq(SharedTestDataADM.IMAGES_PROJECT_IRI),
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.imagesUser01.permissionData)
@@ -154,7 +148,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.imagesReviewerUser.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.imagesReviewerUser.permissionData)
@@ -166,7 +159,6 @@ class PermissionsResponderADMSpec
           groupIris = SharedTestDataV1.anythingUser1.groups,
           isInProjectAdminGroups = Seq.empty[IRI],
           isInSystemAdminGroup = false,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
         expectMsg(SharedTestDataV1.anythingUser1.permissionData)
@@ -240,7 +232,6 @@ class PermissionsResponderADMSpec
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -265,7 +256,6 @@ class PermissionsResponderADMSpec
             forGroup = SharedTestDataADM.thingSearcherGroup.id,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -299,7 +289,6 @@ class PermissionsResponderADMSpec
             forGroup = OntologyConstants.KnoraAdmin.KnownUser,
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -473,7 +462,6 @@ class PermissionsResponderADMSpec
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -496,7 +484,6 @@ class PermissionsResponderADMSpec
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -518,7 +505,6 @@ class PermissionsResponderADMSpec
             forResourceClass = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
             hasPermissions = Set(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -543,7 +529,6 @@ class PermissionsResponderADMSpec
             forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -566,7 +551,6 @@ class PermissionsResponderADMSpec
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -593,7 +577,6 @@ class PermissionsResponderADMSpec
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -619,7 +602,6 @@ class PermissionsResponderADMSpec
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)
             )
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -647,7 +629,6 @@ class PermissionsResponderADMSpec
               PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -679,7 +660,6 @@ class PermissionsResponderADMSpec
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -714,7 +694,6 @@ class PermissionsResponderADMSpec
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = hasPermissions
           ).prepareHasPermissions,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -731,7 +710,6 @@ class PermissionsResponderADMSpec
 //      "return all permissions for 'image' project " in {
 //        appActor ! PermissionsForProjectGetRequestADM(
 //          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-//          featureFactoryConfig = defaultFeatureFactoryConfig,
 //          requestingUser = rootUser,
 //          apiRequestID = UUID.randomUUID()
 //        )
@@ -742,7 +720,6 @@ class PermissionsResponderADMSpec
 //      "return all permissions for 'incunabula' project " in {
 //        appActor ! PermissionsForProjectGetRequestADM(
 //          projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
-//          featureFactoryConfig = defaultFeatureFactoryConfig,
 //          requestingUser = rootUser,
 //          apiRequestID = UUID.randomUUID()
 //        )

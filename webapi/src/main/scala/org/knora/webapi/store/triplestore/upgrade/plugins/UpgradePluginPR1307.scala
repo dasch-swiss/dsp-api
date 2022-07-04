@@ -7,7 +7,6 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import org.knora.webapi.IRI
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
@@ -15,8 +14,8 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for Knora PR 1307.
  */
-class UpgradePluginPR1307(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+class UpgradePluginPR1307() extends UpgradePlugin {
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   // IRI objects representing the IRIs used in this transformation.
   private val rdfTypeIri: IriNode          = nodeFactory.makeIriNode(OntologyConstants.Rdf.Type)

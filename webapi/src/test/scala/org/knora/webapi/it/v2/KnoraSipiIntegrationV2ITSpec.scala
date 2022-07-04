@@ -350,7 +350,7 @@ class KnoraSipiIntegrationV2ITSpec
     )
   }
 
-  "The Knora/Sipi integration" ignore {
+  "The Knora/Sipi integration" should {
     var loginToken: String = ""
 
     "not accept a token in Sipi that hasn't been signed by Knora" in {

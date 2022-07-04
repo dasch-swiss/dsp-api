@@ -105,7 +105,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      Resolver.bintrayRepo("hseeberger", "maven")
+      Resolver.bintrayRepo("hseeberger", "maven"),
+      "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
     libraryDependencies ++= Dependencies.webapiLibraryDependencies
   )
@@ -143,9 +144,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
-    fork := true,                       // run tests in a forked JVM
-    Test / testForkedParallel := false, // run forked tests in parallel
-    Test / parallelExecution := false,  // run non-forked tests in parallel
+    Test / fork := true,                // run tests in a forked JVM
+    Test / testForkedParallel := false, // not run forked tests in parallel
+    Test / parallelExecution := false,  // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
     Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
@@ -236,6 +237,7 @@ lazy val apiMain = project
   .settings(
     name := "dsp-api-main",
     libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
+    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore, schemaRepo, schemaApi)
@@ -257,6 +259,7 @@ lazy val schemaApi = project
   .settings(
     name := "schemaApi",
     libraryDependencies ++= Dependencies.schemaApiLibraryDependencies,
+    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore)
@@ -266,6 +269,7 @@ lazy val schemaCore = project
   .settings(
     name := "schemaCore",
     libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
+    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
 
@@ -274,6 +278,7 @@ lazy val schemaRepo = project
   .settings(
     name := "schemaRepo",
     libraryDependencies ++= Dependencies.schemaRepoLibraryDependencies,
+    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaCore)
@@ -283,6 +288,7 @@ lazy val schemaRepoEventStoreService = project
   .settings(
     name := "schemaRepoEventstoreService",
     libraryDependencies ++= Dependencies.schemaRepoEventStoreServiceLibraryDependencies,
+    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
@@ -292,6 +298,7 @@ lazy val schemaRepoSearchService = project
   .settings(
     name := "dsp-schema-repo-search-service",
     libraryDependencies ++= Dependencies.schemaRepoSearchServiceLibraryDependencies,
+    resolvers += "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots",
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(schemaRepo)
