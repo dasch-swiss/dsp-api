@@ -203,11 +203,6 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 
 .PHONY: test
 test: build ## runs all tests
-	sbt -v "schemaApi/test"
-	sbt -v "schemaCore/test"
-	sbt -v "schemaRepo/test"
-	sbt -v "schemaRepoEventStoreService/test"
-	sbt -v "schemaRepoSearchService/test"
 	sbt -v "shared/test"
 	sbt -v "sipi/test"
 	sbt -v "userCore/test"
