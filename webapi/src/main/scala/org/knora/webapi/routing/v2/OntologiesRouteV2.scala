@@ -980,6 +980,63 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                                                                      settings = settings,
                                                                      log = log
                                                                    )
+
+              // If the GUI element is a list, radio, pulldown or slider, check if a GUI attribute (which is mandatory in these cases) is provided
+              guiElementList     = OntologyConstants.SalsahGui.List.toSmartIri
+              guiElementRadio    = OntologyConstants.SalsahGui.Radio.toSmartIri
+              guiElementPulldown = OntologyConstants.SalsahGui.Pulldown.toSmartIri
+              guiElementSlider   = OntologyConstants.SalsahGui.Slider.toSmartIri
+
+              needsGuiAttribute = requestMessage.newGuiElement == Some(guiElementList) ||
+                                    requestMessage.newGuiElement == Some(guiElementRadio) ||
+                                    requestMessage.newGuiElement == Some(guiElementPulldown) ||
+                                    requestMessage.newGuiElement == Some(guiElementSlider)
+
+              _ = if (
+                    needsGuiAttribute &&
+                    requestMessage.newGuiAttributes.isEmpty
+                  ) {
+                    throw BadRequestException(s"Missing GUI attribute (salsah-gui:guiAttribute)")
+                  }
+
+              // If the GUI element is a list, radio, pulldown or slider, check if the provided GUI attribute is correct
+              guiElementsPointingToList = List(guiElementList, guiElementRadio, guiElementPulldown)
+
+              _ = if (needsGuiAttribute) {
+                    requestMessage.newGuiElement match {
+                      // GUI element is a list, radio or pulldown, so it needs a GUI attribute that points to a list
+                      case Some(newGuiElement) if guiElementsPointingToList.contains(newGuiElement) =>
+                        requestMessage.newGuiAttributes.map { guiAttribute: String =>
+                          if (!guiAttribute.startsWith("hlist=")) {
+                            throw BadRequestException(
+                              s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to be a list reference of the form 'hlist=<LIST_IRI>' but found $guiAttribute"
+                            )
+                          }
+                        }
+                      // GUI element is a slider, so it needs two GUI attributes min and max
+                      case Some(newGuiElement) if newGuiElement == guiElementSlider =>
+                        if (requestMessage.newGuiAttributes.size != 2) {
+                          throw BadRequestException(
+                            s"salsah-gui:guiElement $newGuiElement needs two salsah-gui:guiAttribute ('min' and 'max'), but ${requestMessage.newGuiAttributes.size} were provided."
+                          )
+                        }
+                        requestMessage.newGuiAttributes.map { guiAttribute: String =>
+                          if (!guiAttribute.startsWith("max=") && !guiAttribute.startsWith("min=")) {
+                            throw BadRequestException(
+                              s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to provide 'min' and 'max' parameters but found $guiAttribute"
+                            )
+                          }
+                        }
+                      case Some(_) =>
+                        throw BadRequestException(
+                          s"Unknown GUI element (salsah-gui:guiElement) provided"
+                        )
+                      case None =>
+                        throw BadRequestException(
+                          s"No GUI element (salsah-gui:guiElement) provided"
+                        )
+                    }
+                  }
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteWithFuture(

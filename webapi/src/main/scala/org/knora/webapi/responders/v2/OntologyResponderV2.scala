@@ -2642,58 +2642,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
              )
 
-        // If the GUI element is a list, radio, pulldown or slider, check if a GUI attribute (which is mandatory in these cases) is provided
-
-        guiElementList     = OntologyConstants.SalsahGui.List.toSmartIri
-        guiElementRadio    = OntologyConstants.SalsahGui.Radio.toSmartIri
-        guiElementPulldown = OntologyConstants.SalsahGui.Pulldown.toSmartIri
-        guiElementSlider   = OntologyConstants.SalsahGui.Slider.toSmartIri
-
-        needsGuiAttribute = changePropertyGuiElementRequest.newGuiElement == Some(guiElementList) ||
-                              changePropertyGuiElementRequest.newGuiElement == Some(guiElementRadio) ||
-                              changePropertyGuiElementRequest.newGuiElement == Some(guiElementPulldown) ||
-                              changePropertyGuiElementRequest.newGuiElement == Some(guiElementSlider)
-
-        _ = if (
-              needsGuiAttribute &&
-              changePropertyGuiElementRequest.newGuiAttributes.isEmpty
-            ) {
-              throw BadRequestException(s"Missing GUI attribute (salsah-gui:guiAttribute)")
-            }
-
-        // If the GUI element is a list, radio, pulldown or slider, check if the provided GUI attribute is correct
-
-        guiElementsPointingToList = List(guiElementList, guiElementRadio, guiElementPulldown)
-
-        _ = if (needsGuiAttribute) {
-              changePropertyGuiElementRequest.newGuiElement match {
-                case Some(newGuiElement) if guiElementsPointingToList.contains(newGuiElement) =>
-                  changePropertyGuiElementRequest.newGuiAttributes.map { guiAttribute: String =>
-                    if (!guiAttribute.startsWith("hlist=")) {
-                      throw BadRequestException(
-                        s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to be a list reference of the form 'hlist=<LIST_IRI>' but found $guiAttribute"
-                      )
-                    }
-                  }
-                case Some(newGuiElement) if newGuiElement == guiElementSlider =>
-                  changePropertyGuiElementRequest.newGuiAttributes.map { guiAttribute: String =>
-                    if (!guiAttribute.startsWith("max=") && !guiAttribute.startsWith("min=")) {
-                      throw BadRequestException(
-                        s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to provide 'min' and 'max' parameters but found $guiAttribute"
-                      )
-                    }
-                  }
-                case Some(_) =>
-                  throw BadRequestException(
-                    s"Unknown GUI element (salsah-gui:guiElement) provided"
-                  )
-                case None =>
-                  throw BadRequestException(
-                    s"No GUI element (salsah-gui:guiElement) provided"
-                  )
-              }
-            }
-
         // If this is a link property, also change the GUI element and attribute of the corresponding link value property.
 
         maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] =
