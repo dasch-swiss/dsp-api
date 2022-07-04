@@ -41,7 +41,6 @@ import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import org.knora.webapi.messages.util.KnoraSystemInstances
 
 /**
  * Responds to requests dealing with ontologies.

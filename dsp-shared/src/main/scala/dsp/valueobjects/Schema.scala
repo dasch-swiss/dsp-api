@@ -37,26 +37,26 @@ object Property {
   }
 
   /**
-   * PropertyDescriptions value object.
+   * PropertyDescription value object.
    */
-  sealed abstract case class PropertyDescriptions private (value: Seq[V2.StringLiteralV2])
-  object PropertyDescriptions { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, PropertyDescriptions] =
+  sealed abstract case class PropertyDescription private (value: Seq[V2.StringLiteralV2])
+  object PropertyDescription { self =>
+    def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, PropertyDescription] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(SchemaErrorMessages.PropertyDescriptionsMissing))
+        Validation.fail(BadRequestException(SchemaErrorMessages.PropertyDescriptionMissing))
       } else {
-        val validatedDescriptions = Validation(value.map { description =>
+        val validatedDescription = Validation(value.map { description =>
           val validatedDescription =
             V2IriValidation.toSparqlEncodedString(
               description.value,
-              throw BadRequestException(SchemaErrorMessages.PropertyDescriptionsInvalid)
+              throw BadRequestException(SchemaErrorMessages.PropertyDescriptionInvalid)
             )
           V2.StringLiteralV2(value = validatedDescription, language = description.language)
         })
-        validatedDescriptions.map(new PropertyDescriptions(_) {})
+        validatedDescription.map(new PropertyDescription(_) {})
       }
 
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[PropertyDescriptions]] =
+    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[PropertyDescription]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -66,8 +66,8 @@ object Property {
 }
 
 object SchemaErrorMessages {
-  val PropertyLabelMissing        = "Property label cannot be empty."
-  val PropertyLabelInvalid        = "Property label is invalid."
-  val PropertyDescriptionsMissing = "Property descriptions cannot be empty."
-  val PropertyDescriptionsInvalid = "Property descriptions is invalid."
+  val PropertyLabelMissing       = "Property label cannot be empty."
+  val PropertyLabelInvalid       = "Property label is invalid."
+  val PropertyDescriptionMissing = "Property description cannot be empty."
+  val PropertyDescriptionInvalid = "Property description is invalid."
 }

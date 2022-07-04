@@ -14,7 +14,8 @@ import zio.prelude.Validation
  * @param id          the ID of the property
  */
 sealed abstract case class Property private (
-  id: PropertyId
+  id: PropertyId,
+  description: PropertyDescriptions
 ) extends Ordered[Property] { self =>
 
   /**
@@ -29,17 +30,33 @@ sealed abstract case class Property private (
    *  @return the updated [[Property]]
    */
   def updateLabel(newValue: PropertyLabel): Property =
-    new Property(
-      self.id
-    ) {}
+    Property.make(
+      self.id,
+      newValue,
+      self.description
+    )
+
+  /**
+   * Update the description of a Property
+   *
+   *  @param newValue  the new description
+   *  @return the updated [[Property]]
+   */
+  def updateDescription(newValue: PropertyDescriptions): Property =
+    Property.make(
+      self.id,
+      newValue,
+      self.description
+    )
 }
 
 object Property {
   def make(
-    label: PropertyLabel
+    label: PropertyLabel,
+    description: PropertyDescriptions
   ): Property = {
     val id = PropertyId.make()
-    new Property(id) {}
+    new Property(id, label, description) {}
   }
 
 }
