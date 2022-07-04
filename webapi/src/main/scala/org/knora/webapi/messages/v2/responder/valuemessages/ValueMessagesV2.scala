@@ -15,6 +15,7 @@ import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
 import dsp.errors.SipiException
 import dsp.valueobjects.IriErrorMessages
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2

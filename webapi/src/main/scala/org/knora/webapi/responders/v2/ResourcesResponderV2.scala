@@ -9,6 +9,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -1164,10 +1165,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             check <- ResourceUtilV2.checkListNodeExistsAndHasRootNode(listNodeIri, appActor)
 
             _ = if (!check) {
-              throw NotFoundException(
-                s"<${listNodeIri}> does not exist, is not a ListNode or is a root node."
-              )
-            } else FastFuture.successful(())
+                  throw NotFoundException(
+                    s"<${listNodeIri}> does not exist, is not a ListNode or is a root node."
+                  )
+                } else FastFuture.successful(())
           } yield ()
         }.toSeq
       )
