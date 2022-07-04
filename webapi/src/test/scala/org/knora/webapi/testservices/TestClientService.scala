@@ -84,9 +84,9 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     )
 
     for {
-      _ <- ZIO.debug("Loading test data started ...")
+      _ <- ZIO.logInfo("Loading test data started ...")
       _ <- singleAwaitingRequest(loadRequest, 101.seconds)
-      _ <- ZIO.debug("... loading test data done.")
+      _ <- ZIO.logInfo("... loading test data done.")
     } yield ()
   }
 
@@ -95,7 +95,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
    */
   def singleAwaitingRequest(
     request: akka.http.scaladsl.model.HttpRequest,
-    duration: zio.Duration = 60.seconds
+    duration: zio.Duration = 666.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
       .fromFuture[akka.http.scaladsl.model.HttpResponse](executionContext =>
@@ -357,14 +357,14 @@ object TestClientService {
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
-  def layer(config: AppConfig, actorSystem: ActorSystem): ZLayer[Any, Nothing, TestClientService] = {
-    implicit val system = actorSystem
-
+  val layer: ZLayer[AppConfig & TestActorSystemService, Nothing, TestClientService] = {
     ZLayer.scoped {
       for {
         // _          <- ZIO.debug(config.sipi)
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-      } yield TestClientService(config, httpClient, actorSystem)
+        config     <- ZIO.service[AppConfig]
+        tass       <- ZIO.service[TestActorSystemService]
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_)(tass.getActorSystem))
+      } yield TestClientService(config, httpClient, tass.getActorSystem)
     }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
   }
 

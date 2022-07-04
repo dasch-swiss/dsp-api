@@ -30,17 +30,24 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util._
 import spray.json.JsValue
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.util.UUID
 import scala.concurrent.duration._
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
@@ -662,12 +669,17 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   // The default timeout for receiving reply messages from actors.
@@ -916,7 +928,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a
       appActor ! ResourceFullGetRequestV1(
         iri = "http://rdfh.ch/0803/c5058f3a",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.incunabulaMemberUser
       )
 
@@ -932,7 +943,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75
       appActor ! ResourceFullGetRequestV1(
         iri = "http://rdfh.ch/0803/8a0b1e75",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.incunabulaMemberUser
       )
 
@@ -949,7 +959,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       appActor ! ResourceContextGetRequestV1(
         iri = "http://rdfh.ch/0803/c5058f3a",
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -963,7 +972,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       appActor ! ResourceContextGetRequestV1(
         iri = "http://rdfh.ch/0803/8a0b1e75",
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -1103,7 +1111,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         label = "Test-Misc",
         projectIri = "http://rdfh.ch/projects/0803",
         values = valuesToBeCreated,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1144,7 +1151,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         label = "Test-Book",
         projectIri = "http://rdfh.ch/projects/0803",
         values = valuesToBeCreated,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1203,7 +1209,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         label = "Book with reference to nonexistent resource",
         projectIri = "http://rdfh.ch/projects/0803",
         values = valuesToBeCreated,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1287,7 +1292,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         label = "Test-Book",
         projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
         values = valuesToBeCreated,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1306,7 +1310,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       // See if we can query the resource.
       appActor ! ResourceFullGetRequestV1(
         iri = newBookResourceIri.get,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.incunabulaProjectAdminUser
       )
       expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
@@ -1361,7 +1364,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
         values = valuesToBeCreated,
         file = Some(fileValue),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1383,7 +1385,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val pageGetContext = ResourceContextGetRequestV1(
         iri = resIri,
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -1400,7 +1401,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val resourceDeleteRequest = ResourceDeleteRequestV1(
         resourceIri = newPageResourceIri.get,
         deleteComment = Some("This page was deleted as a test"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1412,7 +1412,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       // Check that the resource is marked as deleted.
       appActor ! ResourceInfoGetRequestV1(
         iri = newPageResourceIri.get,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -1429,7 +1428,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       val propertiesGetRequest = PropertiesGetRequestV1(
         iri = "http://rdfh.ch/0803/021ec18f1735",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -1445,7 +1443,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val resourceContextPage = ResourceContextGetRequestV1(
         iri = "http://rdfh.ch/0803/9d626dc76c03",
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -1461,7 +1458,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       appActor ! ResourceFullGetRequestV1(
         iri = "http://rdfh.ch/0001/project-thing-2",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.anythingUser1
       )
 
@@ -1475,7 +1471,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       appActor ! ResourceFullGetRequestV1(
         iri = "http://rdfh.ch/0001/project-thing-2",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.anythingUser2
       )
 
@@ -1490,7 +1485,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       appActor ! ResourceFullGetRequestV1(
         iri = "http://rdfh.ch/0001/project-thing-1",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.anythingUser1
       )
 
@@ -1509,7 +1503,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       appActor ! ResourceFullGetRequestV1(
         iri = "http://rdfh.ch/0001/project-thing-1",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.anythingUser2
       )
 
@@ -1530,7 +1523,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       appActor ! ResourceContextGetRequestV1(
         iri = "http://rdfh.ch/0001/containing-thing",
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.anythingUser1
       )
 
@@ -1550,7 +1542,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       appActor ! ResourceContextGetRequestV1(
         iri = "http://rdfh.ch/0001/containing-thing",
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.anythingUser2
       )
 
@@ -1563,7 +1554,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       appActor ! ResourceContextGetRequestV1(
         iri = "http://rdfh.ch/0001/containing-thing",
         resinfo = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
@@ -1579,7 +1569,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         projectIri = "http://rdfh.ch/projects/0803",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1596,7 +1585,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         projectIri = "http://rdfh.ch/projects/0803",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1613,7 +1601,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1629,7 +1616,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       appActor ! ChangeResourceLabelRequestV1(
         resourceIri = "http://rdfh.ch/0803/c5058f3a",
         label = myNewLabel,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = SharedTestDataADM.incunabulaProjectAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1653,7 +1639,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         projectIri = "http://rdfh.ch/projects/0001",
         values = valuesToBeCreated,
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.anythingUser1,
         apiRequestID = UUID.randomUUID
       )

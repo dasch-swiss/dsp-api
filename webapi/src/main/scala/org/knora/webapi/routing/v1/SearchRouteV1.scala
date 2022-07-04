@@ -9,7 +9,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.knora.webapi.IRI
 import dsp.errors.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
@@ -242,15 +241,12 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "search" /) {
       // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
       get { requestContext =>
         val requestMessage = for {
-          userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
-                     )
+          userADM                         <- getUserADM(requestContext)
           params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
         } yield makeExtendedSearchRequestMessage(userADM, params)
 
@@ -267,10 +263,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
           get { requestContext =>
             val requestMessage = for {
-              userADM <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
-                         )
+              userADM                    <- getUserADM(requestContext)
               params: Map[String, String] = requestContext.request.uri.query().toMap
             } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
 

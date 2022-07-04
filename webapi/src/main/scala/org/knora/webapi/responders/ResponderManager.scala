@@ -40,7 +40,7 @@ import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.ExecutionContext

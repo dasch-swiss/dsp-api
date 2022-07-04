@@ -20,7 +20,6 @@ import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.MissingLastModificationDateOntologyException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -102,14 +101,12 @@ object Cache extends LazyLogging {
   /**
    * Loads and caches all ontology information.
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @param requestingUser       the user making the request.
    * @return a [[SuccessResponseV2]].
    */
   def loadOntologies(
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   )(implicit ec: ExecutionContext, stringFormat: StringFormatter, timeout: Timeout): Future[SuccessResponseV2] = {
     val loadOntologiesFuture: Future[SuccessResponseV2] = for {
@@ -187,8 +184,7 @@ object Cache extends LazyLogging {
           appActor
             .ask(
               SparqlExtendedConstructRequest(
-                sparql = ontologyGraphConstructQuery,
-                featureFactoryConfig = featureFactoryConfig
+                sparql = ontologyGraphConstructQuery
               )
             )
             .mapTo[SparqlExtendedConstructResponse]

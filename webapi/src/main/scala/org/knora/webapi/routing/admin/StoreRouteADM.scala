@@ -8,7 +8,6 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoresADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -35,7 +34,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = Route {
+  override def makeRoute(): Route = Route {
     path("admin" / "store") {
       get { requestContext =>
         /**
@@ -52,8 +51,7 @@ class StoreRouteADM(routeData: KnoraRouteData)
           parameter(Symbol("prependdefaults").as[Boolean] ? true) { prependDefaults => requestContext =>
             val msg = ResetTriplestoreContentRequestADM(
               rdfDataObjects = apiRequest,
-              prependDefaults = prependDefaults,
-              featureFactoryConfig = featureFactoryConfig
+              prependDefaults = prependDefaults
             )
 
             val requestMessage = Future.successful(msg)
@@ -61,7 +59,6 @@ class StoreRouteADM(routeData: KnoraRouteData)
             RouteUtilADM.runJsonRoute(
               requestMessageF = requestMessage,
               requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig,
               settings = settings,
               appActor = appActor,
               log = log

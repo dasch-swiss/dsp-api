@@ -5,7 +5,6 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
@@ -13,8 +12,8 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 /**
  * Transforms a repository for Knora PR 1367.
  */
-class UpgradePluginPR1367(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+class UpgradePluginPR1367() extends UpgradePlugin {
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   override def transform(model: RdfModel): Unit = {
     // Fix the datatypes of decimal literals.

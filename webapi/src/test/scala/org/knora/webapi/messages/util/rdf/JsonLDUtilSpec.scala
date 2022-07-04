@@ -6,7 +6,6 @@
 package org.knora.webapi.util.rdf
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.feature._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
 import spray.json.JsValue
@@ -17,14 +16,10 @@ import java.nio.file.Paths
 /**
  * Tests [[JsonLDUtil]].
  */
-abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
-  private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set(featureToggle),
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
+class JsonLDUtilSpec() extends CoreSpec {
 
-  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil     = RdfFeatureFactory.getRdfFormatUtil()
+  private val rdfModelFactory: RdfModelFactory = RdfFeatureFactory.getRdfModelFactory()
 
   "The JSON-LD tool" should {
     "parse JSON-LD text, compact it with an empty context, convert the result to a JsonLDDocument, and convert that back to text" in {

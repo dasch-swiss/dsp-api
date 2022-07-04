@@ -44,7 +44,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
       "return information for every project" in {
 
         appActor ! ProjectsGetRequestV1(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfile = Some(rootUserProfileV1)
         )
         val received = expectMsgType[ProjectsResponseV1](timeout)
@@ -58,7 +57,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         /* Incunabula project */
         appActor ! ProjectInfoByIRIGetRequestV1(
           iri = SharedTestDataV1.incunabulaProjectInfo.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfileV1 = Some(SharedTestDataV1.rootUser)
         )
         expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
@@ -66,7 +64,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         /* Images project */
         appActor ! ProjectInfoByIRIGetRequestV1(
           iri = SharedTestDataV1.imagesProjectInfo.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfileV1 = Some(SharedTestDataV1.rootUser)
         )
         expectMsg(ProjectInfoResponseV1(SharedTestDataV1.imagesProjectInfo))
@@ -74,7 +71,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
         /* 'SystemProject' */
         appActor ! ProjectInfoByIRIGetRequestV1(
           iri = SharedTestDataV1.systemProjectInfo.id,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfileV1 = Some(SharedTestDataV1.rootUser)
         )
         expectMsg(ProjectInfoResponseV1(SharedTestDataV1.systemProjectInfo))
@@ -84,7 +80,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
       "return information about a project identified by shortname" in {
         appActor ! ProjectInfoByShortnameGetRequestV1(
           SharedTestDataV1.incunabulaProjectInfo.shortname,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           Some(rootUserProfileV1)
         )
         expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
@@ -94,7 +89,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
 
         appActor ! ProjectInfoByIRIGetRequestV1(
           iri = "http://rdfh.ch/projects/notexisting",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfileV1 = Some(rootUserProfileV1)
         )
         expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
@@ -104,7 +98,6 @@ class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) w
       "return 'NotFoundException' when the project shortname unknown " in {
         appActor ! ProjectInfoByShortnameGetRequestV1(
           shortname = "projectwrong",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           userProfileV1 = Some(rootUserProfileV1)
         )
         expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))

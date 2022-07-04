@@ -9,7 +9,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
@@ -216,14 +215,12 @@ sealed trait PermissionsResponderRequestADM extends KnoraRequestADM
  * @param groupIris              the groups the user is member of.
  * @param isInProjectAdminGroups the projects for which the user is member of the ProjectAdmin group.
  * @param isInSystemAdminGroup   the flag denoting users membership in the SystemAdmin group.
- * @param featureFactoryConfig   the feature factory configuration.
  */
 case class PermissionDataGetADM(
   projectIris: Seq[IRI],
   groupIris: Seq[IRI],
   isInProjectAdminGroups: Seq[IRI],
   isInSystemAdminGroup: Boolean,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends PermissionsResponderRequestADM {
 
@@ -235,13 +232,11 @@ case class PermissionDataGetADM(
  * A successful response will be a [[PermissionsForProjectGetResponseADM]].
  *
  * @param projectIri           the project for which the permissions are queried.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiation the request.
  * @param apiRequestID         the API request ID.
  */
 case class PermissionsForProjectGetRequestADM(
   projectIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
@@ -449,13 +444,11 @@ case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
  * Create a single [[AdministrativePermissionADM]].
  *
  * @param createRequest        the API create request payload.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the requesting user.
  * @param apiRequestID         the API request ID.
  */
 case class AdministrativePermissionCreateRequestADM(
   createRequest: CreateAdministrativePermissionAPIRequestADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {
@@ -700,13 +693,11 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(
  * Create a single [[DefaultObjectAccessPermissionADM]].
  *
  * @param createRequest  the create request.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser the requesting user.
  * @param apiRequestID   the API request ID.
  */
 case class DefaultObjectAccessPermissionCreateRequestADM(
   createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends PermissionsResponderRequestADM {

@@ -63,8 +63,7 @@ object Cardinalities {
              settings,
              appActor,
              internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
            )
 
       // Check that the class's rdf:type is owl:Class.
@@ -223,8 +222,7 @@ object Cardinalities {
              settings,
              appActor,
              internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
            )
 
       // Check that the class's rdf:type is owl:Class.
@@ -406,8 +404,7 @@ object Cardinalities {
              settings,
              appActor,
              internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = currentTime,
-             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+             expectedLastModificationDate = currentTime
            )
 
       // Check that the data that was saved corresponds to the data that was submitted.
@@ -415,8 +412,7 @@ object Cardinalities {
       loadedClassDef <- OntologyHelpers.loadClassDefinition(
                           settings,
                           appActor,
-                          classIri = internalClassIri,
-                          featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+                          classIri = internalClassIri
                         )
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {

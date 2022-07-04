@@ -20,12 +20,12 @@ object Dependencies {
   val jenaVersion       = "4.4.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
-  val ZioVersion        = "2.0.0-RC6"
+  val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC3"
-  val ZioConfigVersion  = "3.0.0-RC9"
-  val ZioSchemaVersion  = "0.2.0-RC5"
-  val ZioLoggingVersion = "2.0.0-RC10"
+  val ZioConfigVersion  = "3.0.1"
+  val ZioSchemaVersion  = "0.2.0"
+  val ZioLoggingVersion = "2.0.0"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC13"
 
@@ -36,11 +36,12 @@ object Dependencies {
   val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
   val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
   val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
+  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % ZioVersion
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % ZioVersion
+  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
+  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % akkaVersion     // Scala 3 compatible
@@ -100,8 +101,8 @@ object Dependencies {
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.2"         // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.16.3"
+  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.12"        // Scala 3 compatible
+  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.2"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -152,6 +153,7 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioLogging,
+    zioLoggingSlf4j,
     zioMacros,
     zioPrelude,
     zioTest    % Test,

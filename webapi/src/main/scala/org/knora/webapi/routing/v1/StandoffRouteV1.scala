@@ -10,7 +10,6 @@ import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import dsp.errors.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.Authenticator
@@ -31,7 +30,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "mapping") {
       post {
         entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
@@ -67,10 +66,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
-                           )
+            userProfile <- getUserADM(requestContext)
 
             allParts: Map[Name, String] <- allPartsFuture
 
@@ -110,7 +106,6 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
               standoffApiJSONRequest.mappingName,
               throw BadRequestException("'mappingName' contains invalid characters")
             ),
-            featureFactoryConfig = featureFactoryConfig,
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
           )
