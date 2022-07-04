@@ -35,15 +35,15 @@ object UserDomainSpec extends ZIOSpecDefault {
 
   private val createUserTest = suite("createUser")(
     test("create a user") {
-      for {
-        id         <- SharedTestData.userId1.toZIO
-        givenName  <- SharedTestData.givenName1.toZIO
-        familyName <- SharedTestData.familyName1.toZIO
-        username   <- SharedTestData.username1.toZIO
-        email      <- SharedTestData.email1.toZIO
-        password   <- SharedTestData.password1.toZIO
-        language   <- SharedTestData.languageEn.toZIO
-        status     <- SharedTestData.statusTrue.toZIO
+      (for {
+        id         <- SharedTestData.userId1
+        givenName  <- SharedTestData.givenName1
+        familyName <- SharedTestData.familyName1
+        username   <- SharedTestData.username1
+        email      <- SharedTestData.email1
+        password   <- SharedTestData.password1
+        language   <- SharedTestData.languageEn
+        status     <- SharedTestData.statusTrue
         user <- User
                   .make(
                     id,
@@ -55,23 +55,22 @@ object UserDomainSpec extends ZIOSpecDefault {
                     language,
                     status
                   )
-                  .toZIO
       } yield assertTrue(user.username == username) &&
         assertTrue(user.email == email) &&
         assertTrue(user.givenName == givenName) &&
         assertTrue(user.familyName == familyName) &&
         assertTrue(user.password == password) &&
         assertTrue(user.language == language) &&
-        assertTrue(user.status == status)
+        assertTrue(user.status == status)).toZIO
     }
   )
 
   private val updateUserTest = suite("updateUser")(
     test("update the username") {
-      for {
-        user        <- SharedTestData.user1.toZIO
-        newValue    <- Username.make("newUsername").toZIO
-        updatedUser <- user.updateUsername(newValue).toZIO
+      (for {
+        user        <- SharedTestData.user1
+        newValue    <- Username.make("newUsername")
+        updatedUser <- user.updateUsername(newValue)
       } yield assertTrue(updatedUser.username == newValue) &&
         assertTrue(updatedUser.username != user.username) &&
         assertTrue(updatedUser.email == user.email) &&
@@ -79,86 +78,86 @@ object UserDomainSpec extends ZIOSpecDefault {
         assertTrue(updatedUser.familyName == user.familyName) &&
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+        assertTrue(updatedUser.status == user.status)).toZIO
     },
     test("update the email") {
-      for {
-        user        <- SharedTestData.user1.toZIO
-        newValue    <- Email.make("newEmail@mail.com").toZIO
-        updatedUser <- user.updateEmail(newValue).toZIO
+      (for {
+        user        <- SharedTestData.user1
+        newValue    <- Email.make("newEmail@mail.com")
+        updatedUser <- user.updateEmail(newValue)
       } yield assertTrue(updatedUser.email == newValue) &&
         assertTrue(updatedUser.email != user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
         assertTrue(updatedUser.familyName == user.familyName) &&
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+        assertTrue(updatedUser.status == user.status)).toZIO
     },
     test("update the givenName") {
-      for {
-        user        <- SharedTestData.user1.toZIO
-        newValue    <- GivenName.make("newGivenName").toZIO
-        updatedUser <- user.updateGivenName(newValue).toZIO
+      (for {
+        user        <- SharedTestData.user1
+        newValue    <- GivenName.make("newGivenName")
+        updatedUser <- user.updateGivenName(newValue)
       } yield assertTrue(updatedUser.givenName == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName != user.givenName) &&
         assertTrue(updatedUser.familyName == user.familyName) &&
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+        assertTrue(updatedUser.status == user.status)).toZIO
     },
     test("update the familyName") {
-      for {
-        user        <- SharedTestData.user1.toZIO
-        newValue    <- FamilyName.make("newFamilyName").toZIO
-        updatedUser <- user.updateFamilyName(newValue).toZIO
+      (for {
+        user        <- SharedTestData.user1
+        newValue    <- FamilyName.make("newFamilyName")
+        updatedUser <- user.updateFamilyName(newValue)
       } yield assertTrue(updatedUser.familyName == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
         assertTrue(updatedUser.familyName != user.familyName) &&
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+        assertTrue(updatedUser.status == user.status)).toZIO
     },
     test("update the password") {
-      for {
-        user             <- SharedTestData.user1.toZIO
-        passwordStrength <- SharedTestData.passwordStrength.toZIO
-        newValue         <- PasswordHash.make("newPassword1", passwordStrength).toZIO
-        updatedUser      <- user.updatePassword(newValue).toZIO
+      (for {
+        user             <- SharedTestData.user1
+        passwordStrength <- SharedTestData.passwordStrength
+        newValue         <- PasswordHash.make("newPassword1", passwordStrength)
+        updatedUser      <- user.updatePassword(newValue)
       } yield assertTrue(updatedUser.password == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
         assertTrue(updatedUser.familyName == user.familyName) &&
         assertTrue(updatedUser.password != user.password) &&
         assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status == user.status)
+        assertTrue(updatedUser.status == user.status)).toZIO
     },
     test("update the language") {
-      for {
-        user        <- SharedTestData.user1.toZIO
-        newValue    <- LanguageCode.make("fr").toZIO
-        updatedUser <- user.updateLanguage(newValue).toZIO
+      (for {
+        user        <- SharedTestData.user1
+        newValue    <- LanguageCode.make("fr")
+        updatedUser <- user.updateLanguage(newValue)
       } yield assertTrue(updatedUser.language == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
         assertTrue(updatedUser.familyName == user.familyName) &&
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language != user.language) &&
-        assertTrue(updatedUser.status == user.status)
+        assertTrue(updatedUser.status == user.status)).toZIO
     },
     test("update the status") {
-      for {
-        user        <- SharedTestData.user1.toZIO
-        newValue    <- UserStatus.make(false).toZIO
-        updatedUser <- user.updateStatus(newValue).toZIO
+      (for {
+        user        <- SharedTestData.user1
+        newValue    <- UserStatus.make(false)
+        updatedUser <- user.updateStatus(newValue)
       } yield assertTrue(updatedUser.status == newValue) &&
         assertTrue(updatedUser.email == user.email) &&
         assertTrue(updatedUser.givenName == user.givenName) &&
         assertTrue(updatedUser.familyName == user.familyName) &&
         assertTrue(updatedUser.password == user.password) &&
         assertTrue(updatedUser.language == user.language) &&
-        assertTrue(updatedUser.status != user.status)
+        assertTrue(updatedUser.status != user.status)).toZIO
     }
   )
 }
