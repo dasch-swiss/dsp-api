@@ -1770,7 +1770,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
