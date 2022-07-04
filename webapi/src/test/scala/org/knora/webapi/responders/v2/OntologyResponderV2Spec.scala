@@ -4029,7 +4029,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newGuiAttributes = Set(),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4049,7 +4048,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newGuiAttributes = Set("size=80"),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4068,7 +4066,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newGuiAttributes = Set("min=1", "size=80"),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
