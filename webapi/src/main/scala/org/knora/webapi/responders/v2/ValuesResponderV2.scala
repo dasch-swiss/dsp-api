@@ -195,7 +195,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // If it is a list value, check that it points to a real list node which is not a root node.
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
+                 for {
+                   checkListNodeExistsAndHasRootNode <-
+                     ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
+
+                   _ = if (!checkListNodeExistsAndHasRootNode) {
+                         throw NotFoundException(
+                           s"<${listValue.valueHasListNode}> does not exist, is not a ListNode or is a root node."
+                         )
+                       }
+                 } yield ()
+
                case _ => FastFuture.successful(())
              }
 
@@ -330,8 +340,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                             featureFactoryConfig = createValueRequest.featureFactoryConfig,
                                             requestingUser = createValueRequest.requestingUser
                                           )
-
-        // _ = println(111, createValueRequest.createValue.resourceIri, resourceInfo.resourceClassIri)
 
       } yield CreateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
@@ -1187,7 +1195,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // If it is a list value, check that it points to a real list node which is not a root node.
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
+                 for {
+                   checkListNodeExistsAndHasRootNode <-
+                     ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
+
+                   _ = if (!checkListNodeExistsAndHasRootNode) {
+                         throw NotFoundException(
+                           s"<${listValue.valueHasListNode}> does not exist, is not a ListNode or is a root node."
+                         )
+                       }
+                 } yield ()
+
                case _ => FastFuture.successful(())
              }
 

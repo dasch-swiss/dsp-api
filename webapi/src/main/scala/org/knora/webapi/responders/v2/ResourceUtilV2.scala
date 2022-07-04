@@ -10,7 +10,6 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import dsp.errors.ForbiddenException
-import dsp.errors.NotFoundException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
@@ -134,14 +133,14 @@ object ResourceUtilV2 {
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
 
   /**
-   * Checks whether a list node exists and has a root node, otherwise throws [[NotFoundException]].
+   * Checks whether a list node exists and has a root node.
    *
    * @param listNodeIri the IRI of the list node.
    */
   def checkListNodeExistsAndHasRootNode(listNodeIri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
-  ): Future[Unit] =
+  ): Future[Boolean] =
     for {
       askString <- Future(
                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -150,11 +149,7 @@ object ResourceUtilV2 {
                    )
 
       response <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-
-      _ = if (!response.result) {
-            throw NotFoundException(s"<$listNodeIri> does not exist, is not a ListNode or is a root node.")
-          }
-    } yield ()
+    } yield response.result
 
   /**
    * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether

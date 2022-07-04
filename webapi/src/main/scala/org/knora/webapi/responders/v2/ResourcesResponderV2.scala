@@ -1197,9 +1197,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     Future
       .sequence(
-        listNodesThatShouldExist
-          .map(listNodeIri => ResourceUtilV2.checkListNodeExistsAndHasRootNode(listNodeIri, appActor))
-          .toSeq
+        listNodesThatShouldExist.map { listNodeIri =>
+          for {
+            check <- ResourceUtilV2.checkListNodeExistsAndHasRootNode(listNodeIri, appActor)
+
+            _ = if (!check) {
+              throw NotFoundException(
+                s"<${listNodeIri}> does not exist, is not a ListNode or is a root node."
+              )
+            } else FastFuture.successful(())
+          } yield ()
+        }.toSeq
       )
       .map(_ => ())
   }
