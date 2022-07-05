@@ -858,8 +858,18 @@ object Authenticator extends InstrumentationSupport {
     } yield user
   }
 
+  /**
+   * Calculates the cookie name, where the external host and port are encoded as a base32 string
+   * to make the name of the cookie unique between environments.
+   *
+   * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
+   * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
+   *
+   * @param settings
+   */
   def calculateCookieName(settings: KnoraSettingsImpl): String = {
-    val base32 = new Base32()
+    //
+    val base32 = new Base32('9'.toByte)
     "KnoraAuthentication" + base32.encodeAsString(settings.externalKnoraApiHostPort.getBytes())
   }
 

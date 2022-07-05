@@ -50,7 +50,7 @@ object SipiTestContainer {
   }.tap(_ => ZIO.debug(">>> Acquire Sipi TestContainer <<<"))
 
   def release(container: GenericContainer[Nothing]): UIO[Unit] = ZIO.attemptBlocking {
-    container.stop()
+    //container.stop()
   }.orDie.tap(_ => ZIO.debug(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] = {
