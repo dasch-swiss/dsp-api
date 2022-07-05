@@ -57,6 +57,7 @@ object Dependencies {
   // logging
   val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.4" // Scala 3 compatible
+  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.4"
@@ -187,39 +188,49 @@ object Dependencies {
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
-  // user project dependencies
+  // user slice dependencies
   val userInterfaceLibraryDependencies = Seq(
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    slf4j      % Test
   )
   val userHandlerLibraryDependencies = Seq(
+    springSecurityCore,
+    bouncyCastle,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    slf4j      % Test
   )
   val userCoreLibraryDependencies = Seq(
+    springSecurityCore,
+    bouncyCastle,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    slf4j      % Test
   )
   val userRepoLibraryDependencies = Seq(
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test
+    zioTestSbt % Test,
+    slf4j      % Test
   )
-  val sharedLibraryDependencies =
-    Seq(
-      commonsLang3,
-      commonsValidator,
-      gwtServlet,
-      zioPrelude,
-      scalaLogging,
-      zioTest    % Test,
-      zioTestSbt % Test
-    )
+  val sharedLibraryDependencies = Seq(
+    springSecurityCore,
+    bouncyCastle,
+    commonsLang3,
+    commonsValidator,
+    gwtServlet,
+    zioPrelude,
+    scalaLogging,
+    zioTest    % Test,
+    zioTestSbt % Test,
+    slf4j      % Test
+  )
 }
