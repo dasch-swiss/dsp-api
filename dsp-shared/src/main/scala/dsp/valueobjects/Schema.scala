@@ -25,14 +25,7 @@ object Property {
             throw BadRequestException(SchemaErrorMessages.PropertyLabelInvalid)
           )
         )
-
         validatedValue.map(new PropertyLabel(_) {})
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[PropertyLabel]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
       }
   }
 
@@ -54,12 +47,6 @@ object Property {
           V2.StringLiteralV2(value = validatedDescription, language = description.language)
         })
         validatedDescription.map(new PropertyDescription(_) {})
-      }
-
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[PropertyDescription]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
       }
   }
 
