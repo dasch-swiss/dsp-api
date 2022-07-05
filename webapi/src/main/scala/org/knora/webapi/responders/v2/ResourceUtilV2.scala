@@ -143,6 +143,8 @@ object ResourceUtilV2 {
    * Checks whether a list node exists and if is a root node.
    *
    * @param nodeIri the IRI of the list node.
+   * @param appActor ActorRef
+   * @return Future of Either None for nonexistent, true for root and false for child node.
    */
   def checkListNodeExistsAndIsRootNode(nodeIri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,

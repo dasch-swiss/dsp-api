@@ -37,7 +37,7 @@ class ResourceUtilV2Spec extends CoreSpec() {
         checkNode.onComplete(_.get should be(Right(true)))
       }
 
-      "should return NONE for nonexisting list" in {
+      "should return NONE for nonexistent list" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/otherTreeList77"
         val checkNode = ResourceUtilV2.checkListNodeExistsAndIsRootNode(nodeIri, appActor)
 
