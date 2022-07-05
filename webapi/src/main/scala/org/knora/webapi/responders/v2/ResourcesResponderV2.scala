@@ -1162,13 +1162,27 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       .sequence(
         listNodesThatShouldExist.map { listNodeIri =>
           for {
-            check <- ResourceUtilV2.checkListNodeExistsAndHasRootNode(listNodeIri, appActor)
+            checkNode <- ResourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri, appActor)
 
-            _ = if (!check) {
-                  throw NotFoundException(
-                    s"<${listNodeIri}> does not exist, is not a ListNode or is a root node."
-                  )
-                } else FastFuture.successful(())
+            _ = checkNode match {
+                  // it doesn't have isRootNode property - it's a child node
+                  case Right(false) =>
+                    FastFuture.successful(())
+                  // it does have isRootNode property - it's a root node
+                  case Right(true) =>
+                    FastFuture.failed(
+                      throw BadRequestException(
+                        s"<${listNodeIri}> is a root node. Root nodes cannot be set as values."
+                      )
+                    )
+                  // it deosn't exists or isn't valid list
+                  case Left(_) =>
+                    FastFuture.failed(
+                      throw NotFoundException(
+                        s"<${listNodeIri}> does not exist, or is not a ListNode."
+                      )
+                    )
+                }
           } yield ()
         }.toSeq
       )

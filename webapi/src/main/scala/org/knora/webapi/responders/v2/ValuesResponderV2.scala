@@ -193,13 +193,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
                  for {
-                   checkListNodeExistsAndHasRootNode <-
-                     ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
+                   checkNode <-
+                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
 
-                   _ = if (!checkListNodeExistsAndHasRootNode) {
-                         throw NotFoundException(
-                           s"<${listValue.valueHasListNode}> does not exist, is not a ListNode or is a root node."
-                         )
+                   _ = checkNode match {
+                         // it doesn't have isRootNode property - it's a child node
+                         case Right(false) => ()
+                         // it does have isRootNode property - it's a root node
+                         case Right(true) =>
+                           throw BadRequestException(
+                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                           )
+                         // it deosn't exists or isn't valid list
+                         case Left(_) =>
+                           throw NotFoundException(
+                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                           )
                        }
                  } yield ()
 
@@ -1184,13 +1193,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
                  for {
-                   checkListNodeExistsAndHasRootNode <-
-                     ResourceUtilV2.checkListNodeExistsAndHasRootNode(listValue.valueHasListNode, appActor)
+                   checkNode <-
+                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
 
-                   _ = if (!checkListNodeExistsAndHasRootNode) {
-                         throw NotFoundException(
-                           s"<${listValue.valueHasListNode}> does not exist, is not a ListNode or is a root node."
-                         )
+                   _ = checkNode match {
+                         // it doesn't have isRootNode property - it's a child node
+                         case Right(false) => ()
+                         // it does have isRootNode property - it's a root node
+                         case Right(true) =>
+                           throw BadRequestException(
+                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                           )
+                         // it deosn't exists or isn't valid list
+                         case Left(_) =>
+                           throw NotFoundException(
+                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                           )
                        }
                  } yield ()
 
