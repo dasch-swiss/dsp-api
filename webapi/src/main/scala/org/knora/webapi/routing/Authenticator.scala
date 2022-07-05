@@ -50,6 +50,7 @@ import scala.util.Success
 import scala.util.Try
 import scala.annotation.tailrec
 import org.knora.webapi.settings.KnoraSettingsImpl
+import org.apache.commons.codec.binary.Base32
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -857,8 +858,10 @@ object Authenticator extends InstrumentationSupport {
     } yield user
   }
 
-  def calculateCookieName(settings: KnoraSettingsImpl): String =
-    "KnoraAuthentication" + Adler32Checksum.calc(settings.externalKnoraApiHostPort)
+  def calculateCookieName(settings: KnoraSettingsImpl): String = {
+    val base32 = new Base32()
+    "KnoraAuthentication" + base32.encodeAsString(settings.externalKnoraApiHostPort.getBytes())
+  }
 
 }
 
@@ -1016,29 +1019,5 @@ object JWTHelper {
         log.debug("Invalid JWT")
         None
     }
-  }
-}
-
-/**
- * Calculating the Adler-32 checksum.
- * @see http://en.wikipedia.org/wiki/Adler-32
- */
-object Adler32Checksum {
-  def calc(s: String): Int = {
-
-    val ModAdler = 65521
-
-    @tailrec
-    def loop(s: List[Char], a: Int, b: Int): Int =
-      s match {
-        case Nil => b * 65536 + a
-        case head :: cons => {
-          val _a = (head + a) % ModAdler
-          val _b = (b + _a)   % ModAdler
-          loop(cons, _a, _b)
-        }
-      }
-
-    loop(s.toList, 1, 0)
   }
 }

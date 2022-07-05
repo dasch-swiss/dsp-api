@@ -21,7 +21,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import org.knora.webapi.routing.Adler32Checksum
 import org.knora.webapi.routing.Authenticator
 
 object AuthenticationV1E2ESpec {
