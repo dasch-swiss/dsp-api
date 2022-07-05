@@ -7,6 +7,8 @@ package dsp.user.api
 
 import dsp.errors._
 import dsp.user.domain._
+import dsp.valueobjects.Id.UserId
+import dsp.valueobjects.User._
 import zio._
 import zio.macros.accessible
 
@@ -45,20 +47,36 @@ trait UserRepo {
   def getUserById(id: UserId): IO[Option[Nothing], User]
 
   /**
-   * Retrieves the user from the repository by username or email.
+   * Retrieves the user from the repository by username.
    *
-   * @param usernameOrEmail username or email of the user.
+   * @param username username of the user.
    * @return an optional [[User]].
    */
-  def getUserByUsernameOrEmail(usernameOrEmail: String): IO[Option[Nothing], User]
+  def getUserByUsername(username: Username): IO[Option[Nothing], User]
 
   /**
-   * Checks if a username or email exists in the repo.
+   * Retrieves the user from the repository by email.
    *
-   * @param usernameOrEmail username or email of the user.
+   * @param email email of the user.
+   * @return an optional [[User]].
+   */
+  def getUserByEmail(email: Email): IO[Option[Nothing], User]
+
+  /**
+   * Checks if a username exists in the repo.
+   *
+   * @param username username of the user.
    * @return Unit in case of success
    */
-  def checkUsernameOrEmailExists(usernameOrEmail: String): IO[Option[Nothing], Unit]
+  def checkIfUsernameExists(username: Username): IO[Option[Nothing], Unit]
+
+  /**
+   * Checks if an email exists in the repo.
+   *
+   * @param email email of the user.
+   * @return Unit in case of success
+   */
+  def checkIfEmailExists(email: Email): IO[Option[Nothing], Unit]
 
   /**
    * Deletes a [[User]] from the repository by its [[UserId]].

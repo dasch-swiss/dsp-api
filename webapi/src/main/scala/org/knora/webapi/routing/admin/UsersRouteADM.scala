@@ -117,7 +117,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        val id: Validation[Throwable, Option[UserIri]]        = UserIri.make(apiRequest.id)
+        val iri: Validation[Throwable, Option[UserIri]] = apiRequest.id match {
+          case Some(iri) => UserIri.make(iri).map(Some(_))
+          case None      => Validation.succeed(None)
+        }
         val username: Validation[Throwable, Username]         = Username.make(apiRequest.username)
         val email: Validation[Throwable, Email]               = Email.make(apiRequest.email)
         val givenName: Validation[Throwable, GivenName]       = GivenName.make(apiRequest.givenName)
@@ -127,9 +130,10 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val languageCode: Validation[Throwable, LanguageCode] = LanguageCode.make(apiRequest.lang)
         val systemAdmin: Validation[Throwable, SystemAdmin]   = SystemAdmin.make(apiRequest.systemAdmin)
 
+        // TODO try this out with ZIO.collectAllPar (https://zio.github.io/zio-prelude/docs/functionaldatatypes/validation#accumulating-errors)
         val validatedUserCreatePayload: Validation[Throwable, UserCreatePayloadADM] =
           Validation.validateWith(
-            id,
+            iri,
             username,
             email,
             givenName,
@@ -258,13 +262,30 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
-          val maybeUsername: Option[Username]   = Username.make(apiRequest.username).fold(e => throw e.head, v => v)
-          val maybeEmail: Option[Email]         = Email.make(apiRequest.email).fold(e => throw e.head, v => v)
-          val maybeGivenName: Option[GivenName] = GivenName.make(apiRequest.givenName).fold(e => throw e.head, v => v)
-          val maybeFamilyName: Option[FamilyName] =
-            FamilyName.make(apiRequest.familyName).fold(e => throw e.head, v => v)
-          val maybeLanguageCode: Option[LanguageCode] =
-            LanguageCode.make(apiRequest.lang).fold(e => throw e.head, v => v)
+          val maybeUsername: Option[Username] = apiRequest.username match {
+            case Some(username) => Username.make(username).fold(e => throw e.head, v => Some(v))
+            case None           => None
+          }
+
+          val maybeEmail: Option[Email] = apiRequest.email match {
+            case Some(email) => Email.make(email).fold(e => throw e.head, v => Some(v))
+            case None        => None
+          }
+
+          val maybeGivenName: Option[GivenName] = apiRequest.givenName match {
+            case Some(givenName) => GivenName.make(givenName).fold(e => throw e.head, v => Some(v))
+            case None            => None
+          }
+
+          val maybeFamilyName: Option[FamilyName] = apiRequest.familyName match {
+            case Some(familyName) => FamilyName.make(familyName).fold(e => throw e.head, v => Some(v))
+            case None             => None
+          }
+
+          val maybeLanguageCode: Option[LanguageCode] = apiRequest.lang match {
+            case Some(lang) => LanguageCode.make(lang).fold(e => throw e.head, v => Some(v))
+            case None       => None
+          }
 
           val userUpdatePayload: UserUpdateBasicInformationPayloadADM =
             UserUpdateBasicInformationPayloadADM(

@@ -5,9 +5,14 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
-import scala.util.matching.Regex
 import dsp.errors.BadRequestException
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+import zio._
+import zio.prelude.Validation
+
+import scala.util.matching.Regex
+import java.security.SecureRandom
 
 object User {
 
@@ -40,11 +45,24 @@ object User {
         }
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Username]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
+    /**
+     * Makes a Username value object even if the input is not valid. Instead of returning an Error, it
+     *     just logs the Error message and returns the Username. This is needed when the input value
+     *     was created at a time where the validation was different and couldn't be updated. Only use
+     *     this method in the repo layer or in tests!
+     *
+     * @param value The value the value object is created from
+     */
+    def unsafeMake(value: String): Validation[Throwable, Username] =
+      Username
+        .make(value)
+        .fold(
+          e => {
+            ZIO.logError(e.head.getMessage())
+            Validation.succeed(new Username(value) {})
+          },
+          v => Validation.succeed(v)
+        )
   }
 
   /**
@@ -63,12 +81,6 @@ object User {
           case None        => Validation.fail(BadRequestException(UserErrorMessages.EmailInvalid))
         }
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[Email]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
@@ -82,12 +94,6 @@ object User {
       } else {
         Validation.succeed(new GivenName(value) {})
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[GivenName]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
@@ -100,12 +106,6 @@ object User {
         Validation.fail(BadRequestException(UserErrorMessages.FamilyNameMissing))
       } else {
         Validation.succeed(new FamilyName(value) {})
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[FamilyName]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
       }
   }
 
@@ -125,11 +125,67 @@ object User {
           case None        => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
         }
       }
+  }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Password]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+  /**
+   * PasswordHash value object. Takes a string as input and hashes it.
+   */
+  sealed abstract case class PasswordHash private (value: String, passwordStrength: PasswordStrength) { self =>
+
+    /**
+     * Check password (in clear text). The password supplied in clear text is compared against the
+     * stored hash.
+     *
+     * @param passwordString Password (clear text) to be checked
+     * @return true if password matches, false otherwise
+     */
+    def matches(passwordString: String): Boolean =
+      // check which type of hash we have
+      if (self.value.startsWith("$e0801$")) {
+        // SCrypt
+        val encoder = new SCryptPasswordEncoder()
+        encoder.matches(passwordString, self.value)
+      } else if (self.value.startsWith("$2a$")) {
+        // BCrypt
+        val encoder = new BCryptPasswordEncoder()
+        encoder.matches(passwordString, self.value)
+      } else {
+        ZIO.logError(UserErrorMessages.PasswordHashUnknown)
+        false
+      }
+
+  }
+  object PasswordHash {
+    private val PasswordRegex: Regex = """^[\s\S]*$""".r
+
+    def make(value: String, passwordStrength: PasswordStrength): Validation[Throwable, PasswordHash] =
+      if (value.isEmpty) {
+        Validation.fail(BadRequestException(UserErrorMessages.PasswordMissing))
+      } else {
+        PasswordRegex.findFirstIn(value) match {
+          case Some(value) =>
+            val encoder =
+              new BCryptPasswordEncoder(
+                passwordStrength.value,
+                new SecureRandom()
+              )
+            val hashedValue = encoder.encode(value)
+            Validation.succeed(new PasswordHash(hashedValue, passwordStrength) {})
+          case None => Validation.fail(BadRequestException(UserErrorMessages.PasswordInvalid))
+        }
+      }
+  }
+
+  /**
+   * PasswordStrength value object.
+   */
+  sealed abstract case class PasswordStrength private (value: Int)
+  object PasswordStrength { self =>
+    def make(value: Int): Validation[Throwable, PasswordStrength] =
+      if (value < 4 || value > 31) {
+        Validation.fail(BadRequestException(UserErrorMessages.PasswordStrengthInvalid))
+      } else {
+        Validation.succeed(new PasswordStrength(value) {})
       }
   }
 
@@ -155,12 +211,6 @@ object User {
       } else {
         Validation.succeed(new LanguageCode(value) {})
       }
-
-    def make(value: Option[String]): Validation[Throwable, Option[LanguageCode]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
   }
 
   /**
@@ -174,16 +224,18 @@ object User {
 }
 
 object UserErrorMessages {
-  val UsernameMissing     = "Username cannot be empty."
-  val UsernameInvalid     = "Username is invalid."
-  val EmailMissing        = "Email cannot be empty."
-  val EmailInvalid        = "Email is invalid."
-  val PasswordMissing     = "Password cannot be empty."
-  val PasswordInvalid     = "Password is invalid."
-  val GivenNameMissing    = "GivenName cannot be empty."
-  val GivenNameInvalid    = "GivenName is invalid."
-  val FamilyNameMissing   = "FamilyName cannot be empty."
-  val FamilyNameInvalid   = "FamilyName is invalid."
-  val LanguageCodeMissing = "LanguageCode cannot be empty."
-  val LanguageCodeInvalid = "LanguageCode is invalid."
+  val UsernameMissing         = "Username cannot be empty."
+  val UsernameInvalid         = "Username is invalid."
+  val EmailMissing            = "Email cannot be empty."
+  val EmailInvalid            = "Email is invalid."
+  val PasswordMissing         = "Password cannot be empty."
+  val PasswordInvalid         = "Password is invalid."
+  val PasswordStrengthInvalid = "PasswordStrength is invalid."
+  val PasswordHashUnknown     = "The provided PasswordHash has an unknown format."
+  val GivenNameMissing        = "GivenName cannot be empty."
+  val GivenNameInvalid        = "GivenName is invalid."
+  val FamilyNameMissing       = "FamilyName cannot be empty."
+  val FamilyNameInvalid       = "FamilyName is invalid."
+  val LanguageCodeMissing     = "LanguageCode cannot be empty."
+  val LanguageCodeInvalid     = "LanguageCode is invalid."
 }
