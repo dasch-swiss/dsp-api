@@ -6,15 +6,16 @@
 package org.knora.webapi.messages.v2.responder.valuemessages
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
+import com.typesafe.scalalogging.Logger
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
 import dsp.errors.SipiException
+import dsp.valueobjects.IriErrorMessages
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -41,7 +42,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import dsp.valueobjects.IriErrorMessages
 
 /**
  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].

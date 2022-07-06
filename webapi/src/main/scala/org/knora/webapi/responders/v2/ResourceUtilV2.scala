@@ -9,17 +9,23 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.IRI
+import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
-import dsp.errors.NotFoundException
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
@@ -29,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
+
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Failure
@@ -133,27 +140,49 @@ object ResourceUtilV2 {
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
 
   /**
-   * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
+   * Checks whether a list node exists and if is a root node.
    *
-   * @param listNodeIri the IRI of the list node.
+   * @param nodeIri the IRI of the list node.
+   * @param appActor ActorRef
+   * @return Future of Either None for nonexistent, true for root and false for child node.
    */
-  def checkListNodeExists(listNodeIri: IRI, appActor: ActorRef)(implicit
+  def checkListNodeExistsAndIsRootNode(nodeIri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
-  ): Future[Unit] =
+  ): Future[Either[Option[Nothing], Boolean]] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     for {
-      askString <- Future(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkListNodeExistsByIri(listNodeIri = listNodeIri)
-                       .toString
-                   )
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getListNode(nodeIri = nodeIri)
+            .toString()
+        )
 
-      checkListNodeExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      listNodeResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
 
-      _ = if (!checkListNodeExistsResponse.result) {
-            throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
-          }
-    } yield ()
+      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
+
+      maybeList =
+        if (statements.nonEmpty) {
+          val propToCheck: SmartIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsRootNode)
+          val isRootNode: Boolean   = statements.map(_._2.contains(propToCheck)).head
+
+          Right(isRootNode)
+        } else {
+          Left(None)
+        }
+
+    } yield maybeList
+  }
 
   /**
    * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether

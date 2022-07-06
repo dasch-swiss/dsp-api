@@ -7,9 +7,8 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
 import dsp.errors._
-
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -190,11 +189,29 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                requestingUser = createValueRequest.requestingUser
              )
 
-        // If this is a list value, check that it points to a real list node.
-
+        // If it is a list value, check that it points to a real list node which is not a root node.
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
+                 for {
+                   checkNode <-
+                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
+
+                   _ = checkNode match {
+                         // it doesn't have isRootNode property - it's a child node
+                         case Right(false) => ()
+                         // it does have isRootNode property - it's a root node
+                         case Right(true) =>
+                           throw BadRequestException(
+                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                           )
+                         // it deosn't exists or isn't valid list
+                         case Left(_) =>
+                           throw NotFoundException(
+                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                           )
+                       }
+                 } yield ()
+
                case _ => FastFuture.successful(())
              }
 
@@ -325,6 +342,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                             unverifiedValue = unverifiedValue,
                                             requestingUser = createValueRequest.requestingUser
                                           )
+
       } yield CreateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
         valueType = verifiedValue.value.valueType,
@@ -1171,11 +1189,29 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                requestingUser = updateValueRequest.requestingUser
              )
 
-        // If this is a list value, check that it points to a real list node.
-
+        // If it is a list value, check that it points to a real list node which is not a root node.
         _ <- submittedInternalValueContent match {
                case listValue: HierarchicalListValueContentV2 =>
-                 ResourceUtilV2.checkListNodeExists(listValue.valueHasListNode, appActor)
+                 for {
+                   checkNode <-
+                     ResourceUtilV2.checkListNodeExistsAndIsRootNode(listValue.valueHasListNode, appActor)
+
+                   _ = checkNode match {
+                         // it doesn't have isRootNode property - it's a child node
+                         case Right(false) => ()
+                         // it does have isRootNode property - it's a root node
+                         case Right(true) =>
+                           throw BadRequestException(
+                             s"<${listValue.valueHasListNode}> is a root node. Root nodes cannot be set as values."
+                           )
+                         // it deosn't exists or isn't valid list
+                         case Left(_) =>
+                           throw NotFoundException(
+                             s"<${listValue.valueHasListNode}> does not exist or is not a ListNode."
+                           )
+                       }
+                 } yield ()
+
                case _ => FastFuture.successful(())
              }
 
