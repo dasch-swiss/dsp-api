@@ -106,8 +106,6 @@ class AuthenticationV1E2ESpec
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      //println(response.toString)
-
       val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
       sid = sr.sid
 
@@ -136,8 +134,6 @@ class AuthenticationV1E2ESpec
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
 
-      //println(response.toString)
-
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
       assert(body contains "\"password\":null")
       assert(body contains "\"token\":null")
@@ -147,16 +143,13 @@ class AuthenticationV1E2ESpec
       // authenticate by calling '/v1/session' without parameters but by providing session id in cookie from earlier login
       val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
-
     }
 
     "succeed 'logout' with provided session cookie" in {
       // do logout with stored session id
       val request  = Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
       assert(
         response.headers.contains(
@@ -178,7 +171,6 @@ class AuthenticationV1E2ESpec
     "fail authentication with provided session cookie after logout" in {
       val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -186,7 +178,6 @@ class AuthenticationV1E2ESpec
       /* Correct username and wrong password */
       val request  = Get(baseApiUrl + s"/v1/session?login&email=$rootEmailEnc&password=$wrongPass")
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -194,14 +185,12 @@ class AuthenticationV1E2ESpec
       /* wrong username */
       val request  = Get(baseApiUrl + s"/v1/session?login&email=$wrongEmailEnc&password=$testPass")
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong session id in cookie" in {
       val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
   }
@@ -212,7 +201,6 @@ class AuthenticationV1E2ESpec
       /* Correct username and correct password */
       val request  = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
 
       val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
@@ -243,8 +231,6 @@ class AuthenticationV1E2ESpec
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
 
-      //println(response.toString)
-
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
       assert(body contains "\"password\":null")
       assert(body contains "\"token\":null")
@@ -254,7 +240,6 @@ class AuthenticationV1E2ESpec
       /* Correct username and wrong password */
       val request  = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -262,7 +247,6 @@ class AuthenticationV1E2ESpec
       /* wrong username */
       val request  = Get(baseApiUrl + "/v1/session?login") ~> addCredentials(BasicHttpCredentials(wrongEmail, testPass))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
   }
@@ -272,7 +256,6 @@ class AuthenticationV1E2ESpec
       /* Correct email / correct password */
       val request  = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass")
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
@@ -281,7 +264,6 @@ class AuthenticationV1E2ESpec
       val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$wrongPass")
 
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -290,7 +272,6 @@ class AuthenticationV1E2ESpec
       val request =
         Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
     }
 
@@ -299,15 +280,13 @@ class AuthenticationV1E2ESpec
       val request =
         Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "not return sensitive information (token, password) in the response " in {
       val request  = Get(baseApiUrl + s"/v1/users/$rootIriEnc?email=$rootEmailEnc&password=$testPass")
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
-      // assert(status === StatusCodes.OK)
+      assert(response.status === StatusCodes.OK)
 
       /* check for sensitive information leakage */
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)

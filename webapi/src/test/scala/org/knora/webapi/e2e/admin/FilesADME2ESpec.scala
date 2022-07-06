@@ -25,7 +25,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import org.knora.webapi.routing.Authenticator
 
-object SipiADME2ESpec {
+object FilesADME2ESpec {
   val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -37,7 +37,7 @@ object SipiADME2ESpec {
  *
  * This spec tests the 'admin/files'.
  */
-class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 

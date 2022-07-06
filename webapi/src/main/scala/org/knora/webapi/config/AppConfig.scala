@@ -19,7 +19,6 @@ final case class AppConfig(
   defaultTimeout: String,
   dumpMessages: Boolean,
   showInternalErrors: Boolean,
-  skipAuthentication: Boolean,
   bcryptPasswordStrength: Int,
   jwtSecretKey: String,
   jwtLongevity: String,
