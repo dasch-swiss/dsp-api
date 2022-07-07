@@ -175,5 +175,11 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       }
 
     }
+
+    "called, the 'calculateCookieName' method" should {
+      "succeed with generating the name" in {
+        Authenticator.calculateCookieName(settings) should equal("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999")
+      }
+    }
   }
 }

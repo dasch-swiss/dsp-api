@@ -223,8 +223,6 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   //used in the store package
   val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
-  val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
-
   val jwtSecretKey: String         = config.getString("app.jwt-secret-key")
   val jwtLongevity: FiniteDuration = getFiniteDuration("app.jwt-longevity", config)
 
