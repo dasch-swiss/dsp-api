@@ -53,7 +53,7 @@ class AuthenticationV1E2ESpec
   private val testPass      = java.net.URLEncoder.encode("test", "utf-8")
   private val wrongPass     = java.net.URLEncoder.encode("wrong", "utf-8")
 
-  val KNORA_AUTHENTICATION_COOKIE_NAME = Authenticator.calculateCookieName(settings)
+  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
 
   "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters" should {
 
@@ -113,7 +113,7 @@ class AuthenticationV1E2ESpec
         response.headers.contains(
           `Set-Cookie`(
             HttpCookie(
-              KNORA_AUTHENTICATION_COOKIE_NAME,
+              KnoraAuthenticationCookieName,
               value = sid,
               domain = Some(settings.cookieDomain),
               path = Some("/"),
@@ -130,7 +130,7 @@ class AuthenticationV1E2ESpec
     }
 
     "not return sensitive information (token, password) in the response when checking session" in {
-      val request  = Get(baseApiUrl + s"/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid)
+      val request  = Get(baseApiUrl + s"/v1/session") ~> Cookie(KnoraAuthenticationCookieName, value = sid)
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
 
@@ -141,21 +141,21 @@ class AuthenticationV1E2ESpec
 
     "succeed authentication with correct session id in cookie" in {
       // authenticate by calling '/v1/session' without parameters but by providing session id in cookie from earlier login
-      val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+      val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KnoraAuthenticationCookieName, sid)
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
     }
 
     "succeed 'logout' with provided session cookie" in {
       // do logout with stored session id
-      val request  = Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+      val request  = Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KnoraAuthenticationCookieName, sid)
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
       assert(
         response.headers.contains(
           `Set-Cookie`(
             HttpCookie(
-              KNORA_AUTHENTICATION_COOKIE_NAME,
+              KnoraAuthenticationCookieName,
               "",
               domain = Some(settings.cookieDomain),
               path = Some("/"),
@@ -169,7 +169,7 @@ class AuthenticationV1E2ESpec
     }
 
     "fail authentication with provided session cookie after logout" in {
-      val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+      val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KnoraAuthenticationCookieName, sid)
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.Unauthorized)
     }
@@ -189,7 +189,7 @@ class AuthenticationV1E2ESpec
     }
 
     "fail authentication with wrong session id in cookie" in {
-      val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, "123456")
+      val request  = Get(baseApiUrl + "/v1/session") ~> Cookie(KnoraAuthenticationCookieName, "123456")
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.Unauthorized)
     }
@@ -210,7 +210,7 @@ class AuthenticationV1E2ESpec
         response.headers.contains(
           `Set-Cookie`(
             HttpCookie(
-              KNORA_AUTHENTICATION_COOKIE_NAME,
+              KnoraAuthenticationCookieName,
               value = sid,
               domain = Some(settings.cookieDomain),
               path = Some("/"),
@@ -227,7 +227,7 @@ class AuthenticationV1E2ESpec
     }
 
     "not return sensitive information (token, password) in the response when checking session" in {
-      val request  = Get(baseApiUrl + s"/v1/session") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sid)
+      val request  = Get(baseApiUrl + s"/v1/session") ~> Cookie(KnoraAuthenticationCookieName, sid)
       val response = singleAwaitingRequest(request)
       assert(response.status === StatusCodes.OK)
 

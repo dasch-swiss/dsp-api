@@ -563,10 +563,7 @@ object Authenticator extends InstrumentationSupport {
    */
   private def extractCredentialsFromParametersV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
     // extract email/password from parameters
-
     val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-
-    // log.debug("extractCredentialsFromParametersV2 - params: {}", params)
 
     // check for iri, email, or username parameters
     val maybeIriIdentifier: Option[String]      = params.get("iri").map(_.head)
@@ -574,10 +571,8 @@ object Authenticator extends InstrumentationSupport {
     val maybeUsernameIdentifier: Option[String] = params.get("username").map(_.head)
     val maybeIdentifier: Option[String] =
       List(maybeIriIdentifier, maybeEmailIdentifier, maybeUsernameIdentifier).flatten.headOption
-    // log.debug("extractCredentialsFromParametersV2 - maybeIdentifier: {}", maybeIdentifier)
 
     val maybePassword: Option[String] = params.get("password").map(_.head)
-    // log.debug("extractCredentialsFromParametersV2 - maybePassword: {}", maybePassword)
 
     val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
       Some(
@@ -602,9 +597,6 @@ object Authenticator extends InstrumentationSupport {
       None
     }
 
-    // log.debug("extractCredentialsFromParametersV2 - maybePassCreds: {}", maybePassCreds)
-    // log.debug("extractCredentialsFromParametersV2 - maybeTokenCreds: {}", maybeTokenCreds)
-
     // prefer password credentials
     if (maybePassCreds.nonEmpty) {
       maybePassCreds
@@ -626,6 +618,7 @@ object Authenticator extends InstrumentationSupport {
    *    3. session token
    *
    * @param requestContext the HTTP request context.
+   * @param settings the application settings.
    * @return an optional [[KnoraCredentialsV2]].
    */
   private def extractCredentialsFromHeaderV2(
@@ -722,11 +715,10 @@ object Authenticator extends InstrumentationSupport {
     val settings = KnoraSettings(system)
 
     for {
-      authenticated <- authenticateCredentialsV2(credentials = credentials)
+      _ <- authenticateCredentialsV2(credentials)
 
       user <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) =>
-                  // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
                   getUserByIdentifier(
                     identifier = passCreds.identifier
                   )
@@ -743,7 +735,6 @@ object Authenticator extends InstrumentationSupport {
                         "No IRI found inside token. Please report this as a possible bug."
                       )
                   }
-                  // log.debug("getUserADMThroughCredentialsV2 - used token")
                   getUserByIdentifier(
                     identifier = UserIdentifierADM(maybeIri = Some(userIri))
                   )
@@ -760,12 +751,10 @@ object Authenticator extends InstrumentationSupport {
                         "No IRI found inside token. Please report this as a possible bug."
                       )
                   }
-                  // log.debug("getUserADMThroughCredentialsV2 - used session token")
                   getUserByIdentifier(
                     identifier = UserIdentifierADM(maybeIri = Some(userIri))
                   )
                 case None =>
-                  // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
                   throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
               }
 
@@ -811,7 +800,6 @@ object Authenticator extends InstrumentationSupport {
                  log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
                  throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
              }
-      // _ = log.debug(s"getUserByIdentifier - user: $user")
     } yield user
   }
 
@@ -822,7 +810,7 @@ object Authenticator extends InstrumentationSupport {
    * The default padding needs to be changed from '=' to '9' because '=' is not allowed inside the cookie!!!
    * This also needs to be changed in all the places that base32 is used to calculate the cookie name, e.g., sipi.
    *
-   * @param settings
+   * @param settings the application settings.
    */
   def calculateCookieName(settings: KnoraSettingsImpl): String = {
     //

@@ -47,7 +47,7 @@ class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonPr
   private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
   private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
 
-  val KNORA_AUTHENTICATION_COOKIE_NAME = Authenticator.calculateCookieName(settings)
+  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -64,7 +64,7 @@ class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonPr
   }
 
   def sessionLogout(sessionId: String): Unit =
-    Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+    Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KnoraAuthenticationCookieName, sessionId)
 
   "The Files Route ('admin/files') using token credentials" should {
 
@@ -134,7 +134,7 @@ class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonPr
 
       /* anything image */
       val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KNORA_AUTHENTICATION_COOKIE_NAME,
+        KnoraAuthenticationCookieName,
         sessionId
       )
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -158,7 +158,7 @@ class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonPr
 
       /* anything image */
       val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KNORA_AUTHENTICATION_COOKIE_NAME,
+        KnoraAuthenticationCookieName,
         sessionId
       )
       val response: HttpResponse = singleAwaitingRequest(request)
