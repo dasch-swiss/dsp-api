@@ -38,7 +38,8 @@ services:
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST=0.0.0.0
       - KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT=3333
     # entrypoint: [ "valgrind", "--leak-check=yes", "/sipi/sipi" ] ## uncomment to run SIPI under valgrind
-    command: --config=/sipi/config/sipi.docker-config.lua
+    command: --config=/sipi/config/sipi.docker-test-config.lua ## command variant to start the sipi container with test routes enabled
+    # command: --config=/sipi/config/sipi.docker-config.lua
 
   api:
     image: daschswiss/knora-api:latest

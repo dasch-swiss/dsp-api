@@ -1,7 +1,7 @@
 -- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
-basexx = require( "basexx" )
+require "basexx"
 
 -------------------------------------------------------------------------------
 -- This function is called from the route to get the Knora session id from the cookie.
@@ -36,8 +36,7 @@ function get_session_id(cookie)
     host_port = webapi_hostname .. ':' .. webapi_port
     server.log("host_port: " .. host_port, server.loglevel.LOG_DEBUG)
 
-    local customPadMap = { "", "999999", "9999", "999", "9" }
-    host_port_base32 = basexx.to_basexx(host_port, base32Alphabet, 5, customPadMap)
+    host_port_base32 = basexx.to_base32Custom(host_port)
     server.log("host_port_base32: " .. host_port_base32, server.loglevel.LOG_DEBUG)
 
 

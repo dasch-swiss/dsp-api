@@ -21,6 +21,7 @@ import org.knora.webapi.util.MutableTestString
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.knora.webapi.routing.Authenticator
 
 object AuthenticationV2E2ESpec {
   val config: Config = ConfigFactory.parseString("""
@@ -210,6 +211,12 @@ class AuthenticationV2E2ESpec
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
+    }
+
+    "authenticate with token in cookie" in {
+      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+      val request =
+        Get(baseApiUrl + "/v2/authentication") ~> addHeader(HttpHeader.parse(KnoraAuthenticationCookieName, token.get))
     }
 
     "logout when providing token in header" in {

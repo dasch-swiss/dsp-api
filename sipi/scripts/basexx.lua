@@ -161,6 +161,22 @@ function basexx.to_base32( str )
 end
 
 --------------------------------------------------------------------------------
+-- dsp-api custom variant
+--------------------------------------------------------------------------------
+
+local base32CustomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+local base32CustomPadMap = { "", "999999", "9999", "999", "9" }
+
+function basexx.from_base32Custom( str, ignore )
+   str = ignore_set( str, ignore )
+   return from_basexx( string.upper( str ), base32CustomAlphabet, 5 )
+end
+
+function basexx.to_base32Custom( str )
+   return to_basexx( str, base32CustomAlphabet, 5, base32CustomPadMap[ #str % 5 + 1 ] )
+end
+
+--------------------------------------------------------------------------------
 -- crockford: http://www.crockford.com/wrmg/base32.html
 --------------------------------------------------------------------------------
 
