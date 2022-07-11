@@ -10,12 +10,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.annotation.ServerUnique
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DataConversionException
-import org.knora.webapi.exceptions.OntologyConstraintException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.BadRequestException
+import dsp.errors.DataConversionException
+import dsp.errors.OntologyConstraintException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -28,6 +27,7 @@ import spray.json.RootJsonFormat
 
 import java.nio.file.Path
 import java.util.UUID
+import dsp.valueobjects.V2
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -50,7 +50,7 @@ case class CreateProjectApiRequestADM(
   shortname: String,
   shortcode: String,
   longname: Option[String],
-  description: Seq[StringLiteralV2],
+  description: Seq[V2.StringLiteralV2],
   keywords: Seq[String],
   logo: Option[String],
   status: Boolean,
@@ -164,33 +164,27 @@ sealed trait ProjectsResponderRequestADM extends KnoraRequestADM
  * Get all information about all projects in form of [[ProjectsGetResponseADM]]. The ProjectsGetRequestV1 returns either
  * something or a NotFound exception if there are no projects found. Administration permission checking is performed.
  *
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class ProjectsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
-    extends ProjectsResponderRequestADM
+case class ProjectsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
  * Get all information about all projects in form of a sequence of [[ProjectADM]]. Returns an empty sequence if
  * no projects are found. Administration permission checking is skipped.
  *
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class ProjectsGetADM(featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
-    extends ProjectsResponderRequestADM
+case class ProjectsGetADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
  * Get info about a single project identified either through its IRI, shortname or shortcode. The response is in form
  * of [[ProjectGetResponseADM]]. External use.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectGetRequestADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -199,12 +193,10 @@ case class ProjectGetRequestADM(
  * of [[ProjectADM]]. Internal use only.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectGetADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -212,12 +204,10 @@ case class ProjectGetADM(
  * Returns all users belonging to a project identified either through its IRI, shortname or shortcode.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectMembersGetRequestADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -225,34 +215,28 @@ case class ProjectMembersGetRequestADM(
  * Returns all admin users of a project identified either through its IRI, shortname or shortcode.
  *
  * @param identifier           the IRI, email, or username of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectAdminMembersGetRequestADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
 /**
  * Returns all unique keywords for all projects.
  *
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
-case class ProjectsKeywordsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
-    extends ProjectsResponderRequestADM
+case class ProjectsKeywordsGetRequestADM(requestingUser: UserADM) extends ProjectsResponderRequestADM
 
 /**
  * Returns all keywords for a project identified through IRI.
  *
  * @param projectIri           the IRI of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectKeywordsGetRequestADM(
   projectIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -260,13 +244,11 @@ case class ProjectKeywordsGetRequestADM(
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsADM]]
  *
  * @param identifier           the identifier of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -274,13 +256,11 @@ case class ProjectRestrictedViewSettingsGetADM(
  * Return project's RestrictedView settings. A successful response will be a [[ProjectRestrictedViewSettingsGetResponseADM]].
  *
  * @param identifier           the identifier of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 @ApiMayChange
 case class ProjectRestrictedViewSettingsGetRequestADM(
   identifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -288,12 +268,10 @@ case class ProjectRestrictedViewSettingsGetRequestADM(
  * Requests all the data in the project. A successful response will be a [[ProjectDataGetResponseADM]].
  *
  * @param projectIdentifier    the identifier of the project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  */
 case class ProjectDataGetRequestADM(
   projectIdentifier: ProjectIdentifierADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends ProjectsResponderRequestADM
 
@@ -301,13 +279,11 @@ case class ProjectDataGetRequestADM(
  * Requests the creation of a new project.
  *
  * @param createRequest        the [[ProjectCreatePayloadADM]] information for the creation of a new project.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class ProjectCreateRequestADM(
   createRequest: ProjectCreatePayloadADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM
@@ -323,7 +299,6 @@ case class ProjectCreateRequestADM(
 case class ProjectChangeRequestADM(
   projectIri: IRI,
   changeProjectRequest: ChangeProjectApiRequestADM,
-  featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
 ) extends ProjectsResponderRequestADM

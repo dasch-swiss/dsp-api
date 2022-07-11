@@ -6,11 +6,11 @@
 package org.knora.webapi.messages.util.search.gravsearch.types
 
 import akka.event.LogSource
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.GravsearchException
+import dsp.errors.AssertionException
+import dsp.errors.GravsearchException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -26,20 +26,22 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 
 import scala.annotation.tailrec
 import scala.concurrent.Future
+import akka.actor.ActorRef
 
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
-class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector], responderData: ResponderData)
-    extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
+class InferringGravsearchTypeInspector(
+  nextInspector: Option[GravsearchTypeInspector],
+  appActor: ActorRef,
+  responderData: ResponderData
+) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
 
   import InferringGravsearchTypeInspector._
 
-  private val responderManager = responderData.appActor
-
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val log: LoggingAdapter = akka.event.Logging(system, this)
+  private val log: Logger = Logger(this.getClass())
 
   // The maximum number of type inference iterations.
   private val MAX_ITERATIONS = 50
@@ -906,8 +908,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                    requestingUser = requestingUser
                                  )
 
-      initialEntityInfo: EntityInfoGetResponseV2 <- (responderManager ? initialEntityInfoRequest)
-                                                      .mapTo[EntityInfoGetResponseV2]
+      initialEntityInfo: EntityInfoGetResponseV2 <-
+        appActor
+          .ask(initialEntityInfoRequest)
+          .mapTo[EntityInfoGetResponseV2]
 
       // The ontology responder may return the requested information in the internal schema. Convert each entity
       // definition back to the input schema.
@@ -958,8 +962,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                       requestingUser = requestingUser
                                     )
 
-      additionalEntityInfo: EntityInfoGetResponseV2 <- (responderManager ? additionalEntityInfoRequest)
-                                                         .mapTo[EntityInfoGetResponseV2]
+      additionalEntityInfo: EntityInfoGetResponseV2 <-
+        appActor
+          .ask(additionalEntityInfoRequest)
+          .mapTo[EntityInfoGetResponseV2]
 
       // Add the additional classes to the usage index.
       usageIndexWithAdditionalClasses = usageIndex.copy(

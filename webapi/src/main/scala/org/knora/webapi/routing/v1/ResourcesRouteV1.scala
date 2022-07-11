@@ -12,11 +12,11 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
+import dsp.errors.InconsistentRepositoryDataException
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -70,7 +70,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+  override def makeRoute(): Route = {
 
     def makeResourceRequestMessage(
       resIri: String,
@@ -85,21 +85,18 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         case "info" =>
           ResourceInfoGetRequestV1(
             iri = validResIri,
-            featureFactoryConfig = featureFactoryConfig,
             userProfile = userADM
           )
 
         case "rights" =>
           ResourceRightsGetRequestV1(
             iri = validResIri,
-            featureFactoryConfig = featureFactoryConfig,
             userProfile = userADM
           )
 
         case "context" =>
           ResourceContextGetRequestV1(
             iri = validResIri,
-            featureFactoryConfig = featureFactoryConfig,
             userProfile = userADM,
             resinfo = resinfo
           )
@@ -107,7 +104,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         case "" =>
           ResourceFullGetRequestV1(
             iri = validResIri,
-            featureFactoryConfig = featureFactoryConfig,
             userADM = userADM
           )
 
@@ -178,9 +174,8 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                                       acceptStandoffLinksToClientIDs =
                                                                         acceptStandoffLinksToClientIDs,
                                                                       userProfile = userProfile,
-                                                                      featureFactoryConfig = featureFactoryConfig,
                                                                       settings = settings,
-                                                                      responderManager = responderManager,
+                                                                      appActor = appActor,
                                                                       log = log
                                                                     )
 
@@ -301,7 +296,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
     def makeCreateResourceRequestMessage(
       apiRequest: CreateResourceApiRequestV1,
-      featureFactoryConfig: FeatureFactoryConfig,
       userADM: UserADM
     ): Future[ResourceCreateRequestV1] = {
       val projectIri = stringFormatter.validateAndEscapeIri(
@@ -320,11 +314,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       for {
         projectShortcode: String <- for {
                                       projectResponse: ProjectGetResponseADM <-
-                                        (responderManager ? ProjectGetRequestADM(
-                                          ProjectIdentifierADM(maybeIri = Some(projectIri)),
-                                          featureFactoryConfig = featureFactoryConfig,
-                                          requestingUser = userADM
-                                        )).mapTo[ProjectGetResponseADM]
+                                        appActor
+                                          .ask(
+                                            ProjectGetRequestADM(
+                                              ProjectIdentifierADM(maybeIri = Some(projectIri)),
+                                              requestingUser = userADM
+                                            )
+                                          )
+                                          .mapTo[ProjectGetResponseADM]
                                     } yield projectResponse.project.shortcode
 
         file: Option[FileValueV1] <- apiRequest.file match {
@@ -334,10 +331,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
                                          for {
                                            fileMetadataResponse: GetFileMetadataResponse <-
-                                             (storeManager ? GetFileMetadataRequest(
-                                               filePath = tempFilePath,
-                                               requestingUser = userADM
-                                             )).mapTo[GetFileMetadataResponse]
+                                             appActor
+                                               .ask(
+                                                 GetFileMetadataRequest(
+                                                   filePath = tempFilePath,
+                                                   requestingUser = userADM
+                                                 )
+                                               )
+                                               .mapTo[GetFileMetadataResponse]
                                          } yield Some(
                                            RouteUtilV1.makeFileValue(
                                              filename = filename,
@@ -366,7 +367,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         projectIri = projectIri,
         values = valuesToBeCreated,
         file = file,
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
@@ -394,10 +394,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                              val tempFilePath = stringFormatter.makeSipiTempFilePath(settings, filename)
 
                              for {
-                               fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
-                                                                                  filePath = tempFilePath,
-                                                                                  requestingUser = userProfile
-                                                                                )).mapTo[GetFileMetadataResponse]
+                               fileMetadataResponse: GetFileMetadataResponse <- appActor
+                                                                                  .ask(
+                                                                                    GetFileMetadataRequest(
+                                                                                      filePath = tempFilePath,
+                                                                                      requestingUser = userProfile
+                                                                                    )
+                                                                                  )
+                                                                                  .mapTo[GetFileMetadataResponse]
                              } yield Some(
                                RouteUtilV1.makeFileValue(
                                  filename = filename,
@@ -425,7 +429,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       resourceRequest: Seq[CreateResourceFromXmlImportRequestV1],
       projectId: IRI,
       apiRequestID: UUID,
-      featureFactoryConfig: FeatureFactoryConfig,
       userProfile: UserADM
     ): Future[MultipleResourceCreateRequestV1] = {
       // Make sure there are no duplicate client resource IDs.
@@ -443,11 +446,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       for {
         projectShortcode: String <- for {
                                       projectResponse: ProjectGetResponseADM <-
-                                        (responderManager ? ProjectGetRequestADM(
-                                          identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
-                                          featureFactoryConfig = featureFactoryConfig,
-                                          requestingUser = userProfile
-                                        )).mapTo[ProjectGetResponseADM]
+                                        appActor
+                                          .ask(
+                                            ProjectGetRequestADM(
+                                              identifier = ProjectIdentifierADM(maybeIri = Some(projectId)),
+                                              requestingUser = userProfile
+                                            )
+                                          )
+                                          .mapTo[ProjectGetResponseADM]
                                     } yield projectResponse.project.shortcode
 
         resourcesToCreate: Seq[Future[OneOfMultipleResourceCreateRequestV1]] =
@@ -463,7 +469,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       } yield MultipleResourceCreateRequestV1(
         resourcesToCreate = resToCreateCollection,
         projectIri = projectId,
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userProfile,
         apiRequestID = apiRequestID
       )
@@ -472,7 +477,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     def makeGetPropertiesRequestMessage(resIri: IRI, userADM: UserADM): PropertiesGetRequestV1 =
       PropertiesGetRequestV1(
         iri = resIri,
-        featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM
       )
 
@@ -487,7 +491,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         deleteComment = deleteComment.map(comment =>
           stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))
         ),
-        featureFactoryConfig = featureFactoryConfig,
         userADM = userADM,
         apiRequestID = UUID.randomUUID
       )
@@ -526,17 +529,26 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
         for {
           // Get a NamedGraphEntityInfoV1 listing the IRIs of the classes and properties defined in the initial ontology.
-          initialNamedGraphInfo: NamedGraphEntityInfoV1 <- (responderManager ? NamedGraphEntityInfoRequestV1(
-                                                             initialOntologyIri,
-                                                             userProfile
-                                                           )).mapTo[NamedGraphEntityInfoV1]
+          initialNamedGraphInfo: NamedGraphEntityInfoV1 <- appActor
+                                                             .ask(
+                                                               NamedGraphEntityInfoRequestV1(
+                                                                 initialOntologyIri,
+                                                                 userProfile
+                                                               )
+                                                             )
+                                                             .mapTo[NamedGraphEntityInfoV1]
 
           // Get details about those classes and properties.
-          entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                                                           resourceClassIris = initialNamedGraphInfo.resourceClasses,
-                                                           propertyIris = initialNamedGraphInfo.propertyIris,
-                                                           userProfile = userProfile
-                                                         )).mapTo[EntityInfoGetResponseV1]
+          entityInfoResponse: EntityInfoGetResponseV1 <-
+            appActor
+              .ask(
+                EntityInfoGetRequestV1(
+                  resourceClassIris = initialNamedGraphInfo.resourceClasses,
+                  propertyIris = initialNamedGraphInfo.propertyIris,
+                  userProfile = userProfile
+                )
+              )
+              .mapTo[EntityInfoGetResponseV1]
 
           // Look at the base classes of all the resource classes in the initial ontology. Make a set of
           // the ontologies containing the definitions of those classes, not including including the initial ontology itself
@@ -614,10 +626,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
 
       for {
         // Get a NamedGraphEntityInfoV1 for the knora-base ontology.
-        knoraBaseGraphEntityInfo <- (responderManager ? NamedGraphEntityInfoRequestV1(
-                                      OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
-                                      userProfile
-                                    )).mapTo[NamedGraphEntityInfoV1]
+        knoraBaseGraphEntityInfo <- appActor
+                                      .ask(
+                                        NamedGraphEntityInfoRequestV1(
+                                          OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
+                                          userProfile
+                                        )
+                                      )
+                                      .mapTo[NamedGraphEntityInfoV1]
 
         // Recursively get NamedGraphEntityInfoV1 instances for the main ontology to be used in the XML import,
         // as well as any other project-specific ontologies it depends on.
@@ -685,11 +701,15 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entityInfoResponseFutures: immutable.Iterable[Future[(IRI, EntityInfoGetResponseV1)]] =
           namedGraphInfos.map { case (ontologyIri: IRI, namedGraphInfo: NamedGraphEntityInfoV1) =>
             for {
-              entityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
-                                                               resourceClassIris = namedGraphInfo.resourceClasses,
-                                                               propertyIris = namedGraphInfo.propertyIris,
-                                                               userProfile = userProfile
-                                                             )).mapTo[EntityInfoGetResponseV1]
+              entityInfoResponse: EntityInfoGetResponseV1 <- appActor
+                                                               .ask(
+                                                                 EntityInfoGetRequestV1(
+                                                                   resourceClassIris = namedGraphInfo.resourceClasses,
+                                                                   propertyIris = namedGraphInfo.propertyIris,
+                                                                   userProfile = userProfile
+                                                                 )
+                                                               )
+                                                               .mapTo[EntityInfoGetResponseV1]
             } yield ontologyIri -> entityInfoResponse
           }
 
@@ -1196,8 +1216,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         requestContext =>
           val requestMessage = for {
             userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
+                             requestContext = requestContext
                            )
             params    = requestContext.request.uri.query().toMap
             searchstr = params.getOrElse("searchstr", throw BadRequestException(s"required param searchstr is missing"))
@@ -1251,7 +1270,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
       } ~ post {
@@ -1261,12 +1280,10 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entity(as[CreateResourceApiRequestV1]) { apiRequest => requestContext =>
           val requestMessageFuture = for {
             userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
+                             requestContext = requestContext
                            )
             request <- makeCreateResourceRequestMessage(
                          apiRequest = apiRequest,
-                         featureFactoryConfig = featureFactoryConfig,
                          userADM = userProfile
                        )
           } yield request
@@ -1275,7 +1292,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessageFuture,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1286,8 +1303,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           val requestMessage =
             for {
               userADM <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
+                           requestContext = requestContext
                          )
               requestType = reqtypeParam.getOrElse("")
               resinfo     = resinfoParam.getOrElse(false)
@@ -1302,7 +1318,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1310,8 +1326,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         parameters("deleteComment".?) { deleteCommentParam => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
           } yield makeResourceDeleteMessage(resIri = resIri, deleteComment = deleteCommentParam, userADM = userADM)
 
@@ -1319,7 +1334,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1333,8 +1348,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           case "properties" =>
             for {
               userADM <- getUserADM(
-                           requestContext = requestContext,
-                           featureFactoryConfig = featureFactoryConfig
+                           requestContext = requestContext
                          )
               resIri = stringFormatter.validateAndEscapeIri(
                          iri,
@@ -1342,7 +1356,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                        )
             } yield ResourceFullGetRequestV1(
               iri = resIri,
-              featureFactoryConfig = featureFactoryConfig,
               userADM = userADM
             )
           case other => throw BadRequestException(s"Invalid request type: $other")
@@ -1353,7 +1366,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           viewHandler = ResourceHtmlView.propertiesHtmlView,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -1361,8 +1374,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       get { requestContext =>
         val requestMessage = for {
           userADM <- getUserADM(
-                       requestContext = requestContext,
-                       featureFactoryConfig = featureFactoryConfig
+                       requestContext = requestContext
                      )
           resIri = stringFormatter.validateAndEscapeIri(
                      iri,
@@ -1374,7 +1386,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           requestMessageF = requestMessage,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
 
@@ -1384,8 +1396,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entity(as[ChangeResourceLabelApiRequestV1]) { apiRequest => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
             resIri = stringFormatter.validateAndEscapeIri(
                        iri,
@@ -1399,7 +1410,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             resourceIri = resIri,
             label = label,
             apiRequestID = UUID.randomUUID,
-            featureFactoryConfig = featureFactoryConfig,
             userADM = userADM
           )
 
@@ -1407,7 +1417,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1417,8 +1427,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         parameters("depth".as[Int].?) { depth => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
             resourceIri = stringFormatter.validateAndEscapeIri(
                             iri,
@@ -1430,7 +1439,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -1450,7 +1459,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           requestMessage = msg,
           requestContext = requestContext,
           settings = settings,
-          responderManager = responderManager,
+          appActor = appActor,
           log = log
         )
       }
@@ -1459,8 +1468,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         entity(as[String]) { xml => requestContext =>
           val requestMessage = for {
             userADM <- getUserADM(
-                         requestContext = requestContext,
-                         featureFactoryConfig = featureFactoryConfig
+                         requestContext = requestContext
                        )
 
             _ = if (userADM.isAnonymousUser) {
@@ -1506,7 +1514,6 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
                                                                 resourceRequest = resourcesToCreate,
                                                                 projectId = projectId,
                                                                 apiRequestID = apiRequestID,
-                                                                featureFactoryConfig = featureFactoryConfig,
                                                                 userProfile = userADM
                                                               )
           } yield updateRequest
@@ -1515,7 +1522,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             requestMessageF = requestMessage,
             requestContext = requestContext,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )(timeout = settings.triplestoreUpdateTimeout, executionContext = executionContext)
         }
@@ -1542,8 +1549,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         ) { requestContext =>
           val httpResponseFuture: Future[HttpResponse] = for {
             userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
+                             requestContext = requestContext
                            )
             schemaZipFileBytes: Array[Byte] <- generateSchemaZipFile(
                                                  internalOntologyIri = internalOntologyIri,

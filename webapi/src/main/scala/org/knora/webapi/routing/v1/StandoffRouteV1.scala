@@ -9,8 +9,7 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.Authenticator
@@ -31,7 +30,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("v1" / "mapping") {
       post {
         entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
@@ -44,17 +43,17 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           val allPartsFuture: Future[Map[Name, String]] = formdata.parts
             .mapAsync[(Name, String)](1) {
               case b: BodyPart if b.name == JSON_PART =>
-                //loggingAdapter.debug(s"inside allPartsFuture - processing $JSON_PART")
+                //Logger.debug(s"inside allPartsFuture - processing $JSON_PART")
                 b.toStrict(2.seconds).map { strict =>
-                  //loggingAdapter.debug(strict.entity.data.utf8String)
+                  //Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 
               case b: BodyPart if b.name == XML_PART =>
-                //loggingAdapter.debug(s"inside allPartsFuture - processing $XML_PART")
+                //Logger.debug(s"inside allPartsFuture - processing $XML_PART")
 
                 b.toStrict(2.seconds).map { strict =>
-                  //loggingAdapter.debug(strict.entity.data.utf8String)
+                  //Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 
@@ -67,10 +66,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
 
           val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-            userProfile <- getUserADM(
-                             requestContext = requestContext,
-                             featureFactoryConfig = featureFactoryConfig
-                           )
+            userProfile <- getUserADM(requestContext)
 
             allParts: Map[Name, String] <- allPartsFuture
 
@@ -110,7 +106,6 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
               standoffApiJSONRequest.mappingName,
               throw BadRequestException("'mappingName' contains invalid characters")
             ),
-            featureFactoryConfig = featureFactoryConfig,
             userProfile = userProfile,
             apiRequestID = UUID.randomUUID
           )
@@ -119,7 +114,7 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             requestMessageFuture,
             requestContext,
             settings,
-            responderManager,
+            appActor,
             log
           )
         }

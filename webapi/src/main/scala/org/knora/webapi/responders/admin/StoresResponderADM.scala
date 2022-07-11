@@ -6,8 +6,8 @@
 package org.knora.webapi.responders.admin
 
 import akka.pattern._
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.ForbiddenException
+
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -41,11 +41,10 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    */
   def receive(msg: StoreResponderRequestADM) = msg match {
     case ResetTriplestoreContentRequestADM(
-          rdfDataObjects: Seq[RdfDataObject],
-          prependDefaults: Boolean,
-          featureFactoryConfig: FeatureFactoryConfig
+          rdfDataObjects: List[RdfDataObject],
+          prependDefaults: Boolean
         ) =>
-      resetTriplestoreContent(rdfDataObjects, prependDefaults, featureFactoryConfig)
+      resetTriplestoreContent(rdfDataObjects, prependDefaults)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -56,9 +55,8 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
    * @return a future containing a [[ResetTriplestoreContentResponseADM]].
    */
   private def resetTriplestoreContent(
-    rdfDataObjects: Seq[RdfDataObject],
-    prependDefaults: Boolean = true,
-    featureFactoryConfig: FeatureFactoryConfig
+    rdfDataObjects: List[RdfDataObject],
+    prependDefaults: Boolean = true
   ): Future[ResetTriplestoreContentResponseADM] = {
 
     log.debug(s"resetTriplestoreContent - called")
@@ -71,17 +69,21 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
             )
           }
 
-      resetResponse <- (storeManager ? ResetRepositoryContent(rdfDataObjects, prependDefaults))
+      resetResponse <- appActor
+                         .ask(ResetRepositoryContent(rdfDataObjects, prependDefaults))
                          .mapTo[ResetRepositoryContentACK]
       _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
-      loadOntologiesResponse <- (responderManager ? LoadOntologiesRequestV2(
-                                  featureFactoryConfig = featureFactoryConfig,
-                                  requestingUser = systemUser
-                                )).mapTo[SuccessResponseV2]
+      loadOntologiesResponse <- appActor
+                                  .ask(
+                                    LoadOntologiesRequestV2(
+                                      requestingUser = systemUser
+                                    )
+                                  )
+                                  .mapTo[SuccessResponseV2]
       _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
-      _ <- (storeManager ? CacheServiceFlushDB(systemUser))
+      _ <- appActor.ask(CacheServiceFlushDB(systemUser))
       _  = log.debug(s"resetTriplestoreContent - flushing Redis store done.")
 
       result = ResetTriplestoreContentResponseADM(message = "success")

@@ -8,7 +8,6 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
 import akka.pattern.ask
 import akka.stream.Materializer
 import akka.testkit.ImplicitSender
@@ -16,45 +15,45 @@ import akka.testkit.TestKit
 import akka.util.Timeout
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Logging
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import zio.&
-import zio.Runtime
-import zio.ZEnvironment
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import app.ApplicationActor
-import core.Core
-import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
-import messages.StringFormatter
-import messages.app.appmessages.{AppStart, SetAllowReloadOverHTTPState}
-import messages.store.cacheservicemessages.CacheServiceFlushDB
-import messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
-import messages.util.rdf.RdfFeatureFactory
-import messages.util.{KnoraSystemInstances, ResponderData}
-import messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import store.cacheservice.settings.CacheServiceSettings
-import util.StartupUtils
+import org.knora.webapi.app.ApplicationActor
+import org.knora.webapi.core.Core
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.app.appmessages.{AppStart, SetAllowReloadOverHTTPState}
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
+import org.knora.webapi.util.StartupUtils
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object CoreSpec {
 
@@ -92,7 +91,7 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         name,
-        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+        config.withFallback(CoreSpec.defaultConfig)
       )
     )
 
@@ -100,17 +99,23 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+        config.withFallback(CoreSpec.defaultConfig)
       )
     )
 
-  def this(name: String) = this(ActorSystem(name, TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load())))
+  def this(name: String) =
+    this(
+      ActorSystem(
+        name,
+        ConfigFactory.load()
+      )
+    )
 
   def this() =
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainerFuseki.PortConfig.withFallback(ConfigFactory.load())
+        ConfigFactory.load()
       )
     )
 
@@ -120,73 +125,71 @@ abstract class CoreSpec(_system: ActorSystem)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
-  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+  lazy val rdfDataObjects = List.empty[RdfDataObject]
 
   // needs to be initialized early on
   StringFormatter.initForTest()
-  RdfFeatureFactory.init(settings)
-
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
-
-  // The effect for building a cache service manager and a IIIF service manager.
-  val managers = for {
-    csm       <- ZIO.service[CacheServiceManager]
-    iiifsm    <- ZIO.service[IIIFServiceManager]
-    appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  val log: Logger = Logger(this.getClass())
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & TriplestoreService & AppConfig](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      // FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      SipiTestContainer.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer,
+      Logging.slf4j
     )
 
+  // The ZIO runtime used to run functional effects
+  lazy val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(effectLayers)
+    }
+
+  // The effect for building managers and config.
+  lazy val managers = for {
+    csm       <- ZIO.service[CacheServiceManager]
+    iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
+    appConfig <- ZIO.service[AppConfig]
+  } yield (csm, iiifsm, tssm, appConfig)
+
   /**
-   * Create both managers by unsafe running them.
+   * Create managers and config by unsafe running them.
    */
-  val (cacheServiceManager, iiifServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-          .provide(
-            effectLayers
-          )
-      )
+  val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          managers
+        )
+        .getOrElse(c => throw FiberFailure(c))
+    }
 
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
-
-  // The main application actor forwards messages to the responder manager and the store manager.
-  val responderManager: ActorRef = appActor
-  val storeManager: ActorRef     = appActor
 
   val responderData: ResponderData = ResponderData(
     system = system,
     appActor = appActor,
     knoraSettings = settings,
     cacheServiceSettings = new CacheServiceSettings(system.settings.config)
-  )
-
-  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set.empty,
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
   final override def beforeAll(): Unit = {
@@ -199,40 +202,49 @@ abstract class CoreSpec(_system: ActorSystem)
     // waits until knora is up and running
     applicationStateRunning()
 
-    loadTestData(rdfDataObjects)
-
-    // memusage()
+    prepareRepository(rdfDataObjects)
   }
 
-  final override def afterAll(): Unit =
+  final override def afterAll(): Unit = {
+
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
+
+    /* Stop the server when everything else has finished */
     TestKit.shutdownActorSystem(system)
-
-  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-    logger.info("Loading test data started ...")
-    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Try(Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)) match {
-      case Success(res) => logger.info("... loading test data done.")
-      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
-    }
-
-    logger.info("Loading load ontologies into cache started ...")
-    Try(
-      Await.result(
-        appActor ? LoadOntologiesRequestV2(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        ),
-        1 minute
-      )
-    ) match {
-      case Success(res) => logger.info("... loading ontologies into cache done.")
-      case Failure(e)   => logger.error(s"Loading ontologies into cache failed: ${e.getMessage}")
-    }
-
-    logger.info("CacheServiceFlushDB started ...")
-    Try(Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 15 seconds)) match {
-      case Success(res) => logger.info("... CacheServiceFlushDB done.")
-      case Failure(e)   => logger.error(s"CacheServiceFlushDB failed: ${e.getMessage}")
-    }
   }
+
+  private def prepareRepository(rdfDataObjects: List[RdfDataObject]): Unit =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run {
+        for {
+          ec  <- ZIO.executor.map(_.asExecutionContext)
+          _   <- ZIO.logInfo("Loading test data started ...")
+          tss <- ZIO.service[TriplestoreService]
+          _   <- tss.resetTripleStoreContent(rdfDataObjects).timeout(480.seconds)
+          _   <- ZIO.logInfo("... loading test data done.")
+          _   <- ZIO.logInfo("Loading load ontologies into cache started ...")
+          _ <- ZIO
+                 .fromFuture(implicit ec =>
+                   appActor
+                     .ask(LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser))(
+                       akka.util.Timeout.create(2.minutes)
+                     )
+                 )
+                 .timeout(60.seconds)
+          _ <- ZIO.logInfo("... loading ontologies into cache done.")
+          _ <- ZIO.logInfo("CacheServiceFlushDB started ...")
+          _ <-
+            ZIO
+              .fromFuture(implicit ec =>
+                appActor
+                  .ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))(akka.util.Timeout.create(30.seconds))
+              )
+              .timeout(15.seconds)
+          _ <- ZIO.logInfo("... CacheServiceFlushDB done.")
+        } yield ()
+      }
+    }
 }

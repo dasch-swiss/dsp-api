@@ -9,13 +9,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.BadRequestException
+
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.Comments
-import org.knora.webapi.messages.admin.responder.valueObjects.Labels
-import org.knora.webapi.messages.admin.responder.valueObjects.ListName
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -24,6 +20,7 @@ import org.knora.webapi.routing.RouteUtilADM
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
+import dsp.valueobjects.List._
 
 object UpdateListItemsRouteADM {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -36,17 +33,16 @@ object UpdateListItemsRouteADM {
  */
 class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
-    with Feature
     with Authenticator
     with ListADMJsonProtocol {
 
   import UpdateListItemsRouteADM._
 
-  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    updateNodeName(featureFactoryConfig) ~
-      updateNodeLabels(featureFactoryConfig) ~
-      updateNodeComments(featureFactoryConfig) ~
-      updateNodePosition(featureFactoryConfig)
+  def makeRoute(): Route =
+    updateNodeName() ~
+      updateNodeLabels() ~
+      updateNodeComments() ~
+      updateNodePosition()
 
   @Path("/{IRI}/name")
   @ApiOperation(
@@ -74,7 +70,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Update name of an existing list node, either root or child.
    */
-  private def updateNodeName(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodeName(): Route =
     path(ListsBasePath / Segment / "name") { iri =>
       put {
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
@@ -85,11 +81,10 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeNameChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodeNameChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeNameRequest = namePayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -97,9 +92,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -132,7 +126,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Update labels of an existing list node, either root or child.
    */
-  private def updateNodeLabels(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodeLabels(): Route =
     path(ListsBasePath / Segment / "labels") { iri =>
       put {
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
@@ -143,11 +137,10 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodeLabelsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeLabelsRequest = labelsPayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -155,9 +148,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -190,7 +182,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Updates comments of an existing list node, either root or child.
    */
-  private def updateNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodeComments(): Route =
     path(ListsBasePath / Segment / "comments") { iri =>
       put {
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
@@ -201,11 +193,10 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodeCommentsChangeRequestADM(
             nodeIri = nodeIri,
             changeNodeCommentsRequest = commentsPayload,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -213,9 +204,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }
@@ -248,7 +238,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Updates position of an existing list child node.
    */
-  private def updateNodePosition(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updateNodePosition(): Route =
     path(ListsBasePath / Segment / "position") { iri =>
       put {
         entity(as[ChangeNodePositionApiRequestADM]) { apiRequest => requestContext =>
@@ -256,11 +246,10 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
           val requestMessage: Future[NodePositionChangeRequestADM] = for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield NodePositionChangeRequestADM(
             nodeIri = nodeIri,
             changeNodePositionRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -268,9 +257,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
-            responderManager = responderManager,
+            appActor = appActor,
             log = log
           )
         }

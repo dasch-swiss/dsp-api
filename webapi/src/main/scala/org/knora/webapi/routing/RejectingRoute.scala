@@ -10,7 +10,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.app.appmessages.AppState
 import org.knora.webapi.messages.app.appmessages.AppStates
 import org.knora.webapi.messages.app.appmessages.GetAppState
@@ -31,7 +30,7 @@ trait AppStateAccess {
   protected def getAppState: Future[AppState] =
     for {
 
-      state <- (applicationActor ? GetAppState()).mapTo[AppState]
+      state <- appActor.ask(GetAppState()).mapTo[AppState]
 
     } yield state
 
@@ -49,7 +48,7 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path(Remaining) { wholePath =>
       // check to see if route is on the rejection list
       val rejectSeq: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject: String =>

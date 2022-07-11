@@ -4,7 +4,7 @@
  *@
 
 @import org.knora.webapi._
-@import org.knora.webapi.exceptions.SparqlGenerationException
+@import dsp.errors.SparqlGenerationException
 @import org.knora.webapi.messages.{StringFormatter, SmartIri}
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -189,17 +189,6 @@
 
                             case None => {}
                         }
-                    }
-
-                    case audioFileValue: AudioFileValueContentV2 => {
-                        @audioFileValue.duration match {
-                            case Some(definedDuration) => {
-                                <@newValueIri> knora-base:duration @definedDuration .
-                            }
-
-                            case None => {}
-                        }
-
                     }
 
                     case _ => {}

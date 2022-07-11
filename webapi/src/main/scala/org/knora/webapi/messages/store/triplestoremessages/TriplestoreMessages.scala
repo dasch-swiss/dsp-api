@@ -5,12 +5,11 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -27,6 +26,10 @@ import scala.collection.mutable
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import dsp.valueobjects.V2
+
+import com.typesafe.config.Config
+import zio._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -60,9 +63,8 @@ case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
  * [[SparqlConstructResponse]].
  *
  * @param sparql               the SPARQL string.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
+case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
@@ -72,14 +74,12 @@ case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureF
  * @param graphIri             the named graph IRI to be used in the TriG file.
  * @param outputFile           the file to be written.
  * @param outputFormat         the output file format.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlConstructFileRequest(
   sparql: String,
   graphIri: IRI,
   outputFile: Path,
-  outputFormat: QuadFormat,
-  featureFactoryConfig: FeatureFactoryConfig
+  outputFormat: QuadFormat
 ) extends TriplestoreRequest
 
 /**
@@ -94,10 +94,8 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  * [[SparqlExtendedConstructResponse]].
  *
  * @param sparql               the SPARQL string.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlExtendedConstructRequest(sparql: String, featureFactoryConfig: FeatureFactoryConfig)
-    extends TriplestoreRequest
+case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
@@ -116,15 +114,17 @@ object SparqlExtendedConstructResponse {
    *
    * @param turtleStr     the Turtle document.
    * @param rdfFormatUtil an [[RdfFormatUtil]].
-   * @param log           a [[LoggingAdapter]].
+   * @param log           a [[Logger]].
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(
-    turtleStr: String,
-    rdfFormatUtil: RdfFormatUtil,
-    log: LoggingAdapter
-  ): Try[SparqlExtendedConstructResponse] = {
-    val parseTry = Try {
+    turtleStr: String
+  ): IO[DataConversionException, SparqlExtendedConstructResponse] = {
+
+    val rdfFormatUtil: RdfFormatUtil =
+      RdfFeatureFactory.getRdfFormatUtil()
+
+    ZIO.attemptBlocking {
       implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
@@ -201,14 +201,12 @@ object SparqlExtendedConstructResponse {
       }
 
       SparqlExtendedConstructResponse(statementMap.toMap)
-    }
-
-    parseTry match {
-      case Success(parsed) => Success(parsed)
-      case Failure(e) =>
-        log.error(e, s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter")
-        Failure(DataConversionException("Couldn't parse Turtle document"))
-    }
+    }.foldZIO(
+      failure =>
+        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
+          ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      ZIO.succeed(_)
+    )
   }
 }
 
@@ -228,13 +226,11 @@ case class SparqlExtendedConstructResponse(
  * @param graphIri             the IRI of the named graph.
  * @param outputFile           the destination file.
  * @param outputFormat         the output file format.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class NamedGraphFileRequest(
   graphIri: IRI,
   outputFile: Path,
-  outputFormat: QuadFormat,
-  featureFactoryConfig: FeatureFactoryConfig
+  outputFormat: QuadFormat
 ) extends TriplestoreRequest
 
 /**
@@ -284,7 +280,7 @@ case class SparqlAskResponse(result: Boolean)
  * @param rdfDataObjects  contains a list of [[RdfDataObject]].
  * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
  */
-case class ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true)
+case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDefaults: Boolean = true)
     extends TriplestoreRequest
 
 /**
@@ -307,7 +303,7 @@ case class DropAllRepositoryContentACK()
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].
  */
-case class InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
+case class InsertRepositoryContent(rdfDataObjects: List[RdfDataObject]) extends TriplestoreRequest
 
 /**
  * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.
@@ -366,10 +362,8 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
  * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[FileWrittenResponse]].
  *
  * @param outputFile           the output file.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig)
-    extends TriplestoreRequest
+case class DownloadRepositoryRequest(outputFile: Path) extends TriplestoreRequest
 
 /**
  * Indicates that a file was written successfully.
@@ -395,14 +389,6 @@ case class RepositoryUploadedResponse()
  * @param message a message providing details of what was done.
  */
 case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
-
-/**
- * Updates the triplestore's full-text search index.
- *
- * @param subjectIri if a subject has changed, update the index for that subject. Otherwise, updates
- *                   the index to add any subjects not yet indexed.
- */
-case class SearchIndexUpdateRequest(subjectIri: Option[String] = None) extends TriplestoreRequest
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -598,6 +584,13 @@ case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
    */
   def sortByStringValue: StringLiteralSequenceV2 =
     StringLiteralSequenceV2(stringLiterals.sortBy(_.value))
+
+  /**
+   * Sort sequence of [[StringLiteralV2]] by their language value.
+   *
+   * @return a [[StringLiteralSequenceV2]] sorted by language value.
+   */
+  def sortByLanguage: StringLiteralSequenceV2 = StringLiteralSequenceV2(stringLiterals.sortBy(_.language))
 
   /**
    * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.
@@ -798,6 +791,62 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
             throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
         }
       case JsString(value) => StringLiteralV2(value, None)
+      case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
+    }
+  }
+
+  // TODO-mpro: below object needs to be here because of moving value object to separate project which are also partially used in V2.
+  // Once dsp.valueobjects.V2.StringLiteralV2 is replaced by LangString value object, it can be removed.
+  // By then it is quick fix solution.
+  implicit object V2LiteralV2Format extends JsonFormat[V2.StringLiteralV2] {
+
+    /**
+     * Converts a [[StringLiteralV2]] to a [[JsValue]].
+     *
+     * @param string a [[StringLiteralV2]].
+     * @return a [[JsValue]].
+     */
+    def write(string: V2.StringLiteralV2): JsValue =
+      if (string.language.isDefined) {
+        // have language tag
+        JsObject(
+          Map(
+            "value"    -> string.value.toJson,
+            "language" -> string.language.toJson
+          )
+        )
+      } else {
+        // no language tag
+        JsObject(
+          Map(
+            "value" -> string.value.toJson
+          )
+        )
+      }
+
+    /**
+     * Converts a [[JsValue]] to a [[StringLiteralV2]].
+     *
+     * @param json a [[JsValue]].
+     * @return a [[StringLiteralV2]].
+     */
+    def read(json: JsValue): V2.StringLiteralV2 = json match {
+      case stringWithLang: JsObject =>
+        stringWithLang.getFields("value", "language") match {
+          case Seq(JsString(value), JsString(language)) =>
+            V2.StringLiteralV2(
+              value = value,
+              language = Some(language)
+            )
+          case Seq(JsString(value)) =>
+            V2.StringLiteralV2(
+              value = value,
+              language = None
+            )
+          case _ =>
+            throw DeserializationException("JSON object with 'value', or 'value' and 'language' fields expected.")
+        }
+      case JsString(value) => V2.StringLiteralV2(value, None)
       case _               => throw DeserializationException("JSON object with 'value', or 'value' and 'language' expected. ")
     }
   }

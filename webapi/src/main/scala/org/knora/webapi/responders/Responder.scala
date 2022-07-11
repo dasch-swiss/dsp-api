@@ -8,18 +8,18 @@ package responders
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
-import exceptions.{BadRequestException, DuplicateValueException, UnexpectedMessageException}
+import dsp.errors._
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult
@@ -78,16 +78,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   protected val appActor: ActorRef = responderData.appActor
 
   /**
-   * The main application actor forwards messages to the responder manager.
-   */
-  protected val responderManager: ActorRef = responderData.appActor
-
-  /**
-   * The main application actor forwards messages to the store manager.
-   */
-  protected val storeManager: ActorRef = responderData.appActor
-
-  /**
    * A string formatter.
    */
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -100,8 +90,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   /**
    * Provides logging
    */
-  protected val log: Logger                    = logger
-  protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  protected val log: Logger = logger
 
   /**
    * Checks whether an entity is used in the triplestore.
@@ -128,7 +117,8 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                                 .toString()
                             )
 
-      isEntityUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql))
+      isEntityUsedResponse: SparqlSelectResult <- appActor
+                                                    .ask(SparqlSelectRequest(isEntityUsedSparql))
                                                     .mapTo[SparqlSelectResult]
 
     } yield isEntityUsedResponse.results.bindings.nonEmpty
@@ -152,7 +142,8 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                                      .toString()
                                  )
 
-      isClassUsedInDataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isClassUsedInDataSparql))
+      isClassUsedInDataResponse: SparqlSelectResult <- appActor
+                                                         .ask(SparqlSelectRequest(isClassUsedInDataSparql))
                                                          .mapTo[SparqlSelectResult]
 
     } yield isClassUsedInDataResponse.results.bindings.nonEmpty
@@ -211,7 +202,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
         val entityIriAsString = customEntityIri.toString
         for {
 
-          result <- stringFormatter.checkIriExists(entityIriAsString, storeManager)
+          result <- stringFormatter.checkIriExists(entityIriAsString, appActor)
           _ = if (result) {
                 throw DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one.")
               }
@@ -224,6 +215,6 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
 
         } yield entityIriAsString
 
-      case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
+      case None => stringFormatter.makeUnusedIri(iriFormatter, appActor, log)
     }
 }

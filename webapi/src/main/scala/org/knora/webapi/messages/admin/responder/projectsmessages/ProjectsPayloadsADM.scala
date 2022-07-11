@@ -5,13 +5,14 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import dsp.valueobjects.Iri.ProjectIri
+import dsp.valueobjects.Project._
 
 /**
  * Project creation payload
  */
 final case class ProjectCreatePayloadADM(
-  id: Option[ProjectIRI] = None,
+  id: Option[ProjectIri] = None,
   shortname: Shortname,
   shortcode: Shortcode,
   longname: Option[Longname] = None,

@@ -1,8 +1,8 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.AssertionException
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -21,6 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import akka.actor.ActorRef
 
 private object QueryHandler {
 
@@ -30,14 +31,15 @@ private object QueryHandler {
 
   def transformQuery(
     query: String,
+    appActor: ActorRef,
     responderData: ResponderData,
-    settings: KnoraSettingsImpl,
-    featureFactoryConfig: FeatureFactoryConfig
+    settings: KnoraSettingsImpl
   )(implicit executionContext: ExecutionContext): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 
-    val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
+    val typeInspectionRunner =
+      new GravsearchTypeInspectionRunner(appActor, responderData = responderData, inferTypes = true)
 
     val typeInspectionResultFuture = typeInspectionRunner.inspectTypes(constructQuery.whereClause, anythingUser)
 
@@ -59,8 +61,7 @@ private object QueryHandler {
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
         querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        settings = settings,
-        featureFactoryConfig = featureFactoryConfig
+        settings = settings
       )
 
     val nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -3201,7 +3202,12 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     "transform an input query with an optional property criterion without removing the rdf:type statement" in {
 
       val transformedQuery =
-        QueryHandler.transformQuery(queryWithOptional, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryWithOptional,
+          appActor,
+          responderData,
+          settings
+        )
       assert(transformedQuery === TransformedQueryWithOptional)
     }
 
@@ -3210,9 +3216,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterion,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
@@ -3224,9 +3230,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterionComplex,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterion)
@@ -3238,9 +3244,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterionAndFilter,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
@@ -3252,9 +3258,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateNonOptionalSortCriterionAndFilterComplex,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateNonOptionalSortCriterionAndFilter)
@@ -3266,9 +3272,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterion,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
@@ -3280,9 +3286,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterionComplex,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterion)
@@ -3294,9 +3300,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterionAndFilter,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
@@ -3308,9 +3314,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDateOptionalSortCriterionAndFilterComplex,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDateOptionalSortCriterionAndFilter)
@@ -3322,9 +3328,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterion,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
@@ -3335,9 +3341,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionComplex,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterion)
@@ -3348,9 +3354,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilter,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
@@ -3361,9 +3367,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       // TODO: user provided statements and statement generated for sorting should be unified (https://github.com/dhlab-basel/Knora/issues/1195)
@@ -3374,9 +3380,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndLiteralInSimpleSchema,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery == TransformedQueryWithRdfsLabelAndLiteral)
@@ -3386,9 +3392,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndLiteralInComplexSchema,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
@@ -3398,9 +3404,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndVariableInSimpleSchema,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
@@ -3410,9 +3416,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndVariableInComplexSchema,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndVariable)
@@ -3422,9 +3428,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndRegexInSimpleSchema,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
@@ -3434,9 +3440,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           InputQueryWithRdfsLabelAndRegexInComplexSchema,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
@@ -3444,7 +3450,12 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
 
     "transform an input query with UNION scopes in the simple schema" in {
       val transformedQuery =
-        QueryHandler.transformQuery(InputQueryWithUnionScopes, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          InputQueryWithUnionScopes,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(transformedQuery === TransformedQueryWithUnionScopes)
     }
@@ -3453,9 +3464,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val transformedQuery =
         QueryHandler.transformQuery(
           queryWithStandoffTagHasStartAncestor,
+          appActor,
           responderData,
-          settings,
-          defaultFeatureFactoryConfig
+          settings
         )
 
       assert(transformedQuery === transformedQueryWithStandoffTagHasStartAncestor)
@@ -3463,42 +3474,72 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
 
     "reorder query patterns in where clause" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorder, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryToReorder,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(transformedQuery === transformedQueryToReorder)
     }
 
     "reorder query patterns in where clause with union" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorderWithUnion, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryToReorderWithUnion,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(transformedQuery === transformedQueryToReorderWithUnion)
     }
 
     "reorder query patterns in where clause with optional" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryWithOptional, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryWithOptional,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(transformedQuery === TransformedQueryWithOptional)
     }
 
     "reorder query patterns with minus scope" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorderWithMinus, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryToReorderWithMinus,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(transformedQuery == transformedQueryToReorderWithMinus)
     }
 
     "reorder a query with a cycle" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryToReorderWithCycle, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryToReorderWithCycle,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(transformedQuery == transformedQueryToReorderWithCycle)
     }
 
     "not remove rdf:type knora-api:Resource if it's needed" in {
       val transformedQuery =
-        QueryHandler.transformQuery(queryWithKnoraApiResource, responderData, settings, defaultFeatureFactoryConfig)
+        QueryHandler.transformQuery(
+          queryWithKnoraApiResource,
+          appActor,
+          responderData,
+          settings
+        )
 
       assert(
         transformedQuery.whereClause.patterns.contains(

@@ -7,8 +7,8 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
@@ -69,10 +69,13 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
                          .toString()
                      )
 
-      queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                          sparql = sparqlQuery,
-                                                          featureFactoryConfig = request.featureFactoryConfig
-                                                        )).mapTo[SparqlExtendedConstructResponse]
+      queryResponse: SparqlExtendedConstructResponse <- appActor
+                                                          .ask(
+                                                            SparqlExtendedConstructRequest(
+                                                              sparql = sparqlQuery
+                                                            )
+                                                          )
+                                                          .mapTo[SparqlExtendedConstructResponse]
 
       _ = if (queryResponse.statements.isEmpty)
             throw NotFoundException(s"No file value was found for filename ${request.filename}")
@@ -114,14 +117,15 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
       response <- permissionCode match {
                     case 1 =>
                       for {
-                        maybeRVSettings <- (
-                                             responderManager ? ProjectRestrictedViewSettingsGetADM(
-                                               identifier =
-                                                 ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
-                                               featureFactoryConfig = request.featureFactoryConfig,
-                                               requestingUser = KnoraSystemInstances.Users.SystemUser
-                                             )
-                                           ).mapTo[Option[ProjectRestrictedViewSettingsADM]]
+                        maybeRVSettings <-
+                          appActor
+                            .ask(
+                              ProjectRestrictedViewSettingsGetADM(
+                                identifier = ProjectIdentifierADM(maybeShortcode = Some(request.projectID)),
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                              )
+                            )
+                            .mapTo[Option[ProjectRestrictedViewSettingsADM]]
                       } yield SipiFileInfoGetResponseADM(permissionCode = permissionCode, maybeRVSettings)
 
                     case _ =>

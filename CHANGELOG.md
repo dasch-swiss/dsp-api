@@ -1,5 +1,71 @@
 # Changelog
 
+### [22.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.0...v22.0.1) (2022-07-08)
+
+
+### Bug Fixes
+
+* **authentication:** make cookie name unique between environments ([#2091](https://www.github.com/dasch-swiss/dsp-api/issues/2091)) ([680021e](https://www.github.com/dasch-swiss/dsp-api/commit/680021e8ffd477b162e36a05eeeb4a1c6389d127))
+* **value:** make impossible to set list root node as a value (DEV-973) ([#2088](https://www.github.com/dasch-swiss/dsp-api/issues/2088)) ([94d2b46](https://www.github.com/dasch-swiss/dsp-api/commit/94d2b46387376c78531a45465827e52f5aaaf490))
+
+
+### Maintenance
+
+* **triplestore:** ZIO-fying triplestore service (DSP-904) ([#2059](https://www.github.com/dasch-swiss/dsp-api/issues/2059)) ([9e038ec](https://www.github.com/dasch-swiss/dsp-api/commit/9e038ec8ef21179f4c2f31ccb00fcf02b21311b7))
+* **v3:** finish user slice (DEV-671) ([#2078](https://www.github.com/dasch-swiss/dsp-api/issues/2078)) ([48592ad](https://www.github.com/dasch-swiss/dsp-api/commit/48592ade1694bb26db8e7876e7f4b880e854dc67))
+
+## [22.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.1...v22.0.0) (2022-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* add upgrade plugin that fixes invalid date serialisations (#2081)
+
+### Bug Fixes
+
+* add upgrade plugin that fixes invalid date serialisations ([#2081](https://www.github.com/dasch-swiss/dsp-api/issues/2081)) ([3a0902e](https://www.github.com/dasch-swiss/dsp-api/commit/3a0902ea9b44860bcb73e4ef25888f5ac8a5dc21))
+* **ontology:** link value property is not editable after editing the property metadata (DEV-1037) ([#2084](https://www.github.com/dasch-swiss/dsp-api/issues/2084)) ([09688f5](https://www.github.com/dasch-swiss/dsp-api/commit/09688f5d4bd85e9544807328ee51b222d8b4732b))
+
+
+### Maintenance
+
+* temporarily ignore KnoraSipiIntegrationV2ITSpec ([#2085](https://www.github.com/dasch-swiss/dsp-api/issues/2085)) ([59f93b3](https://www.github.com/dasch-swiss/dsp-api/commit/59f93b318115c204ec3a20da23c97251575084bd))
+
+### [21.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.0...v21.0.1) (2022-06-23)
+
+
+### Bug Fixes
+
+* fix RepositoryUpdater by removing old way of adding plugins ([#2082](https://www.github.com/dasch-swiss/dsp-api/issues/2082)) ([6599b68](https://www.github.com/dasch-swiss/dsp-api/commit/6599b684da0e6d6506a311441a0214f50e5fb3d6))
+
+## [21.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.1...v21.0.0) (2022-06-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* fix valueHasUri bad values and missing types (DEV-1036) (#2079)
+
+### Bug Fixes
+
+* fix valueHasUri bad values and missing types (DEV-1036) ([#2079](https://www.github.com/dasch-swiss/dsp-api/issues/2079)) ([de1e5a4](https://www.github.com/dasch-swiss/dsp-api/commit/de1e5a4e2ce83ad395a76b33b6e2044db6d3003d))
+
+### [20.4.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.0...v20.4.1) (2022-06-16)
+
+
+### Bug Fixes
+
+* **admin:** return list labels and comments sorted by language ([#2074](https://www.github.com/dasch-swiss/dsp-api/issues/2074)) ([f3a66cb](https://www.github.com/dasch-swiss/dsp-api/commit/f3a66cb2ada71177ce5c256b36001b4b33072e2d))
+
+
+### Maintenance
+
+* add missing client test data (DEV-979) ([#2072](https://www.github.com/dasch-swiss/dsp-api/issues/2072)) ([54446bc](https://www.github.com/dasch-swiss/dsp-api/commit/54446bcae2e920581d3d4a6848bdcfa8706d6b22))
+* **audio:** remove not required properties ([#2070](https://www.github.com/dasch-swiss/dsp-api/issues/2070)) ([96362f4](https://www.github.com/dasch-swiss/dsp-api/commit/96362f448d0b2ef93cc840685028a79e59026881))
+* **exceptions:** Create sbt project "shared" and move exceptions (DEV-990) ([#2075](https://www.github.com/dasch-swiss/dsp-api/issues/2075)) ([c09392d](https://www.github.com/dasch-swiss/dsp-api/commit/c09392d7741caecfb21c8fe63e9922ccc912e7de))
+* move value objects to separate project (DEV-615) ([#2069](https://www.github.com/dasch-swiss/dsp-api/issues/2069)) ([b55eb12](https://www.github.com/dasch-swiss/dsp-api/commit/b55eb1228414729dc5b53c6cfc952a5305c7dbcd))
+* responder manager as plain case class ([#2073](https://www.github.com/dasch-swiss/dsp-api/issues/2073)) ([7f55697](https://www.github.com/dasch-swiss/dsp-api/commit/7f55697923cfdb6dbcfc6aa35673e3936648572c))
+* **user:** add user project (DEV-586) ([#2063](https://www.github.com/dasch-swiss/dsp-api/issues/2063)) ([0c5ec03](https://www.github.com/dasch-swiss/dsp-api/commit/0c5ec03239b28ed2075622825695c7475d248e6b))
+
 ## [20.4.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.3.1...v20.4.0) (2022-05-25)
 
 

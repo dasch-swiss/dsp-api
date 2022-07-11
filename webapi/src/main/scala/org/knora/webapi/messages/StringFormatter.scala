@@ -6,7 +6,7 @@
 package org.knora.webapi.messages
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -14,7 +14,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.SalsahGui
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -46,13 +46,12 @@ import scala.util.Success
 import scala.util.Try
 import scala.util.control.Exception._
 import scala.util.matching.Regex
+import dsp.valueobjects.IriErrorMessages
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
-  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
-
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
 
@@ -2818,16 +2817,16 @@ class StringFormatter private (
    * Checks whether an IRI already exists in the triplestore.
    *
    * @param iri          the IRI to be checked.
-   * @param storeManager a reference to the store manager.
+   * @param appActor     a reference to the application actor.
    * @return `true` if the IRI already exists, `false` otherwise.
    */
-  def checkIriExists(iri: IRI, storeManager: ActorRef)(implicit
+  def checkIriExists(iri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[Boolean] =
     for {
       askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(iri).toString)
-      response  <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      response  <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
     } yield response.result
 
   /**
@@ -2837,7 +2836,7 @@ class StringFormatter private (
    * @param iriFun       a function that generates a random IRI.
    * @param storeManager a reference to the Knora store manager actor.
    */
-  def makeUnusedIri(iriFun: => IRI, storeManager: ActorRef, log: LoggingAdapter)(implicit
+  def makeUnusedIri(iriFun: => IRI, storeManager: ActorRef, log: Logger)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
   ): Future[IRI] = {
@@ -2851,7 +2850,7 @@ class StringFormatter private (
           if (!iriExists) {
             FastFuture.successful(newIri)
           } else if (attempts > 1) {
-            log.warning("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
+            log.warn("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
             makeUnusedIriRec(attempts - 1)
           } else {
             throw UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")
@@ -2981,7 +2980,7 @@ class StringFormatter private (
    * @param s the string (IRI) to be checked.
    * @return TRUE for correct versions, FALSE for incorrect.
    */
-  def isUUIDVersion4Or5(s: IRI): Boolean =
+  def isUuidVersion4Or5(s: IRI): Boolean =
     if (getUUIDVersion(s) == 4 || getUUIDVersion(s) == 5) {
       true
     } else {
@@ -2994,7 +2993,7 @@ class StringFormatter private (
    * @param s the string to check.
    * @return TRUE if the string is the right length to be a canonical or Base64-encoded UUID.
    */
-  def hasUUIDLength(s: String): Boolean =
+  def hasUuidLength(s: String): Boolean =
     s.length == CanonicalUuidLength || s.length == Base64UuidLength
 
   /**
@@ -3002,8 +3001,8 @@ class StringFormatter private (
    * @param iri to be validated
    */
   def validateUUIDOfResourceIRI(iri: SmartIri): Unit =
-    if (iri.isKnoraResourceIri && hasUUIDLength(iri.toString.split("/").last) && !isUUIDVersion4Or5(iri.toString)) {
-      throw BadRequestException(UUID_INVALID_ERROR)
+    if (iri.isKnoraResourceIri && hasUuidLength(iri.toString.split("/").last) && !isUuidVersion4Or5(iri.toString)) {
+      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     }
 
   /**
@@ -3011,8 +3010,8 @@ class StringFormatter private (
    * @param iri to be validated.
    */
   def validatePermissionIRI(iri: IRI): Unit =
-    if (isKnoraPermissionIriStr(iri) && !isUUIDVersion4Or5(iri)) {
-      throw BadRequestException(UUID_INVALID_ERROR)
+    if (isKnoraPermissionIriStr(iri) && !isUuidVersion4Or5(iri)) {
+      throw BadRequestException(IriErrorMessages.UuidVersionInvalid)
     } else {
       validatePermissionIri(iri, throw BadRequestException(s"Invalid permission IRI ${iri} is given."))
     }

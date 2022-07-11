@@ -8,7 +8,7 @@ package org.knora.webapi.responders.v2
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -27,8 +27,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util._
@@ -37,11 +37,18 @@ import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import scala.concurrent.duration._
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object ResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -408,12 +415,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   override lazy val rdfDataObjects = List(
@@ -481,10 +493,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   )
 
   private def getResource(resourceIri: IRI, requestingUser: UserADM): ReadResourceV2 = {
-    responderManager ! ResourcesGetRequestV2(
+    appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = anythingUserProfile
     )
 
@@ -534,7 +545,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       .toString()
 
-    storeManager ! SparqlSelectRequest(sparqlQuery)
+    appActor ! SparqlSelectRequest(sparqlQuery)
 
     expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
       sparqlSelectResponse.results.bindings.map { row =>
@@ -550,7 +561,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       .toString()
 
-    storeManager ! SparqlSelectRequest(sparqlQuery)
+    appActor ! SparqlSelectRequest(sparqlQuery)
 
     expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
       val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
@@ -566,9 +577,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val timeout = 30.seconds
 
   "Load test data" in {
-    responderManager ! GetMappingRequestV2(
+    appActor ! GetMappingRequestV2(
       mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
@@ -580,11 +590,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   "The resources responder v2" should {
     "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -599,10 +608,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-      responderManager ! ResourcesPreviewGetRequestV2(
+      appActor ! ResourcesPreviewGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -617,11 +625,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -636,11 +643,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -655,10 +661,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-      responderManager ! ResourcesPreviewGetRequestV2(
+      appActor ! ResourcesPreviewGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -673,11 +678,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -693,12 +697,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris =
           Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -714,13 +717,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a resource of type thing with text as TEI/XML" in {
 
-      responderManager ! ResourceTEIGetRequestV2(
+      appActor ! ResourceTEIGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
         mappingIri = None,
         gravsearchTemplateIri = None,
         headerXSLTIri = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -739,13 +741,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a resource of type Something with text with standoff as TEI/XML" in {
 
-      responderManager ! ResourceTEIGetRequestV2(
+      appActor ! ResourceTEIGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
         mappingIri = None,
         gravsearchTemplateIri = None,
         headerXSLTIri = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -766,11 +767,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
       val versionDate = Instant.parse("2019-02-12T08:05:10Z")
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionDate),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -786,11 +786,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return the complete version history of a resource" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
+      appActor ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
         startDate = None,
         endDate = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -804,11 +803,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val startDate   = Instant.parse("2019-02-08T15:05:11Z")
       val endDate     = Instant.parse("2019-02-13T09:05:10Z")
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
+      appActor ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
         startDate = Some(startDate),
         endDate = Some(endDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -818,11 +816,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "get the latest version of a value, given its UUID" in {
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
         valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -835,12 +832,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "get a past version of a value, given its UUID and a timestamp" in {
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
         valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -853,7 +849,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return a graph of resources reachable via links from/to a given resource" in {
-      responderManager ! GraphDataGetRequestV2(
+      appActor ! GraphDataGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/start",
         depth = 6,
         inbound = true,
@@ -871,7 +867,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
-      responderManager ! GraphDataGetRequestV2(
+      appActor ! GraphDataGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/start",
         depth = 6,
         inbound = true,
@@ -889,7 +885,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return a graph containing a standoff link" in {
-      responderManager ! GraphDataGetRequestV2(
+      appActor ! GraphDataGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/a-thing",
         depth = 4,
         inbound = true,
@@ -904,7 +900,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return a graph containing just one node" in {
-      responderManager ! GraphDataGetRequestV2(
+      appActor ! GraphDataGetRequestV2(
         resourceIri = "http://rdfh.ch/0001/another-thing",
         depth = 4,
         inbound = true,
@@ -931,9 +927,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -981,9 +976,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1141,9 +1135,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1179,9 +1172,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         .toMessage(resourceIri = Some(resourceIri))
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1214,9 +1206,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         .toMessage(resourceIri = Some(resourceIri))
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1252,9 +1243,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           internalMimeType = Some("application/zip")
         )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1286,9 +1276,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1334,9 +1323,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1376,9 +1364,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1422,9 +1409,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1456,9 +1442,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1490,9 +1475,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1563,9 +1547,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1597,9 +1580,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1631,9 +1613,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1665,9 +1646,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1689,9 +1669,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1725,9 +1704,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1748,9 +1726,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.incunabulaProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1765,12 +1742,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[ForbiddenException] should ===(true)
@@ -1782,12 +1758,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
         maybeLabel = Some("new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
@@ -1804,12 +1779,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some(newLabel),
         maybePermissions = Some(newPermissions),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
@@ -1831,12 +1805,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("another new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
@@ -1849,12 +1822,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(Instant.MIN),
         maybeLabel = Some("another new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[EditConflictException] should ===(true)
@@ -1869,12 +1841,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeLabel = Some(newLabel),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
@@ -1893,12 +1864,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(Instant.MIN),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
@@ -1913,12 +1883,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(newModificationDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! updateRequest
+      appActor ! updateRequest
 
       expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
@@ -1939,12 +1908,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         maybeDeleteComment = Some("This resource is too boring."),
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = Some(aThingLastModificationDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! deleteRequest
+      appActor ! deleteRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         msg.cause.isInstanceOf[BadRequestException] should ===(true)
@@ -1957,19 +1925,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeDeleteComment = Some("This resource is too boring."),
         maybeLastModificationDate = Some(aThingLastModificationDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! deleteRequest
+      appActor ! deleteRequest
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq(aThingIri),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
@@ -1993,19 +1959,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         maybeDeleteComment = Some("This resource is too boring."),
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! deleteRequest
+      appActor ! deleteRequest
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      responderManager ! ResourcesGetRequestV2(
+      appActor ! ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
@@ -2031,9 +1995,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         permissions = Some("CR knora-admin:Creator")
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2055,9 +2018,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         permissions = Some("CR knora-admin:Creator")
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.rootUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2077,9 +2039,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         permissions = Some("CR knora-admin:Creator")
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -2111,9 +2072,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.imagesProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2147,9 +2107,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.imagesProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.rootUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2181,9 +2140,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.imagesProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -2222,9 +2180,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2240,7 +2197,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // Update the value.
 
-      responderManager ! UpdateValueRequestV2(
+      appActor ! UpdateValueRequestV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
           resourceClassIri = resourceClassIri,
@@ -2254,7 +2211,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2290,12 +2246,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! eraseRequest
+      appActor ! eraseRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         // println(msg.cause)
@@ -2329,9 +2284,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2348,12 +2302,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! eraseRequest
+      appActor ! eraseRequest
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         // println(msg.cause)
@@ -2362,13 +2315,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // Delete the link.
 
-      responderManager ! DeleteValueRequestV2(
+      appActor ! DeleteValueRequestV2(
         resourceIri = resourceWithLinkIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         propertyIri = linkValuePropertyIri,
         valueIri = linkValue.valueIri,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2384,12 +2336,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser,
         apiRequestID = UUID.randomUUID
       )
 
-      responderManager ! eraseRequest
+      appActor ! eraseRequest
       expectMsgType[SuccessResponseV2](timeout)
 
       // Check that all parts of the resource were erased.
@@ -2408,7 +2359,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
           .toString()
 
-        storeManager ! SparqlAskRequest(sparqlQuery)
+        appActor ! SparqlAskRequest(sparqlQuery)
 
         expectMsgPF(timeout) { case entityExistsResponse: SparqlAskResponse =>
           entityExistsResponse.result should be(false)
@@ -2424,7 +2375,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         .toString()
 
-      storeManager ! SparqlSelectRequest(isEntityUsedSparql)
+      appActor ! SparqlSelectRequest(isEntityUsedSparql)
 
       expectMsgPF(timeout) { case entityUsedResponse: SparqlSelectResult =>
         assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
@@ -2446,9 +2397,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2509,9 +2459,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectADM = SharedTestDataADM.anythingProject
       )
 
-      responderManager ! CreateResourceRequestV2(
+      appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2536,9 +2485,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return full history of a-thing-picture resource" in {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2559,9 +2507,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return full history of a resource as events" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2574,7 +2521,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
       // Update the value permission.
 
-      responderManager ! UpdateValueRequestV2(
+      appActor ! UpdateValueRequestV2(
         UpdateValuePermissionsV2(
           resourceIri = resourceIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -2583,16 +2530,14 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
       val updateValuePermissionResponse = expectMsgType[UpdateValueResponseV2](timeout)
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2613,7 +2558,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val testValue   = "a test value"
       // create new value.
 
-      responderManager ! CreateValueRequestV2(
+      appActor ! CreateValueRequestV2(
         CreateValueV2(
           resourceIri = resourceIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
@@ -2625,16 +2570,14 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueIri = Some(newValueIri.toSmartIri),
           permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser")
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
       expectMsgType[CreateValueResponseV2](timeout)
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2663,22 +2606,20 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val deleteComment = "delete value test"
       // delete the new value.
 
-      responderManager ! DeleteValueRequestV2(
+      appActor ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
         valueIri = valueToDelete,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
         deleteComment = Some(deleteComment),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
       expectMsgType[SuccessResponseV2](timeout)
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2697,9 +2638,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return full history of a deleted resource" in {
       val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -2716,20 +2656,18 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "update resource's metadata to test update resource metadata event" in {
       val resourceIri = "http://rdfh.ch/0001/thing_with_BCE_date2"
-      responderManager ! UpdateResourceMetadataRequestV2(
+      appActor ! UpdateResourceMetadataRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("a new label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
 
       expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
-      responderManager ! ResourceHistoryEventsGetRequestV2(
+      appActor ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
@@ -2743,9 +2681,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "not return resources of a project which does not exist" in {
 
-      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
+      appActor ! ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/1111",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
@@ -2754,9 +2691,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return seq of full history events for each resource of a project" in {
-      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
+      appActor ! ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/0001",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =

@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util
 
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.InconsistentRepositoryDataException
 
 /**
  * A [[Map]] that facilitates error-handling, by wrapping an ordinary [[Map]] and overriding the `default`

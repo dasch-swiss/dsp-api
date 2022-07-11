@@ -6,23 +6,23 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.SipiException
-import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.BadRequestException
+import dsp.errors.SipiException
+import dsp.errors.UnexpectedMessageException
+
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ArchiveFileValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.AudioFileValueV1
@@ -33,6 +33,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV
 import org.knora.webapi.messages.v1.responder.valuemessages.TextFileValueV1
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
+import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 import spray.json.JsNumber
 import spray.json.JsObject
@@ -62,8 +63,8 @@ object RouteUtilV1 {
     requestMessage: KnoraRequestV1,
     requestContext: RequestContext,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter
+    appActor: ActorRef,
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
     // Optionally log the request message. TODO: move this to the testing framework.
     if (settings.dumpMessages) {
@@ -72,7 +73,7 @@ object RouteUtilV1 {
 
     val httpResponse: Future[HttpResponse] = for {
       // Make sure the responder sent a reply of type KnoraResponseV1.
-      knoraResponse <- (responderManager ? requestMessage).map {
+      knoraResponse <- (appActor.ask(requestMessage)).map {
                          case replyMessage: KnoraResponseV1 => replyMessage
 
                          case other =>
@@ -121,8 +122,8 @@ object RouteUtilV1 {
     requestMessageF: Future[RequestMessageT],
     requestContext: RequestContext,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter
+    appActor: ActorRef,
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] =
     for {
       requestMessage <- requestMessageF
@@ -130,7 +131,7 @@ object RouteUtilV1 {
                        requestMessage = requestMessage,
                        requestContext = requestContext,
                        settings = settings,
-                       responderManager = responderManager,
+                       appActor = appActor,
                        log = log
                      )
     } yield routeResult
@@ -154,8 +155,8 @@ object RouteUtilV1 {
     viewHandler: (ReplyMessageT, ActorRef) => String,
     requestContext: RequestContext,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter
+    appActor: ActorRef,
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
     val httpResponse: Future[HttpResponse] = for {
@@ -168,7 +169,7 @@ object RouteUtilV1 {
           }
 
       // Make sure the responder sent a reply of type ReplyMessageT.
-      knoraResponse <- (responderManager ? requestMessage).map {
+      knoraResponse <- (appActor.ask(requestMessage)).map {
                          case replyMessage: ReplyMessageT => replyMessage
 
                          case other =>
@@ -187,7 +188,7 @@ object RouteUtilV1 {
       status = StatusCodes.OK,
       entity = HttpEntity(
         ContentTypes.`text/html(UTF-8)`,
-        viewHandler(knoraResponse, responderManager)
+        viewHandler(knoraResponse, appActor)
       )
     )
 
@@ -203,7 +204,7 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   * @param featureFactoryConfig           the feature factory configuration.
+   *
    * @param settings                       the application's settings.
    * @param responderManager               a reference to the responder manager.
    * @param log                            a logging adapter.
@@ -216,19 +217,22 @@ object RouteUtilV1 {
     mappingIri: IRI,
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter
+    appActor: ActorRef,
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV2] =
     for {
 
       // get the mapping directly from v2 responder directly (to avoid useless back and forth conversions between v2 and v1 message formats)
-      mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                                                 mappingIri = mappingIri,
-                                                 featureFactoryConfig = featureFactoryConfig,
-                                                 requestingUser = userProfile
-                                               )).mapTo[GetMappingResponseV2]
+      mappingResponse: GetMappingResponseV2 <-
+        appActor
+          .ask(
+            GetMappingRequestV2(
+              mappingIri = mappingIri,
+              requestingUser = userProfile
+            )
+          )
+          .mapTo[GetMappingResponseV2]
 
       textWithStandoffTagV1 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                                 xml = xml,

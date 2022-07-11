@@ -9,15 +9,17 @@ import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.V2
 import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.DuplicateValueException
-import org.knora.webapi.exceptions.UpdateNotPerformedException
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.UpdateNotPerformedException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
@@ -63,8 +65,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
   "The Lists Responder" when {
     "used to query information about lists" should {
       "return all lists" in {
-        responderManager ! ListsGetRequestADM(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
+        appActor ! ListsGetRequestADM(
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -74,9 +75,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "return all lists belonging to the images project" in {
-        responderManager ! ListsGetRequestADM(
+        appActor ! ListsGetRequestADM(
           projectIri = Some(IMAGES_PROJECT_IRI),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -88,9 +88,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "return all lists belonging to the anything project" in {
-        responderManager ! ListsGetRequestADM(
+        appActor ! ListsGetRequestADM(
           projectIri = Some(ANYTHING_PROJECT_IRI),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -102,9 +101,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "return basic list information (anything list)" in {
-        responderManager ! ListNodeInfoGetRequestADM(
+        appActor ! ListNodeInfoGetRequestADM(
           iri = "http://rdfh.ch/lists/0001/treeList",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
 
@@ -116,9 +114,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "return basic list information (anything other list)" in {
-        responderManager ! ListNodeInfoGetRequestADM(
+        appActor ! ListNodeInfoGetRequestADM(
           iri = "http://rdfh.ch/lists/0001/otherTreeList",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
 
@@ -130,9 +127,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "return basic node information (images list - sommer)" in {
-        responderManager ! ListNodeInfoGetRequestADM(
+        appActor ! ListNodeInfoGetRequestADM(
           iri = "http://rdfh.ch/lists/00FF/526f26ed04",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
 
@@ -144,9 +140,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "return a full list response" in {
-        responderManager ! ListGetRequestADM(
+        appActor ! ListGetRequestADM(
           iri = "http://rdfh.ch/lists/0001/treeList",
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
 
@@ -166,18 +161,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     "used to modify lists" should {
       "create a list" in {
-        responderManager ! ListRootNodeCreateRequestADM(
+        appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = "Neue Liste", language = Some("de"))))
               .fold(e => throw e.head, v => v),
             comments = Comments
-              .make(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -207,18 +201,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val labelWithSpecialCharacter   = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter    = "a new \\\"name\\\""
-        responderManager ! ListRootNodeCreateRequestADM(
+        appActor ! ListRootNodeCreateRequestADM(
           createRootNode = ListRootNodeCreatePayloadADM(
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v),
             comments = Comments
-              .make(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
+              .make(Seq(V2.StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e.head, v => v)
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -249,15 +242,15 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
             labels = Some(
               Labels
                 .make(
                   Seq(
-                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                    StringLiteralV2(value = "Changed List", language = Some("en"))
+                    V2.StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    V2.StringLiteralV2(value = "Changed List", language = Some("en"))
                   )
                 )
                 .fold(e => throw e.head, v => v)
@@ -266,18 +259,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               Comments
                 .make(
                   Seq(
-                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                    StringLiteralV2(value = "New Comment", language = Some("en"))
+                    V2.StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    V2.StringLiteralV2(value = "New Comment", language = Some("en"))
                   )
                 )
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
-        responderManager ! changeNodeInfoRequest
+        appActor ! changeNodeInfoRequest
 
         val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
@@ -305,15 +297,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not update basic list information if name is duplicate" in {
         val name       = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
-        val projectIRI = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
-        responderManager ! NodeInfoChangeRequestADM(
+        val projectIRI = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
+        appActor ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ListNodeChangePayloadADM(
-            listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
+            listIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = projectIRI,
             name = name
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -327,21 +318,20 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "add child to list - to the root node" in {
-        responderManager ! ListChildNodeCreateRequestADM(
+        appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -358,7 +348,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
@@ -379,22 +371,21 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "add second child to list in first position - to the root node" in {
-        responderManager ! ListChildNodeCreateRequestADM(
+        appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -411,7 +402,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
@@ -432,21 +425,20 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "add child to second child node" in {
-        responderManager ! ListChildNodeCreateRequestADM(
+        appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(secondChildIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(secondChildIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -463,7 +455,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         // check labels
         val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
         labels.size should be(1)
-        labels.sorted should be(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+        labels.sorted should be(
+          Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en")))
+        )
 
         // check comments
         val comments = childNodeInfo.comments.stringLiterals
@@ -485,22 +479,21 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not create a node if given new position is out of range" in {
         val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
-        responderManager ! ListChildNodeCreateRequestADM(
+        appActor ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
@@ -517,13 +510,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to reposition nodes" should {
       "not reposition a node if new position is the same as old one" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 3,
             parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -532,13 +524,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not reposition a node if new position is out of range" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 30,
             parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -547,13 +538,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not reposition a node to another parent node if new position is out of range" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 30,
             parentIri = "http://rdfh.ch/lists/0001/notUsedList"
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -563,13 +553,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "reposition node List014 from position 3 to 1 (shift to right)" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 1,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -596,13 +585,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "reposition node List011 from position 0 to end (shift to left)" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList011"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = -1,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -630,13 +618,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList013"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
         val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 2,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -659,9 +646,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         isShifted should be(true)
 
         /* check old parent node */
-        responderManager ! ListGetRequestADM(
+        appActor ! ListGetRequestADM(
           iri = oldParentIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
@@ -681,13 +667,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList015"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
         val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = -1,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -710,9 +695,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         isShifted should be(true)
 
         /* check old parent node */
-        responderManager ! ListGetRequestADM(
+        appActor ! ListGetRequestADM(
           iri = oldParentIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val receivedNode: ListNodeGetResponseADM = expectMsgType[ListNodeGetResponseADM](timeout)
@@ -726,13 +710,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "put List015 back in end of its original parent node" in {
         val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList015"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = -1,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -751,13 +734,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "put List013 back in position 2 of its original parent node" in {
         val nodeIri      = "http://rdfh.ch/lists/0001/notUsedList013"
         val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 2,
             parentIri = newParentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -776,13 +758,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "put List011 back in its original place" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList011"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 0,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -796,13 +777,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "put List014 back in its original position" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 3,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -816,13 +796,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "reposition node in a position equal to length of new parents children" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList03"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 5,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -836,13 +815,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "reposition List014 in position 0 of its sibling which does not have a child" in {
         val nodeIri   = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList015"
-        responderManager ! NodePositionChangeRequestADM(
+        appActor ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 0,
             parentIri = parentIri
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -857,9 +835,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to delete list items" should {
       "not delete a node that is in use" in {
         val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
-        responderManager ! ListItemDeleteRequestADM(
+        appActor ! ListItemDeleteRequestADM(
           nodeIri = nodeInUseIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -869,9 +846,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
         val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
-        responderManager ! ListItemDeleteRequestADM(
+        appActor ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -884,9 +860,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
         val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
-        responderManager ! ListItemDeleteRequestADM(
+        appActor ! ListItemDeleteRequestADM(
           nodeIri = nodeInUseInOntologyIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -898,9 +873,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "delete a middle child node that is not in use" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
-        responderManager ! ListItemDeleteRequestADM(
+        appActor ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -919,9 +893,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "delete a child node that is not in use" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
-        responderManager ! ListItemDeleteRequestADM(
+        appActor ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -936,9 +909,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
         val listIri = "http://rdfh.ch/lists/0001/notUsedList"
-        responderManager ! ListItemDeleteRequestADM(
+        appActor ! ListItemDeleteRequestADM(
           nodeIri = listIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
@@ -951,9 +923,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to query if list can be deleted" should {
       "return FALSE for a node that is in use" in {
         val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
-        responderManager ! CanDeleteListRequestADM(
+        appActor ! CanDeleteListRequestADM(
           iri = nodeInUseIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -963,9 +934,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return FALSE for a node that is unused but has a child which is used" in {
         val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
-        responderManager ! CanDeleteListRequestADM(
+        appActor ! CanDeleteListRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -975,9 +945,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
         val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
-        responderManager ! CanDeleteListRequestADM(
+        appActor ! CanDeleteListRequestADM(
           iri = nodeInUseInOntologyIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -987,9 +956,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return TRUE for a middle child node that is not in use" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
-        responderManager ! CanDeleteListRequestADM(
+        appActor ! CanDeleteListRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -999,9 +967,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "retrun TRUE for a child node that is not in use" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
-        responderManager ! CanDeleteListRequestADM(
+        appActor ! CanDeleteListRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -1011,9 +978,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
         val listIri = "http://rdfh.ch/lists/0001/notUsedList"
-        responderManager ! CanDeleteListRequestADM(
+        appActor ! CanDeleteListRequestADM(
           iri = listIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
@@ -1025,9 +991,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to delete list node comments" should {
       "do not delete a comment of root list node" in {
         val nodeIri = "http://rdfh.ch/lists/0001/testList"
-        responderManager ! ListNodeCommentsDeleteRequestADM(
+        appActor ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         expectMsg(
@@ -1037,9 +1002,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "delete all comments of child node that contains just one comment" in {
         val nodeIri = "http://rdfh.ch/lists/0001/testList01"
-        responderManager ! ListNodeCommentsDeleteRequestADM(
+        appActor ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: ListNodeCommentsDeleteResponseADM =
@@ -1050,9 +1014,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "delete all comments of child node that contains more than one comment" in {
         val nodeIri = "http://rdfh.ch/lists/0001/testList02"
-        responderManager ! ListNodeCommentsDeleteRequestADM(
+        appActor ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         val response: ListNodeCommentsDeleteResponseADM =
@@ -1063,9 +1026,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "if reqested list does not have comments, inform there is no comments to delete" in {
         val nodeIri = "http://rdfh.ch/lists/0001/testList03"
-        responderManager ! ListNodeCommentsDeleteRequestADM(
+        appActor ! ListNodeCommentsDeleteRequestADM(
           iri = nodeIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser
         )
         expectMsg(

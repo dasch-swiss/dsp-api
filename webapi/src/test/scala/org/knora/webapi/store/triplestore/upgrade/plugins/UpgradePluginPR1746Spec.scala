@@ -6,12 +6,12 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit =
     model
@@ -37,7 +37,7 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr1746.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR1746(defaultFeatureFactoryConfig, logger)
+      val plugin = new UpgradePluginPR1746(log)
       plugin.transform(model)
 
       // Check that the empty valueHasString is replaced with FIXME.

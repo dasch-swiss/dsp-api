@@ -8,12 +8,12 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.GravsearchException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
-import org.knora.webapi.exceptions.TriplestoreTimeoutException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.GravsearchException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.errors.TriplestoreTimeoutException
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -52,7 +52,7 @@ import scala.util.Try
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
   // A Gravsearch type inspection runner.
-  private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
+  private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(appActor, responderData)
 
   /**
    * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.
@@ -63,7 +63,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           limitToProject,
           limitToResourceClass,
           limitToStandoffClass,
-          featureFactoryConfig,
           requestingUser
         ) =>
       fulltextSearchCountV2(
@@ -71,7 +70,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         limitToProject,
         limitToResourceClass,
         limitToStandoffClass,
-        featureFactoryConfig,
         requestingUser
       )
 
@@ -84,7 +82,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           returnFiles,
           targetSchema,
           schemaOptions,
-          featureFactoryConfig,
           requestingUser
         ) =>
       fulltextSearchV2(
@@ -96,23 +93,20 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         returnFiles,
         targetSchema,
         schemaOptions,
-        featureFactoryConfig,
         requestingUser
       )
 
-    case GravsearchCountRequestV2(query, featureFactoryConfig, requestingUser) =>
+    case GravsearchCountRequestV2(query, requestingUser) =>
       gravsearchCountV2(
         inputQuery = query,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
 
-    case GravsearchRequestV2(query, targetSchema, schemaOptions, featureFactoryConfig, requestingUser) =>
+    case GravsearchRequestV2(query, targetSchema, schemaOptions, requestingUser) =>
       gravsearchV2(
         inputQuery = query,
         targetSchema = targetSchema,
         schemaOptions = schemaOptions,
-        featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
 
@@ -120,14 +114,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           searchValue,
           limitToProject,
           limitToResourceClass,
-          featureFactoryConfig,
           requestingUser
         ) =>
       searchResourcesByLabelCountV2(
         searchValue,
         limitToProject,
         limitToResourceClass,
-        featureFactoryConfig,
         requestingUser
       )
 
@@ -137,7 +129,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           limitToProject,
           limitToResourceClass,
           targetSchema,
-          featureFactoryConfig,
           requestingUser
         ) =>
       searchResourcesByLabelV2(
@@ -146,7 +137,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         limitToProject,
         limitToResourceClass,
         targetSchema,
-        featureFactoryConfig,
         requestingUser
       )
 
@@ -165,7 +155,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param searchValue          the values to search for.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
@@ -174,7 +164,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
     limitToStandoffClass: Option[SmartIri],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceCountV2] = {
 
@@ -198,7 +187,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             .toString()
         )
 
-      countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
+      countResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
       _ = if (countResponse.results.bindings.length != 1) {
@@ -222,7 +211,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param returnFiles          if true, return any file value attached to each matching resource.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
@@ -235,7 +224,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     returnFiles: Boolean,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.FullTextMainQueryGenerator.FullTextSearchConstants
@@ -262,7 +250,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             .toString()
         )
 
-      prequeryResponseNotMerged: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql))
+      prequeryResponseNotMerged: SparqlSelectResult <- appActor
+                                                         .ask(SparqlSelectRequest(searchSparql))
                                                          .mapTo[SparqlSelectResult]
 
       mainResourceVar = QueryVariable("resource")
@@ -318,10 +307,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           for {
             searchResponse: SparqlExtendedConstructResponse <-
-              (storeManager ? SparqlExtendedConstructRequest(
-                sparql = triplestoreSpecificQuery.toSparql,
-                featureFactoryConfig = featureFactoryConfig
-              )).mapTo[SparqlExtendedConstructResponse]
+              appActor
+                .ask(
+                  SparqlExtendedConstructRequest(
+                    sparql = triplestoreSpecificQuery.toSparql
+                  )
+                )
+                .mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and value objects
             queryResultsSep: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -351,7 +343,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         if (queryStandoff) {
           getMappingsFromQueryResultsSeparated(
             queryResultsSeparated = mainResourcesAndValueRdfData.resources,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
         } else {
@@ -367,10 +358,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           queryStandoff = queryStandoff,
           calculateMayHaveMoreResults = true,
           versionDate = None,
-          responderManager = responderManager,
+          appActor = appActor,
           settings = settings,
           targetSchema = targetSchema,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
@@ -381,13 +371,12 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * Performs a count query for a Gravsearch query provided by the user.
    *
    * @param inputQuery           a Gravsearch query provided by the client.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the client making the request.
    * @return a [[ResourceCountV2]] representing the number of resources that have been found.
    */
   private def gravsearchCountV2(
     inputQuery: ConstructQuery,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceCountV2] = {
 
@@ -421,8 +410,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
-          querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-          featureFactoryConfig = featureFactoryConfig
+          querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
         )
 
       nonTriplestoreSpecificPrequery: SelectQuery =
@@ -446,7 +434,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       ontologiesForInferenceMaybe <-
         QueryTraverser.getOntologiesRelevantForInference(
           inputQuery.whereClause,
-          storeManager
+          appActor
         )
 
       triplestoreSpecificCountQuery =
@@ -457,7 +445,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
       countResponse: SparqlSelectResult <-
-        (storeManager ? SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
+        appActor
+          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
           .mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -479,7 +468,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param inputQuery           a Gravsearch query provided by the client.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
@@ -487,7 +476,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     inputQuery: ConstructQuery,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
     import org.knora.webapi.messages.util.search.gravsearch.mainquery.GravsearchMainQueryGenerator
@@ -517,8 +505,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           constructClause = inputQuery.constructClause,
           typeInspectionResult = typeInspectionResult,
           querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-          settings = settings,
-          featureFactoryConfig = featureFactoryConfig
+          settings = settings
         )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly
@@ -527,7 +514,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       ontologiesForInferenceMaybe <-
         QueryTraverser.getOntologiesRelevantForInference(
           inputQuery.whereClause,
-          storeManager
+          appActor
         )
       nonTriplestoreSpecificPrequery: SelectQuery =
         QueryTraverser.transformConstructToSelect(
@@ -557,7 +544,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
       start                        = System.currentTimeMillis()
-      tryPrequeryResponseNotMerged = Try(storeManager ? SparqlSelectRequest(triplestoreSpecificPrequerySparql))
+      tryPrequeryResponseNotMerged = Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql)))
       prequeryResponseNotMerged <-
         (tryPrequeryResponseNotMerged match {
           case Failure(exception) => {
@@ -665,10 +652,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
           for {
             mainQueryResponse: SparqlExtendedConstructResponse <-
-              (storeManager ? SparqlExtendedConstructRequest(
-                sparql = triplestoreSpecificMainQuerySparql,
-                featureFactoryConfig = featureFactoryConfig
-              )).mapTo[SparqlExtendedConstructResponse]
+              appActor
+                .ask(
+                  SparqlExtendedConstructRequest(
+                    sparql = triplestoreSpecificMainQuerySparql
+                  )
+                )
+                .mapTo[SparqlExtendedConstructResponse]
 
             // Filter out values that the user doesn't have permission to see.
             queryResultsFilteredForPermissions: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -713,7 +703,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         if (queryStandoff) {
           getMappingsFromQueryResultsSeparated(
             queryResultsSeparated = mainQueryResults.resources,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
         } else {
@@ -729,10 +718,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           queryStandoff = queryStandoff,
           versionDate = None,
           calculateMayHaveMoreResults = true,
-          responderManager = responderManager,
+          appActor = appActor,
           settings = settings,
           targetSchema = targetSchema,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
@@ -754,13 +742,16 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
     for {
       // Get information about the resource class, and about the ORDER BY property if specified.
-      entityInfoResponse: EntityInfoGetResponseV2 <- {
-        responderManager ? EntityInfoGetRequestV2(
-          classIris = Set(internalClassIri),
-          propertyIris = maybeInternalOrderByPropertyIri.toSet,
-          requestingUser = resourcesInProjectGetRequestV2.requestingUser
-        )
-      }.mapTo[EntityInfoGetResponseV2]
+      entityInfoResponse: EntityInfoGetResponseV2 <-
+        appActor
+          .ask(
+            EntityInfoGetRequestV2(
+              classIris = Set(internalClassIri),
+              propertyIris = maybeInternalOrderByPropertyIri.toSet,
+              requestingUser = resourcesInProjectGetRequestV2.requestingUser
+            )
+          )
+          .mapTo[EntityInfoGetResponseV2]
 
       classDef: ReadClassInfoV2 = entityInfoResponse.classInfoMap(internalClassIri)
 
@@ -842,7 +833,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                    )
                    .toString
 
-      sparqlSelectResponse      <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      sparqlSelectResponse      <- appActor.ask(SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
 
       // Find out whether to query standoff along with text values. This boolean value will be passed to
@@ -885,10 +876,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               )
 
             resourceRequestResponse: SparqlExtendedConstructResponse <-
-              (storeManager ? SparqlExtendedConstructRequest(
-                sparql = resourceRequestSparql,
-                featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig
-              )).mapTo[SparqlExtendedConstructResponse]
+              appActor
+                .ask(
+                  SparqlExtendedConstructRequest(
+                    sparql = resourceRequestSparql
+                  )
+                )
+                .mapTo[SparqlExtendedConstructResponse]
 
             // separate resources and values
             mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -903,7 +897,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               if (queryStandoff) {
                 getMappingsFromQueryResultsSeparated(
                   mainResourcesAndValueRdfData.resources,
-                  featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig,
                   resourcesInProjectGetRequestV2.requestingUser
                 )
               } else {
@@ -920,10 +913,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 queryStandoff = maybeStandoffMinStartIndex.nonEmpty,
                 versionDate = None,
                 calculateMayHaveMoreResults = true,
-                responderManager = responderManager,
+                appActor = appActor,
                 targetSchema = resourcesInProjectGetRequestV2.targetSchema,
                 settings = settings,
-                featureFactoryConfig = resourcesInProjectGetRequestV2.featureFactoryConfig,
                 requestingUser = resourcesInProjectGetRequestV2.requestingUser
               )
           } yield readResourcesSequence
@@ -939,7 +931,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param searchValue          the values to search for.
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
@@ -947,7 +939,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     searchValue: String,
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceCountV2] = {
     val searchPhrase: MatchStringWhileTyping = MatchStringWhileTyping(searchValue)
@@ -967,7 +958,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             .toString()
         )
 
-      countResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
+      countResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(countSparql)).mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
       _ = if (countResponse.results.bindings.length != 1) {
@@ -992,7 +983,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
    * @param limitToProject       limit search to given project.
    * @param limitToResourceClass limit search to given resource class.
    * @param targetSchema         the schema of the response.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the client making the request.
    * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
    */
@@ -1002,7 +993,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     limitToProject: Option[IRI],
     limitToResourceClass: Option[SmartIri],
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
 
@@ -1024,10 +1014,13 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         )
 
       searchResourceByLabelResponse: SparqlExtendedConstructResponse <-
-        (storeManager ? SparqlExtendedConstructRequest(
-          sparql = searchResourceByLabelSparql,
-          featureFactoryConfig = featureFactoryConfig
-        )).mapTo[SparqlExtendedConstructResponse]
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = searchResourceByLabelSparql
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
 
       // collect the IRIs of main resources returned
       mainResourceIris: Set[IRI] =
@@ -1067,10 +1060,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
           queryStandoff = false,
           versionDate = None,
           calculateMayHaveMoreResults = true,
-          responderManager = responderManager,
+          appActor = appActor,
           targetSchema = targetSchema,
           settings = settings,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 

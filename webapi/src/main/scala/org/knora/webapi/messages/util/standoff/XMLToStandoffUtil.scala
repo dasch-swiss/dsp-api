@@ -5,12 +5,12 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
+import dsp.errors._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.ErrorHandlingMap
 
@@ -392,7 +392,7 @@ class XMLToStandoffUtil(
   def xml2TextWithStandoff(
     xmlStr: String,
     tagsWithSeparator: Seq[XMLTagSeparatorRequired] = Seq.empty[XMLTagSeparatorRequired],
-    log: LoggingAdapter
+    log: Logger
   ): TextWithStandoff = {
 
     // Knora uses Unicode INFORMATION SEPARATOR TWO (U+001E) to indicate word breaks where a tag implicitly separates words. But
@@ -746,7 +746,7 @@ class XMLToStandoffUtil(
         case Some(existingUuid) => existingUuid
         case None               =>
           // Otherwise, try to parse the ID as a UUID.
-          if (stringFormatter.hasUUIDLength(id)) {
+          if (stringFormatter.hasUuidLength(id)) {
             stringFormatter.decodeUuid(id)
           } else {
             // If the ID doesn't seem to be a UUID, replace it with a random UUID. TODO: this should throw an exception instead.

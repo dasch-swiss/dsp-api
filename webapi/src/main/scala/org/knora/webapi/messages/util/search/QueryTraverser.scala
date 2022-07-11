@@ -212,10 +212,10 @@ object QueryTraverser {
    *
    * @param entity       an RDF entity.
    * @param map          a map of entity IRIs to the IRIs of the ontology where they are defined.
-   * @param storeManager a reference to the storeManager to retrieve a [[ProjectADM]] by a shortcode.
+   * @param appActor     a reference to the appActor to retrieve a [[ProjectADM]] by a shortcode.
    * @return a sequence of ontology IRIs which relate to the input RDF entity.
    */
-  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], storeManager: ActorRef): Seq[SmartIri] =
+  private def resolveEntity(entity: Entity, map: Map[SmartIri, SmartIri], appActor: ActorRef): Seq[SmartIri] =
     entity match {
       case IriRef(iri, _) => {
         val internal     = iri.toOntologySchema(InternalSchema)
@@ -232,7 +232,8 @@ object QueryTraverser {
               case _ => {
                 // find the project with the shortcode
                 val projectFuture =
-                  (storeManager ? CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
+                  appActor
+                    .ask(CacheServiceGetProjectADM(ProjectIdentifierADM(maybeShortcode = shortcode)))
                     .mapTo[Option[ProjectADM]]
                 val projectMaybe = Await.result(projectFuture, 1.second)
                 projectMaybe match {

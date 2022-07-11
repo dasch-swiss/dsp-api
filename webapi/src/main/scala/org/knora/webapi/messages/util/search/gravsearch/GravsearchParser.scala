@@ -11,7 +11,7 @@ import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.QueryParser
 import org.eclipse.rdf4j.query.parser.sparql._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.GravsearchException
+import dsp.errors.GravsearchException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri

@@ -11,7 +11,6 @@ import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.app.appmessages.AppState
 import org.knora.webapi.messages.app.appmessages.AppStates
 import org.knora.webapi.messages.app.appmessages.GetAppState
@@ -20,6 +19,7 @@ import spray.json.JsString
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.http.scaladsl.util.FastFuture
 
 case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
@@ -34,40 +34,45 @@ trait HealthCheck {
   protected def healthCheck(): Future[HttpResponse] =
     for {
 
-      state: AppState <- (applicationActor ? GetAppState()).mapTo[AppState]
+      state: AppState <-
+        appActor
+          .ask(GetAppState())
+          .mapTo[AppState]
+          .fallbackTo(FastFuture.successful(AppStates.Stopped))
 
-      result: HealthCheckResult = state match {
-                                    case AppStates.Stopped    => unhealthy("Stopped. Please retry later.")
-                                    case AppStates.StartingUp => unhealthy("Starting up. Please retry later.")
-                                    case AppStates.WaitingForTriplestore =>
-                                      unhealthy("Waiting for triplestore. Please retry later.")
-                                    case AppStates.TriplestoreReady =>
-                                      unhealthy("Triplestore ready. Please retry later.")
-                                    case AppStates.UpdatingRepository =>
-                                      unhealthy("Updating repository. Please retry later.")
-                                    case AppStates.RepositoryUpToDate =>
-                                      unhealthy("Repository up to date. Please retry later.")
-                                    case AppStates.CreatingCaches => unhealthy("Creating caches. Please retry later.")
-                                    case AppStates.CachesReady    => unhealthy("Caches ready. Please retry later.")
-                                    case AppStates.UpdatingSearchIndex =>
-                                      unhealthy("Updating search index. Please retry later.")
-                                    case AppStates.SearchIndexReady =>
-                                      unhealthy("Search index ready. Please retry later.")
-                                    case AppStates.LoadingOntologies =>
-                                      unhealthy("Loading ontologies. Please retry later.")
-                                    case AppStates.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
-                                    case AppStates.WaitingForIIIFService =>
-                                      unhealthy("Waiting for IIIF service. Please retry later.")
-                                    case AppStates.IIIFServiceReady =>
-                                      unhealthy("IIIF service ready. Please retry later.")
-                                    case AppStates.WaitingForCacheService =>
-                                      unhealthy("Waiting for cache service. Please retry later.")
-                                    case AppStates.CacheServiceReady =>
-                                      unhealthy("Cache service ready. Please retry later.")
-                                    case AppStates.MaintenanceMode =>
-                                      unhealthy("Application is in maintenance mode. Please retry later.")
-                                    case AppStates.Running => healthy()
-                                  }
+      result: HealthCheckResult =
+        state match {
+          case AppStates.Stopped    => unhealthy("Stopped. Please retry later.")
+          case AppStates.StartingUp => unhealthy("Starting up. Please retry later.")
+          case AppStates.WaitingForTriplestore =>
+            unhealthy("Waiting for triplestore. Please retry later.")
+          case AppStates.TriplestoreReady =>
+            unhealthy("Triplestore ready. Please retry later.")
+          case AppStates.UpdatingRepository =>
+            unhealthy("Updating repository. Please retry later.")
+          case AppStates.RepositoryUpToDate =>
+            unhealthy("Repository up to date. Please retry later.")
+          case AppStates.CreatingCaches => unhealthy("Creating caches. Please retry later.")
+          case AppStates.CachesReady    => unhealthy("Caches ready. Please retry later.")
+          case AppStates.UpdatingSearchIndex =>
+            unhealthy("Updating search index. Please retry later.")
+          case AppStates.SearchIndexReady =>
+            unhealthy("Search index ready. Please retry later.")
+          case AppStates.LoadingOntologies =>
+            unhealthy("Loading ontologies. Please retry later.")
+          case AppStates.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
+          case AppStates.WaitingForIIIFService =>
+            unhealthy("Waiting for IIIF service. Please retry later.")
+          case AppStates.IIIFServiceReady =>
+            unhealthy("IIIF service ready. Please retry later.")
+          case AppStates.WaitingForCacheService =>
+            unhealthy("Waiting for cache service. Please retry later.")
+          case AppStates.CacheServiceReady =>
+            unhealthy("Cache service ready. Please retry later.")
+          case AppStates.MaintenanceMode =>
+            unhealthy("Application is in maintenance mode. Please retry later.")
+          case AppStates.Running => healthy()
+        }
 
       response = createResponse(result)
 
@@ -116,7 +121,7 @@ class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("health") {
       get { requestContext =>
         requestContext.complete(healthCheck())

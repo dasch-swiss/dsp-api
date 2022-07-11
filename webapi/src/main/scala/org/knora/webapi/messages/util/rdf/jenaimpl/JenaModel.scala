@@ -7,8 +7,7 @@ package org.knora.webapi.messages.util.rdf.jenaimpl
 
 import org.apache.jena
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.RdfProcessingException
-import org.knora.webapi.feature.Feature
+import dsp.errors.RdfProcessingException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
@@ -157,8 +156,7 @@ abstract class JenaContextFactory {
  */
 class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory: JenaNodeFactory)
     extends JenaContextFactory
-    with RdfModel
-    with Feature {
+    with RdfModel {
 
   import JenaConversions._
 

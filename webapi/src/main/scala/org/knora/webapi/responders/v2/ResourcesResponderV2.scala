@@ -8,9 +8,8 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
+import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM.DeletePermission
 import org.knora.webapi.messages.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.messages.util.PermissionUtilADM.PermissionComparisonResult
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.JsonLDArray
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDInt
@@ -91,7 +91,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           withDeleted,
           targetSchema,
           schemaOptions,
-          featureFactoryConfig,
           requestingUser
         ) =>
       getResourcesV2(
@@ -103,24 +102,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         showDeletedValues = false,
         targetSchema,
         schemaOptions,
-        featureFactoryConfig,
         requestingUser
       )
     case ResourcesPreviewGetRequestV2(
           resIris,
           withDeletedResource,
           targetSchema,
-          featureFactoryConfig,
           requestingUser
         ) =>
-      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, featureFactoryConfig, requestingUser)
+      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, requestingUser)
     case ResourceTEIGetRequestV2(
           resIri,
           textProperty,
           mappingIri,
           gravsearchTemplateIri,
           headerXSLTIri,
-          featureFactoryConfig,
           requestingUser
         ) =>
       getResourceAsTeiV2(
@@ -129,7 +125,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         mappingIri,
         gravsearchTemplateIri,
         headerXSLTIri,
-        featureFactoryConfig,
         requestingUser
       )
 
@@ -169,7 +164,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
       for {
         //check if resourceIri already exists holding a lock on the IRI
-        result <- stringFormatter.checkIriExists(resourceIri, storeManager)
+        result <- stringFormatter.checkIriExists(resourceIri, appActor)
 
         _ = if (result) {
               throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
@@ -185,7 +180,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         _ <- checkStandoffLinkTargets(
                values = internalCreateResource.flatValues,
-               featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                requestingUser = createResourceRequestV2.requestingUser
              )
 
@@ -195,7 +189,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
                                                    resourceIri: IRI,
                                                    internalCreateResources = Seq(internalCreateResource),
-                                                   featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
                                                    requestingUser = createResourceRequestV2.requestingUser
                                                  )
 
@@ -203,20 +196,28 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // resources that are link targets.
 
         resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <-
-          (responderManager ? EntityInfoGetRequestV2(
-            classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
-            requestingUser = createResourceRequestV2.requestingUser
-          )).mapTo[EntityInfoGetResponseV2]
+          appActor
+            .ask(
+              EntityInfoGetRequestV2(
+                classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
+                requestingUser = createResourceRequestV2.requestingUser
+              )
+            )
+            .mapTo[EntityInfoGetResponseV2]
 
         resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(
                                                internalCreateResource.resourceClassIri
                                              )
 
         propertyEntityInfoResponse: EntityInfoGetResponseV2 <-
-          (responderManager ? EntityInfoGetRequestV2(
-            propertyIris = resourceClassInfo.knoraResourceProperties,
-            requestingUser = createResourceRequestV2.requestingUser
-          )).mapTo[EntityInfoGetResponseV2]
+          appActor
+            .ask(
+              EntityInfoGetRequestV2(
+                propertyIris = resourceClassInfo.knoraResourceProperties,
+                requestingUser = createResourceRequestV2.requestingUser
+              )
+            )
+            .mapTo[EntityInfoGetResponseV2]
 
         allEntityInfo = EntityInfoGetResponseV2(
                           classInfoMap = resourceClassEntityInfoResponse.classInfoMap,
@@ -263,8 +264,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                           defaultResourcePermissions = defaultResourcePermissions,
                                                           defaultPropertyPermissions = defaultPropertyPermissions,
                                                           creationDate = creationDate,
-                                                          featureFactoryConfig =
-                                                            createResourceRequestV2.featureFactoryConfig,
                                                           requestingUser = createResourceRequestV2.requestingUser
                                                         )
 
@@ -282,15 +281,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                          .toString()
 
         // Do the update.
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Verify that the resource was created correctly.
         previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
                                                                resourceReadyToCreate = resourceReadyToCreate,
                                                                projectIri =
                                                                  createResourceRequestV2.createResource.projectADM.id,
-                                                               featureFactoryConfig =
-                                                                 createResourceRequestV2.featureFactoryConfig,
                                                                requestingUser = createResourceRequestV2.requestingUser
                                                              )
       } yield previewOfCreatedResource
@@ -320,10 +317,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Ensure that the resource class isn't from a non-shared ontology in another project.
 
       resourceClassOntologyIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
-      readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(
-                                                          Set(resourceClassOntologyIri),
-                                                          createResourceRequestV2.requestingUser
-                                                        )).mapTo[ReadOntologyMetadataV2]
+      readOntologyMetadataV2: ReadOntologyMetadataV2 <- appActor
+                                                          .ask(
+                                                            OntologyMetadataGetByIriRequestV2(
+                                                              Set(resourceClassOntologyIri),
+                                                              createResourceRequestV2.requestingUser
+                                                            )
+                                                          )
+                                                          .mapTo[ReadOntologyMetadataV2]
       ontologyMetadata: OntologyMetadataV2 =
         readOntologyMetadataV2.ontologies.headOption
           .getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
@@ -397,8 +398,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                    resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
                                                    targetSchema = ApiV2Complex,
-                                                   featureFactoryConfig =
-                                                     updateResourceMetadataRequestV2.featureFactoryConfig,
                                                    requestingUser = updateResourceMetadataRequestV2.requestingUser
                                                  )
 
@@ -473,19 +472,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                          .toString()
 
         // Do the update.
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Verify that the resource was updated correctly.
 
-        updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
-                                                          resourceIris =
-                                                            Seq(updateResourceMetadataRequestV2.resourceIri),
-                                                          targetSchema = ApiV2Complex,
-                                                          featureFactoryConfig =
-                                                            updateResourceMetadataRequestV2.featureFactoryConfig,
-                                                          requestingUser =
-                                                            updateResourceMetadataRequestV2.requestingUser
-                                                        )
+        updatedResourcesSeq: ReadResourcesSequenceV2 <-
+          getResourcePreviewV2(
+            resourceIris = Seq(updateResourceMetadataRequestV2.resourceIri),
+            targetSchema = ApiV2Complex,
+            requestingUser = updateResourceMetadataRequestV2.requestingUser
+          )
 
         _ = if (updatedResourcesSeq.resources.size != 1) {
               throw AssertionException(s"Expected one resource, got ${resourcesSeq.resources.size}")
@@ -520,23 +516,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               case None => ()
             }
 
-        // If the resource's label was changed, update the full-text search index.
-        _ <- updateResourceMetadataRequestV2.maybeLabel match {
-               case Some(_) =>
-                 for {
-                   _ <- (storeManager ? SearchIndexUpdateRequest(Some(updateResourceMetadataRequestV2.resourceIri)))
-                          .mapTo[SparqlUpdateResponse]
-                 } yield ()
-
-               case None => FastFuture.successful(())
-             }
       } yield UpdateResourceMetadataResponseV2(
         resourceIri = updateResourceMetadataRequestV2.resourceIri,
         resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
         maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
         maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
-        lastModificationDate = newModificationDate,
-        featureFactoryConfig = updateResourceMetadataRequestV2.featureFactoryConfig
+        lastModificationDate = newModificationDate
       )
     }
 
@@ -577,7 +562,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                    resourceIris = Seq(deleteResourceV2.resourceIri),
                                                    targetSchema = ApiV2Complex,
-                                                   featureFactoryConfig = deleteResourceV2.featureFactoryConfig,
                                                    requestingUser = deleteResourceV2.requestingUser
                                                  )
 
@@ -631,7 +615,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                          .toString()
 
         // Do the update.
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Verify that the resource was deleted correctly.
 
@@ -641,7 +625,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         )
                         .toString()
 
-        sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
+        sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
         rows = sparqlSelectResponse.results.bindings
 
@@ -685,7 +669,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                    resourceIris = Seq(eraseResourceV2.resourceIri),
                                                    targetSchema = ApiV2Complex,
-                                                   featureFactoryConfig = eraseResourceV2.featureFactoryConfig,
                                                    requestingUser = eraseResourceV2.requestingUser
                                                  )
 
@@ -745,11 +728,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // _ = println(sparqlUpdate)
 
         // Do the update.
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+        _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Verify that the resource was erased correctly.
 
-        resourceStillExists: Boolean <- stringFormatter.checkIriExists(resourceSmartIri.toString, storeManager)
+        resourceStillExists: Boolean <- stringFormatter.checkIriExists(resourceSmartIri.toString, appActor)
 
         _ = if (resourceStillExists) {
               throw UpdateNotPerformedException(
@@ -787,7 +770,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
    *                                   have custom permissions. This is a map of property IRIs to permission strings.
    * @param creationDate               the versionDate to be attached to the resource and its values.
-   * @param featureFactoryConfig       the feature factory configuration.
+   *
    * @param requestingUser             the user making the request.
    * @return a [[ResourceReadyToCreate]].
    */
@@ -800,7 +783,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     defaultResourcePermissions: String,
     defaultPropertyPermissions: Map[SmartIri, String],
     creationDate: Instant,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
@@ -878,44 +860,43 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
-      resourcePermissions: String <- internalCreateResource.permissions match {
-                                       case Some(permissionStr) =>
-                                         for {
-                                           validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
-                                                                                   permissionLiteral = permissionStr,
-                                                                                   featureFactoryConfig =
-                                                                                     featureFactoryConfig,
-                                                                                   responderManager = responderManager
-                                                                                 )
+      resourcePermissions: String <-
+        internalCreateResource.permissions match {
+          case Some(permissionStr) =>
+            for {
+              validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
+                                                      permissionLiteral = permissionStr,
+                                                      appActor = appActor
+                                                    )
 
-                                           // Is the requesting user a system admin, or an admin of this project?
-                                           _ = if (
-                                                 !(requestingUser.permissions.isProjectAdmin(
-                                                   internalCreateResource.projectADM.id
-                                                 ) || requestingUser.permissions.isSystemAdmin)
-                                               ) {
+              // Is the requesting user a system admin, or an admin of this project?
+              _ = if (
+                    !(requestingUser.permissions.isProjectAdmin(
+                      internalCreateResource.projectADM.id
+                    ) || requestingUser.permissions.isSystemAdmin)
+                  ) {
 
-                                                 // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+                    // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
 
-                                                 val permissionComparisonResult: PermissionComparisonResult =
-                                                   PermissionUtilADM.comparePermissionsADM(
-                                                     entityCreator = requestingUser.id,
-                                                     entityProject = internalCreateResource.projectADM.id,
-                                                     permissionLiteralA = validatedCustomPermissions,
-                                                     permissionLiteralB = defaultResourcePermissions,
-                                                     requestingUser = requestingUser
-                                                   )
+                    val permissionComparisonResult: PermissionComparisonResult =
+                      PermissionUtilADM.comparePermissionsADM(
+                        entityCreator = requestingUser.id,
+                        entityProject = internalCreateResource.projectADM.id,
+                        permissionLiteralA = validatedCustomPermissions,
+                        permissionLiteralB = defaultResourcePermissions,
+                        requestingUser = requestingUser
+                      )
 
-                                                 if (permissionComparisonResult == AGreaterThanB) {
-                                                   throw ForbiddenException(
-                                                     s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
-                                                   )
-                                                 }
-                                               }
-                                         } yield validatedCustomPermissions
+                    if (permissionComparisonResult == AGreaterThanB) {
+                      throw ForbiddenException(
+                        s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions"
+                      )
+                    }
+                  }
+            } yield validatedCustomPermissions
 
-                                       case None => FastFuture.successful(defaultResourcePermissions)
-                                     }
+          case None => FastFuture.successful(defaultResourcePermissions)
+        }
 
       valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <-
         validateAndFormatValuePermissions(
@@ -923,19 +904,21 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           values = internalCreateResource.values,
           defaultPropertyPermissions = defaultPropertyPermissions,
           resourceIDForErrorMsg = resourceIDForErrorMsg,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
       // Ask the values responder for SPARQL for generating the values.
       sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <-
-        (responderManager ?
-          GenerateSparqlToCreateMultipleValuesRequestV2(
-            resourceIri = resourceIri,
-            values = valuesWithValidatedPermissions,
-            creationDate = creationDate,
-            requestingUser = requestingUser
-          )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
+        appActor
+          .ask(
+            GenerateSparqlToCreateMultipleValuesRequestV2(
+              resourceIri = resourceIri,
+              values = valuesWithValidatedPermissions,
+              creationDate = creationDate,
+              requestingUser = requestingUser
+            )
+          )
+          .mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
     } yield ResourceReadyToCreate(
       sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
         resourceIri = resourceIri,
@@ -956,14 +939,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * to be created.
    *
    * @param internalCreateResources the resources to be created.
-   * @param featureFactoryConfig    the feature factory configuration.
+   *
    * @param requestingUser          the user making the request.
    * @return a map of resource IRIs to class IRIs.
    */
   private def getLinkTargetClasses(
     resourceIri: IRI,
     internalCreateResources: Seq[CreateResourceV2],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Map[IRI, SmartIri]] = {
     // Get the IRIs of the new and existing resources that are targets of links.
@@ -994,7 +976,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       existingTargets: ReadResourcesSequenceV2 <- getResourcePreviewV2(
                                                     resourceIris = existingTargetIris.toSeq,
                                                     targetSchema = ApiV2Complex,
-                                                    featureFactoryConfig = featureFactoryConfig,
                                                     requestingUser = requestingUser
                                                   )
 
@@ -1137,12 +1118,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * permission to see it.
    *
    * @param values               the values to be checked.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the user making the request.
    */
   private def checkStandoffLinkTargets(
     values: Iterable[CreateValueInNewResourceV2],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Unit] = {
     val standoffLinkTargetsThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
@@ -1157,7 +1137,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     getResourcePreviewV2(
       resourceIris = standoffLinkTargetsThatShouldExist.toSeq,
       targetSchema = ApiV2Complex,
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = requestingUser
     ).map(_ => ())
   }
@@ -1181,9 +1160,26 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     Future
       .sequence(
-        listNodesThatShouldExist
-          .map(listNodeIri => ResourceUtilV2.checkListNodeExists(listNodeIri, storeManager))
-          .toSeq
+        listNodesThatShouldExist.map { listNodeIri =>
+          for {
+            checkNode <- ResourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri, appActor)
+
+            _ = checkNode match {
+                  // it doesn't have isRootNode property - it's a child node
+                  case Right(false) => ()
+                  // it does have isRootNode property - it's a root node
+                  case Right(true) =>
+                    throw BadRequestException(
+                      s"<${listNodeIri}> is a root node. Root nodes cannot be set as values."
+                    )
+                  // it deosn't exists or isn't valid list
+                  case Left(_) =>
+                    throw NotFoundException(
+                      s"<${listNodeIri}> does not exist, or is not a ListNode."
+                    )
+                }
+          } yield ()
+        }.toSeq
       )
       .map(_ => ())
   }
@@ -1206,7 +1202,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
     defaultPropertyPermissions: Map[SmartIri, String],
     resourceIDForErrorMsg: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
     val propertyValuesWithValidatedPermissionsFutures
@@ -1221,8 +1216,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 for {
                   validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
                                                   permissionLiteral = permissionStr,
-                                                  featureFactoryConfig = featureFactoryConfig,
-                                                  responderManager = responderManager
+                                                  appActor = appActor
                                                 )
 
                   // Is the requesting user a system admin, or an admin of this project?
@@ -1298,9 +1292,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
-      resourceClassIri -> (responderManager ? requestMessage)
-        .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
-        .map(_.permissionLiteral)
+      resourceClassIri ->
+        appActor
+          .ask(requestMessage)
+          .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+          .map(_.permissionLiteral)
     }.toMap
 
     ActorUtil.sequenceFuturesInMap(permissionsFutures)
@@ -1327,7 +1323,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourceClassIri = resourceClassIri,
             propertyIri = propertyIri,
             requestingUser = requestingUser,
-            responderManager = responderManager
+            appActor = appActor
           )
         }.toMap
 
@@ -1342,14 +1338,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceReadyToCreate the resource that should have been created.
    * @param projectIri            the IRI of the project in which the resource should have been created.
-   * @param featureFactoryConfig  the feature factory configuration.
+   *
    * @param requestingUser        the user that attempted to create the resource.
    * @return a preview of the resource that was created.
    */
   private def verifyResource(
     resourceReadyToCreate: ResourceReadyToCreate,
     projectIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
     val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
@@ -1359,7 +1354,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                       resourceIris = Seq(resourceIri),
                                                       requestingUser = requestingUser,
                                                       targetSchema = ApiV2Complex,
-                                                      featureFactoryConfig = featureFactoryConfig,
                                                       schemaOptions = SchemaOptions.ForStandoffWithTextValues
                                                     )
 
@@ -1466,8 +1460,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         updateFuture = updateFuture,
         valueContent = valueContent,
         requestingUser = requestingUser,
-        responderManager = responderManager,
-        storeManager = storeManager,
+        appActor = appActor,
         log = log
       )
     }
@@ -1489,7 +1482,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
    *                             Cannot be used in conjunction with `preview`.
    * @param queryStandoff        `true` if standoff should be queried.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return a map of resource IRIs to RDF data.
    */
   private def getResourcesFromTriplestore(
@@ -1500,7 +1493,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
     queryStandoff: Boolean,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
     // eliminate duplicate Iris
@@ -1532,10 +1524,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                    .toString()
                                )
 
-      resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
-                                                                    sparql = resourceRequestSparql,
-                                                                    featureFactoryConfig = featureFactoryConfig
-                                                                  )).mapTo[SparqlExtendedConstructResponse]
+      resourceRequestResponse: SparqlExtendedConstructResponse <- appActor
+                                                                    .ask(
+                                                                      SparqlExtendedConstructRequest(
+                                                                        sparql = resourceRequestSparql
+                                                                      )
+                                                                    )
+                                                                    .mapTo[SparqlExtendedConstructResponse]
 
       // separate resources and values
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -1558,7 +1553,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param withDeleted          if defined, indicates if the deleted resource and values should be returned or not.
    * @param targetSchema         the target API schema.
    * @param schemaOptions        the schema options submitted with the request.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
@@ -1571,7 +1566,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
     // eliminate duplicate Iris
@@ -1594,8 +1588,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                                                               versionDate = versionDate,
                                                                                               queryStandoff =
                                                                                                 queryStandoff,
-                                                                                              featureFactoryConfig =
-                                                                                                featureFactoryConfig,
                                                                                               requestingUser =
                                                                                                 requestingUser
                                                                                             )
@@ -1605,7 +1597,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         if (queryStandoff) {
           getMappingsFromQueryResultsSeparated(
             queryResultsSeparated = mainResourcesAndValueRdfData.resources,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
         } else {
@@ -1621,10 +1612,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                 queryStandoff = queryStandoff,
                                                 versionDate = versionDate,
                                                 calculateMayHaveMoreResults = false,
-                                                responderManager = responderManager,
+                                                appActor = appActor,
                                                 targetSchema = targetSchema,
                                                 settings = settings,
-                                                featureFactoryConfig = featureFactoryConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1678,7 +1668,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIris         the resource to query for.
    * @param withDeleted          indicates if the deleted resource should be returned or not.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param requestingUser       the the user making the request.
    * @return a [[ReadResourcesSequenceV2]].
    */
@@ -1686,7 +1676,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     resourceIris: Seq[IRI],
     withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ReadResourcesSequenceV2] = {
 
@@ -1701,8 +1690,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                                                               withDeleted = withDeleted,
                                                                                               queryStandoff =
                                                                                                 false, // This has no effect, because we are not querying values.
-                                                                                              featureFactoryConfig =
-                                                                                                featureFactoryConfig,
                                                                                               requestingUser =
                                                                                                 requestingUser
                                                                                             )
@@ -1716,10 +1703,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                 queryStandoff = false,
                                                 versionDate = None,
                                                 calculateMayHaveMoreResults = false,
-                                                responderManager = responderManager,
+                                                appActor = appActor,
                                                 targetSchema = targetSchema,
                                                 settings = settings,
-                                                featureFactoryConfig = featureFactoryConfig,
                                                 requestingUser = requestingUser
                                               )
 
@@ -1754,13 +1740,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * Obtains a Gravsearch template from Sipi.
    *
    * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
-   * @param featureFactoryConfig  the feature factory configuration.
+   *
    * @param requestingUser        the user making the request.
    * @return the Gravsearch template.
    */
   private def getGravsearchTemplate(
     gravsearchTemplateIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[String] = {
 
@@ -1769,7 +1754,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                               resourceIris = Vector(gravsearchTemplateIri),
                                               targetSchema = ApiV2Complex,
                                               schemaOptions = Set(MarkupAsStandoff),
-                                              featureFactoryConfig = featureFactoryConfig,
                                               requestingUser = requestingUser
                                             )
 
@@ -1820,11 +1804,15 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
       gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-      response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
-                                             fileUrl = gravsearchTemplateUrl,
-                                             requestingUser = KnoraSystemInstances.Users.SystemUser,
-                                             senderName = this.getClass.getName
-                                           )).mapTo[SipiGetTextFileResponse]
+      response: SipiGetTextFileResponse <- appActor
+                                             .ask(
+                                               SipiGetTextFileRequest(
+                                                 fileUrl = gravsearchTemplateUrl,
+                                                 requestingUser = KnoraSystemInstances.Users.SystemUser,
+                                                 senderName = this.getClass.getName
+                                               )
+                                             )
+                                             .mapTo[SipiGetTextFileResponse]
       gravsearchTemplate: String = response.content
 
     } yield gravsearchTemplate
@@ -1840,7 +1828,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    * @param mappingIri            the Iri of the mapping to be used to convert standoff to XML, if a custom mapping is provided. The mapping is expected to contain an XSL transformation.
    * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header. The resource Iri is expected to be represented by the placeholder '$resourceIri' in a BIND.
    * @param headerXSLTIri         the Iri of the XSL template to convert the metadata properties to the TEI header.
-   * @param featureFactoryConfig  the feature factory configuration.
+   *
    * @param requestingUser        the user making the request.
    * @return a [[ResourceTEIGetResponseV2]].
    */
@@ -1850,7 +1838,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     mappingIri: Option[IRI],
     gravsearchTemplateIri: Option[IRI],
     headerXSLTIri: Option[String],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[ResourceTEIGetResponseV2] = {
 
@@ -1941,7 +1928,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             // get the template
             template <- getGravsearchTemplate(
                           gravsearchTemplateIri = gravsearchTemplateIri.get,
-                          featureFactoryConfig = featureFactoryConfig,
                           requestingUser = requestingUser
                         )
 
@@ -1952,13 +1938,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
             // do a request to the SearchResponder
-            gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(
-                                                             constructQuery = constructQuery,
-                                                             targetSchema = ApiV2Complex,
-                                                             schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                                                             featureFactoryConfig = featureFactoryConfig,
-                                                             requestingUser = requestingUser
-                                                           )).mapTo[ReadResourcesSequenceV2]
+            gravSearchResponse: ReadResourcesSequenceV2 <-
+              appActor
+                .ask(
+                  GravsearchRequestV2(
+                    constructQuery = constructQuery,
+                    targetSchema = ApiV2Complex,
+                    schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+                    requestingUser = requestingUser
+                  )
+                )
+                .mapTo[ReadResourcesSequenceV2]
           } yield gravSearchResponse.toResource(resourceIri)
 
         } else {
@@ -1976,7 +1966,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                           resourceIris = Vector(resourceIri),
                           targetSchema = ApiV2Complex,
                           schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-                          featureFactoryConfig = featureFactoryConfig,
                           requestingUser = requestingUser
                         ).map(_.toResource(resourceIri))
           } yield resource
@@ -1999,13 +1988,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                       case Some(headerIri) =>
                                         val teiHeaderXsltRequest = GetXSLTransformationRequestV2(
                                           xsltTextRepresentationIri = headerIri,
-                                          featureFactoryConfig = featureFactoryConfig,
                                           requestingUser = requestingUser
                                         )
 
                                         val xslTransformationFuture = for {
                                           xslTransformation: GetXSLTransformationResponseV2 <-
-                                            (responderManager ? teiHeaderXsltRequest)
+                                            appActor
+                                              .ask(teiHeaderXsltRequest)
                                               .mapTo[GetXSLTransformationResponseV2]
                                         } yield Some(xslTransformation.xslt)
 
@@ -2033,11 +2022,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                            }
 
       // get mapping to convert standoff markup to TEI/XML
-      teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                                            mappingIri = mappingToBeApplied,
-                                            featureFactoryConfig = featureFactoryConfig,
-                                            requestingUser = requestingUser
-                                          )).mapTo[GetMappingResponseV2]
+      teiMapping: GetMappingResponseV2 <- appActor
+                                            .ask(
+                                              GetMappingRequestV2(
+                                                mappingIri = mappingToBeApplied,
+                                                requestingUser = requestingUser
+                                              )
+                                            )
+                                            .mapTo[GetMappingResponseV2]
 
       // get XSLT from mapping for the TEI body
       bodyXslt: String <- teiMapping.mappingIri match {
@@ -2058,13 +2050,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                   // get XSLT for the TEI body.
                                   val teiBodyXsltRequest = GetXSLTransformationRequestV2(
                                     xsltTextRepresentationIri = xslTransformationIri,
-                                    featureFactoryConfig = featureFactoryConfig,
                                     requestingUser = requestingUser
                                   )
 
                                   val xslTransformationFuture = for {
                                     xslTransformation: GetXSLTransformationResponseV2 <-
-                                      (responderManager ? teiBodyXsltRequest)
+                                      appActor
+                                        .ask(teiBodyXsltRequest)
                                         .mapTo[GetXSLTransformationResponseV2]
                                   } yield xslTransformation.xslt
 
@@ -2087,7 +2079,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               header = TEIHeader(
                 headerInfo = headerResource,
                 headerXSLT = headerXSLT,
-                featureFactoryConfig = featureFactoryConfig,
                 settings = settings
               ),
               body = TEIBody(
@@ -2194,7 +2185,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         // _ = println(sparql)
 
-        response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
+        response: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
         rows: Seq[VariableResultsRow] = response.results.bindings
 
         // Did we get any results?
@@ -2335,7 +2326,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       // _ = println(sparql)
 
-      response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
+      response: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
       rows: Seq[VariableResultsRow] = response.results.bindings
 
       _ = if (rows.isEmpty) {
@@ -2440,9 +2431,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                             resourceIris = Seq(resourceHistoryRequest.resourceIri),
                                                             withDeleted = resourceHistoryRequest.withDeletedResource,
                                                             targetSchema = ApiV2Complex,
-                                                            featureFactoryConfig =
-                                                              resourceHistoryRequest.featureFactoryConfig,
-                                                            requestingUser = resourceHistoryRequest.requestingUser
+                                                            requestingUser = KnoraSystemInstances.Users.SystemUser
                                                           )
 
       resourcePreview: ReadResourceV2 = resourcePreviewResponse.toResource(resourceHistoryRequest.resourceIri)
@@ -2458,7 +2447,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                )
                                .toString()
 
-      valueHistoryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(historyRequestSparql))
+      valueHistoryResponse: SparqlSelectResult <- appActor
+                                                    .ask(SparqlSelectRequest(historyRequestSparql))
                                                     .mapTo[SparqlSelectResult]
 
       valueHistoryEntries: Seq[ResourceHistoryEntry] =
@@ -2520,13 +2510,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Run the query.
 
       parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
-      searchResponse <- (responderManager ? GravsearchRequestV2(
-                          constructQuery = parsedGravsearchQuery,
-                          targetSchema = ApiV2Complex,
-                          schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
-                          featureFactoryConfig = request.featureFactoryConfig,
-                          requestingUser = request.requestingUser
-                        )).mapTo[ReadResourcesSequenceV2]
+      searchResponse <- appActor
+                          .ask(
+                            GravsearchRequestV2(
+                              constructQuery = parsedGravsearchQuery,
+                              targetSchema = ApiV2Complex,
+                              schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
+                              requestingUser = request.requestingUser
+                            )
+                          )
+                          .mapTo[ReadResourcesSequenceV2]
 
       resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
 
@@ -2654,23 +2647,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     resourceHistoryEventsGetRequest: ResourceHistoryEventsGetRequestV2
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
-      resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-                                                             ResourceVersionHistoryGetRequestV2(
-                                                               resourceIri =
-                                                                 resourceHistoryEventsGetRequest.resourceIri,
-                                                               withDeletedResource = true,
-                                                               featureFactoryConfig =
-                                                                 resourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                               requestingUser =
-                                                                 resourceHistoryEventsGetRequest.requestingUser
-                                                             )
-                                                           )
+      resourceHistory: ResourceVersionHistoryResponseV2 <-
+        getResourceHistoryV2(
+          ResourceVersionHistoryGetRequestV2(
+            resourceIri = resourceHistoryEventsGetRequest.resourceIri,
+            withDeletedResource = true,
+            requestingUser = resourceHistoryEventsGetRequest.requestingUser
+          )
+        )
       resourceFullHist: Seq[ResourceAndValueHistoryEvent] <- extractEventsFromHistory(
                                                                resourceIri =
                                                                  resourceHistoryEventsGetRequest.resourceIri,
                                                                resourceHistory = resourceHistory.history,
-                                                               featureFactoryConfig =
-                                                                 resourceHistoryEventsGetRequest.featureFactoryConfig,
                                                                requestingUser =
                                                                  resourceHistoryEventsGetRequest.requestingUser
                                                              )
@@ -2688,15 +2676,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   ): Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
-      projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-                                                      identifier = ProjectIdentifierADM(maybeIri =
-                                                        Some(projectResourceHistoryEventsGetRequest.projectIri)
-                                                      ),
-                                                      featureFactoryConfig =
-                                                        projectResourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                      requestingUser =
-                                                        projectResourceHistoryEventsGetRequest.requestingUser
-                                                    )).mapTo[ProjectGetResponseADM]
+      projectInfoResponse: ProjectGetResponseADM <- appActor
+                                                      .ask(
+                                                        ProjectGetRequestADM(
+                                                          identifier = ProjectIdentifierADM(maybeIri =
+                                                            Some(projectResourceHistoryEventsGetRequest.projectIri)
+                                                          ),
+                                                          requestingUser =
+                                                            projectResourceHistoryEventsGetRequest.requestingUser
+                                                        )
+                                                      )
+                                                      .mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -2705,30 +2695,26 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                    )
                    .toString
 
-      sparqlSelectResponse      <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      sparqlSelectResponse      <- appActor.ask(SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
       historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryEvent]]] =
         mainResourceIris.map { resourceIri =>
           for {
-            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-                                                                   ResourceVersionHistoryGetRequestV2(
-                                                                     resourceIri = resourceIri,
-                                                                     withDeletedResource = true,
-                                                                     featureFactoryConfig =
-                                                                       projectResourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                                     requestingUser =
-                                                                       projectResourceHistoryEventsGetRequest.requestingUser
-                                                                   )
-                                                                 )
-            resourceFullHist: Seq[ResourceAndValueHistoryEvent] <- extractEventsFromHistory(
-                                                                     resourceIri = resourceIri,
-                                                                     resourceHistory = resourceHistory.history,
-                                                                     featureFactoryConfig =
-                                                                       projectResourceHistoryEventsGetRequest.featureFactoryConfig,
-                                                                     requestingUser =
-                                                                       projectResourceHistoryEventsGetRequest.requestingUser
-                                                                   )
+            resourceHistory: ResourceVersionHistoryResponseV2 <-
+              getResourceHistoryV2(
+                ResourceVersionHistoryGetRequestV2(
+                  resourceIri = resourceIri,
+                  withDeletedResource = true,
+                  requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+                )
+              )
+            resourceFullHist: Seq[ResourceAndValueHistoryEvent] <-
+              extractEventsFromHistory(
+                resourceIri = resourceIri,
+                resourceHistory = resourceHistory.history,
+                requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+              )
           } yield resourceFullHist
         }
 
@@ -2742,14 +2728,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIri     the IRI of the resource.
    * @param resourceHistory the full representations of the resource in each point in its history.
-   * @param featureFactoryConfig       the feature factory configuration.
+   *
    * @param requestingUser             the user making the request.
    * @return the full history of resource as sequence of [[ResourceAndValueHistoryEvent]].
    */
   def extractEventsFromHistory(
     resourceIri: IRI,
     resourceHistory: Seq[ResourceHistoryEntry],
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[Seq[ResourceAndValueHistoryEvent]] =
     for {
@@ -2759,7 +2744,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                                          getResourceAtGivenTime(
                                                                            resourceIri = resourceIri,
                                                                            versionHist = hist,
-                                                                           featureFactoryConfig = featureFactoryConfig,
                                                                            requestingUser = requestingUser
                                                                          )
                                                                        }
@@ -2804,14 +2788,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    *
    * @param resourceIri                the IRI of the resource.
    * @param versionHist                the history info of the version; i.e. versionDate and author.
-   * @param featureFactoryConfig       the feature factory configuration.
+   *
    * @param requestingUser             the user making the request.
    * @return the full representation of the resource at the given version date.
    */
   private def getResourceAtGivenTime(
     resourceIri: IRI,
     versionHist: ResourceHistoryEntry,
-    featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): Future[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
@@ -2821,7 +2804,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                                   showDeletedValues = true,
                                                                   targetSchema = ApiV2Complex,
                                                                   schemaOptions = Set.empty[SchemaOption],
-                                                                  featureFactoryConfig = featureFactoryConfig,
                                                                   requestingUser = requestingUser
                                                                 )
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head

@@ -10,8 +10,8 @@ import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Directives.extractRequest
 import akka.http.scaladsl.server.ExceptionHandler
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.exceptions.InternalServerException
-import org.knora.webapi.exceptions.RequestRejectedException
+import dsp.errors.InternalServerException
+import dsp.errors.RequestRejectedException
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.http.status.ApiStatusCodesV2
 import org.knora.webapi.messages.OntologyConstants
@@ -23,6 +23,7 @@ import spray.json.JsNumber
 import spray.json.JsObject
 import spray.json.JsString
 import spray.json.JsValue
+import dsp.errors.BadRequestException
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
@@ -42,14 +43,10 @@ object KnoraExceptionHandler extends LazyLogging {
       extractRequest { request =>
         val url = request.uri.path.toString
 
-        // println(s"KnoraExceptionHandler - case: rre - url: $url")
-
         if (url.startsWith("/v1")) {
           complete(exceptionToJsonHttpResponseV1(rre, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(rre, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(rre, settingsImpl))
         }
@@ -60,15 +57,12 @@ object KnoraExceptionHandler extends LazyLogging {
         val uri = request.uri
         val url = uri.path.toString
 
-        // println(s"KnoraExceptionHandler - case: ise - url: $url")
-        logger.error(s"Unable to run route $url", ise)
+        logger.error(s"Internal Server Exception: Unable to run route $url", ise)
 
         if (url.startsWith("/v1")) {
           complete(exceptionToJsonHttpResponseV1(ise, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(ise, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(ise, settingsImpl))
         }
@@ -86,8 +80,6 @@ object KnoraExceptionHandler extends LazyLogging {
           complete(exceptionToJsonHttpResponseV1(other, settingsImpl))
         } else if (url.startsWith("/v2")) {
           complete(exceptionToJsonHttpResponseV2(other, settingsImpl))
-        } else if (url.startsWith("/admin")) {
-          complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
         } else {
           complete(exceptionToJsonHttpResponseADM(other, settingsImpl))
         }

@@ -6,11 +6,13 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import com.typesafe.config.ConfigFactory
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List._
+import dsp.valueobjects.ListErrorMessages
+import dsp.valueobjects.V2
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
@@ -130,24 +132,23 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = ListIRI.make(exampleListIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIri.make(exampleListIri).fold(e => throw e.head, v => v),
+            projectIri = ProjectIri.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
             labels = Labels
-              .make(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
+              .make(Seq(V2.StringLiteralV2(value = "New child node", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .make(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+                .make(Seq(V2.StringLiteralV2(value = "New child comment", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
           ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === INVALID_POSITION)
+      assert(caught.getMessage === ListErrorMessages.InvalidPosition)
     }
 
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {
@@ -190,7 +191,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
-      thrown.getMessage should equal(INVALID_POSITION)
+      thrown.getMessage should equal(ListErrorMessages.InvalidPosition)
     }
   }
 }

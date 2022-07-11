@@ -21,6 +21,7 @@ sipi/test
 /docs/architecture/.structurizr
 /docs/architecture/workspace.json
 
+
 **/target/
 *.aux
 *.bbl
@@ -35,6 +36,7 @@ sipi/test
 *.bak
 *.rdb
 .sbtrc
+**/*.trig
 
 dependencies.txt
 /client-test-data.zip
@@ -42,7 +44,6 @@ dependencies.txt
 /sipi/images/originals/082E/*
 sipi/images/1111/*
 sipi/images/originals/1111/*
-/dependencies.bzl
 
 .idea/
 .metals/

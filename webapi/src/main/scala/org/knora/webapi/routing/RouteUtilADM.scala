@@ -6,15 +6,14 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.exceptions.UnexpectedMessageException
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.admin.responder.KnoraRequestADM
+import dsp.errors.UnexpectedMessageException
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -31,9 +30,9 @@ object RouteUtilADM {
    *
    * @param requestMessageF      a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
    * @param requestContext       the akka-http [[RequestContext]].
-   * @param featureFactoryConfig the per-request feature factory configuration.
+   *
    * @param settings             the application's settings.
-   * @param responderManager     a reference to the responder manager.
+   * @param appActor             a reference to the application actor.
    * @param log                  a logging adapter.
    * @param timeout              a timeout for `ask` messages.
    * @param executionContext     an execution context for futures.
@@ -42,10 +41,9 @@ object RouteUtilADM {
   def runJsonRoute(
     requestMessageF: Future[KnoraRequestADM],
     requestContext: RequestContext,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
-    responderManager: ActorRef,
-    log: LoggingAdapter
+    appActor: ActorRef,
+    log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
     val httpResponse: Future[HttpResponse] = for {
@@ -58,7 +56,7 @@ object RouteUtilADM {
           }
 
       // Make sure the responder sent a reply of type KnoraResponseV2.
-      knoraResponse <- (responderManager ? requestMessage).map {
+      knoraResponse <- (appActor.ask(requestMessage)).map {
                          case replyMessage: KnoraResponseADM => replyMessage
 
                          case other =>
@@ -75,13 +73,11 @@ object RouteUtilADM {
           }
 
       jsonResponse = knoraResponse.toJsValue.asJsObject
-    } yield featureFactoryConfig.addHeaderToHttpResponse(
-      HttpResponse(
-        status = StatusCodes.OK,
-        entity = HttpEntity(
-          ContentTypes.`application/json`,
-          jsonResponse.compactPrint
-        )
+    } yield HttpResponse(
+      status = StatusCodes.OK,
+      entity = HttpEntity(
+        ContentTypes.`application/json`,
+        jsonResponse.compactPrint
       )
     )
 

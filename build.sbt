@@ -28,7 +28,7 @@ lazy val buildSettings = Seq(
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "root", file("."))
-  .aggregate(webapi, apiMain)
+  .aggregate(webapi, sipi, shared, valueObjects, userCore, userHandler, userRepo, userInterface)
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
     // values set for all sub-projects
@@ -105,7 +105,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      Resolver.bintrayRepo("hseeberger", "maven")
+      Resolver.bintrayRepo("hseeberger", "maven"),
+      "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
     libraryDependencies ++= Dependencies.webapiLibraryDependencies
   )
@@ -143,9 +144,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
-    fork := true,                       // run tests in a forked JVM
-    Test / testForkedParallel := false, // run forked tests in parallel
-    Test / parallelExecution := false,  // run non-forked tests in parallel
+    Test / fork := true,                // run tests in a forked JVM
+    Test / testForkedParallel := false, // not run forked tests in parallel
+    Test / parallelExecution := false,  // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
     Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
@@ -201,6 +202,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
+  .dependsOn(shared)
 
 lazy val webapiJavaRunOptions = Seq(
   // "-showversion",
@@ -230,55 +232,90 @@ lazy val webapiJavaTestOptions = Seq(
 // DSP's new codebase
 //////////////////////////////////////
 
-lazy val apiMain = project
-  .in(file("dsp-api-main"))
-  .settings(
-    name := "dsp-api-main",
-    libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaCore, schemaRepo, schemaApi)
+// Value Objects project
 
-lazy val schemaApi = project
-  .in(file("dsp-schema/api"))
+lazy val valueObjects = project
+  .in(file("dsp-value-objects"))
   .settings(
-    name := "schemaApi",
-    libraryDependencies ++= Dependencies.schemaApiLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaCore)
-
-lazy val schemaCore = project
-  .in(file("dsp-schema/core"))
-  .settings(
-    name := "schemaCore",
-    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
+    name := "valueObjects",
+    libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
 
-lazy val schemaRepo = project
-  .in(file("dsp-schema/repo"))
-  .settings(
-    name := "schemaRepo",
-    libraryDependencies ++= Dependencies.schemaRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaCore)
+// User projects
 
-lazy val schemaRepoEventStoreService = project
-  .in(file("dsp-schema/repo-eventstore-service"))
+lazy val userInterface = project
+  .in(file("dsp-user/interface"))
   .settings(
-    name := "schemaRepoEventstoreService",
-    libraryDependencies ++= Dependencies.schemaRepoEventStoreServiceLibraryDependencies,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userInterface",
+    libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(schemaRepo)
+  .dependsOn(shared, userHandler)
 
-lazy val schemaRepoSearchService = project
-  .in(file("dsp-schema/repo-search-service"))
+lazy val userHandler = project
+  .in(file("dsp-user/handler"))
   .settings(
-    name := "dsp-schema-repo-search-service",
-    libraryDependencies ++= Dependencies.schemaRepoSearchServiceLibraryDependencies,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userHandler",
+    libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(schemaRepo)
+  .dependsOn(
+    shared,
+    userCore % "compile->compile;test->test",
+    userRepo % "test->test" //userHandler tests need mock implementation of UserRepo
+  )
+
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, userCore % "compile->compile;test->test")
+
+lazy val userCore = project
+  .in(file("dsp-user/core"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userCore",
+    libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+lazy val shared = project
+  .in(file("dsp-shared"))
+  .settings(
+    name := "shared",
+    libraryDependencies ++= Dependencies.sharedLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )

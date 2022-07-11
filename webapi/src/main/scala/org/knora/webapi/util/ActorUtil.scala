@@ -6,15 +6,16 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Logging
-import org.knora.webapi.exceptions.ExceptionUtil
-import org.knora.webapi.exceptions.RequestRejectedException
-import org.knora.webapi.exceptions.UnexpectedMessageException
+import dsp.errors.ExceptionUtil
+import dsp.errors.RequestRejectedException
+import dsp.errors.UnexpectedMessageException
 import zio._
+import zio.Unsafe.unsafe
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -22,6 +23,7 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import com.typesafe.scalalogging.Logger
 
 object ActorUtil {
 
@@ -30,7 +32,10 @@ object ActorUtil {
    * allocated immediately, and not released until the `Runtime` is shut down or
    * the end of the application.
    */
-  private val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
+  private val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(Logging.slf4j)
+    }
 
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
@@ -43,11 +48,12 @@ object ActorUtil {
    *
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], log: LoggingAdapter, appConfig: AppConfig): Unit =
-    runtime
-      .unsafeRunTask(
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig): Unit =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(
         zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
       )
+    }
 
   /**
    * The "cause" handling part of `zio2Message`. It analyses the kind of failures and defects
@@ -113,9 +119,9 @@ object ActorUtil {
    *
    * @param sender the actor that made the request in the `ask` pattern.
    * @param future a [[Future]] that will provide the result of the sender's request.
-   * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
+   * @param log    a [[Logger]] for logging non-serializable exceptions.
    */
-  def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: LoggingAdapter)(implicit
+  def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: Logger)(implicit
     executionContext: ExecutionContext
   ): Unit =
     future.onComplete { tryObj: Try[ReplyT] =>
@@ -131,9 +137,9 @@ object ActorUtil {
    *
    * @param sender the actor that made the request in the `ask` pattern.
    * @param tryObj a [[Try]] that will provide the result of the sender's request.
-   * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
+   * @param log    a [[Logger]] for logging non-serializable exceptions.
    */
-  def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter)(implicit
+  def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: Logger)(implicit
     executionContext: ExecutionContext
   ): Unit =
     tryObj match {
@@ -166,9 +172,9 @@ object ActorUtil {
    *
    * @param sender  the actor that made the request in the `ask` pattern.
    * @param message the message that was received.
-   * @param log     a [[LoggingAdapter]].
+   * @param log     a [[Logger]].
    */
-  def handleUnexpectedMessage(sender: ActorRef, message: Any, log: LoggingAdapter, who: String)(implicit
+  def handleUnexpectedMessage(sender: ActorRef, message: Any, log: Logger, who: String)(implicit
     executionContext: ExecutionContext
   ): Unit = {
     val unexpectedMessageException = UnexpectedMessageException(

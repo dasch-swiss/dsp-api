@@ -8,7 +8,7 @@ package org.knora.webapi
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
-import akka.event.LoggingAdapter
+import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
@@ -21,9 +21,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.core.Core
 import org.knora.webapi.core.Logging
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
-import org.knora.webapi.feature.TestFeatureFactoryConfig
 import org.knora.webapi.http.handler
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.AppStart
@@ -36,63 +33,57 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import zio.&
-import zio.Runtime
-import zio.ZEnvironment
-import zio.ZIO
-import zio.ZLayer
+import zio._
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.testkit.TestActorRef
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
  */
-class R2RSpec
+abstract class R2RSpec
     extends Core
     with StartupUtils
     with Suite
     with ScalatestRouteTest
     with AnyWordSpecLike
     with Matchers
-    with BeforeAndAfterAll
-    with LazyLogging {
+    with BeforeAndAfterAll {
 
   /* needed by the core trait */
   implicit lazy val _system: ActorSystem = ActorSystem(
-    actorSystemNameFrom(getClass),
-    TestContainerFuseki.PortConfig.withFallback(
-      ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())
-    )
+    actorSystemNameFrom(getClass)
   )
 
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
 
   StringFormatter.initForTest()
-  RdfFeatureFactory.init(settings)
 
-  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set.empty,
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
-
+  val log: Logger                             = Logger(this.getClass())
   lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // override so that we can use our own system
@@ -104,54 +95,56 @@ class R2RSpec
 
   implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-  // The ZIO runtime used to run functional effects
-  val runtime = Runtime.unsafeFromLayer(Logging.fromInfo)
-
   // The effect for building a cache service manager and a IIIF service manager.
   lazy val managers = for {
     csm       <- ZIO.service[CacheServiceManager]
     iiifsm    <- ZIO.service[IIIFServiceManager]
+    tssm      <- ZIO.service[TriplestoreServiceManager]
     appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, appConfig)
+  } yield (csm, iiifsm, tssm, appConfig)
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
   lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
       AppConfigForTestContainers.testcontainers,
       JWTService.layer,
-      // FusekiTestContainer.layer,
-      SipiTestContainer.layer
+      SipiTestContainer.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer,
+      Logging.slf4j,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
+
+  // The ZIO runtime used to run functional effects
+  lazy val runtime =
+    Unsafe.unsafe { implicit u =>
+      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
+    }
 
   /**
    * Create both managers by unsafe running them.
    */
-  lazy val (cacheServiceManager, iiifServiceManager, appConfig) =
-    runtime
-      .unsafeRun(
-        managers
-          .provide(
-            effectLayers
-          )
-      )
+  lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(managers).getOrElse(c => throw FiberFailure(c))
+    }
 
   // start the Application Actor
   lazy val appActor: ActorRef =
     system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig)),
+      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
       name = APPLICATION_MANAGER_ACTOR_NAME
     )
-
-  // The main application actor forwards messages to the responder manager and the store manager.
-  val responderManager: ActorRef = appActor
-  val storeManager: ActorRef     = appActor
 
   val routeData: KnoraRouteData = KnoraRouteData(
     system = system,
@@ -160,9 +153,7 @@ class R2RSpec
 
   lazy val rdfDataObjects = List.empty[RdfDataObject]
 
-  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
-  override def beforeAll(): Unit = {
+  final override def beforeAll(): Unit = {
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
 
@@ -175,31 +166,44 @@ class R2RSpec
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit =
+  final override def afterAll(): Unit = {
+
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
 
+  }
+
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit =
-    runtime.unsafeRunTask(
-      (for {
-        testClient <- ZIO.service[TestClientService]
-        result     <- testClient.loadTestData(rdfDataObjects)
-      } yield result).provide(TestClientService.layer(appConfig, system))
-    )
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.run(
+        (for {
+          testClient <- ZIO.service[TestClientService]
+          result     <- testClient.loadTestData(rdfDataObjects)
+        } yield result)
+      )
+    }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity
+        .toStrict(scala.concurrent.duration.Duration(5.toLong, TimeUnit.SECONDS))
+        .map(_.data.decodeString("UTF-8"))
+    val responseBodyStr =
+      Await.result(responseBodyFuture, scala.concurrent.duration.Duration(5.toLong, TimeUnit.SECONDS))
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
   protected def parseTurtle(turtleStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
   }
 
   protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
     rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
   }
 

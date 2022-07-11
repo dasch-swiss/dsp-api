@@ -7,9 +7,8 @@ package org.knora.webapi.messages.v1.responder.standoffmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
@@ -29,7 +28,6 @@ sealed trait StandoffResponderRequestV1 extends KnoraRequestV1
  * @param xml                  the mapping in XML.
  * @param projectIri           the IRI of the project the mapping belongs to.
  * @param mappingName          the name of the mapping to be created.
- * @param featureFactoryConfig the feature factory configuration.
  * @param userProfile          the profile of the user making the request.
  */
 case class CreateMappingRequestV1(
@@ -37,7 +35,6 @@ case class CreateMappingRequestV1(
   label: String,
   projectIri: IRI,
   mappingName: String,
-  featureFactoryConfig: FeatureFactoryConfig,
   userProfile: UserADM,
   apiRequestID: UUID
 ) extends StandoffResponderRequestV1
@@ -55,11 +52,9 @@ case class CreateMappingResponseV1(mappingIri: IRI) extends KnoraResponseV1 {
  * Represents a request to get a mapping from XML elements and attributes to standoff entities.
  *
  * @param mappingIri  the IRI of the mapping.
- * @param featureFactoryConfig the feature factory configuration.
  * @param userProfile the profile of the user making the request.
  */
-case class GetMappingRequestV1(mappingIri: IRI, featureFactoryConfig: FeatureFactoryConfig, userProfile: UserADM)
-    extends StandoffResponderRequestV1
+case class GetMappingRequestV1(mappingIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV1
 
 /**
  * Represents a response to a [[GetMappingRequestV1]].
@@ -78,12 +73,10 @@ case class GetMappingResponseV1(
  * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
  *
  * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
- * @param featureFactoryConfig      the feature factory configuration.
  * @param userProfile               the profile of the user making the request.
  */
 case class GetXSLTransformationRequestV1(
   xsltTextRepresentationIri: IRI,
-  featureFactoryConfig: FeatureFactoryConfig,
   userProfile: UserADM
 ) extends StandoffResponderRequestV1
 

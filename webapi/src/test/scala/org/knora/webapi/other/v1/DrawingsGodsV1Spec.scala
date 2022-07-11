@@ -74,28 +74,25 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     val ddd2                    = new MutableUserADM
 
     "retrieve the drawings gods user's profile" in {
-      responderManager ! UserGetADM(
+      appActor ! UserGetADM(
         identifier = UserIdentifierADM(maybeIri = Some(rootUserIri)),
         userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
       rootUser.set(expectMsgType[Option[UserADM]](timeout).get)
 
-      responderManager ! UserGetADM(
+      appActor ! UserGetADM(
         identifier = UserIdentifierADM(maybeIri = Some(ddd1UserIri)),
         userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
       ddd1.set(expectMsgType[Option[UserADM]](timeout).get)
 
-      responderManager ! UserGetADM(
+      appActor ! UserGetADM(
         UserIdentifierADM(maybeIri = Some(ddd2UserIri)),
         userInformationTypeADM = UserInformationTypeADM.Full,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -104,7 +101,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
     "return correct drawings-gods:QualityData resource permissions string for drawings-gods-test-ddd2 user" in {
       val qualityDataResourceClass = s"$drawingsGodsOntologyIri#QualityData"
-      responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+      appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
         drawingsGodsProjectIri,
         qualityDataResourceClass,
         targetUser = ddd2.get,
@@ -119,7 +116,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
     "return correct drawings-gods:Person resource class permissions string for drawings-gods-test-ddd1 user" in {
       val personResourceClass = s"$drawingsGodsOntologyIri#Person"
-      responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+      appActor ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
         drawingsGodsProjectIri,
         personResourceClass,
         targetUser = ddd1.get,
@@ -135,7 +132,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     "return correct drawings-gods:hasLastname property permissions string for drawings-gods-test-ddd1 user" in {
       val personResourceClass = s"$drawingsGodsOntologyIri#Person"
       val hasLastnameProperty = s"$drawingsGodsOntologyIri#hasLastname"
-      responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+      appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
         drawingsGodsProjectIri,
         personResourceClass,
         hasLastnameProperty,
@@ -152,7 +149,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     "return correct drawings-gods:DrawingPublic / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
       val drawingPublicResourceClass = s"$drawingsGodsOntologyIri#DrawingPublic"
       val hasStillImageFileValue     = OntologyConstants.KnoraBase.HasStillImageFileValue
-      responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+      appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
         drawingsGodsProjectIri,
         drawingPublicResourceClass,
         hasStillImageFileValue,
@@ -169,7 +166,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     "return correct drawings-gods:DrawingPrivate / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
       val drawingPrivateResourceClass = s"$drawingsGodsOntologyIri#DrawingPrivate"
       val hasStillImageFileValue      = OntologyConstants.KnoraBase.HasStillImageFileValue
-      responderManager ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
+      appActor ! DefaultObjectAccessPermissionsStringForPropertyGetADM(
         drawingsGodsProjectIri,
         drawingPrivateResourceClass,
         hasStillImageFileValue,
@@ -198,13 +195,12 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         s"$drawingsGodsOntologyIri#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
       )
 
-      responderManager ! ResourceCreateRequestV1(
+      appActor ! ResourceCreateRequestV1(
         resourceTypeIri = s"$drawingsGodsOntologyIri#Person",
         label = "Test-Person",
         projectIri = drawingsGodsProjectIri,
         values = valuesToBeCreated,
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = ddd1.get,
         apiRequestID = UUID.randomUUID
       )
@@ -212,9 +208,8 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
       val createResponse = expectMsgType[ResourceCreateResponseV1](timeout)
       val resourceIri    = createResponse.res_id
 
-      responderManager ! ResourceFullGetRequestV1(
+      appActor ! ResourceFullGetRequestV1(
         iri = resourceIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userADM = ddd1.get
       )
 
@@ -245,13 +240,12 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         s"$drawingsGodsOntologyIri#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
       )
 
-      responderManager ! ResourceCreateRequestV1(
+      appActor ! ResourceCreateRequestV1(
         resourceTypeIri = s"$drawingsGodsOntologyIri#Person",
         label = "Test-Person",
         projectIri = drawingsGodsProjectIri,
         values = valuesToBeCreated,
         file = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = rootUser.get,
         apiRequestID = UUID.randomUUID
       )

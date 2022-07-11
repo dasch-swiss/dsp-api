@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.NotFoundException
+import dsp.errors.NotFoundException
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -150,7 +150,7 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                        )
                        .toString()
                    }
-      listQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
+      listQueryResponse: SparqlSelectResult <- appActor.ask(SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResult]
 
       // Group the results to map each node to the SPARQL query results representing its children.
       groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] =
@@ -232,7 +232,8 @@ class ListsResponderV1(responderData: ResponderData) extends Responder(responder
                            )
                            .toString()
                        }
-      nodePathResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(nodePathQuery))
+      nodePathResponse: SparqlSelectResult <- appActor
+                                                .ask(SparqlSelectRequest(nodePathQuery))
                                                 .mapTo[SparqlSelectResult]
 
       /*

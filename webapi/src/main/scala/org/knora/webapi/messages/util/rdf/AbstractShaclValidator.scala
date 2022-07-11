@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes

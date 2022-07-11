@@ -15,7 +15,7 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import org.knora.webapi.exceptions.AssertionException
+import dsp.errors.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -26,15 +26,24 @@ import org.knora.webapi.messages.util.search.SparqlQueryConstants
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import scala.concurrent.ExecutionContextExecutor
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestActorSystemService
+import org.knora.webapi.core.Logging
 
 /**
  * Tests creating a still image file value using a mock Sipi.
@@ -57,12 +66,20 @@ class ValuesV2R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer,
+      Logging.slf4j,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"

@@ -9,17 +9,23 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import dsp.errors.BadRequestException
+import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.exceptions.NotFoundException
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringForPropertyGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
+import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
+import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.PermissionUtilADM
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
@@ -116,42 +122,67 @@ object ResourceUtilV2 {
     resourceClassIri: SmartIri,
     propertyIri: SmartIri,
     requestingUser: UserADM,
-    responderManager: ActorRef
+    appActor: ActorRef
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] =
     for {
-      defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
-        responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = projectIri,
-          resourceClassIri = resourceClassIri.toString,
-          propertyIri = propertyIri.toString,
-          targetUser = requestingUser,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-      }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+      defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <-
+        appActor
+          .ask(
+            DefaultObjectAccessPermissionsStringForPropertyGetADM(
+              projectIri = projectIri,
+              resourceClassIri = resourceClassIri.toString,
+              propertyIri = propertyIri.toString,
+              targetUser = requestingUser,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )
+          )
+          .mapTo[DefaultObjectAccessPermissionsStringResponseADM]
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
 
   /**
-   * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
+   * Checks whether a list node exists and if is a root node.
    *
-   * @param listNodeIri the IRI of the list node.
+   * @param nodeIri the IRI of the list node.
+   * @param appActor ActorRef
+   * @return Future of Either None for nonexistent, true for root and false for child node.
    */
-  def checkListNodeExists(listNodeIri: IRI, storeManager: ActorRef)(implicit
+  def checkListNodeExistsAndIsRootNode(nodeIri: IRI, appActor: ActorRef)(implicit
     timeout: Timeout,
     executionContext: ExecutionContext
-  ): Future[Unit] =
+  ): Future[Either[Option[Nothing], Boolean]] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     for {
-      askString <- Future(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkListNodeExistsByIri(listNodeIri = listNodeIri)
-                       .toString
-                   )
+      sparqlQuery <-
+        Future(
+          org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+            .getListNode(nodeIri = nodeIri)
+            .toString()
+        )
 
-      checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      listNodeResponse <-
+        appActor
+          .ask(
+            SparqlExtendedConstructRequest(
+              sparql = sparqlQuery
+            )
+          )
+          .mapTo[SparqlExtendedConstructResponse]
 
-      _ = if (!checkListNodeExistsResponse.result) {
-            throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
-          }
-    } yield ()
+      statements: Map[SubjectV2, Map[SmartIri, Seq[LiteralV2]]] = listNodeResponse.statements
+
+      maybeList =
+        if (statements.nonEmpty) {
+          val propToCheck: SmartIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.IsRootNode)
+          val isRootNode: Boolean   = statements.map(_._2.contains(propToCheck)).head
+
+          Right(isRootNode)
+        } else {
+          Left(None)
+        }
+
+    } yield maybeList
+  }
 
   /**
    * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
@@ -167,8 +198,7 @@ object ResourceUtilV2 {
     updateFuture: Future[T],
     valueContent: ValueContentV2,
     requestingUser: UserADM,
-    responderManager: ActorRef,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] =
     // Was this a file value update?
@@ -185,7 +215,7 @@ object ResourceUtilV2 {
             )
 
             // If Sipi succeeds, return the future we were given. Otherwise, return a failed future.
-            (storeManager ? sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
+            appActor.ask(sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
 
           case Failure(_) =>
             // The file value update failed. Ask Sipi to delete the temporary file.
@@ -194,7 +224,7 @@ object ResourceUtilV2 {
               requestingUser = requestingUser
             )
 
-            val sipiResponseFuture: Future[SuccessResponseV2] = (storeManager ? sipiRequest).mapTo[SuccessResponseV2]
+            val sipiResponseFuture: Future[SuccessResponseV2] = appActor.ask(sipiRequest).mapTo[SuccessResponseV2]
 
             // Did Sipi successfully delete the temporary file?
             sipiResponseFuture.transformWith {

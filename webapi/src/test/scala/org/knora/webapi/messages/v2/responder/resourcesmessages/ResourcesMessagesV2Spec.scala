@@ -1,7 +1,7 @@
 package org.knora.webapi.messages.v2.responder.resourcesmessages
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.sharedtestdata._
 
@@ -15,7 +15,6 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
       val caught = intercept[BadRequestException](
         ProjectResourcesWithHistoryGetRequestV2(
           projectIri = projectIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
@@ -26,7 +25,6 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
       val caught = intercept[BadRequestException](
         ProjectResourcesWithHistoryGetRequestV2(
           projectIri = "http://rdfh.ch/0001/thing-with-history", // resource IRI instead of project IRI
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
@@ -40,7 +38,6 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
       val caught = intercept[BadRequestException](
         ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
@@ -52,7 +49,6 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
       val caught = intercept[BadRequestException](
         ResourceHistoryEventsGetRequestV2(
           resourceIri = resourceIri,
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )

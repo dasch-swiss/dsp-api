@@ -10,8 +10,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.ForbiddenException
-import org.knora.webapi.feature.FeatureFactoryConfig
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 
@@ -32,15 +31,13 @@ object UserUtilADM {
    * @param requestingUser   the requesting user.
    * @param requestedUserIri the IRI of the requested user.
    * @param projectIri       the IRI of the project.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[UserADM]] representing the requested user.
    */
   def switchToUser(
     requestingUser: UserADM,
     requestedUserIri: IRI,
     projectIri: IRI,
-    featureFactoryConfig: FeatureFactoryConfig,
-    responderManager: ActorRef
+    appActor: ActorRef
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -54,12 +51,16 @@ object UserUtilADM {
       )
     } else {
       for {
-        userResponse: UserResponseADM <- (responderManager ? UserGetRequestADM(
-                                           identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
-                                           userInformationTypeADM = UserInformationTypeADM.Full,
-                                           featureFactoryConfig = featureFactoryConfig,
-                                           requestingUser = KnoraSystemInstances.Users.SystemUser
-                                         )).mapTo[UserResponseADM]
+        userResponse: UserResponseADM <-
+          appActor
+            .ask(
+              UserGetRequestADM(
+                identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
+                userInformationTypeADM = UserInformationTypeADM.Full,
+                requestingUser = KnoraSystemInstances.Users.SystemUser
+              )
+            )
+            .mapTo[UserResponseADM]
       } yield userResponse.user
     }
   }

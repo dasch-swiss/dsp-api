@@ -10,8 +10,8 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.InternalSchema
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import dsp.errors.BadRequestException
+import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -47,7 +47,7 @@ object Cardinalities {
    */
   def canDeleteCardinalitiesFromClass(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
@@ -61,10 +61,9 @@ object Cardinalities {
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
              settings,
-             storeManager,
+             appActor,
              internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
            )
 
       // Check that the class's rdf:type is owl:Class.
@@ -127,7 +126,7 @@ object Cardinalities {
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
                                    settings,
-                                   storeManager,
+                                   appActor,
                                    internalClassIri,
                                    submittedPropertyToDelete
                                  )
@@ -207,7 +206,7 @@ object Cardinalities {
    */
   def deleteCardinalitiesFromClass(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
@@ -221,10 +220,9 @@ object Cardinalities {
       // Check that the ontology exists and has not been updated by another user since the client last read it.
       _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
              settings,
-             storeManager,
+             appActor,
              internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
-             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate
            )
 
       // Check that the class's rdf:type is owl:Class.
@@ -288,7 +286,7 @@ object Cardinalities {
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(
                                    settings,
-                                   storeManager,
+                                   appActor,
                                    internalClassIri,
                                    submittedPropertyToDelete
                                  )
@@ -398,25 +396,23 @@ object Cardinalities {
                        )
                        .toString()
 
-      _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+      _ <- appActor.ask(SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
 
       // Check that the ontology's last modification date was updated.
 
       _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
              settings,
-             storeManager,
+             appActor,
              internalOntologyIri = internalOntologyIri,
-             expectedLastModificationDate = currentTime,
-             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+             expectedLastModificationDate = currentTime
            )
 
       // Check that the data that was saved corresponds to the data that was submitted.
 
       loadedClassDef <- OntologyHelpers.loadClassDefinition(
                           settings,
-                          storeManager,
-                          classIri = internalClassIri,
-                          featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+                          appActor,
+                          classIri = internalClassIri
                         )
 
       _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
@@ -459,7 +455,7 @@ object Cardinalities {
    */
   def isPropertyUsedInResources(
     settings: KnoraSettingsImpl,
-    storeManager: ActorRef,
+    appActor: ActorRef,
     internalClassIri: SmartIri,
     internalPropertyIri: SmartIri
   )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
@@ -475,7 +471,7 @@ object Cardinalities {
                      .toString()
                  )
       response: SparqlAskResponse <-
-        (storeManager ? SparqlAskRequest(request)).mapTo[SparqlAskResponse]
+        appActor.ask(SparqlAskRequest(request)).mapTo[SparqlAskResponse]
     } yield response.result
 
   /**

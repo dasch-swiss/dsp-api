@@ -24,9 +24,9 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.exceptions.NotFoundException
-import org.knora.webapi.exceptions.SipiException
+import dsp.errors.BadRequestException
+import dsp.errors.NotFoundException
+import dsp.errors.SipiException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -37,7 +37,7 @@ import spray.json._
 import zio._
 
 import java.util
-import org.knora.webapi.exceptions.KnoraException
+import dsp.errors.KnoraException
 
 /**
  * Makes requests to Sipi.
@@ -60,9 +60,9 @@ case class IIIFServiceSipiImpl(
     import SipiKnoraJsonResponseProtocol._
 
     for {
-      url             <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
-      request         <- ZIO.succeed(new HttpGet(url))
-      _               <- ZIO.debug(request)
+      url     <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
+      request <- ZIO.succeed(new HttpGet(url))
+      // _               <- ZIO.debug(request)
       sipiResponseStr <- doSipiRequest(request)
       sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse])
     } yield GetFileMetadataResponse(
@@ -332,7 +332,7 @@ object IIIFServiceSipiImpl {
     }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
 
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
-    ZLayer {
+    ZLayer.scoped {
       for {
         config <- ZIO.service[AppConfig]
         // _          <- ZIO.debug(config)
@@ -340,8 +340,8 @@ object IIIFServiceSipiImpl {
         // HINT: Scope does not work when used together with unsafeRun to
         // bridge over to Akka. Need to change this as soon Akka is removed
         // httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
-        httpClient <- acquire(config)
+        httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
-    }.tap(_ => ZIO.debug(">>> Sipi IIIF Service Initialized <<<"))
+    }
   }
 }
