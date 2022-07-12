@@ -109,7 +109,7 @@ end
 -- generic function to decode and encode base32/base64
 --------------------------------------------------------------------------------
 
-local function from_basexx( str, alphabet, bits )
+function from_basexx( str, alphabet, bits )
    local result = {}
    for i = 1, #str do
       local c = string.sub( str, i, i )
@@ -127,7 +127,7 @@ local function from_basexx( str, alphabet, bits )
    return pure_from_bit( string.sub( value, 1, #value - pad ) )
 end
 
-local function to_basexx( str, alphabet, bits, pad )
+function to_basexx( str, alphabet, bits, pad )
    local bitString = basexx.to_bit( str )
 
    local chunks = divide_string( bitString, bits )

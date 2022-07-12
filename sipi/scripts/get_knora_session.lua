@@ -1,7 +1,7 @@
 -- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
-require "basexx"
+basexx = require( "basexx" )
 
 -------------------------------------------------------------------------------
 -- This function is called from the route to get the Knora session id from the cookie.

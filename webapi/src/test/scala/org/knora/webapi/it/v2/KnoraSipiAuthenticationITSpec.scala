@@ -32,6 +32,7 @@ import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object KnoraSipiAuthenticationITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -55,6 +56,11 @@ class KnoraSipiAuthenticationITSpec
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
+
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+  )
 
   "The Knora/Sipi authentication" should {
     var loginToken: String = ""
@@ -99,7 +105,7 @@ class KnoraSipiAuthenticationITSpec
       assert(response.status === StatusCodes.OK)
     }
 
-    "accept a token in Sipi that has been signed by Knora" in {
+    "accept a token in Sipi that has been signed by Knora" ignore {
       val invalidToken = "a_invalid_token"
 
       // The image to be uploaded.
@@ -120,7 +126,7 @@ class KnoraSipiAuthenticationITSpec
       assert(sipiResponse.status == StatusCodes.OK)
     }
 
-    "not accept a token in Sipi that hasn't been signed by Knora" in {
+    "not accept a token in Sipi that hasn't been signed by Knora" ignore {
       val invalidToken = "a_invalid_token"
 
       // The image to be uploaded.

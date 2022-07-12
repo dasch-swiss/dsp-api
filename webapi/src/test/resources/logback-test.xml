@@ -37,12 +37,10 @@
     <logger name="kamon.metric" level="ERROR"/>
     <logger name="org.apache.http" level="INFO"/>
     <logger name="org.apache.http.wire" level="INFO"/>
-    <logger name="org.testcontainers" level="INFO"/>
-    <logger name="com.github.dockerjava" level="WARN"/>
-    <logger name="org.testcontainers.dockerclient.DockerClientProviderStrategy" level="WARN" />
-    <logger name="org.testcontainers.DockerClientFactory" level="WARN" />
-    <logger name="org.testcontainers.utility.ImageNameSubstitutor" level="WARN" />
-    <logger name="org.testcontainers.utility.RegistryAuthLocator" level="WARN" />
+    <logger name="org.testcontainers" level="WARN" />
+    <logger name="com.github.dockerjava" level="WARN" />
+    <logger name="ch.qos.logback" level="WARN" />
+
 
     <!-- Logging inside ZIO -->
     <logger name="zio-slf4j-logger" level="INFO"/>

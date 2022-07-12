@@ -45,12 +45,15 @@ object SipiTestContainer {
       "/sipi/config/sipi.docker-config.lua",
       BindMode.READ_ONLY
     )
+
+    // TODO: add some default images: https://www.testcontainers.org/features/files/
+
     sipiContainer.start()
     sipiContainer
   }.tap(_ => ZIO.debug(">>> Acquire Sipi TestContainer <<<"))
 
   def release(container: GenericContainer[Nothing]): UIO[Unit] = ZIO.attemptBlocking {
-    container.stop()
+    //container.stop()
   }.orDie.tap(_ => ZIO.debug(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] = {
