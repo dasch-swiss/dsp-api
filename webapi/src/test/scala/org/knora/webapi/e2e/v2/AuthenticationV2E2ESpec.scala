@@ -215,8 +215,20 @@ class AuthenticationV2E2ESpec
 
     "authenticate with token in cookie" in {
       val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
-      val request =
-        Get(baseApiUrl + "/v2/authentication") ~> addHeader(HttpHeader.parse(KnoraAuthenticationCookieName, token.get))
+      val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, token.get)
+
+      val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
+      val response = singleAwaitingRequest(request)
+      assert(response.status === StatusCodes.OK)
+    }
+
+    "fail authentication with invalid token in cookie" in {
+      val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
+      val cookieHeader                  = headers.Cookie(KnoraAuthenticationCookieName, "not_a_valid_token")
+
+      val request  = Get(baseApiUrl + "/v2/authentication") ~> addHeader(cookieHeader)
+      val response = singleAwaitingRequest(request)
+      assert(response.status === StatusCodes.Unauthorized)
     }
 
     "logout when providing token in header" in {
