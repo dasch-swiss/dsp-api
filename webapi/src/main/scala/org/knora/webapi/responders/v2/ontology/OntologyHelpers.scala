@@ -920,12 +920,16 @@ object OntologyHelpers {
     val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
       propertyIri =>
         if (
-          !isKnoraResourceProperty(
-            propertyIri,
-            cacheData
-          ) || propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue
+          propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue
         ) {
-          throw NotFoundException(s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}>")
+          throw BadRequestException(
+            s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}> - must not use this built-in property directly."
+          )
+        }
+        if (!isKnoraResourceProperty(propertyIri, cacheData)) {
+          throw NotFoundException(
+            s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}> - not found in ontology cache."
+          )
         }
 
         cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
