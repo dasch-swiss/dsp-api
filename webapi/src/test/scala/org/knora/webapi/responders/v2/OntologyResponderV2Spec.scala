@@ -31,6 +31,8 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Schema
 
 /**
  * Tests [[OntologyResponderV2]].
@@ -3963,12 +3965,29 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+      val propertyIri =
+        Iri.PropertyIri
+          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
+          .fold(e => throw e.head, v => v)
+      val guiElement =
+        Schema.GuiElement
+          .make("http://www.knora.org/ontology/salsah-gui#SimpleText")
+          .fold(e => throw e.head, v => Some(v))
+      val guiAttributes =
+        List("size=80")
+          .map(attribute =>
+            Schema.GuiAttribute
+              .make(attribute)
+              .fold(e => throw e.head, v => v)
+          )
+      val guiObject =
+        Schema.GuiObject
+          .make(guiAttributes, guiElement)
+          .fold(e => throw e.head, v => v)
 
       appActor ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
-        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#SimpleText".toSmartIri),
-        newGuiAttributes = Set("size=80"),
+        newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = anythingAdminUser
@@ -3987,7 +4006,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         // Check that the salsah-gui:guiElement from the message is as expected
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
+        val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         val guiElementPropComplex = property.entityInfoContent.predicates(
           OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
@@ -4020,68 +4039,21 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not change a property with GUI element List if the salsah-gui:guiAttribute is missing" in {
-      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasListValue")
-
-      appActor ! ChangePropertyGuiElementRequest(
-        propertyIri = propertyIri,
-        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#List".toSmartIri),
-        newGuiAttributes = Set(),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-
-    }
-
-    "throw Bad Request Exception when changing a property with GUI element List and the salsah-gui:guiAttribute doesn't start with 'hlist='" in {
-      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasListValue")
-
-      appActor ! ChangePropertyGuiElementRequest(
-        propertyIri = propertyIri,
-        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#List".toSmartIri),
-        newGuiAttributes = Set("size=80"),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
-    "throw Bad Request Exception when changing a property with GUI element Slider and one of the salsah-gui:guiAttributes doesn't start with 'min=' or 'max='" in {
-      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasInteger")
-
-      appActor ! ChangePropertyGuiElementRequest(
-        propertyIri = propertyIri,
-        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#Slider".toSmartIri),
-        newGuiAttributes = Set("min=1", "size=80"),
-        lastModificationDate = freetestLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+      val propertyIri =
+        Iri.PropertyIri
+          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
+          .fold(e => throw e.head, v => v)
+      val guiElement    = None
+      val guiAttributes = List()
+      val guiObject =
+        Schema.GuiObject
+          .make(guiAttributes, guiElement)
+          .fold(e => throw e.head, v => v)
 
       appActor ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
-        newGuiElement = None,
-        newGuiAttributes = Set.empty,
+        newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = anythingAdminUser
@@ -4090,7 +4062,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
+        val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         property.entityInfoContent.predicates
           .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(None)
@@ -7040,5 +7012,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       loadInvalidTestData(invalidOnto)
     }
+
   }
 }

@@ -32,6 +32,8 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{Knor
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Schema
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -903,9 +905,8 @@ sealed trait ChangeLabelsOrCommentsRequest {
  * @param requestingUser       the user making the request.
  */
 case class ChangePropertyGuiElementRequest(
-  propertyIri: SmartIri,
-  newGuiElement: Option[SmartIri],
-  newGuiAttributes: Set[String],
+  propertyIri: Iri.PropertyIri,
+  newGuiObject: Schema.GuiObject,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: UserADM
@@ -922,11 +923,12 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
+   * @param appActor            a reference to the application actor.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
+  @deprecated
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
@@ -936,58 +938,11 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
     Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
+      throw BadRequestException(
+        "Deprecated method fromJsonLD() for ChangePropertyGuiElementRequest. Please report this as a bug."
       )
     }
 
-  private def fromJsonLDSync(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): ChangePropertyGuiElementRequest = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate = propertyUpdateInfo.lastModificationDate
-
-    val newGuiElement: Option[SmartIri] =
-      propertyInfoContent.predicates
-        .get(
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
-        )
-        .map { predicateInfoV2: PredicateInfoV2 =>
-          predicateInfoV2.objects.head match {
-            case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value.toOntologySchema(InternalSchema)
-            case other =>
-              throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
-          }
-        }
-
-    val newGuiAttributes: Set[String] =
-      propertyInfoContent.predicates
-        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
-        .map { predicateInfoV2: PredicateInfoV2 =>
-          predicateInfoV2.objects.map {
-            case stringLiteralV2: StringLiteralV2 => stringLiteralV2.value
-            case other                            => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-          }.toSet
-        }
-        .getOrElse(Set.empty[String])
-
-    ChangePropertyGuiElementRequest(
-      propertyIri = propertyInfoContent.propertyIri,
-      newGuiElement = newGuiElement,
-      newGuiAttributes = newGuiAttributes,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser
-    )
-  }
 }
 
 /**

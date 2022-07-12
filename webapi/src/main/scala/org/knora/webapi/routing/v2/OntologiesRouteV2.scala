@@ -11,7 +11,7 @@ import akka.http.scaladsl.server.Route
 
 import java.util.UUID
 import scala.concurrent.Future
-
+import zio.prelude.Validation
 import dsp.errors.BadRequestException
 
 import org.knora.webapi._
@@ -21,6 +21,18 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Schema._
+import zio.ZIO
+import akka.actor.Status
+import javax.validation.Valid
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import dsp.valueobjects.V2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -904,78 +916,86 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext
-                                )
-
+              requestingUser: UserADM <- getUserADM(
+                                           requestContext = requestContext
+                                         )
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-              requestMessage: ChangePropertyGuiElementRequest <- ChangePropertyGuiElementRequest
-                                                                   .fromJsonLD(
-                                                                     jsonLDDocument = requestDoc,
-                                                                     apiRequestID = UUID.randomUUID,
-                                                                     requestingUser = requestingUser,
-                                                                     appActor = appActor,
-                                                                     settings = settings,
-                                                                     log = log
-                                                                   )
+              inputOntologiesV2Try = Try(InputOntologyV2.fromJsonLD(requestDoc))
+              inputOntology = inputOntologiesV2Try match {
+                                case Failure(exception) => throw exception
+                                case Success(value)     => value
+                              }
 
-              // If the GUI element is a list, radio, pulldown or slider, check if a GUI attribute (which is mandatory in these cases) is provided
-              guiElementList     = OntologyConstants.SalsahGui.List.toSmartIri
-              guiElementRadio    = OntologyConstants.SalsahGui.Radio.toSmartIri
-              guiElementPulldown = OntologyConstants.SalsahGui.Pulldown.toSmartIri
-              guiElementSlider   = OntologyConstants.SalsahGui.Slider.toSmartIri
+              propertyUpdateInfoTry = Try(OntologyUpdateHelper.getPropertyDef(inputOntology))
+              propertyUpdateInfo = propertyUpdateInfoTry match {
+                                     case Failure(exception) => throw exception
+                                     case Success(value)     => value
+                                   }
 
-              needsGuiAttribute = requestMessage.newGuiElement == Some(guiElementList) ||
-                                    requestMessage.newGuiElement == Some(guiElementRadio) ||
-                                    requestMessage.newGuiElement == Some(guiElementPulldown) ||
-                                    requestMessage.newGuiElement == Some(guiElementSlider)
+              propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
+              lastModificationDate = propertyUpdateInfo.lastModificationDate
 
-              _ = if (
-                    needsGuiAttribute &&
-                    requestMessage.newGuiAttributes.isEmpty
-                  ) {
-                    throw BadRequestException(s"Missing GUI attribute (salsah-gui:guiAttribute)")
-                  }
+              // get all values from request and validate them by making value objects from it
 
-              // If the GUI element is a list, radio, pulldown or slider, check if the provided GUI attribute is correct
-              guiElementsPointingToList = List(guiElementList, guiElementRadio, guiElementPulldown)
+              // validate property IRI
+              propertyIri = PropertyIri.make(propertyInfoContent.propertyIri.toString)
 
-              _ = if (needsGuiAttribute) {
-                    requestMessage.newGuiElement match {
-                      // GUI element is a list, radio or pulldown, so it needs a GUI attribute that points to a list
-                      case Some(newGuiElement) if guiElementsPointingToList.contains(newGuiElement) =>
-                        requestMessage.newGuiAttributes.map { guiAttribute: String =>
-                          if (!guiAttribute.startsWith("hlist=")) {
-                            throw BadRequestException(
-                              s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to be a list reference of the form 'hlist=<LIST_IRI>' but found $guiAttribute"
-                            )
-                          }
-                        }
-                      // GUI element is a slider, so it needs two GUI attributes min and max
-                      case Some(newGuiElement) if newGuiElement == guiElementSlider =>
-                        if (requestMessage.newGuiAttributes.size != 2) {
-                          throw BadRequestException(
-                            s"salsah-gui:guiElement $newGuiElement needs two salsah-gui:guiAttribute ('min' and 'max'), but ${requestMessage.newGuiAttributes.size} were provided."
-                          )
-                        }
-                        requestMessage.newGuiAttributes.map { guiAttribute: String =>
-                          if (!guiAttribute.startsWith("max=") && !guiAttribute.startsWith("min=")) {
-                            throw BadRequestException(
-                              s"salsah-gui:guiAttribute for salsah-gui:guiElement $newGuiElement has to provide 'min' and 'max' parameters but found $guiAttribute"
-                            )
-                          }
-                        }
-                      case Some(_) =>
-                        throw BadRequestException(
-                          s"Unknown GUI element (salsah-gui:guiElement) provided"
-                        )
-                      case None =>
-                        throw BadRequestException(
-                          s"No GUI element (salsah-gui:guiElement) provided"
-                        )
+              newGuiElement: Option[SmartIri] =
+                propertyInfoContent.predicates
+                  .get(
+                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
+                  )
+                  .map { predicateInfoV2: PredicateInfoV2 =>
+                    predicateInfoV2.objects.head match {
+                      case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value.toOntologySchema(InternalSchema)
+                      case other =>
+                        throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
                     }
                   }
+
+              newGuiAttributes: Set[String] =
+                propertyInfoContent.predicates
+                  .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+                  .map { predicateInfoV2: PredicateInfoV2 =>
+                    predicateInfoV2.objects.map {
+                      case stringLiteralV2: StringLiteralV2 => stringLiteralV2.value
+                      case other                            => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
+                    }.toSet
+                  }
+                  .getOrElse(Set.empty[String])
+
+              // validate GUI element
+              maybeNewGuiElementString: Option[String] = newGuiElement match {
+                                                           case None             => None
+                                                           case Some(guiElement) => SmartIri.unapply(guiElement)
+                                                         }
+
+              validatedNewGuiElement = maybeNewGuiElementString match {
+                                         case Some(guiElement) => GuiElement.make(guiElement).map(Some(_))
+                                         case None             => Validation.succeed(None)
+                                       }
+
+              // validate GUI attributes
+              guiAttributes =
+                newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
+
+              validatedGuiAttributes = Validation.validateAll(guiAttributes)
+
+              // validate GUI object
+              guiObject: GuiObject = Validation
+                                       .validate(validatedGuiAttributes, validatedNewGuiElement)
+                                       .flatMap(v => GuiObject.make(v._1, v._2))
+                                       .fold(e => throw e.head, v => v)
+
+              requestMessage = ChangePropertyGuiElementRequest(
+                                 propertyIri = propertyIri.fold(e => throw e.head, v => v),
+                                 newGuiObject = guiObject,
+                                 lastModificationDate = lastModificationDate,
+                                 apiRequestID = UUID.randomUUID,
+                                 requestingUser = requestingUser
+                               )
+
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteWithFuture(

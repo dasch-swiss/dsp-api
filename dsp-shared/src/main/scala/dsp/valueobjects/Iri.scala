@@ -137,6 +137,19 @@ object Iri {
         }
       }
   }
+
+  /**
+   * PropertyIri value object.
+   */
+  sealed abstract case class PropertyIri private (value: String) extends Iri
+  object PropertyIri {
+    def make(value: String): Validation[Throwable, PropertyIri] =
+      if (value.isEmpty) {
+        Validation.fail(BadRequestException(IriErrorMessages.PropertyIriMissing))
+      } else {
+        Validation.succeed(new PropertyIri(value) {})
+      }
+  }
 }
 
 object IriErrorMessages {
@@ -149,4 +162,5 @@ object IriErrorMessages {
   val UserIriMissing     = "User IRI cannot be empty."
   val UserIriInvalid     = "User IRI is invalid."
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
+  val PropertyIriMissing = "Property IRI cannot be empty."
 }
