@@ -24,12 +24,12 @@ object Schema {
       if (guiAttributeKeys.toSet.size < guiAttributes.size) {
         return Validation.fail(
           BadRequestException(
-            s"Duplicate GUI attributes for salsah-gui:guiElement $guiElement."
+            s"Duplicate gui attributes for salsah-gui:guiElement $guiElement."
           )
         )
       }
 
-      // If the GUI element is a list, radio, pulldown or slider, check if a GUI attribute (which is mandatory in these cases) is provided
+      // If the gui element is a list, radio, pulldown or slider, check if a gui attribute (which is mandatory in these cases) is provided
       val guiElementList     = SalsahGui.List
       val guiElementRadio    = SalsahGui.Radio
       val guiElementPulldown = SalsahGui.Pulldown
@@ -54,52 +54,34 @@ object Schema {
       val guiElementsPointingToList: Set[SalsahGui.IRI] = Set(guiElementList, guiElementRadio, guiElementPulldown)
 
       if (needsGuiAttribute) {
-        guiElement match {
-          // GUI element is a list, radio or pulldown, so it needs a GUI attribute that points to a list
+        val validatedGuiAttributes: Validation[Throwable, List[GuiAttribute]] = guiElement match {
+          // gui element is a list, radio or pulldown, so it needs a gui attribute that points to a list
           case Some(guiElement) if guiElementsPointingToList.contains(guiElement.value) =>
-            if (guiAttributes.size != 1) {
-              return Validation.fail(
-                BadRequestException(
-                  s"Too many GUI attributes. salsah-gui:guiElement $guiElement needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found $guiAttributes."
-                )
-              )
-            } else {
-              guiAttributes.map { guiAttribute: GuiAttribute =>
-                if (guiAttribute.k != ("hlist")) {
-                  return Validation.fail(
-                    BadRequestException(
-                      s"salsah-gui:guiAttribute for salsah-gui:guiElement $guiElement has to be a list reference of the form 'hlist=<LIST_IRI>', but found $guiAttribute."
-                    )
-                  )
-                }
-              }
-            }
-          // GUI element is a slider, so it needs two GUI attributes min and max
+            validateGuiElementsPointingToList(guiElement, guiAttributes).fold(
+              e => Validation.fail(e.head),
+              v => Validation.succeed(v)
+            )
+
+          // gui element is a slider, so it needs two gui attributes min and max
           case Some(guiElement) if guiElement.value == guiElementSlider =>
-            if (guiAttributes.size != 2) {
-              return Validation.fail(
-                BadRequestException(
-                  s"Wrong number of GUI attributes. salsah-gui:guiElement $guiElement needs 2 salsah-gui:guiAttribute 'min' and 'max', but found ${guiAttributes.size}: $guiAttributes."
-                )
-              )
-            }
-            guiAttributes.map { guiAttribute: GuiAttribute =>
-              if (guiAttribute.k != ("max") && guiAttribute.k != ("min")) {
-                return Validation.fail(
-                  BadRequestException(
-                    s"Incorrect GUI attributes. salsah-gui:guiElement $guiElement needs two salsah-gui:guiAttribute 'min' and 'max', but found $guiAttributes."
-                  )
-                )
-              }
-            }
+            validateGuiElementSlider(guiElement, guiAttributes).fold(
+              e => Validation.fail(e.head),
+              v => Validation.succeed(v)
+            )
 
           case _ =>
-            return Validation.fail(
+            Validation.fail(
               BadRequestException(
                 s"Unknown value for salsah-gui:guiElement: $guiElement."
               )
             )
         }
+
+        return validatedGuiAttributes.fold(
+          e => Validation.fail(e.head),
+          v => Validation.succeed(new GuiObject(v, guiElement) {})
+        )
+
       }
 
       Validation.succeed(new GuiObject(guiAttributes, guiElement) {})
@@ -115,7 +97,6 @@ object Schema {
   sealed abstract case class GuiAttribute private (k: String, v: String) {
     val value = k + "=" + v
   }
-
   object GuiAttribute {
     def make(keyValue: String): Validation[Throwable, GuiAttribute] = {
       val k: String = keyValue.split("=").head.trim()
@@ -148,6 +129,71 @@ object Schema {
       }
   }
 
+  /**
+   * Validates if gui elements that require pointing to a list (List, Radio, Pulldown) actually point to a list
+   *
+   * @param guiElement the gui element that needs to be validated
+   * @param guiAttributes the gui attributes that need to be validated
+   *
+   * @return either the validated list of gui attributes or a [[dsp.errors.BadRequestException]]
+   */
+  private def validateGuiElementsPointingToList(
+    guiElement: GuiElement,
+    guiAttributes: List[GuiAttribute]
+  ): Validation[BadRequestException, List[GuiAttribute]] = {
+    // gui element can have only one gui attribute
+    if (guiAttributes.size != 1) {
+      return Validation.fail(
+        BadRequestException(
+          s"Wrong number of gui attributes. salsah-gui:guiElement $guiElement needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found $guiAttributes."
+        )
+      )
+    }
+    // gui attribute needs to point to a list
+    if (guiAttributes.head.k != ("hlist")) {
+      return Validation.fail(
+        BadRequestException(
+          s"salsah-gui:guiAttribute for salsah-gui:guiElement $guiElement has to be a list reference of the form 'hlist=<LIST_IRI>', but found ${guiAttributes.head}."
+        )
+      )
+    } else {
+      return Validation.succeed(guiAttributes)
+    }
+  }
+
+  /**
+   * Validates if gui element Slider has the correct gui attributes
+   *
+   * @param guiElement the gui element that needs to be validated
+   * @param guiAttributes the gui attributes that need to be validated
+   *
+   * @return either the validated list of gui attributes or a [[dsp.errors.BadRequestException]]
+   */
+  private def validateGuiElementSlider(
+    guiElement: GuiElement,
+    guiAttributes: List[GuiAttribute]
+  ): Validation[BadRequestException, List[GuiAttribute]] = {
+    // gui element needs two gui attributes
+    if (guiAttributes.size != 2) {
+      return Validation.fail(
+        BadRequestException(
+          s"Wrong number of gui attributes. salsah-gui:guiElement $guiElement needs 2 salsah-gui:guiAttribute 'min' and 'max', but found ${guiAttributes.size}: $guiAttributes."
+        )
+      )
+    }
+    // gui element needs to have gui attributes 'min' and 'max'
+    val validGuiAttributes = scala.collection.immutable.List("min", "max")
+    guiAttributes.map { guiAttribute: GuiAttribute =>
+      if (!validGuiAttributes.contains(guiAttribute.k)) {
+        return Validation.fail(
+          BadRequestException(
+            s"Incorrect gui attributes. salsah-gui:guiElement $guiElement needs two salsah-gui:guiAttribute 'min' and 'max', but found $guiAttributes."
+          )
+        )
+      }
+    }
+    return Validation.succeed(guiAttributes)
+  }
 }
 
 object SchemaErrorMessages {
@@ -159,11 +205,11 @@ object SchemaErrorMessages {
   val ClassLabelInvalid          = "Class label is invalid."
   val ClassDescriptionMissing    = "Class description cannot be empty."
   val ClassDescriptionInvalid    = "Class description is invalid."
-  val GuiAttributeMissing        = "GUI attribute cannot be empty."
-  val GuiAttributeUnknown        = s"GUI attribute is unknown. Needs to be one of ${SalsahGui.GuiAttributes}"
-  val GuiElementMissing          = "GUI element cannot be empty."
-  val GuiElementInvalid          = "GUI element is invalid."
-  val GuiElementUnknown          = s"GUI element is unknown. Needs to be one of ${SalsahGui.GuiElements}"
-  val GuiObjectMissing           = "GUI object cannot be empty."
-  val GuiAttributesMissing       = "GUI attributes cannot be empty."
+  val GuiAttributeMissing        = "gui attribute cannot be empty."
+  val GuiAttributeUnknown        = s"gui attribute is unknown. Needs to be one of ${SalsahGui.GuiAttributes}"
+  val GuiElementMissing          = "gui element cannot be empty."
+  val GuiElementInvalid          = "gui element is invalid."
+  val GuiElementUnknown          = s"gui element is unknown. Needs to be one of ${SalsahGui.GuiElements}"
+  val GuiObjectMissing           = "gui object cannot be empty."
+  val GuiAttributesMissing       = "gui attributes cannot be empty."
 }
