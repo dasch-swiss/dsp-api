@@ -36,11 +36,8 @@ class UpgradePluginPR2094Spec extends UpgradePluginSpec with LazyLogging {
         .toSet
         .headOption match {
         case Some(statement: Statement) =>
-          println(111, statement)
           statement.obj match {
             case datatypeLiteral: DatatypeLiteral =>
-              println(222, statement.obj)
-              println(333, datatypeLiteral.datatype)
               assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Uri)
 
             case other =>

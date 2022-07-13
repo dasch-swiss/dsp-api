@@ -38,7 +38,7 @@ class UpgradePluginPR2079(log: Logger) extends UpgradePlugin {
               )
 
               log.info(
-                s"Transformed valueHasIri: $literal to ${newObjectValue(literal.value)}."
+                s"Transformed valueHasUri: $literal to ${newObjectValue(literal.value)}."
               )
             }
 

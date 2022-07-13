@@ -38,7 +38,7 @@ class UpgradePluginPR2094(log: Logger) extends UpgradePlugin {
             )
 
             log.info(
-              s"Transformed v23 valueHasIri $node to ${newObjectValue(node.iri)}."
+              s"Transformed valueHasUri $node to ${newObjectValue(node.iri)}."
             )
 
           case _ => ()
