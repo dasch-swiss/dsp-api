@@ -41,6 +41,9 @@ function get_session_id(cookie)
 
 
 
+
+    
+
     -- tries to extract the Knora session id from the cookie:
     -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
     -- ";" is expected to separate different key value pairs (https://tools.ietf.org/html/rfc6265#section-4.2.1)
@@ -50,6 +53,10 @@ function get_session_id(cookie)
     local session_id = string.match(cookie, "KnoraAuthentication" .. host_port_base32 .. "=([^%s;]+)")
     server.log("extracted session_id: " .. session_id, server.loglevel.LOG_DEBUG)
 
-    return session_id
+    local session = {}
+    session["id"] = session_id
+    session["name"] = "KnoraAuthentication" .. host_port_base32
+
+    return session
 
 end

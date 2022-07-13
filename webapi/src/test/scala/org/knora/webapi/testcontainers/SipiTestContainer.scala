@@ -48,7 +48,7 @@ object SipiTestContainer {
     )
 
     // TODO: add some default images: https://www.testcontainers.org/features/files/
-    val incunabulaImageDirPath  = Paths.get("..", "sipi/images/0803")
+    val incunabulaImageDirPath = Paths.get("..", "sipi/images/0803")
     sipiContainer.withFileSystemBind(incunabulaImageDirPath.toString(), "/sipi/images/0803", BindMode.READ_ONLY)
 
     sipiContainer.start()
@@ -56,7 +56,7 @@ object SipiTestContainer {
   }.tap(_ => ZIO.debug(">>> Acquire Sipi TestContainer <<<"))
 
   def release(container: GenericContainer[Nothing]): UIO[Unit] = ZIO.attemptBlocking {
-    //container.stop()
+    container.stop()
   }.orDie.tap(_ => ZIO.debug(">>> Release Sipi TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, SipiTestContainer] = {

@@ -42,17 +42,18 @@ function pre_flight(prefix, identifier, cookie)
 
     if cookie ~='' then
 
-        -- tries to extract the Knora session id from the cookie:
+        -- tries to extract the Knora session name and id from the cookie:
         -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
         -- returns nil if it cannot find it
-        session_id = get_session_id(cookie)
+        session = get_session_id(cookie)
 
-        if session_id == nil then
-            -- no session_id could be extracted
+        if session == nil then
+            -- no session could be extracted
             print("cookie key is invalid: " .. cookie)
             server.log("cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
         else
-            knora_cookie_header = { Cookie = "KnoraAuthentication=" .. session_id }
+            knora_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
+            server.log("pre_flight - knora_cookie_header: " .. knora_cookie_header["Cookie"], server.loglevel.LOG_DEBUG)
         end
     end
 
@@ -78,7 +79,6 @@ function pre_flight(prefix, identifier, cookie)
 
     -- print("knora_url: " .. knora_url)
     server.log("pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)
-    server.log("pre_flight - knora_cookie_header: " .. tostring(knora_cookie_header), server.loglevel.LOG_DEBUG)
 
     success, result = server.http("GET", knora_url, knora_cookie_header, 5000)
 
