@@ -33,6 +33,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
+import dsp.constants.SalsahGui
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -1181,21 +1182,21 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
         responseAsInput.properties.head._2
-          .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+          .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
           .objects
           .toSet should ===(
           paramsAsInput.properties.head._2
-            .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+            .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
             .objects
             .toSet
         )
 
         responseAsInput.properties.head._2
-          .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+          .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
           .objects
           .toSet should ===(
           paramsAsInput.properties.head._2
-            .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+            .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
             .objects
             .toSet
         )
@@ -1247,12 +1248,12 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+            .contains(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
         )
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+            .contains(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
         )
 
         // Check that the ontology's last modification date was updated.

@@ -41,6 +41,7 @@ import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import dsp.constants.SalsahGui
 
 /**
  * Responds to requests dealing with ontologies.
@@ -2672,8 +2673,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         maybeNewGuiElementPredicate: Option[(SmartIri, PredicateInfoV2)] =
           newGuiElementIri.map { guiElement: SmartIri =>
-            OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -> PredicateInfoV2(
-              predicateIri = OntologyConstants.SalsahGui.GuiElementProp.toSmartIri,
+            SalsahGui.GuiElementProp.toSmartIri -> PredicateInfoV2(
+              predicateIri = SalsahGui.GuiElementProp.toSmartIri,
               objects = Seq(SmartIriLiteralV2(guiElement))
             )
           }
@@ -2681,8 +2682,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         maybeUnescapedNewGuiAttributePredicate: Option[(SmartIri, PredicateInfoV2)] =
           if (newGuiAttributeIris.nonEmpty) {
             Some(
-              OntologyConstants.SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
-                predicateIri = OntologyConstants.SalsahGui.GuiAttribute.toSmartIri,
+              SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
+                predicateIri = SalsahGui.GuiAttribute.toSmartIri,
                 objects = newGuiAttributeIris.map(StringLiteralV2(_)).toSeq
               )
             )
@@ -2693,8 +2694,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
                                                            predicates =
                                                              currentReadPropertyInfo.entityInfoContent.predicates -
-                                                               OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -
-                                                               OntologyConstants.SalsahGui.GuiAttribute.toSmartIri ++
+                                                               SalsahGui.GuiElementProp.toSmartIri -
+                                                               SalsahGui.GuiAttribute.toSmartIri ++
                                                                maybeNewGuiElementPredicate ++
                                                                maybeUnescapedNewGuiAttributePredicate
                                                          )
@@ -2721,8 +2722,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef =>
             val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
               predicates = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates -
-                OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -
-                OntologyConstants.SalsahGui.GuiAttribute.toSmartIri ++
+                SalsahGui.GuiElementProp.toSmartIri -
+                SalsahGui.GuiAttribute.toSmartIri ++
                 maybeNewGuiElementPredicate ++
                 maybeUnescapedNewGuiAttributePredicate
             )

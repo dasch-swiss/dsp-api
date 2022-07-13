@@ -6,15 +6,16 @@
 package org.knora.webapi.messages.v1.responder.resourcemessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi._
+import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.InvalidApiJsonException
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
@@ -802,23 +803,23 @@ object SalsahGuiConversions {
    * A [[Map]] of Knora IRIs to SALSAH GUI element names.
    */
   private val iris2SalsahGuiElements: Map[IRI, IRI] = Map(
-    OntologyConstants.SalsahGui.SimpleText  -> "text",
-    OntologyConstants.SalsahGui.Textarea    -> "textarea",
-    OntologyConstants.SalsahGui.Pulldown    -> "pulldown",
-    OntologyConstants.SalsahGui.Slider      -> "slider",
-    OntologyConstants.SalsahGui.Spinbox     -> "spinbox",
-    OntologyConstants.SalsahGui.Searchbox   -> "searchbox",
-    OntologyConstants.SalsahGui.Date        -> "date",
-    OntologyConstants.SalsahGui.Geometry    -> "geometry",
-    OntologyConstants.SalsahGui.Colorpicker -> "colorpicker",
-    OntologyConstants.SalsahGui.List        -> "hlist",
-    OntologyConstants.SalsahGui.Radio       -> "radio",
-    OntologyConstants.SalsahGui.Checkbox    -> "checkbox",
-    OntologyConstants.SalsahGui.Richtext    -> "richtext",
-    OntologyConstants.SalsahGui.Interval    -> "interval",
-    OntologyConstants.SalsahGui.TimeStamp   -> "timestamp",
-    OntologyConstants.SalsahGui.Geonames    -> "geoname",
-    OntologyConstants.SalsahGui.Fileupload  -> "fileupload"
+    SalsahGui.SimpleText  -> "text",
+    SalsahGui.Textarea    -> "textarea",
+    SalsahGui.Pulldown    -> "pulldown",
+    SalsahGui.Slider      -> "slider",
+    SalsahGui.Spinbox     -> "spinbox",
+    SalsahGui.Searchbox   -> "searchbox",
+    SalsahGui.Date        -> "date",
+    SalsahGui.Geometry    -> "geometry",
+    SalsahGui.Colorpicker -> "colorpicker",
+    SalsahGui.List        -> "hlist",
+    SalsahGui.Radio       -> "radio",
+    SalsahGui.Checkbox    -> "checkbox",
+    SalsahGui.Richtext    -> "richtext",
+    SalsahGui.Interval    -> "interval",
+    SalsahGui.TimeStamp   -> "timestamp",
+    SalsahGui.Geonames    -> "geoname",
+    SalsahGui.Fileupload  -> "fileupload"
   )
 
   /**

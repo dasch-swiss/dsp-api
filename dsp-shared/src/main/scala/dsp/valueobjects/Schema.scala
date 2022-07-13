@@ -5,11 +5,10 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
+import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
-import dsp.constants.SalsahGuiConstants._
 import zio.prelude.Subtype
-import dsp.constants.SalsahGuiConstants
+import zio.prelude.Validation
 
 object Schema {
 
@@ -41,7 +40,7 @@ object Schema {
         return Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributesMissing))
       }
 
-      val guiElementsPointingToList: Set[IRI] = Set(guiElementList, guiElementRadio, guiElementPulldown)
+      val guiElementsPointingToList: Set[SalsahGui.IRI] = Set(guiElementList, guiElementRadio, guiElementPulldown)
 
       if (needsGuiAttribute) {
         guiElement match {
@@ -108,7 +107,7 @@ object Schema {
       val guiAttributeValue = value.split("=").last.trim()
       if (value.isEmpty) {
         Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributeMissing))
-      } else if (!SalsahGuiConstants.SalsahGui.SalsahGuiAttribute.valueMap.contains(guiAttribute)) {
+      } else if (!SalsahGui.GuiAttributes.valueMap.contains(guiAttribute)) {
         Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributeUnknown))
       } else {
         Validation.succeed(new GuiAttribute(value.replace(" ", "")) {})
@@ -125,7 +124,7 @@ object Schema {
     def make(value: String): Validation[Throwable, GuiElement] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(SchemaErrorMessages.GuiElementMissing))
-      } else if (!SalsahGuiConstants.SalsahGui.SalsahGuiElement.valueMap.contains(value)) {
+      } else if (!SalsahGui.GuiElements.valueMap.contains(value)) {
         Validation.fail(BadRequestException(SchemaErrorMessages.GuiElementUnknown))
       } else {
         Validation.succeed(new GuiElement(value) {})
@@ -145,11 +144,11 @@ object SchemaErrorMessages {
   val ClassDescriptionInvalid    = "Class description is invalid."
   val GuiAttributeMissing        = "GUI attribute cannot be empty."
   val GuiAttributeUnknown =
-    s"GUI attribute is unknown. Needs to be one of ${SalsahGuiConstants.SalsahGui.SalsahGuiAttribute.valueMap}"
+    s"GUI attribute is unknown. Needs to be one of ${SalsahGui.GuiAttributes.valueMap}"
   val GuiElementMissing = "GUI element cannot be empty."
   val GuiElementInvalid = "GUI element is invalid."
   val GuiElementUnknown =
-    s"GUI element is unknown. Needs to be one of ${SalsahGuiConstants.SalsahGui.SalsahGuiElement.valueMap}"
+    s"GUI element is unknown. Needs to be one of ${SalsahGui.GuiElements.valueMap}"
   val GuiObjectMissing     = "GUI object cannot be empty."
   val GuiAttributesMissing = "GUI attributes cannot be empty."
 }

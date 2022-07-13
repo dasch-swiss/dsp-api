@@ -33,6 +33,7 @@ import scala.util.Success
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import dsp.valueobjects.V2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import dsp.constants.SalsahGui
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -916,17 +917,20 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
+
               requestingUser: UserADM <- getUserADM(
                                            requestContext = requestContext
                                          )
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
+              // get ontology info from request
               inputOntologiesV2Try = Try(InputOntologyV2.fromJsonLD(requestDoc))
               inputOntology = inputOntologiesV2Try match {
                                 case Failure(exception) => throw exception
                                 case Success(value)     => value
                               }
 
+              // get property info from request
               propertyUpdateInfoTry = Try(OntologyUpdateHelper.getPropertyDef(inputOntology))
               propertyUpdateInfo = propertyUpdateInfoTry match {
                                      case Failure(exception) => throw exception
@@ -938,56 +942,56 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
               // get all values from request and validate them by making value objects from it
 
-              // validate property IRI
+              // get and validate property IRI
               propertyIri = PropertyIri.make(propertyInfoContent.propertyIri.toString)
 
+              // get the (optional) new gui element
               newGuiElement: Option[SmartIri] =
                 propertyInfoContent.predicates
                   .get(
-                    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
+                    SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
                   )
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.head match {
-                      case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value.toOntologySchema(InternalSchema)
+                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema)
                       case other =>
                         throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
                     }
                   }
 
-              newGuiAttributes: Set[String] =
+              // get the new gui attribute(s)
+              newGuiAttributes: List[String] =
                 propertyInfoContent.predicates
-                  .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+                  .get(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.map {
-                      case stringLiteralV2: StringLiteralV2 => stringLiteralV2.value
-                      case other                            => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-                    }.toSet
+                      case guiAttribute: StringLiteralV2 => guiAttribute.value
+                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
+                    }.toList
                   }
-                  .getOrElse(Set.empty[String])
+                  .getOrElse(List())
 
-              // validate GUI element
-              maybeNewGuiElementString: Option[String] = newGuiElement match {
-                                                           case None             => None
-                                                           case Some(guiElement) => SmartIri.unapply(guiElement)
-                                                         }
+              // validate the new gui element by creating value object
+              maybeNewGuiElementString: Option[String] = newGuiElement.map(guiElement => guiElement.toString())
 
               validatedNewGuiElement = maybeNewGuiElementString match {
                                          case Some(guiElement) => GuiElement.make(guiElement).map(Some(_))
                                          case None             => Validation.succeed(None)
                                        }
 
-              // validate GUI attributes
+              // validate the new gui attributes by creating value objects
               guiAttributes =
                 newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
 
               validatedGuiAttributes = Validation.validateAll(guiAttributes)
 
-              // validate GUI object
+              // validate the combination of gui element and gui attribute by creating a GuiObject value object
               guiObject: GuiObject = Validation
                                        .validate(validatedGuiAttributes, validatedNewGuiElement)
-                                       .flatMap(v => GuiObject.make(v._1, v._2))
+                                       .flatMap(values => GuiObject.make(values._1, values._2))
                                        .fold(e => throw e.head, v => v)
 
+              // create the request message with the validated gui object
               requestMessage = ChangePropertyGuiElementRequest(
                                  propertyIri = propertyIri.fold(e => throw e.head, v => v),
                                  newGuiObject = guiObject,
