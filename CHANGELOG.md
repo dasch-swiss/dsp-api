@@ -1,5 +1,12 @@
 # Changelog
 
+### [22.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.1...v22.0.2) (2022-07-13)
+
+
+### Bug Fixes
+
+* **ontology:** existing cardinalities get duplicated in the triplestore when adding a new cardinality to a class (DEV-937) ([#2092](https://www.github.com/dasch-swiss/dsp-api/issues/2092)) ([9fa26db](https://www.github.com/dasch-swiss/dsp-api/commit/9fa26db3ceaa9678b2244863e2fdbc2797a2b57b))
+
 ### [22.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.0...v22.0.1) (2022-07-08)
 
 
