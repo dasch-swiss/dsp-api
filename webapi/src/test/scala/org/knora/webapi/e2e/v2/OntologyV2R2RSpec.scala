@@ -33,6 +33,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -1370,7 +1371,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-            """.stripMargin
+              """.stripMargin
 
       CollectClientTestData("create-class-without-cardinalities-request", params)
 
@@ -1554,7 +1555,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-            """.stripMargin
+              """.stripMargin
 
       CollectClientTestData("create-link-property-request", params)
 
@@ -1612,7 +1613,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-            """.stripMargin
+              """.stripMargin
 
       CollectClientTestData("add-cardinalities-to-class-nothing-request", params)
 
@@ -1736,7 +1737,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
            |  }
            |}
-      """.stripMargin
+        """.stripMargin
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -2324,7 +2325,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
            |    }
            |}
-                  """.stripMargin
+                    """.stripMargin
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~> addCredentials(
         BasicHttpCredentials(superUsername, password)
@@ -2382,7 +2383,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "useless" : "${uselessIri.get}#"
            |  }
            |}
-              """.stripMargin
+                """.stripMargin
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 =
@@ -2670,7 +2671,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-              """.stripMargin
+                """.stripMargin
 
       Post(
         "/v2/ontologies/cardinalities",
@@ -2722,7 +2723,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-              """.stripMargin
+                """.stripMargin
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -2953,7 +2954,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
          |  }
          |}
-              """.stripMargin
+                """.stripMargin
 
     CollectClientTestData("candeletecardinalities-true-request", params)
 
@@ -3348,5 +3349,142 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
+  }
+
+  "create a class that is a sequence of a video resource" in {
+
+    val videoResourceIri             = "http://0.0.0.0:3333/ontology/0001/freetest/v2#VideoResource".toSmartIri
+    val videoSequenceIri             = "http://0.0.0.0:3333/ontology/0001/freetest/v2#VideoSequence".toSmartIri
+    val isSequenceOfVideoPropertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#isSequenceOfVideo".toSmartIri
+
+    // create VideoResource class
+    val createVideoClassRequest = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "VideoResource",
+        label = LangString("en", "blah blah blah"),
+        comment = None,
+        subClassOf = Some("knora-api:MovingImageRepresentation")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createVideoClassRequest)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseString  = responseAs[String]
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      assert(responseAsInput.classes.keySet.contains(videoResourceIri))
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // create VideoSequence class
+    val createSequenceClassRequest = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "VideoSequence",
+        label = LangString("en", "blah blah blah"),
+        comment = None
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceClassRequest)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseString  = responseAs[String]
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      assert(responseAsInput.classes.keySet.contains(videoSequenceIri))
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // create isSequenceOfVideo property
+    val sequenceOfPropertyRequest = CreatePropertyRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        propertyName = "isSequenceOfVideo",
+        subjectClassName = None,
+        propertyType = PropertyValueType.Resource,
+        label = LangString("en", "blah blah blah"),
+        comment = None,
+        subPropertyOf = Some("knora-api:isSequenceOf")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/properties",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, sequenceOfPropertyRequest)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+
+      val response = responseAs[String]
+      assert(status == StatusCodes.OK, response)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // add cardinality to class
+    val addCardinalitiesRequestJson = AddCardinalitiesRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "VideoSequence",
+        restrictions = List(
+          Restriction(
+            CardinalityRestriction.CardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "isSequenceOfVideo")
+          )
+        )
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/cardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // check the ontology to see if all worked as it should
+    val url = URLEncoder.encode(s"http://0.0.0.0:3333/ontology/0001/freetest/v2", "UTF-8")
+    Get(
+      s"/v2/ontologies/allentities/${url}"
+    ) ~> ontologiesPath ~> check {
+      val responseStr: String = responseAs[String]
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      assert(responseAsInput.classes.keySet.contains(videoResourceIri))
+      assert(responseAsInput.classes.keySet.contains(videoSequenceIri))
+      val videoSequenceCardinalities = responseAsInput.classes
+        .getOrElse(videoSequenceIri, throw new AssertionError(s"Class $videoSequenceIri not found"))
+        .directCardinalities
+      assert(videoSequenceCardinalities.keySet.contains(isSequenceOfVideoPropertyIri))
+      val card = videoSequenceCardinalities.get(isSequenceOfVideoPropertyIri)
+      assert(card.get.cardinality == Cardinality.MustHaveOne)
+    }
+
   }
 }
