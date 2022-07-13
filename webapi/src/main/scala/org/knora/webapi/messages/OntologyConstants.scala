@@ -926,21 +926,6 @@ object OntologyConstants {
     val UseInference: IRI      = KnoraApiV2PrefixExpansion + "useInference"
   }
 
-  object SalsahGuiApiV2WithValueObjects {
-    val SalsahGuiOntologyIri: IRI =
-      KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2Complex.VersionSegment
-    val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
-    val GuiAttribute: IRI             = SalsahGuiPrefixExpansion + "guiAttribute"
-    val GuiOrder: IRI                 = SalsahGuiPrefixExpansion + "guiOrder"
-    val GuiElementProp: IRI           = SalsahGuiPrefixExpansion + "guiElement"
-    val GuiAttributeDefinition: IRI   = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
-    val GuiElementClass: IRI          = SalsahGuiPrefixExpansion + "Guielement"
-    val Geometry: IRI                 = SalsahGuiPrefixExpansion + "Geometry"
-    val Colorpicker: IRI              = SalsahGuiPrefixExpansion + "Colorpicker"
-    val Fileupload: IRI               = SalsahGuiPrefixExpansion + "Fileupload"
-    val Richtext: IRI                 = SalsahGuiPrefixExpansion + "Richtext"
-  }
-
   object KnoraApiV2Simple {
 
     val VersionSegment = "/simple/v2"

@@ -1182,21 +1182,21 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
         responseAsInput.properties.head._2
-          .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+          .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
           .objects
           .toSet should ===(
           paramsAsInput.properties.head._2
-            .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+            .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
             .objects
             .toSet
         )
 
         responseAsInput.properties.head._2
-          .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+          .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
           .objects
           .toSet should ===(
           paramsAsInput.properties.head._2
-            .predicates(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+            .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
             .objects
             .toSet
         )
@@ -1248,12 +1248,12 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+            .contains(SalsahGui.External.GuiElementProp.toSmartIri)
         )
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+            .contains(SalsahGui.External.GuiAttribute.toSmartIri)
         )
 
         // Check that the ontology's last modification date was updated.

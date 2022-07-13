@@ -949,7 +949,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               newGuiElement: Option[SmartIri] =
                 propertyInfoContent.predicates
                   .get(
-                    SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
+                    SalsahGui.External.GuiElementProp.toSmartIri
                   )
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.head match {
@@ -962,7 +962,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               // get the new gui attribute(s)
               newGuiAttributes: List[String] =
                 propertyInfoContent.predicates
-                  .get(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+                  .get(SalsahGui.External.GuiAttribute.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.map {
                       case guiAttribute: StringLiteralV2 => guiAttribute.value

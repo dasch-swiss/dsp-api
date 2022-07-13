@@ -1715,7 +1715,7 @@ case class ReadOntologyV2(
     val salsahGuiPrefix: Option[(String, String)] = targetSchema match {
       case ApiV2Complex =>
         Some(
-          SalsahGui.SalsahGuiOntologyLabel -> SalsahGui.SalsahGuiApiV2WithValueObjects.SalsahGuiPrefixExpansion
+          SalsahGui.SalsahGuiOntologyLabel -> SalsahGui.External.SalsahGuiPrefixExpansion
         )
 
       case _ => None
@@ -2829,7 +2829,7 @@ case class ReadClassInfoV2(
       val guiOrderStatement = targetSchema match {
         case ApiV2Complex =>
           cardinalityInfo.guiOrder.map { guiOrder =>
-            SalsahGui.SalsahGuiApiV2WithValueObjects.GuiOrder -> JsonLDInt(guiOrder)
+            SalsahGui.External.GuiOrder -> JsonLDInt(guiOrder)
           }
 
         case _ => None
@@ -3019,9 +3019,9 @@ case class ReadPropertyInfoV2(
 
     val guiElementStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
       entityInfoContent
-        .getPredicateIriObject(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+        .getPredicateIriObject(SalsahGui.External.GuiElementProp.toSmartIri)
         .map { obj =>
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
+          SalsahGui.External.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
         }
     } else {
       None
@@ -3029,11 +3029,11 @@ case class ReadPropertyInfoV2(
 
     val guiAttributeStatement = if (targetSchema == ApiV2Complex) {
       entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(
-        SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri
+        SalsahGui.External.GuiAttribute.toSmartIri
       ) match {
         case objs if objs.nonEmpty =>
           Some(
-            SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute -> JsonLDArray(
+            SalsahGui.External.GuiAttribute -> JsonLDArray(
               objs.toArray.sorted.map(JsonLDString).toIndexedSeq
             )
           )
@@ -3235,7 +3235,7 @@ object ClassInfoContentV2 {
     OntologyConstants.Owl.MinCardinality,
     OntologyConstants.Owl.MaxCardinality,
     OntologyConstants.Owl.OnProperty,
-    SalsahGui.SalsahGuiApiV2WithValueObjects.GuiOrder
+    SalsahGui.External.GuiOrder
   )
 
   /**
@@ -3349,7 +3349,7 @@ object ClassInfoContentV2 {
 
                 val onProperty =
                   restriction.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
-                val guiOrder = restriction.maybeInt(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiOrder)
+                val guiOrder = restriction.maybeInt(SalsahGui.External.GuiOrder)
 
                 val owlCardinalityInfo = OwlCardinalityInfo(
                   owlCardinalityIri = owlCardinalityIri,
@@ -3544,8 +3544,8 @@ object PropertyInfoContentV2 {
     OntologyConstants.Rdfs.SubPropertyOf,
     OntologyConstants.Rdfs.Label,
     OntologyConstants.Rdfs.Comment,
-    SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp,
-    SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute
+    SalsahGui.External.GuiElementProp,
+    SalsahGui.External.GuiAttribute
   )
 
   /**

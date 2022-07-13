@@ -2051,12 +2051,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("An invalid property definition", Some("en"))
             )
           ),
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Textarea".toSmartIri))
           ),
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          SalsahGui.External.GuiAttribute.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
             objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80.5"))
           )
         ),
@@ -2108,12 +2108,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("An invalid property definition", Some("en"))
             )
           ),
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Textarea".toSmartIri))
           ),
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          SalsahGui.External.GuiAttribute.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
             objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80"), StringLiteralV2("wrap=wrong"))
           )
         ),
@@ -2787,8 +2787,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de"))
             )
           ),
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
           )
         ),
@@ -3934,8 +3934,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("Anzeigt, ob ein Nichts Nichtsein hat", Some("de"))
             )
           ),
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Checkbox".toSmartIri))
           )
         ),
@@ -4010,22 +4010,22 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         val guiElementPropComplex = property.entityInfoContent.predicates(
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
+          SalsahGui.External.GuiElementProp.toSmartIri
         )
 
         val guiElementPropComplexExpected = PredicateInfoV2(
-          predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
           objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
         )
 
         guiElementPropComplex should equal(guiElementPropComplexExpected)
 
         val guiAttributeComplex = property.entityInfoContent.predicates(
-          SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri
+          SalsahGui.External.GuiAttribute.toSmartIri
         )
 
         val guiAttributeComplexExpected = PredicateInfoV2(
-          predicateIri = SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
           objects = Seq(StringLiteralV2("size=80"))
         )
 
@@ -4066,10 +4066,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         property.entityInfoContent.predicates
-          .get(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(None)
+          .get(SalsahGui.External.GuiElementProp.toSmartIri) should ===(None)
 
         property.entityInfoContent.predicates
-          .get(SalsahGui.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) should ===(None)
+          .get(SalsahGui.External.GuiAttribute.toSmartIri) should ===(None)
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(

@@ -104,7 +104,8 @@ object SalsahGui {
       }
   }
 
-  object SalsahGuiApiV2WithValueObjects {
+  object External {
+    // external representation of salsah-gui entities of the form: http://api.knora.org/ontology/salsah-gui/v2#...
     val ApiOntologyHostname: String   = "http://api.knora.org"
     val ApiOntologyStart: String      = ApiOntologyHostname + "/ontology/"
     val VersionSegment                = "/v2"
