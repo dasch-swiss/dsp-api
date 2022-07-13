@@ -1405,12 +1405,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
+        cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] =
+          newInternalClassDefWithLinkValueProps.directCardinalities -- existingClassDef.directCardinalities.keySet
+
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .addCardinalitiesToClass(
                            ontologyNamedGraphIri = internalOntologyIri,
                            ontologyIri = internalOntologyIri,
                            classIri = internalClassIri,
-                           cardinalitiesToAdd = newInternalClassDefWithLinkValueProps.directCardinalities,
+                           cardinalitiesToAdd = cardinalitiesToAdd,
                            lastModificationDate = addCardinalitiesRequest.lastModificationDate,
                            currentTime = currentTime
                          )

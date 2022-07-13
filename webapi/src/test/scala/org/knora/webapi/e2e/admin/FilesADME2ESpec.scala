@@ -19,13 +19,13 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
-import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import org.knora.webapi.routing.Authenticator
 
-object SipiADME2ESpec {
+object FilesADME2ESpec {
   val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -37,7 +37,7 @@ object SipiADME2ESpec {
  *
  * This spec tests the 'admin/files'.
  */
-class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
@@ -46,6 +46,8 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
   private val normalUserEmail       = SharedTestDataV1.normalUser.userData.email.get
   private val normalUserEmailEnc    = java.net.URLEncoder.encode(normalUserEmail, "utf-8")
   private val testPass              = java.net.URLEncoder.encode("test", "utf-8")
+
+  val KnoraAuthenticationCookieName = Authenticator.calculateCookieName(settings)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -62,7 +64,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
   }
 
   def sessionLogout(sessionId: String): Unit =
-    Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+    Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KnoraAuthenticationCookieName, sessionId)
 
   "The Files Route ('admin/files') using token credentials" should {
 
@@ -132,7 +134,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
 
       /* anything image */
       val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KNORA_AUTHENTICATION_COOKIE_NAME,
+        KnoraAuthenticationCookieName,
         sessionId
       )
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -156,7 +158,7 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
 
       /* anything image */
       val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
-        KNORA_AUTHENTICATION_COOKIE_NAME,
+        KnoraAuthenticationCookieName,
         sessionId
       )
       val response: HttpResponse = singleAwaitingRequest(request)

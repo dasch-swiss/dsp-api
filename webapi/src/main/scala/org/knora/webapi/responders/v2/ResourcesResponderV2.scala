@@ -8,9 +8,8 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
-import org.knora.webapi._
 import dsp.errors._
-
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -1161,9 +1160,26 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     Future
       .sequence(
-        listNodesThatShouldExist
-          .map(listNodeIri => ResourceUtilV2.checkListNodeExists(listNodeIri, appActor))
-          .toSeq
+        listNodesThatShouldExist.map { listNodeIri =>
+          for {
+            checkNode <- ResourceUtilV2.checkListNodeExistsAndIsRootNode(listNodeIri, appActor)
+
+            _ = checkNode match {
+                  // it doesn't have isRootNode property - it's a child node
+                  case Right(false) => ()
+                  // it does have isRootNode property - it's a root node
+                  case Right(true) =>
+                    throw BadRequestException(
+                      s"<${listNodeIri}> is a root node. Root nodes cannot be set as values."
+                    )
+                  // it deosn't exists or isn't valid list
+                  case Left(_) =>
+                    throw NotFoundException(
+                      s"<${listNodeIri}> does not exist, or is not a ListNode."
+                    )
+                }
+          } yield ()
+        }.toSeq
       )
       .map(_ => ())
   }
