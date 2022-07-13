@@ -3440,6 +3440,10 @@ class OntologyV2R2RSpec extends R2RSpec {
           Restriction(
             CardinalityRestriction.CardinalityOne,
             onProperty = Property(ontology = "freetest", property = "isSequenceOfVideo")
+          ),
+          Restriction(
+            CardinalityRestriction.CardinalityOne,
+            onProperty = Property(ontology = "knora-api", property = "hasSequenceBounds")
           )
         )
       )
@@ -3571,6 +3575,10 @@ class OntologyV2R2RSpec extends R2RSpec {
           Restriction(
             CardinalityRestriction.CardinalityOne,
             onProperty = Property(ontology = "freetest", property = "isSequenceOfAudio")
+          ),
+          Restriction(
+            CardinalityRestriction.CardinalityOne,
+            onProperty = Property(ontology = "knora-api", property = "hasSequenceBounds")
           )
         )
       )
