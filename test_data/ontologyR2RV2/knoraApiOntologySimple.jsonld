@@ -1043,6 +1043,18 @@
             "@id": "knora-api:hasRepresentation"
         },
         {
+            "rdfs:label": "Sequence Bounds",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "rdfs:comment": "Indicates the bounds of a sequence, i.e. the start and end point in the containing resource.",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:Interval"
+            },
+            "@id": "knora-api:hasSequenceBounds"
+        },
+        {
             "rdfs:label": "has Standoff Link to",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasLinkTo"
@@ -1155,6 +1167,21 @@
             "@id": "knora-api:isRegionOf"
         },
         {
+            "rdfs:label": "is sequence of",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasLinkTo"
+            },
+            "rdfs:comment": "Indicates that this resource is a sequence of a video or audio resource",
+            "@type": "owl:ObjectProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:Resource"
+            },
+            "@id": "knora-api:isSequenceOf"
+        },
+        {
             "rdfs:label": "May have more results",
             "rdfs:comment": "Indicates whether more results may be available for a search query",
             "@type": "owl:DatatypeProperty",
@@ -1205,7 +1232,7 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:hasValue"
             },
-            "rdfs:comment": "Indicates the position of a resource within a sequence",
+            "rdfs:comment": "Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
