@@ -43,8 +43,8 @@ object CreateClassRequest {
     ontologyName: String,
     lastModificationDate: Instant,
     className: String,
-    label: LangString,
-    comment: Option[LangString],
+    label: LangString = LangString("en", "Label"),
+    comment: Option[LangString] = None,
     subClassOf: Option[String] = None
   ): CreateClassRequest = {
     val ontologyId           = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
@@ -112,8 +112,8 @@ object CreatePropertyRequest {
     propertyName: String,
     subjectClassName: Option[String],
     propertyType: PropertyValueType,
-    label: LangString,
-    comment: Option[LangString],
+    label: LangString = LangString("en", "Lablel"),
+    comment: Option[LangString] = None,
     subPropertyOf: Option[String] = None
   ): CreatePropertyRequest = {
     val LocalHost_Ontology   = "http://0.0.0.0:3333/ontology"

@@ -3363,8 +3363,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "VideoResource",
-        label = LangString("en", "blah blah blah"),
-        comment = None,
         subClassOf = Some("knora-api:MovingImageRepresentation")
       )
       .value
@@ -3388,9 +3386,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
-        className = "VideoSequence",
-        label = LangString("en", "blah blah blah"),
-        comment = None
+        className = "VideoSequence"
       )
       .value
 
@@ -3416,8 +3412,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "isSequenceOfVideo",
         subjectClassName = None,
         propertyType = PropertyValueType.Resource,
-        label = LangString("en", "blah blah blah"),
-        comment = None,
         subPropertyOf = Some("knora-api:isSequenceOf")
       )
       .value
@@ -3500,8 +3494,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "AudioResource",
-        label = LangString("en", "blah blah blah"),
-        comment = None,
         subClassOf = Some("knora-api:AudioRepresentation")
       )
       .value
@@ -3525,9 +3517,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
-        className = "AudioSequence",
-        label = LangString("en", "blah blah blah"),
-        comment = None
+        className = "AudioSequence"
       )
       .value
 
@@ -3553,8 +3543,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "isSequenceOfAudio",
         subjectClassName = None,
         propertyType = PropertyValueType.Resource,
-        label = LangString("en", "blah blah blah"),
-        comment = None,
         subPropertyOf = Some("knora-api:isSequenceOf")
       )
       .value
