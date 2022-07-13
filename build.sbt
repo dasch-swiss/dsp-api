@@ -71,7 +71,6 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Universal / mappings ++= {
       // copy the sipi/scripts folder
       directory("sipi/scripts"),
-      // directory("sipi/images/0803/incunabula_0000000002.jp2"), // needed for testing
     },
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
