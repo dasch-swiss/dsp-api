@@ -9,6 +9,7 @@ import zio._
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import scala.jdk.CollectionConverters._
+import java.nio.file.Paths
 
 final case class SipiTestContainer(container: GenericContainer[Nothing])
 
@@ -47,6 +48,8 @@ object SipiTestContainer {
     )
 
     // TODO: add some default images: https://www.testcontainers.org/features/files/
+    val incunabulaImageDirPath  = Paths.get("..", "sipi/images/0803")
+    sipiContainer.withFileSystemBind(incunabulaImageDirPath.toString(), "/sipi/images/0803", BindMode.READ_ONLY)
 
     sipiContainer.start()
     sipiContainer

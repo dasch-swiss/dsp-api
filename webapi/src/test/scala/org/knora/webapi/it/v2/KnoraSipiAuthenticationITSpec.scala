@@ -56,6 +56,7 @@ class KnoraSipiAuthenticationITSpec
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
+  private val incunabulaImageDirPath  = Paths.get("..", "sipi/images/0803")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -105,7 +106,7 @@ class KnoraSipiAuthenticationITSpec
       assert(response.status === StatusCodes.OK)
     }
 
-    "accept a token in Sipi that has been signed by Knora" ignore {
+    "accept a token in Sipi that has been signed by Knora" in {
       val invalidToken = "a_invalid_token"
 
       // The image to be uploaded.
@@ -126,7 +127,7 @@ class KnoraSipiAuthenticationITSpec
       assert(sipiResponse.status == StatusCodes.OK)
     }
 
-    "not accept a token in Sipi that hasn't been signed by Knora" ignore {
+    "not accept a token in Sipi that hasn't been signed by Knora" in {
       val invalidToken = "a_invalid_token"
 
       // The image to be uploaded.
