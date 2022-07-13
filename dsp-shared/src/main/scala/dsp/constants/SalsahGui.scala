@@ -47,45 +47,39 @@ object SalsahGui {
   val Geonames: IRI    = SalsahGuiPrefixExpansion + "Geonames"
   val Fileupload: IRI  = SalsahGuiPrefixExpansion + "Fileupload"
 
-  object GuiElements extends Enumeration {
+  val GuiElements = scala.collection.immutable.List(
+    SimpleText,
+    Textarea,
+    Pulldown,
+    Slider,
+    Spinbox,
+    Searchbox,
+    Date,
+    Geometry,
+    Colorpicker,
+    List,
+    Radio,
+    Checkbox,
+    Richtext,
+    Interval,
+    TimeStamp,
+    Geonames,
+    Fileupload
+  )
 
-    val SimpleText: Value  = Value(SalsahGui.SimpleText.toString())
-    val Textarea: Value    = Value(SalsahGui.Textarea.toString())
-    val Pulldown: Value    = Value(SalsahGui.Pulldown.toString())
-    val Slider: Value      = Value(SalsahGui.Slider.toString())
-    val Spinbox: Value     = Value(SalsahGui.Spinbox.toString())
-    val Searchbox: Value   = Value(SalsahGui.Searchbox.toString())
-    val Date: Value        = Value(SalsahGui.Date.toString())
-    val Geometry: Value    = Value(SalsahGui.Geometry.toString())
-    val Colorpicker: Value = Value(SalsahGui.Colorpicker.toString())
-    val List: Value        = Value(SalsahGui.List.toString())
-    val Radio: Value       = Value(SalsahGui.Radio.toString())
-    val Checkbox: Value    = Value(SalsahGui.Checkbox.toString())
-    val Richtext: Value    = Value(SalsahGui.Richtext.toString())
-    val Interval: Value    = Value(SalsahGui.Interval.toString())
-    val TimeStamp: Value   = Value(SalsahGui.TimeStamp.toString())
-    val Geonames: Value    = Value(SalsahGui.Geonames.toString())
-    val Fileupload: Value  = Value(SalsahGui.Fileupload.toString())
-
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-  }
-
-  object GuiAttributes extends Enumeration {
-
-    val Ncolors: Value   = Value("ncolors")
-    val Hlist: Value     = Value("hlist")
-    val Numprops: Value  = Value("numprops")
-    val Size: Value      = Value("size")
-    val Maxlength: Value = Value("maxlength")
-    val Min: Value       = Value("min")
-    val Max: Value       = Value("max")
-    val Cols: Value      = Value("cols")
-    val Rows: Value      = Value("rows")
-    val Width: Value     = Value("width")
-    val Wrap: Value      = Value("wrap")
-
-    val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-  }
+  val GuiAttributes = scala.collection.immutable.List(
+    "ncolors",
+    "hlist",
+    "numprops",
+    "size",
+    "maxlength",
+    "min",
+    "max",
+    "cols",
+    "rows",
+    "width",
+    "wrap"
+  )
 
   object SalsahGuiAttributeType extends Enumeration {
 

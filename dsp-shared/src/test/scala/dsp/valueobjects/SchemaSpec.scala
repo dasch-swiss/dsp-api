@@ -21,11 +21,15 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiElementRadioIri    = "http://www.knora.org/ontology/salsah-gui#Radio"
   private val guiElementSliderIri   = "http://www.knora.org/ontology/salsah-gui#Slider"
 
-  private val guiAttributeUnknownString = "unknown"
-  private val guiAttributeSizeString    = "size=80"
-  private val guiAttributeHlistString   = "hlist="
-  private val guiAttributeMinString     = "min=1"
-  private val guiAttributeMaxString     = "max=10"
+  private val guiAttributeInvalidString            = "invalid"
+  private val guiAttributeUnknownString            = "unknown=10"
+  private val guiAttributeSizeString               = "size=80"
+  private val guiAttributeSizeStringKey            = "size"
+  private val guiAttributeSizeStringValue          = "80"
+  private val guiAttributeSizeStringWithWhitespace = "size    =  80 "
+  private val guiAttributeHlistString              = "hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA"
+  private val guiAttributeMinString                = "min=1"
+  private val guiAttributeMaxString                = "max=10"
 
   private val guiAttributeSize  = Schema.GuiAttribute.make(guiAttributeSizeString).fold(e => throw e.head, v => v)
   private val guiAttributeHlist = Schema.GuiAttribute.make(guiAttributeHlistString).fold(e => throw e.head, v => v)
@@ -45,6 +49,13 @@ object SchemaSpec extends ZIOSpecDefault {
         Schema.GuiAttribute.make("") == Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributeMissing))
       )
     },
+    test("pass an invalid value and return an error") {
+      assertTrue(
+        Schema.GuiAttribute.make(guiAttributeInvalidString) == Validation.fail(
+          BadRequestException(SchemaErrorMessages.GuiAttributeUnknown)
+        )
+      )
+    },
     test("pass an unknown value and return an error") {
       assertTrue(
         Schema.GuiAttribute.make(guiAttributeUnknownString) == Validation.fail(
@@ -52,8 +63,25 @@ object SchemaSpec extends ZIOSpecDefault {
         )
       )
     },
+    test("pass a valid value with whitespace and successfully create value object") {
+      assertTrue(
+        Schema.GuiAttribute
+          .make(guiAttributeSizeStringWithWhitespace)
+          .toOption
+          .get
+          .k == guiAttributeSizeStringKey
+      ) &&
+      assertTrue(
+        Schema.GuiAttribute
+          .make(guiAttributeSizeStringWithWhitespace)
+          .toOption
+          .get
+          .v == guiAttributeSizeStringValue
+      )
+    },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.value == guiAttributeSizeString)
+      assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.k == guiAttributeSizeStringKey) &&
+      assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.v == guiAttributeSizeStringValue)
     }
   )
 
@@ -77,7 +105,7 @@ object SchemaSpec extends ZIOSpecDefault {
 
   private val guiObjectTest = suite("GUI object")(
     test(
-      "pass valid GUI element ('salsah-gui#List') with GUI attribute ('hlist=') and successfully create value object"
+      "pass GUI element 'salsah-gui#List' with GUI attribute 'hlist' and successfully create value object"
     ) {
       (for {
         guiObject <- Schema.GuiObject
@@ -92,7 +120,7 @@ object SchemaSpec extends ZIOSpecDefault {
           guiObject.guiElement == Some(guiElementList)
         )).toZIO
     },
-    test("pass a GUI element 'salsah-gui#List' with misfitting GUI attribute 'size=80' and return an error") {
+    test("pass GUI element 'salsah-gui#List' with misfitting GUI attribute 'size=80' and return an error") {
       assertTrue(
         Schema.GuiObject
           .make(
@@ -100,12 +128,12 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementList)
           ) == Validation.fail(
           BadRequestException(
-            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) has to be a list reference of the form 'hlist=<LIST_IRI>' but found GuiAttribute(size=80)"
+            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
       )
     },
-    test("pass a GUI element 'salsah-gui#Pulldown' with misfitting GUI attribute 'size=80' and return an error") {
+    test("pass GUI element 'salsah-gui#Pulldown' with misfitting GUI attribute 'size=80' and return an error") {
       assertTrue(
         Schema.GuiObject
           .make(
@@ -113,12 +141,12 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementPulldown)
           ) == Validation.fail(
           BadRequestException(
-            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Pulldown) has to be a list reference of the form 'hlist=<LIST_IRI>' but found GuiAttribute(size=80)"
+            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Pulldown) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
       )
     },
-    test("pass a GUI element 'salsah-gui#Radio' with misfitting GUI attribute 'size=80' and return an error") {
+    test("pass GUI element 'salsah-gui#Radio' with misfitting GUI attribute 'size=80' and return an error") {
       assertTrue(
         Schema.GuiObject
           .make(
@@ -126,13 +154,13 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementRadio)
           ) == Validation.fail(
           BadRequestException(
-            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Radio) has to be a list reference of the form 'hlist=<LIST_IRI>' but found GuiAttribute(size=80)"
+            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Radio) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
       )
     },
     test(
-      "pass valid GUI element 'salsah-gui#Slider' with GUI attributes 'min=1' and 'max=10' and successfully create value object"
+      "pass GUI element 'salsah-gui#Slider' with GUI attributes 'min=1' and 'max=10' and successfully create value object"
     ) {
       (for {
         guiObject <- Schema.GuiObject
@@ -148,7 +176,7 @@ object SchemaSpec extends ZIOSpecDefault {
         )).toZIO
     },
     test(
-      "pass valid GUI element 'salsah-gui#Slider' with duplicated GUI attributes 'min=1' and 'min=1' and return an error"
+      "pass GUI element 'salsah-gui#Slider' with duplicated GUI attributes 'min=1' and 'min=1' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -157,13 +185,13 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementSlider)
           ) == Validation.fail(
           BadRequestException(
-            "Duplicate GUI attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs two salsah-gui:guiAttribute 'min' and 'max'."
+            "Duplicate GUI attributes for salsah-gui:guiElement Some(GuiElement(http://www.knora.org/ontology/salsah-gui#Slider))."
           )
         )
       )
     },
     test(
-      "pass valid GUI element 'salsah-gui#Slider' with too many GUI attributes 'min=1','max=10', and 'min=80' and return an error"
+      "pass GUI element 'salsah-gui#Slider' with too many GUI attributes 'min=1','max=10', and 'min=80' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -172,12 +200,12 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementSlider)
           ) == Validation.fail(
           BadRequestException(
-            "Wrong number of GUI attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs two salsah-gui:guiAttribute 'min' and 'max', but 3 were provided."
+            "Wrong number of GUI attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1), GuiAttribute(max,10), GuiAttribute(size,80))."
           )
         )
       )
     },
-    test("pass valid GUI element 'salsah-gui#Slider' with misfitting GUI attribute 'size=80' and return an error") {
+    test("pass GUI element 'salsah-gui#Slider' with misfitting GUI attribute 'size=80' and return an error") {
       assertTrue(
         Schema.GuiObject
           .make(
@@ -185,7 +213,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementSlider)
           ) == Validation.fail(
           BadRequestException(
-            "Wrong number of GUI attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs two salsah-gui:guiAttribute 'min' and 'max', but 1 were provided."
+            "Wrong number of GUI attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 1: List(GuiAttribute(size,80))."
           )
         )
       )

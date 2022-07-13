@@ -980,8 +980,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                                        }
 
               // validate the new gui attributes by creating value objects
-              guiAttributes =
-                newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
+              guiAttributes = newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
 
               validatedGuiAttributes = Validation.validateAll(guiAttributes)
 
