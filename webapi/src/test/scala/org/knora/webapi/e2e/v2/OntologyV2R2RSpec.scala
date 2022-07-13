@@ -3482,8 +3482,145 @@ class OntologyV2R2RSpec extends R2RSpec {
         .getOrElse(videoSequenceIri, throw new AssertionError(s"Class $videoSequenceIri not found"))
         .directCardinalities
       assert(videoSequenceCardinalities.keySet.contains(isSequenceOfVideoPropertyIri))
-      val card = videoSequenceCardinalities.get(isSequenceOfVideoPropertyIri)
-      assert(card.get.cardinality == Cardinality.MustHaveOne)
+      val cardinality = videoSequenceCardinalities.get(isSequenceOfVideoPropertyIri).get.cardinality
+      assert(cardinality == Cardinality.MustHaveOne)
+    }
+
+  }
+
+  "create a class that is a sequence of an audio resource" in {
+
+    val audioResourceIri             = "http://0.0.0.0:3333/ontology/0001/freetest/v2#AudioResource".toSmartIri
+    val audioSequenceIri             = "http://0.0.0.0:3333/ontology/0001/freetest/v2#AudioSequence".toSmartIri
+    val isSequenceOfAudioPropertyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#isSequenceOfAudio".toSmartIri
+
+    // create AudioResource class
+    val createAudioClassRequest = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "AudioResource",
+        label = LangString("en", "blah blah blah"),
+        comment = None,
+        subClassOf = Some("knora-api:AudioRepresentation")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createAudioClassRequest)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseString  = responseAs[String]
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      assert(responseAsInput.classes.keySet.contains(audioResourceIri))
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // create AudioSequence class
+    val createSequenceClassRequest = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "AudioSequence",
+        label = LangString("en", "blah blah blah"),
+        comment = None
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceClassRequest)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseString  = responseAs[String]
+      val responseJsonDoc = responseToJsonLDDocument(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      assert(responseAsInput.classes.keySet.contains(audioSequenceIri))
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // create isSequenceOfAudio property
+    val sequenceOfPropertyRequest = CreatePropertyRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        propertyName = "isSequenceOfAudio",
+        subjectClassName = None,
+        propertyType = PropertyValueType.Resource,
+        label = LangString("en", "blah blah blah"),
+        comment = None,
+        subPropertyOf = Some("knora-api:isSequenceOf")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/properties",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, sequenceOfPropertyRequest)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+
+      val response = responseAs[String]
+      assert(status == StatusCodes.OK, response)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(response)
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // add cardinality to class
+    val addCardinalitiesRequestJson = AddCardinalitiesRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "AudioSequence",
+        restrictions = List(
+          Restriction(
+            CardinalityRestriction.CardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "isSequenceOfAudio")
+          )
+        )
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/cardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // check the ontology to see if all worked as it should
+    val url = URLEncoder.encode(s"http://0.0.0.0:3333/ontology/0001/freetest/v2", "UTF-8")
+    Get(
+      s"/v2/ontologies/allentities/${url}"
+    ) ~> ontologiesPath ~> check {
+      val responseStr: String = responseAs[String]
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      assert(responseAsInput.classes.keySet.contains(audioResourceIri))
+      assert(responseAsInput.classes.keySet.contains(audioSequenceIri))
+      val audioSequenceCardinalities = responseAsInput.classes
+        .getOrElse(audioSequenceIri, throw new AssertionError(s"Class $audioSequenceIri not found"))
+        .directCardinalities
+      assert(audioSequenceCardinalities.keySet.contains(isSequenceOfAudioPropertyIri))
+      val cardinality = audioSequenceCardinalities.get(isSequenceOfAudioPropertyIri).get.cardinality
+      assert(cardinality == Cardinality.MustHaveOne)
     }
 
   }
