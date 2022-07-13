@@ -149,7 +149,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementList)
           ) == Validation.fail(
           BadRequestException(
-            "gui attributes cannot be empty."
+            SchemaErrorMessages.GuiAttributesMissing
           )
         )
       )
@@ -211,7 +211,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementRadio)
           ) == Validation.fail(
           BadRequestException(
-            "gui attributes cannot be empty."
+            SchemaErrorMessages.GuiAttributesMissing
           )
         )
       )
@@ -273,7 +273,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementPulldown)
           ) == Validation.fail(
           BadRequestException(
-            "gui attributes cannot be empty."
+            SchemaErrorMessages.GuiAttributesMissing
           )
         )
       )
