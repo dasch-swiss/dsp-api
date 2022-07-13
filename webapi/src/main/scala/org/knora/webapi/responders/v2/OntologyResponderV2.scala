@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -41,7 +42,6 @@ import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import dsp.constants.SalsahGui
 
 /**
  * Responds to requests dealing with ontologies.
@@ -2635,7 +2635,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           changePropertyGuiElementRequest.newGuiObject.guiElement.map(guiElement => guiElement.value.toSmartIri)
 
         newGuiAttributeIris =
-          changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value).toSet
+          changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
 
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .changePropertyGuiElement(
@@ -2645,7 +2645,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                            maybeLinkValuePropertyIri =
                              maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
                            maybeNewGuiElement = newGuiElementIri,
-                           newGuiAttributes = newGuiAttributeIris,
+                           newGuiAttributes = newGuiAttributeIris.toSet,
                            lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                            currentTime = currentTime
                          )
