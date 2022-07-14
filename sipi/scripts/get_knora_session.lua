@@ -36,11 +36,13 @@ function get_session_id(cookie)
     host_port = webapi_hostname .. ':' .. webapi_port
     server.log("host_port: " .. host_port, server.loglevel.LOG_DEBUG)
 
-    local customPadMap = { "", "999999", "9999", "999", "9" }
-    host_port_base32 = basexx.to_basexx(host_port, base32Alphabet, 5, customPadMap)
+    host_port_base32 = basexx.to_base32Custom(host_port)
     server.log("host_port_base32: " .. host_port_base32, server.loglevel.LOG_DEBUG)
 
 
+
+
+    
 
     -- tries to extract the Knora session id from the cookie:
     -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
@@ -51,6 +53,10 @@ function get_session_id(cookie)
     local session_id = string.match(cookie, "KnoraAuthentication" .. host_port_base32 .. "=([^%s;]+)")
     server.log("extracted session_id: " .. session_id, server.loglevel.LOG_DEBUG)
 
-    return session_id
+    local session = {}
+    session["id"] = session_id
+    session["name"] = "KnoraAuthentication" .. host_port_base32
+
+    return session
 
 end

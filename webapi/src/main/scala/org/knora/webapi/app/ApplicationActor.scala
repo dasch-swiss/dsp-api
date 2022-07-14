@@ -433,7 +433,7 @@ class ApplicationActor(
               new ProjectsRouteADM(routeData).knoraApiPath ~
               new StoreRouteADM(routeData).knoraApiPath ~
               new UsersRouteADM(routeData).knoraApiPath ~
-              new SipiRouteADM(routeData).knoraApiPath ~
+              new FilesRouteADM(routeData).knoraApiPath ~
               new SwaggerApiDocsRoute(routeData).knoraApiPath
           }
         }
