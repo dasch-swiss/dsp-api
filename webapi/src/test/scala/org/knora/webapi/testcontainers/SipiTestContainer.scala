@@ -47,7 +47,6 @@ object SipiTestContainer {
       BindMode.READ_ONLY
     )
 
-    // TODO: add some default images: https://www.testcontainers.org/features/files/
     val incunabulaImageDirPath = Paths.get("..", "sipi/images/0803/incunabula_0000000002.jp2")
     sipiContainer.withFileSystemBind(
       incunabulaImageDirPath.toString(),
