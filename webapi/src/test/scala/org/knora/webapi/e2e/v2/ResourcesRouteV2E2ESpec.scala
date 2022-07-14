@@ -2439,6 +2439,75 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
       assert(sequenceBoundsResponse.status == StatusCodes.OK)
     }
+
+    "correctly create and request additional resources that have a isSequenceOf relation to a video resource" in {
+      val cred   = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl = s"$baseApiUrl/v2/values"
+      val resUrl = s"$baseApiUrl/v2/resources"
+
+      // create another sequence of the video resource
+      val createSequenceJson: String =
+        """{
+          |  "@type" : "sequences:VideoSequence",
+          |  "knora-api:isSequenceOfValue" : {
+          |    "@type" : "knora-api:LinkValue",
+          |    "knora-api:linkValueHasTargetIri" : {
+          |      "@id" : "http://rdfh.ch/0001/video-01"
+          |    }
+          |  },
+          |  "knora-api:hasSequenceBounds" : {
+          |    "@type" : "knora-api:IntervalValue",
+          |    "knora-api:intervalValueHasEnd" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "3.4"
+          |    },
+          |    "knora-api:intervalValueHasStart" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "1.2"
+          |    }
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "second sequence",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "sequences" : "http://0.0.0.0:3333/ontology/0001/sequences/v2#"
+          |  }
+          |}""".stripMargin
+
+      val createSequenceRequest =
+        Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
+      val createSequenceResponse = singleAwaitingRequest(createSequenceRequest)
+      assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
+      val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
+      val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
+
+      // get the newly created sequence reource
+      val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
+      val sequenceResponse   = singleAwaitingRequest(sequenceGetRequest)
+      assert(sequenceResponse.status == StatusCodes.OK)
+      val getSequenceResponseBody = responseToJsonLDDocument(sequenceResponse).body
+      val sequenceOfUuid = getSequenceResponseBody
+        .requireObject(OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue)
+        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val sequenceBoundsUuid = getSequenceResponseBody
+        .requireObject(OntologyConstants.KnoraApiV2Complex.HasSequenceBounds)
+        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+
+      // get the isSequenceOfValue property on the sequence resource
+      val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)
+      val sequenceOfResponse = singleAwaitingRequest(sequenceOfRequest)
+      assert(sequenceOfResponse.status == StatusCodes.OK)
+
+      // get the hasSequenceBounds property on the sequence resource
+      val sequenceBoundsRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceBoundsUuid") ~> addCredentials(cred)
+      val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
+      assert(sequenceBoundsResponse.status == StatusCodes.OK)
+    }
   }
 }
 
