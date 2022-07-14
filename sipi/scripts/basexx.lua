@@ -109,7 +109,7 @@ end
 -- generic function to decode and encode base32/base64
 --------------------------------------------------------------------------------
 
-local function from_basexx( str, alphabet, bits )
+function from_basexx( str, alphabet, bits )
    local result = {}
    for i = 1, #str do
       local c = string.sub( str, i, i )
@@ -127,7 +127,7 @@ local function from_basexx( str, alphabet, bits )
    return pure_from_bit( string.sub( value, 1, #value - pad ) )
 end
 
-local function to_basexx( str, alphabet, bits, pad )
+function to_basexx( str, alphabet, bits, pad )
    local bitString = basexx.to_bit( str )
 
    local chunks = divide_string( bitString, bits )
@@ -158,6 +158,22 @@ end
 
 function basexx.to_base32( str )
    return to_basexx( str, base32Alphabet, 5, base32PadMap[ #str % 5 + 1 ] )
+end
+
+--------------------------------------------------------------------------------
+-- dsp-api custom variant
+--------------------------------------------------------------------------------
+
+local base32CustomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+local base32CustomPadMap = { "", "999999", "9999", "999", "9" }
+
+function basexx.from_base32Custom( str, ignore )
+   str = ignore_set( str, ignore )
+   return from_basexx( string.upper( str ), base32CustomAlphabet, 5 )
+end
+
+function basexx.to_base32Custom( str )
+   return to_basexx( str, base32CustomAlphabet, 5, base32CustomPadMap[ #str % 5 + 1 ] )
 end
 
 --------------------------------------------------------------------------------

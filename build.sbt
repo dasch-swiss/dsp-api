@@ -70,7 +70,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Docker / defaultLinuxInstallLocation := "/sipi",
     Universal / mappings ++= {
       // copy the sipi/scripts folder
-      directory("sipi/scripts")
+      directory("sipi/scripts"),
     },
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {

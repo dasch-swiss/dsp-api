@@ -17,7 +17,7 @@ import org.knora.webapi.routing.RouteUtilADM
 /**
  * Provides a routing function for the API that Sipi connects to.
  */
-class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
+class FilesRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
    * A routing function for the API that Sipi connects to.

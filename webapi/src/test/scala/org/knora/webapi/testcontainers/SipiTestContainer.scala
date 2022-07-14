@@ -9,6 +9,7 @@ import zio._
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import scala.jdk.CollectionConverters._
+import java.nio.file.Paths
 
 final case class SipiTestContainer(container: GenericContainer[Nothing])
 
@@ -45,6 +46,14 @@ object SipiTestContainer {
       "/sipi/config/sipi.docker-config.lua",
       BindMode.READ_ONLY
     )
+
+    val incunabulaImageDirPath = Paths.get("..", "sipi/images/0803/incunabula_0000000002.jp2")
+    sipiContainer.withFileSystemBind(
+      incunabulaImageDirPath.toString(),
+      "/sipi/images/0803/incunabula_0000000002.jp2",
+      BindMode.READ_ONLY
+    )
+
     sipiContainer.start()
     sipiContainer
   }.tap(_ => ZIO.debug(">>> Acquire Sipi TestContainer <<<"))
