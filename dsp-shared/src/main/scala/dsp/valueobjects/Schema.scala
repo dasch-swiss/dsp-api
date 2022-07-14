@@ -35,36 +35,30 @@ object Schema {
       val guiElementPulldown = SalsahGui.Pulldown
       val guiElementSlider   = SalsahGui.Slider
 
+      val guiElementsPointingToList: Set[SalsahGui.IRI] = Set(guiElementList, guiElementRadio, guiElementPulldown)
+
       val needsGuiAttribute: Boolean = guiElement match {
         case None => false
         case Some(guiElement) =>
-          guiElement.value == guiElementList ||
-            guiElement.value == guiElementRadio ||
-            guiElement.value == guiElementPulldown ||
-            guiElement.value == guiElementSlider
+          guiElement.value == guiElementSlider ||
+            guiElementsPointingToList.contains(guiElement.value)
       }
-
-      if (
-        needsGuiAttribute &&
-        guiAttributes.isEmpty
-      ) {
-        return Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributesMissing))
-      }
-
-      val guiElementsPointingToList: Set[SalsahGui.IRI] = Set(guiElementList, guiElementRadio, guiElementPulldown)
 
       if (needsGuiAttribute) {
+        if (guiAttributes.isEmpty) {
+          return Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributesMissing))
+        }
         val validatedGuiAttributes: Validation[Throwable, List[GuiAttribute]] = guiElement match {
           // gui element is a list, radio or pulldown, so it needs a gui attribute that points to a list
           case Some(guiElement) if guiElementsPointingToList.contains(guiElement.value) =>
-            validateGuiElementsPointingToList(guiElement, guiAttributes).fold(
+            validateGuiObjectsPointingToList(guiElement, guiAttributes).fold(
               e => Validation.fail(e.head),
               v => Validation.succeed(v)
             )
 
           // gui element is a slider, so it needs two gui attributes min and max
           case Some(guiElement) if guiElement.value == guiElementSlider =>
-            validateGuiElementSlider(guiElement, guiAttributes).fold(
+            validateGuiObjectSlider(guiElement, guiAttributes).fold(
               e => Validation.fail(e.head),
               v => Validation.succeed(v)
             )
@@ -72,7 +66,7 @@ object Schema {
           case _ =>
             Validation.fail(
               BadRequestException(
-                s"Unknown value for salsah-gui:guiElement: $guiElement."
+                s"Unable to validate gui attributes. Unknown value for salsah-gui:guiElement: $guiElement."
               )
             )
         }
@@ -137,12 +131,12 @@ object Schema {
    *
    * @return either the validated list of gui attributes or a [[dsp.errors.BadRequestException]]
    */
-  private def validateGuiElementsPointingToList(
+  private[valueobjects] def validateGuiObjectsPointingToList(
     guiElement: GuiElement,
     guiAttributes: List[GuiAttribute]
   ): Validation[BadRequestException, List[GuiAttribute]] = {
     // gui element can have only one gui attribute
-    if (guiAttributes.size != 1) {
+    if (guiAttributes.size > 1) {
       return Validation.fail(
         BadRequestException(
           s"Wrong number of gui attributes. salsah-gui:guiElement $guiElement needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found $guiAttributes."
@@ -169,7 +163,7 @@ object Schema {
    *
    * @return either the validated list of gui attributes or a [[dsp.errors.BadRequestException]]
    */
-  private def validateGuiElementSlider(
+  private[valueobjects] def validateGuiObjectSlider(
     guiElement: GuiElement,
     guiAttributes: List[GuiAttribute]
   ): Validation[BadRequestException, List[GuiAttribute]] = {

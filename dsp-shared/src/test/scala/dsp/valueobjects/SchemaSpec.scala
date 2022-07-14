@@ -9,6 +9,7 @@ import dsp.errors.BadRequestException
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
+import dsp.constants.SalsahGui
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -16,10 +17,11 @@ import zio.test._
 object SchemaSpec extends ZIOSpecDefault {
 
   private val guiElementUnknownIri  = "http://www.knora.org/ontology/salsah-gui#Unknown"
-  private val guiElementListIri     = "http://www.knora.org/ontology/salsah-gui#List"
-  private val guiElementPulldownIri = "http://www.knora.org/ontology/salsah-gui#Pulldown"
-  private val guiElementRadioIri    = "http://www.knora.org/ontology/salsah-gui#Radio"
-  private val guiElementSliderIri   = "http://www.knora.org/ontology/salsah-gui#Slider"
+  private val guiElementListIri     = SalsahGui.List
+  private val guiElementPulldownIri = SalsahGui.Pulldown
+  private val guiElementRadioIri    = SalsahGui.Radio
+  private val guiElementSliderIri   = SalsahGui.Slider
+  private val guiElementCheckboxIri = SalsahGui.Checkbox
 
   private val guiAttributeInvalidString            = "invalid"
   private val guiAttributeUnknownString            = "unknown=10"
@@ -40,9 +42,20 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiElementPulldown = Schema.GuiElement.make(guiElementPulldownIri).fold(e => throw e.head, v => v)
   private val guiElementRadio    = Schema.GuiElement.make(guiElementRadioIri).fold(e => throw e.head, v => v)
   private val guiElementSlider   = Schema.GuiElement.make(guiElementSliderIri).fold(e => throw e.head, v => v)
+  private val guiElementCheckbox = Schema.GuiElement.make(guiElementCheckboxIri).fold(e => throw e.head, v => v)
 
-  def spec =
-    (guiAttributeTest + guiElementTest + guiObjectTest + guiObjectListTest + guiObjectRadioTest + guiObjectPulldownTest + guiObjectSliderTest)
+  def spec = (
+    guiAttributeTest +
+      guiElementTest +
+      guiObjectTest +
+      validateGuiObjectsPointingToListTest +
+      validateGuiObjectSliderTest +
+      guiObjectListTest +
+      guiObjectRadioTest +
+      guiObjectPulldownTest +
+      guiObjectSliderTest +
+      guiObjectCheckboxTest
+  )
 
   private val guiAttributeTest = suite("gui attribute")(
     test("pass an empty value and return an error") {
@@ -82,7 +95,8 @@ object SchemaSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.k == guiAttributeSizeStringKey) &&
-      assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.v == guiAttributeSizeStringValue)
+      assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.v == guiAttributeSizeStringValue) &&
+      assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.value == guiAttributeSizeString)
     }
   )
 
@@ -101,6 +115,84 @@ object SchemaSpec extends ZIOSpecDefault {
     },
     test("pass a valid value and successfully create value object") {
       assertTrue(Schema.GuiElement.make(guiElementListIri).toOption.get.value == guiElementListIri)
+    }
+  )
+
+  private val validateGuiObjectsPointingToListTest = suite("validateGuiObjectsPointingToList")(
+    test(
+      "pass gui element 'salsah-gui#List' with gui attribute 'hlist' and successfully create value object"
+    ) {
+      val guiElement    = guiElementList
+      val guiAttributes = scala.collection.immutable.List(guiAttributeHlist)
+      val result        = Schema.validateGuiObjectsPointingToList(guiElement, guiAttributes)
+      assertTrue(
+        result == Validation.succeed(guiAttributes)
+      )
+    },
+    test(
+      "pass a gui element that points to a list but has a misfitting gui attribute and return an error"
+    ) {
+      val guiElement    = guiElementList
+      val guiAttributes = scala.collection.immutable.List(guiAttributeSize)
+      assertTrue(
+        Schema.validateGuiObjectsPointingToList(guiElement, guiAttributes) == Validation.fail(
+          BadRequestException(
+            "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
+          )
+        )
+      )
+    },
+    test(
+      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+    ) {
+      val guiElement    = guiElementList
+      val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist)
+      assertTrue(
+        Schema.validateGuiObjectsPointingToList(guiElement, guiAttributes) == Validation.fail(
+          BadRequestException(
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
+          )
+        )
+      )
+    }
+  )
+
+  private val validateGuiObjectSliderTest = suite("validateGuiObjectSlider")(
+    test(
+      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1' and 'max=10' and successfully create value object"
+    ) {
+      val guiElement    = guiElementSlider
+      val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeMax)
+      val result        = Schema.validateGuiObjectSlider(guiElement, guiAttributes)
+      assertTrue(
+        result == Validation.succeed(guiAttributes)
+      )
+    },
+    test(
+      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1','max=10', and 'min=80' and return an error"
+    ) {
+      val guiElement    = guiElementSlider
+      val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeSize)
+      assertTrue(
+        Schema.validateGuiObjectSlider(guiElement, guiAttributes) == Validation.fail(
+          BadRequestException(
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1), GuiAttribute(max,10), GuiAttribute(size,80))."
+          )
+        )
+      )
+    },
+    test(
+      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+    ) {
+      val guiElement    = guiElementSlider
+      val guiAttributes = scala.collection.immutable.List(guiAttributeSize)
+      assertTrue(
+        Schema.validateGuiObjectSlider(guiElement, guiAttributes) == Validation.fail(
+          BadRequestException(
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 1: List(GuiAttribute(size,80))."
+          )
+        )
+      )
     }
   )
 
@@ -326,6 +418,21 @@ object SchemaSpec extends ZIOSpecDefault {
         )).toZIO
     },
     test(
+      "pass gui element 'salsah-gui#Slider' without gui attribute and return an error"
+    ) {
+      assertTrue(
+        Schema.GuiObject
+          .make(
+            scala.collection.immutable.List(),
+            Some(guiElementSlider)
+          ) == Validation.fail(
+          BadRequestException(
+            SchemaErrorMessages.GuiAttributesMissing
+          )
+        )
+      )
+    },
+    test(
       "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1','max=10', and 'min=80' and return an error"
     ) {
       assertTrue(
@@ -352,6 +459,25 @@ object SchemaSpec extends ZIOSpecDefault {
           )
         )
       )
+    }
+  )
+
+  private val guiObjectCheckboxTest = suite("gui object - Checkbox")(
+    test(
+      "pass gui element 'salsah-gui#Checkbox' without gui attributes and successfully create value object"
+    ) {
+      (for {
+        guiObject <- Schema.GuiObject
+                       .make(
+                         scala.collection.immutable.List(),
+                         Some(guiElementCheckbox)
+                       )
+      } yield assertTrue(
+        guiObject.guiAttributes == scala.collection.immutable.List()
+      ) &&
+        assertTrue(
+          guiObject.guiElement == Some(guiElementCheckbox)
+        )).toZIO
     }
   )
 }
