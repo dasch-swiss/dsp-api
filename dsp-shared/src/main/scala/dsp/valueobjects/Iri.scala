@@ -147,6 +147,14 @@ object Iri {
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.PropertyIriMissing))
       } else {
+        // TODO all the following needs to be checked when validating a property iri (see string formatter for the implementations of these methods)
+        // if (
+        //   !(propertyIri.isKnoraApiV2EntityIri &&
+        //     propertyIri.getOntologySchema.contains(ApiV2Complex) &&
+        //     propertyIri.getOntologyFromEntity == externalOntologyIri)
+        // ) {
+        //   throw BadRequestException(s"Invalid property IRI: $propertyIri")
+        // }
         Validation.succeed(new PropertyIri(value) {})
       }
   }
