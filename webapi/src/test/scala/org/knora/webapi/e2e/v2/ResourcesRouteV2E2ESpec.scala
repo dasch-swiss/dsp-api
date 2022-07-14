@@ -100,6 +100,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
+  private def collectClientTestData(fileName: String, fileContent: String, fileExtension: String = "json"): Unit =
+    clientTestDataCollector.addFile(
+      TestDataFileContent(
+        filePath = TestDataFilePath(
+          directoryPath = clientTestDataPath,
+          filename = fileName,
+          fileExtension = fileExtension
+        ),
+        text = fileContent
+      )
+    )
+
   private def successResponse(message: String): String =
     s"""{
        |  "knora-api:result" : "$message",
@@ -216,16 +228,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "resource-preview",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("resource-preview", responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
@@ -515,16 +518,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "testding",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("testding", responseAsString)
 
       // Check that the resource corresponds to the ontology.
       instanceChecker.check(
@@ -547,16 +541,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "thing-with-picture",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("thing-with-picture", responseAsString)
 
       // Check that the resource corresponds to the ontology.
       instanceChecker.check(
@@ -732,16 +717,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "resource-graph",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("resource-graph", responseAsString)
 
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
@@ -988,16 +964,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           |  }
           |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-values-request",
-            fileExtension = "json"
-          ),
-          text = createResourceWithValues
-        )
-      )
+      collectClientTestData("create-resource-with-values-request", createResourceWithValues)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1153,16 +1120,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-creation-date",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-creation-date", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1209,16 +1167,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val customIRI: IRI = SharedTestDataADM.customResourceIRI
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-IRI-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-IRI-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1316,16 +1265,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val customValueIRI: IRI = SharedTestDataADM.customValueIRI
       val jsonLDEntity        = createResourceWithCustomValueIRI(customValueIRI)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-value-IRI-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-value-IRI-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1372,16 +1312,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            | }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-value-UUID-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-value-UUID-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1432,16 +1363,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            | }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-value-creationDate-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-value-creationDate-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1503,15 +1425,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            | }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
+      collectClientTestData(
+        "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
+        jsonLDEntity
       )
 
       val request = Post(
@@ -1585,16 +1501,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-as-user",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-as-user", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1681,16 +1588,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("update-resource-metadata-request", jsonLDEntity)
 
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
@@ -1708,16 +1606,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-response",
-            fileExtension = "json"
-          ),
-          text = updateResponseAsString
-        )
-      )
+      collectClientTestData("update-resource-metadata-response", jsonLDEntity)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1769,16 +1658,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-request-with-last-mod-date",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("update-resource-metadata-request-with-last-mod-date", jsonLDEntity)
 
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
@@ -1798,16 +1678,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-response-with-last-mod-date",
-            fileExtension = "json"
-          ),
-          text = updateResponseAsString
-        )
-      )
+      collectClientTestData("update-resource-metadata-response-with-last-mod-date", jsonLDEntity)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1853,16 +1724,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-resource-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("delete-resource-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
@@ -1873,16 +1735,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-resource-response",
-            fileExtension = "json"
-          ),
-          text = updateResponseAsString
-        )
-      )
+      collectClientTestData("delete-resource-response", jsonLDEntity)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1897,16 +1750,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val responseType = previewJsonLD.requireString("@type")
       responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "deleted-resource-preview-response",
-            fileExtension = "json"
-          ),
-          text = previewResponseAsString
-        )
-      )
+      collectClientTestData("deleted-resource-preview-response", jsonLDEntity)
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1931,16 +1775,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-resource-with-custom-delete-date-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("delete-resource-with-custom-delete-date-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
@@ -2133,16 +1968,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "erase-resource-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("erase-resource-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/erase",
