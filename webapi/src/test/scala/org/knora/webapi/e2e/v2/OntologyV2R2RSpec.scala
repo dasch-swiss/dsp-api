@@ -1248,6 +1248,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.BadRequest, responseStr)
 
+        CollectClientTestData("not-change-property-guielement-response", responseStr)
       }
     }
 
