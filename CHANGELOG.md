@@ -1,5 +1,18 @@
 # Changelog
 
+## [23.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.1...v23.0.0) (2022-07-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* transform valueHasUri values from node to string type (DEV-1047) (#2094)
+
+### Bug Fixes
+
+* **authentication:** make cookie name unique between environments ([#2095](https://www.github.com/dasch-swiss/dsp-api/issues/2095)) ([7d420a4](https://www.github.com/dasch-swiss/dsp-api/commit/7d420a4e88f355b1465aa1403508c433deb0ae8d))
+* **ontology:** existing cardinalities get duplicated in the triplestore when adding a new cardinality to a class (DEV-937) ([#2092](https://www.github.com/dasch-swiss/dsp-api/issues/2092)) ([9fa26db](https://www.github.com/dasch-swiss/dsp-api/commit/9fa26db3ceaa9678b2244863e2fdbc2797a2b57b))
+* transform valueHasUri values from node to string type (DEV-1047) ([#2094](https://www.github.com/dasch-swiss/dsp-api/issues/2094)) ([e1d8d95](https://www.github.com/dasch-swiss/dsp-api/commit/e1d8d95504f5b6b0c35dd136f2a51e05576f2eac))
+
 ### [22.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.0...v22.0.1) (2022-07-08)
 
 
