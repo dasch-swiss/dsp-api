@@ -49,7 +49,6 @@ function pre_flight(prefix, identifier, cookie)
 
         if session == nil then
             -- no session could be extracted
-            print("cookie key is invalid: " .. cookie)
             server.log("cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
         else
             knora_cookie_header = { Cookie = session["name"] .. "=" .. session["id"] }
