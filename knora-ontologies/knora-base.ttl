@@ -1615,6 +1615,8 @@
     rdfs:comment    "Represents a time interval, e.g. in an audio recording"@en .
 
 
+###  http://www.knora.org/ontology/knora-base#TimeBase
+
 :TimeBase
     rdf:type        owl:Class ;
     rdfs:subClassOf :ValueBase,
@@ -1623,7 +1625,7 @@
                       owl:cardinality "1"^^xsd:nonNegativeInteger ] .
 
 
-###  http://www.knora.org/ontology/knora-base#IntervalValue
+###  http://www.knora.org/ontology/knora-base#TimeValue
 
 :TimeValue
     rdf:type        owl:Class ;
