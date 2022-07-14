@@ -81,6 +81,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     RdfDataObject(
       path = "test_data/ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(
+      path = "test_data/ontologies/sequences-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/sequences"
+    ),
+    RdfDataObject(
+      path = "test_data/all_data/sequences-data.ttl",
+      name = "http://www.knora.org/data/0001/sequences"
     )
   )
 
@@ -2400,6 +2408,36 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
       val editValueResponseDoc            = responseToJsonLDDocument(editValueResponse)
       assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
+    }
+
+    "correctly load and request resources that have a isSequenceOf relation to a video resource" in {
+      val cred   = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl = s"$baseApiUrl/v2/values"
+      val resUrl = s"$baseApiUrl/v2/resources"
+
+      // get the video resource
+      val videoResourceIri = URLEncoder.encode("http://rdfh.ch/0001/video-01", "UTF-8")
+      val videoGetRequest  = Get(s"$resUrl/$videoResourceIri") ~> addCredentials(cred)
+      val videoResponse    = singleAwaitingRequest(videoGetRequest)
+      assert(videoResponse.status == StatusCodes.OK)
+
+      // get the sequence reource pointing to the video resource
+      val sequenceResourceIri = URLEncoder.encode("http://rdfh.ch/0001/video-sequence-01", "UTF-8")
+      val sequenceGetRequest  = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
+      val sequenceResponse    = singleAwaitingRequest(sequenceGetRequest)
+      assert(sequenceResponse.status == StatusCodes.OK)
+
+      // get the isSequenceOfValue property on the sequence resource
+      val sequenceOfUuid     = "6CKp1AmZT1SRHYeSOUaJjA"
+      val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)
+      val sequenceOfResponse = singleAwaitingRequest(sequenceOfRequest)
+      assert(sequenceOfResponse.status == StatusCodes.OK)
+
+      // get the hasSequenceBounds property on the sequence resource
+      val sequenceBoundsUuid     = "vEDim4wvSfGnhSvX6fXcaA"
+      val sequenceBoundsRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceBoundsUuid") ~> addCredentials(cred)
+      val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
+      assert(sequenceBoundsResponse.status == StatusCodes.OK)
     }
   }
 }
