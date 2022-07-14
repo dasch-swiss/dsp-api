@@ -1524,13 +1524,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                    .toString()
                                )
 
-      resourceRequestResponse: SparqlExtendedConstructResponse <- appActor
-                                                                    .ask(
-                                                                      SparqlExtendedConstructRequest(
-                                                                        sparql = resourceRequestSparql
-                                                                      )
-                                                                    )
-                                                                    .mapTo[SparqlExtendedConstructResponse]
+      resourceRequestResponse: SparqlExtendedConstructResponse <-
+        appActor
+          .ask(SparqlExtendedConstructRequest(sparql = resourceRequestSparql))
+          .mapTo[SparqlExtendedConstructResponse]
 
       // separate resources and values
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData =
@@ -1578,19 +1575,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
 
-      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
-                                                                                              resourceIris =
-                                                                                                resourceIris,
-                                                                                              preview = false,
-                                                                                              withDeleted = withDeleted,
-                                                                                              propertyIri = propertyIri,
-                                                                                              valueUuid = valueUuid,
-                                                                                              versionDate = versionDate,
-                                                                                              queryStandoff =
-                                                                                                queryStandoff,
-                                                                                              requestingUser =
-                                                                                                requestingUser
-                                                                                            )
+      mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <-
+        getResourcesFromTriplestore(
+          resourceIris = resourceIris,
+          preview = false,
+          withDeleted = withDeleted,
+          propertyIri = propertyIri,
+          valueUuid = valueUuid,
+          versionDate = versionDate,
+          queryStandoff = queryStandoff,
+          requestingUser = requestingUser
+        )
 
       // If we're querying standoff, get XML-to standoff mappings.
       mappingsAsMap: Map[IRI, MappingAndXSLTransformation] <-
