@@ -7,8 +7,8 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -20,8 +20,8 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import scala.concurrent.duration._
 import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -37,9 +37,9 @@ import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.util._
 
 import java.time.Instant
-import scala.concurrent.Future
 import scala.concurrent.Await
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * Responds to requests dealing with ontologies.
@@ -943,6 +943,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -1359,6 +1360,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               cacheData = cacheData,
               existingLinkPropsToKeep = existingReadClassInfo.linkProperties
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -1610,6 +1612,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
