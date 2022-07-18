@@ -34,7 +34,7 @@
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions    "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
     knora-base:creationDate      "2019-11-29T10:00:00.673298Z"^^xsd:dateTime ;
-    freetest:hasListValue          <http://rdfh.ch/0001/free-test-with-list-value/values/free-test-list-node-01> ;
+    freetest:hasListValue        <http://rdfh.ch/0001/free-test-with-list-value/values/free-test-list-node-01> ;
     rdfs:label                   "an object with a list value"@en ;
     knora-base:isDeleted         false .
 
