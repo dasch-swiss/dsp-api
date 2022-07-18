@@ -94,7 +94,6 @@ object Schema {
   object GuiAttribute {
     def make(keyValue: String): Validation[Throwable, GuiAttribute] = {
       val k: String = keyValue.split("=").head.trim()
-      // TODO also check the type of the value (integer, string etc.)
       val v: String = keyValue.split("=").last.trim()
 
       if (keyValue.isEmpty) {
@@ -102,7 +101,10 @@ object Schema {
       } else if (!SalsahGui.GuiAttributes.contains(k)) {
         Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeUnknown(k)))
       } else {
-        Validation.succeed(new GuiAttribute(k, v) {})
+        validateGuiAttributeValueType(k, v).fold(
+          e => Validation.fail(e.head),
+          validValue => Validation.succeed(new GuiAttribute(k, validValue) {})
+        )
       }
     }
   }
@@ -187,12 +189,45 @@ object Schema {
     }
     return Validation.succeed(guiAttributes)
   }
+
+  /**
+   * Validates if the value of a gui attribute is of the correct value type (integer, decimal, string etc.)
+   *
+   * @param key     the gui attribute key
+   * @param value   the gui attribute value
+   *
+   * @return either the validated value of the gui attribute or a [[dsp.errors.ValidationException]]
+   */
+  private[valueobjects] def validateGuiAttributeValueType(
+    key: String,
+    value: String
+  ): Validation[ValidationException, String] = {
+    val expectedValueType = SalsahGui.GuiAttributes.get(key)
+
+    // try to parse the given value according to the expected value type
+    val parseResult = expectedValueType match {
+      case Some(valueType) if valueType.toString() == "integer" => value.toIntOption
+      case Some(valueType) if valueType.toString() == "percent" => value.toDoubleOption
+      case Some(valueType) if valueType.toString() == "decimal" => value.toDoubleOption
+      case Some(valueType) if valueType.toString() == "string"  => Some(value)
+      case Some(valueType) if valueType.toString() == "iri"     => Some(value)
+      case _                                                    => None
+    }
+
+    parseResult match {
+      case None         => Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeHasWrongType(key, value)))
+      case Some(result) => Validation.succeed(result.toString())
+    }
+  }
+
 }
 
 object SchemaErrorMessages {
   val GuiAttributeMissing = "gui attribute cannot be empty."
   def GuiAttributeUnknown(guiAttribute: String): String =
-    s"gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes.foreach(value => value)}"
+    s"gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes}"
+  def GuiAttributeHasWrongType(key: String, value: String): String =
+    s"Value '$value' of gui attribute '$key' has the wrong attribute type."
   val GuiElementMissing                             = "gui element cannot be empty."
   def GuiElementInvalid(guiElement: String): String = s"gui element '$guiElement' is invalid."
   val GuiElementUnknown                             = s"gui element is unknown. Needs to be one of: ${SalsahGui.GuiElements}"

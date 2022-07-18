@@ -10,6 +10,7 @@ import dsp.errors.ValidationException
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
+import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -22,7 +23,7 @@ object SchemaSpec extends ZIOSpecDefault {
       .make("hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA")
       .fold(e => throw e.head, v => v)
   private val guiAttributeMin = Schema.GuiAttribute.make("min=1").fold(e => throw e.head, v => v)
-  private val guiAttributeMax = Schema.GuiAttribute.make("max=10").fold(e => throw e.head, v => v)
+  private val guiAttributeMax = Schema.GuiAttribute.make("max=10.0").fold(e => throw e.head, v => v)
 
   private val guiElementList     = Schema.GuiElement.make(SalsahGui.List).fold(e => throw e.head, v => v)
   private val guiElementPulldown = Schema.GuiElement.make(SalsahGui.Pulldown).fold(e => throw e.head, v => v)
@@ -117,14 +118,14 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
     ) {
       val guiElement    = guiElementList
       val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist)
       assertTrue(
         Schema.validateGuiObjectsPointingToList(guiElement, guiAttributes) == Validation.fail(
           ValidationException(
-            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1.0), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
       )
@@ -133,7 +134,7 @@ object SchemaSpec extends ZIOSpecDefault {
 
   private val validateGuiObjectSliderTest = suite("validateGuiObjectSlider")(
     test(
-      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1' and 'max=10' and successfully create value object"
+      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1.0' and 'max=10.0' and successfully create value object"
     ) {
       val guiElement    = guiElementSlider
       val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeMax)
@@ -143,20 +144,20 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1','max=10', and 'min=80' and return an error"
+      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1.0','max=10.0', and 'min=80' and return an error"
     ) {
       val guiElement    = guiElementSlider
       val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeSize)
       assertTrue(
         Schema.validateGuiObjectSlider(guiElement, guiAttributes) == Validation.fail(
           ValidationException(
-            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1), GuiAttribute(max,10), GuiAttribute(size,80))."
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1.0), GuiAttribute(max,10.0), GuiAttribute(size,80))."
           )
         )
       )
     },
     test(
-      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
     ) {
       val guiElement    = guiElementSlider
       val guiAttributes = scala.collection.immutable.List(guiAttributeSize)
@@ -218,7 +219,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -227,7 +228,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementList)
           ) == Validation.fail(
           ValidationException(
-            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1.0), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
       )
@@ -277,7 +278,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#Radio' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#Radio' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -286,7 +287,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementRadio)
           ) == Validation.fail(
           ValidationException(
-            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Radio) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Radio) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1.0), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
       )
@@ -336,7 +337,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#Pulldown' with too many gui attributes 'min=1','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#Pulldown' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -345,7 +346,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementPulldown)
           ) == Validation.fail(
           ValidationException(
-            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Pulldown) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Pulldown) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1.0), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
       )
@@ -367,7 +368,7 @@ object SchemaSpec extends ZIOSpecDefault {
 
   private val guiObjectSliderTest = suite("gui object - Slider")(
     test(
-      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1' and 'max=10' and successfully create value object"
+      "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1.0' and 'max=10.0' and successfully create value object"
     ) {
       val guiObject = Schema.GuiObject
         .make(
@@ -395,7 +396,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1','max=10', and 'min=80' and return an error"
+      "pass gui element 'salsah-gui#Slider' with too many gui attributes 'min=1.0','max=10.0', and 'min=80' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -404,7 +405,7 @@ object SchemaSpec extends ZIOSpecDefault {
             Some(guiElementSlider)
           ) == Validation.fail(
           ValidationException(
-            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1), GuiAttribute(max,10), GuiAttribute(size,80))."
+            "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1.0), GuiAttribute(max,10.0), GuiAttribute(size,80))."
           )
         )
       )

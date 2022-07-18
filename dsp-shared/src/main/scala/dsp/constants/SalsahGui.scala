@@ -67,18 +67,18 @@ object SalsahGui {
     Fileupload
   )
 
-  val GuiAttributes = scala.collection.immutable.List(
-    "ncolors",
-    "hlist",
-    "numprops",
-    "size",
-    "maxlength",
-    "min",
-    "max",
-    "cols",
-    "rows",
-    "width",
-    "wrap"
+  val GuiAttributes = scala.collection.immutable.Map(
+    ("ncolors", SalsahGuiAttributeType.Integer),
+    ("hlist", SalsahGuiAttributeType.Iri),
+    ("numprops", SalsahGuiAttributeType.Integer),
+    ("size", SalsahGuiAttributeType.Integer),
+    ("maxlength", SalsahGuiAttributeType.Integer),
+    ("min", SalsahGuiAttributeType.Decimal),
+    ("max", SalsahGuiAttributeType.Decimal),
+    ("cols", SalsahGuiAttributeType.Integer),
+    ("rows", SalsahGuiAttributeType.Integer),
+    ("width", SalsahGuiAttributeType.Percent),
+    ("wrap", SalsahGuiAttributeType.Str)
   )
 
   object SalsahGuiAttributeType extends Enumeration {
