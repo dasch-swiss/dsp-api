@@ -52,14 +52,14 @@ object SchemaSpec extends ZIOSpecDefault {
     test("pass an invalid value and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("invalid") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeUnknown)
+          ValidationException(SchemaErrorMessages.GuiAttributeUnknown("invalid"))
         )
       )
     },
     test("pass an unknown value and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("unknown=10") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiAttributeUnknown)
+          ValidationException(SchemaErrorMessages.GuiAttributeUnknown("unknown"))
         )
       )
     },

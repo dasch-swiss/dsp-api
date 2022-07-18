@@ -100,7 +100,7 @@ object Schema {
       if (keyValue.isEmpty) {
         Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeMissing))
       } else if (!SalsahGui.GuiAttributes.contains(k)) {
-        Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeUnknown))
+        Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeUnknown(k)))
       } else {
         Validation.succeed(new GuiAttribute(k, v) {})
       }
@@ -190,19 +190,12 @@ object Schema {
 }
 
 object SchemaErrorMessages {
-  val PropertyLabelMissing       = "Property label cannot be empty."
-  val PropertyLabelInvalid       = "Property label is invalid."
-  val PropertyDescriptionMissing = "Property description cannot be empty."
-  val PropertyDescriptionInvalid = "Property description is invalid."
-  val ClassLabelMissing          = "Class label cannot be empty."
-  val ClassLabelInvalid          = "Class label is invalid."
-  val ClassDescriptionMissing    = "Class description cannot be empty."
-  val ClassDescriptionInvalid    = "Class description is invalid."
-  val GuiAttributeMissing        = "gui attribute cannot be empty."
-  val GuiAttributeUnknown        = s"gui attribute is unknown. Needs to be one of ${SalsahGui.GuiAttributes}"
-  val GuiElementMissing          = "gui element cannot be empty."
-  val GuiElementInvalid          = "gui element is invalid."
-  val GuiElementUnknown          = s"gui element is unknown. Needs to be one of ${SalsahGui.GuiElements}"
-  val GuiObjectMissing           = "gui object cannot be empty."
-  val GuiAttributesMissing       = "gui attributes cannot be empty."
+  val GuiAttributeMissing = "gui attribute cannot be empty."
+  def GuiAttributeUnknown(guiAttribute: String): String =
+    s"gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes.foreach(value => value)}"
+  val GuiElementMissing                             = "gui element cannot be empty."
+  def GuiElementInvalid(guiElement: String): String = s"gui element '$guiElement' is invalid."
+  val GuiElementUnknown                             = s"gui element is unknown. Needs to be one of: ${SalsahGui.GuiElements}"
+  val GuiObjectMissing                              = "gui object cannot be empty."
+  val GuiAttributesMissing                          = "gui attributes cannot be empty."
 }
