@@ -29,6 +29,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import akka.util.Timeout
+import dsp.constants.SalsahGui
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
@@ -157,12 +158,12 @@ class CacheSpec extends CoreSpec {
                     predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
                     Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue)))
                   ),
-                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.SimpleText)))
+                  stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
+                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.SimpleText)))
                   ),
-                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute),
+                  stringFormatter.toSmartIri(SalsahGui.GuiAttribute) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiAttribute),
                     Seq(
                       StringLiteralV2("size=80"),
                       StringLiteralV2("maxlength=255")
@@ -250,9 +251,9 @@ class CacheSpec extends CoreSpec {
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
                   Seq(SmartIriLiteralV2(pagePropertyIri))
                 ),
-                stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass) -> PredicateInfoV2(
-                  predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass),
-                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.Searchbox)))
+                stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.Searchbox)))
                 )
               ),
               subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkTo)),

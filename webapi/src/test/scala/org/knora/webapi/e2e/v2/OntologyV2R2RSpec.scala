@@ -5,11 +5,12 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import dsp.constants.SalsahGui
+import dsp.errors.AssertionException
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import dsp.errors.AssertionException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -17,6 +18,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models._
@@ -33,7 +35,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -1182,21 +1183,21 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
 
         responseAsInput.properties.head._2
-          .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+          .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
           .objects
           .toSet should ===(
           paramsAsInput.properties.head._2
-            .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+            .predicates(SalsahGui.External.GuiElementProp.toSmartIri)
             .objects
             .toSet
         )
 
         responseAsInput.properties.head._2
-          .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+          .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
           .objects
           .toSet should ===(
           paramsAsInput.properties.head._2
-            .predicates(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+            .predicates(SalsahGui.External.GuiAttribute.toSmartIri)
             .objects
             .toSet
         )
@@ -1205,6 +1206,50 @@ class OntologyV2R2RSpec extends R2RSpec {
         val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "not change the salsah-gui:guiElement and salsah-gui:guiAttribute of a property if their combination is invalid" in {
+      val params =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:hasName",
+           |    "@type" : "owl:ObjectProperty",
+           |    "salsah-gui:guiElement" : {
+           |      "@id" : "salsah-gui:List"
+           |    },
+           |    "salsah-gui:guiAttribute" : [ "cols=80", "rows=24" ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}""".stripMargin
+
+      CollectClientTestData("not-change-property-guielement-request", params)
+
+      // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+      val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+      Put(
+        "/v2/ontologies/properties/guielement",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.BadRequest, responseStr)
+
+        CollectClientTestData("not-change-property-guielement-response", responseStr)
       }
     }
 
@@ -1248,12 +1293,12 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+            .contains(SalsahGui.External.GuiElementProp.toSmartIri)
         )
 
         assert(
           !responseAsInput.properties.head._2.predicates
-            .contains(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+            .contains(SalsahGui.External.GuiAttribute.toSmartIri)
         )
 
         // Check that the ontology's last modification date was updated.

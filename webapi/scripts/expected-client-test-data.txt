@@ -213,6 +213,8 @@ test-data/v2/ontologies/get-property-textValue-response.json
 test-data/v2/ontologies/incunabula-ontology.json
 test-data/v2/ontologies/knora-api-ontology.json
 test-data/v2/ontologies/minimal-ontology.json
+test-data/v2/ontologies/not-change-property-guielement-request.json
+test-data/v2/ontologies/not-change-property-guielement-response.json
 test-data/v2/ontologies/remove-class-cardinalities-request.json
 test-data/v2/ontologies/remove-property-cardinality-request.json
 test-data/v2/ontologies/remove-property-guielement-request.json

@@ -5,22 +5,39 @@
 
 package org.knora.webapi.routing.v2
 
+import akka.actor.Status
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-
-import java.util.UUID
-import scala.concurrent.Future
-
+import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
-
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Schema._
+import dsp.valueobjects.V2
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilV2
+import zio.ZIO
+import zio.prelude.Validation
+
+import java.util.UUID
+import javax.validation.Valid
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -786,9 +803,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext
-                                )
+              requestingUser: UserADM <- getUserADM(
+                                           requestContext = requestContext
+                                         )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
@@ -800,6 +817,53 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                                                            settings = settings,
                                                            log = log
                                                          )
+
+              // get gui related values from request and validate them by making value objects from it
+
+              // get ontology info from request
+              inputOntology: InputOntologyV2             = InputOntologyV2.fromJsonLD(requestDoc)
+              propertyUpdateInfo: PropertyUpdateInfo     = OntologyUpdateHelper.getPropertyDef(inputOntology)
+              propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
+
+              // get the (optional) gui element
+              maybeGuiElement: Option[SmartIri] =
+                propertyInfoContent.predicates
+                  .get(SalsahGui.External.GuiElementProp.toSmartIri)
+                  .map { predicateInfoV2: PredicateInfoV2 =>
+                    predicateInfoV2.objects.head match {
+                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema)
+                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
+                    }
+                  }
+
+              // validate the gui element by creating value object
+              validatedGuiElement = maybeGuiElement match {
+                                      case Some(guiElement) => GuiElement.make(guiElement.toString()).map(Some(_))
+                                      case None             => Validation.succeed(None)
+                                    }
+
+              // get the gui attribute(s)
+              maybeGuiAttributes: List[String] =
+                propertyInfoContent.predicates
+                  .get(SalsahGui.External.GuiAttribute.toSmartIri)
+                  .map { predicateInfoV2: PredicateInfoV2 =>
+                    predicateInfoV2.objects.map {
+                      case guiAttribute: StringLiteralV2 => guiAttribute.value
+                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
+                    }.toList
+                  }
+                  .getOrElse(List())
+
+              // validate the gui attributes by creating value objects
+              guiAttributes = maybeGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
+
+              validatedGuiAttributes = Validation.validateAll(guiAttributes)
+
+              // validate the combination of gui element and gui attribute by creating a GuiObject value object
+              guiObject: GuiObject = Validation
+                                       .validate(validatedGuiAttributes, validatedGuiElement)
+                                       .flatMap(values => GuiObject.make(values._1, values._2))
+                                       .fold(e => throw e.head, v => v)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteWithFuture(
@@ -904,21 +968,77 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
-              requestingUser <- getUserADM(
-                                  requestContext = requestContext
-                                )
+
+              requestingUser: UserADM <- getUserADM(
+                                           requestContext = requestContext
+                                         )
 
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-              requestMessage: ChangePropertyGuiElementRequest <- ChangePropertyGuiElementRequest
-                                                                   .fromJsonLD(
-                                                                     jsonLDDocument = requestDoc,
-                                                                     apiRequestID = UUID.randomUUID,
-                                                                     requestingUser = requestingUser,
-                                                                     appActor = appActor,
-                                                                     settings = settings,
-                                                                     log = log
-                                                                   )
+              // get ontology info from request
+              inputOntology: InputOntologyV2 = InputOntologyV2.fromJsonLD(requestDoc)
+
+              // get property info from request - in OntologyUpdateHelper.getPropertyDef a lot of validation of the property iri is done
+              propertyUpdateInfo: PropertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntology)
+
+              propertyInfoContent: PropertyInfoContentV2 = propertyUpdateInfo.propertyInfoContent
+              lastModificationDate                       = propertyUpdateInfo.lastModificationDate
+
+              // get all values from request and validate them by making value objects from it
+
+              // get and validate property IRI
+              propertyIri = PropertyIri.make(propertyInfoContent.propertyIri.toString)
+
+              // get the (optional) new gui element
+              newGuiElement: Option[SmartIri] =
+                propertyInfoContent.predicates
+                  .get(SalsahGui.External.GuiElementProp.toSmartIri)
+                  .map { predicateInfoV2: PredicateInfoV2 =>
+                    predicateInfoV2.objects.head match {
+                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema)
+                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
+                    }
+                  }
+
+              // validate the new gui element by creating value object
+              validatedNewGuiElement = newGuiElement match {
+                                         case Some(guiElement) => GuiElement.make(guiElement.toString()).map(Some(_))
+                                         case None             => Validation.succeed(None)
+                                       }
+
+              // get the new gui attribute(s)
+              newGuiAttributes: List[String] =
+                propertyInfoContent.predicates
+                  .get(SalsahGui.External.GuiAttribute.toSmartIri)
+                  .map { predicateInfoV2: PredicateInfoV2 =>
+                    predicateInfoV2.objects.map {
+                      case guiAttribute: StringLiteralV2 => guiAttribute.value
+                      case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
+                    }.toList
+                  }
+                  .getOrElse(List())
+
+              // validate the new gui attributes by creating value objects
+              guiAttributes = newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
+
+              validatedGuiAttributes = Validation.validateAll(guiAttributes)
+
+              // validate the combination of gui element and gui attribute by creating a GuiObject value object
+              guiObject =
+                Validation
+                  .validate(validatedGuiAttributes, validatedNewGuiElement)
+                  .flatMap(values => GuiObject.make(values._1, values._2))
+                  .fold(e => throw e.head, v => v)
+
+              // create the request message with the validated gui object
+              requestMessage = ChangePropertyGuiElementRequest(
+                                 propertyIri = propertyIri.fold(e => throw e.head, v => v),
+                                 newGuiObject = guiObject,
+                                 lastModificationDate = lastModificationDate,
+                                 apiRequestID = UUID.randomUUID,
+                                 requestingUser = requestingUser
+                               )
+
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteWithFuture(

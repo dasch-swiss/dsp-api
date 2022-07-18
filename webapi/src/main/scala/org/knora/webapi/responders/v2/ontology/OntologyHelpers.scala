@@ -9,6 +9,7 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
@@ -38,9 +39,9 @@ import java.time.Instant
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import scala.util.Try
 
 object OntologyHelpers {
 
@@ -790,12 +791,12 @@ object OntologyHelpers {
     allIndividuals: Map[SmartIri, IndividualInfoContentV2]
   )(implicit stringFormatter: StringFormatter): Map[SmartIri, Set[SalsahGuiAttributeDefinition]] = {
     val guiElementIndividuals: Map[SmartIri, IndividualInfoContentV2] = allIndividuals.filter { case (_, individual) =>
-      individual.getRdfType.toString == OntologyConstants.SalsahGui.GuiElementClass
+      individual.getRdfType.toString == SalsahGui.GuiElementClass
     }
 
     guiElementIndividuals.map { case (guiElementIri, guiElementIndividual) =>
       val attributeDefs: Set[SalsahGuiAttributeDefinition] =
-        guiElementIndividual.predicates.get(OntologyConstants.SalsahGui.GuiAttributeDefinition.toSmartIri) match {
+        guiElementIndividual.predicates.get(SalsahGui.GuiAttributeDefinition.toSmartIri) match {
           case Some(predicateInfo) =>
             predicateInfo.objects.map {
               case StringLiteralV2(attributeDefStr, None) =>
@@ -836,11 +837,11 @@ object OntologyHelpers {
 
     // Find out which salsah-gui:Guielement the property uses, if any.
     val maybeGuiElementPred: Option[PredicateInfoV2] =
-      predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)
+      predicates.get(SalsahGui.GuiElementProp.toSmartIri)
     val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(
       _.requireIriObject(
         throw InconsistentRepositoryDataException(
-          s"Property $propertyIri has an invalid object for ${OntologyConstants.SalsahGui.GuiElementProp}"
+          s"Property $propertyIri has an invalid object for ${SalsahGui.GuiElementProp}"
         )
       )
     )
@@ -858,7 +859,7 @@ object OntologyHelpers {
 
     // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
     val guiAttributes: Set[SalsahGuiAttribute] =
-      predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
+      predicates.get(SalsahGui.GuiAttribute.toSmartIri) match {
         case Some(guiAttributePred) =>
           val guiElementIri = maybeGuiElementIri.getOrElse(
             errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement")
@@ -1284,7 +1285,7 @@ object OntologyHelpers {
     )
 
     // salsah-gui:guiOrder isn't allowed here.
-    if (otherPreds.contains(OntologyConstants.SalsahGui.GuiOrder.toSmartIri)) {
+    if (otherPreds.contains(SalsahGui.GuiOrder.toSmartIri)) {
       throw InconsistentRepositoryDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
     }
 
@@ -1744,24 +1745,24 @@ object OntologyHelpers {
           )
       }
 
-      val guiOrder: Option[Int] = blankNode.get(OntologyConstants.SalsahGui.GuiOrder.toSmartIri) match {
+      val guiOrder: Option[Int] = blankNode.get(SalsahGui.GuiOrder.toSmartIri) match {
         case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
         case None                            => None
         case other =>
           throw InconsistentRepositoryDataException(
-            s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other"
+            s"Expected one integer object for predicate ${SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other"
           )
       }
 
       // salsah-gui:guiElement and salsah-gui:guiAttribute aren't allowed here.
 
-      if (blankNode.contains(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)) {
+      if (blankNode.contains(SalsahGui.GuiElementProp.toSmartIri)) {
         throw InconsistentRepositoryDataException(
           s"Class $classIri contains salsah-gui:guiElement in an owl:Restriction"
         )
       }
 
-      if (blankNode.contains(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri)) {
+      if (blankNode.contains(SalsahGui.GuiAttribute.toSmartIri)) {
         throw InconsistentRepositoryDataException(
           s"Class $classIri contains salsah-gui:guiAttribute in an owl:Restriction"
         )

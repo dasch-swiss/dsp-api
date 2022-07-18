@@ -7,6 +7,7 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import dsp.constants.SalsahGui
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -16,6 +17,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequ
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetResponseADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
@@ -2635,6 +2637,12 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         currentTime: Instant = Instant.now
 
+        newGuiElementIri =
+          changePropertyGuiElementRequest.newGuiObject.guiElement.map(guiElement => guiElement.value.toSmartIri)
+
+        newGuiAttributeIris =
+          changePropertyGuiElementRequest.newGuiObject.guiAttributes.map(guiAttribute => guiAttribute.value)
+
         updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
                          .changePropertyGuiElement(
                            ontologyNamedGraphIri = internalOntologyIri,
@@ -2642,8 +2650,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                            propertyIri = internalPropertyIri,
                            maybeLinkValuePropertyIri =
                              maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
-                           maybeNewGuiElement = changePropertyGuiElementRequest.newGuiElement,
-                           newGuiAttributes = changePropertyGuiElementRequest.newGuiAttributes,
+                           maybeNewGuiElement = newGuiElementIri,
+                           newGuiAttributes = newGuiAttributeIris.toSet,
                            lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
                            currentTime = currentTime
                          )
@@ -2670,19 +2678,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                              )
 
         maybeNewGuiElementPredicate: Option[(SmartIri, PredicateInfoV2)] =
-          changePropertyGuiElementRequest.newGuiElement.map { guiElement: SmartIri =>
-            OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -> PredicateInfoV2(
-              predicateIri = OntologyConstants.SalsahGui.GuiElementProp.toSmartIri,
+          newGuiElementIri.map { guiElement: SmartIri =>
+            SalsahGui.GuiElementProp.toSmartIri -> PredicateInfoV2(
+              predicateIri = SalsahGui.GuiElementProp.toSmartIri,
               objects = Seq(SmartIriLiteralV2(guiElement))
             )
           }
 
         maybeUnescapedNewGuiAttributePredicate: Option[(SmartIri, PredicateInfoV2)] =
-          if (changePropertyGuiElementRequest.newGuiAttributes.nonEmpty) {
+          if (newGuiAttributeIris.nonEmpty) {
             Some(
-              OntologyConstants.SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
-                predicateIri = OntologyConstants.SalsahGui.GuiAttribute.toSmartIri,
-                objects = changePropertyGuiElementRequest.newGuiAttributes.map(StringLiteralV2(_)).toSeq
+              SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
+                predicateIri = SalsahGui.GuiAttribute.toSmartIri,
+                objects = newGuiAttributeIris.map(StringLiteralV2(_)).toSeq
               )
             )
           } else {
@@ -2692,8 +2700,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
                                                            predicates =
                                                              currentReadPropertyInfo.entityInfoContent.predicates -
-                                                               OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -
-                                                               OntologyConstants.SalsahGui.GuiAttribute.toSmartIri ++
+                                                               SalsahGui.GuiElementProp.toSmartIri -
+                                                               SalsahGui.GuiAttribute.toSmartIri ++
                                                                maybeNewGuiElementPredicate ++
                                                                maybeUnescapedNewGuiAttributePredicate
                                                          )
@@ -2720,8 +2728,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeLoadedLinkValuePropertyDef.map { loadedLinkValuePropertyDef =>
             val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
               predicates = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates -
-                OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -
-                OntologyConstants.SalsahGui.GuiAttribute.toSmartIri ++
+                SalsahGui.GuiElementProp.toSmartIri -
+                SalsahGui.GuiAttribute.toSmartIri ++
                 maybeNewGuiElementPredicate ++
                 maybeUnescapedNewGuiAttributePredicate
             )
@@ -2779,7 +2787,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     for {
       requestingUser <- FastFuture.successful(changePropertyGuiElementRequest.requestingUser)
 
-      externalPropertyIri = changePropertyGuiElementRequest.propertyIri
+      externalPropertyIri = changePropertyGuiElementRequest.propertyIri.value.toSmartIri
       externalOntologyIri = externalPropertyIri.getOntologyFromEntity
 
       _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(

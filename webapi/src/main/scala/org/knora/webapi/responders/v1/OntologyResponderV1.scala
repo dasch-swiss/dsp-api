@@ -27,6 +27,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future
+import dsp.constants.SalsahGui
 
 /**
  * Handles requests for information about ontology entities.
@@ -256,7 +257,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                       attributes = valueUtilV1.makeAttributeString(
                                                                         entityInfo
                                                                           .getPredicateStringObjectsWithoutLang(
-                                                                            OntologyConstants.SalsahGui.GuiAttribute
+                                                                            SalsahGui.GuiAttribute
                                                                           ) + valueUtilV1
                                                                           .makeAttributeRestype(
                                                                             entityInfo
@@ -272,7 +273,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                       ),
                                                                       gui_name = entityInfo
                                                                         .getPredicateObject(
-                                                                          OntologyConstants.SalsahGui.GuiElementProp
+                                                                          SalsahGui.GuiElementProp
                                                                         )
                                                                         .map(iri =>
                                                                           SalsahGuiConversions.iri2SalsahGuiElement(iri)
@@ -312,12 +313,12 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         ),
                                                                       attributes = valueUtilV1.makeAttributeString(
                                                                         entityInfo.getPredicateStringObjectsWithoutLang(
-                                                                          OntologyConstants.SalsahGui.GuiAttribute
+                                                                          SalsahGui.GuiAttribute
                                                                         )
                                                                       ),
                                                                       gui_name = entityInfo
                                                                         .getPredicateObject(
-                                                                          OntologyConstants.SalsahGui.GuiElementProp
+                                                                          SalsahGui.GuiElementProp
                                                                         )
                                                                         .map(iri =>
                                                                           SalsahGuiConversions.iri2SalsahGuiElement(iri)
@@ -629,7 +630,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                 valuetype_id = OntologyConstants.KnoraBase.LinkValue,
                 attributes = valueUtilV1.makeAttributeString(
                   entityInfo
-                    .getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1
+                    .getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) + valueUtilV1
                     .makeAttributeRestype(
                       entityInfo
                         .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
@@ -641,7 +642,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                     )
                 ),
                 gui_name = entityInfo
-                  .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
+                  .getPredicateObject(SalsahGui.GuiElementProp)
                   .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
               )
 
@@ -666,10 +667,10 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                     )
                   ),
                 attributes = valueUtilV1.makeAttributeString(
-                  entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute)
+                  entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute)
                 ),
                 gui_name = entityInfo
-                  .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
+                  .getPredicateObject(SalsahGui.GuiElementProp)
                   .map(iri => SalsahGuiConversions.iri2SalsahGuiElement(iri))
               )
 
