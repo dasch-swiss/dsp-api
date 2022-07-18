@@ -16,6 +16,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 
 import java.time.Instant
+import dsp.constants.SalsahGui
 
 /**
  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
@@ -170,7 +171,7 @@ object SharedTestDataADM {
     ontologies = Seq(
       OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
       OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri,
-      OntologyConstants.SalsahGui.SalsahGuiOntologyIri,
+      SalsahGui.SalsahGuiOntologyIri,
       OntologyConstants.Standoff.StandoffOntologyIri
     ),
     status = true,
