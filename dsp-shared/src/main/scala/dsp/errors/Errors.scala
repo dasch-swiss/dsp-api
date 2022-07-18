@@ -169,6 +169,14 @@ case class InvalidJsonLDException(msg: String, cause: Throwable = null) extends 
 case class InvalidRdfException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 /**
+ * An exception indication that the validation of one or more values submitted to the API v2 failed.
+ *
+ * @param msg   a description of the error.
+ * @param cause the cause for the error
+ */
+case class ValidationException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
+
+/**
  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
  *
  * @param message a description of the error.

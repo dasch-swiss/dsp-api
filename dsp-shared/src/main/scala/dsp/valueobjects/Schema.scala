@@ -6,7 +6,7 @@
 package dsp.valueobjects
 
 import dsp.constants.SalsahGui
-import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import zio.prelude.Subtype
 import zio.prelude.Validation
 
@@ -23,7 +23,7 @@ object Schema {
       val guiAttributeKeys: List[String] = guiAttributes.map { guiAttribute: GuiAttribute => guiAttribute.k }
       if (guiAttributeKeys.toSet.size < guiAttributes.size) {
         return Validation.fail(
-          BadRequestException(
+          ValidationException(
             s"Duplicate gui attributes for salsah-gui:guiElement $guiElement."
           )
         )
@@ -46,7 +46,7 @@ object Schema {
 
       if (needsGuiAttribute) {
         if (guiAttributes.isEmpty) {
-          return Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributesMissing))
+          return Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributesMissing))
         }
         val validatedGuiAttributes: Validation[Throwable, List[GuiAttribute]] = guiElement match {
           // gui element is a list, radio or pulldown, so it needs a gui attribute that points to a list
@@ -65,7 +65,7 @@ object Schema {
 
           case _ =>
             Validation.fail(
-              BadRequestException(
+              ValidationException(
                 s"Unable to validate gui attributes. Unknown value for salsah-gui:guiElement: $guiElement."
               )
             )
@@ -94,18 +94,17 @@ object Schema {
   object GuiAttribute {
     def make(keyValue: String): Validation[Throwable, GuiAttribute] = {
       val k: String = keyValue.split("=").head.trim()
-      val v: String =
-        keyValue.split("=").last.trim() // TODO also check the type of the value (integer, string etc.)
+      // TODO also check the type of the value (integer, string etc.)
+      val v: String = keyValue.split("=").last.trim()
 
       if (keyValue.isEmpty) {
-        Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributeMissing))
+        Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeMissing))
       } else if (!SalsahGui.GuiAttributes.contains(k)) {
-        Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributeUnknown))
+        Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeUnknown))
       } else {
         Validation.succeed(new GuiAttribute(k, v) {})
       }
     }
-
   }
 
   /**
@@ -115,9 +114,9 @@ object Schema {
   object GuiElement {
     def make(value: String): Validation[Throwable, GuiElement] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(SchemaErrorMessages.GuiElementMissing))
+        Validation.fail(ValidationException(SchemaErrorMessages.GuiElementMissing))
       } else if (!SalsahGui.GuiElements.contains(value)) {
-        Validation.fail(BadRequestException(SchemaErrorMessages.GuiElementUnknown))
+        Validation.fail(ValidationException(SchemaErrorMessages.GuiElementUnknown))
       } else {
         Validation.succeed(new GuiElement(value) {})
       }
@@ -129,16 +128,16 @@ object Schema {
    * @param guiElement the gui element that needs to be validated
    * @param guiAttributes the gui attributes that need to be validated
    *
-   * @return either the validated list of gui attributes or a [[dsp.errors.BadRequestException]]
+   * @return either the validated list of gui attributes or a [[dsp.errors.ValidationException]]
    */
   private[valueobjects] def validateGuiObjectsPointingToList(
     guiElement: GuiElement,
     guiAttributes: List[GuiAttribute]
-  ): Validation[BadRequestException, List[GuiAttribute]] = {
+  ): Validation[ValidationException, List[GuiAttribute]] = {
     // gui element can have only one gui attribute
     if (guiAttributes.size > 1) {
       return Validation.fail(
-        BadRequestException(
+        ValidationException(
           s"Wrong number of gui attributes. salsah-gui:guiElement $guiElement needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found $guiAttributes."
         )
       )
@@ -146,7 +145,7 @@ object Schema {
     // gui attribute needs to point to a list
     if (guiAttributes.head.k != ("hlist")) {
       return Validation.fail(
-        BadRequestException(
+        ValidationException(
           s"salsah-gui:guiAttribute for salsah-gui:guiElement $guiElement has to be a list reference of the form 'hlist=<LIST_IRI>', but found ${guiAttributes.head}."
         )
       )
@@ -161,16 +160,16 @@ object Schema {
    * @param guiElement the gui element that needs to be validated
    * @param guiAttributes the gui attributes that need to be validated
    *
-   * @return either the validated list of gui attributes or a [[dsp.errors.BadRequestException]]
+   * @return either the validated list of gui attributes or a [[dsp.errors.ValidationException]]
    */
   private[valueobjects] def validateGuiObjectSlider(
     guiElement: GuiElement,
     guiAttributes: List[GuiAttribute]
-  ): Validation[BadRequestException, List[GuiAttribute]] = {
+  ): Validation[ValidationException, List[GuiAttribute]] = {
     // gui element needs two gui attributes
     if (guiAttributes.size != 2) {
       return Validation.fail(
-        BadRequestException(
+        ValidationException(
           s"Wrong number of gui attributes. salsah-gui:guiElement $guiElement needs 2 salsah-gui:guiAttribute 'min' and 'max', but found ${guiAttributes.size}: $guiAttributes."
         )
       )
@@ -180,7 +179,7 @@ object Schema {
     guiAttributes.map { guiAttribute: GuiAttribute =>
       if (!validGuiAttributes.contains(guiAttribute.k)) {
         return Validation.fail(
-          BadRequestException(
+          ValidationException(
             s"Incorrect gui attributes. salsah-gui:guiElement $guiElement needs two salsah-gui:guiAttribute 'min' and 'max', but found $guiAttributes."
           )
         )

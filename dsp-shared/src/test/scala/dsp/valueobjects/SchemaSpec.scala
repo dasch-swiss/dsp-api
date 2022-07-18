@@ -5,11 +5,11 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
+import dsp.constants.SalsahGui
+import dsp.errors.ValidationException
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
-import dsp.constants.SalsahGui
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -46,20 +46,20 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiAttributeTest = suite("gui attribute")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Schema.GuiAttribute.make("") == Validation.fail(BadRequestException(SchemaErrorMessages.GuiAttributeMissing))
+        Schema.GuiAttribute.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("invalid") == Validation.fail(
-          BadRequestException(SchemaErrorMessages.GuiAttributeUnknown)
+          ValidationException(SchemaErrorMessages.GuiAttributeUnknown)
         )
       )
     },
     test("pass an unknown value and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("unknown=10") == Validation.fail(
-          BadRequestException(SchemaErrorMessages.GuiAttributeUnknown)
+          ValidationException(SchemaErrorMessages.GuiAttributeUnknown)
         )
       )
     },
@@ -79,13 +79,13 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiElementTest = suite("gui element")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Schema.GuiElement.make("") == Validation.fail(BadRequestException(SchemaErrorMessages.GuiElementMissing))
+        Schema.GuiElement.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiElementMissing))
       )
     },
     test("pass an unknown value and return an error") {
       assertTrue(
         Schema.GuiElement.make("http://www.knora.org/ontology/salsah-gui#Unknown") == Validation.fail(
-          BadRequestException(SchemaErrorMessages.GuiElementUnknown)
+          ValidationException(SchemaErrorMessages.GuiElementUnknown)
         )
       )
     },
@@ -110,7 +110,7 @@ object SchemaSpec extends ZIOSpecDefault {
       val guiAttributes = scala.collection.immutable.List(guiAttributeSize)
       assertTrue(
         Schema.validateGuiObjectsPointingToList(guiElement, guiAttributes) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
@@ -123,7 +123,7 @@ object SchemaSpec extends ZIOSpecDefault {
       val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist)
       assertTrue(
         Schema.validateGuiObjectsPointingToList(guiElement, guiAttributes) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
@@ -149,7 +149,7 @@ object SchemaSpec extends ZIOSpecDefault {
       val guiAttributes = scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeSize)
       assertTrue(
         Schema.validateGuiObjectSlider(guiElement, guiAttributes) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1), GuiAttribute(max,10), GuiAttribute(size,80))."
           )
         )
@@ -162,7 +162,7 @@ object SchemaSpec extends ZIOSpecDefault {
       val guiAttributes = scala.collection.immutable.List(guiAttributeSize)
       assertTrue(
         Schema.validateGuiObjectSlider(guiElement, guiAttributes) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 1: List(GuiAttribute(size,80))."
           )
         )
@@ -180,7 +180,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeMin, guiAttributeMin),
             Some(guiElementSlider)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Duplicate gui attributes for salsah-gui:guiElement Some(GuiElement(http://www.knora.org/ontology/salsah-gui#Slider))."
           )
         )
@@ -211,7 +211,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(),
             Some(guiElementList)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             SchemaErrorMessages.GuiAttributesMissing
           )
         )
@@ -226,7 +226,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist),
             Some(guiElementList)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
@@ -239,7 +239,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeSize),
             Some(guiElementList)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#List) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
@@ -270,7 +270,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(),
             Some(guiElementRadio)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             SchemaErrorMessages.GuiAttributesMissing
           )
         )
@@ -285,7 +285,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist),
             Some(guiElementRadio)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Radio) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
@@ -298,7 +298,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeSize),
             Some(guiElementRadio)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Radio) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
@@ -329,7 +329,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(),
             Some(guiElementPulldown)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             SchemaErrorMessages.GuiAttributesMissing
           )
         )
@@ -344,7 +344,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist),
             Some(guiElementPulldown)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Pulldown) needs a salsah-gui:guiAttribute referencing a list of the form 'hlist=<LIST_IRI>', but found List(GuiAttribute(min,1), GuiAttribute(hlist,http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA))."
           )
         )
@@ -357,7 +357,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeSize),
             Some(guiElementPulldown)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "salsah-gui:guiAttribute for salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Pulldown) has to be a list reference of the form 'hlist=<LIST_IRI>', but found GuiAttribute(size,80)."
           )
         )
@@ -388,7 +388,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(),
             Some(guiElementSlider)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             SchemaErrorMessages.GuiAttributesMissing
           )
         )
@@ -403,7 +403,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeSize),
             Some(guiElementSlider)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 3: List(GuiAttribute(min,1), GuiAttribute(max,10), GuiAttribute(size,80))."
           )
         )
@@ -416,7 +416,7 @@ object SchemaSpec extends ZIOSpecDefault {
             scala.collection.immutable.List(guiAttributeSize),
             Some(guiElementSlider)
           ) == Validation.fail(
-          BadRequestException(
+          ValidationException(
             "Wrong number of gui attributes. salsah-gui:guiElement GuiElement(http://www.knora.org/ontology/salsah-gui#Slider) needs 2 salsah-gui:guiAttribute 'min' and 'max', but found 1: List(GuiAttribute(size,80))."
           )
         )

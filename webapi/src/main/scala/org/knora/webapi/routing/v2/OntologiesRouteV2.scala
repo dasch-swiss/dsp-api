@@ -1019,15 +1019,16 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   .getOrElse(List())
 
               // validate the new gui attributes by creating value objects
-              guiAttributes = newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
+              guiAttributes = newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
 
               validatedGuiAttributes = Validation.validateAll(guiAttributes)
 
               // validate the combination of gui element and gui attribute by creating a GuiObject value object
-              guiObject: GuiObject = Validation
-                                       .validate(validatedGuiAttributes, validatedNewGuiElement)
-                                       .flatMap(values => GuiObject.make(values._1, values._2))
-                                       .fold(e => throw e.head, v => v)
+              guiObject =
+                Validation
+                  .validate(validatedGuiAttributes, validatedNewGuiElement)
+                  .flatMap(values => GuiObject.make(values._1, values._2))
+                  .fold(e => throw e.head, v => v)
 
               // create the request message with the validated gui object
               requestMessage = ChangePropertyGuiElementRequest(
