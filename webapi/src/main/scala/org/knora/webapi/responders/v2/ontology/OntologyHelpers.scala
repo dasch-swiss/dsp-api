@@ -825,80 +825,113 @@ object OntologyHelpers {
    *
    * @param propertyInfoContent        the property definition.
    * @param allGuiAttributeDefinitions the GUI attribute definitions for each GUI element.
-   * @param errorFun                   a function that throws an exception. It will be passed the message to be included in the exception.
+   * @param errorFun                   a function that maps an error message to a Throwable.
+   *
+   * @return a Validation containing either the Throwable cause why the validation failed, or a Success of Unit to indicate successful validation.
    */
   def validateGuiAttributes(
     propertyInfoContent: PropertyInfoContentV2,
     allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
-    errorFun: String => Nothing
-  )(implicit stringFormatter: StringFormatter): Unit = {
+    errorFun: String => Throwable
+  )(implicit stringFormatter: StringFormatter): Validation[Throwable, Unit] = {
     val propertyIri = propertyInfoContent.propertyIri
     val predicates  = propertyInfoContent.predicates
 
     // Find out which salsah-gui:Guielement the property uses, if any.
     val maybeGuiElementPred: Option[PredicateInfoV2] =
       predicates.get(SalsahGui.GuiElementProp.toSmartIri)
-    val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(
-      _.requireIriObject(
-        throw InconsistentRepositoryDataException(
-          s"Property $propertyIri has an invalid object for ${SalsahGui.GuiElementProp}"
-        )
-      )
-    )
 
-    // Get that Guielement's attribute definitions, if any.
-    val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
-      case Some(guiElementIri) =>
-        allGuiAttributeDefinitions.getOrElse(
-          guiElementIri,
-          errorFun(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist")
-        )
-
-      case None => Set.empty[SalsahGuiAttributeDefinition]
-    }
-
-    // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
-    val guiAttributes: Set[SalsahGuiAttribute] =
-      predicates.get(SalsahGui.GuiAttribute.toSmartIri) match {
-        case Some(guiAttributePred) =>
-          val guiElementIri = maybeGuiElementIri.getOrElse(
-            errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement")
-          )
-
-          if (guiAttributeDefs.isEmpty) {
-            errorFun(
-              s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition"
-            )
-          }
-
-          // Syntactically validate each attribute.
-          guiAttributePred.objects.map {
-            case StringLiteralV2(guiAttributeObj, None) =>
-              stringFormatter.toSalsahGuiAttribute(
-                s = guiAttributeObj,
-                attributeDefs = guiAttributeDefs,
-                errorFun =
-                  errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
+    for {
+      maybeGuiElementIri <-
+        Validation.fromTry(
+          Try(
+            maybeGuiElementPred.map(
+              _.requireIriObject(
+                throw InconsistentRepositoryDataException(
+                  s"Property $propertyIri has an invalid object for ${SalsahGui.GuiElementProp}"
+                )
               )
+            )
+          )
+        )
 
-            case other =>
-              errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $other")
-          }.toSet
-
-        case None => Set.empty[SalsahGuiAttribute]
+      // Get that Guielement's attribute definitions, if any.
+      guiAttributeDefs <- {
+        maybeGuiElementIri match {
+          case Some(guiElementIri) =>
+            allGuiAttributeDefinitions
+              .get(guiElementIri) match {
+              case None =>
+                Validation.fail(
+                  errorFun(
+                    s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist"
+                  )
+                )
+              case Some(value) => Validation.succeed(value)
+            }
+          case None => Validation.succeed(Set.empty[SalsahGuiAttributeDefinition])
+        }
       }
 
-    // Check that all required GUI attributes are provided.
-    val requiredAttributeNames             = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
-    val providedAttributeNames             = guiAttributes.map(_.attributeName)
-    val missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
+      // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
+      guiAttributes <-
+        predicates.get(SalsahGui.GuiAttribute.toSmartIri) match {
+          case Some(guiAttributePred) =>
+            maybeGuiElementIri match {
+              case None =>
+                Validation.fail(
+                  errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement")
+                )
+              case Some(value) if guiAttributeDefs.isEmpty =>
+                Validation.fail(
+                  errorFun(
+                    s"Property $propertyIri has salsah-gui:guiAttribute, but $value has no salsah-gui:guiAttributeDefinition"
+                  )
+                )
+              case Some(value) =>
+                // Syntactically validate each attribute.
+                Validation
+                  .validateAll(guiAttributePred.objects.map {
+                    case StringLiteralV2(guiAttributeObj, None) =>
+                      Validation.fromTry(
+                        Try(
+                          stringFormatter.toSalsahGuiAttribute(
+                            s = guiAttributeObj,
+                            attributeDefs = guiAttributeDefs,
+                            errorFun = {
+                              throw errorFun(
+                                s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj"
+                              )
+                            }
+                          )
+                        )
+                      )
 
-    if (missingAttributeNames.nonEmpty) {
-      errorFun(
-        s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames
-          .mkString(", ")}"
-      )
-    }
+                    case other =>
+                      Validation.fail(
+                        errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $other")
+                      )
+                  })
+                  .map(_.toSet)
+            }
+
+          case None => Validation.succeed(Set.empty[SalsahGuiAttribute])
+        }
+
+      // Check that all required GUI attributes are provided.
+      requiredAttributeNames             = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
+      providedAttributeNames             = guiAttributes.map(_.attributeName)
+      missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
+
+      _ <- if (missingAttributeNames.nonEmpty) {
+             Validation.fail(
+               errorFun(
+                 s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames
+                   .mkString(", ")}"
+               )
+             )
+           } else { Validation.succeed(()) }
+    } yield ()
   }
 
   /**
@@ -911,7 +944,7 @@ object OntologyHelpers {
    * @param cacheData               the ontology cache.
    * @param existingLinkPropsToKeep the link properties that are already defined on the class and that
    *                                will be kept after the update.
-   * @return the updated class definition, and the cardinalities resulting from inheritance.
+   * @return A Validation containing either a Throwable or the updated class definition, and the cardinalities resulting from inheritance.
    */
   def checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
     internalClassDef: ClassInfoContentV2,
