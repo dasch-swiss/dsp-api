@@ -6,13 +6,14 @@
 package dsp.valueobjects
 
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio._
 import zio.prelude.Validation
 
-import scala.util.matching.Regex
 import java.security.SecureRandom
+import scala.util.matching.Regex
 
 object User {
 
@@ -199,26 +200,11 @@ object User {
   }
 
   /**
-   * LanguageCode value object.
-   */
-  sealed abstract case class LanguageCode private (value: String)
-  object LanguageCode { self =>
-    def make(value: String): Validation[Throwable, LanguageCode] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
-      } else if (!V2.SupportedLanguageCodes.contains(value)) {
-        Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeInvalid))
-      } else {
-        Validation.succeed(new LanguageCode(value) {})
-      }
-  }
-
-  /**
    * SystemAdmin value object.
    */
   sealed abstract case class SystemAdmin private (value: Boolean)
   object SystemAdmin {
-    def make(value: Boolean): Validation[Throwable, SystemAdmin] =
+    def make(value: Boolean): Validation[ValidationException, SystemAdmin] =
       Validation.succeed(new SystemAdmin(value) {})
   }
 }

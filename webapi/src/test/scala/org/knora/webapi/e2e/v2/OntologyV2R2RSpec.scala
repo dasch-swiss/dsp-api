@@ -7,6 +7,8 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
+import dsp.valueobjects.LangString
+import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
@@ -2787,13 +2789,19 @@ class OntologyV2R2RSpec extends R2RSpec {
   "create a class with two cardinalities, use one in data, and allow only removal of the cardinality for the property not used in data" in {
     // Create a class with no cardinalities.
 
+    val label = LangString.make(LanguageCode.en, "A Blue Free Test class").fold(e => throw e.head, v => v)
+    val comment = Some(
+      LangString
+        .make(LanguageCode.en, "A Blue Free Test class used for testing cardinalities")
+        .fold(e => throw e.head, v => v)
+    )
     val createClassRequestJson = CreateClassRequest
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "BlueFreeTestClass",
-        label = LangString("en", "A Blue Free Test class"),
-        comment = Some(LangString("en", "A Blue Free Test class used for testing cardinalities"))
+        label = label,
+        comment = comment
       )
       .value
 
@@ -2811,7 +2819,12 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // Create a text property.
-
+    val label1 = LangString.make(LanguageCode.en, "blue test text property").fold(e => throw e.head, v => v)
+    val comment1 = Some(
+      LangString
+        .make(LanguageCode.en, "A blue test text property")
+        .fold(e => throw e.head, v => v)
+    )
     val createTestTextPropRequestJson =
       CreatePropertyRequest
         .make(
@@ -2820,8 +2833,8 @@ class OntologyV2R2RSpec extends R2RSpec {
           propertyName = "hasBlueTestTextProp",
           subjectClassName = Some("BlueFreeTestClass"),
           propertyType = PropertyValueType.TextValue,
-          label = LangString("en", "blue test text property"),
-          comment = Some(LangString("en", "A blue test text property"))
+          label = label1,
+          comment = comment1
         )
         .value
 
@@ -2840,7 +2853,12 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // Create an integer property.
-
+    val label2 = LangString.make(LanguageCode.en, "blue test integer property").fold(e => throw e.head, v => v)
+    val comment2 = Some(
+      LangString
+        .make(LanguageCode.en, "A blue test integer property")
+        .fold(e => throw e.head, v => v)
+    )
     val createTestIntegerPropRequestJson = CreatePropertyRequest
       .make(
         ontologyName = "freetest",
@@ -2848,8 +2866,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "hasBlueTestIntProp",
         subjectClassName = Some("BlueFreeTestClass"),
         propertyType = PropertyValueType.IntValue,
-        label = LangString("en", "blue test integer property"),
-        comment = Some(LangString("en", "A blue test integer property"))
+        label = label2,
+        comment = comment2
       )
       .value
 
@@ -3034,13 +3052,19 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   "create two classes with the same property, use one in data, and allow removal of the cardinality for the property not used in data" in {
     // Create TestClassOne with no cardinalities.
+    val label = LangString.make(LanguageCode.en, "Test class number one").fold(e => throw e.head, v => v)
+    val comment = Some(
+      LangString
+        .make(LanguageCode.en, "A test class used for testing cardinalities")
+        .fold(e => throw e.head, v => v)
+    )
     val createClassRequestJsonOne = CreateClassRequest
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "TestClassOne",
-        label = LangString("en", "Test class number one"),
-        comment = Some(LangString("en", "A test class used for testing cardinalities"))
+        label = label,
+        comment = comment
       )
       .value
 
@@ -3058,13 +3082,19 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // Create TestClassTwo with no cardinalities
+    val label1 = LangString.make(LanguageCode.en, "Test class number two").fold(e => throw e.head, v => v)
+    val comment1 = Some(
+      LangString
+        .make(LanguageCode.en, "A test class used for testing cardinalities")
+        .fold(e => throw e.head, v => v)
+    )
     val createClassRequestJsonTwo = CreateClassRequest
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "TestClassTwo",
-        label = LangString("en", "Test class number two"),
-        comment = Some(LangString("en", "A test class used for testing cardinalities"))
+        label = label1,
+        comment = comment1
       )
       .value
 
@@ -3082,6 +3112,12 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // Create a text property hasTestTextProp.
+    val label2 = LangString.make(LanguageCode.en, "Test int property").fold(e => throw e.head, v => v)
+    val comment2 = Some(
+      LangString
+        .make(LanguageCode.en, "A test int property")
+        .fold(e => throw e.head, v => v)
+    )
     val createPropRequestJson = CreatePropertyRequest
       .make(
         ontologyName = "freetest",
@@ -3089,8 +3125,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "hasIntProp",
         subjectClassName = None,
         propertyType = PropertyValueType.IntValue,
-        label = LangString("en", "Test int property"),
-        comment = Some(LangString("en", "A test int property"))
+        label = label2,
+        comment = comment2
       )
       .value
 
@@ -3344,12 +3380,13 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   "create a class w/o comment" in {
+    val label = LangString.make(LanguageCode.en, "Test label").fold(e => throw e.head, v => v)
     val request = CreateClassRequest
       .make(
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         className = "testClass",
-        label = LangString("en", "Test label"),
+        label = label,
         comment = None
       )
       .value
@@ -3369,6 +3406,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   "create a property w/o comment" in {
+    val label = LangString.make(LanguageCode.en, "Test label").fold(e => throw e.head, v => v)
     val request = CreatePropertyRequest
       .make(
         ontologyName = "freetest",
@@ -3376,7 +3414,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         propertyName = "testProperty",
         subjectClassName = None,
         propertyType = PropertyValueType.IntValue,
-        label = LangString("en", "Test label"),
+        label = label,
         comment = None
       )
       .value

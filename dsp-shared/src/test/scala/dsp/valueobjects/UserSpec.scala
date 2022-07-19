@@ -5,10 +5,11 @@
 
 package dsp.valueobjects
 
+import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
-import dsp.errors.BadRequestException
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -190,13 +191,13 @@ object UserSpec extends ZIOSpecDefault {
   private val languageCodeTest = suite("LanguageCode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        LanguageCode.make("") == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
+        LanguageCode.make("") == Validation.fail(ValidationException(UserErrorMessages.LanguageCodeMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
         LanguageCode.make(invalidLanguageCode) == Validation.fail(
-          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
+          ValidationException(UserErrorMessages.LanguageCodeInvalid)
         )
       )
     },

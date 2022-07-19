@@ -38,6 +38,12 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import dsp.errors.ValidationException
+import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
+import dsp.valueobjects.LangString
+
+import dsp.schema.domain.CreatePropertyCommand
+import dsp.schema.domain.{SmartIri => NotAnotherSmartIri}
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -860,10 +866,98 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               validatedGuiAttributes = Validation.validateAll(guiAttributes)
 
               // validate the combination of gui element and gui attribute by creating a GuiObject value object
-              guiObject: GuiObject = Validation
-                                       .validate(validatedGuiAttributes, validatedGuiElement)
-                                       .flatMap(values => GuiObject.make(values._1, values._2))
-                                       .fold(e => throw e.head, v => v)
+              guiObject = Validation
+                            .validate(validatedGuiAttributes, validatedGuiElement)
+                            .flatMap(values => GuiObject.make(values._1, values._2))
+
+              ontologyIri =
+                Validation.succeed(NotAnotherSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString()))
+              lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
+              propertyIri          = Validation.succeed(NotAnotherSmartIri(propertyInfoContent.propertyIri.toString()))
+              subjectType = propertyInfoContent.predicates.get(
+                              OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
+                            ) match {
+                              case None => Validation.succeed(None)
+                              case Some(value) =>
+                                value.objects.head match {
+                                  case objectType: SmartIriLiteralV2 =>
+                                    Validation.succeed(
+                                      Some(
+                                        NotAnotherSmartIri(objectType.value.toOntologySchema(InternalSchema).toString())
+                                      )
+                                    )
+                                  case other =>
+                                    Validation.fail(ValidationException(s"Unexpected subject type for $other"))
+                                }
+                            }
+              objectType =
+                propertyInfoContent.predicates.get(OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri) match {
+                  case None => Validation.fail(ValidationException(s"Object type cannot be empty."))
+                  case Some(value) =>
+                    value.objects.head match {
+                      case objectType: SmartIriLiteralV2 =>
+                        Validation.succeed(
+                          NotAnotherSmartIri(objectType.value.toOntologySchema(InternalSchema).toString())
+                        )
+                      case other => Validation.fail(ValidationException(s"Unexpected object type for $other"))
+                    }
+                }
+              label = propertyInfoContent.predicates.get(OntologyConstants.Rdfs.Label.toSmartIri) match {
+                        case None => Validation.fail(ValidationException("Label missing"))
+                        case Some(value) =>
+                          value.objects.head match {
+                            case StringLiteralV2(value, Some(language)) => LangString.make(language, value)
+                            case StringLiteralV2(_, None) =>
+                              Validation.fail(ValidationException("Label missing the language tag"))
+                            case _ => Validation.fail(ValidationException("Unexpected Type for Label"))
+                          }
+                      }
+              comment = propertyInfoContent.predicates.get(OntologyConstants.Rdfs.Comment.toSmartIri) match {
+                          case None => Validation.succeed(None)
+                          case Some(value) =>
+                            value.objects.head match {
+                              case StringLiteralV2(value, Some(language)) =>
+                                LangString.make(language, value).map(Some(_))
+                              case StringLiteralV2(_, None) =>
+                                Validation.fail(ValidationException("Comment missing the language tag"))
+                              case _ => Validation.fail(ValidationException("Unexpected Type for Comment"))
+                            }
+                        }
+              superProperties =
+                propertyInfoContent.subPropertyOf.toList.map(smartIri =>
+                  NotAnotherSmartIri(smartIri.toString())
+                ) match {
+                  case Nil        => Validation.fail(ValidationException("SuperProperties cannot be empty."))
+                  case superProps => Validation.succeed(superProps)
+                }
+
+              createPropertyCommand: CreatePropertyCommand =
+                Validation
+                  .validate(
+                    ontologyIri,
+                    lastModificationDate,
+                    propertyIri,
+                    subjectType,
+                    objectType,
+                    label,
+                    comment,
+                    superProperties,
+                    guiObject
+                  )
+                  .flatMap(values =>
+                    CreatePropertyCommand.make(
+                      values._1,
+                      values._2,
+                      values._3,
+                      values._4,
+                      values._5,
+                      values._6,
+                      values._7,
+                      values._8,
+                      values._9
+                    )
+                  )
+                  .fold(e => throw e.head, v => v)
             } yield requestMessage
 
             RouteUtilV2.runRdfRouteWithFuture(
