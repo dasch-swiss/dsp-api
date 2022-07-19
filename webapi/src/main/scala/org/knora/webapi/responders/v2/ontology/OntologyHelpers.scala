@@ -699,7 +699,7 @@ object OntologyHelpers {
         errorFun = { msg: String =>
           throw InconsistentRepositoryDataException(msg)
         }
-      )
+      ).mapError(e => throw e)
 
       val isResourceProp = allKnoraResourceProps.contains(propertyIri)
       val isValueProp =
@@ -842,6 +842,7 @@ object OntologyHelpers {
       predicates.get(SalsahGui.GuiElementProp.toSmartIri)
 
     for {
+      // _ <- Validation.fromOption(None).mapError(_ => BadRequestException("..."))
       maybeGuiElementIri <-
         Validation.fromTry(
           Try(

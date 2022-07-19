@@ -2356,7 +2356,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           |    "@type" : "knora-api:IntervalValue",
           |    "knora-api:intervalValueHasEnd" : {
           |      "@type" : "xsd:decimal",
-          |      "@value" : "4.2"
+          |      "@value" : "14.2"
           |    },
           |    "knora-api:intervalValueHasStart" : {
           |      "@type" : "xsd:decimal",
