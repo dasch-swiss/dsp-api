@@ -225,12 +225,12 @@ object Schema {
 object SchemaErrorMessages {
   val GuiAttributeMissing = "gui attribute cannot be empty."
   def GuiAttributeUnknown(guiAttribute: String): String =
-    s"gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes}"
+    s"gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes.mkString(", ")}"
   def GuiAttributeHasWrongType(key: String, value: String): String =
     s"Value '$value' of gui attribute '$key' has the wrong attribute type."
   val GuiElementMissing                             = "gui element cannot be empty."
   def GuiElementInvalid(guiElement: String): String = s"gui element '$guiElement' is invalid."
-  val GuiElementUnknown                             = s"gui element is unknown. Needs to be one of: ${SalsahGui.GuiElements}"
+  val GuiElementUnknown                             = s"gui element is unknown. Needs to be one of: ${SalsahGui.GuiElements.mkString(", ")}"
   val GuiObjectMissing                              = "gui object cannot be empty."
   val GuiAttributesMissing                          = "gui attributes cannot be empty."
 }
