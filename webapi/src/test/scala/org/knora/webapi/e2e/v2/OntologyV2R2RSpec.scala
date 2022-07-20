@@ -1418,7 +1418,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-              """.stripMargin
+           """.stripMargin
 
       CollectClientTestData("create-class-without-cardinalities-request", params)
 
@@ -1602,7 +1602,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-              """.stripMargin
+                """.stripMargin
 
       CollectClientTestData("create-link-property-request", params)
 
@@ -1660,7 +1660,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-              """.stripMargin
+                """.stripMargin
 
       CollectClientTestData("add-cardinalities-to-class-nothing-request", params)
 
@@ -1784,7 +1784,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
            |  }
            |}
-        """.stripMargin
+          """.stripMargin
 
       Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -2372,7 +2372,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
            |    }
            |}
-                    """.stripMargin
+                      """.stripMargin
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~> addCredentials(
         BasicHttpCredentials(superUsername, password)
@@ -2430,7 +2430,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "useless" : "${uselessIri.get}#"
            |  }
            |}
-                """.stripMargin
+                  """.stripMargin
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 =
@@ -2718,7 +2718,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-                """.stripMargin
+                  """.stripMargin
 
       Post(
         "/v2/ontologies/cardinalities",
@@ -2770,7 +2770,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
            |  }
            |}
-                """.stripMargin
+                  """.stripMargin
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -3017,7 +3017,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
          |  }
          |}
-                """.stripMargin
+                  """.stripMargin
 
     CollectClientTestData("candeletecardinalities-true-request", params)
 
