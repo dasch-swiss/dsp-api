@@ -6,6 +6,7 @@
 package org.knora.webapi
 package messages
 
+import dsp.constants.SalsahGui
 import dsp.errors._
 
 /**
@@ -594,53 +595,6 @@ object OntologyConstants {
     val StandoffStyleElementTag: IRI  = StandoffPrefixExpansion + "StandoffStyleTag"
   }
 
-  object SalsahGui {
-    val SalsahGuiOntologyLabel: String = "salsah-gui"
-    val SalsahGuiOntologyIri: IRI      = KnoraInternal.InternalOntologyStart + "/" + SalsahGuiOntologyLabel
-    val SalsahGuiPrefixExpansion: IRI  = SalsahGuiOntologyIri + "#"
-
-    val GuiAttribute: IRI           = SalsahGuiPrefixExpansion + "guiAttribute"
-    val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
-    val GuiOrder: IRI               = SalsahGuiPrefixExpansion + "guiOrder"
-    val GuiElementProp: IRI         = SalsahGuiPrefixExpansion + "guiElement"
-    val GuiElementClass: IRI        = SalsahGuiPrefixExpansion + "Guielement"
-    val SimpleText: IRI             = SalsahGuiPrefixExpansion + "SimpleText"
-    val Textarea: IRI               = SalsahGuiPrefixExpansion + "Textarea"
-    val Pulldown: IRI               = SalsahGuiPrefixExpansion + "Pulldown"
-    val Slider: IRI                 = SalsahGuiPrefixExpansion + "Slider"
-    val Spinbox: IRI                = SalsahGuiPrefixExpansion + "Spinbox"
-    val Searchbox: IRI              = SalsahGuiPrefixExpansion + "Searchbox"
-    val Date: IRI                   = SalsahGuiPrefixExpansion + "Date"
-    val Geometry: IRI               = SalsahGuiPrefixExpansion + "Geometry"
-    val Colorpicker: IRI            = SalsahGuiPrefixExpansion + "Colorpicker"
-    val List: IRI                   = SalsahGuiPrefixExpansion + "List"
-    val Radio: IRI                  = SalsahGuiPrefixExpansion + "Radio"
-    val Checkbox: IRI               = SalsahGuiPrefixExpansion + "Checkbox"
-    val Richtext: IRI               = SalsahGuiPrefixExpansion + "Richtext"
-    val Interval: IRI               = SalsahGuiPrefixExpansion + "Interval"
-    val TimeStamp: IRI              = SalsahGuiPrefixExpansion + "TimeStamp"
-    val Geonames: IRI               = SalsahGuiPrefixExpansion + "Geonames"
-    val Fileupload: IRI             = SalsahGuiPrefixExpansion + "Fileupload"
-
-    object SalsahGuiAttributeType extends Enumeration {
-
-      val Integer: Value = Value(0, "integer")
-      val Percent: Value = Value(1, "percent")
-      val Decimal: Value = Value(2, "decimal")
-      val Str: Value     = Value(3, "string")
-      val Iri: Value     = Value(4, "iri")
-
-      val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-      def lookup(name: String): Value =
-        valueMap.get(name) match {
-          case Some(value) => value
-          case None        => throw InconsistentRepositoryDataException(s"salsah-gui attribute type not found: $name")
-        }
-    }
-
-  }
-
   object Ontotext {
     val LuceneFulltext = "http://www.ontotext.com/owlim/lucene#fullTextSearchIndex"
   }
@@ -970,23 +924,6 @@ object OntologyConstants {
 
     val GravsearchOptions: IRI = KnoraApiV2PrefixExpansion + "GravsearchOptions"
     val UseInference: IRI      = KnoraApiV2PrefixExpansion + "useInference"
-  }
-
-  object SalsahGuiApiV2WithValueObjects {
-    val SalsahGuiOntologyIri: IRI =
-      KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2Complex.VersionSegment
-    val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
-
-    val GuiAttribute: IRI           = SalsahGuiPrefixExpansion + "guiAttribute"
-    val GuiOrder: IRI               = SalsahGuiPrefixExpansion + "guiOrder"
-    val GuiElementProp: IRI         = SalsahGuiPrefixExpansion + "guiElement"
-    val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
-    val GuiElementClass: IRI        = SalsahGuiPrefixExpansion + "Guielement"
-
-    val Geometry: IRI    = SalsahGuiPrefixExpansion + "Geometry"
-    val Colorpicker: IRI = SalsahGuiPrefixExpansion + "Colorpicker"
-    val Fileupload: IRI  = SalsahGuiPrefixExpansion + "Fileupload"
-    val Richtext: IRI    = SalsahGuiPrefixExpansion + "Richtext"
   }
 
   object KnoraApiV2Simple {

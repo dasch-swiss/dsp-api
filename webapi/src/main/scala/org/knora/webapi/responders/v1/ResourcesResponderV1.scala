@@ -53,6 +53,7 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import dsp.constants.SalsahGui
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -865,7 +866,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                           valuetype_id = Some(OntologyConstants.KnoraBase.LinkValue),
                                           guiorder = guiOrder,
                                           guielement = propertyEntityInfo
-                                            .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
+                                            .getPredicateObject(SalsahGui.GuiElementProp)
                                             .map(guiElementIri =>
                                               SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
                                             ),
@@ -875,7 +876,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                           ),
                                           occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                                           attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
-                                            OntologyConstants.SalsahGui.GuiAttribute
+                                            SalsahGui.GuiAttribute
                                           ) + valueUtilV1.makeAttributeRestype(
                                             propertyEntityInfo
                                               .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
@@ -896,7 +897,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                           ),
                                           guiorder = guiOrder,
                                           guielement = propertyEntityInfo
-                                            .getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp)
+                                            .getPredicateObject(SalsahGui.GuiElementProp)
                                             .map(guiElementIri =>
                                               SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
                                             ),
@@ -907,7 +908,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                           occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
                                           attributes = propertyEntityInfo
                                             .getPredicateStringObjectsWithoutLang(
-                                              OntologyConstants.SalsahGui.GuiAttribute
+                                              SalsahGui.GuiAttribute
                                             )
                                             .mkString(";"),
                                           value_rights = Nil
@@ -922,7 +923,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             pid = "__location__",
             valuetype_id = Some("-1"),
             guiorder = Some(Int.MaxValue),
-            guielement = Some(SalsahGuiConversions.iri2SalsahGuiElement(OntologyConstants.SalsahGui.Fileupload)),
+            guielement = Some(SalsahGuiConversions.iri2SalsahGuiElement(SalsahGui.Fileupload)),
             values = Vector(IntegerValueV1(0)),
             value_ids = Vector("0"),
             comments = Vector(None),
@@ -3219,7 +3220,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         },
         guiorder = propertyCardinality.flatMap(_.guiOrder),
         guielement = propertyEntityInfo.flatMap(
-          _.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri =>
+          _.getPredicateObject(SalsahGui.GuiElementProp).map(guiElementIri =>
             SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)
           )
         ),
@@ -3233,7 +3234,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         attributes = propertyEntityInfo match {
           case Some(entityInfo) =>
             if (entityInfo.isLinkProp) {
-              (entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1
+              (entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute) + valueUtilV1
                 .makeAttributeRestype(
                   entityInfo
                     .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
@@ -3244,7 +3245,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     )
                 )).mkString(";")
             } else {
-              entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute).mkString(";")
+              entityInfo.getPredicateStringObjectsWithoutLang(SalsahGui.GuiAttribute).mkString(";")
             }
           case None => ""
         },

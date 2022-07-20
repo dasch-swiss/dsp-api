@@ -6,17 +6,18 @@
 package org.knora.webapi.messages
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
+import com.typesafe.scalalogging.Logger
+import dsp.constants.SalsahGui
+import dsp.errors._
+import dsp.valueobjects.IriErrorMessages
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
-import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants.SalsahGui
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
@@ -46,7 +47,6 @@ import scala.util.Success
 import scala.util.Try
 import scala.util.control.Exception._
 import scala.util.matching.Regex
-import dsp.valueobjects.IriErrorMessages
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
@@ -193,7 +193,7 @@ object StringFormatter {
   case class SalsahGuiAttributeDefinition(
     attributeName: String,
     isRequired: Boolean,
-    allowedType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value,
+    allowedType: SalsahGui.SalsahGuiAttributeType.Value,
     enumeratedValues: Set[String] = Set.empty[String],
     unparsedString: String
   )
@@ -210,7 +210,7 @@ object StringFormatter {
    * Represents a parsed value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
    */
   sealed trait SalsahGuiAttributeValue {
-    def attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value
+    def attributeType: SalsahGui.SalsahGuiAttributeType.Value
   }
 
   /**
@@ -219,8 +219,8 @@ object StringFormatter {
    * @param value the integer value.
    */
   case class SalsahGuiIntegerAttributeValue(value: Int) extends SalsahGuiAttributeValue {
-    override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value =
-      OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer
+    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
+      SalsahGui.SalsahGuiAttributeType.Integer
   }
 
   /**
@@ -229,8 +229,8 @@ object StringFormatter {
    * @param value the percent value.
    */
   case class SalsahGuiPercentAttributeValue(value: Int) extends SalsahGuiAttributeValue {
-    override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value =
-      OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent
+    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
+      SalsahGui.SalsahGuiAttributeType.Percent
   }
 
   /**
@@ -239,8 +239,8 @@ object StringFormatter {
    * @param value the decimal value.
    */
   case class SalsahGuiDecimalAttributeValue(value: BigDecimal) extends SalsahGuiAttributeValue {
-    override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value =
-      OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal
+    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
+      SalsahGui.SalsahGuiAttributeType.Decimal
   }
 
   /**
@@ -249,8 +249,8 @@ object StringFormatter {
    * @param value the string value.
    */
   case class SalsahGuiStringAttributeValue(value: String) extends SalsahGuiAttributeValue {
-    override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value =
-      OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str
+    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
+      SalsahGui.SalsahGuiAttributeType.Str
   }
 
   /**
@@ -259,8 +259,8 @@ object StringFormatter {
    * @param value the IRI value.
    */
   case class SalsahGuiIriAttributeValue(value: IRI) extends SalsahGuiAttributeValue {
-    override val attributeType: OntologyConstants.SalsahGui.SalsahGuiAttributeType.Value =
-      OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri
+    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
+      SalsahGui.SalsahGuiAttributeType.Iri
   }
 
   /*
@@ -1828,11 +1828,11 @@ class StringFormatter private (
     s match {
       case SalsahGuiAttributeDefinitionRegex(attributeName, required, allowedTypeStr, _, enumeratedValuesStr) =>
         val allowedType: SalsahGui.SalsahGuiAttributeType.Value =
-          OntologyConstants.SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
+          SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
 
         val enumeratedValues: Set[String] = Option(enumeratedValuesStr) match {
           case Some(enumeratedValuesStr) =>
-            if (allowedType != OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str) {
+            if (allowedType != SalsahGui.SalsahGuiAttributeType.Str) {
               errorFun
             }
 
@@ -1874,13 +1874,13 @@ class StringFormatter private (
 
         // Try to parse the value as the type given in the attribute definition.
         val maybeParsedAttrValue: Option[SalsahGuiAttributeValue] = attributeDef.allowedType match {
-          case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer =>
+          case SalsahGui.SalsahGuiAttributeType.Integer =>
             catching(classOf[NumberFormatException]).opt(attributeValue.toInt).map(SalsahGuiIntegerAttributeValue)
 
-          case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal =>
+          case SalsahGui.SalsahGuiAttributeType.Decimal =>
             catching(classOf[NumberFormatException]).opt(BigDecimal(attributeValue)).map(SalsahGuiDecimalAttributeValue)
 
-          case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent =>
+          case SalsahGui.SalsahGuiAttributeType.Percent =>
             if (attributeValue.endsWith("%")) {
               val intStr = attributeValue.stripSuffix("%")
               catching(classOf[NumberFormatException]).opt(intStr.toInt).map(SalsahGuiPercentAttributeValue)
@@ -1888,7 +1888,7 @@ class StringFormatter private (
               None
             }
 
-          case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri =>
+          case SalsahGui.SalsahGuiAttributeType.Iri =>
             if (attributeValue.startsWith("<") && attributeValue.endsWith(">")) {
               val iriWithoutAngleBrackets = attributeValue.substring(1, attributeValue.length - 1)
 
@@ -1899,7 +1899,7 @@ class StringFormatter private (
               None
             }
 
-          case OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str =>
+          case SalsahGui.SalsahGuiAttributeType.Str =>
             if (attributeDef.enumeratedValues.nonEmpty && !attributeDef.enumeratedValues.contains(attributeValue)) {
               errorFun
             }

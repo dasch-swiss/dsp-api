@@ -1,5 +1,12 @@
 # Changelog
 
+### [23.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.0...v23.0.1) (2022-07-19)
+
+
+### Bug Fixes
+
+* **ontology:** Don't accept list values without gui attribute (DEV-775) ([#2089](https://www.github.com/dasch-swiss/dsp-api/issues/2089)) ([74a14e1](https://www.github.com/dasch-swiss/dsp-api/commit/74a14e1eb5c475b307ee573042b5384f6c1f562a))
+
 ## [23.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.1...v23.0.0) (2022-07-14)
 
 

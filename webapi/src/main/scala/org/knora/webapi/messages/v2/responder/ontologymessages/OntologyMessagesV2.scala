@@ -6,32 +6,35 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
+import com.typesafe.scalalogging.Logger
+import dsp.constants.SalsahGui
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
+import dsp.errors.DataConversionException
+import dsp.errors.InconsistentRepositoryDataException
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Schema
 import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.knora.webapi._
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-
-import org.knora.webapi._
-import dsp.errors.{
-  AssertionException,
-  BadRequestException,
-  DataConversionException,
-  InconsistentRepositoryDataException
-}
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -896,16 +899,14 @@ sealed trait ChangeLabelsOrCommentsRequest {
  * Requests that the `salsah-gui:guiElement` and `salsah-gui:guiAttribute` of a property are changed.
  *
  * @param propertyIri          the IRI of the property to be changed.
- * @param newGuiElement        the new GUI element to be used with the property, or `None` if no GUI element should be specified.
- * @param newGuiAttributes     the new GUI attributes to be used with the property, or `None` if no GUI element should be specified.
+ * @param newGuiObject         the GUI object with the new GUI element and/or GUI attributes.
  * @param lastModificationDate the ontology's last modification date.
  * @param apiRequestID         the ID of the API request.
  * @param requestingUser       the user making the request.
  */
 case class ChangePropertyGuiElementRequest(
-  propertyIri: SmartIri,
-  newGuiElement: Option[SmartIri],
-  newGuiAttributes: Set[String],
+  propertyIri: Iri.PropertyIri,
+  newGuiObject: Schema.GuiObject,
   lastModificationDate: Instant,
   apiRequestID: UUID,
   requestingUser: UserADM
@@ -922,11 +923,12 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
    * @param jsonLDDocument       the JSON-LD input.
    * @param apiRequestID         the UUID of the API request.
    * @param requestingUser       the user making the request.
-   * @param appActror            a reference to the application actor.
+   * @param appActor            a reference to the application actor.
    * @param settings             the application settings.
    * @param log                  a logging adapter.
    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
    */
+  @deprecated
   override def fromJsonLD(
     jsonLDDocument: JsonLDDocument,
     apiRequestID: UUID,
@@ -936,58 +938,10 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     log: Logger
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] =
     Future {
-      fromJsonLDSync(
-        jsonLDDocument = jsonLDDocument,
-        apiRequestID = apiRequestID,
-        requestingUser = requestingUser
+      throw BadRequestException(
+        "Deprecated method fromJsonLD() for ChangePropertyGuiElementRequest. Please report this as a bug."
       )
     }
-
-  private def fromJsonLDSync(
-    jsonLDDocument: JsonLDDocument,
-    apiRequestID: UUID,
-    requestingUser: UserADM
-  ): ChangePropertyGuiElementRequest = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val propertyUpdateInfo   = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
-    val propertyInfoContent  = propertyUpdateInfo.propertyInfoContent
-    val lastModificationDate = propertyUpdateInfo.lastModificationDate
-
-    val newGuiElement: Option[SmartIri] =
-      propertyInfoContent.predicates
-        .get(
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
-        )
-        .map { predicateInfoV2: PredicateInfoV2 =>
-          predicateInfoV2.objects.head match {
-            case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value.toOntologySchema(InternalSchema)
-            case other =>
-              throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
-          }
-        }
-
-    val newGuiAttributes: Set[String] =
-      propertyInfoContent.predicates
-        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
-        .map { predicateInfoV2: PredicateInfoV2 =>
-          predicateInfoV2.objects.map {
-            case stringLiteralV2: StringLiteralV2 => stringLiteralV2.value
-            case other                            => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-          }.toSet
-        }
-        .getOrElse(Set.empty[String])
-
-    ChangePropertyGuiElementRequest(
-      propertyIri = propertyInfoContent.propertyIri,
-      newGuiElement = newGuiElement,
-      newGuiAttributes = newGuiAttributes,
-      lastModificationDate = lastModificationDate,
-      apiRequestID = apiRequestID,
-      requestingUser = requestingUser
-    )
-  }
 }
 
 /**
@@ -1761,7 +1715,7 @@ case class ReadOntologyV2(
     val salsahGuiPrefix: Option[(String, String)] = targetSchema match {
       case ApiV2Complex =>
         Some(
-          OntologyConstants.SalsahGui.SalsahGuiOntologyLabel -> OntologyConstants.SalsahGuiApiV2WithValueObjects.SalsahGuiPrefixExpansion
+          SalsahGui.SalsahGuiOntologyLabel -> SalsahGui.External.SalsahGuiPrefixExpansion
         )
 
       case _ => None
@@ -1771,7 +1725,7 @@ case class ReadOntologyV2(
     val otherKnoraOntologiesUsed: Set[SmartIri] =
       (knoraOntologiesFromClasses ++ knoraOntologiesFromProperties).filterNot { ontology =>
         ontology.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel ||
-        ontology.getOntologyName == OntologyConstants.SalsahGui.SalsahGuiOntologyLabel
+        ontology.getOntologyName == SalsahGui.SalsahGuiOntologyLabel
       }
 
     // Make the JSON-LD context.
@@ -2875,7 +2829,7 @@ case class ReadClassInfoV2(
       val guiOrderStatement = targetSchema match {
         case ApiV2Complex =>
           cardinalityInfo.guiOrder.map { guiOrder =>
-            OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder -> JsonLDInt(guiOrder)
+            SalsahGui.External.GuiOrder -> JsonLDInt(guiOrder)
           }
 
         case _ => None
@@ -3065,9 +3019,9 @@ case class ReadPropertyInfoV2(
 
     val guiElementStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2Complex) {
       entityInfoContent
-        .getPredicateIriObject(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+        .getPredicateIriObject(SalsahGui.External.GuiElementProp.toSmartIri)
         .map { obj =>
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
+          SalsahGui.External.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
         }
     } else {
       None
@@ -3075,11 +3029,11 @@ case class ReadPropertyInfoV2(
 
     val guiAttributeStatement = if (targetSchema == ApiV2Complex) {
       entityInfoContent.getPredicateStringLiteralObjectsWithoutLang(
-        OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri
+        SalsahGui.External.GuiAttribute.toSmartIri
       ) match {
         case objs if objs.nonEmpty =>
           Some(
-            OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute -> JsonLDArray(
+            SalsahGui.External.GuiAttribute -> JsonLDArray(
               objs.toArray.sorted.map(JsonLDString).toIndexedSeq
             )
           )
@@ -3281,7 +3235,7 @@ object ClassInfoContentV2 {
     OntologyConstants.Owl.MinCardinality,
     OntologyConstants.Owl.MaxCardinality,
     OntologyConstants.Owl.OnProperty,
-    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder
+    SalsahGui.External.GuiOrder
   )
 
   /**
@@ -3395,7 +3349,7 @@ object ClassInfoContentV2 {
 
                 val onProperty =
                   restriction.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
-                val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder)
+                val guiOrder = restriction.maybeInt(SalsahGui.External.GuiOrder)
 
                 val owlCardinalityInfo = OwlCardinalityInfo(
                   owlCardinalityIri = owlCardinalityIri,
@@ -3590,8 +3544,8 @@ object PropertyInfoContentV2 {
     OntologyConstants.Rdfs.SubPropertyOf,
     OntologyConstants.Rdfs.Label,
     OntologyConstants.Rdfs.Comment,
-    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp,
-    OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute
+    SalsahGui.External.GuiElementProp,
+    SalsahGui.External.GuiAttribute
   )
 
   /**
