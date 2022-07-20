@@ -989,24 +989,18 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               // get and validate property IRI
               propertyIri = PropertyIri.make(propertyInfoContent.propertyIri.toString)
 
-              // get the (optional) new gui element
-              newGuiElement: Option[SmartIri] =
+              // get the (optional) new gui element from the request
+              newGuiElement: Option[String] =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiElementProp.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.head match {
-                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema)
+                      case guiElement: SmartIriLiteralV2 => guiElement.value.toOntologySchema(InternalSchema).toString()
                       case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
                     }
                   }
 
-              // validate the new gui element by creating value object
-              validatedNewGuiElement = newGuiElement match {
-                                         case Some(guiElement) => GuiElement.make(guiElement.toString()).map(Some(_))
-                                         case None             => Validation.succeed(None)
-                                       }
-
-              // get the new gui attribute(s)
+              // get the new gui attribute(s) from the request
               newGuiAttributes: List[String] =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiAttribute.toSmartIri)
@@ -1018,17 +1012,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   }
                   .getOrElse(List())
 
-              // validate the new gui attributes by creating value objects
-              guiAttributes = newGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
-
-              validatedGuiAttributes = Validation.validateAll(guiAttributes)
-
-              // validate the combination of gui element and gui attribute by creating a GuiObject value object
-              guiObject =
-                Validation
-                  .validate(validatedGuiAttributes, validatedNewGuiElement)
-                  .flatMap(values => GuiObject.make(values._1, values._2))
-                  .fold(e => throw e.head, v => v)
+              guiObject = GuiObject.makeFromStrings(newGuiAttributes, newGuiElement).fold(e => throw e.head, v => v)
 
               // create the request message with the validated gui object
               requestMessage = ChangePropertyGuiElementRequest(
