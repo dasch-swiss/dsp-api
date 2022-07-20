@@ -229,10 +229,6 @@ test-data/v2/resources/create-resource-with-custom-value-IRI-request.json
 test-data/v2/resources/create-resource-with-custom-value-UUID-request.json
 test-data/v2/resources/create-resource-with-custom-value-creationDate-request.json
 test-data/v2/resources/create-resource-with-values-request.json
-test-data/v2/resources/create-sequence-of-audio-request.json
-test-data/v2/resources/create-sequence-of-audio-response.json
-test-data/v2/resources/create-sequence-of-video-request.json
-test-data/v2/resources/create-sequence-of-video-response.json
 test-data/v2/resources/delete-resource-request.json
 test-data/v2/resources/delete-resource-response.json
 test-data/v2/resources/delete-resource-with-custom-delete-date-request.json

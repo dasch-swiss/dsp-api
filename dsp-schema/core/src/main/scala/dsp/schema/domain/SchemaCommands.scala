@@ -3,7 +3,6 @@ package dsp.schema.domain
 import dsp.errors.ValidationException
 import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema
-// import dsp.valueobjects.V2.SmartIri
 import zio.prelude.Validation
 
 import java.time.Instant

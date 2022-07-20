@@ -2302,8 +2302,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           |  }
           |}""".stripMargin
 
-      collectClientTestData("create-sequence-of-video-request", createSequenceJson)
-
       val createSequenceRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
       val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
@@ -2311,8 +2309,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
-
-      collectClientTestData("create-sequence-of-video-response", createSequenceResponseAsString)
 
       // get the newly created sequence reource
       val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
@@ -2376,8 +2372,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           |  }
           |}""".stripMargin
 
-      collectClientTestData("create-sequence-of-audio-request", createSequenceJson)
-
       val createSequenceRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
       val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
@@ -2385,8 +2379,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
-
-      collectClientTestData("create-sequence-of-audio-response", createSequenceResponseAsString)
 
       // get the newly created sequence reource
       val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
