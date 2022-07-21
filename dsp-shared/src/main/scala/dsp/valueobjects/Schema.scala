@@ -66,7 +66,7 @@ object Schema {
       // Check if the correct gui attributes are provided for a given gui element
       val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] =
         guiElement match {
-          // gui element is not allowed to have a gui attribute (Checkbox, Fileupload, Richtext, Timestamp, Interval, Geonames, Geometry, Date)
+          // the following gui elements are not allowed to have a gui attribute (Checkbox, Fileupload, Richtext, Timestamp, Interval, Geonames, Geometry, Date)
           case Some(guiElement) if SalsahGui.guiElementsWithoutGuiAttribute.contains(guiElement.value) =>
             if (!guiAttributes.isEmpty) {
               Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
@@ -74,16 +74,12 @@ object Schema {
               Validation.succeed(guiAttributes)
             }
 
-          // everything else has optional gui attributes
+          // all other gui elements have optional gui attributes
           case Some(guiElement) =>
             validateGuiAttributeKey(guiElement, guiAttributes)
 
-          case _ =>
-            Validation.fail(
-              ValidationException(
-                s"Unable to validate gui attributes. Unknown value for salsah-gui:guiElement: $guiElement."
-              )
-            )
+          // if there is no gui element, an empty list is returned
+          case None => Validation.succeed(scala.collection.immutable.List())
         }
 
       Validation.validateWith(
