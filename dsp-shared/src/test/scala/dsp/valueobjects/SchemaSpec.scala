@@ -124,7 +124,20 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectTest = suite("gui object")(
+  private val guiObjectTest = suite("gui object - makeFromStrings")(
+    test(
+      "pass valid gui element with mvalid gui attributes and successfully create value object"
+    ) {
+      val guiObject = Schema.GuiObject
+        .makeFromStrings(
+          scala.collection.immutable.List(guiAttributeHlist.value),
+          Some(guiElementList.value)
+        )
+        .fold(e => throw e.head, v => v)
+
+      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeHlist)) &&
+      assertTrue(guiObject.guiElement == Some(guiElementList))
+    },
     test(
       "pass valid gui element with multiple wrong gui attributes and return multiple errors"
     ) {
@@ -154,6 +167,21 @@ object SchemaSpec extends ZIOSpecDefault {
             ValidationException(SchemaErrorMessages.GuiAttributeUnknown("mini")),
             ValidationException(SchemaErrorMessages.GuiAttributeUnknown("maxi")),
             ValidationException(SchemaErrorMessages.GuiElementUnknown("unknown"))
+          )
+        )
+      )
+    },
+    test(
+      "pass no gui element but gui attributes and return an error"
+    ) {
+      assertTrue(
+        Schema.GuiObject
+          .makeFromStrings(
+            scala.collection.immutable.List(guiAttributeMin.value, guiAttributeMax.value),
+            None
+          ) == Validation.failNonEmptyChunk(
+          NonEmptyChunk(
+            ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty)
           )
         )
       )

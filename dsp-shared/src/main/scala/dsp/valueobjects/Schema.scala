@@ -79,7 +79,13 @@ object Schema {
             validateGuiAttributes(guiElement, guiAttributes)
 
           // if there is no gui element, an empty list is returned
-          case None => Validation.succeed(scala.collection.immutable.List())
+          case None =>
+            if (!guiAttributes.isEmpty) {
+              Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
+            } else {
+              Validation.succeed(scala.collection.immutable.List())
+            }
+
         }
 
       Validation.validateWith(
