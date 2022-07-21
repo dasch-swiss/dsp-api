@@ -5,15 +5,16 @@
 
 package dsp.role.domain
 
-object Permission extends Enumeration {
-  type Permission = Value
+import dsp.valueobjects.Id.RoleId
+import dsp.valueobjects.Id.UserId
+import dsp.valueobjects.Permission._
+import dsp.valueobjects.Role._
+import zio.prelude.Validation
+import dsp.errors.BadRequestException
 
-  val View   = Value("view")
-  val Create = Value("create")
-  val Modify = Value("modify")
-  val Delete = Value("delete")
-  val Admin  = Value("admin")
-}
+case class User(
+  id: UserId
+)
 
 /**
  * Role's domain model.
@@ -25,20 +26,20 @@ object Permission extends Enumeration {
  * @param permission the role's permission
  */
 sealed abstract case class Role private (
-  id: String,            // RoleId(RoleIri, Uuid)
-  name: String,          // Langstring
-  description: String,   // Langstring
-  users: List[User],     // List[User]
-  permission: Permission // Permission => view | create | modify | delete | administrate | erase
+  id: RoleId,
+  name: RoleName,               // Langstring
+  description: RoleDescription, // Langstring
+  users: List[User],            // List[User]
+  permission: Permission        // Permission => view | create | modify | delete | administrate | erase
 ) { self =>
 
   /**
-   * Allows to compare teo [[Role]] instances.
+   * Allows to compare the [[Role]] instances.
    *
    * @param that [[Role]] to compare
    * @return [[Boolean]] value
    */
-  def equals(that: Role): Boolean = self.id.equals(that.id)
+  def compare(that: Role): Boolean = self.id.equals(that.id)
 
   /**
    * Updates the role's name.
@@ -46,7 +47,7 @@ sealed abstract case class Role private (
    * @param newValue new role's name to update
    * @return updated [[Role]]
    */
-  def updateName(newValue: String): Role =
+  def updateName(newValue: RoleName): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       newValue,
@@ -61,7 +62,7 @@ sealed abstract case class Role private (
    * @param newValue new role's description to update
    * @return updated [[Role]]
    */
-  def updateDescription(newValue: String): Role =
+  def updateDescription(newValue: RoleDescription): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       self.name,
@@ -76,7 +77,7 @@ sealed abstract case class Role private (
    * @param newValue new role's users to update
    * @return updated [[Role]]
    */
-  def updateUsers(newValue: List[User]): Role =
+  def updateUsers(newValue: List[User]): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       self.name,
@@ -91,7 +92,7 @@ sealed abstract case class Role private (
    * @param newValue new role's permission to update
    * @return updated [[Role]]
    */
-  def updatePermission(newValue: Permission): Role =
+  def updatePermission(newValue: Permission): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       self.name,
@@ -103,10 +104,11 @@ sealed abstract case class Role private (
 
 object Role {
   def make(
-    id: String,
-    name: String,
-    description: String,
+    id: RoleId,
+    name: RoleName,
+    description: RoleDescription,
     users: List[User],
     permission: Permission
-  )
+  ): Validation[BadRequestException, Role] =
+    Validation.succeed(new Role(id, name, description, users, permission) {})
 }

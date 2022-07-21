@@ -14,6 +14,54 @@ sealed trait Id
 object Id {
 
   /**
+   * Stores the role's ID.
+   *
+   * @param uuid the role's UUID
+   * @param iri the role's IRI
+   */
+  sealed abstract case class RoleId private (
+    uuid: UUID,
+    iri: Iri.GroupIri // should be replaced
+  ) extends Id
+
+  object RoleId {
+    private val roleIriPrefix = "http://rdfh.ch//groups/"
+
+    /**
+     * Generates a RoleId instance with a UUID and a given IRI.
+     *
+     * @param iri the role's IRI used to create RoleId
+     * @return new RoleId instance
+     */
+    def fromIri(iri: Iri.GroupIri): Validation[Throwable, RoleId] = {
+      val uuid: UUID = UUID.fromString(iri.value.split("/").last)
+      Validation.succeed(new RoleId(uuid, iri) {})
+    }
+
+    /**
+     * Generates a RoleId instance with a UUID and a given IRI.
+     *
+     * @param uuid the UUID used to create RoleId
+     * @return new RoleId instance
+     */
+    def fromUuid(uuid: UUID): Validation[Throwable, RoleId] = {
+      val iri = Iri.GroupIri.make(roleIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      Validation.succeed(new RoleId(uuid, iri) {})
+    }
+
+    /**
+     * Generates a RoleId instance with new random UUID and a new IRI.
+     *
+     * @return new RoleId instance
+     */
+    def make(): Validation[Throwable, RoleId] = {
+      val uuid = UUID.randomUUID()
+      val iri  = Iri.GroupIri.make(roleIriPrefix + uuid.toString).fold(e => throw e.head, v => v)
+      Validation.succeed(new RoleId(uuid, iri) {})
+    }
+  }
+
+  /**
    * Stores the user ID, i.e. UUID and IRI of the user
    *
    * @param uuid the UUID of the user

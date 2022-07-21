@@ -247,7 +247,7 @@ lazy val valueObjects = project
 lazy val roleInterface = project
   .in(file("dsp-role/interface"))
   .settings(
-    scalacOptions +++ Seq(
+    scalacOptions ++= Seq(
       "-feature",
       "-unchecked",
       "-deprecation",
@@ -263,7 +263,7 @@ lazy val roleInterface = project
 lazy val roleHandler = project
   .in(file("dsp-role/handler"))
   .settings(
-    scalacOptions +++ Seq(
+    scalacOptions ++= Seq(
       "-feature",
       "-unchecked",
       "-deprecation",
@@ -274,12 +274,16 @@ lazy val roleHandler = project
     libraryDependencies ++= Dependencies.roleHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, roleRepo % "test->test", roleCore %% "compile->compile;test->test")
+  .dependsOn(
+    shared,
+    roleCore % "compile->compile;test->test",
+    roleRepo % "test->test"
+  )
 
 lazy val roleRepo = project
   .in(file("dsp-role/repo"))
   .settings(
-    scalacOptions +++ Seq(
+    scalacOptions ++= Seq(
       "-feature",
       "-unchecked",
       "-deprecation",
@@ -295,7 +299,7 @@ lazy val roleRepo = project
 lazy val roleCore = project
   .in(file("dsp-role/core"))
   .settings(
-    scalacOptions +++ Seq(
+    scalacOptions ++= Seq(
       "-feature",
       "-unchecked",
       "-deprecation",
