@@ -97,7 +97,7 @@ object SalsahGui {
       ("max", SalsahGuiAttributeType.Decimal),
       ("cols", SalsahGuiAttributeType.Integer),
       ("rows", SalsahGuiAttributeType.Integer),
-      ("width", SalsahGuiAttributeType.Percent), // TODO handle this correctly!
+      ("width", SalsahGuiAttributeType.Percent),
       ("wrap", SalsahGuiAttributeType.Str)
     )
 

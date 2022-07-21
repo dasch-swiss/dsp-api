@@ -65,17 +65,31 @@ object SchemaSpec extends ZIOSpecDefault {
         Schema.GuiAttribute.make("") == Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeMissing))
       )
     },
-    test("pass an invalid value and return an error") {
+    test("pass an invalid key and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("invalid") == Validation.fail(
           ValidationException(SchemaErrorMessages.GuiAttributeUnknown("invalid"))
         )
       )
     },
-    test("pass an unknown value and return an error") {
+    test("pass an unknown key and return an error") {
       assertTrue(
         Schema.GuiAttribute.make("unknown=10") == Validation.fail(
           ValidationException(SchemaErrorMessages.GuiAttributeUnknown("unknown"))
+        )
+      )
+    },
+    test("pass an invalid value for gui attribute 'wrap' and return an error") {
+      assertTrue(
+        Schema.GuiAttribute.make("wrap=invalid") == Validation.fail(
+          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("wrap", "invalid"))
+        )
+      )
+    },
+    test("pass an invalid value type for gui attribute 'rows' and return an error") {
+      assertTrue(
+        Schema.GuiAttribute.make("rows=20.5") == Validation.fail(
+          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("rows", "20.5"))
         )
       )
     },
