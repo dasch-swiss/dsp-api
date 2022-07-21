@@ -7,11 +7,11 @@ package dsp.valueobjects
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
-import zio.prelude.Subtype
-import zio.prelude.Validation
-import scala.collection.immutable
-import zio.prelude.ZValidation
 import zio.prelude._
+
+import scala.collection.immutable
+import zio.prelude.ZValidation.Failure
+import zio.prelude.ZValidation.Success
 
 object Schema {
 
@@ -27,22 +27,35 @@ object Schema {
     ): Validation[ValidationException, GuiObject] = {
 
       // create value objects from raw inputs
-      val validatedGuiElement: Validation[ValidationException, Option[GuiElement]] = guiElement match {
-        case Some(guiElement) => GuiElement.make(guiElement).map(Some(_))
-        case None             => Validation.succeed(None)
-      }
+      val validatedGuiElement: Validation[ValidationException, Option[GuiElement]] =
+        guiElement match {
+          case Some(guiElement) => GuiElement.make(guiElement).map(Some(_))
+          case None             => Validation.succeed(None)
+        }
 
       val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] =
+        // with forEach, multiple errors are returned if multiple errors occur
         guiAttributes.forEach { case guiAttribute => GuiAttribute.make(guiAttribute) }
-      // Validation.validateAll(
-      //   guiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
-      // )
 
-      for {
-        guiAttributes <- validatedGuiAttributes
-        guiElement    <- validatedGuiElement
-        guiObject     <- make(guiAttributes, guiElement)
-      } yield guiObject
+      val validatedGuiAttributesAndGuiElement =
+        Validation.validateWith(
+          validatedGuiAttributes,
+          validatedGuiElement
+        )((ga, ge) => (ga, ge))
+
+      // if there were errors in creating gui attributes or gui element, all of them are returned
+      // otherwise, the gui object is created
+      validatedGuiAttributesAndGuiElement match {
+        case Failure(log, errors) => Validation.failNonEmptyChunk(errors)
+        case Success(log, value)  => GuiObject.make(value._1, value._2)
+      }
+
+      // the following code block would short-circuit after an error in one of the lines
+      // for {
+      //   guiAttributes <- validatedGuiAttributes
+      //   guiElement    <- validatedGuiElement
+      //   guiObject     <- make(guiAttributes, guiElement)
+      // } yield guiObject
     }
 
     def make(
@@ -50,50 +63,33 @@ object Schema {
       guiElement: Option[GuiElement]
     ): Validation[ValidationException, GuiObject] = {
 
-      // check that there are no duplicated gui attributes
-      // val guiAttributeKeys: List[String] = guiAttributes.map { guiAttribute: GuiAttribute => guiAttribute.k }
-      // if (guiAttributeKeys.toSet.size < guiAttributes.size) {
-      //   return Validation.fail(
-      //     ValidationException(
-      //       s"Duplicate gui attributes for salsah-gui:guiElement $guiElement."
-      //     )
-      //   )
-      // }
+      // Check if the correct gui attributes are provided for a given gui element
+      val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] =
+        guiElement match {
+          // gui element is not allowed to have a gui attribute (Checkbox, Fileupload, Richtext, Timestamp, Interval, Geonames, Geometry, Date)
+          case Some(guiElement) if SalsahGui.guiElementsWithoutGuiAttribute.contains(guiElement.value) =>
+            if (!guiAttributes.isEmpty) {
+              Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
+            } else {
+              Validation.succeed(guiAttributes)
+            }
 
-      // If the gui element is a list, radio, pulldown or slider, check if a gui attribute (which is mandatory in these cases) is provided
-      val guiElementsPointingToList: Set[SalsahGui.IRI] = Set(SalsahGui.List, SalsahGui.Radio, SalsahGui.Pulldown)
+          // everything else has optional gui attributes
+          case Some(guiElement) =>
+            validateGuiAttributeKey(guiElement, guiAttributes)
 
-      val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] = guiElement match {
-        // gui element is a list, radio or pulldown, so it needs a gui attribute that points to a list
-        case Some(guiElement) if guiElementsPointingToList.contains(guiElement.value) =>
-          validateGuiObjectsPointingToList(guiElement, guiAttributes)
-
-        // gui element is a slider, so it needs two gui attributes min and max
-        case Some(guiElement) if guiElement.value == SalsahGui.Slider =>
-          validateGuiObjectSlider(guiElement, guiAttributes)
-
-        // case Some(guiElement) if guiElement.value == SalsahGui.Checkbox =>
-        //   validateGuiObjectCheckbox(guiElement, guiAttributes)
-
-        case _ =>
-          Validation.fail(
-            ValidationException(
-              s"Unable to validate gui attributes. Unknown value for salsah-gui:guiElement: $guiElement."
+          case _ =>
+            Validation.fail(
+              ValidationException(
+                s"Unable to validate gui attributes. Unknown value for salsah-gui:guiElement: $guiElement."
+              )
             )
-          )
-      }
-
-      // check that there are no duplicate gui attributes
-      val checkedGuiAttributes = for {
-        checkedGuiAttributes <- checkGuiAttributesForDuplicates(guiAttributes)
-      } yield checkedGuiAttributes
-
-      val allChecked = Validation.validate(checkedGuiAttributes, validatedGuiAttributes)
+        }
 
       Validation.validateWith(
-        allChecked,
+        validatedGuiAttributes,
         Validation.succeed(guiElement)
-      )((a, b) => new GuiObject(a._1, b) {})
+      )((a, b) => new GuiObject(a, b) {})
 
     }
   }
@@ -117,7 +113,7 @@ object Schema {
       } else if (!SalsahGui.GuiAttributes.contains(k)) {
         Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeUnknown(k)))
       } else {
-        validateGuiAttributeValueType(k, v).fold(
+        validateGuiAttributeValue(k, v).fold(
           e => Validation.fail(e.head),
           validValue => Validation.succeed(new GuiAttribute(k, validValue) {})
         )
@@ -134,160 +130,78 @@ object Schema {
       if (value.isEmpty) {
         Validation.fail(ValidationException(SchemaErrorMessages.GuiElementMissing))
       } else if (!SalsahGui.GuiElements.contains(value)) {
-        Validation.fail(ValidationException(SchemaErrorMessages.GuiElementUnknown))
+        Validation.fail(ValidationException(SchemaErrorMessages.GuiElementUnknown(value)))
       } else {
         Validation.succeed(new GuiElement(value) {})
       }
   }
 
   /**
-   * Validates if gui elements that require pointing to a list (List, Radio, Pulldown) actually point to a list
+   * Checks if a list of gui attributes is correct in respect to a given gui element
    *
-   * @param guiElement the gui element that needs to be validated
-   * @param guiAttributes the gui attributes that need to be validated
-   *
-   * @return either the validated list of gui attributes or a [[dsp.errors.ValidationException]]
-   */
-  private[valueobjects] def validateGuiObjectsPointingToList(
-    guiElement: GuiElement,
-    guiAttributes: List[GuiAttribute]
-  ): Validation[ValidationException, List[GuiAttribute]] = {
-    val expectedGuiAttributes = scala.collection.immutable.List("hlist")
-    for {
-      _ <- checkGuiAttributesEmpty(guiAttributes)
-      _ <- checkGuiElementHasCorrectNumberOfGuiAttributes(guiElement, guiAttributes.size)
-      result <- {
-        if (guiAttributes.map(_.k) != scala.collection.immutable.List("hlist")) {
-          Validation.fail(
-            ValidationException(
-              SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributes.map(_.k), expectedGuiAttributes)
-            )
-          )
-        } else {
-          Validation.succeed(guiAttributes)
-        }
-      }
-    } yield result
-  }
-
-  // gui attribute needs to point to a list
-
-  /**
-   * Validates if gui element Slider has the correct gui attributes
-   *
-   * @param guiElement the gui element that needs to be validated
-   * @param guiAttributes the gui attributes that need to be validated
-   *
-   * @return either the validated list of gui attributes or a [[dsp.errors.ValidationException]]
-   */
-  private[valueobjects] def validateGuiObjectSlider(
-    guiElement: GuiElement,
-    guiAttributes: List[GuiAttribute]
-  ): Validation[ValidationException, List[GuiAttribute]] = {
-    val expectedGuiAttributes = scala.collection.immutable.List("min", "max")
-    for {
-      _ <- checkGuiAttributesEmpty(guiAttributes)
-      _ <- checkGuiElementHasCorrectNumberOfGuiAttributes(guiElement, guiAttributes.size)
-      result <- {
-        if (guiAttributes.map(_.k) != scala.collection.immutable.List("min", "max")) {
-          Validation.fail(
-            ValidationException(
-              SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributes.map(_.k), expectedGuiAttributes)
-            )
-          )
-        } else {
-          Validation.succeed(guiAttributes)
-        }
-      }
-    } yield result
-
-    // gui element needs two gui attributes
-    // val expectedNumberOfGuiAttributes: Int = 2
-    // val numberOfGuiAttributes: Int         = guiAttributes.size
-    // if (guiAttributes.size != 2) {
-    //   return Validation.fail(
-    //     ValidationException(
-    //       SchemaErrorMessages.GuiAttributeWrongNumber(
-    //         guiElement.value,
-    //         numberOfGuiAttributes,
-    //         expectedNumberOfGuiAttributes
-    //       )
-    //     )
-    //   )
-    // }
-    // gui element needs to have gui attributes 'min' and 'max'
-    // val validGuiAttributes = scala.collection.immutable.List("min", "max")
-    // guiAttributes.map { guiAttribute: GuiAttribute =>
-    //   if (!validGuiAttributes.contains(guiAttribute.k)) {
-    //     return Validation.fail(
-    //       ValidationException(
-    //         s"Incorrect gui attributes. salsah-gui:guiElement $guiElement needs two salsah-gui:guiAttribute 'min' and 'max', but found $guiAttributes."
-    //       )
-    //     )
-    //   }
-    // }
-    // return Validation.succeed(guiAttributes)
-  }
-
-  /**
-   * Validates a list of gui attributes for emptyness (i.e. validation fails if list is empty)
-   *
+   * @param guiElement    gui element the list of gui attributes is validated against
    * @param guiAttributes list of gui attributes to be checked
    *
-   * @return either the list of gui attributes or a [[dsp.errors.ValidationException]] in case it is empty
+   * @return either the validated list of gui attributes or a [[dsp.errors.ValidationException]]
    */
-  private[valueobjects] def checkGuiAttributesEmpty(
+  private[valueobjects] def validateGuiAttributeKey(
+    guiElement: GuiElement,
     guiAttributes: List[GuiAttribute]
-  ): Validation[ValidationException, List[GuiAttribute]] =
-    if (guiAttributes.isEmpty) {
-      Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributesMissing))
+  ): Validation[ValidationException, List[GuiAttribute]] = {
+
+    val expectedGuiAttributes = guiElement.value match {
+      case SalsahGui.List        => scala.collection.immutable.List("hlist")
+      case SalsahGui.Radio       => scala.collection.immutable.List("hlist")
+      case SalsahGui.Pulldown    => scala.collection.immutable.List("hlist")
+      case SalsahGui.Slider      => scala.collection.immutable.List("min", "max")
+      case SalsahGui.SimpleText  => scala.collection.immutable.List("size", "maxlength")
+      case SalsahGui.Textarea    => scala.collection.immutable.List("cols", "rows", "width", "wrap")
+      case SalsahGui.Spinbox     => scala.collection.immutable.List("min", "max")
+      case SalsahGui.Searchbox   => scala.collection.immutable.List("numprops")
+      case SalsahGui.Colorpicker => scala.collection.immutable.List("ncolors")
+    }
+
+    val guiAttributeIsRequired: Boolean =
+      SalsahGui.guiElementsPointingToList.contains(guiElement.value) ||
+        SalsahGui.Slider == guiElement.value
+
+    val guiAttributeKeys: List[String] = guiAttributes.map(_.k)
+
+    val hasDuplicateAttributes: Boolean = guiAttributeKeys.toSet.size < guiAttributes.size
+
+    if (
+      guiAttributeIsRequired &&
+      (guiAttributeKeys != expectedGuiAttributes || hasDuplicateAttributes)
+    ) {
+      Validation.fail(
+        ValidationException(
+          SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributeKeys, expectedGuiAttributes)
+        )
+      )
+    } else if (
+      !guiAttributeIsRequired &&
+      (!guiAttributeKeys.forall(expectedGuiAttributes.contains) || hasDuplicateAttributes)
+    ) {
+      Validation.fail(
+        ValidationException(
+          SchemaErrorMessages.GuiAttributeWrong(guiElement.value, guiAttributeKeys, expectedGuiAttributes)
+        )
+      )
     } else {
       Validation.succeed(guiAttributes)
     }
 
-  /**
-   * Validates if the number of gui attributes is correct in respect to a given gui element
-   *
-   * @param guiElement             the gui element against which the validation is performed
-   * @param numberOfGuiAttributes  number of gui attributes
-   *
-   * @return either the validated gui element or a [[dsp.errors.ValidationException]] in case of wrong number
-   */
-  private[valueobjects] def checkGuiElementHasCorrectNumberOfGuiAttributes(
-    guiElement: GuiElement,
-    numberOfGuiAttributes: Int
-  ): Validation[ValidationException, GuiElement] = {
-    val guiElementsToNumberOfGuiAttributes = Map(
-      (SalsahGui.List, 1),
-      (SalsahGui.Pulldown, 1),
-      (SalsahGui.Radio, 1),
-      (SalsahGui.Slider, 2)
-    )
-    val expectedNumberOfGuiAttributes: Int = guiElementsToNumberOfGuiAttributes.getOrElse(guiElement.value, 0)
-    if (numberOfGuiAttributes != expectedNumberOfGuiAttributes) {
-      Validation.fail(
-        ValidationException(
-          SchemaErrorMessages.GuiAttributeWrongNumber(
-            guiElement.value,
-            numberOfGuiAttributes,
-            expectedNumberOfGuiAttributes
-          )
-        )
-      )
-    } else {
-      Validation.succeed(guiElement)
-    }
   }
 
   /**
-   * Validates if the value of a gui attribute is of the correct value type (integer, decimal, string etc.)
+   * Checks if the value of a gui attribute is of the correct value type (integer, decimal, string etc.)
    *
    * @param key     the gui attribute key
    * @param value   the gui attribute value
    *
    * @return either the validated value of the gui attribute or a [[dsp.errors.ValidationException]]
    */
-  private[valueobjects] def validateGuiAttributeValueType(
+  private[valueobjects] def validateGuiAttributeValue(
     key: String,
     value: String
   ): Validation[ValidationException, String] = {
@@ -296,68 +210,47 @@ object Schema {
     // try to parse the given value according to the expected value type
     val parseResult = expectedValueType match {
       case Some(valueType) if valueType.toString() == "integer" => value.toIntOption
-      case Some(valueType) if valueType.toString() == "percent" => value.toDoubleOption
+      case Some(valueType) if valueType.toString() == "percent" => value.split("%").head.trim.toIntOption
       case Some(valueType) if valueType.toString() == "decimal" => value.toDoubleOption
-      case Some(valueType) if valueType.toString() == "string"  => Some(value)
-      case Some(valueType) if valueType.toString() == "iri"     => Some(value)
-      case _                                                    => None
+      case Some(valueType) if valueType.toString() == "string" =>
+        if (value.trim() == "soft" || value.trim() == "hard") Some(value.trim()) else None
+      case Some(valueType) if valueType.toString() == "iri" => Some(value)
+      case _                                                => None
     }
 
     parseResult match {
-      case None         => Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeHasWrongType(key, value)))
-      case Some(result) => Validation.succeed(result.toString())
+      case None => Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType(key, value)))
+      case Some(result) =>
+        Validation.succeed(result.toString())
     }
-  }
-
-  private[valueobjects] def checkGuiAttributesForDuplicates(
-    guiAttributes: List[GuiAttribute]
-  ): Validation[ValidationException, List[GuiAttribute]] = {
-    val guiAttributeKeys: List[String] = guiAttributes.map { guiAttribute: GuiAttribute => guiAttribute.k }
-    if (guiAttributeKeys.toSet.size < guiAttributes.size) {
-      Validation.fail(
-        ValidationException(SchemaErrorMessages.GuiAttributeDuplicates(guiAttributeKeys))
-      )
-    } else Validation.succeed(guiAttributes)
   }
 
 }
 
 object SchemaErrorMessages {
   val GuiAttributeMissing =
-    "gui attribute cannot be empty."
+    "Gui attribute cannot be empty."
+
+  val GuiAttributeNotEmpty =
+    "No gui attributes allowed."
 
   def GuiAttributeUnknown(guiAttribute: String): String =
-    s"gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes.keys.mkString(", ")}"
+    s"Gui attribute '$guiAttribute' is unknown. Needs to be one of: ${SalsahGui.GuiAttributes.keys.mkString(", ")}"
 
-  def GuiAttributeHasWrongType(key: String, value: String): String =
+  def GuiAttributeWrongValueType(key: String, value: String): String =
     s"Value '$value' of gui attribute '$key' has the wrong attribute type."
 
   def GuiAttributeDuplicates(guiAttributeKeys: List[String]): String =
     s"Found duplicate gui attributes: ${guiAttributeKeys.mkString(", ")}."
 
-  def GuiAttributeWrongNumber(
-    guiElement: String,
-    numberOfGuiAttributes: Int,
-    expectedNumber: Int
-  ): String =
-    s"Wrong number of gui attributes. salsah-gui:guiElement '$guiElement' needs $expectedNumber salsah-gui:guiAttribute(s) but found: $numberOfGuiAttributes"
-
-  val GuiElementMissing =
-    "gui element cannot be empty."
-
-  def GuiElementInvalid(guiElement: String): String =
-    s"gui element '$guiElement' is invalid."
-
-  val GuiElementUnknown =
-    s"gui element is unknown. Needs to be one of: ${SalsahGui.GuiElements.mkString(", ")}"
-
-  val GuiObjectMissing =
-    "gui object cannot be empty."
-
-  val GuiAttributesMissing =
-    "gui attributes cannot be empty."
-
   def GuiAttributeWrong(guiElement: String, guiAttributes: List[String], expectedGuiAttributes: List[String]) =
     s"Expected salsah-gui:guiAttribute '${expectedGuiAttributes.mkString(", ")}' for salsah-gui:guiElement '$guiElement', but found '${guiAttributes
       .mkString(", ")}'."
+
+  val GuiElementMissing =
+    "Gui element cannot be empty."
+
+  def GuiElementUnknown(guiElement: String) =
+    s"Gui element '$guiElement' is unknown. Needs to be one of: ${SalsahGui.GuiElements.mkString(", ")}"
+
 }

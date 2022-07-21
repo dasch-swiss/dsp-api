@@ -67,22 +67,41 @@ object SalsahGui {
     Fileupload
   )
 
-  val GuiAttributes = scala.collection.immutable.Map(
-    ("ncolors", SalsahGuiAttributeType.Integer),
-    ("hlist", SalsahGuiAttributeType.Iri),
-    ("numprops", SalsahGuiAttributeType.Integer),
-    ("size", SalsahGuiAttributeType.Integer),
-    ("maxlength", SalsahGuiAttributeType.Integer),
-    ("min", SalsahGuiAttributeType.Decimal),
-    ("max", SalsahGuiAttributeType.Decimal),
-    ("cols", SalsahGuiAttributeType.Integer),
-    ("rows", SalsahGuiAttributeType.Integer),
-    ("width", SalsahGuiAttributeType.Percent),
-    ("wrap", SalsahGuiAttributeType.Str)
-  )
+  val guiElementsPointingToList: Set[SalsahGui.IRI] =
+    Set(
+      SalsahGui.List,
+      SalsahGui.Radio,
+      SalsahGui.Pulldown
+    )
+
+  val guiElementsWithoutGuiAttribute: Set[SalsahGui.IRI] =
+    Set(
+      SalsahGui.Checkbox,
+      SalsahGui.Fileupload,
+      SalsahGui.Richtext,
+      SalsahGui.TimeStamp,
+      SalsahGui.Interval,
+      SalsahGui.Geonames,
+      SalsahGui.Geometry,
+      SalsahGui.Date
+    )
+
+  val GuiAttributes =
+    scala.collection.immutable.Map(
+      ("ncolors", SalsahGuiAttributeType.Integer),
+      ("hlist", SalsahGuiAttributeType.Iri),
+      ("numprops", SalsahGuiAttributeType.Integer),
+      ("size", SalsahGuiAttributeType.Integer),
+      ("maxlength", SalsahGuiAttributeType.Integer),
+      ("min", SalsahGuiAttributeType.Decimal),
+      ("max", SalsahGuiAttributeType.Decimal),
+      ("cols", SalsahGuiAttributeType.Integer),
+      ("rows", SalsahGuiAttributeType.Integer),
+      ("width", SalsahGuiAttributeType.Percent), // TODO handle this correctly!
+      ("wrap", SalsahGuiAttributeType.Str)
+    )
 
   object SalsahGuiAttributeType extends Enumeration {
-
     val Integer: Value = Value(0, "integer")
     val Percent: Value = Value(1, "percent")
     val Decimal: Value = Value(2, "decimal")
