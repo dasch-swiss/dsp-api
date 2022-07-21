@@ -160,7 +160,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectListTest = suite("gui object - List")(
+  private val guiObjectListTest = suite("gui object - List (mandatory gui attribute)")(
     test(
       "pass gui element 'salsah-gui#List' with gui attribute 'hlist' and successfully create value object"
     ) {
@@ -233,7 +233,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectRadioTest = suite("gui object - Radio")(
+  private val guiObjectRadioTest = suite("gui object - Radio (mandatory gui attribute)")(
     test(
       "pass gui element 'salsah-gui#Radio' with gui attribute 'hlist' and successfully create value object"
     ) {
@@ -306,7 +306,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectPulldownTest = suite("gui object - Pulldown")(
+  private val guiObjectPulldownTest = suite("gui object - Pulldown (mandatory gui attribute)")(
     test(
       "pass gui element 'salsah-gui#Pulldown' with gui attribute 'hlist' and successfully create value object"
     ) {
@@ -379,7 +379,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectSliderTest = suite("gui object - Slider")(
+  private val guiObjectSliderTest = suite("gui object - Slider (mandatory gui attribute)")(
     test(
       "pass gui element 'salsah-gui#Slider' with gui attributes 'min=1.0' and 'max=10.0' and successfully create value object"
     ) {
@@ -432,6 +432,25 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
+      "pass gui element 'salsah-gui#Slider' with duplicate gui attributes 'min=1.0','max=10.0', and 'min=1.0' and return an error"
+    ) {
+      assertTrue(
+        Schema.GuiObject
+          .make(
+            scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeMin),
+            Some(guiElementSlider)
+          ) == Validation.fail(
+          ValidationException(
+            SchemaErrorMessages.GuiAttributeWrong(
+              guiElementSlider.value,
+              scala.collection.immutable.List("min", "max", "min"),
+              scala.collection.immutable.List("min", "max")
+            )
+          )
+        )
+      )
+    },
+    test(
       "pass gui element 'salsah-gui#Slider' with misfitting gui attribute 'size=80' and return an error"
     ) {
       assertTrue(
@@ -452,7 +471,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectSpinboxTest = suite("gui object - Spinbox")(
+  private val guiObjectSpinboxTest = suite("gui object - Spinbox (optional gui attributes)")(
     test(
       "pass gui element 'salsah-gui#Spinbox' without gui attributes and successfully create value object"
     ) {
@@ -514,7 +533,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectSimpleTextTest = suite("gui object - SimpleText")(
+  private val guiObjectSimpleTextTest = suite("gui object - SimpleText (optional gui attributes)")(
     test(
       "pass gui element 'salsah-gui#SimpleText' without gui attributes and successfully create value object"
     ) {
@@ -575,7 +594,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectTextareaTest = suite("gui object - Textarea")(
+  private val guiObjectTextareaTest = suite("gui object - Textarea (optional gui attributes)")(
     test(
       "pass gui element 'salsah-gui#Textarea' without gui attributes and successfully create value object"
     ) {
@@ -639,7 +658,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectSearchboxTest = suite("gui object - Searchbox")(
+  private val guiObjectSearchboxTest = suite("gui object - Searchbox (optional gui attributes)")(
     test(
       "pass gui element 'salsah-gui#Searchbox' without gui attributes and successfully create value object"
     ) {
@@ -690,7 +709,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectColorpickerTest = suite("gui object - Colorpicker")(
+  private val guiObjectColorpickerTest = suite("gui object - Colorpicker (optional gui attributes)")(
     test(
       "pass gui element 'salsah-gui#Colorpicker' without gui attributes and successfully create value object"
     ) {
@@ -760,7 +779,7 @@ object SchemaSpec extends ZIOSpecDefault {
     }
   )
 
-  private val guiObjectCheckboxTest = suite("gui object - Checkbox")(
+  private val guiObjectCheckboxTest = suite("gui object - Checkbox (no gui attributes allowed)")(
     test(
       "pass gui element 'salsah-gui#Checkbox' without gui attribute and successfully create value object"
     ) {

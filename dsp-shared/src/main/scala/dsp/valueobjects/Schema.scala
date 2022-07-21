@@ -76,7 +76,7 @@ object Schema {
 
           // all other gui elements have optional gui attributes
           case Some(guiElement) =>
-            validateGuiAttributeKey(guiElement, guiAttributes)
+            validateGuiAttributes(guiElement, guiAttributes)
 
           // if there is no gui element, an empty list is returned
           case None => Validation.succeed(scala.collection.immutable.List())
@@ -140,7 +140,7 @@ object Schema {
    *
    * @return either the validated list of gui attributes or a [[dsp.errors.ValidationException]]
    */
-  private[valueobjects] def validateGuiAttributeKey(
+  private[valueobjects] def validateGuiAttributes(
     guiElement: GuiElement,
     guiAttributes: List[GuiAttribute]
   ): Validation[ValidationException, List[GuiAttribute]] = {
@@ -167,7 +167,7 @@ object Schema {
 
     if (
       guiAttributeIsRequired &&
-      (guiAttributeKeys != expectedGuiAttributes || hasDuplicateAttributes)
+      (guiAttributeKeys != expectedGuiAttributes)
     ) {
       Validation.fail(
         ValidationException(
