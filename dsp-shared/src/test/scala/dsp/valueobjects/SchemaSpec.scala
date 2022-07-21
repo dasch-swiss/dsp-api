@@ -8,10 +8,9 @@ package dsp.valueobjects
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
 import dsp.valueobjects.User._
+import zio.NonEmptyChunk
 import zio.prelude.Validation
 import zio.test._
-import dsp.errors.BadRequestException
-import zio.NonEmptyChunk
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.

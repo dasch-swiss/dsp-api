@@ -7,11 +7,11 @@ package dsp.valueobjects
 
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
+import zio.prelude.ZValidation.Failure
+import zio.prelude.ZValidation.Success
 import zio.prelude._
 
 import scala.collection.immutable
-import zio.prelude.ZValidation.Failure
-import zio.prelude.ZValidation.Success
 
 object Schema {
 
