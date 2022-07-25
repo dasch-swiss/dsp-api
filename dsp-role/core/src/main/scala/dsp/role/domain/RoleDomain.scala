@@ -30,7 +30,7 @@ sealed abstract case class Role private (
   name: LangString,        // Langstring
   description: LangString, // Langstring
   users: List[RoleUser],   // List[User]
-  permission: Permission   // Permission => view | create | modify | delete | administrate | erase
+  permission: Permission   // Permission
 ) { self =>
 
   /**
@@ -110,5 +110,13 @@ object Role {
     users: List[RoleUser],
     permission: Permission
   ): Validation[BadRequestException, Role] =
-    Validation.succeed(new Role(id, name, description, users, permission) {})
+    Validation.succeed(
+      new Role(
+        id,
+        name,
+        description,
+        users,
+        permission
+      ) {}
+    )
 }
