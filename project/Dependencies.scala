@@ -60,7 +60,7 @@ object Dependencies {
   val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.4"
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.0" // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.5" // Scala 3 incompatible
 
