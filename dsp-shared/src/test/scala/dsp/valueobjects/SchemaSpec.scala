@@ -93,16 +93,43 @@ object SchemaSpec extends ZIOSpecDefault {
         )
       )
     },
+    test("pass an invalid value type for gui attribute 'hlist' and return an error") {
+      assertTrue(
+        Schema.GuiAttribute.make("hlist=notAnIri") == Validation.fail(
+          ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType("hlist", "notAnIri"))
+        )
+      )
+    },
     test("pass a valid value with whitespace and successfully create value object") {
       val guiAttributeWithWhitespace = "  size    =  80 "
       assertTrue(Schema.GuiAttribute.make(guiAttributeWithWhitespace).toOption.get.k == "size") &&
       assertTrue(Schema.GuiAttribute.make(guiAttributeWithWhitespace).toOption.get.v == "80")
     },
-    test("pass a valid value and successfully create value object") {
+    test("pass a valid value for 'size' and successfully create value object") {
       val guiAttributeSizeString = "size=80"
       assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.k == "size") &&
       assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.v == "80") &&
       assertTrue(Schema.GuiAttribute.make(guiAttributeSizeString).toOption.get.value == "size=80")
+    },
+    test(
+      "pass a valid value for 'hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and successfully create value object"
+    ) {
+      val guiAttributeHlistString = "hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"
+      assertTrue(Schema.GuiAttribute.make(guiAttributeHlistString).toOption.get.k == "hlist") &&
+      assertTrue(
+        Schema.GuiAttribute
+          .make(guiAttributeHlistString)
+          .toOption
+          .get
+          .v == "http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA"
+      ) &&
+      assertTrue(
+        Schema.GuiAttribute
+          .make(guiAttributeHlistString)
+          .toOption
+          .get
+          .value == "hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA"
+      )
     }
   )
 
@@ -126,11 +153,11 @@ object SchemaSpec extends ZIOSpecDefault {
 
   private val guiObjectTest = suite("gui object - makeFromStrings")(
     test(
-      "pass valid gui element with mvalid gui attributes and successfully create value object"
+      "pass valid gui element with valid gui attributes and successfully create value object"
     ) {
       val guiObject = Schema.GuiObject
         .makeFromStrings(
-          scala.collection.immutable.List(guiAttributeHlist.value),
+          scala.collection.immutable.List("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"),
           Some(guiElementList.value)
         )
         .fold(e => throw e.head, v => v)

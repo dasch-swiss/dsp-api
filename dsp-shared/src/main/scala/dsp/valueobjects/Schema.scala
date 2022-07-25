@@ -9,6 +9,7 @@ import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
 import zio.prelude.ZValidation.Failure
 import zio.prelude.ZValidation.Success
+import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import zio.prelude._
 
 import scala.collection.immutable
@@ -43,8 +44,7 @@ object Schema {
           validatedGuiElement
         )((ga, ge) => (ga, ge))
 
-      // if there were errors in creating gui attributes or gui element, all of them are returned
-      // otherwise, the gui object is created
+      // if there were errors in creating gui attributes or gui element, all of the errors are returned
       validatedGuiAttributesAndGuiElement match {
         case Failure(log, errors) => Validation.failNonEmptyChunk(errors)
         case Success(log, value)  => GuiObject.make(value._1, value._2)
@@ -207,17 +207,23 @@ object Schema {
     key: String,
     value: String
   ): Validation[ValidationException, String] = {
+
     val expectedValueType = SalsahGui.GuiAttributes.get(key)
 
     // try to parse the given value according to the expected value type
-    val parseResult = expectedValueType match {
+    val parseResult: Option[Any] = expectedValueType match {
       case Some(valueType) if valueType.toString() == "integer" => value.toIntOption
       case Some(valueType) if valueType.toString() == "percent" => value.split("%").head.trim.toIntOption
       case Some(valueType) if valueType.toString() == "decimal" => value.toDoubleOption
       case Some(valueType) if valueType.toString() == "string" =>
         if (value.trim() == "soft" || value.trim() == "hard") Some(value.trim()) else None
-      case Some(valueType) if valueType.toString() == "iri" =>
-        if (value.startsWith("<") && value.endsWith(">")) Some(value) else None
+      case Some(valueType) if valueType.toString() == "iri" => {
+        val iriWithoutBrackets: Option[String] =
+          if (value.startsWith("<") && value.endsWith(">")) Some(value.substring(1, value.length - 1)) else None
+        iriWithoutBrackets.map { value: String =>
+          if (Iri.urlValidator.isValid(encodeAllowEscapes(value))) value else None
+        }
+      }
       case _ => None
     }
 

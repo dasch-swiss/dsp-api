@@ -7,9 +7,17 @@ package dsp.valueobjects
 
 import dsp.errors.BadRequestException
 import zio.prelude.Validation
+import org.apache.commons.validator.routines.UrlValidator
 
 sealed trait Iri
 object Iri {
+
+  // A validator for URLs
+  val urlValidator =
+    new UrlValidator(
+      Array("http", "https"),       // valid URL schemes
+      UrlValidator.ALLOW_LOCAL_URLS // local URLs are URL-encoded IRIs as part of the whole URL
+    )
 
   /**
    * GroupIri value object.
