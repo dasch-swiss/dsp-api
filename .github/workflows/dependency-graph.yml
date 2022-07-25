@@ -1,11 +1,9 @@
-# .github/workflows/dependency-graph.yml
 name: Update Dependency Graph
 
 on:
   push:
     branches:
       - main # default branch of the project
-  workflow_dispatch:
 
 jobs:
   update-graph:
