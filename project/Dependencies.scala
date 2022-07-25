@@ -61,8 +61,8 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.4"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.0" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.5" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.0"  // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.21" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
