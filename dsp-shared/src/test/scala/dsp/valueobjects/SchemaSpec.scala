@@ -222,7 +222,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#List' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -295,7 +295,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#Radio' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#Radio' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
@@ -368,7 +368,7 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test(
-      "pass gui element 'salsah-gui#Pulldown' with too many gui attributes 'min=1.0','hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA' and return an error"
+      "pass gui element 'salsah-gui#Pulldown' with too many gui attributes 'min=1.0','hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>' and return an error"
     ) {
       assertTrue(
         Schema.GuiObject
