@@ -12,7 +12,7 @@ import dsp.valueobjects.Role._
 import zio.prelude.Validation
 import dsp.errors.BadRequestException
 
-case class User(
+case class RoleUser(
   id: UserId
 )
 
@@ -27,10 +27,10 @@ case class User(
  */
 sealed abstract case class Role private (
   id: RoleId,
-  name: RoleName,               // Langstring
-  description: RoleDescription, // Langstring
-  users: List[User],            // List[User]
-  permission: Permission        // Permission => view | create | modify | delete | administrate | erase
+  name: LangString,        // Langstring
+  description: LangString, // Langstring
+  users: List[RoleUser],   // List[User]
+  permission: Permission   // Permission => view | create | modify | delete | administrate | erase
 ) { self =>
 
   /**
@@ -47,7 +47,7 @@ sealed abstract case class Role private (
    * @param newValue new role's name to update
    * @return updated [[Role]]
    */
-  def updateName(newValue: RoleName): Validation[BadRequestException, Role] =
+  def updateName(newValue: LangString): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       newValue,
@@ -62,7 +62,7 @@ sealed abstract case class Role private (
    * @param newValue new role's description to update
    * @return updated [[Role]]
    */
-  def updateDescription(newValue: RoleDescription): Validation[BadRequestException, Role] =
+  def updateDescription(newValue: LangString): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       self.name,
@@ -77,7 +77,7 @@ sealed abstract case class Role private (
    * @param newValue new role's users to update
    * @return updated [[Role]]
    */
-  def updateUsers(newValue: List[User]): Validation[BadRequestException, Role] =
+  def updateUsers(newValue: List[RoleUser]): Validation[BadRequestException, Role] =
     Role.make(
       self.id,
       self.name,
@@ -105,9 +105,9 @@ sealed abstract case class Role private (
 object Role {
   def make(
     id: RoleId,
-    name: RoleName,
-    description: RoleDescription,
-    users: List[User],
+    name: LangString,
+    description: LangString,
+    users: List[RoleUser],
     permission: Permission
   ): Validation[BadRequestException, Role] =
     Validation.succeed(new Role(id, name, description, users, permission) {})

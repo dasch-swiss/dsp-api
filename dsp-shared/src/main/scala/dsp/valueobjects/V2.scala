@@ -73,6 +73,12 @@ object V2IriValidation {
    * @return the same string, escaped or unescaped as requested.
    */
   def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+// Findings about this method:
+// - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
+// - `'` doesn't appear on that list, but this method escapes it
+// - why `\r` throws error instead of being escaped?
+// - fun fact is that if I remove  StringUtils.replaceEach, for example `\t` passes unescaped, why?
+
     if (s.isEmpty || s.contains("\r")) errorFun
 
     // http://www.morelab.deusto.es/code_injection/

@@ -11,55 +11,33 @@ import zio.prelude.Validation
 object Role {
 
   /**
-   * RoleName value object.
+   * LangString value object.
+   *
+   * @param value the value of the string
+   * @param isoCode language ISO code pf the string
    */
-  sealed abstract case class RoleName private (value: String)
-  object RoleName { self =>
-    def make(value: String): Validation[Throwable, RoleName] =
+  sealed abstract case class LangString private (value: String, isoCode: String)
+  object LangString {
+    def isIsoCodeSupported(isoCode: String): Boolean =
+      V2.SupportedLanguageCodes.contains(isoCode.toLowerCase)
+
+    def make(value: String, isoCode: String): Validation[Throwable, LangString] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(RoleErrorMessages.RoleNameMissing))
+        Validation.fail(BadRequestException("Value cannot be empty."))
+      } else if (isoCode.isEmpty) {
+        Validation.fail(BadRequestException("Language ISO code cannot be empty."))
+      } else if (isIsoCodeSupported(isoCode)) {
+        Validation.fail(BadRequestException(s"Language ISO code $isoCode is not suporrted."))
       } else {
+        // Validation.succeed(new LangString(value, isoCode) {})
         val validatedValue = Validation(
           V2IriValidation.toSparqlEncodedString(
             value,
-            throw BadRequestException(RoleErrorMessages.RoleNameInvalid)
+            throw BadRequestException("String value is invalid.")
           )
         )
 
-        validatedValue.map(new RoleName(_) {})
-      }
-
-    def make(value: Option[String]): Validation[Throwable, Option[RoleName]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
-      }
-  }
-
-  /**
-   * RoleDescription value object.
-   */
-  sealed abstract case class RoleDescription private (value: Seq[V2.StringLiteralV2])
-  object RoleDescription { self =>
-    def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, RoleDescription] =
-      if (value.isEmpty) {
-        Validation.fail(BadRequestException(RoleErrorMessages.RoleDescriptionMissing))
-      } else {
-        val validatedDescriptions = Validation(value.map { description =>
-          val validatedDescription =
-            V2IriValidation.toSparqlEncodedString(
-              description.value,
-              throw BadRequestException(RoleErrorMessages.RoleDescriptionInvalid)
-            )
-          V2.StringLiteralV2(value = validatedDescription, language = description.language)
-        })
-        validatedDescriptions.map(new RoleDescription(_) {})
-      }
-
-    def make(value: Option[Seq[V2.StringLiteralV2]]): Validation[Throwable, Option[RoleDescription]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+        validatedValue.map(new LangString(_, isoCode) {})
       }
   }
 }
@@ -72,11 +50,4 @@ object Permission extends Enumeration {
   val Modify = Value("modify")
   val Delete = Value("delete")
   val Admin  = Value("admin")
-}
-
-object RoleErrorMessages {
-  val RoleNameMissing        = "Role name cannot be empty."
-  val RoleNameInvalid        = "Role name is invalid."
-  val RoleDescriptionMissing = "Role description cannot be empty."
-  val RoleDescriptionInvalid = "Role description is invalid."
 }
