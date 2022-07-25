@@ -123,6 +123,14 @@ object V2IriValidation {
     isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
 
   /**
+   * Returns `true` if an IRI string looks like a Knora role IRI.
+   *
+   * @param iri the IRI to be checked.
+   */
+  def isKnoraRoleIriStr(iri: IRI): Boolean =
+    isIri(iri) && iri.startsWith("http://" + IriDomain + "/roles/")
+
+  /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
    *
    * @param iri the IRI to be checked.

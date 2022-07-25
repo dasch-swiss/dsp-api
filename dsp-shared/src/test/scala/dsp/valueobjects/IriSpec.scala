@@ -21,6 +21,8 @@ object IriSpec extends ZIOSpecDefault {
   val listIriWithUUIDVersion3    = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
   val validProjectIri            = "http://rdfh.ch/projects/0001"
   val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
+  val validRoleIri               = "http://rdfh.chroles/jDEEitJESRi3pDaDjjQ1WQ"
+  val roleIriWithUUIDVersion3    = "http://rdfh.chroles/cCmdcpn2MO211YYOplR1hQ"
   val validUserIri               = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
   val userIriWithUUIDVersion3    = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
@@ -149,6 +151,29 @@ object IriSpec extends ZIOSpecDefault {
       assertTrue(
         ProjectIri.make(None) == Validation.succeed(None)
       )
+    }
+  )
+
+  private val RoleIriTest = suite("IriSpec - roleIri")(
+    test("pass an empty value and return an error") {
+      assertTrue(RoleIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing)))
+    },
+    test("pass an invalid value and return an error") {
+      assertTrue(
+        RoleIri.make(invalidIri) == Validation.fail(
+          BadRequestException(IriErrorMessages.RoleIriInvalid)
+        )
+      )
+    },
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
+      assertTrue(
+        RoleIri.make(roleIriWithUUIDVersion3) == Validation.fail(
+          BadRequestException(IriErrorMessages.UuidVersionInvalid)
+        )
+      )
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(RoleIri.make(validRoleIri).toOption.get.value == validRoleIri)
     }
   )
 

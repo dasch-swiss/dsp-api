@@ -113,6 +113,34 @@ object Iri {
   /**
    * UserIri value object.
    */
+  sealed abstract case class RoleIri private (value: String) extends Iri
+  object RoleIri {
+    def make(value: String): Validation[Throwable, RoleIri] =
+      if (value.isEmpty) {
+        Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
+      } else {
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
+
+        if (!V2IriValidation.isKnoraRoleIriStr(value)) {
+          Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid))
+        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
+        } else {
+          val validatedValue = Validation(
+            V2IriValidation.validateAndEscapeIri(
+              value,
+              throw BadRequestException(IriErrorMessages.RoleIriInvalid)
+            )
+          )
+
+          validatedValue.map(new RoleIri(_) {})
+        }
+      }
+  }
+
+  /**
+   * UserIri value object.
+   */
   sealed abstract case class UserIri private (value: String) extends Iri
   object UserIri {
     def make(value: String): Validation[Throwable, UserIri] =
@@ -167,6 +195,8 @@ object IriErrorMessages {
   val ListIriInvalid     = "List IRI is invalid"
   val ProjectIriMissing  = "Project IRI cannot be empty."
   val ProjectIriInvalid  = "Project IRI is invalid."
+  val RoleIriMissing     = "Role IRI cannot be empty."
+  val RoleIriInvalid     = "Role IRI is invalid."
   val UserIriMissing     = "User IRI cannot be empty."
   val UserIriInvalid     = "User IRI is invalid."
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
