@@ -19,15 +19,15 @@ object Role {
   sealed abstract case class LangString private (value: String, isoCode: String)
   object LangString {
     def isIsoCodeSupported(isoCode: String): Boolean =
-      V2.SupportedLanguageCodes.contains(isoCode.toLowerCase)
+      V2.SupportedLanguageCodes.contains(isoCode.toLowerCase) // should only lower case be supported?
 
     def make(value: String, isoCode: String): Validation[Throwable, LangString] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException("Value cannot be empty."))
       } else if (isoCode.isEmpty) {
         Validation.fail(BadRequestException("Language ISO code cannot be empty."))
-      } else if (isIsoCodeSupported(isoCode)) {
-        Validation.fail(BadRequestException(s"Language ISO code $isoCode is not suporrted."))
+      } else if (!isIsoCodeSupported(isoCode)) {
+        Validation.fail(BadRequestException(s"Language ISO code: $isoCode is not suporrted."))
       } else {
         // Validation.succeed(new LangString(value, isoCode) {})
         val validatedValue = Validation(
@@ -51,3 +51,19 @@ object Permission extends Enumeration {
   val Delete = Value("delete")
   val Admin  = Value("admin")
 }
+
+// object Permission {
+//   val View   = "view"
+//   val Create = "create"
+//   val Modify = "modify"
+//   val Delete = "delete"
+//   val Admin  = "admin"
+
+//   val availablePermissions: Set[String] = Set(
+//     View,
+//     Create,
+//     Modify,
+//     Delete,
+//     Admin
+//   )
+// }

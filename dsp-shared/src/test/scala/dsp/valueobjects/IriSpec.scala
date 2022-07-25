@@ -21,8 +21,8 @@ object IriSpec extends ZIOSpecDefault {
   val listIriWithUUIDVersion3    = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
   val validProjectIri            = "http://rdfh.ch/projects/0001"
   val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
-  val validRoleIri               = "http://rdfh.chroles/jDEEitJESRi3pDaDjjQ1WQ"
-  val roleIriWithUUIDVersion3    = "http://rdfh.chroles/cCmdcpn2MO211YYOplR1hQ"
+  val validRoleIri               = "http://rdfh.ch/roles/jDEEitJESRi3pDaDjjQ1WQ"
+  val roleIriWithUUIDVersion3    = "http://rdfh.ch/roles/cCmdcpn2MO211YYOplR1hQ"
   val validUserIri               = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
   val userIriWithUUIDVersion3    = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
