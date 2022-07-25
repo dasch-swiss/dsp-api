@@ -9,14 +9,14 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+import dsp.constants.SalsahGui
+import dsp.errors._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
-import dsp.errors._
-
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -38,7 +38,6 @@ import java.time.Instant
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import dsp.constants.SalsahGui
 
 object OntologyHelpers {
 
@@ -690,14 +689,6 @@ object OntologyHelpers {
     propertyDefs.map { case (propertyIri, propertyDef) =>
       val ontologyIri = propertyIri.getOntologyFromEntity
 
-      validateGuiAttributes(
-        propertyInfoContent = propertyDef,
-        allGuiAttributeDefinitions = allGuiAttributeDefinitions,
-        errorFun = { msg: String =>
-          throw InconsistentRepositoryDataException(msg)
-        }
-      )
-
       val isResourceProp = allKnoraResourceProps.contains(propertyIri)
       val isValueProp =
         allSubPropertyOfRelations(propertyIri).contains(OntologyConstants.KnoraBase.HasValue.toSmartIri)
@@ -814,87 +805,6 @@ object OntologyHelpers {
         }
 
       guiElementIri -> attributeDefs
-    }
-  }
-
-  /**
-   * Validates the GUI attributes of a resource class property.
-   *
-   * @param propertyInfoContent        the property definition.
-   * @param allGuiAttributeDefinitions the GUI attribute definitions for each GUI element.
-   * @param errorFun                   a function that throws an exception. It will be passed the message to be included in the exception.
-   */
-  def validateGuiAttributes(
-    propertyInfoContent: PropertyInfoContentV2,
-    allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
-    errorFun: String => Nothing
-  )(implicit stringFormatter: StringFormatter): Unit = {
-    val propertyIri = propertyInfoContent.propertyIri
-    val predicates  = propertyInfoContent.predicates
-
-    // Find out which salsah-gui:Guielement the property uses, if any.
-    val maybeGuiElementPred: Option[PredicateInfoV2] =
-      predicates.get(SalsahGui.GuiElementProp.toSmartIri)
-    val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(
-      _.requireIriObject(
-        throw InconsistentRepositoryDataException(
-          s"Property $propertyIri has an invalid object for ${SalsahGui.GuiElementProp}"
-        )
-      )
-    )
-
-    // Get that Guielement's attribute definitions, if any.
-    val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
-      case Some(guiElementIri) =>
-        allGuiAttributeDefinitions.getOrElse(
-          guiElementIri,
-          errorFun(s"Property $propertyIri has salsah-gui:guiElement $guiElementIri, which doesn't exist")
-        )
-
-      case None => Set.empty[SalsahGuiAttributeDefinition]
-    }
-
-    // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
-    val guiAttributes: Set[SalsahGuiAttribute] =
-      predicates.get(SalsahGui.GuiAttribute.toSmartIri) match {
-        case Some(guiAttributePred) =>
-          val guiElementIri = maybeGuiElementIri.getOrElse(
-            errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement")
-          )
-
-          if (guiAttributeDefs.isEmpty) {
-            errorFun(
-              s"Property $propertyIri has salsah-gui:guiAttribute, but $guiElementIri has no salsah-gui:guiAttributeDefinition"
-            )
-          }
-
-          // Syntactically validate each attribute.
-          guiAttributePred.objects.map {
-            case StringLiteralV2(guiAttributeObj, None) =>
-              stringFormatter.toSalsahGuiAttribute(
-                s = guiAttributeObj,
-                attributeDefs = guiAttributeDefs,
-                errorFun =
-                  errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $guiAttributeObj")
-              )
-
-            case other =>
-              errorFun(s"Property $propertyIri contains an invalid salsah-gui:guiAttribute: $other")
-          }.toSet
-
-        case None => Set.empty[SalsahGuiAttribute]
-      }
-
-    // Check that all required GUI attributes are provided.
-    val requiredAttributeNames             = guiAttributeDefs.filter(_.isRequired).map(_.attributeName)
-    val providedAttributeNames             = guiAttributes.map(_.attributeName)
-    val missingAttributeNames: Set[String] = requiredAttributeNames -- providedAttributeNames
-
-    if (missingAttributeNames.nonEmpty) {
-      errorFun(
-        s"Property $propertyIri has one or more missing objects of salsah-gui:guiAttribute: ${missingAttributeNames
-          .mkString(", ")}"
-      )
     }
   }
 

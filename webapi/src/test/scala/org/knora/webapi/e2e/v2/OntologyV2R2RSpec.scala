@@ -3394,4 +3394,106 @@ class OntologyV2R2RSpec extends R2RSpec {
       freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
     }
   }
+
+  "not create a property with invalid gui attribute" in {
+    val params =
+      s"""{
+         |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+         |  "@type" : "owl:Ontology",
+         |  "knora-api:lastModificationDate" : {
+         |    "@type" : "xsd:dateTimeStamp",
+         |    "@value" : "$anythingLastModDate"
+         |  },
+         |  "@graph" : [ {
+         |      "@id" : "anything:hasPropertyWithWrongGuiAttribute",
+         |      "@type" : "owl:ObjectProperty",
+         |      "knora-api:subjectType" : {
+         |        "@id" : "anything:Thing"
+         |      },
+         |      "knora-api:objectType" : {
+         |        "@id" : "knora-api:TextValue"
+         |      } ,
+         |      "rdfs:label" : [ {
+         |        "@language" : "en",
+         |        "@value" : "has wrong GUI attribute"
+         |      } ],
+         |      "rdfs:subPropertyOf" : [ {
+         |        "@id" : "knora-api:hasValue"
+         |      } ],
+         |      "salsah-gui:guiElement" : {
+         |        "@id" : "salsah-gui:SimpleText"
+         |      },
+         |      "salsah-gui:guiAttribute" : [ "size=80", "maxilength=100" ]
+         |  } ],
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+         |    "owl" : "http://www.w3.org/2002/07/owl#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+         |  }
+         |}""".stripMargin
+
+    Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)
+    ) ~> ontologiesPath ~> check {
+
+      val responseStr: String = responseAs[String]
+      assert(response.status == StatusCodes.BadRequest, responseStr)
+
+    }
+  }
+
+  "not create a property with invalid gui attribute value" in {
+    val params =
+      s"""{
+         |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+         |  "@type" : "owl:Ontology",
+         |  "knora-api:lastModificationDate" : {
+         |    "@type" : "xsd:dateTimeStamp",
+         |    "@value" : "$anythingLastModDate"
+         |  },
+         |  "@graph" : [ {
+         |      "@id" : "anything:hasPropertyWithWrongGuiAttribute",
+         |      "@type" : "owl:ObjectProperty",
+         |      "knora-api:subjectType" : {
+         |        "@id" : "anything:Thing"
+         |      },
+         |      "knora-api:objectType" : {
+         |        "@id" : "knora-api:TextValue"
+         |      } ,
+         |      "rdfs:label" : [ {
+         |        "@language" : "en",
+         |        "@value" : "has wrong GUI attribute"
+         |      } ],
+         |      "rdfs:subPropertyOf" : [ {
+         |        "@id" : "knora-api:hasValue"
+         |      } ],
+         |      "salsah-gui:guiElement" : {
+         |        "@id" : "salsah-gui:SimpleText"
+         |      },
+         |      "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100.7" ]
+         |  } ],
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+         |    "owl" : "http://www.w3.org/2002/07/owl#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+         |  }
+         |}""".stripMargin
+
+    Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)
+    ) ~> ontologiesPath ~> check {
+
+      val responseStr: String = responseAs[String]
+      assert(response.status == StatusCodes.BadRequest, responseStr)
+
+    }
+  }
 }
