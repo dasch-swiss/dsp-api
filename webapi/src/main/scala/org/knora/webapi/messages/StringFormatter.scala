@@ -198,71 +198,6 @@ object StringFormatter {
     unparsedString: String
   )
 
-  /**
-   * Represents a parsed object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param attributeName  the name of the attribute.
-   * @param attributeValue the value of the attribute.
-   */
-  case class SalsahGuiAttribute(attributeName: String, attributeValue: SalsahGuiAttributeValue)
-
-  /**
-   * Represents a parsed value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   */
-  sealed trait SalsahGuiAttributeValue {
-    def attributeType: SalsahGui.SalsahGuiAttributeType.Value
-  }
-
-  /**
-   * Represents a parsed integer value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the integer value.
-   */
-  case class SalsahGuiIntegerAttributeValue(value: Int) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Integer
-  }
-
-  /**
-   * Represents a parsed percent value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the percent value.
-   */
-  case class SalsahGuiPercentAttributeValue(value: Int) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Percent
-  }
-
-  /**
-   * Represents a parsed decimal value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the decimal value.
-   */
-  case class SalsahGuiDecimalAttributeValue(value: BigDecimal) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Decimal
-  }
-
-  /**
-   * Represents a parsed string value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the string value.
-   */
-  case class SalsahGuiStringAttributeValue(value: String) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Str
-  }
-
-  /**
-   * Represents a parsed IRI value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the IRI value.
-   */
-  case class SalsahGuiIriAttributeValue(value: IRI) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Iri
-  }
-
   /*
 
     In order to parse project-specific API v2 ontology IRIs, the StringFormatter
@@ -833,10 +768,6 @@ class StringFormatter private (
   // Parses an object of salsah-gui:guiAttributeDefinition.
   private val SalsahGuiAttributeDefinitionRegex: Regex =
     """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
-
-  // Parses an object of salsa-gui:guiAttribute.
-  private val SalsahGuiAttributeRegex: Regex =
-    """^(\p{L}+)=(.+)$""".r
 
   // A regex for matching a string containing an email address.
   private val EmailAddressRegex: Regex =
@@ -1850,73 +1781,6 @@ class StringFormatter private (
         )
 
       case _ =>
-        errorFun
-    }
-
-  /**
-   * Parses an object of `salsah-gui:guiAttribute`.
-   *
-   * @param s             the string to be parsed.
-   * @param attributeDefs the values of `salsah-gui:guiAttributeDefinition` for the property.
-   * @param errorFun      a function that throws an exception. It will be called if the string is invalid.
-   * @return a [[SalsahGuiAttribute]].
-   */
-  def toSalsahGuiAttribute(
-    s: String,
-    attributeDefs: Set[SalsahGuiAttributeDefinition],
-    errorFun: => Nothing
-  ): SalsahGuiAttribute =
-    // Try to parse the expression using a regex.
-    s match {
-      case SalsahGuiAttributeRegex(attributeName: String, attributeValue: String) =>
-        // The regex matched. Get the attribute definition corresponding to the attribute name.
-        val attributeDef = attributeDefs.find(_.attributeName == attributeName).getOrElse(errorFun)
-
-        // Try to parse the value as the type given in the attribute definition.
-        val maybeParsedAttrValue: Option[SalsahGuiAttributeValue] = attributeDef.allowedType match {
-          case SalsahGui.SalsahGuiAttributeType.Integer =>
-            catching(classOf[NumberFormatException]).opt(attributeValue.toInt).map(SalsahGuiIntegerAttributeValue)
-
-          case SalsahGui.SalsahGuiAttributeType.Decimal =>
-            catching(classOf[NumberFormatException]).opt(BigDecimal(attributeValue)).map(SalsahGuiDecimalAttributeValue)
-
-          case SalsahGui.SalsahGuiAttributeType.Percent =>
-            if (attributeValue.endsWith("%")) {
-              val intStr = attributeValue.stripSuffix("%")
-              catching(classOf[NumberFormatException]).opt(intStr.toInt).map(SalsahGuiPercentAttributeValue)
-            } else {
-              None
-            }
-
-          case SalsahGui.SalsahGuiAttributeType.Iri =>
-            if (attributeValue.startsWith("<") && attributeValue.endsWith(">")) {
-              val iriWithoutAngleBrackets = attributeValue.substring(1, attributeValue.length - 1)
-
-              catching(classOf[ParseException])
-                .opt(validateAndEscapeIri(iriWithoutAngleBrackets, throw new ParseException("Couldn't parse IRI", 1)))
-                .map(SalsahGuiIriAttributeValue)
-            } else {
-              None
-            }
-
-          case SalsahGui.SalsahGuiAttributeType.Str =>
-            if (attributeDef.enumeratedValues.nonEmpty && !attributeDef.enumeratedValues.contains(attributeValue)) {
-              errorFun
-            }
-
-            Some(SalsahGuiStringAttributeValue(attributeValue))
-
-          case _ => None
-        }
-
-        maybeParsedAttrValue match {
-          case Some(parsedAttrValue) =>
-            SalsahGuiAttribute(attributeName = attributeName, attributeValue = parsedAttrValue)
-          case None => errorFun
-        }
-
-      case _ =>
-        // The expression couldn't be parsed.
         errorFun
     }
 

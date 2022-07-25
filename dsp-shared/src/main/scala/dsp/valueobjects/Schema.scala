@@ -216,8 +216,9 @@ object Schema {
       case Some(valueType) if valueType.toString() == "decimal" => value.toDoubleOption
       case Some(valueType) if valueType.toString() == "string" =>
         if (value.trim() == "soft" || value.trim() == "hard") Some(value.trim()) else None
-      case Some(valueType) if valueType.toString() == "iri" => Some(value)
-      case _                                                => None
+      case Some(valueType) if valueType.toString() == "iri" =>
+        if (value.startsWith("<") && value.endsWith(">")) Some(value) else None
+      case _ => None
     }
 
     parseResult match {
