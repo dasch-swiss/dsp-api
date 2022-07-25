@@ -20,7 +20,7 @@ object SchemaSpec extends ZIOSpecDefault {
   private val guiAttributeSize = Schema.GuiAttribute.make("size=80").fold(e => throw e.head, v => v)
   private val guiAttributeHlist =
     Schema.GuiAttribute
-      .make("hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA")
+      .make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>")
       .fold(e => throw e.head, v => v)
   private val guiAttributeMin       = Schema.GuiAttribute.make("min=1").fold(e => throw e.head, v => v)
   private val guiAttributeMax       = Schema.GuiAttribute.make("max=10.0").fold(e => throw e.head, v => v)
