@@ -6,8 +6,8 @@
 package dsp.valueobjects
 
 import dsp.errors.BadRequestException
-import zio.prelude.Validation
 import org.apache.commons.validator.routines.UrlValidator
+import zio.prelude.Validation
 
 sealed trait Iri
 object Iri {
@@ -18,6 +18,15 @@ object Iri {
       Array("http", "https"),       // valid URL schemes
       UrlValidator.ALLOW_LOCAL_URLS // local URLs are URL-encoded IRIs as part of the whole URL
     )
+
+  /**
+   * Returns `true` if a string is an IRI.
+   *
+   * @param s the string to be checked.
+   * @return `true` if the string is an IRI.
+   */
+  def isIri(s: String): Boolean =
+    urlValidator.isValid(s)
 
   /**
    * GroupIri value object.

@@ -13,6 +13,7 @@ import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
 import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
@@ -629,16 +630,6 @@ class StringFormatter private (
   } else {
     maybeSettings.map(_.arkAssignedNumber)
   }
-
-  // Valid URL schemes.
-  private val schemes = Array("http", "https")
-
-  // A validator for URLs.
-  private val urlValidator =
-    new UrlValidator(
-      schemes,
-      UrlValidator.ALLOW_LOCAL_URLS
-    ) // local urls are URL-encoded Knora IRIs as part of the whole URL
 
   // The hostname used in internal Knora IRIs.
   private val InternalIriHostname = "www.knora.org"
@@ -1559,15 +1550,6 @@ class StringFormatter private (
     }
 
   /**
-   * Returns `true` if a string is an IRI.
-   *
-   * @param s the string to be checked.
-   * @return `true` if the string is an IRI.
-   */
-  def isIri(s: String): Boolean =
-    urlValidator.isValid(s)
-
-  /**
    * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
    *
    * @param s        the string to be checked.
@@ -1578,7 +1560,7 @@ class StringFormatter private (
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
     val urlEncodedStr = encodeAllowEscapes(s)
 
-    if (urlValidator.isValid(urlEncodedStr)) {
+    if (Iri.urlValidator.isValid(urlEncodedStr)) {
       urlEncodedStr
     } else {
       errorFun
@@ -1605,7 +1587,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    Iri.isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -1621,7 +1603,7 @@ class StringFormatter private (
       OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
     )
 
-    isIri(iri) && builtInProjects.contains(iri)
+    Iri.isIri(iri) && builtInProjects.contains(iri)
   }
 
   /**
@@ -1630,7 +1612,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraListIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
@@ -1638,7 +1620,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraUserIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora group IRI.
@@ -1646,7 +1628,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraGroupIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora permission IRI.
@@ -1654,7 +1636,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraPermissionIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
 
   /**
    * Checks that a string represents a valid resource identifier in a standoff link.
