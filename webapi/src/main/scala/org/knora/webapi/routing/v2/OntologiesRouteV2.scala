@@ -11,7 +11,11 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
+import dsp.schema.domain.CreatePropertyCommand
+import dsp.schema.domain.{SmartIri => SmartIriV3}
 import dsp.valueobjects.Iri._
+import dsp.valueobjects.LangString
 import dsp.valueobjects.Schema._
 import dsp.valueobjects.V2
 import org.knora.webapi.ApiV2Complex
@@ -20,6 +24,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
@@ -38,12 +43,6 @@ import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import dsp.errors.ValidationException
-import org.knora.webapi.messages.store.triplestoremessages.BooleanLiteralV2
-import dsp.valueobjects.LangString
-
-import dsp.schema.domain.CreatePropertyCommand
-import dsp.schema.domain.{SmartIri => NotAnotherSmartIri}
 
 object OntologiesRouteV2 {
   val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
@@ -871,9 +870,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             .flatMap(values => GuiObject.make(values._1, values._2))
 
               ontologyIri =
-                Validation.succeed(NotAnotherSmartIri(inputOntology.ontologyMetadata.ontologyIri.toString()))
+                Validation.succeed(SmartIriV3(inputOntology.ontologyMetadata.ontologyIri.toString()))
               lastModificationDate = Validation.succeed(propertyUpdateInfo.lastModificationDate)
-              propertyIri          = Validation.succeed(NotAnotherSmartIri(propertyInfoContent.propertyIri.toString()))
+              propertyIri          = Validation.succeed(SmartIriV3(propertyInfoContent.propertyIri.toString()))
               subjectType = propertyInfoContent.predicates.get(
                               OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
                             ) match {
@@ -883,7 +882,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                                   case objectType: SmartIriLiteralV2 =>
                                     Validation.succeed(
                                       Some(
-                                        NotAnotherSmartIri(objectType.value.toOntologySchema(InternalSchema).toString())
+                                        SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString())
                                       )
                                     )
                                   case other =>
@@ -897,7 +896,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                     value.objects.head match {
                       case objectType: SmartIriLiteralV2 =>
                         Validation.succeed(
-                          NotAnotherSmartIri(objectType.value.toOntologySchema(InternalSchema).toString())
+                          SmartIriV3(objectType.value.toOntologySchema(InternalSchema).toString())
                         )
                       case other => Validation.fail(ValidationException(s"Unexpected object type for $other"))
                     }
@@ -924,9 +923,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                             }
                         }
               superProperties =
-                propertyInfoContent.subPropertyOf.toList.map(smartIri =>
-                  NotAnotherSmartIri(smartIri.toString())
-                ) match {
+                propertyInfoContent.subPropertyOf.toList.map(smartIri => SmartIriV3(smartIri.toString())) match {
                   case Nil        => Validation.fail(ValidationException("SuperProperties cannot be empty."))
                   case superProps => Validation.succeed(superProps)
                 }

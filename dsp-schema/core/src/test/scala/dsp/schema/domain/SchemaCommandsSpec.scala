@@ -1,14 +1,15 @@
 package dsp.schema.domain
 
-import zio._
-import zio.test._
-import zio.test.Assertion._
-import zio.prelude.Validation
-import java.time.Instant
+import dsp.constants.SalsahGui
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.Schema
-import dsp.constants.SalsahGui
+import zio._
+import zio.prelude.Validation
+import zio.test.Assertion._
+import zio.test._
+
+import java.time.Instant
 
 /**
  * This spec is used to test [[dsp.schema.domain.SchemaCommands]].
