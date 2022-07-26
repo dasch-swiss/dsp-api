@@ -240,17 +240,6 @@ object Cache extends LazyLogging {
       }
     }
 
-    // A map of OWL named individual IRIs to named individuals.
-    val allIndividuals = ontologies.flatMap {
-      case (_, ontology) => {
-        ontology.individuals.map {
-          case (individualIri, readIndividual) => {
-            individualIri -> readIndividual.entityInfoContent
-          }
-        }
-      }
-    }
-
     // Construct entity definitions.
 
     val readClassInfos: Map[SmartIri, ReadClassInfoV2] = ontologies.flatMap { case (_, ontology) =>
