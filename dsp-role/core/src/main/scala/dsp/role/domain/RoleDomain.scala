@@ -8,7 +8,7 @@ package dsp.role.domain
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Id.RoleId
 import dsp.valueobjects.Id.UserId
-import dsp.valueobjects.Permission._
+import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
 import zio.prelude.Validation
 

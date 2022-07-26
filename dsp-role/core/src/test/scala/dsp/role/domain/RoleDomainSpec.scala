@@ -32,14 +32,14 @@ object RoleDomainSpec extends ZIOSpecDefault {
           name        <- RoleTestData.roleName1
           description <- RoleTestData.roleDescription1
           users        = RoleTestData.roleUsers1
-          permission   = RoleTestData.rolePermission1
+          permission  <- RoleTestData.rolePermission1
 
           role <- Role.make(
                     id,
                     name,
                     description,
                     users = users,
-                    permission = permission
+                    permission
                   )
         } yield assertTrue(role.id == id) &&
           assertTrue(role.name == name) &&
@@ -94,7 +94,7 @@ object RoleDomainSpec extends ZIOSpecDefault {
       (
         for {
           role        <- RoleTestData.role1
-          newValue     = Permission(2)
+          newValue    <- Permission.make(Permission.Create)
           updatedRole <- role.updatePermission(newValue)
         } yield assertTrue(updatedRole.name == role.name) &&
           assertTrue(updatedRole.description == role.description) &&
