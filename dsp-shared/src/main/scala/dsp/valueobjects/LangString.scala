@@ -3,6 +3,8 @@ package dsp.valueobjects
 import dsp.errors.ValidationException
 import zio.prelude.Validation
 
+// TODO: docstrings
+
 sealed abstract case class LangString private (language: LanguageCode, value: String)
 
 object LangString {
@@ -13,7 +15,7 @@ object LangString {
       Validation.succeed(new LangString(language, value) {})
     }
 
-  def make(language: String, value: String): Validation[ValidationException, LangString] =
+  def makeFromStrings(language: String, value: String): Validation[ValidationException, LangString] =
     for {
       languageCode <- LanguageCode.make(language)
       langString   <- LangString.make(languageCode, value)
