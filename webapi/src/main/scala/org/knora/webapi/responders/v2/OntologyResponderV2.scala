@@ -2753,6 +2753,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeUnescapedNewLinkValuePropertyDef.map { unescapedNewLinkPropertyDef =>
             unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = unescapedNewLinkPropertyDef,
+              isEditable = true,
               isResourceProp = true,
               isLinkValueProp = true
             )
@@ -3277,6 +3278,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeNewLinkValuePropertyDef.map { newLinkPropertyDef: PropertyInfoContentV2 =>
             newLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = newLinkPropertyDef,
+              isEditable = true,
               isResourceProp = true,
               isLinkValueProp = true
             )
