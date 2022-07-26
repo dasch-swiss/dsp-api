@@ -5,10 +5,10 @@
 
 package dsp.role.domain
 
-import zio.test._
-import dsp.valueobjects.Role._
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
+import dsp.valueobjects.Role._
+import zio.test._
 
 object RoleDomainSpec extends ZIOSpecDefault {
   def spec = (compareRolesTest + createRoleTest + updateRoleTest)
