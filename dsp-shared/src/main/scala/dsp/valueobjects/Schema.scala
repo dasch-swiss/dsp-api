@@ -41,32 +41,9 @@ object Schema {
   )
 
   /**
-   * A set that contains all gui elements that point to a list
-   */
-  private val guiElementsPointingToList: Set[SalsahGui.IRI] = Set(
-    SalsahGui.List,
-    SalsahGui.Radio,
-    SalsahGui.Pulldown
-  )
-
-  /**
-   * A set that contains all gui elements that do not have a gui attribute
-   */
-  private val guiElementsWithoutGuiAttribute: Set[SalsahGui.IRI] = Set(
-    SalsahGui.Checkbox,
-    SalsahGui.Fileupload,
-    SalsahGui.Richtext,
-    SalsahGui.TimeStamp,
-    SalsahGui.Interval,
-    SalsahGui.Geonames,
-    SalsahGui.Geometry,
-    SalsahGui.Date
-  )
-
-  /**
    * A map that defines the (sometimes optional) gui attributes for each gui element
    */
-  private val guiElementToGuiAttributes = Map(
+  private val guiElementToGuiAttributes: Map[SalsahGui.IRI, List[String]] = Map(
     (SalsahGui.List, List(SalsahGui.Hlist)),
     (SalsahGui.Radio, List(SalsahGui.Hlist)),
     (SalsahGui.Pulldown, List(SalsahGui.Hlist)),
@@ -77,6 +54,18 @@ object Schema {
     (SalsahGui.Searchbox, List(SalsahGui.Numprops)),
     (SalsahGui.Colorpicker, List(SalsahGui.Ncolors))
   )
+
+  /**
+   * A set that contains all gui elements that do not have a gui attribute
+   */
+  private val guiElementsWithoutGuiAttribute: Set[SalsahGui.IRI] =
+    guiElements.toSet diff guiElementToGuiAttributes.keySet
+
+  /**
+   * A set that contains all gui elements that point to a list
+   */
+  private val guiElementsPointingToList: Set[SalsahGui.IRI] =
+    guiElementToGuiAttributes.filter(_._2 == List(SalsahGui.Hlist)).keySet
 
   /**
    * A map that defines the gui attribute type for each gui attribute
