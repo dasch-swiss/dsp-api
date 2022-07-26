@@ -29,6 +29,7 @@ object SalsahGui {
   val GuiElementProp: IRI         = SalsahGuiPrefixExpansion + "guiElement"
   val GuiElementClass: IRI        = SalsahGuiPrefixExpansion + "Guielement"
 
+  // Gui elements
   val SimpleText: IRI  = SalsahGuiPrefixExpansion + "SimpleText"
   val Textarea: IRI    = SalsahGuiPrefixExpansion + "Textarea"
   val Pulldown: IRI    = SalsahGuiPrefixExpansion + "Pulldown"
@@ -47,59 +48,18 @@ object SalsahGui {
   val Geonames: IRI    = SalsahGuiPrefixExpansion + "Geonames"
   val Fileupload: IRI  = SalsahGuiPrefixExpansion + "Fileupload"
 
-  val GuiElements = scala.collection.immutable.List(
-    SimpleText,
-    Textarea,
-    Pulldown,
-    Slider,
-    Spinbox,
-    Searchbox,
-    Date,
-    Geometry,
-    Colorpicker,
-    List,
-    Radio,
-    Checkbox,
-    Richtext,
-    Interval,
-    TimeStamp,
-    Geonames,
-    Fileupload
-  )
-
-  val guiElementsPointingToList: Set[SalsahGui.IRI] =
-    Set(
-      SalsahGui.List,
-      SalsahGui.Radio,
-      SalsahGui.Pulldown
-    )
-
-  val guiElementsWithoutGuiAttribute: Set[SalsahGui.IRI] =
-    Set(
-      SalsahGui.Checkbox,
-      SalsahGui.Fileupload,
-      SalsahGui.Richtext,
-      SalsahGui.TimeStamp,
-      SalsahGui.Interval,
-      SalsahGui.Geonames,
-      SalsahGui.Geometry,
-      SalsahGui.Date
-    )
-
-  val GuiAttributes =
-    scala.collection.immutable.Map(
-      ("ncolors", SalsahGuiAttributeType.Integer),
-      ("hlist", SalsahGuiAttributeType.Iri),
-      ("numprops", SalsahGuiAttributeType.Integer),
-      ("size", SalsahGuiAttributeType.Integer),
-      ("maxlength", SalsahGuiAttributeType.Integer),
-      ("min", SalsahGuiAttributeType.Decimal),
-      ("max", SalsahGuiAttributeType.Decimal),
-      ("cols", SalsahGuiAttributeType.Integer),
-      ("rows", SalsahGuiAttributeType.Integer),
-      ("width", SalsahGuiAttributeType.Percent),
-      ("wrap", SalsahGuiAttributeType.Str)
-    )
+  // Gui attributes
+  val Ncolors: String   = "ncolors"
+  val Hlist: String     = "hlist"
+  val Numprops: String  = "numprops"
+  val Size: String      = "size"
+  val Maxlength: String = "maxlength"
+  val Min: String       = "min"
+  val Max: String       = "max"
+  val Cols: String      = "cols"
+  val Rows: String      = "rows"
+  val Width: String     = "width"
+  val Wrap: String      = "wrap"
 
   object SalsahGuiAttributeType extends Enumeration {
     val Integer: Value = Value(0, "integer")
@@ -130,9 +90,10 @@ object SalsahGui {
     val GuiElementProp: IRI         = SalsahGuiPrefixExpansion + "guiElement"
     val GuiAttributeDefinition: IRI = SalsahGuiPrefixExpansion + "guiAttributeDefinition"
     val GuiElementClass: IRI        = SalsahGuiPrefixExpansion + "Guielement"
-    val Geometry: IRI               = SalsahGuiPrefixExpansion + "Geometry"
-    val Colorpicker: IRI            = SalsahGuiPrefixExpansion + "Colorpicker"
-    val Fileupload: IRI             = SalsahGuiPrefixExpansion + "Fileupload"
-    val Richtext: IRI               = SalsahGuiPrefixExpansion + "Richtext"
+
+    val Geometry: IRI    = SalsahGuiPrefixExpansion + "Geometry"
+    val Colorpicker: IRI = SalsahGuiPrefixExpansion + "Colorpicker"
+    val Fileupload: IRI  = SalsahGuiPrefixExpansion + "Fileupload"
+    val Richtext: IRI    = SalsahGuiPrefixExpansion + "Richtext"
   }
 }
