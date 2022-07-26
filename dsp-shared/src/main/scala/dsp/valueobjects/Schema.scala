@@ -8,18 +8,19 @@ package dsp.valueobjects
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import dsp.constants.SalsahGui
 import dsp.errors.ValidationException
+import dsp.valueobjects.{List => ListGuiElement}
 import zio.prelude.ZValidation.Failure
 import zio.prelude.ZValidation.Success
 import zio.prelude._
 
-import scala.collection.immutable
+import scala.collection.immutable.List
 
 object Schema {
 
   /**
    * A list of all known gui elements
    */
-  val guiElements: List[SalsahGui.IRI] = scala.collection.immutable.List(
+  val guiElements: List[SalsahGui.IRI] = List(
     SalsahGui.SimpleText,
     SalsahGui.Textarea,
     SalsahGui.Pulldown,
@@ -147,7 +148,7 @@ object Schema {
             if (!guiAttributes.isEmpty) {
               Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
             } else {
-              Validation.succeed(scala.collection.immutable.List())
+              Validation.succeed(List())
             }
 
         }
@@ -216,15 +217,16 @@ object Schema {
   ): Validation[ValidationException, List[GuiAttribute]] = {
 
     val expectedGuiAttributes = guiElement.value match {
-      case SalsahGui.List        => scala.collection.immutable.List("hlist")
-      case SalsahGui.Radio       => scala.collection.immutable.List("hlist")
-      case SalsahGui.Pulldown    => scala.collection.immutable.List("hlist")
-      case SalsahGui.Slider      => scala.collection.immutable.List("min", "max")
-      case SalsahGui.SimpleText  => scala.collection.immutable.List("size", "maxlength")
-      case SalsahGui.Textarea    => scala.collection.immutable.List("cols", "rows", "width", "wrap")
-      case SalsahGui.Spinbox     => scala.collection.immutable.List("min", "max")
-      case SalsahGui.Searchbox   => scala.collection.immutable.List("numprops")
-      case SalsahGui.Colorpicker => scala.collection.immutable.List("ncolors")
+      case SalsahGui.List       => List(SalsahGui.Hlist)
+      case SalsahGui.Radio      => List(SalsahGui.Hlist)
+      case SalsahGui.Pulldown   => List(SalsahGui.Hlist)
+      case SalsahGui.Slider     => List(SalsahGui.Min, SalsahGui.Max)
+      case SalsahGui.SimpleText => List(SalsahGui.Size, SalsahGui.Maxlength)
+      case SalsahGui.Textarea =>
+        List(SalsahGui.Cols, SalsahGui.Rows, SalsahGui.Width, SalsahGui.Wrap)
+      case SalsahGui.Spinbox     => List(SalsahGui.Min, SalsahGui.Max)
+      case SalsahGui.Searchbox   => List(SalsahGui.Numprops)
+      case SalsahGui.Colorpicker => List(SalsahGui.Ncolors)
     }
 
     val guiAttributeIsRequired: Boolean =
