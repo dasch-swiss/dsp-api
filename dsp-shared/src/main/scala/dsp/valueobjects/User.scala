@@ -222,6 +222,4 @@ object UserErrorMessages {
   val GivenNameInvalid        = "GivenName is invalid."
   val FamilyNameMissing       = "FamilyName cannot be empty."
   val FamilyNameInvalid       = "FamilyName is invalid."
-  val LanguageCodeMissing     = "LanguageCode cannot be empty."
-  val LanguageCodeInvalid     = "LanguageCode is invalid."
 }

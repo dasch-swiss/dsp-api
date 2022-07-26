@@ -56,9 +56,9 @@ sealed abstract case class LanguageCode private (value: String)
 object LanguageCode { self =>
   def make(value: String): Validation[ValidationException, LanguageCode] =
     if (value.isEmpty) {
-      Validation.fail(ValidationException(UserErrorMessages.LanguageCodeMissing))
+      Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing))
     } else if (!V2.SupportedLanguageCodes.contains(value)) {
-      Validation.fail(ValidationException(UserErrorMessages.LanguageCodeInvalid))
+      Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid))
     } else {
       Validation.succeed(new LanguageCode(value) {})
     }
@@ -72,4 +72,8 @@ object LanguageCode { self =>
 
 object LangStringErrorMessages {
   val LangStringValueEmpty = "String value cannot be empty."
+}
+object LanguageCodeErrorMessages {
+  val LanguageCodeMissing = "LanguageCode cannot be empty."
+  val LanguageCodeInvalid = "LanguageCode is invalid."
 }
