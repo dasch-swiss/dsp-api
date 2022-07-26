@@ -20,7 +20,7 @@ object Schema {
   /**
    * A list of all known gui elements
    */
-  val guiElements: List[SalsahGui.IRI] = List(
+  private[valueobjects] val guiElements: List[SalsahGui.IRI] = List(
     SalsahGui.SimpleText,
     SalsahGui.Textarea,
     SalsahGui.Pulldown,
@@ -64,9 +64,24 @@ object Schema {
   )
 
   /**
+   * A map that defines the (sometimes optional) gui attributes for each gui element
+   */
+  private val guiElementToGuiAttributes = Map(
+    (SalsahGui.List, List(SalsahGui.Hlist)),
+    (SalsahGui.Radio, List(SalsahGui.Hlist)),
+    (SalsahGui.Pulldown, List(SalsahGui.Hlist)),
+    (SalsahGui.Slider, List(SalsahGui.Min, SalsahGui.Max)),
+    (SalsahGui.SimpleText, List(SalsahGui.Size, SalsahGui.Maxlength)),
+    (SalsahGui.Textarea, List(SalsahGui.Cols, SalsahGui.Rows, SalsahGui.Width, SalsahGui.Wrap)),
+    (SalsahGui.Spinbox, List(SalsahGui.Min, SalsahGui.Max)),
+    (SalsahGui.Searchbox, List(SalsahGui.Numprops)),
+    (SalsahGui.Colorpicker, List(SalsahGui.Ncolors))
+  )
+
+  /**
    * A map that defines the gui attribute type for each gui attribute
    */
-  val guiAttributeToType = Map(
+  private[valueobjects] val guiAttributeToType = Map(
     (SalsahGui.Ncolors, SalsahGui.SalsahGuiAttributeType.Integer),
     (SalsahGui.Hlist, SalsahGui.SalsahGuiAttributeType.Iri),
     (SalsahGui.Numprops, SalsahGui.SalsahGuiAttributeType.Integer),
@@ -216,18 +231,7 @@ object Schema {
     guiAttributes: List[GuiAttribute]
   ): Validation[ValidationException, List[GuiAttribute]] = {
 
-    val expectedGuiAttributes = guiElement.value match {
-      case SalsahGui.List       => List(SalsahGui.Hlist)
-      case SalsahGui.Radio      => List(SalsahGui.Hlist)
-      case SalsahGui.Pulldown   => List(SalsahGui.Hlist)
-      case SalsahGui.Slider     => List(SalsahGui.Min, SalsahGui.Max)
-      case SalsahGui.SimpleText => List(SalsahGui.Size, SalsahGui.Maxlength)
-      case SalsahGui.Textarea =>
-        List(SalsahGui.Cols, SalsahGui.Rows, SalsahGui.Width, SalsahGui.Wrap)
-      case SalsahGui.Spinbox     => List(SalsahGui.Min, SalsahGui.Max)
-      case SalsahGui.Searchbox   => List(SalsahGui.Numprops)
-      case SalsahGui.Colorpicker => List(SalsahGui.Ncolors)
-    }
+    val expectedGuiAttributes: List[String] = guiElementToGuiAttributes.getOrElse(guiElement.value, List())
 
     val guiAttributeIsRequired: Boolean =
       guiElementsPointingToList.contains(guiElement.value) ||
