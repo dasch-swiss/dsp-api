@@ -592,11 +592,17 @@ pages of a book like in [this](https://docs.dasch.swiss/DSP-API/01-introduction/
 
 #### isSequenceOf
 
-Similar to `kb:isPartOf` for `kb:StillImageRepresentations`, part-whole-relations can be defined for resource that have a time dimension by using `kb:isSequenceOf`. This mostly makes sense for video or audio resources that are subtypes of `kb:MovingImageRepresentation` and `kb:AudioRepresentation`.
+Similar to `kb:isPartOf` for `kb:StillImageRepresentations`, part-whole-relations can be defined for resources that have a time 
+dimension by using `kb:isSequenceOf`. You can use it for video or audio resources that are subtypes of `kb:MovingImageRepresentation` 
+and `kb:AudioRepresentation`.
 
-`kb:isSequenceOf` is intended to be used in combination with `kb:hasSequenceBounds` which points to a `kb:IntervalValue` that defines the start and end point of the subseqence in relation to the entire audio/video resource. A dedicated frontend behaviour is planned, if these properties are used in combination.
+`kb:isSequenceOf` is intended to be used in combination with the property `kb:hasSequenceBounds` which points to a `kb:IntervalValue`.
+This defines the start and end point of the subseqence in relation to the entire audio/video resource as an [interval](#intervalvalue). 
+A dedicated frontend behaviour is planned, if these properties are used in combination.
 
-The main difference to `kb:isPartOf` is where actual resoure(s) live: In `kb:isPartOf`, each part *is a* `kb:StillImageRepresentation` and the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`, and the parts only define which sub-sequence of this representation they are.
+There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: For `kb:isPartOf`, each part *is a* `kb:StillImageRepresentation` and 
+the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`.
+The parts only define which sub-sequence of this representation they are.
 
 ### Text with Standoff Markup
 

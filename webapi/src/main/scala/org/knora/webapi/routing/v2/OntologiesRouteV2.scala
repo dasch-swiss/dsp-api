@@ -906,7 +906,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                         case None => Validation.fail(ValidationException("Label missing"))
                         case Some(value) =>
                           value.objects.head match {
-                            case StringLiteralV2(value, Some(language)) => LangString.make(language, value)
+                            case StringLiteralV2(value, Some(language)) => LangString.makeFromStrings(language, value)
                             case StringLiteralV2(_, None) =>
                               Validation.fail(ValidationException("Label missing the language tag"))
                             case _ => Validation.fail(ValidationException("Unexpected Type for Label"))
@@ -917,7 +917,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                           case Some(value) =>
                             value.objects.head match {
                               case StringLiteralV2(value, Some(language)) =>
-                                LangString.make(language, value).map(Some(_))
+                                LangString.makeFromStrings(language, value).map(Some(_))
                               case StringLiteralV2(_, None) =>
                                 Validation.fail(ValidationException("Comment missing the language tag"))
                               case _ => Validation.fail(ValidationException("Unexpected Type for Comment"))

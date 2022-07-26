@@ -30,11 +30,9 @@ object UserSpec extends ZIOSpecDefault {
   private val validPassword                               = "pass-word"
   private val validGivenName                              = "John"
   private val validFamilyName                             = "Rambo"
-  private val validLanguageCode                           = "de"
-  private val invalidLanguageCode                         = "00"
 
   def spec =
-    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + languageCodeTest + systemAdminTest)
+    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + systemAdminTest)
 
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {
@@ -185,24 +183,6 @@ object UserSpec extends ZIOSpecDefault {
 
       assertTrue(password.matches(passwordEqualString)) &&
       assertTrue(!password.matches(passwordNotEqualString))
-    }
-  )
-
-  private val languageCodeTest = suite("LanguageCode")(
-    test("pass an empty value and return an error") {
-      assertTrue(
-        LanguageCode.make("") == Validation.fail(ValidationException(UserErrorMessages.LanguageCodeMissing))
-      )
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        LanguageCode.make(invalidLanguageCode) == Validation.fail(
-          ValidationException(UserErrorMessages.LanguageCodeInvalid)
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(LanguageCode.make(validLanguageCode).toOption.get.value == validLanguageCode)
     }
   )
 

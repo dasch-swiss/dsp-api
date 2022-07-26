@@ -842,7 +842,6 @@ object OntologyHelpers {
       predicates.get(SalsahGui.GuiElementProp.toSmartIri)
 
     for {
-      // _ <- Validation.fromOption(None).mapError(_ => BadRequestException("..."))
       maybeGuiElementIri <-
         Validation.fromTry(
           Try(
