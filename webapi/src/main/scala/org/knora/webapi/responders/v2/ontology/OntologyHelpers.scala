@@ -21,7 +21,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
@@ -667,7 +666,6 @@ object OntologyHelpers {
    * @param directSubPropertyOfRelations a map of property IRIs to their immediate base properties.
    * @param allSubPropertyOfRelations    a map of property IRIs to all their base properties.
    * @param allSubClassOfRelations       a map of class IRIs to all their base classes.
-   * @param allGuiAttributeDefinitions   a map of `Guielement` IRIs to sets of [[SalsahGuiAttributeDefinition]].
    * @param allKnoraResourceProps        a set of the IRIs of all Knora resource properties.
    * @param allLinkProps                 a set of the IRIs of all link properties.
    * @param allLinkValueProps            a set of the IRIs of link value properties.
@@ -679,7 +677,6 @@ object OntologyHelpers {
     directSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     allSubClassOfRelations: Map[SmartIri, Seq[SmartIri]],
-    allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
     allKnoraResourceProps: Set[SmartIri],
     allLinkProps: Set[SmartIri],
     allLinkValueProps: Set[SmartIri],
@@ -766,46 +763,6 @@ object OntologyHelpers {
     individualDefs.map { case (individualIri, individual) =>
       individualIri -> ReadIndividualInfoV2(individual)
     }
-
-  /**
-   * Given all the OWL named individuals available, constructs a map of `salsah-gui:Guielement` individuals to
-   * their GUI attribute definitions.
-   *
-   * @param allIndividuals all the OWL named individuals available.
-   * @return a map of `salsah-gui:Guielement` individuals to their GUI attribute definitions.
-   */
-  def makeGuiAttributeDefinitions(
-    allIndividuals: Map[SmartIri, IndividualInfoContentV2]
-  )(implicit stringFormatter: StringFormatter): Map[SmartIri, Set[SalsahGuiAttributeDefinition]] = {
-    val guiElementIndividuals: Map[SmartIri, IndividualInfoContentV2] = allIndividuals.filter { case (_, individual) =>
-      individual.getRdfType.toString == SalsahGui.GuiElementClass
-    }
-
-    guiElementIndividuals.map { case (guiElementIri, guiElementIndividual) =>
-      val attributeDefs: Set[SalsahGuiAttributeDefinition] =
-        guiElementIndividual.predicates.get(SalsahGui.GuiAttributeDefinition.toSmartIri) match {
-          case Some(predicateInfo) =>
-            predicateInfo.objects.map {
-              case StringLiteralV2(attributeDefStr, None) =>
-                stringFormatter.toSalsahGuiAttributeDefinition(
-                  attributeDefStr,
-                  throw InconsistentRepositoryDataException(
-                    s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr"
-                  )
-                )
-
-              case other =>
-                throw InconsistentRepositoryDataException(
-                  s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $other"
-                )
-            }.toSet
-
-          case None => Set.empty[SalsahGuiAttributeDefinition]
-        }
-
-      guiElementIri -> attributeDefs
-    }
-  }
 
   /**
    * Before creating a new class or adding cardinalities to an existing class, checks the validity of the

@@ -11,7 +11,6 @@ import akka.pattern._
 import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
-import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
@@ -182,22 +181,6 @@ object StringFormatter {
    * @param prefixLabel the prefix label.
    */
   case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
-
-  /**
-   * Represents a parsed object of the property `salsah-gui:guiAttributeDefinition`.
-   *
-   * @param attributeName    the name of the attribute.
-   * @param isRequired       `true` if the attribute is required.
-   * @param allowedType      the type of the attribute's value.
-   * @param enumeratedValues the allowed values, if this is an enumerated string attribute.
-   */
-  case class SalsahGuiAttributeDefinition(
-    attributeName: String,
-    isRequired: Boolean,
-    allowedType: SalsahGui.SalsahGuiAttributeType.Value,
-    enumeratedValues: Set[String] = Set.empty[String],
-    unparsedString: String
-  )
 
   /*
 
@@ -755,10 +738,6 @@ class StringFormatter private (
   ).r
 
   private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
-
-  // Parses an object of salsah-gui:guiAttributeDefinition.
-  private val SalsahGuiAttributeDefinitionRegex: Regex =
-    """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
 
   // A regex for matching a string containing an email address.
   private val EmailAddressRegex: Regex =
@@ -1729,42 +1708,6 @@ class StringFormatter private (
    */
   def toJsonEncodedString(s: String): String =
     JsString(s).compactPrint
-
-  /**
-   * Parses an object of `salsah-gui:guiAttributeDefinition`.
-   *
-   * @param s        the string to be parsed.
-   * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-   * @return a [[SalsahGuiAttributeDefinition]].
-   */
-  def toSalsahGuiAttributeDefinition(s: String, errorFun: => Nothing): SalsahGuiAttributeDefinition =
-    s match {
-      case SalsahGuiAttributeDefinitionRegex(attributeName, required, allowedTypeStr, _, enumeratedValuesStr) =>
-        val allowedType: SalsahGui.SalsahGuiAttributeType.Value =
-          SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
-
-        val enumeratedValues: Set[String] = Option(enumeratedValuesStr) match {
-          case Some(enumeratedValuesStr) =>
-            if (allowedType != SalsahGui.SalsahGuiAttributeType.Str) {
-              errorFun
-            }
-
-            enumeratedValuesStr.split('|').toSet
-
-          case None => Set.empty[String]
-        }
-
-        SalsahGuiAttributeDefinition(
-          attributeName = attributeName,
-          isRequired = Option(required).nonEmpty,
-          allowedType = allowedType,
-          enumeratedValues = enumeratedValues,
-          unparsedString = s
-        )
-
-      case _ =>
-        errorFun
-    }
 
   /**
    * Parses an `xsd:dateTimeStamp`.
