@@ -30,7 +30,7 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
         label             <- LangString.make(LanguageCode.en, "some label")
         commentLangString <- LangString.make(LanguageCode.en, "some comment")
         comment            = Some(commentLangString)
-        guiAttribute      <- Schema.GuiAttribute.make("hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA")
+        guiAttribute      <- Schema.GuiAttribute.make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>")
         guiElement        <- Schema.GuiElement.make(SalsahGui.List)
         guiObject         <- Schema.GuiObject.make(guiAttributes = List(guiAttribute), guiElement = Some(guiElement))
         command = CreatePropertyCommand.make(
@@ -44,7 +44,6 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
                     superProperties = superProperties,
                     guiObject = guiObject
                   )
-        // commant <- CreatePropertyCommand.make()
       } yield assert(command.toEither)(isRight)).toZIO
     }
   )

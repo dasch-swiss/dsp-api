@@ -39,7 +39,7 @@ object LangString {
 
   /**
    * Unsafely creates a LangString value object.
-   * Warning: skipps all validation. Should not be used unless there is no possibility for the data to be invalid.
+   * Warning: skips all validation. Should not be used unless there is no possibility for the data to be invalid.
    *
    * @param languagea [[LanguageCode]] value object representing the language of the LangString.
    * @param value     the string value of the LangString.
@@ -58,7 +58,7 @@ object LanguageCode { self =>
     if (value.isEmpty) {
       Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing))
     } else if (!V2.SupportedLanguageCodes.contains(value)) {
-      Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid))
+      Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(value)))
     } else {
       Validation.succeed(new LanguageCode(value) {})
     }
@@ -74,6 +74,6 @@ object LangStringErrorMessages {
   val LangStringValueEmpty = "String value cannot be empty."
 }
 object LanguageCodeErrorMessages {
-  val LanguageCodeMissing = "LanguageCode cannot be empty."
-  val LanguageCodeInvalid = "LanguageCode is invalid."
+  val LanguageCodeMissing               = "LanguageCode cannot be empty."
+  def LanguageCodeInvalid(lang: String) = s"LanguageCode '$lang' is invalid."
 }

@@ -29,7 +29,7 @@ object LangStringSpec extends ZIOSpecDefault {
     test("pass an invalid value and return an error") {
       assertTrue(
         LanguageCode.make(invalidLanguageCode) == Validation.fail(
-          ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid)
+          ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(invalidLanguageCode))
         )
       )
     },
@@ -102,8 +102,10 @@ object LangStringSpec extends ZIOSpecDefault {
     ),
     suite("`makeFromStrings()` smart constructor")(
       test("pass an invalid language value and return an error") {
-        val expected = Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid))
-        val result   = LangString.makeFromStrings("english", "ok string value")
+        val invalidLanguageCode = "english"
+        val expected =
+          Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(invalidLanguageCode)))
+        val result = LangString.makeFromStrings(invalidLanguageCode, "ok string value")
         assertTrue(result == expected)
       },
       test("pass an empty string value and return an error") {

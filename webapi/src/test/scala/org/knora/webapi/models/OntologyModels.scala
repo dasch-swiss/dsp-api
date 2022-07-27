@@ -29,7 +29,7 @@ sealed abstract case class CreateClassRequest private (value: String)
 object CreateClassRequest {
 
   /**
-   * Make a CreateClassRequest (JSON-LD)
+   * Makes a CreateClassRequest (JSON-LD).
    *
    * @param ontologyName         the ontology name
    * @param lastModificationDate the LMD of the ontology
