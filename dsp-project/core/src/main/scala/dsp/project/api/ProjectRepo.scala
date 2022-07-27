@@ -14,59 +14,57 @@ import zio.macros.accessible
 
 /**
  * The trait (interface) for the project repository. The project repository is responsible for storing and retrieving projects.
- * Needs to be used by the user repository implementations.
+ * Needs to be used by the project repository implementations.
  */
 @accessible // with this annotation we don't have to write the companion object ourselves
 trait ProjectRepo {
 
-// TODO: update all following in this file
+  /**
+   * Writes a project to the repository (used for both create and update).
+   * If this fails (e.g. the triplestore is not available), it's a non-recovable error. That's why we need UIO.
+   *   When used, we should do it like: ...store(...).orDie
+   *
+   * @param project the project to write
+   * @return        The project ID
+   */
+  def storeProject(project: Project): UIO[ProjectId]
 
-//   /**
-//    * Writes a user to the repository (used for both create and update).
-//    * If this fails (e.g. the triplestore is not available), it's a non-recovable error. That's why we need UIO.
-//    *   When used, we should do it like: ...store(...).orDie
-//    *
-//    * @param user the user to write
-//    * @return     Unit
-//    */
-//   def storeUser(user: User): UIO[UserId]
+  /**
+   * Gets all projects from the repository.
+   *
+   * @return   a list of [[Project]]
+   */
+  def getProjects(): UIO[List[Project]]
 
-//   /**
-//    * Gets all users from the repository.
-//    *
-//    * @return   a list of [[User]]
-//    */
-//   def getUsers(): UIO[List[User]]
+  /**
+   * Retrieves the project from the repository by ID.
+   *
+   * @param id the project's ID
+   * @return an optional [[Project]]
+   */
+  def getProjectById(id: ProjectId): IO[Option[Nothing], Project]
 
-//   /**
-//    * Retrieves the user from the repository by ID.
-//    *
-//    * @param id the user's ID
-//    * @return an optional [[User]]
-//    */
-//   def getUserById(id: UserId): IO[Option[Nothing], User]
+  /**
+   * Retrieves the project from the repository by ShortCode.
+   *
+   * @param shortCode ShortCode of the project.
+   * @return an optional [[Project]].
+   */
+  def getProjectByShortCode(shortCode: String): IO[Option[Nothing], Project]
 
-//   /**
-//    * Retrieves the user from the repository by username or email.
-//    *
-//    * @param usernameOrEmail username or email of the user.
-//    * @return an optional [[User]].
-//    */
-//   def getUserByUsernameOrEmail(usernameOrEmail: String): IO[Option[Nothing], User]
+  /**
+   * Checks if a project ShortCode exists in the repo.
+   *
+   * @param shortCode ShortCode of the project.
+   * @return Unit in case of success
+   */
+  def checkShortCodeExists(shortCode: String): IO[Option[Nothing], Unit]
 
-//   /**
-//    * Checks if a username or email exists in the repo.
-//    *
-//    * @param usernameOrEmail username or email of the user.
-//    * @return Unit in case of success
-//    */
-//   def checkUsernameOrEmailExists(usernameOrEmail: String): IO[Option[Nothing], Unit]
-
-//   /**
-//    * Deletes a [[User]] from the repository by its [[UserId]].
-//    *
-//    * @param id the user ID
-//    * @return   Unit or None if not found
-//    */
-//   def deleteUser(id: UserId): IO[Option[Nothing], UserId]
+  /**
+   * Deletes a [[Project]] from the repository by its [[ProjectId]].
+   *
+   * @param id the project ID
+   * @return   Project ID or None if not found
+   */
+  def deleteProject(id: ProjectId): IO[Option[Nothing], ProjectId]
 }
