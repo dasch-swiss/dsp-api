@@ -6,9 +6,6 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactory
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
@@ -41,7 +38,7 @@ abstract class GravsearchQueryOptimisationFeature(
 /**
  * A feature factory that constructs Gravsearch query optimisation algorithms.
  */
-object GravsearchQueryOptimisationFactory extends FeatureFactory {
+object GravsearchQueryOptimisationFactory {
 
   /**
    * Returns a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations, depending
@@ -49,34 +46,25 @@ object GravsearchQueryOptimisationFactory extends FeatureFactory {
    *
    * @param typeInspectionResult the type inspection result.
    * @param querySchema the query schema.
-   * @param featureFactoryConfig the feature factory configuration.
    * @return a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations.
    */
   def getGravsearchQueryOptimisationFeature(
     typeInspectionResult: GravsearchTypeInspectionResult,
-    querySchema: ApiV2Schema,
-    featureFactoryConfig: FeatureFactoryConfig
+    querySchema: ApiV2Schema
   ): GravsearchQueryOptimisationFeature =
     new GravsearchQueryOptimisationFeature(
       typeInspectionResult: GravsearchTypeInspectionResult,
       querySchema: ApiV2Schema
     ) {
       override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
-        if (featureFactoryConfig.getToggle("gravsearch-dependency-optimisation").isEnabled) {
-          new ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult, querySchema).optimiseQueryPatterns(
-            new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
-              .optimiseQueryPatterns(
-                new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
-                  .optimiseQueryPatterns(patterns)
-              )
-          )
-        } else {
+        new ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult, querySchema).optimiseQueryPatterns(
           new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
             .optimiseQueryPatterns(
               new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
                 .optimiseQueryPatterns(patterns)
             )
-        }
+        )
+
     }
 }
 
@@ -90,8 +78,7 @@ object GravsearchQueryOptimisationFactory extends FeatureFactory {
 class RemoveRedundantKnoraApiResourceOptimisationFeature(
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema
-) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
-    with Feature {
+) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
 
   /**
    * If the specified statement has rdf:type with an IRI as object, returns that IRI, otherwise None.
@@ -158,8 +145,7 @@ class RemoveRedundantKnoraApiResourceOptimisationFeature(
 class RemoveEntitiesInferredFromPropertyOptimisationFeature(
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema
-) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
-    with Feature {
+) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
 
   /**
    * Performs the optimisation.
@@ -242,8 +228,7 @@ class RemoveEntitiesInferredFromPropertyOptimisationFeature(
 class ReorderPatternsByDependencyOptimisationFeature(
   typeInspectionResult: GravsearchTypeInspectionResult,
   querySchema: ApiV2Schema
-) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
-    with Feature {
+) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema) {
 
   /**
    * Converts a sequence of query patterns into DAG representing dependencies between

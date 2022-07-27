@@ -649,7 +649,7 @@ class FileModelsSpec extends CoreSpec {
           resourceIri = resourceIRI,
           valueIri = valueIRI
         )
-        val msg = documentRepresentation.toMessage(featureFactoryConfig = defaultFeatureFactoryConfig)
+        val msg = documentRepresentation.toMessage()
         msg.updateValue should equal(
           UpdateValueContentV2(
             resourceIri = resourceIRI,
@@ -695,7 +695,6 @@ class FileModelsSpec extends CoreSpec {
           ontologyName = prefix
         )
         val msg = documentRepresentation.toMessage(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           internalMimeType = Some(internalMimeType),
           originalFilename = Some(originalFileName),
           originalMimeType = Some(originalMimetype),

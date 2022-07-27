@@ -5,8 +5,8 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
 import dsp.errors.BadRequestException
+import zio.prelude.Validation
 
 sealed trait Iri
 object Iri {
@@ -114,7 +114,7 @@ object Iri {
    * UserIri value object.
    */
   sealed abstract case class UserIri private (value: String) extends Iri
-  object UserIri { self =>
+  object UserIri {
     def make(value: String): Validation[Throwable, UserIri] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
@@ -136,11 +136,26 @@ object Iri {
           validatedValue.map(new UserIri(_) {})
         }
       }
+  }
 
-    def make(value: Option[String]): Validation[Throwable, Option[UserIri]] =
-      value match {
-        case Some(v) => self.make(v).map(Some(_))
-        case None    => Validation.succeed(None)
+  /**
+   * PropertyIri value object.
+   */
+  sealed abstract case class PropertyIri private (value: String) extends Iri
+  object PropertyIri {
+    def make(value: String): Validation[Throwable, PropertyIri] =
+      if (value.isEmpty) {
+        Validation.fail(BadRequestException(IriErrorMessages.PropertyIriMissing))
+      } else {
+        // TODO all the following needs to be checked when validating a property iri (see string formatter for the implementations of these methods)
+        // if (
+        //   !(propertyIri.isKnoraApiV2EntityIri &&
+        //     propertyIri.getOntologySchema.contains(ApiV2Complex) &&
+        //     propertyIri.getOntologyFromEntity == externalOntologyIri)
+        // ) {
+        //   throw BadRequestException(s"Invalid property IRI: $propertyIri")
+        // }
+        Validation.succeed(new PropertyIri(value) {})
       }
   }
 }
@@ -155,4 +170,5 @@ object IriErrorMessages {
   val UserIriMissing     = "User IRI cannot be empty."
   val UserIriInvalid     = "User IRI is invalid."
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
+  val PropertyIriMissing = "Property IRI cannot be empty."
 }

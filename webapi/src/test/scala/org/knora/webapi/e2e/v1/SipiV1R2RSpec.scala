@@ -20,16 +20,25 @@ import org.knora.webapi.messages.v1.responder.valuemessages.CreateRichtextV1
 import org.knora.webapi.routing.v1.ResourcesRouteV1
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.testservices.TestActorSystemService
+import org.knora.webapi.core.Logging
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
@@ -58,12 +67,20 @@ class SipiV1R2RSpec extends R2RSpec {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer,
+      Logging.slf4j,
+      TestClientService.layer,
+      TestActorSystemService.layer
     )
 
   object RequestParams {

@@ -14,7 +14,7 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future

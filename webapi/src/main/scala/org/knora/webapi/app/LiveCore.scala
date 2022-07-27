@@ -16,7 +16,7 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
 
 import scala.concurrent.ExecutionContext
-import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 /**
  * The applications actor system.
@@ -55,7 +55,7 @@ trait LiveCore extends Core {
    * sequences.
    */
   lazy val appActor: ActorRef = system.actorOf(
-    Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, appConfig))
+    Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig))
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = APPLICATION_MANAGER_ACTOR_NAME
   )

@@ -6,7 +6,6 @@
 package org.knora.webapi.messages.v1.responder.ckanmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
@@ -26,14 +25,12 @@ sealed trait CkanResponderRequestV1 extends KnoraRequestV1
  * @param projects
  * @param limit
  * @param info
- * @param featureFactoryConfig the feature factory configuration.
  * @param userProfile
  */
 case class CkanRequestV1(
   projects: Option[Seq[String]],
   limit: Option[Int],
   info: Boolean,
-  featureFactoryConfig: FeatureFactoryConfig,
   userProfile: UserADM
 ) extends CkanResponderRequestV1
 

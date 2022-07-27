@@ -8,7 +8,7 @@ package org.knora.webapi.util.rdf
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.IRI
 import dsp.errors.AssertionException
-import org.knora.webapi.feature._
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
@@ -17,19 +17,12 @@ import java.io.FileInputStream
 
 /**
  * Tests implementations of [[RdfModel]].
- *
- * @param featureToggle a feature toggle specifying which implementation of [[RdfModel]] should
- *                      be used for the test.
  */
-abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
-  private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-    testToggles = Set(featureToggle),
-    parent = new KnoraSettingsFeatureFactoryConfig(settings)
-  )
+class RdfModelSpec() extends CoreSpec {
 
-  private val model: RdfModel              = RdfFeatureFactory.getRdfModelFactory(featureFactoryConfig).makeEmptyModel
-  private val nodeFactory: RdfNodeFactory  = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+  private val model: RdfModel              = RdfFeatureFactory.getRdfModelFactory().makeEmptyModel
+  private val nodeFactory: RdfNodeFactory  = RdfFeatureFactory.getRdfNodeFactory()
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
   /**
    * Adds a statement, then searches for it by subject and predicate.

@@ -16,7 +16,7 @@ import org.knora.webapi.IRI
 import dsp.errors.BadRequestException
 import dsp.errors.SipiException
 import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.http.status.ApiStatusCodesV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -204,7 +204,7 @@ object RouteUtilV1 {
    *                                       resources. In a bulk import, this allows standoff links to resources
    *                                       that are to be created by the import.
    * @param userProfile                    the user making the request.
-   * @param featureFactoryConfig           the feature factory configuration.
+   *
    * @param settings                       the application's settings.
    * @param responderManager               a reference to the responder manager.
    * @param log                            a logging adapter.
@@ -217,7 +217,6 @@ object RouteUtilV1 {
     mappingIri: IRI,
     acceptStandoffLinksToClientIDs: Boolean,
     userProfile: UserADM,
-    featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
     log: Logger
@@ -230,7 +229,6 @@ object RouteUtilV1 {
           .ask(
             GetMappingRequestV2(
               mappingIri = mappingIri,
-              featureFactoryConfig = featureFactoryConfig,
               requestingUser = userProfile
             )
           )

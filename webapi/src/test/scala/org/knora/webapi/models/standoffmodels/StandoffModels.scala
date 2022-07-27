@@ -5,7 +5,6 @@
 
 package org.knora.webapi.models.standoffmodels
 
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -49,13 +48,12 @@ sealed abstract case class DefineStandoffMapping private (
    * Create a [[CreateMappingRequestV2]] message representation of the request. This can be used in unit tests.
    *
    * @param xml                  the mapping XML.
-   * @param featureFactoryConfig the [[FeatureFactoryConfig]].
+   *
    * @param user                 the user issuing the request.
    * @return a [[CreateMappingRequestV2]] message representation of the request that can be processed by an Akka actor.
    */
   def toMessage(
     xml: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     user: UserADM
   ): CreateMappingRequestV2 = {
     val mappingMetadata = CreateMappingRequestMetadataV2(
@@ -66,7 +64,6 @@ sealed abstract case class DefineStandoffMapping private (
     CreateMappingRequestV2(
       metadata = mappingMetadata,
       xml = CreateMappingRequestXMLV2(xml),
-      featureFactoryConfig = featureFactoryConfig,
       requestingUser = user,
       apiRequestID = UUID.randomUUID()
     )

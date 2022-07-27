@@ -9,8 +9,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import dsp.errors.BadRequestException
-import org.knora.webapi.feature.Feature
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -31,19 +30,18 @@ object DeleteListItemsRouteADM {
  */
 class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
-    with Feature
     with Authenticator
     with ListADMJsonProtocol {
 
   import DeleteListItemsRouteADM._
 
-  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    deleteListItem(featureFactoryConfig) ~
-      canDeleteList(featureFactoryConfig) ~
-      deleteListNodeComments(featureFactoryConfig)
+  def makeRoute(): Route =
+    deleteListItem() ~
+      canDeleteList() ~
+      deleteListNodeComments()
 
   /* delete list (i.e. root node) or a child node which should also delete its children */
-  private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+  private def deleteListItem(): Route = path(ListsBasePath / Segment) { iri =>
     delete {
       /* delete a list item root node or child if unused */
       requestContext =>
@@ -51,10 +49,9 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield ListItemDeleteRequestADM(
           nodeIri = nodeIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
         )
@@ -62,7 +59,6 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -73,24 +69,22 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Checks if a list can be deleted (none of its nodes is used in data).
    */
-  private def canDeleteList(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def canDeleteList(): Route =
     path(ListsBasePath / "candelete" / Segment) { iri =>
       get { requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[CanDeleteListRequestADM] = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          requestingUser <- getUserADM(requestContext)
         } yield CanDeleteListRequestADM(
           iri = listIri,
-          featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log
@@ -101,24 +95,22 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Deletes all comments from requested list node (only child).
    */
-  private def deleteListNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def deleteListNodeComments(): Route =
     path(ListsBasePath / "comments" / Segment) { iri =>
       delete { requestContext =>
         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[ListNodeCommentsDeleteRequestADM] =
           for {
-            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+            requestingUser <- getUserADM(requestContext)
           } yield ListNodeCommentsDeleteRequestADM(
             iri = listIri,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser
           )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log

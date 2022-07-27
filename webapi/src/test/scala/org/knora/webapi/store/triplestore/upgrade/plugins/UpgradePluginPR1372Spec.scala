@@ -14,7 +14,7 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr1372.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR1372(defaultFeatureFactoryConfig)
+      val plugin = new UpgradePluginPR1372()
       plugin.transform(model)
 
       // Make an in-memory repository containing the transformed model.

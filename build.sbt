@@ -28,7 +28,7 @@ lazy val buildSettings = Seq(
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "root", file("."))
-  .aggregate(webapi, apiMain)
+  .aggregate(webapi, sipi, shared, valueObjects, userCore, userHandler, userRepo, userInterface)
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
     // values set for all sub-projects
@@ -70,7 +70,7 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
     Docker / defaultLinuxInstallLocation := "/sipi",
     Universal / mappings ++= {
       // copy the sipi/scripts folder
-      directory("sipi/scripts")
+      directory("sipi/scripts"),
     },
     // use filterNot to return all items that do NOT meet the criteria
     dockerCommands := dockerCommands.value.filterNot {
@@ -105,7 +105,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
   .settings(
     name := "webapi",
     resolvers ++= Seq(
-      Resolver.bintrayRepo("hseeberger", "maven")
+      Resolver.bintrayRepo("hseeberger", "maven"),
+      "Sonatype" at "https://oss.sonatype.org/content/repositories/snapshots"
     ),
     libraryDependencies ++= Dependencies.webapiLibraryDependencies
   )
@@ -143,9 +144,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     logLevel := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
-    fork := true,                       // run tests in a forked JVM
-    Test / testForkedParallel := false, // run forked tests in parallel
-    Test / parallelExecution := false,  // run non-forked tests in parallel
+    Test / fork := true,                // run tests in a forked JVM
+    Test / testForkedParallel := false, // not run forked tests in parallel
+    Test / parallelExecution := false,  // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
     Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
@@ -231,15 +232,6 @@ lazy val webapiJavaTestOptions = Seq(
 // DSP's new codebase
 //////////////////////////////////////
 
-lazy val apiMain = project
-  .in(file("dsp-api-main"))
-  .settings(
-    name := "dsp-api-main",
-    libraryDependencies ++= Dependencies.dspApiMainLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaCore, schemaRepo, schemaApi)
-
 // Value Objects project
 
 lazy val valueObjects = project
@@ -249,52 +241,6 @@ lazy val valueObjects = project
     libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-
-// Schema projects
-
-lazy val schemaApi = project
-  .in(file("dsp-schema/api"))
-  .settings(
-    name := "schemaApi",
-    libraryDependencies ++= Dependencies.schemaApiLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaCore)
-
-lazy val schemaCore = project
-  .in(file("dsp-schema/core"))
-  .settings(
-    name := "schemaCore",
-    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-
-lazy val schemaRepo = project
-  .in(file("dsp-schema/repo"))
-  .settings(
-    name := "schemaRepo",
-    libraryDependencies ++= Dependencies.schemaRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaCore)
-
-lazy val schemaRepoEventStoreService = project
-  .in(file("dsp-schema/repo-eventstore-service"))
-  .settings(
-    name := "schemaRepoEventstoreService",
-    libraryDependencies ++= Dependencies.schemaRepoEventStoreServiceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaRepo)
-
-lazy val schemaRepoSearchService = project
-  .in(file("dsp-schema/repo-search-service"))
-  .settings(
-    name := "dsp-schema-repo-search-service",
-    libraryDependencies ++= Dependencies.schemaRepoSearchServiceLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(schemaRepo)
 
 // User projects
 
@@ -328,7 +274,27 @@ lazy val userHandler = project
     libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, userCore, userRepo % "test->test") //userHandler tests need mock implementation of UserRepo
+  .dependsOn(
+    shared,
+    userCore % "compile->compile;test->test",
+    userRepo % "test->test" //userHandler tests need mock implementation of UserRepo
+  )
+
+lazy val userRepo = project
+  .in(file("dsp-user/repo"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "userRepo",
+    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, userCore % "compile->compile;test->test")
 
 lazy val userCore = project
   .in(file("dsp-user/core"))
@@ -345,23 +311,6 @@ lazy val userCore = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)
-
-lazy val userRepo = project
-  .in(file("dsp-user/repo"))
-  .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
-    name := "userRepo",
-    libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-  .dependsOn(shared, userCore)
-//.dependsOn(userHandler % "compile->compile;test->test", userDomain)
 
 lazy val shared = project
   .in(file("dsp-shared"))

@@ -9,7 +9,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -35,20 +34,17 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    deletePermission(featureFactoryConfig)
+  override def makeRoute(): Route =
+    deletePermission()
 
   /**
    * Delete a permission
    */
-  private def deletePermission(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def deletePermission(): Route =
     path(PermissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
-          requestingUser <- getUserADM(
-                              requestContext = requestContext,
-                              featureFactoryConfig = featureFactoryConfig
-                            )
+          requestingUser <- getUserADM(requestContext)
         } yield PermissionDeleteRequestADM(
           permissionIri = iri,
           requestingUser = requestingUser,
@@ -58,7 +54,6 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
           settings = settings,
           appActor = appActor,
           log = log

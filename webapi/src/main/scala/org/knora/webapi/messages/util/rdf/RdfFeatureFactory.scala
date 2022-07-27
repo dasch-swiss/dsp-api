@@ -6,16 +6,13 @@
 package org.knora.webapi.messages.util.rdf
 
 import dsp.errors.AssertionException
-import org.knora.webapi.feature.FeatureFactory
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.util.rdf.jenaimpl._
-import org.knora.webapi.messages.util.rdf.rdf4jimpl._
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * A feature factory that creates RDF processing tools.
  */
-object RdfFeatureFactory extends FeatureFactory {
+object RdfFeatureFactory {
 
   /**
    * The name of the feature toggle that enables the Jena implementation of the RDF façade.
@@ -27,12 +24,6 @@ object RdfFeatureFactory extends FeatureFactory {
   private val jenaModelFactory                               = new JenaModelFactory(jenaNodeFactory)
   private val jenaFormatUtil                                 = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
   private var jenaShaclValidator: Option[JenaShaclValidator] = None
-
-  // RDF4J singletons.
-  private val rdf4jNodeFactory                                 = new RDF4JNodeFactory
-  private val rdf4jModelFactory                                = new RDF4JModelFactory(rdf4jNodeFactory)
-  private val rdf4jFormatUtil                                  = new RDF4JFormatUtil(modelFactory = rdf4jModelFactory, nodeFactory = rdf4jNodeFactory)
-  private var rdf4jShaclValidator: Option[RDF4JShaclValidator] = None
 
   /**
    * Initialises the [[RdfFeatureFactory]]. This method must be called once, on application startup.
@@ -49,62 +40,32 @@ object RdfFeatureFactory extends FeatureFactory {
           nodeFactory = jenaNodeFactory
         )
       )
-
-      rdf4jShaclValidator = Some(
-        new RDF4JShaclValidator(
-          baseDir = settings.shaclShapesDir,
-          rdfFormatUtil = rdf4jFormatUtil,
-          nodeFactory = rdf4jNodeFactory
-        )
-      )
     }
 
   /**
    * Returns an [[RdfModelFactory]].
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfModelFactory]].
    */
-  def getRdfModelFactory(featureFactoryConfig: FeatureFactoryConfig): RdfModelFactory =
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaModelFactory
-    } else {
-      rdf4jModelFactory
-    }
+  def getRdfModelFactory(): RdfModelFactory = jenaModelFactory
 
   /**
    * Returns an [[RdfNodeFactory]].
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfNodeFactory]].
    */
-  def getRdfNodeFactory(featureFactoryConfig: FeatureFactoryConfig): RdfNodeFactory =
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaNodeFactory
-    } else {
-      rdf4jNodeFactory
-    }
+  def getRdfNodeFactory(): RdfNodeFactory = jenaNodeFactory
 
   /**
    * Returns an [[RdfFormatUtil]].
    *
-   * @param featureFactoryConfig the feature factory configuration.
    * @return an [[RdfFormatUtil]].
    */
-  def getRdfFormatUtil(featureFactoryConfig: FeatureFactoryConfig): RdfFormatUtil =
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaFormatUtil
-    } else {
-      rdf4jFormatUtil
-    }
+  def getRdfFormatUtil(): RdfFormatUtil = jenaFormatUtil
 
-  def getShaclValidator(featureFactoryConfig: FeatureFactoryConfig): ShaclValidator = {
+  def getShaclValidator(): ShaclValidator = {
     def notInitialised: Nothing = throw AssertionException("RdfFeatureFactory has not been initialised")
 
-    if (featureFactoryConfig.getToggle(JENA_TOGGLE_NAME).isEnabled) {
-      jenaShaclValidator.getOrElse(notInitialised)
-    } else {
-      rdf4jShaclValidator.getOrElse(notInitialised)
-    }
+    jenaShaclValidator.getOrElse(notInitialised)
   }
 }

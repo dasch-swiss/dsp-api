@@ -27,13 +27,13 @@ object IriSpec extends ZIOSpecDefault {
   def spec = (groupIriTest + listIriTest + projectIriTest)
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(GroupIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))) &&
       assertTrue(
         GroupIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.GroupIriMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         GroupIri.make(invalidIri) == Validation.fail(
           BadRequestException(IriErrorMessages.GroupIriInvalid)
@@ -45,7 +45,7 @@ object IriSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid IRI containing unsupported UUID version and throw an error") {
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         GroupIri.make(groupIriWithUUIDVersion3) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
@@ -69,13 +69,13 @@ object IriSpec extends ZIOSpecDefault {
   )
 
   private val listIriTest = suite("IriSpec - ListIri")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(ListIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))) &&
       assertTrue(
         ListIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.ListIriMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         ListIri.make(invalidIri) == Validation.fail(
           BadRequestException(IriErrorMessages.ListIriInvalid)
@@ -87,7 +87,7 @@ object IriSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid IRI containing unsupported UUID version and throw an error") {
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         ListIri.make(listIriWithUUIDVersion3) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
@@ -111,13 +111,13 @@ object IriSpec extends ZIOSpecDefault {
   )
 
   private val projectIriTest = suite("IriSpec - ProjectIri")(
-    test("pass an empty value and throw an error") {
+    test("pass an empty value and return an error") {
       assertTrue(ProjectIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))) &&
       assertTrue(
         ProjectIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.ProjectIriMissing))
       )
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         ProjectIri.make(invalidIri) == Validation.fail(
           BadRequestException(IriErrorMessages.ProjectIriInvalid)
@@ -129,7 +129,7 @@ object IriSpec extends ZIOSpecDefault {
         )
       )
     },
-    test("pass an invalid IRI containing unsupported UUID version and throw an error") {
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         ProjectIri.make(projectIriWithUUIDVersion3) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
@@ -152,45 +152,26 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
-  private val UserIriTest = suite("IriSpec - ProjectIri")(
-    test("pass an empty value and throw an error") {
-      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))) &&
-      assertTrue(
-        UserIri.make(Some("")) == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing))
-      )
+  private val UserIriTest = suite("IriSpec - UserIri")(
+    test("pass an empty value and return an error") {
+      assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
     },
-    test("pass an invalid value and throw an error") {
+    test("pass an invalid value and return an error") {
       assertTrue(
         UserIri.make(invalidIri) == Validation.fail(
           BadRequestException(IriErrorMessages.UserIriInvalid)
         )
-      ) &&
-      assertTrue(
-        UserIri.make(Some(invalidIri)) == Validation.fail(
-          BadRequestException(IriErrorMessages.UserIriInvalid)
-        )
       )
     },
-    test("pass an invalid IRI containing unsupported UUID version and throw an error") {
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
       assertTrue(
         UserIri.make(userIriWithUUIDVersion3) == Validation.fail(
-          BadRequestException(IriErrorMessages.UuidVersionInvalid)
-        )
-      ) &&
-      assertTrue(
-        UserIri.make(Some(userIriWithUUIDVersion3)) == Validation.fail(
           BadRequestException(IriErrorMessages.UuidVersionInvalid)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(UserIri.make(validUserIri).toOption.get.value == validUserIri) &&
-      assertTrue(UserIri.make(Option(validUserIri)).getOrElse(null).get.value == validUserIri)
-    },
-    test("successfully validate passing None") {
-      assertTrue(
-        UserIri.make(None) == Validation.succeed(None)
-      )
+      assertTrue(UserIri.make(validUserIri).toOption.get.value == validUserIri)
     }
   )
 }

@@ -16,6 +16,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import java.time.Instant
 import java.util.UUID
+import dsp.constants.SalsahGui
 
 /**
  * Tests [[StringFormatter]].
@@ -1073,7 +1074,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "hlist",
           isRequired = true,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Iri,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Iri,
           unparsedString = hlistDef
         )
       )
@@ -1084,7 +1085,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "numprops",
           isRequired = false,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
           unparsedString = numpropsDef
         )
       )
@@ -1095,7 +1096,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "size",
           isRequired = false,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
           unparsedString = sizeDef
         )
       )
@@ -1106,7 +1107,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "maxlength",
           isRequired = false,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
           unparsedString = maxlengthDef
         )
       )
@@ -1117,7 +1118,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "max",
           isRequired = true,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Decimal,
           unparsedString = maxDef
         )
       )
@@ -1128,7 +1129,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "min",
           isRequired = true,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Decimal,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Decimal,
           unparsedString = minDef
         )
       )
@@ -1139,7 +1140,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "width",
           isRequired = false,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Percent,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Percent,
           unparsedString = widthDef
         )
       )
@@ -1150,7 +1151,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "rows",
           isRequired = false,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Integer,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
           unparsedString = rowsDef
         )
       )
@@ -1161,7 +1162,7 @@ class StringFormatterSpec extends CoreSpec() {
         SalsahGuiAttributeDefinition(
           attributeName = "wrap",
           isRequired = false,
-          allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str,
+          allowedType = SalsahGui.SalsahGuiAttributeType.Str,
           enumeratedValues = Set("soft", "hard"),
           unparsedString = wrapDef
         )

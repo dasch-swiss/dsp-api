@@ -169,6 +169,14 @@ case class InvalidJsonLDException(msg: String, cause: Throwable = null) extends 
 case class InvalidRdfException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 /**
+ * An exception indication that the validation of one or more values submitted to the API v2 failed.
+ *
+ * @param msg   a description of the error.
+ * @param cause the cause for the error
+ */
+case class ValidationException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
+
+/**
  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
  *
  * @param message a description of the error.
@@ -292,12 +300,15 @@ object TriplestoreConnectionException {
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-case class TriplestoreTimeoutException(message: String, cause: Option[Throwable] = None)
+final case class TriplestoreTimeoutException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
 object TriplestoreTimeoutException {
   def apply(message: String, e: Throwable, log: Logger): TriplestoreTimeoutException =
     TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+
+  def apply(message: String, cause: Throwable): TriplestoreTimeoutException =
+    TriplestoreTimeoutException(message, Some(cause))
 }
 
 /**
@@ -334,12 +345,15 @@ object TriplestoreInternalException {
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-case class TriplestoreResponseException(message: String, cause: Option[Throwable] = None)
+final case class TriplestoreResponseException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
 object TriplestoreResponseException {
   def apply(message: String, e: Throwable, log: Logger): TriplestoreResponseException =
     TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+
+  def apply(message: String): TriplestoreResponseException =
+    TriplestoreResponseException(message)
 }
 
 /**
@@ -373,7 +387,7 @@ object InvalidApiJsonException {
 }
 
 /**
- * Indicates that during caching with [[org.knora.webapi.store.cacheservice.api.CacheService]] something went wrong.
+ * Indicates that during caching with [[org.knora.webapi.store.cache.api.CacheService]] something went wrong.
  *
  * @param message a description of the error.
  */

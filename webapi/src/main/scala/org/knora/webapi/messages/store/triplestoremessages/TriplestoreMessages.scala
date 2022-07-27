@@ -10,7 +10,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
 import org.knora.webapi._
 import dsp.errors._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -28,6 +27,9 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import dsp.valueobjects.V2
+
+import com.typesafe.config.Config
+import zio._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -61,9 +63,8 @@ case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
  * [[SparqlConstructResponse]].
  *
  * @param sparql               the SPARQL string.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureFactoryConfig) extends TriplestoreRequest
+case class SparqlConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. The triplestore's will be
@@ -73,14 +74,12 @@ case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureF
  * @param graphIri             the named graph IRI to be used in the TriG file.
  * @param outputFile           the file to be written.
  * @param outputFormat         the output file format.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class SparqlConstructFileRequest(
   sparql: String,
   graphIri: IRI,
   outputFile: Path,
-  outputFormat: QuadFormat,
-  featureFactoryConfig: FeatureFactoryConfig
+  outputFormat: QuadFormat
 ) extends TriplestoreRequest
 
 /**
@@ -95,10 +94,8 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  * [[SparqlExtendedConstructResponse]].
  *
  * @param sparql               the SPARQL string.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class SparqlExtendedConstructRequest(sparql: String, featureFactoryConfig: FeatureFactoryConfig)
-    extends TriplestoreRequest
+case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
@@ -121,11 +118,13 @@ object SparqlExtendedConstructResponse {
    * @return a [[SparqlExtendedConstructResponse]] representing the document.
    */
   def parseTurtleResponse(
-    turtleStr: String,
-    rdfFormatUtil: RdfFormatUtil,
-    log: Logger
-  ): Try[SparqlExtendedConstructResponse] = {
-    val parseTry = Try {
+    turtleStr: String
+  ): IO[DataConversionException, SparqlExtendedConstructResponse] = {
+
+    val rdfFormatUtil: RdfFormatUtil =
+      RdfFeatureFactory.getRdfFormatUtil()
+
+    ZIO.attemptBlocking {
       implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
       val statementMap: mutable.Map[SubjectV2, ConstructPredicateObjects] = mutable.Map.empty
@@ -202,14 +201,12 @@ object SparqlExtendedConstructResponse {
       }
 
       SparqlExtendedConstructResponse(statementMap.toMap)
-    }
-
-    parseTry match {
-      case Success(parsed) => Success(parsed)
-      case Failure(e) =>
-        log.error(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter, ${e.toString()}")
-        Failure(DataConversionException("Couldn't parse Turtle document"))
-    }
+    }.foldZIO(
+      failure =>
+        ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
+          ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
+      ZIO.succeed(_)
+    )
   }
 }
 
@@ -229,13 +226,11 @@ case class SparqlExtendedConstructResponse(
  * @param graphIri             the IRI of the named graph.
  * @param outputFile           the destination file.
  * @param outputFormat         the output file format.
- * @param featureFactoryConfig the feature factory configuration.
  */
 case class NamedGraphFileRequest(
   graphIri: IRI,
   outputFile: Path,
-  outputFormat: QuadFormat,
-  featureFactoryConfig: FeatureFactoryConfig
+  outputFormat: QuadFormat
 ) extends TriplestoreRequest
 
 /**
@@ -285,7 +280,7 @@ case class SparqlAskResponse(result: Boolean)
  * @param rdfDataObjects  contains a list of [[RdfDataObject]].
  * @param prependDefaults denotes if a default set defined in application.conf should be also loaded
  */
-case class ResetRepositoryContent(rdfDataObjects: Seq[RdfDataObject], prependDefaults: Boolean = true)
+case class ResetRepositoryContent(rdfDataObjects: List[RdfDataObject], prependDefaults: Boolean = true)
     extends TriplestoreRequest
 
 /**
@@ -308,7 +303,7 @@ case class DropAllRepositoryContentACK()
  *
  * @param rdfDataObjects contains a list of [[RdfDataObject]].
  */
-case class InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) extends TriplestoreRequest
+case class InsertRepositoryContent(rdfDataObjects: List[RdfDataObject]) extends TriplestoreRequest
 
 /**
  * Sent as a response to [[InsertRepositoryContent]] if the request was processed successfully.
@@ -367,10 +362,8 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
  * Requests that the repository is downloaded to an N-Quads file. A successful response will be a [[FileWrittenResponse]].
  *
  * @param outputFile           the output file.
- * @param featureFactoryConfig the feature factory configuration.
  */
-case class DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig)
-    extends TriplestoreRequest
+case class DownloadRepositoryRequest(outputFile: Path) extends TriplestoreRequest
 
 /**
  * Indicates that a file was written successfully.
@@ -396,14 +389,6 @@ case class RepositoryUploadedResponse()
  * @param message a message providing details of what was done.
  */
 case class RepositoryUpdatedResponse(message: String) extends TriplestoreRequest
-
-/**
- * Updates the triplestore's full-text search index.
- *
- * @param subjectIri if a subject has changed, update the index for that subject. Otherwise, updates
- *                   the index to add any subjects not yet indexed.
- */
-case class SearchIndexUpdateRequest(subjectIri: Option[String] = None) extends TriplestoreRequest
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages

@@ -42,7 +42,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       "succeed with the correct 'email' " in {
         val resF = Authenticator invokePrivate getUserByIdentifier(
           UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           timeout,
@@ -56,7 +55,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       "fail with the wrong 'email' " in {
         val resF = Authenticator invokePrivate getUserByIdentifier(
           UserIdentifierADM(maybeEmail = Some("wronguser@example.com")),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           timeout,
@@ -71,7 +69,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         an[BadRequestException] should be thrownBy {
           Authenticator invokePrivate getUserByIdentifier(
             UserIdentifierADM(),
-            defaultFeatureFactoryConfig,
             system,
             appActor,
             timeout,
@@ -90,7 +87,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           )
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(correctPasswordCreds),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           executionContext
@@ -104,7 +100,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some("wrongemail@example.com")), "wrongpassword")
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(wrongPasswordCreds),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           executionContext
@@ -121,7 +116,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           )
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(wrongPasswordCreds),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           executionContext
@@ -140,7 +134,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val tokenCreds = KnoraJWTTokenCredentialsV2(token)
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           executionContext
@@ -160,7 +153,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           executionContext
@@ -173,7 +165,6 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val tokenCreds = KnoraJWTTokenCredentialsV2("123456")
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
-          defaultFeatureFactoryConfig,
           system,
           appActor,
           executionContext
@@ -183,6 +174,12 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
       }
 
+    }
+
+    "called, the 'calculateCookieName' method" should {
+      "succeed with generating the name" in {
+        Authenticator.calculateCookieName(settings) should equal("KnoraAuthenticationGAXDALRQFYYDUMZTGMZQ9999")
+      }
     }
   }
 }

@@ -7,15 +7,17 @@ package dsp.user.handler
 
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
+import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.user.api.UserRepo
 import dsp.user.domain.User
-import dsp.user.domain.UserId
+import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.User._
 import zio._
 
 import java.util.UUID
+import dsp.errors.KnoraException
 
 /**
  * The user handler.
@@ -23,107 +25,222 @@ import java.util.UUID
  * @param repo  the user repository
  */
 final case class UserHandler(repo: UserRepo) {
-  // implement all possible requests from V2, but divide things up into smaller functions to keep it cleaner than before
 
   /**
-   * Retrieve all users (sorted by IRI).
+   * Retrieves all users (sorted by IRI).
    */
   def getUsers(): UIO[List[User]] =
-    repo.getUsers().map(_.sorted)
-
-  // getSingleUserADM should be inspected in the route. According to the user identifier, the
-  // right method from the userHandler should be called.
+    repo.getUsers().map(_.sorted).tap(_ => ZIO.logInfo(s"Got all users"))
 
   /**
-   * Retrieve the user by ID.
+   * Retrieves the user by ID.
    *
    * @param id  the user's ID
    */
   def getUserById(id: UserId): IO[NotFoundException, User] =
     for {
-      user <- repo.getUserById(id).mapError(_ => NotFoundException("User not found"))
+      user <- repo
+                .getUserById(id)
+                .mapError(_ => NotFoundException(s"User with ID '${id}' not found"))
+                .tap(_ => ZIO.logInfo(s"Looked up user by ID '${id}'"))
     } yield user
 
   /**
-   * Retrieve the user by username.
+   * Retrieves the user by username.
    *
    * @param username  the user's username
    */
   def getUserByUsername(username: Username): IO[NotFoundException, User] =
     repo
-      .getUserByUsernameOrEmail(username.value)
-      .mapError(_ => NotFoundException(s"User with Username ${username.value} not found"))
+      .getUserByUsername(username)
+      .mapError(_ => NotFoundException(s"User with Username '${username.value}' not found"))
+      .tap(_ => ZIO.logInfo(s"Looked up user by username '${username.value}'"))
 
   /**
-   * Retrieve the user by email.
+   * Retrieves the user by email.
    *
    * @param email  the user's email
    */
   def getUserByEmail(email: Email): IO[NotFoundException, User] =
     repo
-      .getUserByUsernameOrEmail(email.value)
-      .mapError(_ => NotFoundException(s"User with Email ${email.value} not found"))
+      .getUserByEmail(email)
+      .mapError(_ => NotFoundException(s"User with Email '${email.value}' not found"))
+      .tap(_ => ZIO.logInfo(s"Looked up user by email '${email.value}'"))
 
   /**
-   * Check if username is already taken
+   * Checks if username is already taken
    *
    * @param username  the user's username
    */
-  private def checkUsernameTaken(username: Username): IO[DuplicateValueException, Unit] =
+  private def checkIfUsernameTaken(username: Username): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .checkUsernameOrEmailExists(username.value)
-             .mapError(_ => DuplicateValueException(s"Username ${username.value} already exists"))
+             .checkIfUsernameExists(username)
+             .mapError(_ => DuplicateValueException(s"Username '${username.value}' already taken"))
+             .tap(_ => ZIO.logInfo(s"Checked if username '${username.value}' is already taken"))
     } yield ()
 
   /**
-   * Check if email is already taken
+   * Checks if email is already taken
    *
    * @param email  the user's email
    */
-  private def checkEmailTaken(email: Email): IO[DuplicateValueException, Unit] =
+  private def checkIfEmailTaken(email: Email): IO[DuplicateValueException, Unit] =
     for {
       _ <- repo
-             .checkUsernameOrEmailExists(email.value)
-             .mapError(_ => DuplicateValueException(s"Email ${email.value} already exists"))
+             .checkIfEmailExists(email)
+             .mapError(_ => DuplicateValueException(s"Email '${email.value}' already taken"))
+             .tap(_ => ZIO.logInfo(s"Checked if email '${email.value}' is already taken"))
     } yield ()
 
+  /**
+   * Creates a new user
+   *
+   *  @param username  the user's username
+   *  @param email  the user's email
+   *  @param givenName  the user's givenName
+   *  @param familyName  the user's familyName
+   *  @param password  the user's password (hashed)
+   *  @param language  the user's language
+   *  @param role  the user's role
+   */
   def createUser(
     username: Username,
     email: Email,
     givenName: GivenName,
     familyName: FamilyName,
-    password: Password,
-    language: LanguageCode
+    password: PasswordHash,
+    language: LanguageCode,
+    status: UserStatus
     //role: Role
-  ): IO[DuplicateValueException, UserId] =
-    for {
-      _      <- checkUsernameTaken(username) // also lock/reserve username
-      _      <- checkEmailTaken(email) // also lock/reserve email
-      user   <- ZIO.succeed(User.make(givenName, familyName, username, email, password, language))
-      userId <- repo.storeUser(user) // we assume that this can't fail
-    } yield userId
+  ): IO[Throwable, UserId] =
+    (for {
+      _      <- checkIfUsernameTaken(username) // TODO reserve username
+      _      <- checkIfEmailTaken(email) // TODO reserve email
+      id     <- UserId.make().toZIO
+      user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
+      userId <- repo.storeUser(user)
+    } yield userId).tap(userId => ZIO.logInfo(s"Created user with ID '${userId}'"))
 
-  def updateUsername(id: UserId, value: Username): IO[RequestRejectedException, UserId] =
-    for {
-      _ <- checkUsernameTaken(value)
-      // lock/reserve username
+  /**
+   * Updates the username of a user
+   *
+   *  @param id  the user's ID
+   *  @param newValue  the new username
+   */
+  def updateUsername(id: UserId, newValue: Username): IO[RequestRejectedException, UserId] =
+    (for {
+      _ <- checkIfUsernameTaken(newValue)
+      // TODO reserve new username because it has to be unique
+      // check if user exists and get him
+      user        <- getUserById(id)
+      userUpdated <- user.updateUsername(newValue).toZIO
+      _           <- repo.storeUser(userUpdated)
+    } yield id).tap(_ => ZIO.logInfo(s"Updated username with new value '${newValue.value}'"))
+
+  /**
+   * Updates the email of a user
+   *
+   *  @param id  the user's ID
+   *  @param newValue  the new email
+   */
+  def updateEmail(id: UserId, newValue: Email): IO[RequestRejectedException, UserId] =
+    (for {
+      // TODO reserve new email because it has to be unique
+      _ <- checkIfEmailTaken(newValue)
+      // check if user exists and get him
+      user        <- getUserById(id)
+      userUpdated <- user.updateEmail(newValue).toZIO
+      _           <- repo.storeUser(userUpdated)
+    } yield id).tap(_ => ZIO.logInfo(s"Updated email with new value '${newValue.value}'"))
+
+  /**
+   * Updates the given name of a user
+   *
+   *  @param id  the user's ID
+   *  @param newValue  the new given name
+   */
+  def updateGivenName(id: UserId, newValue: GivenName): IO[RequestRejectedException, UserId] =
+    (for {
+      // check if user exists and get him
+      user        <- getUserById(id)
+      userUpdated <- user.updateGivenName(newValue).toZIO
+      _           <- repo.storeUser(userUpdated)
+    } yield id).tap(_ => ZIO.logInfo(s"Updated givenName with new value '${newValue.value}'"))
+
+  /**
+   * Updates the family name of a user
+   *
+   *  @param id  the user's ID
+   *  @param newValue  the new family name
+   */
+  def updateFamilyName(id: UserId, newValue: FamilyName): IO[RequestRejectedException, UserId] =
+    (for {
       // check if user exists and get him, lock user
       user        <- getUserById(id)
-      userUpdated <- ZIO.succeed(user.updateUsername(value))
+      userUpdated <- user.updateFamilyName(newValue).toZIO
       _           <- repo.storeUser(userUpdated)
-    } yield id
+    } yield id).tap(_ => ZIO.logInfo(s"Updated familyName with new value '${newValue.value}'"))
 
-  def updatePassword(id: UserId, newPassword: Password, currentPassword: Password, requestingUser: User) = ???
-  // either the user himself or a sysadmin can change a user's password
-  // in both cases we need the current password of either the user itself or the sysadmin
+  /**
+   * Updates the password of a user
+   *
+   *  @param id  the user's ID
+   *  @param newPassword  the new password
+   *  @param currentPassword  the user's current password
+   *  @param requestingUser  the requesting user
+   */
+  def updatePassword(
+    id: UserId,
+    newPassword: PasswordHash,
+    currentPassword: PasswordHash,
+    requestingUser: User
+  ): IO[RequestRejectedException, UserId] = {
+    // either the user himself or a sysadmin can change a user's password
+    if (!requestingUser.id.equals(id)) { // TODO check role, user needs to be himself or sysadmin, i.e. sth like requestingUser.role.equals(SysAdmin)
+      return ZIO.fail(
+        ForbiddenException("User's password can only be changed by the user itself or a system administrator")
+      )
+    }
 
+    // check if the provided current password (of either the user or the sysadmin) is correct
+    if (!requestingUser.password.equals(currentPassword)) {
+      return ZIO.fail(ForbiddenException("The supplied password does not match the requesting user's password"))
+    }
+
+    (for {
+      // check if user exists and get him, lock user
+      user        <- getUserById(id)
+      userUpdated <- user.updatePassword(newPassword).toZIO
+      _           <- repo.storeUser(userUpdated)
+    } yield id).tap(_ => ZIO.logInfo(s"Updated password"))
+  }
+
+  /**
+   * Updates the username of a user
+   *
+   *  @param id  the user's ID
+   *  @param newValue  the new language
+   */
+  def updateLanguage(id: UserId, newValue: LanguageCode): IO[RequestRejectedException, UserId] =
+    (for {
+      // check if user exists and get him, lock user
+      user        <- getUserById(id)
+      userUpdated <- user.updateLanguage(newValue).toZIO
+      _           <- repo.storeUser(userUpdated)
+    } yield id).tap(_ => ZIO.logInfo(s"Updated language with new value '${newValue.value}'"))
+
+  /**
+   * Deletes the user which means that it is marked as deleted.
+   *
+   *  @param id  the user's ID
+   */
   def deleteUser(id: UserId): IO[NotFoundException, UserId] =
-    for {
+    (for {
       _ <- repo
              .deleteUser(id)
-             .mapError(_ => NotFoundException(s"User with ID ${id} not found"))
-    } yield id
+             .mapError(_ => NotFoundException(s"User with ID '${id}' not found"))
+    } yield id).tap(_ => ZIO.logInfo(s"Deleted user with ID '${id}'"))
 
 }
 
@@ -136,6 +253,6 @@ object UserHandler {
       for {
         repo <- ZIO.service[UserRepo]
       } yield UserHandler(repo)
-    }.tap(_ => ZIO.debug(">>> User handler initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
   }
 }

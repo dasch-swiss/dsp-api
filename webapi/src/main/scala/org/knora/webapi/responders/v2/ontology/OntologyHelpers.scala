@@ -16,7 +16,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import dsp.errors._
-import org.knora.webapi.feature.FeatureFactoryConfig
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -38,6 +38,7 @@ import java.time.Instant
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import dsp.constants.SalsahGui
 
 object OntologyHelpers {
 
@@ -119,14 +120,13 @@ object OntologyHelpers {
    * Reads an ontology's metadata.
    *
    * @param internalOntologyIri  the ontology's internal IRI.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return an [[OntologyMetadataV2]], or [[None]] if the ontology is not found.
    */
   def loadOntologyMetadata(
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
-    internalOntologyIri: SmartIri,
-    featureFactoryConfig: FeatureFactoryConfig
+    internalOntologyIri: SmartIri
   )(implicit
     executionContext: ExecutionContext,
     stringFormatter: StringFormatter,
@@ -148,8 +148,7 @@ object OntologyHelpers {
       getOntologyInfoResponse <- appActor
                                    .ask(
                                      SparqlConstructRequest(
-                                       sparql = getOntologyInfoSparql,
-                                       featureFactoryConfig = featureFactoryConfig
+                                       sparql = getOntologyInfoSparql
                                      )
                                    )
                                    .mapTo[SparqlConstructResponse]
@@ -789,12 +788,12 @@ object OntologyHelpers {
     allIndividuals: Map[SmartIri, IndividualInfoContentV2]
   )(implicit stringFormatter: StringFormatter): Map[SmartIri, Set[SalsahGuiAttributeDefinition]] = {
     val guiElementIndividuals: Map[SmartIri, IndividualInfoContentV2] = allIndividuals.filter { case (_, individual) =>
-      individual.getRdfType.toString == OntologyConstants.SalsahGui.GuiElementClass
+      individual.getRdfType.toString == SalsahGui.GuiElementClass
     }
 
     guiElementIndividuals.map { case (guiElementIri, guiElementIndividual) =>
       val attributeDefs: Set[SalsahGuiAttributeDefinition] =
-        guiElementIndividual.predicates.get(OntologyConstants.SalsahGui.GuiAttributeDefinition.toSmartIri) match {
+        guiElementIndividual.predicates.get(SalsahGui.GuiAttributeDefinition.toSmartIri) match {
           case Some(predicateInfo) =>
             predicateInfo.objects.map {
               case StringLiteralV2(attributeDefStr, None) =>
@@ -835,11 +834,11 @@ object OntologyHelpers {
 
     // Find out which salsah-gui:Guielement the property uses, if any.
     val maybeGuiElementPred: Option[PredicateInfoV2] =
-      predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)
+      predicates.get(SalsahGui.GuiElementProp.toSmartIri)
     val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(
       _.requireIriObject(
         throw InconsistentRepositoryDataException(
-          s"Property $propertyIri has an invalid object for ${OntologyConstants.SalsahGui.GuiElementProp}"
+          s"Property $propertyIri has an invalid object for ${SalsahGui.GuiElementProp}"
         )
       )
     )
@@ -857,7 +856,7 @@ object OntologyHelpers {
 
     // If the property has the predicate salsah-gui:guiAttribute, syntactically validate the objects of that predicate.
     val guiAttributes: Set[SalsahGuiAttribute] =
-      predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri) match {
+      predicates.get(SalsahGui.GuiAttribute.toSmartIri) match {
         case Some(guiAttributePred) =>
           val guiElementIri = maybeGuiElementIri.getOrElse(
             errorFun(s"Property $propertyIri has salsah-gui:guiAttribute, but no salsah-gui:guiElement")
@@ -1128,14 +1127,13 @@ object OntologyHelpers {
    * Loads a property definition from the triplestore and converts it to a [[PropertyInfoContentV2]].
    *
    * @param propertyIri the IRI of the property to be loaded.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return a [[PropertyInfoContentV2]] representing the property definition.
    */
   def loadPropertyDefinition(
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
-    propertyIri: SmartIri,
-    featureFactoryConfig: FeatureFactoryConfig
+    propertyIri: SmartIri
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[PropertyInfoContentV2] =
     for {
       sparql <- Future(
@@ -1149,8 +1147,7 @@ object OntologyHelpers {
       constructResponse <- appActor
                              .ask(
                                SparqlExtendedConstructRequest(
-                                 sparql = sparql,
-                                 featureFactoryConfig = featureFactoryConfig
+                                 sparql = sparql
                                )
                              )
                              .mapTo[SparqlExtendedConstructResponse]
@@ -1249,7 +1246,7 @@ object OntologyHelpers {
     )
 
     // salsah-gui:guiOrder isn't allowed here.
-    if (otherPreds.contains(OntologyConstants.SalsahGui.GuiOrder.toSmartIri)) {
+    if (otherPreds.contains(SalsahGui.GuiOrder.toSmartIri)) {
       throw InconsistentRepositoryDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
     }
 
@@ -1575,14 +1572,13 @@ object OntologyHelpers {
    * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].
    *
    * @param classIri the IRI of the class to be loaded.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return a [[ClassInfoContentV2]] representing the class definition.
    */
   def loadClassDefinition(
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
-    classIri: SmartIri,
-    featureFactoryConfig: FeatureFactoryConfig
+    classIri: SmartIri
   )(implicit ex: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[ClassInfoContentV2] =
     for {
       sparql <- Future(
@@ -1596,8 +1592,7 @@ object OntologyHelpers {
       constructResponse <- appActor
                              .ask(
                                SparqlExtendedConstructRequest(
-                                 sparql = sparql,
-                                 featureFactoryConfig = featureFactoryConfig
+                                 sparql = sparql
                                )
                              )
                              .mapTo[SparqlExtendedConstructResponse]
@@ -1711,24 +1706,24 @@ object OntologyHelpers {
           )
       }
 
-      val guiOrder: Option[Int] = blankNode.get(OntologyConstants.SalsahGui.GuiOrder.toSmartIri) match {
+      val guiOrder: Option[Int] = blankNode.get(SalsahGui.GuiOrder.toSmartIri) match {
         case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
         case None                            => None
         case other =>
           throw InconsistentRepositoryDataException(
-            s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other"
+            s"Expected one integer object for predicate ${SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other"
           )
       }
 
       // salsah-gui:guiElement and salsah-gui:guiAttribute aren't allowed here.
 
-      if (blankNode.contains(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)) {
+      if (blankNode.contains(SalsahGui.GuiElementProp.toSmartIri)) {
         throw InconsistentRepositoryDataException(
           s"Class $classIri contains salsah-gui:guiElement in an owl:Restriction"
         )
       }
 
-      if (blankNode.contains(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri)) {
+      if (blankNode.contains(SalsahGui.GuiAttribute.toSmartIri)) {
         throw InconsistentRepositoryDataException(
           s"Class $classIri contains salsah-gui:guiAttribute in an owl:Restriction"
         )
@@ -1767,22 +1762,20 @@ object OntologyHelpers {
    * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateBeforeUpdate(
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-    featureFactoryConfig: FeatureFactoryConfig
+    expectedLastModificationDate: Instant
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,
       appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
-      featureFactoryConfig = featureFactoryConfig,
       errorFun = throw EditConflictException(
         s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} has been modified by another user, please reload it and try again."
       )
@@ -1796,22 +1789,20 @@ object OntologyHelpers {
    * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that should now be attached to the ontology.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @return a failed Future if the expected last modification date is not found.
    */
   def checkOntologyLastModificationDateAfterUpdate(
     settings: KnoraSettingsImpl,
     appActor: ActorRef,
     internalOntologyIri: SmartIri,
-    expectedLastModificationDate: Instant,
-    featureFactoryConfig: FeatureFactoryConfig
+    expectedLastModificationDate: Instant
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     checkOntologyLastModificationDate(
       settings,
       appActor,
       internalOntologyIri = internalOntologyIri,
       expectedLastModificationDate = expectedLastModificationDate,
-      featureFactoryConfig = featureFactoryConfig,
       errorFun = throw UpdateNotPerformedException(
         s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} was not updated. Please report this as a possible bug."
       )
@@ -1824,7 +1815,7 @@ object OntologyHelpers {
    * @param appActor the store manager actor ref.
    * @param internalOntologyIri          the internal IRI of the ontology.
    * @param expectedLastModificationDate the last modification date that the ontology is expected to have.
-   * @param featureFactoryConfig the feature factory configuration.
+   *
    * @param errorFun                     a function that throws an exception. It will be called if the expected last modification date is not found.
    * @return a failed Future if the expected last modification date is not found.
    */
@@ -1833,15 +1824,13 @@ object OntologyHelpers {
     appActor: ActorRef,
     internalOntologyIri: SmartIri,
     expectedLastModificationDate: Instant,
-    featureFactoryConfig: FeatureFactoryConfig,
     errorFun: => Nothing
   )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[Unit] =
     for {
       existingOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
                                                                 settings,
                                                                 appActor,
-                                                                internalOntologyIri = internalOntologyIri,
-                                                                featureFactoryConfig = featureFactoryConfig
+                                                                internalOntologyIri = internalOntologyIri
                                                               )
 
       _ = existingOntologyMetadata match {

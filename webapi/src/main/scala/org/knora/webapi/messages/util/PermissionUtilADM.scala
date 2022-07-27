@@ -12,7 +12,6 @@ import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.IRI
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -725,7 +724,6 @@ object PermissionUtilADM extends LazyLogging {
    * Given a permission literal, checks that it refers to valid permissions and groups.
    *
    * @param permissionLiteral the permission literal.
-   * @param featureFactoryConfig the feature factory configuration.
    * @param responderManager  a reference to the responder manager.
    * @param timeout           a timeout for `ask` messages.
    * @param executionContext  an execution context for futures.
@@ -733,7 +731,6 @@ object PermissionUtilADM extends LazyLogging {
    */
   def validatePermissions(
     permissionLiteral: String,
-    featureFactoryConfig: FeatureFactoryConfig,
     appActor: ActorRef
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
     val stringFormatter = StringFormatter.getGeneralInstance
@@ -764,7 +761,6 @@ object PermissionUtilADM extends LazyLogging {
              .ask(
                MultipleGroupsGetRequestADM(
                  groupIris = validatedProjectSpecificGroupIris,
-                 featureFactoryConfig = featureFactoryConfig,
                  requestingUser = KnoraSystemInstances.Users.SystemUser
                )
              )

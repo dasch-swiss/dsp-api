@@ -10,7 +10,6 @@ import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.http.version.BuildInfo
 import spray.json.JsObject
 import spray.json.JsString
@@ -54,7 +53,7 @@ class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+  override def makeRoute(): Route =
     path("version") {
       get { requestContext =>
         requestContext.complete(createResponse())

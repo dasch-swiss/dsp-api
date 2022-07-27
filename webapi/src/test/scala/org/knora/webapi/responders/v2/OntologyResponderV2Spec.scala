@@ -31,6 +31,9 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Schema
+import dsp.constants.SalsahGui
 
 /**
  * Tests [[OntologyResponderV2]].
@@ -38,7 +41,7 @@ import scala.language.postfixOps
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  override lazy val rdfDataObjects: Seq[RdfDataObject] =
+  override lazy val rdfDataObjects: List[RdfDataObject] =
     List(exampleSharedOntology, anythingData, freeTestOntology, freeTestData)
   private val imagesUser           = SharedTestDataADM.imagesUser01
   private val imagesProjectIri     = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
@@ -104,7 +107,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     expectMsg(5 minutes, ResetRepositoryContentACK())
 
     appActor ! LoadOntologiesRequestV2(
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
@@ -119,7 +121,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser02
       )
 
@@ -135,7 +136,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -157,7 +157,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -181,7 +180,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -207,7 +205,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         comment = Some(aComment),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -232,7 +229,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         label = Some(newLabel),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -254,7 +250,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -278,7 +273,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         label = "The bär ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -294,7 +288,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         label = "The bar ontology",
         comment = Some("some comment"),
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -319,7 +312,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         comment = Some(newComment),
         lastModificationDate = barLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -341,7 +333,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The foo ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -356,7 +347,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologyIri = "http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri,
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -371,7 +361,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser02
       )
 
@@ -386,7 +375,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -404,7 +392,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Reload the ontologies from the triplestore and check again.
 
       appActor ! LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -438,7 +425,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologyIri = AnythingOntologyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -465,7 +451,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The rdfs ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -482,7 +467,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The 0000 ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -499,7 +483,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The -foo ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -516,7 +499,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The v3 ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -533,7 +515,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The ontology ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -550,7 +531,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The wrong knora ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -567,7 +547,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The simple ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -584,7 +563,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = imagesProjectIri,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -602,7 +580,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         isShared = true,
         label = "The invalid shared ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = imagesUser
       )
 
@@ -618,7 +595,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         projectIri = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject.toSmartIri,
         label = "The invalid non-shared ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser
       )
 
@@ -635,7 +611,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         isShared = true,
         label = "a chaired ontology",
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser
       )
 
@@ -707,7 +682,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -775,7 +749,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -794,7 +767,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Reload the ontology cache and see if we get the same result.
 
       appActor ! LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -869,7 +841,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -909,7 +880,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Reload the ontology cache and see if we get the same result.
 
       appActor ! LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -993,7 +963,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = comicBookClassInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1036,7 +1005,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = comicAuthorClassInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1090,7 +1058,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = comicAuthorPropertyInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1130,7 +1097,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1203,7 +1169,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1253,7 +1218,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1303,7 +1267,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1353,7 +1316,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1403,7 +1365,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1456,7 +1417,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1506,7 +1466,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1560,7 +1519,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1610,7 +1568,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1660,7 +1617,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1710,7 +1666,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1760,7 +1715,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1810,7 +1764,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1860,7 +1813,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1910,7 +1862,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -1960,7 +1911,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2010,7 +1960,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2061,7 +2010,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2103,12 +2051,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("An invalid property definition", Some("en"))
             )
           ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Textarea".toSmartIri))
           ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          SalsahGui.External.GuiAttribute.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
             objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80.5"))
           )
         ),
@@ -2120,7 +2068,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2161,12 +2108,12 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("An invalid property definition", Some("en"))
             )
           ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Textarea".toSmartIri))
           ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          SalsahGui.External.GuiAttribute.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
             objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80"), StringLiteralV2("wrap=wrong"))
           )
         ),
@@ -2178,7 +2125,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2204,7 +2150,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -2230,7 +2175,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2266,7 +2210,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2306,7 +2249,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -2340,7 +2282,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2384,7 +2325,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2411,7 +2351,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2437,7 +2376,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2464,7 +2402,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2490,7 +2427,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2520,7 +2456,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = linkPropertyIri,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2593,7 +2528,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -2637,7 +2571,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2678,7 +2611,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2718,7 +2650,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2771,7 +2702,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = partThingClassInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2812,7 +2742,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = wholeThingClassInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2858,8 +2787,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de"))
             )
           ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
           )
         ),
@@ -2871,7 +2800,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = partOfPropertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2926,7 +2854,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         label = Some(newLabel),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2949,7 +2876,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -2998,7 +2924,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3085,7 +3010,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3167,7 +3091,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContentWithCardinalityToDeleteDontAllow,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3206,7 +3129,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3288,7 +3210,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3330,7 +3251,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3370,7 +3290,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -3394,7 +3313,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3429,7 +3347,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3465,7 +3382,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -3494,7 +3410,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3534,7 +3449,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         newObjects = newObjects,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3586,7 +3500,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3627,7 +3540,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3668,7 +3580,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3709,7 +3620,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3752,7 +3662,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3795,7 +3704,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3838,7 +3746,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3893,7 +3800,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3911,7 +3817,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasInterestingThingValue,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3930,7 +3835,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = linkPropIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -3977,7 +3881,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Reload the ontology cache and see if we get the same result.
 
       appActor ! LoadOntologiesRequestV2(
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
@@ -4031,8 +3934,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               StringLiteralV2("Anzeigt, ob ein Nichts Nichtsein hat", Some("de"))
             )
           ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
             objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Checkbox".toSmartIri))
           )
         ),
@@ -4044,7 +3947,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4064,21 +3966,37 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+      val propertyIri =
+        Iri.PropertyIri
+          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
+          .fold(e => throw e.head, v => v)
+      val guiElement =
+        Schema.GuiElement
+          .make("http://www.knora.org/ontology/salsah-gui#SimpleText")
+          .fold(e => throw e.head, v => Some(v))
+      val guiAttributes =
+        List("size=80")
+          .map(attribute =>
+            Schema.GuiAttribute
+              .make(attribute)
+              .fold(e => throw e.head, v => v)
+          )
+      val guiObject =
+        Schema.GuiObject
+          .make(guiAttributes, guiElement)
+          .fold(e => throw e.head, v => v)
 
       appActor ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
-        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#SimpleText".toSmartIri),
-        newGuiAttributes = Set("size=80"),
+        newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         msg.properties.head._2.entityInfoContent.predicates
-          .get(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementProp)) match {
+          .get(stringFormatter.toSmartIri(SalsahGui.GuiElementProp)) match {
           case Some(predicateInfo) =>
             val guiElementTypeFromMessage = predicateInfo.objects.head.asInstanceOf[SmartIriLiteralV2]
             val guiElementTypeInternal    = guiElementTypeFromMessage.toOntologySchema(InternalSchema)
@@ -4089,25 +4007,25 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         // Check that the salsah-gui:guiElement from the message is as expected
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
+        val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         val guiElementPropComplex = property.entityInfoContent.predicates(
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
+          SalsahGui.External.GuiElementProp.toSmartIri
         )
 
         val guiElementPropComplexExpected = PredicateInfoV2(
-          predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
           objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
         )
 
         guiElementPropComplex should equal(guiElementPropComplexExpected)
 
         val guiAttributeComplex = property.entityInfoContent.predicates(
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri
+          SalsahGui.External.GuiAttribute.toSmartIri
         )
 
         val guiAttributeComplexExpected = PredicateInfoV2(
-          predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
           objects = Seq(StringLiteralV2("size=80"))
         )
 
@@ -4123,28 +4041,35 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
-      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+      val propertyIri =
+        Iri.PropertyIri
+          .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
+          .fold(e => throw e.head, v => v)
+      val guiElement    = None
+      val guiAttributes = List()
+      val guiObject =
+        Schema.GuiObject
+          .make(guiAttributes, guiElement)
+          .fold(e => throw e.head, v => v)
 
       appActor ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
-        newGuiElement = None,
-        newGuiAttributes = Set.empty,
+        newGuiObject = guiObject,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
-        val property = externalOntology.properties(propertyIri)
+        val property = externalOntology.properties(propertyIri.value.toSmartIri)
 
         property.entityInfoContent.predicates
-          .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(None)
+          .get(SalsahGui.External.GuiElementProp.toSmartIri) should ===(None)
 
         property.entityInfoContent.predicates
-          .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) should ===(None)
+          .get(SalsahGui.External.GuiAttribute.toSmartIri) should ===(None)
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
@@ -4194,7 +4119,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4235,7 +4159,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4272,7 +4195,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4312,7 +4234,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4332,7 +4253,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4354,7 +4274,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -4370,7 +4289,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4410,7 +4328,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -4460,7 +4377,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4492,7 +4408,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4557,7 +4472,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4590,7 +4504,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4654,7 +4567,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4685,7 +4597,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4743,7 +4654,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4786,7 +4696,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4859,7 +4768,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -4901,7 +4809,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -4963,7 +4870,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5002,7 +4908,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5019,7 +4924,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasNothingness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5041,7 +4945,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasNothingness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5070,7 +4973,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -5098,7 +5000,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5130,7 +5031,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasEmptiness,
         lastModificationDate = anythingLastModDate.minusSeconds(60),
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5147,7 +5047,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasEmptiness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingNonAdminUser
       )
 
@@ -5164,7 +5063,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasOtherNothing,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5184,7 +5082,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = hasEmptiness,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5206,7 +5103,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5248,7 +5144,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5287,7 +5182,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5333,7 +5227,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5383,7 +5276,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5429,7 +5321,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5466,7 +5357,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5492,7 +5382,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5536,7 +5425,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5562,7 +5450,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classIri = classIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5608,7 +5495,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5634,7 +5520,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5684,7 +5569,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5710,7 +5594,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5756,7 +5639,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5782,7 +5664,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5832,7 +5713,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5886,7 +5766,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5940,7 +5819,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -5993,7 +5871,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6030,7 +5907,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6064,7 +5940,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6135,7 +6010,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6191,7 +6065,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6247,7 +6120,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6281,7 +6153,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6319,7 +6190,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -6346,7 +6216,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6374,7 +6243,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6441,7 +6309,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6523,7 +6390,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyInfoContent = propertyInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6570,7 +6436,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classWithNewCardinalityInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6637,7 +6502,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContentWithCardinalityToDeleteAllow,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6661,7 +6525,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classChangeInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
@@ -6710,7 +6573,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 

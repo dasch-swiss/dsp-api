@@ -6,9 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import dsp.errors._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -29,17 +29,24 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.models.filemodels.ChangeFileRequest
 import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.cacheservice.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
 import zio.ZLayer
+import zio.Runtime
 
 import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -64,12 +71,17 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   /* we need to run our app with the mocked sipi implementation */
   override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & AppConfig](
+    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
+      Runtime.removeDefaultLoggers,
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
       IIIFServiceMockImpl.layer,
-      AppConfig.live
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      RepositoryUpdater.layer,
+      FusekiTestContainer.layer
     )
 
   override lazy val rdfDataObjects = List(
@@ -198,7 +210,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       constructQuery = parsedGravsearchQuery,
       targetSchema = ApiV2Complex,
       schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = requestingUser
     )
 
@@ -241,7 +252,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     appActor ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = requestingUser
     )
 
@@ -344,7 +354,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     appActor ! ResourcesPreviewGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = requestingUser
     )
 
@@ -407,7 +416,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   "Load test data" in {
     appActor ! GetMappingRequestV2(
       mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
@@ -435,7 +443,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -478,7 +485,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -519,7 +525,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -570,7 +575,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -613,7 +617,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -666,7 +669,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -709,7 +711,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -764,7 +765,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -813,7 +813,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -861,7 +860,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -889,7 +887,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -921,7 +918,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueUUID = Some(valueUUID),
           valueCreationDate = Some(valueCreationDate)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -969,7 +965,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           valueCreationDate = Some(valueCreationDate)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1001,7 +996,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           valueCreationDate = Some(valueCreationDate)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1052,7 +1046,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           newValueVersionIri = Some(newValueVersionIri.toSmartIri)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1096,7 +1089,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1121,7 +1113,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1161,7 +1152,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1188,7 +1178,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(valueHasComment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1236,7 +1225,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1285,7 +1273,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -1313,7 +1300,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasDecimal = valueHasDecimal
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1354,7 +1340,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasDecimal = valueHasDecimal
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1382,7 +1367,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasTimeStamp = valueHasTimeStamp
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1431,7 +1415,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           propertyIri = propertyIri,
           valueContent = submittedValueContent
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1483,7 +1466,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           propertyIri = propertyIri,
           valueContent = submittedValueContent
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1511,7 +1493,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasBoolean = valueHasBoolean
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1556,7 +1537,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeometry = valueHasGeometry
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1598,7 +1578,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeometry = valueHasGeometry
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1628,7 +1607,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasIntervalEnd = valueHasIntervalEnd
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1674,7 +1652,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasIntervalEnd = valueHasIntervalEnd
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1702,7 +1679,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1745,7 +1721,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1770,13 +1745,37 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
 
       expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[NotFoundException])
+      }
+    }
+
+    "not create a list value that is a root list node" in {
+      val resourceIri           = "http://rdfh.ch/0001/a-blue-thing"
+      val resourceClassIri      = "http://www.knora.org/ontology/0001/anything#BlueThing".toSmartIri
+      val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+      val valueHasListNode      = "http://rdfh.ch/lists/0001/otherTreeList"
+
+      appActor ! CreateValueRequestV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = resourceClassIri,
+          propertyIri = propertyIri,
+          valueContent = HierarchicalListValueContentV2(
+            ontologySchema = ApiV2Complex,
+            valueHasListNode = valueHasListNode
+          )
+        ),
+        requestingUser = anythingUser1,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -1798,7 +1797,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasColor = valueHasColor
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1841,7 +1839,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasColor = valueHasColor
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1869,7 +1866,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasUri = valueHasUri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1912,7 +1908,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasUri = valueHasUri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1940,7 +1935,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeonameCode = valueHasGeonameCode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -1983,7 +1977,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeonameCode = valueHasGeonameCode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2009,7 +2002,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = zeitglöckleinIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2053,7 +2045,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = zeitglöckleinIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2079,7 +2070,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = zeitglöckleinIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2102,7 +2092,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = generationeIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2127,7 +2116,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2152,7 +2140,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2177,7 +2164,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2201,7 +2187,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some("this is not a date")
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2226,7 +2211,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = "http://rdfh.ch/0803/e41ab5695c"
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2247,7 +2231,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = 1
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2294,7 +2277,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2391,7 +2373,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2468,7 +2449,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2494,7 +2474,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2523,7 +2502,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2570,7 +2548,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID
       )
@@ -2598,7 +2575,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2626,7 +2602,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some(permissions)
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2661,7 +2636,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           permissions = permissions
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2699,7 +2673,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           permissions = permissions
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID
       )
@@ -2723,7 +2696,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           permissions = permissions
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2747,7 +2719,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           permissions = permissions
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2773,7 +2744,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasInteger = intValue
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2799,7 +2769,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2845,7 +2814,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2915,7 +2883,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2944,7 +2911,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2994,7 +2960,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -3024,7 +2989,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -3074,7 +3038,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -3099,7 +3062,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             maybeValueHasString = Some(valueHasString)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -3126,7 +3088,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasDecimal = valueHasDecimal
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3168,7 +3129,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasDecimal = valueHasDecimal
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3195,7 +3155,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasTimeStamp = valueHasTimeStamp
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3237,7 +3196,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasTimeStamp = valueHasTimeStamp
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3269,7 +3227,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueIri = dateValueIri.get,
           valueContent = submittedValueContent
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3322,7 +3279,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueIri = dateValueIri.get,
           valueContent = submittedValueContent
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3349,7 +3305,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasBoolean = valueHasBoolean
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3391,7 +3346,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasBoolean = valueHasBoolean
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3419,7 +3373,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeometry = valueHasGeometry
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3462,7 +3415,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeometry = valueHasGeometry
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3491,7 +3443,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasIntervalEnd = valueHasIntervalEnd
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3538,7 +3489,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasIntervalEnd = valueHasIntervalEnd
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3565,7 +3515,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3609,7 +3558,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3635,7 +3583,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasListNode = valueHasListNode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3662,7 +3609,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasColor = valueHasColor
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3706,7 +3652,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasColor = valueHasColor
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3733,7 +3678,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasUri = valueHasUri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3777,7 +3721,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasUri = valueHasUri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3804,7 +3747,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeonameCode = valueHasGeonameCode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3848,7 +3790,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueHasGeonameCode = valueHasGeonameCode
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -3875,7 +3816,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = generationeIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -3923,7 +3863,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = generationeIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -3954,7 +3893,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4004,7 +3942,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4035,7 +3972,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4086,7 +4022,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             comment = Some(comment)
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4128,7 +4063,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             referredResourceIri = generationeIri
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4154,7 +4088,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologyName = "anything"
         )
         .toMessage(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           internalMimeType = Some(mimeTypeJP2),
           originalFilename = Some("test.tiff"),
           originalMimeType = Some(mimeTypeTIFF),
@@ -4203,7 +4136,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
       val changeFileMessage = changeFileRequest
         .toMessage(
-          featureFactoryConfig = defaultFeatureFactoryConfig,
           resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
           internalMimeType = Some(internalMimeType),
           originalMimeType = originalMimeType,
@@ -4268,7 +4200,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueIri = stillImageFileValueIri.get,
           valueContent = valueContent
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser, // this user doesn't have the necessary permission
         apiRequestID = UUID.randomUUID
       )
@@ -4303,7 +4234,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           valueIri = stillImageFileValueIri.get,
           valueContent = valueContent
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -4324,7 +4254,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         valueIri = intValueIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser2,
         apiRequestID = UUID.randomUUID
       )
@@ -4347,7 +4276,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         valueIri = valueIri,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -4377,7 +4305,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = deleteComment,
         deleteDate = Some(deleteDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -4401,7 +4328,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri,
         valueIri = standoffLinkValueIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4422,7 +4348,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         valueIri = zeitglöckleinCommentWithStandoffIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4460,7 +4385,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = linkValuePropertyIri,
         valueIri = linkValueIRI,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4485,7 +4409,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaCreatorUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4509,7 +4432,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -4530,7 +4452,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some("CR knora-admin:Creator")
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4554,7 +4475,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -4575,7 +4495,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some("CR knora-admin:Creator")
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.rootUser,
         apiRequestID = UUID.randomUUID
       )
@@ -4597,7 +4516,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       appActor ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -4618,7 +4536,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           permissions = Some("CR knora-admin:Creator")
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -4645,7 +4562,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -4689,7 +4605,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -4743,7 +4658,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
         apiRequestID = UUID.randomUUID
       )

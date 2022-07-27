@@ -4,3 +4,7 @@
  */
 
 package dsp.user.api
+
+// this placeholder can be removed as soon as the code are there
+// without it there is a warning
+object placeholder {}

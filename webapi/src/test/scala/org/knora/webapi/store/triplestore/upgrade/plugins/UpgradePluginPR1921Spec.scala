@@ -10,7 +10,7 @@ import dsp.errors.AssertionException
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
-  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory()
 
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit =
     model
@@ -34,7 +34,7 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
     // Parse the input file.
     val model: RdfModel = trigFileToModel("../test_data/upgrade/pr1921.trig")
     // Use the plugin to transform the input.
-    val plugin = new UpgradePluginPR1921(defaultFeatureFactoryConfig, logger)
+    val plugin = new UpgradePluginPR1921(log)
     plugin.transform(model)
 
     "replace simple strings in group descriptions with language strings" in {

@@ -9,7 +9,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
-import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
@@ -36,26 +35,22 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    createAdministrativePermission(featureFactoryConfig) ~
-      createDefaultObjectAccessPermission(featureFactoryConfig)
+  override def makeRoute(): Route =
+    createAdministrativePermission() ~
+      createDefaultObjectAccessPermission()
 
   /**
    * Create a new administrative permission
    */
-  private def createAdministrativePermission(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def createAdministrativePermission(): Route =
     path(PermissionsBasePath / "ap") {
       post {
         /* create a new administrative permission */
         entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
           } yield AdministrativePermissionCreateRequestADM(
             createRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -63,7 +58,6 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             appActor = appActor,
             log = log
@@ -75,19 +69,15 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Create default object access permission
    */
-  private def createDefaultObjectAccessPermission(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def createDefaultObjectAccessPermission(): Route =
     path(PermissionsBasePath / "doap") {
       post {
         /* create a new default object access permission */
         entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>
           val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
-            requestingUser <- getUserADM(
-                                requestContext = requestContext,
-                                featureFactoryConfig = featureFactoryConfig
-                              )
+            requestingUser <- getUserADM(requestContext)
           } yield DefaultObjectAccessPermissionCreateRequestADM(
             createRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -95,7 +85,6 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
             settings = settings,
             appActor = appActor,
             log = log

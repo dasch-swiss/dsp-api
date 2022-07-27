@@ -1,5 +1,74 @@
 # Changelog
 
+### [23.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.0...v23.0.1) (2022-07-19)
+
+
+### Bug Fixes
+
+* **ontology:** Don't accept list values without gui attribute (DEV-775) ([#2089](https://www.github.com/dasch-swiss/dsp-api/issues/2089)) ([74a14e1](https://www.github.com/dasch-swiss/dsp-api/commit/74a14e1eb5c475b307ee573042b5384f6c1f562a))
+
+## [23.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.1...v23.0.0) (2022-07-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* transform valueHasUri values from node to string type (DEV-1047) (#2094)
+
+### Bug Fixes
+
+* **authentication:** make cookie name unique between environments ([#2095](https://www.github.com/dasch-swiss/dsp-api/issues/2095)) ([7d420a4](https://www.github.com/dasch-swiss/dsp-api/commit/7d420a4e88f355b1465aa1403508c433deb0ae8d))
+* **ontology:** existing cardinalities get duplicated in the triplestore when adding a new cardinality to a class (DEV-937) ([#2092](https://www.github.com/dasch-swiss/dsp-api/issues/2092)) ([9fa26db](https://www.github.com/dasch-swiss/dsp-api/commit/9fa26db3ceaa9678b2244863e2fdbc2797a2b57b))
+* transform valueHasUri values from node to string type (DEV-1047) ([#2094](https://www.github.com/dasch-swiss/dsp-api/issues/2094)) ([e1d8d95](https://www.github.com/dasch-swiss/dsp-api/commit/e1d8d95504f5b6b0c35dd136f2a51e05576f2eac))
+
+### [22.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v22.0.0...v22.0.1) (2022-07-08)
+
+
+### Bug Fixes
+
+* **authentication:** make cookie name unique between environments ([#2091](https://www.github.com/dasch-swiss/dsp-api/issues/2091)) ([680021e](https://www.github.com/dasch-swiss/dsp-api/commit/680021e8ffd477b162e36a05eeeb4a1c6389d127))
+* **value:** make impossible to set list root node as a value (DEV-973) ([#2088](https://www.github.com/dasch-swiss/dsp-api/issues/2088)) ([94d2b46](https://www.github.com/dasch-swiss/dsp-api/commit/94d2b46387376c78531a45465827e52f5aaaf490))
+
+
+### Maintenance
+
+* **triplestore:** ZIO-fying triplestore service (DSP-904) ([#2059](https://www.github.com/dasch-swiss/dsp-api/issues/2059)) ([9e038ec](https://www.github.com/dasch-swiss/dsp-api/commit/9e038ec8ef21179f4c2f31ccb00fcf02b21311b7))
+* **v3:** finish user slice (DEV-671) ([#2078](https://www.github.com/dasch-swiss/dsp-api/issues/2078)) ([48592ad](https://www.github.com/dasch-swiss/dsp-api/commit/48592ade1694bb26db8e7876e7f4b880e854dc67))
+
+## [22.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.1...v22.0.0) (2022-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* add upgrade plugin that fixes invalid date serialisations (#2081)
+
+### Bug Fixes
+
+* add upgrade plugin that fixes invalid date serialisations ([#2081](https://www.github.com/dasch-swiss/dsp-api/issues/2081)) ([3a0902e](https://www.github.com/dasch-swiss/dsp-api/commit/3a0902ea9b44860bcb73e4ef25888f5ac8a5dc21))
+* **ontology:** link value property is not editable after editing the property metadata (DEV-1037) ([#2084](https://www.github.com/dasch-swiss/dsp-api/issues/2084)) ([09688f5](https://www.github.com/dasch-swiss/dsp-api/commit/09688f5d4bd85e9544807328ee51b222d8b4732b))
+
+
+### Maintenance
+
+* temporarily ignore KnoraSipiIntegrationV2ITSpec ([#2085](https://www.github.com/dasch-swiss/dsp-api/issues/2085)) ([59f93b3](https://www.github.com/dasch-swiss/dsp-api/commit/59f93b318115c204ec3a20da23c97251575084bd))
+
+### [21.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v21.0.0...v21.0.1) (2022-06-23)
+
+
+### Bug Fixes
+
+* fix RepositoryUpdater by removing old way of adding plugins ([#2082](https://www.github.com/dasch-swiss/dsp-api/issues/2082)) ([6599b68](https://www.github.com/dasch-swiss/dsp-api/commit/6599b684da0e6d6506a311441a0214f50e5fb3d6))
+
+## [21.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.1...v21.0.0) (2022-06-23)
+
+
+### ⚠ BREAKING CHANGES
+
+* fix valueHasUri bad values and missing types (DEV-1036) (#2079)
+
+### Bug Fixes
+
+* fix valueHasUri bad values and missing types (DEV-1036) ([#2079](https://www.github.com/dasch-swiss/dsp-api/issues/2079)) ([de1e5a4](https://www.github.com/dasch-swiss/dsp-api/commit/de1e5a4e2ce83ad395a76b33b6e2044db6d3003d))
+
 ### [20.4.1](https://www.github.com/dasch-swiss/dsp-api/compare/v20.4.0...v20.4.1) (2022-06-16)
 
 

@@ -17,17 +17,17 @@ object RedisTestContainer {
     container.withExposedPorts(6379)
     container.start()
     container
-  }.orDie.tap(_ => ZIO.debug(">>> acquireRedisTestContainer executed <<<"))
+  }.orDie.tap(_ => ZIO.debug(">>> Acquire Redis TestContainer <<<"))
 
   def releaseRedisTestContainer(container: GenericContainer[Nothing]): URIO[Any, Unit] = ZIO.attemptBlocking {
     container.stop()
-  }.orDie.tap(_ => ZIO.debug(">>> releaseRedisTestContainer executed <<<"))
+  }.orDie.tap(_ => ZIO.debug(">>> Release Redis TestContainer <<<"))
 
   val layer: ZLayer[Any, Nothing, RedisTestContainer] = {
     ZLayer.scoped {
       for {
         tc <- ZIO.acquireRelease(acquireRedisTestContainer)(releaseRedisTestContainer(_)).orDie
       } yield RedisTestContainer(tc)
-    }.tap(_ => ZIO.debug(">>> Redis Test Container Initialized <<<"))
+    }
   }
 }
