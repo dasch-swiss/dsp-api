@@ -7,6 +7,7 @@ package dsp.project.api
 
 import dsp.errors._
 import dsp.project.domain._
+import dsp.valueobjects._
 import zio._
 import zio.macros.accessible
 

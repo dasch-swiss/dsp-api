@@ -15,9 +15,9 @@ object Project {
   /**
    * Project Shortcode value object.
    */
-  sealed abstract case class Shortcode private (value: String)
-  object Shortcode { self =>
-    def make(value: String): Validation[Throwable, Shortcode] =
+  sealed abstract case class ShortCode private (value: String)
+  object ShortCode { self =>
+    def make(value: String): Validation[Throwable, ShortCode] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       } else {
@@ -27,10 +27,10 @@ object Project {
             throw BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
           )
         )
-        validatedValue.map(new Shortcode(_) {})
+        validatedValue.map(new ShortCode(_) {})
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Shortcode]] =
+    def make(value: Option[String]): Validation[Throwable, Option[ShortCode]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)

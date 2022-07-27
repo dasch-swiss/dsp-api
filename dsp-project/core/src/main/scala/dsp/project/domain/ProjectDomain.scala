@@ -5,63 +5,13 @@
 
 package dsp.project.domain
 
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.Project._
+import dsp.valueobjects._
 import zio.prelude.Validation
 
 import java.util.UUID
-import dsp.valueobjects.Project._
-import dsp.valueobjects.Iri._
-
-/**
- * Stores the project ID, i.e. UUID, IRI and shortcode of the project
- *
- * @param uuid      the UUID of the project
- * @param iri       the IRI of the project
- * @param shortcode the shortcode of the project
- */
-abstract case class ProjectId private (
-  uuid: UUID,
-  iri: ProjectIri,
-  shortcode: Shortcode
-)
-
-/**
- * Companion object for ProjectId. Contains factory methods for creating ProjectId instances.
- */
-object ProjectId {
-
-  // TODO: add docs for shortcode
-
-  /**
-   * Generates a ProjectId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
-   *
-   * @return a new ProjectId instance
-   */
-  def fromIri(iri: ProjectIri, shortcode: Shortcode): ProjectId = {
-    val uuid: UUID = UUID.fromString(iri.value.split("/").last)
-    new ProjectId(uuid = uuid, iri = iri, shortcode = shortcode) {}
-  }
-
-  /**
-   * Generates a ProjectId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
-   *
-   * @return a new ProjectId instance
-   */
-  def fromUuid(uuid: UUID, shortcode: Shortcode): ProjectId = {
-    val iri: ProjectIri = ProjectIri.make(s"http://rdfh.ch/projects/${uuid}").fold(e => throw e.head, v => v)
-    new ProjectId(uuid = uuid, iri = iri, shortcode = shortcode) {}
-  }
-
-  /**
-   * Generates a ProjectId instance with a new (random) UUID and an IRI which is created from a prefix and the UUID.
-   *
-   * @return a new ProjectId instance
-   */
-  def make(shortcode: Shortcode): ProjectId = {
-    val uuid: UUID      = UUID.randomUUID()
-    val iri: ProjectIri = ProjectIri.make(s"http://rdfh.ch/projects/${uuid}").fold(e => throw e.head, v => v)
-    new ProjectId(uuid = uuid, iri = iri, shortcode = shortcode) {}
-  }
-}
+import dsp.errors.ValidationException
 
 /**
  * Represents the project domain object.
@@ -74,23 +24,48 @@ sealed abstract case class Project private (
   id: ProjectId,
   name: String,
   description: String
+  // TODO: add project status here
+  // TODO: use project valueobjects for things like name, description, etc.
 ) extends Ordered[Project] { self =>
 
   /**
-   * Allows to sort collections of [[User]]s. Sorting is done by the IRI.
+   * Allows to sort collections of [[Project]]s. Sorting is done by the IRI.
    */
   def compare(that: Project): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
+  // TODO: by which field should a project be sorted by? shortcode? name? IRI?
 
-  // TODO: add this kind of things
-//   def updateUsername(value: Username): User =
-//     new User(self.id, self.givenName, self.familyName, value, self.email, self.password, self.language) {}
+  /**
+   * Update the name of the project.
+   *
+   * @param name the new name
+   * @return the updated Project
+   */
+  def updateProjectName(name: String): Validation[ValidationException, Project] =
+    Project.make(
+      id = self.id,
+      name = name,
+      description = self.description
+    )
+
+  /**
+   * Update the description of the project.
+   *
+   * @param description the new description
+   * @return the updated Project
+   */
+  def updateProjectDescription(description: String): Validation[ValidationException, Project] =
+    Project.make(
+      id = self.id,
+      name = self.name,
+      description = description
+    )
 }
 object Project {
   def make(
     id: ProjectId,
-    name: String,
-    description: String
-  ): Project =
-    new Project(id = id, name = name, description = description) {}
+    name: String,       // TODO: make LangString as soon as we have it
+    description: String // TODO: make LangString as soon as we have it
+  ): Validation[ValidationException, Project] =
+    Validation.succeed(new Project(id = id, name = name, description = description) {})
 
 }

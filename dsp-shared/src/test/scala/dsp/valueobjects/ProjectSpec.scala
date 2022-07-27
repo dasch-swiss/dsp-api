@@ -31,31 +31,31 @@ object ProjectSpec extends ZIOSpecDefault {
   private val shortcodeTest = suite("ProjectSpec - Shortcode")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Shortcode.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+        ShortCode.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       ) &&
       assertTrue(
-        Shortcode.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
+        ShortCode.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortcodeMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        Shortcode.make(invalidShortcode) == Validation.fail(
+        ShortCode.make(invalidShortcode) == Validation.fail(
           BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
         )
       ) &&
       assertTrue(
-        Shortcode.make(Some(invalidShortcode)) == Validation.fail(
+        ShortCode.make(Some(invalidShortcode)) == Validation.fail(
           BadRequestException(ProjectErrorMessages.ShortcodeInvalid)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Shortcode.make(validShortcode).toOption.get.value == validShortcode) &&
-      assertTrue(Shortcode.make(Option(validShortcode)).getOrElse(null).get.value == validShortcode)
+      assertTrue(ShortCode.make(validShortcode).toOption.get.value == validShortcode) &&
+      assertTrue(ShortCode.make(Option(validShortcode)).getOrElse(null).get.value == validShortcode)
     },
     test("successfully validate passing None") {
       assertTrue(
-        Shortcode.make(None) == Validation.succeed(None)
+        ShortCode.make(None) == Validation.succeed(None)
       )
     }
   )
@@ -87,7 +87,7 @@ object ProjectSpec extends ZIOSpecDefault {
     },
     test("successfully validate passing None") {
       assertTrue(
-        Shortcode.make(None) == Validation.succeed(None)
+        ShortCode.make(None) == Validation.succeed(None)
       )
     }
   )
@@ -105,7 +105,7 @@ object ProjectSpec extends ZIOSpecDefault {
     },
     test("successfully validate passing None") {
       assertTrue(
-        Shortcode.make(None) == Validation.succeed(None)
+        ShortCode.make(None) == Validation.succeed(None)
       )
     }
   )
