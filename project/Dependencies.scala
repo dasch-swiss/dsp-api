@@ -221,6 +221,8 @@ object Dependencies {
     zioTestSbt % Test,
     slf4j      % Test
   )
+
+  // shared project dependencies
   val sharedLibraryDependencies = Seq(
     springSecurityCore,
     bouncyCastle,
@@ -259,16 +261,4 @@ object Dependencies {
     zioTest    % Test,
     zioTestSbt % Test
   )
-
-  // shared project dependencies
-  val sharedLibraryDependencies =
-    Seq(
-      commonsLang3,
-      commonsValidator,
-      gwtServlet,
-      zioPrelude,
-      scalaLogging,
-      zioTest    % Test,
-      zioTestSbt % Test
-    )
 }
