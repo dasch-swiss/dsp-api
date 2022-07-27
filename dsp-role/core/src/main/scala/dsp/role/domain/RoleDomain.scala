@@ -27,11 +27,11 @@ case class RoleUser(
  */
 sealed abstract case class Role private (
   id: RoleId,
-  name: LangString,        // Langstring
-  description: LangString, // Langstring
-  users: List[RoleUser],   // List[User]
-  permission: Permission   // Permission
-) { self =>
+  name: LangString,
+  description: LangString,
+  users: List[RoleUser], // List[User]
+  permission: Permission
+) extends Ordered[Role] { self =>
 
   /**
    * Allows to compare the [[Role]] instances.
@@ -39,7 +39,8 @@ sealed abstract case class Role private (
    * @param that [[Role]] to compare
    * @return [[Boolean]] value
    */
-  def compare(that: Role): Boolean = self.id.equals(that.id)
+  def compare(that: Role): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
+  //  Boolean = self.id.equals(that.id)
 
   /**
    * Updates the role's name.

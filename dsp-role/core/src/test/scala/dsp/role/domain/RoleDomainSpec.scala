@@ -28,11 +28,11 @@ object RoleDomainSpec extends ZIOSpecDefault {
     test("create a role") {
       (
         for {
-          id          <- RoleTestData.roleId1
-          name        <- RoleTestData.roleName1
-          description <- RoleTestData.roleDescription1
-          users        = RoleTestData.roleUsers1
-          permission  <- RoleTestData.rolePermission1
+          id          <- RoleTestData.id1
+          name        <- RoleTestData.name1
+          description <- RoleTestData.description1
+          users        = RoleTestData.users1
+          permission  <- RoleTestData.permission1
 
           role <- Role.make(
                     id,

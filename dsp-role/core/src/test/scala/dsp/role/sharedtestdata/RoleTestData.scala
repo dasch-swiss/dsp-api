@@ -11,44 +11,44 @@ import dsp.valueobjects.Role._
 import dsp.valueobjects.User
 
 object RoleTestData {
-  val roleId1          = Id.RoleId.make()
-  val roleName1        = LangString.make("Name", "en")
-  val roleDescription1 = LangString.make("Description", "en")
-  val roleUsers1       = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
-  val rolePermission1  = Permission.make(Permission.View)
+  val id1          = Id.RoleId.make()
+  val name1        = LangString.make("Name", "en")
+  val description1 = LangString.make("Description", "en")
+  val users1       = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
+  val permission1  = Permission.make(Permission.View)
 
   val role1 = for {
-    id          <- roleId1
-    name        <- roleName1
-    description <- roleDescription1
-    permission  <- rolePermission1
+    id          <- id1
+    name        <- name1
+    description <- description1
+    permission  <- permission1
 
     role <- Role.make(
               id,
               name,
               description,
-              users = roleUsers1,
+              users = users1,
               permission
             )
   } yield role
 
-  val roleId2          = Id.RoleId.make()
-  val roleName2        = LangString.make("Name 2", "en")
-  val roleDescription2 = LangString.make("Description 2", "en")
-  val roleUsers2       = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
-  val rolePermission2  = Permission.make(Permission.Admin)
+  val id2          = Id.RoleId.make()
+  val name2        = LangString.make("Name 2", "en")
+  val description2 = LangString.make("Description 2", "en")
+  val users2       = List(RoleUser(Id.UserId.make().fold(e => throw e.head, v => v)))
+  val permission2  = Permission.make(Permission.Admin)
 
   val role2 = for {
-    id          <- roleId2
-    name        <- roleName2
-    description <- roleDescription2
-    permission  <- rolePermission2
+    id          <- id2
+    name        <- name2
+    description <- description2
+    permission  <- permission2
 
     role <- Role.make(
               id,
               name,
               description,
-              users = roleUsers2,
+              users = users2,
               permission
             )
   } yield role
