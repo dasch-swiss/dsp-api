@@ -121,14 +121,14 @@ object SchemaSpec extends ZIOSpecDefault {
           .make(guiAttributeHlistString)
           .toOption
           .get
-          .v == "http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA"
+          .v == "<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"
       ) &&
       assertTrue(
         Schema.GuiAttribute
           .make(guiAttributeHlistString)
           .toOption
           .get
-          .value == "hlist=http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA"
+          .value == "hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"
       )
     }
   )

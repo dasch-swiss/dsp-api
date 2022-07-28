@@ -278,8 +278,8 @@ object Schema {
       case Some(valueType) if valueType.toString() == "iri" => {
         val iriWithoutBrackets: Option[String] =
           if (value.startsWith("<") && value.endsWith(">")) Some(value.substring(1, value.length - 1)) else None
-        iriWithoutBrackets.map { value: String =>
-          if (Iri.urlValidator.isValid(encodeAllowEscapes(value))) value else None
+        iriWithoutBrackets.map { valueWithoutBrackets: String =>
+          if (Iri.urlValidator.isValid(encodeAllowEscapes(valueWithoutBrackets))) value else None
         }
       }
       case _ => None

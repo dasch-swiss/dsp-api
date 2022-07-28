@@ -822,7 +822,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               // get gui related values from request and validate them by making value objects from it
 
               // get the (optional) gui element from the request
-              maybeGuiElement =
+              maybeGuiElement: Option[String] =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiElementProp.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
@@ -833,7 +833,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   }
 
               // get the gui attribute(s) from the request
-              maybeGuiAttributes =
+              maybeGuiAttributes: Set[String] =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiAttribute.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
