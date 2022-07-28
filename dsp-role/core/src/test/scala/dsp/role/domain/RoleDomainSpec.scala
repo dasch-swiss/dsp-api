@@ -10,6 +10,9 @@ import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
 import zio.test._
 
+/**
+ * This spec is used to test [[RoleDomain]].
+ */
 object RoleDomainSpec extends ZIOSpecDefault {
   def spec = (compareRolesTest + createRoleTest + updateRoleTest)
 
