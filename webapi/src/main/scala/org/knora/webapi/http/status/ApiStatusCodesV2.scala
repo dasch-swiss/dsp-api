@@ -32,13 +32,13 @@ object ApiStatusCodesV2 {
       case BadRequestException(_)         => StatusCodes.BadRequest
       case ValidationException(_, _)      => StatusCodes.BadRequest
       case RequestRejectedException(_)    => StatusCodes.BadRequest
-      // RequestRejectedException must be last in this group
+      // RequestRejectedException must be the last one in this group
 
       // Subclasses of InternalServerException
       case UpdateNotPerformedException(_)    => StatusCodes.Conflict
       case TriplestoreTimeoutException(_, _) => StatusCodes.GatewayTimeout
       case InternalServerException(_)        => StatusCodes.InternalServerError
-      // InternalServerException must be last in this group
+      // InternalServerException must be the last one in this group
 
       case _ => StatusCodes.InternalServerError
     }

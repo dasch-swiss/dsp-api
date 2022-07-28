@@ -20,7 +20,7 @@ object Schema {
   /**
    * A list of all known gui elements
    */
-  private[valueobjects] val guiElements: List[SalsahGui.IRI] = List(
+  private[valueobjects] val guiElements: Set[SalsahGui.IRI] = Set(
     SalsahGui.SimpleText,
     SalsahGui.Textarea,
     SalsahGui.Pulldown,
@@ -43,16 +43,16 @@ object Schema {
   /**
    * A map that defines the (sometimes optional) gui attributes for each gui element
    */
-  private val guiElementToGuiAttributes: Map[SalsahGui.IRI, List[String]] = Map(
-    (SalsahGui.List, List(SalsahGui.Hlist)),
-    (SalsahGui.Radio, List(SalsahGui.Hlist)),
-    (SalsahGui.Pulldown, List(SalsahGui.Hlist)),
-    (SalsahGui.Slider, List(SalsahGui.Min, SalsahGui.Max)),
-    (SalsahGui.SimpleText, List(SalsahGui.Size, SalsahGui.Maxlength)),
-    (SalsahGui.Textarea, List(SalsahGui.Cols, SalsahGui.Rows, SalsahGui.Width, SalsahGui.Wrap)),
-    (SalsahGui.Spinbox, List(SalsahGui.Min, SalsahGui.Max)),
-    (SalsahGui.Searchbox, List(SalsahGui.Numprops)),
-    (SalsahGui.Colorpicker, List(SalsahGui.Ncolors))
+  private val guiElementToGuiAttributes: Map[SalsahGui.IRI, Set[String]] = Map(
+    (SalsahGui.List, Set(SalsahGui.Hlist)),
+    (SalsahGui.Radio, Set(SalsahGui.Hlist)),
+    (SalsahGui.Pulldown, Set(SalsahGui.Hlist)),
+    (SalsahGui.Slider, Set(SalsahGui.Min, SalsahGui.Max)),
+    (SalsahGui.SimpleText, Set(SalsahGui.Size, SalsahGui.Maxlength)),
+    (SalsahGui.Textarea, Set(SalsahGui.Cols, SalsahGui.Rows, SalsahGui.Width, SalsahGui.Wrap)),
+    (SalsahGui.Spinbox, Set(SalsahGui.Min, SalsahGui.Max)),
+    (SalsahGui.Searchbox, Set(SalsahGui.Numprops)),
+    (SalsahGui.Colorpicker, Set(SalsahGui.Ncolors))
   )
 
   /**
@@ -65,7 +65,7 @@ object Schema {
    * A set that contains all gui elements that point to a list
    */
   private val guiElementsPointingToList: Set[SalsahGui.IRI] =
-    guiElementToGuiAttributes.filter(_._2 == List(SalsahGui.Hlist)).keySet
+    guiElementToGuiAttributes.filter(_._2 == Set(SalsahGui.Hlist)).keySet
 
   /**
    * A map that defines the gui attribute type for each gui attribute
@@ -85,19 +85,19 @@ object Schema {
   )
 
   /**
-   * GuiObject value object. Consists of a list of gui attributes and an optional gui element. If no gui attributes are used,
-   * the list is empty.
+   * GuiObject value object. Consists of a list of gui attributes and an optional gui element.
+   * If no gui attributes are used, the list is empty.
    *
    * @param guiAttributes a list of gui attributes
    * @param guiElement optional gui element
    *
    * @return the GuiObject value object
    */
-  sealed abstract case class GuiObject private (guiAttributes: List[GuiAttribute], guiElement: Option[GuiElement])
+  sealed abstract case class GuiObject private (guiAttributes: Set[GuiAttribute], guiElement: Option[GuiElement])
   object GuiObject {
 
     def makeFromStrings(
-      guiAttributes: List[String],
+      guiAttributes: Set[String],
       guiElement: Option[String]
     ): Validation[ValidationException, GuiObject] = {
 
@@ -111,36 +111,37 @@ object Schema {
       // create a list of GuiAttribute value objects from raw inputs
       val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] =
         // with forEach, multiple errors are returned if multiple errors occur
-        guiAttributes.forEach { case guiAttribute => GuiAttribute.make(guiAttribute) }
+        guiAttributes.toList.forEach { case guiAttribute => GuiAttribute.make(guiAttribute) }
 
-      val validatedGuiAttributesAndGuiElement =
-        Validation.validateWith(
+      val validatedGuiAttributesAndGuiElement
+        : ZValidation[Nothing, ValidationException, (List[GuiAttribute], Option[GuiElement])] =
+        Validation.validate(
           validatedGuiAttributes,
           validatedGuiElement
-        )((ga, ge) => (ga, ge))
+        )
 
       // if there were errors in creating gui attributes or gui element, all of the errors are returned
       validatedGuiAttributesAndGuiElement match {
         case Failure(log, errors) => Validation.failNonEmptyChunk(errors)
-        case Success(log, value)  => GuiObject.make(value._1, value._2)
+        case Success(log, value)  => GuiObject.make(value._1.toSet, value._2)
       }
 
     }
 
     def make(
-      guiAttributes: List[GuiAttribute],
+      guiAttributes: Set[GuiAttribute],
       guiElement: Option[GuiElement]
     ): Validation[ValidationException, GuiObject] = {
 
       // Check if the correct gui attributes are provided for a given gui element
-      val validatedGuiAttributes: Validation[ValidationException, List[GuiAttribute]] =
+      val validatedGuiAttributes: Validation[ValidationException, Set[GuiAttribute]] =
         guiElement match {
           // the following gui elements are not allowed to have a gui attribute (Checkbox, Fileupload, Richtext, Timestamp, Interval, Geonames, Geometry, Date)
           case Some(guiElement) if guiElementsWithoutGuiAttribute.contains(guiElement.value) =>
-            if (!guiAttributes.isEmpty) {
-              Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
-            } else {
+            if (guiAttributes.isEmpty) {
               Validation.succeed(guiAttributes)
+            } else {
+              Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
             }
 
           // all other gui elements have optional gui attributes
@@ -149,10 +150,10 @@ object Schema {
 
           // if there is no gui element, an empty list is returned
           case None =>
-            if (!guiAttributes.isEmpty) {
-              Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
+            if (guiAttributes.isEmpty) {
+              Validation.succeed(Set())
             } else {
-              Validation.succeed(List())
+              Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeNotEmpty))
             }
 
         }
@@ -217,21 +218,19 @@ object Schema {
    */
   private def validateGuiAttributes(
     guiElement: GuiElement,
-    guiAttributes: List[GuiAttribute]
-  ): Validation[ValidationException, List[GuiAttribute]] = {
+    guiAttributes: Set[GuiAttribute]
+  ): Validation[ValidationException, Set[GuiAttribute]] = {
 
-    val expectedGuiAttributes: List[String] = guiElementToGuiAttributes.getOrElse(guiElement.value, List())
+    val expectedGuiAttributes: Set[String] = guiElementToGuiAttributes.getOrElse(guiElement.value, Set())
 
-    val guiAttributeIsRequired: Boolean =
+    val isGuiAttributeRequired: Boolean =
       guiElementsPointingToList.contains(guiElement.value) ||
         SalsahGui.Slider == guiElement.value
 
-    val guiAttributeKeys: List[String] = guiAttributes.map(_.k)
-
-    val hasDuplicateAttributes: Boolean = guiAttributeKeys.toSet.size < guiAttributes.size
+    val guiAttributeKeys: Set[String] = guiAttributes.map(_.k)
 
     if (
-      guiAttributeIsRequired &&
+      isGuiAttributeRequired &&
       (guiAttributeKeys != expectedGuiAttributes)
     ) {
       Validation.fail(
@@ -240,8 +239,8 @@ object Schema {
         )
       )
     } else if (
-      !guiAttributeIsRequired &&
-      (!guiAttributeKeys.forall(expectedGuiAttributes.contains) || hasDuplicateAttributes)
+      !isGuiAttributeRequired &&
+      (!guiAttributeKeys.forall(expectedGuiAttributes.contains))
     ) {
       Validation.fail(
         ValidationException(
@@ -255,7 +254,7 @@ object Schema {
   }
 
   /**
-   * Checks if the value of a gui attribute is of the correct value type (integer, decimal, string etc.)
+   * Checks if the value of a gui attribute has correct value type (integer, decimal, string etc.)
    *
    * @param key     the gui attribute key
    * @param value   the gui attribute value
@@ -296,29 +295,17 @@ object Schema {
 }
 
 object SchemaErrorMessages {
-  val GuiAttributeMissing =
-    "Gui attribute cannot be empty."
-
-  val GuiAttributeNotEmpty =
-    "No gui attributes allowed."
-
-  def GuiAttributeUnknown(guiAttribute: String): String =
+  val GuiAttributeMissing  = "Gui attribute cannot be empty."
+  val GuiAttributeNotEmpty = "No gui attributes allowed."
+  val GuiElementMissing    = "Gui element cannot be empty."
+  val GuiAttributeUnknown = (guiAttribute: String) =>
     s"Gui attribute '$guiAttribute' is unknown. Needs to be one of: ${Schema.guiAttributeToType.keys.mkString(", ")}"
-
-  def GuiAttributeWrongValueType(key: String, value: String): String =
+  val GuiAttributeWrongValueType = (key: String, value: String) =>
     s"Value '$value' of gui attribute '$key' has the wrong attribute type."
-
-  def GuiAttributeDuplicates(guiAttributeKeys: List[String]): String =
-    s"Found duplicate gui attributes: ${guiAttributeKeys.mkString(", ")}."
-
-  def GuiAttributeWrong(guiElement: String, guiAttributes: List[String], expectedGuiAttributes: List[String]) =
+  val GuiAttributeWrong = (guiElement: String, guiAttributes: Set[String], expectedGuiAttributes: Set[String]) =>
     s"Expected salsah-gui:guiAttribute '${expectedGuiAttributes.mkString(", ")}' for salsah-gui:guiElement '$guiElement', but found '${guiAttributes
       .mkString(", ")}'."
-
-  val GuiElementMissing =
-    "Gui element cannot be empty."
-
-  def GuiElementUnknown(guiElement: String) =
+  val GuiElementUnknown = (guiElement: String) =>
     s"Gui element '$guiElement' is unknown. Needs to be one of: ${Schema.guiElements.mkString(", ")}"
 
 }

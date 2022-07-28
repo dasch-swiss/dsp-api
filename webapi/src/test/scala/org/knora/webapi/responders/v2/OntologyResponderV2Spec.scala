@@ -3861,7 +3861,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           .make("http://www.knora.org/ontology/salsah-gui#SimpleText")
           .fold(e => throw e.head, v => Some(v))
       val guiAttributes =
-        List("size=80")
+        Set("size=80")
           .map(attribute =>
             Schema.GuiAttribute
               .make(attribute)
@@ -3931,8 +3931,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         Iri.PropertyIri
           .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
           .fold(e => throw e.head, v => v)
-      val guiElement    = None
-      val guiAttributes = List()
+      val guiElement                              = None
+      val guiAttributes: Set[Schema.GuiAttribute] = Set.empty
       val guiObject =
         Schema.GuiObject
           .make(guiAttributes, guiElement)

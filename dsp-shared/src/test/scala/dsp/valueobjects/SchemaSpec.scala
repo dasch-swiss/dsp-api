@@ -140,9 +140,10 @@ object SchemaSpec extends ZIOSpecDefault {
       )
     },
     test("pass an unknown value and return an error") {
+      val unknownGuiElement = "http://www.knora.org/ontology/salsah-gui#Unknown"
       assertTrue(
-        Schema.GuiElement.make("http://www.knora.org/ontology/salsah-gui#Unknown") == Validation.fail(
-          ValidationException(SchemaErrorMessages.GuiElementUnknown("http://www.knora.org/ontology/salsah-gui#Unknown"))
+        Schema.GuiElement.make(unknownGuiElement) == Validation.fail(
+          ValidationException(SchemaErrorMessages.GuiElementUnknown(unknownGuiElement))
         )
       )
     },
@@ -157,12 +158,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .makeFromStrings(
-          scala.collection.immutable.List("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"),
+          Set("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>"),
           Some(guiElementList.value)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeHlist)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeHlist)) &&
       assertTrue(guiObject.guiElement == Some(guiElementList))
     },
     test(
@@ -171,7 +172,7 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .makeFromStrings(
-            scala.collection.immutable.List("mini", "maxi"),
+            Set("mini", "maxi"),
             Some(guiElementSlider.value)
           ) == Validation.failNonEmptyChunk(
           NonEmptyChunk(
@@ -187,7 +188,7 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .makeFromStrings(
-            scala.collection.immutable.List("mini", "maxi"),
+            Set("mini", "maxi"),
             Some("unknown")
           ) == Validation.failNonEmptyChunk(
           NonEmptyChunk(
@@ -204,7 +205,7 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .makeFromStrings(
-            scala.collection.immutable.List(guiAttributeMin.value, guiAttributeMax.value),
+            Set(guiAttributeMin.value, guiAttributeMax.value),
             None
           ) == Validation.failNonEmptyChunk(
           NonEmptyChunk(
@@ -221,12 +222,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeHlist),
+          Set(guiAttributeHlist),
           Some(guiElementList)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeHlist)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeHlist)) &&
       assertTrue(guiObject.guiElement == Some(guiElementList))
     },
     test(
@@ -235,14 +236,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(),
+            Set(),
             Some(guiElementList)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementList.value,
-              scala.collection.immutable.List(),
-              scala.collection.immutable.List("hlist")
+              Set(),
+              Set("hlist")
             )
           )
         )
@@ -254,14 +255,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist),
+            Set(guiAttributeMin, guiAttributeHlist),
             Some(guiElementList)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementList.value,
-              scala.collection.immutable.List("min", "hlist"),
-              scala.collection.immutable.List("hlist")
+              Set("min", "hlist"),
+              Set("hlist")
             )
           )
         )
@@ -273,14 +274,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementList)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementList.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("hlist")
+              Set("size"),
+              Set("hlist")
             )
           )
         )
@@ -294,12 +295,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeHlist),
+          Set(guiAttributeHlist),
           Some(guiElementRadio)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeHlist)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeHlist)) &&
       assertTrue(guiObject.guiElement == Some(guiElementRadio))
     },
     test(
@@ -308,14 +309,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(),
+            Set(),
             Some(guiElementRadio)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementRadio.value,
-              scala.collection.immutable.List(),
-              scala.collection.immutable.List("hlist")
+              Set(),
+              Set("hlist")
             )
           )
         )
@@ -327,14 +328,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist),
+            Set(guiAttributeMin, guiAttributeHlist),
             Some(guiElementRadio)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementRadio.value,
-              scala.collection.immutable.List("min", "hlist"),
-              scala.collection.immutable.List("hlist")
+              Set("min", "hlist"),
+              Set("hlist")
             )
           )
         )
@@ -346,14 +347,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementRadio)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementRadio.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("hlist")
+              Set("size"),
+              Set("hlist")
             )
           )
         )
@@ -367,12 +368,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeHlist),
+          Set(guiAttributeHlist),
           Some(guiElementPulldown)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeHlist)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeHlist)) &&
       assertTrue(guiObject.guiElement == Some(guiElementPulldown))
     },
     test(
@@ -381,14 +382,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(),
+            Set(),
             Some(guiElementPulldown)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementPulldown.value,
-              scala.collection.immutable.List(),
-              scala.collection.immutable.List("hlist")
+              Set(),
+              Set("hlist")
             )
           )
         )
@@ -400,14 +401,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeMin, guiAttributeHlist),
+            Set(guiAttributeMin, guiAttributeHlist),
             Some(guiElementPulldown)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementPulldown.value,
-              scala.collection.immutable.List("min", "hlist"),
-              scala.collection.immutable.List("hlist")
+              Set("min", "hlist"),
+              Set("hlist")
             )
           )
         )
@@ -419,14 +420,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementPulldown)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementPulldown.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("hlist")
+              Set("size"),
+              Set("hlist")
             )
           )
         )
@@ -440,12 +441,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeMin, guiAttributeMax),
+          Set(guiAttributeMin, guiAttributeMax),
           Some(guiElementSlider)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeMin, guiAttributeMax)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeMin, guiAttributeMax)) &&
       assertTrue(guiObject.guiElement == Some(guiElementSlider))
     },
     test(
@@ -454,14 +455,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(),
+            Set(),
             Some(guiElementSlider)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSlider.value,
-              scala.collection.immutable.List(),
-              scala.collection.immutable.List("min", "max")
+              Set(),
+              Set("min", "max")
             )
           )
         )
@@ -473,33 +474,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeSize),
+            Set(guiAttributeMin, guiAttributeMax, guiAttributeSize),
             Some(guiElementSlider)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSlider.value,
-              scala.collection.immutable.List("min", "max", "size"),
-              scala.collection.immutable.List("min", "max")
-            )
-          )
-        )
-      )
-    },
-    test(
-      "pass gui element 'salsah-gui#Slider' with duplicate gui attributes 'min=1.0','max=10.0', and 'min=1.0' and return an error"
-    ) {
-      assertTrue(
-        Schema.GuiObject
-          .make(
-            scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeMin),
-            Some(guiElementSlider)
-          ) == Validation.fail(
-          ValidationException(
-            SchemaErrorMessages.GuiAttributeWrong(
-              guiElementSlider.value,
-              scala.collection.immutable.List("min", "max", "min"),
-              scala.collection.immutable.List("min", "max")
+              Set("min", "max", "size"),
+              Set("min", "max")
             )
           )
         )
@@ -511,14 +493,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementSlider)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSlider.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("min", "max")
+              Set("size"),
+              Set("min", "max")
             )
           )
         )
@@ -532,12 +514,14 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(),
+          Set(),
           Some(guiElementSpinbox)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List()) &&
+      val emptySet: Set[Schema.GuiAttribute] = Set()
+
+      assertTrue(guiObject.guiAttributes == emptySet) &&
       assertTrue(guiObject.guiElement == Some(guiElementSpinbox))
     },
     test(
@@ -545,12 +529,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeMin),
+          Set(guiAttributeMin),
           Some(guiElementSpinbox)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeMin)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeMin)) &&
       assertTrue(guiObject.guiElement == Some(guiElementSpinbox))
     },
     test(
@@ -558,12 +542,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeMin, guiAttributeMax),
+          Set(guiAttributeMin, guiAttributeMax),
           Some(guiElementSpinbox)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeMin, guiAttributeMax)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeMin, guiAttributeMax)) &&
       assertTrue(guiObject.guiElement == Some(guiElementSpinbox))
     },
     test(
@@ -572,14 +556,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeMin, guiAttributeMax, guiAttributeSize),
+            Set(guiAttributeMin, guiAttributeMax, guiAttributeSize),
             Some(guiElementSpinbox)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSpinbox.value,
-              scala.collection.immutable.List("min", "max", "size"),
-              scala.collection.immutable.List("min", "max")
+              Set("min", "max", "size"),
+              Set("min", "max")
             )
           )
         )
@@ -594,12 +578,14 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(),
+          Set(),
           Some(guiElementSimpleText)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List()) &&
+      val emptySet: Set[Schema.GuiAttribute] = Set()
+
+      assertTrue(guiObject.guiAttributes == emptySet) &&
       assertTrue(guiObject.guiElement == Some(guiElementSimpleText))
     },
     test(
@@ -607,12 +593,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeSize),
+          Set(guiAttributeSize),
           Some(guiElementSimpleText)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeSize)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeSize)) &&
       assertTrue(guiObject.guiElement == Some(guiElementSimpleText))
     },
     test(
@@ -620,12 +606,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeSize, guiAttributeMaxlength),
+          Set(guiAttributeSize, guiAttributeMaxlength),
           Some(guiElementSimpleText)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeSize, guiAttributeMaxlength)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeSize, guiAttributeMaxlength)) &&
       assertTrue(guiObject.guiElement == Some(guiElementSimpleText))
     },
     test(
@@ -634,14 +620,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize, guiAttributeMaxlength, guiAttributeMax),
+            Set(guiAttributeSize, guiAttributeMaxlength, guiAttributeMax),
             Some(guiElementSimpleText)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSimpleText.value,
-              scala.collection.immutable.List("size", "maxlength", "max"),
-              scala.collection.immutable.List("size", "maxlength")
+              Set("size", "maxlength", "max"),
+              Set("size", "maxlength")
             )
           )
         )
@@ -655,12 +641,14 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(),
+          Set(),
           Some(guiElementTextarea)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List()) &&
+      val emptySet: Set[Schema.GuiAttribute] = Set()
+
+      assertTrue(guiObject.guiAttributes == emptySet) &&
       assertTrue(guiObject.guiElement == Some(guiElementTextarea))
     },
     test(
@@ -668,14 +656,13 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap),
+          Set(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap),
           Some(guiElementTextarea)
         )
         .fold(e => throw e.head, v => v)
 
       assertTrue(
-        guiObject.guiAttributes == scala.collection.immutable
-          .List(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap)
+        guiObject.guiAttributes == Set(guiAttributeCols, guiAttributeRows, guiAttributeWidth, guiAttributeWrap)
       ) &&
       assertTrue(guiObject.guiElement == Some(guiElementTextarea))
     },
@@ -684,12 +671,12 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeCols, guiAttributeRows),
+          Set(guiAttributeCols, guiAttributeRows),
           Some(guiElementTextarea)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List(guiAttributeCols, guiAttributeRows)) &&
+      assertTrue(guiObject.guiAttributes == Set(guiAttributeCols, guiAttributeRows)) &&
       assertTrue(guiObject.guiElement == Some(guiElementTextarea))
     },
     test(
@@ -698,14 +685,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementTextarea)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementTextarea.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("cols", "rows", "width", "wrap")
+              Set("size"),
+              Set("cols", "rows", "width", "wrap")
             )
           )
         )
@@ -719,12 +706,14 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(),
+          Set(),
           Some(guiElementSearchbox)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List()) &&
+      val emptySet: Set[Schema.GuiAttribute] = Set()
+
+      assertTrue(guiObject.guiAttributes == emptySet) &&
       assertTrue(guiObject.guiElement == Some(guiElementSearchbox))
     },
     test(
@@ -732,14 +721,13 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeNumprops),
+          Set(guiAttributeNumprops),
           Some(guiElementSearchbox)
         )
         .fold(e => throw e.head, v => v)
 
       assertTrue(
-        guiObject.guiAttributes == scala.collection.immutable
-          .List(guiAttributeNumprops)
+        guiObject.guiAttributes == Set(guiAttributeNumprops)
       ) &&
       assertTrue(guiObject.guiElement == Some(guiElementSearchbox))
     },
@@ -749,14 +737,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementSearchbox)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementSearchbox.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("numprops")
+              Set("size"),
+              Set("numprops")
             )
           )
         )
@@ -770,12 +758,13 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(),
+          Set.empty,
           Some(guiElementColorpicker)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List()) &&
+      val emptySet: Set[Schema.GuiAttribute] = Set()
+      assertTrue(guiObject.guiAttributes == emptySet) &&
       assertTrue(guiObject.guiElement == Some(guiElementColorpicker))
     },
     test(
@@ -783,14 +772,13 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(guiAttributeNcolors),
+          Set(guiAttributeNcolors),
           Some(guiElementColorpicker)
         )
         .fold(e => throw e.head, v => v)
 
       assertTrue(
-        guiObject.guiAttributes == scala.collection.immutable
-          .List(guiAttributeNcolors)
+        guiObject.guiAttributes == Set(guiAttributeNcolors)
       ) &&
       assertTrue(guiObject.guiElement == Some(guiElementColorpicker))
     },
@@ -800,33 +788,14 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeSize),
+            Set(guiAttributeSize),
             Some(guiElementColorpicker)
           ) == Validation.fail(
           ValidationException(
             SchemaErrorMessages.GuiAttributeWrong(
               guiElementColorpicker.value,
-              scala.collection.immutable.List("size"),
-              scala.collection.immutable.List("ncolors")
-            )
-          )
-        )
-      )
-    },
-    test(
-      "pass gui element 'salsah-gui#Colorpicker' with duplicate gui attributes 'ncolors=12', 'ncolors=12' and return an error"
-    ) {
-      assertTrue(
-        Schema.GuiObject
-          .make(
-            scala.collection.immutable.List(guiAttributeNcolors, guiAttributeNcolors),
-            Some(guiElementColorpicker)
-          ) == Validation.fail(
-          ValidationException(
-            SchemaErrorMessages.GuiAttributeWrong(
-              guiElementColorpicker.value,
-              scala.collection.immutable.List("ncolors", "ncolors"),
-              scala.collection.immutable.List("ncolors")
+              Set("size"),
+              Set("ncolors")
             )
           )
         )
@@ -840,12 +809,13 @@ object SchemaSpec extends ZIOSpecDefault {
     ) {
       val guiObject = Schema.GuiObject
         .make(
-          scala.collection.immutable.List(),
+          Set(),
           Some(guiElementCheckbox)
         )
         .fold(e => throw e.head, v => v)
 
-      assertTrue(guiObject.guiAttributes == scala.collection.immutable.List()) &&
+      val emptySet: Set[Schema.GuiAttribute] = Set()
+      assertTrue(guiObject.guiAttributes == emptySet) &&
       assertTrue(guiObject.guiElement == Some(guiElementCheckbox))
     },
     test(
@@ -854,7 +824,7 @@ object SchemaSpec extends ZIOSpecDefault {
       assertTrue(
         Schema.GuiObject
           .make(
-            scala.collection.immutable.List(guiAttributeMin),
+            Set(guiAttributeMin),
             Some(guiElementCheckbox)
           ) == Validation.fail(
           ValidationException(

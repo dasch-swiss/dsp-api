@@ -20,7 +20,7 @@ brevity, we omit the prefix in this document.
 
 ### guiOrder
  
-`guiOrder` can be attached to an `owl:Restriction` representing a cardinality
+`guiOrder` can be attached to a cardinality
 in a resource class, to indicate the order in which properties
 should be displayed in the GUI. The object is a non-negative
 integer. For example, a property with `guiOrder` 0 would be
@@ -29,7 +29,7 @@ on.
 
 ### guiElement
 
-`guiElement` can be attached to a property definition to indicate which SALSAH
+`guiElement` can be attached to a property definition to indicate which
 GUI element should be used to enter data for the property. This
 should be one of the individuals of class `Guielement` described
 below.
@@ -41,12 +41,12 @@ the GUI element specified in `guiElement`. The objects of this
 predicate are written in a DSL with the following syntax:
 
 ```ebnf
-object              = attribute name, "=", attribute value ;
-attribute name      = identifier ;
-identifier          = letter , { letter } ;
-attribute value     = integer | decimal | percent | string | iri ;
-percent             = integer, "%" ;
-iri                 = "<", string, ">" ;
+object          = attribute name, "=", attribute value ;
+attribute name  = identifier ;
+identifier      = letter , { letter } ;
+attribute value = integer | decimal | percent | string | iri ;
+percent         = integer, "%" ;
+iri             = "<", string, ">" ;
 ```
 
 The attributes used with each GUI element are described below under
@@ -77,7 +77,7 @@ value given via `guiAttribute` must be one of the enumerated values.
 
 ### Guielement
 
-The instances of class `Guielement` are individuals representing SALSAH GUI
+The instances of class `Guielement` are individuals representing GUI
 elements for data entry.
 
 ## Individuals
@@ -114,7 +114,7 @@ recording.
 [ListValue](knora-base.md#listvalue)). A property definition that
 uses this element must also contain this `guiAttribute` predicate: 
 
-- `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
+`"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
 `knora-base:ListNode` that is the root node of a hierarchical list.
 
 ### Pulldown
@@ -124,7 +124,7 @@ uses this element must also contain this `guiAttribute` predicate:
 property definition that uses this element must also contain this
 `guiAttribute` predicate: 
 
-- `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
+`"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
 `knora-base:ListNode` that is the root node of a hierarchical list.
 
 ### Radio
@@ -134,7 +134,7 @@ property definition that uses this element must also contain this
 definition that uses this element must also contain this
 `guiAttribute` predicate:
 
-- `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
+`"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
 `knora-base:ListNode` that is the root node of a hierarchical list.
 
 ### Richtext
@@ -147,7 +147,7 @@ definition that uses this element must also contain this
 `rdfs:label`. For DSP-API v1, a property definition that uses this
 element may also contain this `guiAttribute` predicate:
 
--   `"numprops=N"`, where `N` is an integer specifying the number of
+`"numprops=N"`, where `N` is an integer specifying the number of
 describing properties to be returned for each found resource.
 
 For DSP-API v2, the `guiAttribute` has no effect.

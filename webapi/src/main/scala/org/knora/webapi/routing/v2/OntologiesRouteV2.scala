@@ -822,7 +822,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               // get gui related values from request and validate them by making value objects from it
 
               // get the (optional) gui element from the request
-              maybeGuiElement: Option[String] =
+              maybeGuiElement =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiElementProp.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
@@ -833,18 +833,19 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   }
 
               // get the gui attribute(s) from the request
-              maybeGuiAttributes: List[String] =
+              maybeGuiAttributes =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiAttribute.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.map {
                       case guiAttribute: StringLiteralV2 => guiAttribute.value
                       case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-                    }.toList
+                    }.toSet
                   }
-                  .getOrElse(List())
+                  .getOrElse(Set())
 
-              guiObject = GuiObject.makeFromStrings(maybeGuiAttributes, maybeGuiElement).fold(e => throw e.head, v => v)
+              guiObject =
+                GuiObject.makeFromStrings(maybeGuiAttributes, maybeGuiElement).fold(e => throw e.head, v => v)
 
               requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
                                                            jsonLDDocument = requestDoc,
@@ -978,7 +979,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               propertyIri = PropertyIri.make(propertyInfoContent.propertyIri.toString)
 
               // get the (optional) new gui element from the request
-              newGuiElement: Option[String] =
+              newGuiElement =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiElementProp.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
@@ -989,16 +990,16 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   }
 
               // get the new gui attribute(s) from the request
-              newGuiAttributes: List[String] =
+              newGuiAttributes =
                 propertyInfoContent.predicates
                   .get(SalsahGui.External.GuiAttribute.toSmartIri)
                   .map { predicateInfoV2: PredicateInfoV2 =>
                     predicateInfoV2.objects.map {
                       case guiAttribute: StringLiteralV2 => guiAttribute.value
                       case other                         => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-                    }.toList
+                    }.toSet
                   }
-                  .getOrElse(List())
+                  .getOrElse(Set())
 
               guiObject = GuiObject.makeFromStrings(newGuiAttributes, newGuiElement).fold(e => throw e.head, v => v)
 
