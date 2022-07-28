@@ -26,7 +26,7 @@ object ProjectDomainSpec extends ZIOSpecDefault {
   private val id          = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
   private val name        = "proj"
   private val description = "A Project"
-  // TODO: these should be langString/valueobjects
+  // TODO-BL: these should be langString/valueobjects
 
   override def spec = suite("Project")(projectCreateTests + projectCompareTests + projectUpdateTests)
 
@@ -93,6 +93,6 @@ object ProjectDomainSpec extends ZIOSpecDefault {
       )).toZIO
     }
   )
-  // TODO: add tests for unhappy path, as soon as there are invalid values for these things
+  // TODO-BL: add tests for unhappy path, as soon as there are invalid values for these things
 
 }

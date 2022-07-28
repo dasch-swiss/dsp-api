@@ -8,6 +8,8 @@ package dsp.valueobjects
 import zio.prelude.Validation
 import dsp.errors.BadRequestException
 
+// TODO-BL: revisit those
+
 object Project {
 
   // TODO-mpro: longname, description, keywords, logo are missing enhanced validation

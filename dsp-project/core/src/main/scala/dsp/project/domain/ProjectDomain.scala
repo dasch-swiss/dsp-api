@@ -24,15 +24,15 @@ sealed abstract case class Project private (
   id: ProjectId,
   name: String,
   description: String
-  // TODO: add project status here
-  // TODO: use project valueobjects for things like name, description, etc.
+  // TODO-BL: add project status here
+  // TODO-BL: use project valueobjects for things like name, description, etc.
 ) extends Ordered[Project] { self =>
 
   /**
    * Allows to sort collections of [[Project]]s. Sorting is done by the IRI.
    */
   def compare(that: Project): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
-  // TODO: by which field should a project be sorted by? shortcode? name? IRI?
+  // TODO-BL: by which field should a project be sorted by? shortcode? name? IRI?
 
   /**
    * Update the name of the project.
@@ -63,8 +63,8 @@ sealed abstract case class Project private (
 object Project {
   def make(
     id: ProjectId,
-    name: String,       // TODO: make LangString as soon as we have it
-    description: String // TODO: make LangString as soon as we have it
+    name: String,       // TODO-BL: make LangString as soon as we have it
+    description: String // TODO-BL: make LangString as soon as we have it
   ): Validation[ValidationException, Project] =
     Validation.succeed(new Project(id = id, name = name, description = description) {})
 
