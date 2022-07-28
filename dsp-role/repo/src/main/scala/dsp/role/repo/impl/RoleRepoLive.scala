@@ -22,14 +22,23 @@ final case class RoleRepoLive(
   roles: TMap[UUID, Role]
 ) extends RoleRepo {
 
+  /**
+   * @inheritDoc
+   */
   override def storeRole(r: Role): UIO[RoleId] =
     (for {
       _ <- roles.put(r.id.uuid, r)
     } yield r.id).commit.tap(_ => ZIO.logInfo(s"Stored role with ID: ${r.id.uuid}"))
 
+  /**
+   * @inheritDoc
+   */
   override def getRoles(): UIO[List[Role]] =
     roles.values.commit.tap(rolesList => ZIO.logInfo(s"Found roles number: ${rolesList.size}"))
 
+  /**
+   * @inheritDoc
+   */
   override def getRoleById(id: RoleId): IO[Option[Nothing], Role] =
     roles
       .get(id.uuid)
@@ -40,6 +49,9 @@ final case class RoleRepoLive(
         _ => ZIO.logInfo(s"Found role by ID: ${id.uuid}")
       )
 
+  /**
+   * @inheritDoc
+   */
   override def deleteRole(id: RoleId): IO[Option[Nothing], RoleId] =
     (for {
       role <- roles.get(id.uuid).some

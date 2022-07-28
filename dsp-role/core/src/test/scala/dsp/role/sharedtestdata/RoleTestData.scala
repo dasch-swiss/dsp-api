@@ -9,6 +9,9 @@ import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
 
+/**
+ * Contains shared role test data.
+ */
 object RoleTestData {
   val id1          = Id.RoleId.make()
   val name1        = LangString.make("Name", "en")

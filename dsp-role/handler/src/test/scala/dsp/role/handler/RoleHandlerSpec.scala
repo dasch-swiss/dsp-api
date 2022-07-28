@@ -19,6 +19,9 @@ import zio.ZIO
 import zio._
 import zio.test._
 
+/**
+ * This soec is used to test [[RoleHandler]]
+ */
 object RoleHandlerSpec extends ZIOSpecDefault {
   def spec = (getRolesTest)
 
@@ -156,7 +159,7 @@ object RoleHandlerSpec extends ZIOSpecDefault {
                     permission1
                   )
 
-        updatedRoleId <- handler.updatePermissionn(roleId, newValue)
+        updatedRoleId <- handler.updatePermission(roleId, newValue)
         retrievedRole <- handler.getRoleById(updatedRoleId)
       } yield assertTrue(retrievedRole.name == name1) &&
         assertTrue(retrievedRole.description == description1) &&
