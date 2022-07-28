@@ -9,15 +9,15 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.role.api.RoleRepo
 import dsp.role.domain.Role
+import dsp.role.domain.RoleTestData
 import dsp.role.domain.RoleUser
+import dsp.role.repo.impl.RoleRepoMock
 import dsp.valueobjects.Id.RoleId
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
 import zio.ZIO
 import zio._
 import zio.test._
-import dsp.role.domain.RoleTestData
-import dsp.role.repo.impl.RoleRepoMock
 
 object RoleHandlerSpec extends ZIOSpecDefault {
   def spec = (getRolesTest)
@@ -110,9 +110,9 @@ object RoleHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedRole.users == users1) &&
         assertTrue(retrievedRole.permission == permission1)
     },
-//     test("store a role and update its users") {
-// // implment adding users to the role
-//     }
+    // test("store a role and update its users") {
+    //   // implment adding users to the role
+    // },
     test("store a role and update its name") {
       for {
         handler <- ZIO.service[RoleHandler]

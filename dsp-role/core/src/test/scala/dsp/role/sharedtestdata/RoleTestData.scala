@@ -8,7 +8,6 @@ package dsp.role.domain
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import dsp.valueobjects.User
 
 object RoleTestData {
   val id1          = Id.RoleId.make()
