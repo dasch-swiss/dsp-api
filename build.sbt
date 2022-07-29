@@ -242,6 +242,76 @@ lazy val valueObjects = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
 
+// Role projects
+
+lazy val roleInterface = project
+  .in(file("dsp-role/interface"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "roleInterface",
+    libraryDependencies ++= Dependencies.roleInterfaceLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, roleHandler)
+
+lazy val roleHandler = project
+  .in(file("dsp-role/handler"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "roleHandler",
+    libraryDependencies ++= Dependencies.roleHandlerLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(
+    shared,
+    roleCore % "compile->compile;test->test",
+    roleRepo % "test->test"
+  )
+
+lazy val roleRepo = project
+  .in(file("dsp-role/repo"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "roleRepo",
+    libraryDependencies ++= Dependencies.roleRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, roleCore % "compile->compile;test->test")
+
+lazy val roleCore = project
+  .in(file("dsp-role/core"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "roleCore",
+    libraryDependencies ++= Dependencies.roleCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
 // User projects
 
 lazy val userInterface = project
@@ -311,6 +381,8 @@ lazy val userCore = project
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)
+
+// Shared project
 
 lazy val shared = project
   .in(file("dsp-shared"))
