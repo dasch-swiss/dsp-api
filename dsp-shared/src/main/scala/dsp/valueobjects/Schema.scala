@@ -286,9 +286,8 @@ object Schema {
     }
 
     parseResult match {
-      case None => Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType(key, value)))
-      case Some(result) =>
-        Validation.succeed(result.toString())
+      case None         => Validation.fail(ValidationException(SchemaErrorMessages.GuiAttributeWrongValueType(key, value)))
+      case Some(result) => Validation.succeed(result.toString())
     }
   }
 

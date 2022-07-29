@@ -845,7 +845,12 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   .getOrElse(Set())
 
               guiObject =
-                GuiObject.makeFromStrings(maybeGuiAttributes, maybeGuiElement).fold(e => throw e.head, v => v)
+                GuiObject
+                  .makeFromStrings(maybeGuiAttributes, maybeGuiElement)
+                  .fold(
+                    e => throw BadRequestException(e.map(error => error.msg).mkString(sys.props("line.separator"))),
+                    v => v
+                  )
 
               requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
                                                            jsonLDDocument = requestDoc,
@@ -1001,7 +1006,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   }
                   .getOrElse(Set())
 
-              guiObject = GuiObject.makeFromStrings(newGuiAttributes, newGuiElement).fold(e => throw e.head, v => v)
+              guiObject =
+                GuiObject
+                  .makeFromStrings(newGuiAttributes, newGuiElement)
+                  .fold(
+                    e => throw BadRequestException(e.map(error => error.msg).mkString(sys.props("line.separator"))),
+                    v => v
+                  )
 
               // create the request message with the validated gui object
               requestMessage = ChangePropertyGuiElementRequest(
