@@ -19,7 +19,7 @@ import zio._
 /**
  * The role handler.
  *
- * @param repo  the role repository
+ * @param repo the role repository
  */
 final case class RoleHandler(repo: RoleRepo) {
 
@@ -41,7 +41,7 @@ final case class RoleHandler(repo: RoleRepo) {
     for {
       role <- repo
                 .getRoleById(id)
-                .mapError(_ => NotFoundException(s"Role with ID: $id not found"))
+                .mapError(_ => NotFoundException(s"Not found the role with ID: $id"))
                 .tap(_ => ZIO.logInfo(s"Found the role by ID: $id"))
     } yield role
 
@@ -52,6 +52,7 @@ final case class RoleHandler(repo: RoleRepo) {
    * @param description the role's description
    * @param users the role's users
    * @param permission the role's permission
+   * @return the [[RoleId]] if succeed, [[Throwable]] if fail
    */
   def createRole(
     name: LangString,
@@ -66,10 +67,11 @@ final case class RoleHandler(repo: RoleRepo) {
     } yield storedRole).tap(id => ZIO.logInfo(s"Created role with ID: $id"))
 
   /**
-   * Updates the name of the role.
+   * Updates the name of a role.
    *
-   *  @param id  the roles's ID
-   *  @param newValue  the new name value
+   * @param id the roles's ID
+   * @param newValue the new name value
+   * @return the [[RoleId]] if succeed, [[RequestRejectedException]] if fail
    */
   def updateName(id: RoleId, newValue: LangString): IO[RequestRejectedException, RoleId] =
     (for {
@@ -79,10 +81,11 @@ final case class RoleHandler(repo: RoleRepo) {
     } yield id).tap(_ => ZIO.logInfo(s"Updated name with new value: ${newValue.value}"))
 
   /**
-   * Updates the description of the role.
+   * Updates the description of a role.
    *
-   *  @param id  the roles's ID
-   *  @param newValue  the new description value
+   * @param id the roles's ID
+   * @param newValue the new description value
+   * @return the [[RoleId]] if succeed, [[RequestRejectedException]] if fail
    */
   def updateDescription(id: RoleId, newValue: LangString): IO[RequestRejectedException, RoleId] =
     (for {
@@ -92,10 +95,11 @@ final case class RoleHandler(repo: RoleRepo) {
     } yield id).tap(_ => ZIO.logInfo(s"Updated description with new value: $newValue"))
 
   /**
-   * Updates the users of the role.
+   * Updates the users of a role.
    *
-   *  @param id  the roles's ID
-   *  @param newValue  the new users value
+   * @param id the roles's ID
+   * @param newValue the new users value
+   * @return the [[RoleId]] if succeed, [[RequestRejectedException]] if fail
    */
   def updateUsers(id: RoleId, newValue: List[RoleUser]): IO[RequestRejectedException, RoleId] =
     (for {
@@ -105,10 +109,11 @@ final case class RoleHandler(repo: RoleRepo) {
     } yield id).tap(_ => ZIO.logInfo(s"Updated users with new value: $newValue"))
 
   /**
-   * Updates the permission of the role.
+   * Updates the permission of a role.
    *
-   *  @param id  the roles's ID
-   *  @param newValue  the new permission value
+   * @param id the roles's ID
+   * @param newValue the new permission value
+   * @return the [[RoleId]] if succeed, [[RequestRejectedException]] if fail
    */
   def updatePermission(id: RoleId, newValue: Permission): IO[RequestRejectedException, RoleId] =
     (for {
@@ -120,11 +125,12 @@ final case class RoleHandler(repo: RoleRepo) {
   /**
    * Deletes the role.
    *
-   *  @param id  the roles's ID
+   * @param id the roles's ID
+   * @return the [[RoleId]] if succeed, [[NotFoundException]] if fail
    */
   def deleteRole(id: RoleId): IO[NotFoundException, RoleId] =
     (for {
-      _ <- repo.deleteRole(id).mapError(_ => NotFoundException(s"Role with ID: $id not found"))
+      _ <- repo.deleteRole(id).mapError(_ => NotFoundException(s"Not found the role with ID: $id"))
     } yield id).tap(_ => ZIO.logInfo(s"Deleted role with ID: $id"))
 }
 

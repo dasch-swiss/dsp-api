@@ -9,9 +9,9 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.role.api.RoleRepo
 import dsp.role.domain.Role
-import dsp.role.domain.RoleTestData
 import dsp.role.domain.RoleUser
 import dsp.role.repo.impl.RoleRepoMock
+import dsp.role.sharedtestdata.RoleTestData
 import dsp.valueobjects.Id.RoleId
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
@@ -20,10 +20,10 @@ import zio._
 import zio.test._
 
 /**
- * This soec is used to test [[RoleHandler]]
+ * This spec is used to test [[RoleHandler]]
  */
 object RoleHandlerSpec extends ZIOSpecDefault {
-  def spec = (getRolesTest)
+  def spec = (getRolesTest + updateRoleTest + deleteRoleTest)
 
   private val getRolesTest = suite("getRoles")(
     test("return an empty map while trying to get all roles but there are none") {
@@ -62,7 +62,10 @@ object RoleHandlerSpec extends ZIOSpecDefault {
 
         roles <- handler.getRoles()
       } yield assertTrue(roles.size == 2)
-    },
+    }
+  ).provide(RoleRepoMock.layer, RoleHandler.layer)
+
+  private val updateRoleTest = suite("updateRole")(
     test("store a role and update its name") {
       for {
         handler <- ZIO.service[RoleHandler]
@@ -113,9 +116,6 @@ object RoleHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedRole.users == users1) &&
         assertTrue(retrievedRole.permission == permission1)
     },
-    // test("store a role and update its users") {
-    //   // implment adding users to the role
-    // },
     test("store a role and update its name") {
       for {
         handler <- ZIO.service[RoleHandler]
@@ -167,4 +167,27 @@ object RoleHandlerSpec extends ZIOSpecDefault {
         assertTrue(retrievedRole.permission == newValue)
     }
   ).provide(RoleRepoMock.layer, RoleHandler.layer)
+
+  private val deleteRoleTest = suite("deleteRole") {
+    test("store and delete a role") {
+      for {
+        handler <- ZIO.service[RoleHandler]
+
+        name1        <- RoleTestData.name1.toZIO
+        description1 <- RoleTestData.description1.toZIO
+        users1        = RoleTestData.users1
+        permission1  <- RoleTestData.permission1.toZIO
+
+        roleId <- handler.createRole(
+                    name1,
+                    description1,
+                    users1,
+                    permission1
+                  )
+
+        deletedRoleId <- handler.deleteRole(roleId)
+        roles         <- handler.getRoles()
+      } yield assertTrue(roles.size == 0)
+    }
+  }.provide(RoleRepoMock.layer, RoleHandler.layer)
 }

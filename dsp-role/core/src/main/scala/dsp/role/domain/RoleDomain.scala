@@ -17,7 +17,7 @@ case class RoleUser(
 )
 
 /**
- * Role's domain model.
+ * Role's domain entity.
  *
  * @param id the role's ID
  * @param name the role's name
@@ -29,7 +29,7 @@ sealed abstract case class Role private (
   id: RoleId,
   name: LangString,
   description: LangString,
-  users: List[RoleUser], // List[User]
+  users: List[RoleUser], // how to reperesnt the user here?
   permission: Permission
 ) extends Ordered[Role] { self =>
 
@@ -40,10 +40,9 @@ sealed abstract case class Role private (
    * @return [[Boolean]] value
    */
   def compare(that: Role): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
-  //  Boolean = self.id.equals(that.id)
 
   /**
-   * Updates the role's name.
+   * Updates the role's name with new value.
    *
    * @param newValue new role's name to update
    * @return updated [[Role]]
@@ -58,7 +57,7 @@ sealed abstract case class Role private (
     )
 
   /**
-   * Updates the role's description.
+   * Updates the role's description with new value.
    *
    * @param newValue new role's description to update
    * @return updated [[Role]]
@@ -73,7 +72,7 @@ sealed abstract case class Role private (
     )
 
   /**
-   * Updates the role's users.
+   * Updates the role's users with new value.
    *
    * @param newValue new role's users to update
    * @return updated [[Role]]
@@ -88,7 +87,7 @@ sealed abstract case class Role private (
     )
 
   /**
-   * Updates the role's permission.
+   * Updates the role's permission with new value.
    *
    * @param newValue new role's permission to update
    * @return updated [[Role]]

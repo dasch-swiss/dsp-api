@@ -5,6 +5,7 @@
 
 package dsp.role.domain
 
+import dsp.role.sharedtestdata.RoleTestData
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._

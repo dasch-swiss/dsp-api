@@ -6,7 +6,7 @@
 package dsp.role.api
 
 import dsp.role.domain.Role
-import dsp.valueobjects.Id._
+import dsp.valueobjects.Id.RoleId
 import zio._
 import zio.macros.accessible
 
@@ -21,20 +21,20 @@ trait RoleRepo {
   /**
    * Writes a role into the repository, while both creating or updating a role.
    *
-   * @param r the role to write
-   * @return Unit
+   * @param r the [[Role]] to write
+   * @return the [[RoleId]]
    */
-  def storeRole(r: Role): UIO[RoleId]
+  def storeRole(role: Role): UIO[RoleId]
 
   /**
-   * Gets all roles from teh repository.
+   * Gets all roles from the repository.
    *
    * @return a list of [[Role]]
    */
   def getRoles(): UIO[List[Role]]
 
   /**
-   * Retrieves the role frim the repository.
+   * Retrieves a role from the repository.
    *
    * @param id the role's ID
    * @return the [[Role]] if found
@@ -47,7 +47,7 @@ trait RoleRepo {
    * Deletes the [[Role]] from the repository by its [[RoleId]]
    *
    * @param id the role ID
-   * @return the [[RoleId]] deleted role, if found
+   * @return the [[RoleId]] of the deleted role, if found
    */
   def deleteRole(id: RoleId): IO[Option[Nothing], RoleId]
 }

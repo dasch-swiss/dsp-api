@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package dsp.role.domain
+package dsp.role.sharedtestdata
 
+import dsp.role.domain.Role
+import dsp.role.domain.RoleUser
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._

@@ -34,7 +34,7 @@ final case class RoleRepoLive(
    * @inheritDoc
    */
   override def getRoles(): UIO[List[Role]] =
-    roles.values.commit.tap(rolesList => ZIO.logInfo(s"Found roles number: ${rolesList.size}"))
+    roles.values.commit.tap(rolesList => ZIO.logInfo(s"Number of roles found: ${rolesList.size}"))
 
   /**
    * @inheritDoc
@@ -45,7 +45,7 @@ final case class RoleRepoLive(
       .commit
       .some
       .tapBoth(
-        _ => ZIO.logInfo(s"Role with ID: ${id.uuid} not found"),
+        _ => ZIO.logInfo(s"Not found the role with ID: ${id.uuid}"),
         _ => ZIO.logInfo(s"Found role by ID: ${id.uuid}")
       )
 

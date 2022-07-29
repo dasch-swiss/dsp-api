@@ -6,9 +6,9 @@
 package dsp.role.repo.impl
 
 import dsp.role.api.RoleRepo
-import dsp.role.domain.RoleTestData
 import dsp.role.repo.impl.RoleRepoLive
 import dsp.role.repo.impl.RoleRepoMock
+import dsp.role.sharedtestdata.RoleTestData
 import zio._
 import zio.test.Assertion._
 import zio.test._

@@ -14,7 +14,7 @@ object Role {
    * LangString value object.
    *
    * @param value the [[String]] the value to be validated
-   * @param isoCode thelanguage ISO code to be validated
+   * @param isoCode the language ISO code to be validated
    */
   sealed abstract case class LangString private (value: String, isoCode: String)
   object LangString {
