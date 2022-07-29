@@ -203,14 +203,15 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 
 .PHONY: test
 test: build ## runs all tests
-	sbt -v "shared/test"
-	sbt -v "sipi/test"
-	sbt -v "userCore/test"
-	sbt -v "userHandler/test"
-	sbt -v "userInterface/test"
-	sbt -v "userRepo/test"
-	sbt -v "valueObjects/test"
-	sbt -v "webapi/test"
+	sbt -v coverage "shared/test"
+	sbt -v coverage "sipi/test"
+	sbt -v coverage "userCore/test"
+	sbt -v coverage "userHandler/test"
+	sbt -v coverage "userInterface/test"
+	sbt -v coverage "userRepo/test"
+	sbt -v coverage "valueObjects/test"
+	sbt -v coverage "webapi/test"
+	sbt coverageAggregate
 
 
 #################################
