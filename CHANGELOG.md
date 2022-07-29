@@ -1,5 +1,21 @@
 # Changelog
 
+### [23.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.1...v23.0.2) (2022-07-29)
+
+
+### Bug Fixes
+
+* **ontology:** link value property is still not editable after updating the property metadata (DEV-1116) ([#2133](https://www.github.com/dasch-swiss/dsp-api/issues/2133)) ([d5b48db](https://www.github.com/dasch-swiss/dsp-api/commit/d5b48db1528d3a8f0c0d3f08bc97564d01e383ce))
+* **sipi:** cookie parsing can cause an error which leads to 404 for images (DEV-1135) ([#2134](https://www.github.com/dasch-swiss/dsp-api/issues/2134)) ([bd023a5](https://www.github.com/dasch-swiss/dsp-api/commit/bd023a5836c1c741f094f9b6c974adc54a8d798d))
+
+
+### Maintenance
+
+* add dependency checking ([#2100](https://www.github.com/dasch-swiss/dsp-api/issues/2100)) ([8017b1f](https://www.github.com/dasch-swiss/dsp-api/commit/8017b1fe96e0728d8d3b112c25b121aa7af073c2))
+* add dependency checking ([#2102](https://www.github.com/dasch-swiss/dsp-api/issues/2102)) ([856277b](https://www.github.com/dasch-swiss/dsp-api/commit/856277b0c7d843f4ff563bf8350e99c579073d14))
+* Improve validation of GUI elements and GUI attributes (DEV-1082) ([#2098](https://www.github.com/dasch-swiss/dsp-api/issues/2098)) ([5cec8ba](https://www.github.com/dasch-swiss/dsp-api/commit/5cec8bac0b73237c85a72a33d2e3cd20a7cebee1))
+* **v3:** add role slice (DEV-1010) ([#2099](https://www.github.com/dasch-swiss/dsp-api/issues/2099)) ([6920716](https://www.github.com/dasch-swiss/dsp-api/commit/6920716e72b9acb32f5444bc6848bfda2986fb93))
+
 ### [23.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.0...v23.0.1) (2022-07-19)
 
 
