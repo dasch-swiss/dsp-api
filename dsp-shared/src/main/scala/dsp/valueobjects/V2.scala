@@ -5,14 +5,15 @@
 
 package dsp.valueobjects
 
-import java.util.UUID
-import java.util.Base64
-import java.nio.ByteBuffer
-import scala.util.matching.Regex
-import org.apache.commons.validator.routines.UrlValidator
-import org.apache.commons.lang3.StringUtils
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import dsp.errors.BadRequestException
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.validator.routines.UrlValidator
+
+import java.nio.ByteBuffer
+import java.util.Base64
+import java.util.UUID
+import scala.util.matching.Regex
 
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order
@@ -91,17 +92,12 @@ object V2IriValidation {
   }
 
   /**
-   * The domain name used to construct IRIs.
-   */
-  val IriDomain: String = "rdfh.ch"
-
-  /**
    * Returns `true` if an IRI string looks like a Knora list IRI.
    *
    * @param iri the IRI to be checked.
    */
   def isKnoraListIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora role IRI.
@@ -109,7 +105,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraRoleIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/roles/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
@@ -117,7 +113,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraUserIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora group IRI.
@@ -125,7 +121,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraGroupIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -133,7 +129,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    Iri.isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    Iri.isIri(iri) && (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
