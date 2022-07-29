@@ -188,49 +188,85 @@ object Dependencies {
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
-  // user slice dependencies
+  // user projects dependencies
   val userInterfaceLibraryDependencies = Seq(
+    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
   val userHandlerLibraryDependencies = Seq(
-    springSecurityCore,
     bouncyCastle,
+    slf4j % Test,
+    springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
   val userCoreLibraryDependencies = Seq(
-    springSecurityCore,
     bouncyCastle,
+    slf4j % Test,
+    springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
   val userRepoLibraryDependencies = Seq(
+    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
-  val sharedLibraryDependencies = Seq(
+
+  // role projects dependencies
+  val roleInterfaceLibraryDependencies = Seq(
+    slf4j % Test,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val roleHandlerLibraryDependencies = Seq(
+    bouncyCastle,
+    slf4j % Test,
     springSecurityCore,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val roleCoreLibraryDependencies = Seq(
+    bouncyCastle,
+    slf4j % Test,
+    springSecurityCore,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val roleRepoLibraryDependencies = Seq(
+    slf4j % Test,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+
+  // shared project dependencies
+  val sharedLibraryDependencies = Seq(
     bouncyCastle,
     commonsLang3,
     commonsValidator,
     gwtServlet,
-    zioPrelude,
     scalaLogging,
+    slf4j % Test,
+    springSecurityCore,
+    zioPrelude,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
 }
