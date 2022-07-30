@@ -11,20 +11,19 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.KnoraBaseVersion
-import org.knora.webapi.OntologySchema
 import dsp.errors.ApplicationCacheException
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.MissingLastModificationDateOntologyException
+import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.KnoraBaseVersion
+import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
@@ -73,7 +72,6 @@ object Cache extends LazyLogging {
    * @param superClassOfRelations     a map of base classes to their subclasses.
    * @param subPropertyOfRelations    a map of subproperties to their base properties.
    * @param superPropertyOfRelations  a map of base classes to their subproperties.
-   * @param guiAttributeDefinitions   a map of salsah-gui:Guielement individuals to their GUI attribute definitions.
    * @param classDefinedInOntology    a map of class IRIs to the ontology where the class is defined
    * @param propertyDefinedInOntology a map of property IRIs to the ontology where the property is defined
    * @param entityDefinedInOntology   a map of entity IRIs (property or class) to the ontology where the entity is defined
@@ -85,7 +83,6 @@ object Cache extends LazyLogging {
     superClassOfRelations: Map[SmartIri, Set[SmartIri]],
     subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
     superPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
-    guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
     classDefinedInOntology: Map[SmartIri, SmartIri],
     propertyDefinedInOntology: Map[SmartIri, SmartIri],
     entityDefinedInOntology: Map[SmartIri, SmartIri],
@@ -243,20 +240,6 @@ object Cache extends LazyLogging {
       }
     }
 
-    // A map of OWL named individual IRIs to named individuals.
-    val allIndividuals = ontologies.flatMap {
-      case (_, ontology) => {
-        ontology.individuals.map {
-          case (individualIri, readIndividual) => {
-            individualIri -> readIndividual.entityInfoContent
-          }
-        }
-      }
-    }
-    // A map of salsah-gui:GuiElement individuals to their GUI attribute definitions.
-    val allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]] =
-      OntologyHelpers.makeGuiAttributeDefinitions(allIndividuals)
-
     // Construct entity definitions.
 
     val readClassInfos: Map[SmartIri, ReadClassInfoV2] = ontologies.flatMap { case (_, ontology) =>
@@ -384,10 +367,7 @@ object Cache extends LazyLogging {
       propertyDefinedInOntology ++ classDefinedInOntology,
       key => s"Property not found in propertyDefinedInOntology: $key"
     )
-    val guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](
-      allGuiAttributeDefinitions,
-      key => s"salsah-gui:Guielement not found in allGuiAttributeDefinitions: $key"
-    )
+
     val standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
 
     OntologyCacheData(
@@ -399,7 +379,6 @@ object Cache extends LazyLogging {
       classDefinedInOntology = classDefinedInOntologyErrorMap,
       propertyDefinedInOntology = propertyDefinedInOntologyErrorMap,
       entityDefinedInOntology = entityDefinedInOntologyErrorMap,
-      guiAttributeDefinitions = guiAttributeDefinitions,
       standoffProperties = standoffProperties
     )
   }
@@ -464,10 +443,6 @@ object Cache extends LazyLogging {
         constructResponse = ontologyGraph.constructResponse
       )
     }.toMap
-
-    // A map of salsah-gui:Guielement individuals to their GUI attribute definitions.
-    val allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]] =
-      OntologyHelpers.makeGuiAttributeDefinitions(allIndividuals)
 
     // Determine relations between entities.
 
@@ -573,7 +548,6 @@ object Cache extends LazyLogging {
       directSubPropertyOfRelations = directSubPropertyOfRelations,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
       allSubClassOfRelations = allSubClassOfRelations,
-      allGuiAttributeDefinitions = allGuiAttributeDefinitions,
       allKnoraResourceProps = allKnoraResourceProps,
       allLinkProps = allLinkProps,
       allLinkValueProps = allLinkValueProps,
@@ -657,10 +631,6 @@ object Cache extends LazyLogging {
       entityDefinedInOntology = new ErrorHandlingMap[SmartIri, SmartIri](
         propertyDefinedInOntology ++ classDefinedInOntology,
         key => s"Property not found: $key"
-      ),
-      guiAttributeDefinitions = new ErrorHandlingMap[SmartIri, Set[SalsahGuiAttributeDefinition]](
-        allGuiAttributeDefinitions,
-        key => s"salsah-gui:Guielement not found: $key"
       ),
       standoffProperties = propertiesUsedInStandoffCardinalities ++ propertiesWithStandoffTagSubjects
     )
