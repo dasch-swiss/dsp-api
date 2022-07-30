@@ -71,7 +71,7 @@ object Dependencies {
   // authentication
   val jwtSprayJson = "com.pauldijou" %% "jwt-spray-json" % "5.0.0" // Scala 3 incompatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.6.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.6.6" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
