@@ -888,18 +888,23 @@ case class TriplestoreServiceHttpConnectorImpl(
         .orDie
 
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): UIO[Unit] =
-      if (statusCode / 100 == 2) ZIO.unit
+      if (statusCode / 100 == 2)
+        ZIO.unit
       else {
-        val entity = Option(response.getEntity)
-          .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
-        val responseException = new TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+        val entity =
+          Option(response.getEntity)
+            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
+
+        val statusResponseMsg =
+          s"Triplestore responded with HTTP code $statusCode"
+
         (statusCode, entity) match {
-          case (404, _) => ZIO.die(new NotFoundException("The requested data was not found"))
-          case (500, _) => ZIO.die(responseException)
+          case (404, _) => ZIO.die(NotFoundException.notFound)
+          case (500, _) => ZIO.die(TriplestoreResponseException(statusResponseMsg))
           case (503, Some(response)) if response.contains("Query timed out") =>
-            ZIO.die(new TriplestoreTimeoutException(s"Triplestore responded with HTTP code $statusCode: $response"))
-          case (503, _) => ZIO.die(responseException)
-          case _        => ZIO.die(responseException)
+            ZIO.die(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
+          case (503, _) => ZIO.die(TriplestoreResponseException(statusResponseMsg))
+          case _        => ZIO.die(TriplestoreResponseException(statusResponseMsg))
         }
       }
 

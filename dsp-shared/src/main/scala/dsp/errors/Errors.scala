@@ -106,6 +106,9 @@ case class ForbiddenException(message: String) extends RequestRejectedException(
  * @param message a description of the error.
  */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
+object NotFoundException {
+  val notFound = NotFoundException("The requested data was not found")
+}
 
 /**
  * An exception indicating that a requested update is not allowed because it would create a duplicate value.

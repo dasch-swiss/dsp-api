@@ -14,7 +14,6 @@ import org.knora.webapi._
 import dsp.errors.AssertionException
 import dsp.errors.InvalidApiJsonException
 import dsp.errors.NotFoundException
-import dsp.errors.TriplestoreResponseException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -28,6 +27,7 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
 import org.scalatest.Assertion

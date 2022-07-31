@@ -19,7 +19,7 @@ abstract class TriplestoreException(message: String, cause: Option[Throwable] = 
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-case class TriplestoreConnectionException(message: String, cause: Option[Throwable] = None)
+final case class TriplestoreConnectionException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
 object TriplestoreConnectionException {
@@ -42,6 +42,9 @@ object TriplestoreTimeoutException {
 
   def apply(message: String, cause: Throwable): TriplestoreTimeoutException =
     TriplestoreTimeoutException(message, Some(cause))
+
+  def apply(message: String): TriplestoreTimeoutException =
+    TriplestoreTimeoutException(message, None)
 }
 
 /**
@@ -50,7 +53,7 @@ object TriplestoreTimeoutException {
  * @param message a description of the error.
  * @param cause   the original exception representing the cause of the error, if any.
  */
-case class TriplestoreUnsupportedFeatureException(message: String, cause: Option[Throwable] = None)
+final case class TriplestoreUnsupportedFeatureException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
 object TriplestoreUnsupportedFeatureException {
@@ -86,5 +89,5 @@ object TriplestoreResponseException {
     TriplestoreResponseException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 
   def apply(message: String): TriplestoreResponseException =
-    TriplestoreResponseException(message)
+    TriplestoreResponseException(message, None)
 }
