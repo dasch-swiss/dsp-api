@@ -9,6 +9,7 @@ import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
 import dsp.errors.BadRequestException
+import zio.prelude.ZValidation
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -160,30 +161,37 @@ object UserSpec extends ZIOSpecDefault {
 
   private val passwordHashTest = suite("PasswordHash")(
     test("pass an empty value and return an error") {
-      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
       assertTrue(
-        PasswordHash.make("", passwordStrength) == Validation.fail(
+        PasswordHash.make("", PasswordStrength(12)) == Validation.fail(
           BadRequestException(UserErrorMessages.PasswordMissing)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      val passwordString   = "password1"
-      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
-      val password         = PasswordHash.make(passwordString, passwordStrength).fold(e => throw e.head, v => v)
+      val passwordString = "password1"
+      val password       = PasswordHash.make("password1", PasswordStrength(12)).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordString))
     },
-    test("test if a password matches it hashed value") {
+    test("test if a password matches its hashed value") {
       val passwordString         = "password1"
       val passwordEqualString    = "password1"
       val passwordNotEqualString = "password2"
 
-      val passwordStrength = PasswordStrength.make(12).fold(e => throw e.head, v => v)
-      val password         = PasswordHash.make(passwordString, passwordStrength).fold(e => throw e.head, v => v)
+      val password = PasswordHash.make(passwordString, PasswordStrength(12)).fold(e => throw e.head, v => v)
 
       assertTrue(password.matches(passwordEqualString)) &&
       assertTrue(!password.matches(passwordNotEqualString))
+    },
+    test("pass an invalid password strength value and return an error") {
+      assertTrue(
+        PasswordStrength.make(-1) == Validation.fail("-1 did not satisfy greaterThanOrEqualTo(4)")
+      )
+    },
+    test("pass a valid password strength value and create value object") {
+      assertTrue(
+        PasswordStrength.make(12) == Validation.succeed(PasswordStrength(12))
+      )
     }
   )
 

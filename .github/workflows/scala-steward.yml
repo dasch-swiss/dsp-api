@@ -20,3 +20,4 @@ jobs:
         uses: scala-steward-org/scala-steward-action@v2
         with:
           github-token: ${{ secrets.GH_TOKEN }}
+          author-email: 50987250+daschbot@users.noreply.github.com
