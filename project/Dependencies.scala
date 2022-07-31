@@ -69,7 +69,8 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2" // latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
+  // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "5.7.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
