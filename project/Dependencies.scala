@@ -71,7 +71,7 @@ object Dependencies {
   // authentication
   val jwtSprayJson = "com.pauldijou" %% "jwt-spray-json" % "5.0.0" // Scala 3 incompatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.6.6" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.7.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
@@ -102,7 +102,7 @@ object Dependencies {
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.12"        // Scala 3 compatible
+  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.2"
 
   // found/added by the plugin but deleted anyway
