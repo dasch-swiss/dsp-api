@@ -889,6 +889,7 @@ case class TriplestoreServiceHttpConnectorImpl(
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): UIO[Unit] =
       statusCode match {
         case 200 => ZIO.unit
+        case 204 => ZIO.unit
         case _ => {
           val entity = Option(response.getEntity)
             .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
