@@ -12,7 +12,6 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.TriplestoreTimeoutException
 
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -42,6 +41,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
 
 import scala.concurrent.Future

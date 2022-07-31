@@ -48,6 +48,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.store.triplestore.errors._
 import spray.json._
 
 import java.io.BufferedInputStream
