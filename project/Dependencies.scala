@@ -69,9 +69,10 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.pauldijou" %% "jwt-spray-json" % "5.0.0" // Scala 3 incompatible
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
+  // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.6.6" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.7.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
@@ -89,7 +90,7 @@ object Dependencies {
   val jodd            = "org.jodd"                      % "jodd"              % "3.2.6"
   val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "3.4.4"
   val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "3.4.4"
-  val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.3"
+  val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.4"
   val scalaGraph      = "org.scala-graph"              %% "graph-core"        % "1.13.1" // Scala 3 incompatible
   val scallop         = "org.rogach"                   %% "scallop"           % "4.1.0"  // Scala 3 compatible
   val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
@@ -102,7 +103,7 @@ object Dependencies {
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.12"        // Scala 3 compatible
+  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.2"
 
   // found/added by the plugin but deleted anyway
