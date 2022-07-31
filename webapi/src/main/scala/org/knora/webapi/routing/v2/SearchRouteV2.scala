@@ -206,6 +206,8 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   private def fullTextSearch(): Route = path("v2" / "search" / Segment) {
     searchStr => // TODO: if a space is encoded as a "+", this is not converted back to a space
       get { requestContext =>
+        log.info(s"Full Text Search for string: $searchStr")
+
         if (searchStr.contains(OntologyConstants.KnoraApi.ApiOntologyHostname)) {
           throw BadRequestException("It looks like you are submitting a Gravsearch request to a full-text search route")
         }
