@@ -25,6 +25,7 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import dsp.errors.NotFoundException
 
 object ActorUtil {
 
@@ -66,14 +67,20 @@ object ActorUtil {
    */
   def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
     cause match {
+      case Fail(value, trace) =>
+        value match {
+          case notFoundEx: NotFoundException =>
+            log.info(s"This error is presumably the clients fault: $notFoundEx")
+            sender ! akka.actor.Status.Failure(notFoundEx)
+        }
       case Die(value, trace) =>
         value match {
           case rejectedEx: RequestRejectedException =>
             log.info(s"This error is presumably the clients fault: $rejectedEx")
             sender ! akka.actor.Status.Failure(rejectedEx)
-          case other =>
-            log.error(s"This error is presumably NOT the clients fault: $other")
-            sender ! akka.actor.Status.Failure(other)
+          case otherEx =>
+            log.error(s"This error is presumably NOT the clients fault: $otherEx")
+            sender ! akka.actor.Status.Failure(otherEx)
         }
       case other => log.error(s"handleCause() expects a ZIO.Die, but got $other")
     }

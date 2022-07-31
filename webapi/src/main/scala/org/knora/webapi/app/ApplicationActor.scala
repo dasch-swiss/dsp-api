@@ -27,7 +27,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.MissingLastModificationDateOntologyException
-import dsp.errors.SipiException
 import dsp.errors.UnexpectedMessageException
 import dsp.errors.UnsupportedValueException
 import org.knora.webapi.http.directives.DSPApiDirectives
@@ -58,6 +57,7 @@ import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
