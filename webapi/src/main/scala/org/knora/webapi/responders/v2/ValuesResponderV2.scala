@@ -916,19 +916,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Get ontology information about the submitted property.
 
-        propertyInfoRequestForSubmittedProperty = PropertiesGetRequestV2(
-                                                    propertyIris = Set(submittedInternalPropertyIri),
-                                                    allLanguages = false,
-                                                    requestingUser = updateValueRequest.requestingUser
-                                                  )
+        propertyInfoRequestForSubmittedProperty =
+          PropertiesGetRequestV2(
+            propertyIris = Set(submittedInternalPropertyIri),
+            allLanguages = false,
+            requestingUser = updateValueRequest.requestingUser
+          )
 
         propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
           appActor
             .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
-                                                                 submittedInternalPropertyIri
-                                                               )
+
+        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
+          propertyInfoResponseForSubmittedProperty.properties(
+            submittedInternalPropertyIri
+          )
 
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
@@ -946,23 +949,23 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- getAdjustedInternalPropertyInfo(
-                                                              submittedPropertyIri = submittedExternalPropertyIri,
-                                                              maybeSubmittedValueType =
-                                                                Some(submittedExternalValueType),
-                                                              propertyInfoForSubmittedProperty =
-                                                                propertyInfoForSubmittedProperty,
-                                                              requestingUser = updateValueRequest.requestingUser
-                                                            )
+        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+          getAdjustedInternalPropertyInfo(
+            submittedPropertyIri = submittedExternalPropertyIri,
+            maybeSubmittedValueType = Some(submittedExternalValueType),
+            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            requestingUser = updateValueRequest.requestingUser
+          )
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
 
-        resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
-                                          resourceIri = resourceIri,
-                                          propertyInfo = adjustedInternalPropertyInfo,
-                                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                                        )
+        resourceInfo: ReadResourceV2 <-
+          getResourceWithPropertyValues(
+            resourceIri = resourceIri,
+            propertyInfo = adjustedInternalPropertyInfo,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+          )
 
         _ = if (resourceInfo.resourceClassIri != submittedExternalResourceClassIri.toOntologySchema(InternalSchema)) {
               throw BadRequestException(
@@ -971,14 +974,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             }
 
         // Check that the resource has the value that the user wants to update, as an object of the submitted property.
-        currentValue: ReadValueV2 = resourceInfo.values
-                                      .get(submittedInternalPropertyIri)
-                                      .flatMap(_.find(_.valueIri == valueIri))
-                                      .getOrElse {
-                                        throw NotFoundException(
-                                          s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>"
-                                        )
-                                      }
+        currentValue: ReadValueV2 =
+          resourceInfo.values
+            .get(submittedInternalPropertyIri)
+            .flatMap(_.find(_.valueIri == valueIri))
+            .getOrElse {
+              throw NotFoundException(
+                s"Resource <$resourceIri> does not have value <$valueIri> as an object of property <$submittedExternalPropertyIri>"
+              )
+            }
 
         // Check that the current value has the submitted value type.
         _ = if (currentValue.valueContent.valueType != submittedExternalValueType.toOntologySchema(InternalSchema)) {
@@ -1011,16 +1015,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     ): Future[UpdateValueResponseV2] =
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
-                                                          resourceIri = updateValuePermissionsV2.resourceIri,
-                                                          submittedExternalResourceClassIri =
-                                                            updateValuePermissionsV2.resourceClassIri,
-                                                          submittedExternalPropertyIri =
-                                                            updateValuePermissionsV2.propertyIri,
-                                                          valueIri = updateValuePermissionsV2.valueIri,
-                                                          submittedExternalValueType =
-                                                            updateValuePermissionsV2.valueType
-                                                        )
+        resourcePropertyValue: ResourcePropertyValue <-
+          getResourcePropertyValue(
+            resourceIri = updateValuePermissionsV2.resourceIri,
+            submittedExternalResourceClassIri = updateValuePermissionsV2.resourceClassIri,
+            submittedExternalPropertyIri = updateValuePermissionsV2.propertyIri,
+            valueIri = updateValuePermissionsV2.valueIri,
+            submittedExternalValueType = updateValuePermissionsV2.valueType
+          )
 
         resourceInfo: ReadResourceV2           = resourcePropertyValue.resource
         submittedInternalPropertyIri: SmartIri = resourcePropertyValue.submittedInternalPropertyIri
@@ -1028,17 +1030,20 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Validate and reformat the submitted permissions.
 
-        newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(
-                                               permissionLiteral = updateValuePermissionsV2.permissions,
-                                               appActor = appActor
-                                             )
+        newValuePermissionLiteral: String <-
+          PermissionUtilADM.validatePermissions(
+            permissionLiteral = updateValuePermissionsV2.permissions,
+            appActor = appActor
+          )
 
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
 
-        currentPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(
-                                                                      currentValue.permissions
-                                                                    )
+        currentPermissionsParsed: Map[EntityPermission, Set[IRI]] =
+          PermissionUtilADM.parsePermissions(
+            currentValue.permissions
+          )
+
         newPermissionsParsed: Map[EntityPermission, Set[IRI]] =
           PermissionUtilADM.parsePermissions(
             updateValuePermissionsV2.permissions,
@@ -1066,39 +1071,43 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                               stringFormatter.makeRandomValueIri(resourceInfo.resourceIri)
                             )
 
-        currentTime: Instant = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
+        currentTime: Instant =
+          updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .changeValuePermissions(
-                           dataNamedGraph = dataNamedGraph,
-                           resourceIri = resourceInfo.resourceIri,
-                           propertyIri = submittedInternalPropertyIri,
-                           currentValueIri = currentValue.valueIri,
-                           valueTypeIri = currentValue.valueContent.valueType,
-                           newValueIri = newValueIri,
-                           newPermissions = newValuePermissionLiteral,
-                           currentTime = currentTime
-                         )
-                         .toString()
+        sparqlUpdate =
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .changeValuePermissions(
+              dataNamedGraph = dataNamedGraph,
+              resourceIri = resourceInfo.resourceIri,
+              propertyIri = submittedInternalPropertyIri,
+              currentValueIri = currentValue.valueIri,
+              valueTypeIri = currentValue.valueContent.valueType,
+              newValueIri = newValueIri,
+              newPermissions = newValuePermissionLiteral,
+              currentTime = currentTime
+            )
+            .toString()
 
         _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
         // Check that the value was written correctly to the triplestore.
 
-        unverifiedValue = UnverifiedValueV2(
-                            newValueIri = newValueIri,
-                            newValueUUID = currentValue.valueHasUUID,
-                            valueContent = currentValue.valueContent,
-                            permissions = newValuePermissionLiteral,
-                            creationDate = currentTime
-                          )
+        unverifiedValue =
+          UnverifiedValueV2(
+            newValueIri = newValueIri,
+            newValueUUID = currentValue.valueHasUUID,
+            valueContent = currentValue.valueContent,
+            permissions = newValuePermissionLiteral,
+            creationDate = currentTime
+          )
 
-        verifiedValue: VerifiedValueV2 <- verifyValue(
-                                            resourceIri = resourceInfo.resourceIri,
-                                            propertyIri = submittedInternalPropertyIri,
-                                            unverifiedValue = unverifiedValue,
-                                            requestingUser = updateValueRequest.requestingUser
-                                          )
+        verifiedValue: VerifiedValueV2 <-
+          verifyValue(
+            resourceIri = resourceInfo.resourceIri,
+            propertyIri = submittedInternalPropertyIri,
+            unverifiedValue = unverifiedValue,
+            requestingUser = updateValueRequest.requestingUser
+          )
       } yield UpdateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
         valueType = unverifiedValue.valueContent.valueType,
@@ -1117,16 +1126,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     ): Future[UpdateValueResponseV2] = {
       for {
         // Do the initial checks, and get information about the resource, the property, and the value.
-        resourcePropertyValue: ResourcePropertyValue <- getResourcePropertyValue(
-                                                          resourceIri = updateValueContentV2.resourceIri,
-                                                          submittedExternalResourceClassIri =
-                                                            updateValueContentV2.resourceClassIri,
-                                                          submittedExternalPropertyIri =
-                                                            updateValueContentV2.propertyIri,
-                                                          valueIri = updateValueContentV2.valueIri,
-                                                          submittedExternalValueType =
-                                                            updateValueContentV2.valueContent.valueType
-                                                        )
+        resourcePropertyValue: ResourcePropertyValue <-
+          getResourcePropertyValue(
+            resourceIri = updateValueContentV2.resourceIri,
+            submittedExternalResourceClassIri = updateValueContentV2.resourceClassIri,
+            submittedExternalPropertyIri = updateValueContentV2.propertyIri,
+            valueIri = updateValueContentV2.valueIri,
+            submittedExternalValueType = updateValueContentV2.valueContent.valueType
+          )
 
         resourceInfo: ReadResourceV2                     = resourcePropertyValue.resource
         submittedInternalPropertyIri: SmartIri           = resourcePropertyValue.submittedInternalPropertyIri
@@ -1134,25 +1141,28 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         currentValue: ReadValueV2                        = resourcePropertyValue.value
 
         // Did the user submit permissions for the new value?
-        newValueVersionPermissionLiteral <- updateValueContentV2.permissions match {
-                                              case Some(permissions) =>
-                                                // Yes. Validate them.
-                                                PermissionUtilADM.validatePermissions(
-                                                  permissionLiteral = permissions,
-                                                  appActor = appActor
-                                                )
+        newValueVersionPermissionLiteral <-
+          updateValueContentV2.permissions match {
+            case Some(permissions) =>
+              // Yes. Validate them.
+              PermissionUtilADM.validatePermissions(
+                permissionLiteral = permissions,
+                appActor = appActor
+              )
 
-                                              case None =>
-                                                // No. Use the permissions on the current version of the value.
-                                                FastFuture.successful(currentValue.permissions)
-                                            }
+            case None =>
+              // No. Use the permissions on the current version of the value.
+              FastFuture.successful(currentValue.permissions)
+          }
 
         // Check that the user has permission to do the update. If they want to change the permissions
         // on the value, they need ChangeRightsPermission, otherwise they need ModifyPermission.
 
-        currentPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(
-                                                                      currentValue.permissions
-                                                                    )
+        currentPermissionsParsed: Map[EntityPermission, Set[IRI]] =
+          PermissionUtilADM.parsePermissions(
+            currentValue.permissions
+          )
+
         newPermissionsParsed: Map[EntityPermission, Set[IRI]] =
           PermissionUtilADM.parsePermissions(
             newValueVersionPermissionLiteral,
@@ -1176,9 +1186,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             )
 
         // Convert the submitted value content to the internal schema.
-        submittedInternalValueContent: ValueContentV2 = updateValueContentV2.valueContent.toOntologySchema(
-                                                          InternalSchema
-                                                        )
+        submittedInternalValueContent: ValueContentV2 =
+          updateValueContentV2.valueContent.toOntologySchema(
+            InternalSchema
+          )
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -1217,7 +1228,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Check that the updated value would not duplicate the current value version.
 
-        unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
+        unescapedSubmittedInternalValueContent =
+          submittedInternalValueContent.unescape
 
         _ = if (unescapedSubmittedInternalValueContent.wouldDuplicateCurrentVersion(currentValue.valueContent)) {
               throw DuplicateValueException("The submitted value is the same as the current version")
@@ -1225,9 +1237,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Check that the updated value would not duplicate another existing value of the resource.
 
-        currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values
-                                                   .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
-                                                   .filter(_.valueIri != updateValueContentV2.valueIri)
+        currentValuesForProp: Seq[ReadValueV2] =
+          resourceInfo.values
+            .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+            .filter(_.valueIri != updateValueContentV2.valueIri)
 
         _ = if (
               currentValuesForProp.exists(currentVal =>
@@ -1264,49 +1277,50 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Create the new value version.
 
-        unverifiedValue: UnverifiedValueV2 <- (currentValue, submittedInternalValueContent) match {
-                                                case (
-                                                      currentLinkValue: ReadLinkValueV2,
-                                                      newLinkValue: LinkValueContentV2
-                                                    ) =>
-                                                  updateLinkValueV2AfterChecks(
-                                                    dataNamedGraph = dataNamedGraph,
-                                                    resourceInfo = resourceInfo,
-                                                    linkPropertyIri =
-                                                      adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
-                                                    currentLinkValue = currentLinkValue,
-                                                    newLinkValue = newLinkValue,
-                                                    valueCreator = updateValueRequest.requestingUser.id,
-                                                    valuePermissions = newValueVersionPermissionLiteral,
-                                                    valueCreationDate = updateValueContentV2.valueCreationDate,
-                                                    newValueVersionIri = updateValueContentV2.newValueVersionIri,
-                                                    requestingUser = updateValueRequest.requestingUser
-                                                  )
+        unverifiedValue: UnverifiedValueV2 <-
+          (currentValue, submittedInternalValueContent) match {
+            case (
+                  currentLinkValue: ReadLinkValueV2,
+                  newLinkValue: LinkValueContentV2
+                ) =>
+              updateLinkValueV2AfterChecks(
+                dataNamedGraph = dataNamedGraph,
+                resourceInfo = resourceInfo,
+                linkPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+                currentLinkValue = currentLinkValue,
+                newLinkValue = newLinkValue,
+                valueCreator = updateValueRequest.requestingUser.id,
+                valuePermissions = newValueVersionPermissionLiteral,
+                valueCreationDate = updateValueContentV2.valueCreationDate,
+                newValueVersionIri = updateValueContentV2.newValueVersionIri,
+                requestingUser = updateValueRequest.requestingUser
+              )
 
-                                                case _ =>
-                                                  updateOrdinaryValueV2AfterChecks(
-                                                    dataNamedGraph = dataNamedGraph,
-                                                    resourceInfo = resourceInfo,
-                                                    propertyIri =
-                                                      adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
-                                                    currentValue = currentValue,
-                                                    newValueVersion = submittedInternalValueContent,
-                                                    valueCreator = updateValueRequest.requestingUser.id,
-                                                    valuePermissions = newValueVersionPermissionLiteral,
-                                                    valueCreationDate = updateValueContentV2.valueCreationDate,
-                                                    newValueVersionIri = updateValueContentV2.newValueVersionIri,
-                                                    requestingUser = updateValueRequest.requestingUser
-                                                  )
-                                              }
+            case _ =>
+              updateOrdinaryValueV2AfterChecks(
+                dataNamedGraph = dataNamedGraph,
+                resourceInfo = resourceInfo,
+                propertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri,
+                currentValue = currentValue,
+                newValueVersion = submittedInternalValueContent,
+                valueCreator = updateValueRequest.requestingUser.id,
+                valuePermissions = newValueVersionPermissionLiteral,
+                valueCreationDate = updateValueContentV2.valueCreationDate,
+                newValueVersionIri = updateValueContentV2.newValueVersionIri,
+                requestingUser = updateValueRequest.requestingUser
+              )
+          }
 
         // Check that the value was written correctly to the triplestore.
 
-        verifiedValue: VerifiedValueV2 <- verifyValue(
-                                            resourceIri = updateValueContentV2.resourceIri,
-                                            propertyIri = submittedInternalPropertyIri,
-                                            unverifiedValue = unverifiedValue,
-                                            requestingUser = updateValueRequest.requestingUser
-                                          )
+        verifiedValue: VerifiedValueV2 <-
+          verifyValue(
+            resourceIri = updateValueContentV2.resourceIri,
+            propertyIri = submittedInternalPropertyIri,
+            unverifiedValue = unverifiedValue,
+            requestingUser = updateValueRequest.requestingUser
+          )
+
       } yield UpdateValueResponseV2(
         valueIri = verifiedValue.newValueIri,
         valueType = unverifiedValue.valueContent.valueType,
@@ -1380,98 +1394,92 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                           )
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
-      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValue.valueContent, newValueVersion) match {
-                                                              case (
-                                                                    currentTextValue: TextValueContentV2,
-                                                                    newTextValue: TextValueContentV2
-                                                                  ) =>
-                                                                // Identify the resource references that have been added or removed in the new version of
-                                                                // the value.
-                                                                val addedResourceRefs =
-                                                                  newTextValue.standoffLinkTagTargetResourceIris -- currentTextValue.standoffLinkTagTargetResourceIris
-                                                                val removedResourceRefs =
-                                                                  currentTextValue.standoffLinkTagTargetResourceIris -- newTextValue.standoffLinkTagTargetResourceIris
+      standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <-
+        (currentValue.valueContent, newValueVersion) match {
+          case (
+                currentTextValue: TextValueContentV2,
+                newTextValue: TextValueContentV2
+              ) =>
+            // Identify the resource references that have been added or removed in the new version of
+            // the value.
+            val addedResourceRefs =
+              newTextValue.standoffLinkTagTargetResourceIris -- currentTextValue.standoffLinkTagTargetResourceIris
+            val removedResourceRefs =
+              currentTextValue.standoffLinkTagTargetResourceIris -- newTextValue.standoffLinkTagTargetResourceIris
 
-                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was added.
-                                                                val standoffLinkUpdatesForAddedResourceRefFutures
-                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
-                                                                  addedResourceRefs.toVector.map { targetResourceIri =>
-                                                                    incrementLinkValue(
-                                                                      sourceResourceInfo = resourceInfo,
-                                                                      linkPropertyIri =
-                                                                        OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                                                                      targetResourceIri = targetResourceIri,
-                                                                      valueCreator =
-                                                                        OntologyConstants.KnoraAdmin.SystemUser,
-                                                                      valuePermissions = standoffLinkValuePermissions,
-                                                                      requestingUser = requestingUser
-                                                                    )
-                                                                  }
+            // Construct a SparqlTemplateLinkUpdate for each reference that was added.
+            val standoffLinkUpdatesForAddedResourceRefFutures: Seq[Future[SparqlTemplateLinkUpdate]] =
+              addedResourceRefs.toVector.map { targetResourceIri =>
+                incrementLinkValue(
+                  sourceResourceInfo = resourceInfo,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                  targetResourceIri = targetResourceIri,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  requestingUser = requestingUser
+                )
+              }
 
-                                                                val standoffLinkUpdatesForAddedResourceRefsFuture
-                                                                  : Future[Seq[SparqlTemplateLinkUpdate]] =
-                                                                  Future.sequence(
-                                                                    standoffLinkUpdatesForAddedResourceRefFutures
-                                                                  )
+            val standoffLinkUpdatesForAddedResourceRefsFuture: Future[Seq[SparqlTemplateLinkUpdate]] =
+              Future.sequence(
+                standoffLinkUpdatesForAddedResourceRefFutures
+              )
 
-                                                                // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
-                                                                val standoffLinkUpdatesForRemovedResourceRefFutures
-                                                                  : Seq[Future[SparqlTemplateLinkUpdate]] =
-                                                                  removedResourceRefs.toVector.map {
-                                                                    removedTargetResource =>
-                                                                      decrementLinkValue(
-                                                                        sourceResourceInfo = resourceInfo,
-                                                                        linkPropertyIri =
-                                                                          OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
-                                                                        targetResourceIri = removedTargetResource,
-                                                                        valueCreator =
-                                                                          OntologyConstants.KnoraAdmin.SystemUser,
-                                                                        valuePermissions = standoffLinkValuePermissions,
-                                                                        requestingUser = requestingUser
-                                                                      )
-                                                                  }
+            // Construct a SparqlTemplateLinkUpdate for each reference that was removed.
+            val standoffLinkUpdatesForRemovedResourceRefFutures: Seq[Future[SparqlTemplateLinkUpdate]] =
+              removedResourceRefs.toVector.map { removedTargetResource =>
+                decrementLinkValue(
+                  sourceResourceInfo = resourceInfo,
+                  linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                  targetResourceIri = removedTargetResource,
+                  valueCreator = OntologyConstants.KnoraAdmin.SystemUser,
+                  valuePermissions = standoffLinkValuePermissions,
+                  requestingUser = requestingUser
+                )
+              }
 
-                                                                val standoffLinkUpdatesForRemovedResourceRefFuture =
-                                                                  Future.sequence(
-                                                                    standoffLinkUpdatesForRemovedResourceRefFutures
-                                                                  )
+            val standoffLinkUpdatesForRemovedResourceRefFuture =
+              Future.sequence(
+                standoffLinkUpdatesForRemovedResourceRefFutures
+              )
 
-                                                                for {
-                                                                  standoffLinkUpdatesForAddedResourceRefs <-
-                                                                    standoffLinkUpdatesForAddedResourceRefsFuture
-                                                                  standoffLinkUpdatesForRemovedResourceRefs <-
-                                                                    standoffLinkUpdatesForRemovedResourceRefFuture
-                                                                } yield standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
+            for {
+              standoffLinkUpdatesForAddedResourceRefs <-
+                standoffLinkUpdatesForAddedResourceRefsFuture
+              standoffLinkUpdatesForRemovedResourceRefs <-
+                standoffLinkUpdatesForRemovedResourceRefFuture
+            } yield standoffLinkUpdatesForAddedResourceRefs ++ standoffLinkUpdatesForRemovedResourceRefs
 
-                                                              case _ =>
-                                                                FastFuture.successful(
-                                                                  Vector.empty[SparqlTemplateLinkUpdate]
-                                                                )
-                                                            }
+          case _ =>
+            FastFuture.successful(
+              Vector.empty[SparqlTemplateLinkUpdate]
+            )
+        }
 
       // If no custom value creation date was provided, make a timestamp to indicate when the value
       // was updated.
       currentTime: Instant = valueCreationDate.getOrElse(Instant.now)
 
       // Generate a SPARQL update.
-      sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                       .addValueVersion(
-                         dataNamedGraph = dataNamedGraph,
-                         resourceIri = resourceInfo.resourceIri,
-                         propertyIri = propertyIri,
-                         currentValueIri = currentValue.valueIri,
-                         newValueIri = newValueIri,
-                         valueTypeIri = newValueVersion.valueType,
-                         value = newValueVersion,
-                         valueCreator = valueCreator,
-                         valuePermissions = valuePermissions,
-                         maybeComment = newValueVersion.comment,
-                         linkUpdates = standoffLinkUpdates,
-                         currentTime = currentTime,
-                         requestingUser = requestingUser.id,
-                         stringFormatter = stringFormatter
-                       )
-                       .toString()
+      sparqlUpdate =
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .addValueVersion(
+            dataNamedGraph = dataNamedGraph,
+            resourceIri = resourceInfo.resourceIri,
+            propertyIri = propertyIri,
+            currentValueIri = currentValue.valueIri,
+            newValueIri = newValueIri,
+            valueTypeIri = newValueVersion.valueType,
+            value = newValueVersion,
+            valueCreator = valueCreator,
+            valuePermissions = valuePermissions,
+            maybeComment = newValueVersion.comment,
+            linkUpdates = standoffLinkUpdates,
+            currentTime = currentTime,
+            requestingUser = requestingUser.id,
+            stringFormatter = stringFormatter
+          )
+          .toString()
 
       /*
             _ = println("================ Update value ================")
@@ -1521,27 +1529,27 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     if (currentLinkValue.valueContent.referredResourceIri != newLinkValue.referredResourceIri) {
       for {
         // Yes. Delete the existing link and decrement its LinkValue's reference count.
-        sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate <- decrementLinkValue(
-                                                                              sourceResourceInfo = resourceInfo,
-                                                                              linkPropertyIri = linkPropertyIri,
-                                                                              targetResourceIri =
-                                                                                currentLinkValue.valueContent.referredResourceIri,
-                                                                              valueCreator = valueCreator,
-                                                                              valuePermissions = valuePermissions,
-                                                                              requestingUser = requestingUser
-                                                                            )
+        sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate <-
+          decrementLinkValue(
+            sourceResourceInfo = resourceInfo,
+            linkPropertyIri = linkPropertyIri,
+            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+            valueCreator = valueCreator,
+            valuePermissions = valuePermissions,
+            requestingUser = requestingUser
+          )
 
         // Create a new link, and create a new LinkValue for it.
-        sparqlTemplateLinkUpdateForNewLink: SparqlTemplateLinkUpdate <- incrementLinkValue(
-                                                                          sourceResourceInfo = resourceInfo,
-                                                                          linkPropertyIri = linkPropertyIri,
-                                                                          targetResourceIri =
-                                                                            newLinkValue.referredResourceIri,
-                                                                          customNewLinkValueIri = newValueVersionIri,
-                                                                          valueCreator = valueCreator,
-                                                                          valuePermissions = valuePermissions,
-                                                                          requestingUser = requestingUser
-                                                                        )
+        sparqlTemplateLinkUpdateForNewLink: SparqlTemplateLinkUpdate <-
+          incrementLinkValue(
+            sourceResourceInfo = resourceInfo,
+            linkPropertyIri = linkPropertyIri,
+            targetResourceIri = newLinkValue.referredResourceIri,
+            customNewLinkValueIri = newValueVersionIri,
+            valueCreator = valueCreator,
+            valuePermissions = valuePermissions,
+            requestingUser = requestingUser
+          )
 
         // If no custom value creation date was provided, make a timestamp to indicate when the link value
         // was updated.
@@ -1551,21 +1559,22 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         newLinkValueUUID = UUID.randomUUID
 
         // Generate a SPARQL update string.
-        sparqlUpdate <- Future(
-                          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                            .changeLinkTarget(
-                              dataNamedGraph = dataNamedGraph,
-                              linkSourceIri = resourceInfo.resourceIri,
-                              linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
-                              linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
-                              newLinkValueUUID = newLinkValueUUID,
-                              maybeComment = newLinkValue.comment,
-                              currentTime = currentTime,
-                              requestingUser = requestingUser.id,
-                              stringFormatter = stringFormatter
-                            )
-                            .toString()
-                        )
+        sparqlUpdate <-
+          Future(
+            org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .changeLinkTarget(
+                dataNamedGraph = dataNamedGraph,
+                linkSourceIri = resourceInfo.resourceIri,
+                linkUpdateForCurrentLink = sparqlTemplateLinkUpdateForCurrentLink,
+                linkUpdateForNewLink = sparqlTemplateLinkUpdateForNewLink,
+                newLinkValueUUID = newLinkValueUUID,
+                maybeComment = newLinkValue.comment,
+                currentTime = currentTime,
+                requestingUser = requestingUser.id,
+                stringFormatter = stringFormatter
+              )
+              .toString()
+          )
 
         /*
                 _ = println("================ Update link ================")
@@ -1584,32 +1593,34 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     } else {
       for {
         // We're not changing the link target, just the metadata on the LinkValue.
-        sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate <- changeLinkValueMetadata(
-                                                                sourceResourceInfo = resourceInfo,
-                                                                linkPropertyIri = linkPropertyIri,
-                                                                targetResourceIri =
-                                                                  currentLinkValue.valueContent.referredResourceIri,
-                                                                customNewLinkValueIri = newValueVersionIri,
-                                                                valueCreator = valueCreator,
-                                                                valuePermissions = valuePermissions,
-                                                                requestingUser = requestingUser
-                                                              )
+        sparqlTemplateLinkUpdate: SparqlTemplateLinkUpdate <-
+          changeLinkValueMetadata(
+            sourceResourceInfo = resourceInfo,
+            linkPropertyIri = linkPropertyIri,
+            targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
+            customNewLinkValueIri = newValueVersionIri,
+            valueCreator = valueCreator,
+            valuePermissions = valuePermissions,
+            requestingUser = requestingUser
+          )
 
         // Make a timestamp to indicate when the link value was updated.
         currentTime: Instant = Instant.now
 
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                         .changeLinkMetadata(
-                           dataNamedGraph = dataNamedGraph,
-                           linkSourceIri = resourceInfo.resourceIri,
-                           linkUpdate = sparqlTemplateLinkUpdate,
-                           maybeComment = newLinkValue.comment,
-                           currentTime = currentTime,
-                           requestingUser = requestingUser.id
-                         )
-                         .toString()
+        sparqlUpdate =
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .changeLinkMetadata(
+              dataNamedGraph = dataNamedGraph,
+              linkSourceIri = resourceInfo.resourceIri,
+              linkUpdate = sparqlTemplateLinkUpdate,
+              maybeComment = newLinkValue.comment,
+              currentTime = currentTime,
+              requestingUser = requestingUser.id
+            )
+            .toString()
 
         _ <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
       } yield UnverifiedValueV2(
         newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
         newValueUUID = currentLinkValue.valueHasUUID,
@@ -1628,25 +1639,28 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     def makeTaskFuture: Future[SuccessResponseV2] = {
       for {
         // Convert the submitted property IRI to the internal schema.
-        submittedInternalPropertyIri: SmartIri <- Future(
-                                                    deleteValueRequest.propertyIri.toOntologySchema(InternalSchema)
-                                                  )
+        submittedInternalPropertyIri: SmartIri <-
+          Future(
+            deleteValueRequest.propertyIri.toOntologySchema(InternalSchema)
+          )
 
         // Get ontology information about the submitted property.
 
-        propertyInfoRequestForSubmittedProperty = PropertiesGetRequestV2(
-                                                    propertyIris = Set(submittedInternalPropertyIri),
-                                                    allLanguages = false,
-                                                    requestingUser = deleteValueRequest.requestingUser
-                                                  )
+        propertyInfoRequestForSubmittedProperty =
+          PropertiesGetRequestV2(
+            propertyIris = Set(submittedInternalPropertyIri),
+            allLanguages = false,
+            requestingUser = deleteValueRequest.requestingUser
+          )
 
         propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <-
           appActor
             .ask(propertyInfoRequestForSubmittedProperty)
             .mapTo[ReadOntologyV2]
-        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(
-                                                                 submittedInternalPropertyIri
-                                                               )
+        propertyInfoForSubmittedProperty: ReadPropertyInfoV2 =
+          propertyInfoResponseForSubmittedProperty.properties(
+            submittedInternalPropertyIri
+          )
 
         // Don't accept link properties.
         _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
@@ -1664,24 +1678,26 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // corresponding link property, whose objects we will need to query. Get ontology information about the
         // adjusted property.
 
-        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- getAdjustedInternalPropertyInfo(
-                                                              submittedPropertyIri = deleteValueRequest.propertyIri,
-                                                              maybeSubmittedValueType = None,
-                                                              propertyInfoForSubmittedProperty =
-                                                                propertyInfoForSubmittedProperty,
-                                                              requestingUser = deleteValueRequest.requestingUser
-                                                            )
+        adjustedInternalPropertyInfo: ReadPropertyInfoV2 <-
+          getAdjustedInternalPropertyInfo(
+            submittedPropertyIri = deleteValueRequest.propertyIri,
+            maybeSubmittedValueType = None,
+            propertyInfoForSubmittedProperty = propertyInfoForSubmittedProperty,
+            requestingUser = deleteValueRequest.requestingUser
+          )
 
-        adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
+        adjustedInternalPropertyIri =
+          adjustedInternalPropertyInfo.entityInfoContent.propertyIri
 
         // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
         // so we can see objects that the user doesn't have permission to see.
 
-        resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
-                                          resourceIri = deleteValueRequest.resourceIri,
-                                          propertyInfo = adjustedInternalPropertyInfo,
-                                          requestingUser = KnoraSystemInstances.Users.SystemUser
-                                        )
+        resourceInfo: ReadResourceV2 <-
+          getResourceWithPropertyValues(
+            resourceIri = deleteValueRequest.resourceIri,
+            propertyInfo = adjustedInternalPropertyInfo,
+            requestingUser = KnoraSystemInstances.Users.SystemUser
+          )
 
         // Check that the resource belongs to the class that the client submitted.
 
@@ -1693,19 +1709,21 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Check that the resource has the value that the user wants to delete, as an object of the submitted property.
 
-        maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values
-                                                   .get(submittedInternalPropertyIri)
-                                                   .flatMap(_.find(_.valueIri == deleteValueRequest.valueIri))
+        maybeCurrentValue: Option[ReadValueV2] =
+          resourceInfo.values
+            .get(submittedInternalPropertyIri)
+            .flatMap(_.find(_.valueIri == deleteValueRequest.valueIri))
 
         // Check that the user has permission to delete the value.
 
-        currentValue: ReadValueV2 = maybeCurrentValue match {
-                                      case Some(value) => value
-                                      case None =>
-                                        throw NotFoundException(
-                                          s"Resource <${deleteValueRequest.resourceIri}> does not have value <${deleteValueRequest.valueIri}> as an object of property <${deleteValueRequest.propertyIri}>"
-                                        )
-                                    }
+        currentValue: ReadValueV2 =
+          maybeCurrentValue match {
+            case Some(value) => value
+            case None =>
+              throw NotFoundException(
+                s"Resource <${deleteValueRequest.resourceIri}> does not have value <${deleteValueRequest.valueIri}> as an object of property <${deleteValueRequest.propertyIri}>"
+              )
+          }
 
         // Check that the value is of the type that the client submitted.
 
@@ -1727,26 +1745,30 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         // Get the definition of the resource class.
 
-        classInfoRequest = ClassesGetRequestV2(
-                             classIris = Set(resourceInfo.resourceClassIri),
-                             allLanguages = false,
-                             requestingUser = deleteValueRequest.requestingUser
-                           )
+        classInfoRequest =
+          ClassesGetRequestV2(
+            classIris = Set(resourceInfo.resourceClassIri),
+            allLanguages = false,
+            requestingUser = deleteValueRequest.requestingUser
+          )
 
         classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
         classInfo: ReadClassInfoV2         = classInfoResponse.classes(resourceInfo.resourceClassIri)
-        cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
-                                                              submittedInternalPropertyIri,
-                                                              throw InconsistentRepositoryDataException(
-                                                                s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                                                                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"
-                                                              )
-                                                            )
+
+        cardinalityInfo: Cardinality.KnoraCardinalityInfo =
+          classInfo.allCardinalities.getOrElse(
+            submittedInternalPropertyIri,
+            throw InconsistentRepositoryDataException(
+              s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"
+            )
+          )
 
         // Check that the resource class's cardinality for the submitted property allows this value to be deleted.
 
-        currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values
-                                                   .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
+        currentValuesForProp: Seq[ReadValueV2] =
+          resourceInfo.values
+            .getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
         _ =
           if (
@@ -1767,22 +1789,24 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
 
         // Do the update.
-        deletedValueIri: IRI <- deleteValueV2AfterChecks(
-                                  dataNamedGraph = dataNamedGraph,
-                                  resourceInfo = resourceInfo,
-                                  propertyIri = adjustedInternalPropertyIri,
-                                  deleteComment = deleteValueRequest.deleteComment,
-                                  deleteDate = deleteValueRequest.deleteDate,
-                                  currentValue = currentValue,
-                                  requestingUser = deleteValueRequest.requestingUser
-                                )
+        deletedValueIri: IRI <-
+          deleteValueV2AfterChecks(
+            dataNamedGraph = dataNamedGraph,
+            resourceInfo = resourceInfo,
+            propertyIri = adjustedInternalPropertyIri,
+            deleteComment = deleteValueRequest.deleteComment,
+            deleteDate = deleteValueRequest.deleteDate,
+            currentValue = currentValue,
+            requestingUser = deleteValueRequest.requestingUser
+          )
 
         // Check whether the update succeeded.
-        sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                        .checkValueDeletion(
-                          valueIri = deletedValueIri
-                        )
-                        .toString()
+        sparqlQuery =
+          org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+            .checkValueDeletion(
+              valueIri = deletedValueIri
+            )
+            .toString()
 
         sparqlSelectResponse <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
         rows                  = sparqlSelectResponse.results.bindings
@@ -1813,11 +1837,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
            }
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
-      taskResult <- IriLocker.runWithIriLock(
-                      deleteValueRequest.apiRequestID,
-                      deleteValueRequest.resourceIri,
-                      () => makeTaskFuture
-                    )
+      taskResult <-
+        IriLocker.runWithIriLock(
+          deleteValueRequest.apiRequestID,
+          deleteValueRequest.resourceIri,
+          () => makeTaskFuture
+        )
     } yield taskResult
   }
 

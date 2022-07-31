@@ -13,7 +13,6 @@ import com.typesafe.scalalogging.Logger
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotImplementedException
-import dsp.errors.SipiException
 import dsp.valueobjects.IriErrorMessages
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
@@ -36,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
 import java.time.Instant
