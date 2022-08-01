@@ -9,10 +9,13 @@ import dsp.errors.BadRequestException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio._
+import zio.prelude.Assertion._
+import zio.prelude.Subtype
 import zio.prelude.Validation
 
-import scala.util.matching.Regex
 import java.security.SecureRandom
+import scala.language.experimental.macros
+import scala.util.matching.Regex
 
 object User {
 
@@ -166,7 +169,7 @@ object User {
           case Some(value) =>
             val encoder =
               new BCryptPasswordEncoder(
-                passwordStrength.value,
+                passwordStrength,
                 new SecureRandom()
               )
             val hashedValue = encoder.encode(value)
@@ -179,15 +182,13 @@ object User {
   /**
    * PasswordStrength value object.
    */
-  sealed abstract case class PasswordStrength private (value: Int)
-  object PasswordStrength { self =>
-    def make(value: Int): Validation[Throwable, PasswordStrength] =
-      if (value < 4 || value > 31) {
-        Validation.fail(BadRequestException(UserErrorMessages.PasswordStrengthInvalid))
-      } else {
-        Validation.succeed(new PasswordStrength(value) {})
-      }
+  object PasswordStrength extends Subtype[Int] {
+    override def assertion = assert {
+      greaterThanOrEqualTo(4) &&
+      lessThanOrEqualTo(31)
+    }
   }
+  type PasswordStrength = PasswordStrength.Type
 
   /**
    * UserStatus value object.

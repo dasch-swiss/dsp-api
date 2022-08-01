@@ -32,6 +32,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 import org.knora.webapi.util.MutableTestIri
 import zio.&
@@ -4204,7 +4205,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+      expectMsgPF(3.seconds) { case msg: akka.actor.Status.Failure =>
         assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
