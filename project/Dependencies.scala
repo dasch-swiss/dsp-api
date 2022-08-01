@@ -69,14 +69,15 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.pauldijou" %% "jwt-spray-json" % "5.0.0" // Scala 3 incompatible
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
+  // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
     "org.springframework.security" % "spring-security-core" % "5.7.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "4.2.1"
+  val jedis   = "redis.clients"  % "jedis"   % "4.2.3"
 
   // serialization
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
@@ -103,7 +104,7 @@ object Dependencies {
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.2"
+  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.3"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
