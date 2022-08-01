@@ -215,7 +215,10 @@ object ResourceUtilV2 {
             )
 
             // If Sipi succeeds, return the future we were given. Otherwise, return a failed future.
-            appActor.ask(sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
+            appActor
+              .ask(sipiRequest)
+              .mapTo[SuccessResponseV2]
+              .flatMap(_ => updateFuture)
 
           case Failure(_) =>
             // The file value update failed. Ask Sipi to delete the temporary file.
@@ -224,11 +227,14 @@ object ResourceUtilV2 {
               requestingUser = requestingUser
             )
 
-            val sipiResponseFuture: Future[SuccessResponseV2] = appActor.ask(sipiRequest).mapTo[SuccessResponseV2]
+            val sipiResponseFuture: Future[SuccessResponseV2] =
+              appActor
+                .ask(sipiRequest)
+                .mapTo[SuccessResponseV2]
 
             // Did Sipi successfully delete the temporary file?
             sipiResponseFuture.transformWith {
-              case Success(_) =>
+              case Success(value) =>
                 // Yes. Return the future we were given.
                 updateFuture
 
