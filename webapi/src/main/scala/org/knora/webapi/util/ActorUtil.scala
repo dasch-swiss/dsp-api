@@ -6,16 +6,18 @@
 package org.knora.webapi.util
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.Logging
+import com.typesafe.scalalogging.Logger
+import dsp.errors.BadRequestException
 import dsp.errors.ExceptionUtil
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
-import zio._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.Logging
+import zio.Cause._
 import zio.Unsafe.unsafe
+import zio._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -23,7 +25,7 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import com.typesafe.scalalogging.Logger
+import dsp.errors.NotFoundException
 
 object ActorUtil {
 
@@ -48,10 +50,10 @@ object ActorUtil {
    *
    * Since this is the "edge" of the ZIO world for now, we need to log all errors that ZIO has potentially accumulated
    */
-  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig): Unit =
+  def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig, log: Logger): Unit =
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.run(
-        zioTask.foldCauseZIO(cause => handleCause(cause, sender), success => ZIO.succeed(sender ! success))
+        zioTask.foldCause(cause => handleCause(cause, sender, log), success => sender ! success)
       )
     }
 
@@ -63,32 +65,24 @@ object ActorUtil {
    * @param cause the failures and defects that need to be handled.
    * @param sender the actor that made the request in the `ask` pattern.
    */
-  def handleCause(cause: Cause[Throwable], sender: ActorRef): ZIO[Any, Nothing, Unit] =
-    cause.failureOrCause match {
-      case Left(rejectedEx: RequestRejectedException) => {
-        // The error was the client's fault. Log the exception, and also
-        // let the client know.
-        ZIO.logDebug(s"This error is presumably the clients fault: $rejectedEx") *>
-          ZIO.succeed(sender ! akka.actor.Status.Failure(rejectedEx))
-      }
-
-      case Left(otherEx: Exception) => {
-        // The error wasn't the client's fault. Log the exception, and also
-        // let the client know.
-        ZIO.logError(s"This error is presumably NOT the clients fault: $otherEx") *>
-          ZIO.succeed(sender ! akka.actor.Status.Failure(otherEx))
-      }
-
-      case Left(otherThrowable: Throwable) =>
-        // Don't try to recover from a Throwable that isn't an Exception.
-        ZIO.logError(s"Presumably something realy bad has happened: $otherThrowable") *>
-          ZIO.succeed(sender ! akka.actor.Status.Failure(otherThrowable))
-
-      case Right(otherCauses: Cause[Nothing]) =>
-        // Now we are getting all non-recoverable defects, which we need to squash before
-        // sending it back to the requesting actor.
-        ZIO.logErrorCause(otherCauses) *>
-          ZIO.succeed(sender ! akka.actor.Status.Failure(otherCauses.squashTrace))
+  def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
+    cause match {
+      case Fail(value, trace) =>
+        value match {
+          case notFoundEx: NotFoundException =>
+            log.info(s"This error is presumably the clients fault: $notFoundEx")
+            sender ! akka.actor.Status.Failure(notFoundEx)
+        }
+      case Die(value, trace) =>
+        value match {
+          case rejectedEx: RequestRejectedException =>
+            log.info(s"This error is presumably the clients fault: $rejectedEx")
+            sender ! akka.actor.Status.Failure(rejectedEx)
+          case otherEx =>
+            log.error(s"This error is presumably NOT the clients fault: $otherEx")
+            sender ! akka.actor.Status.Failure(otherEx)
+        }
+      case other => log.error(s"handleCause() expects a ZIO.Die, but got $other")
     }
 
   /**
