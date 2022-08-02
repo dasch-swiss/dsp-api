@@ -40,14 +40,14 @@ function pre_flight(prefix, identifier, cookie)
 
     knora_cookie_header = nil
 
-    if cookie ~='' then
+    if cookie ~= '' then
 
         -- tries to extract the Knora session name and id from the cookie:
         -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
         -- returns nil if it cannot find it
         session = get_session_id(cookie)
 
-        if session == nil then
+        if session == nil or session["name"] == nil or session["id"] == nil then
             -- no session could be extracted
             server.log("cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
         else
@@ -74,7 +74,7 @@ function pre_flight(prefix, identifier, cookie)
     end
     server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
-    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' ..  identifier
+    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 
     -- print("knora_url: " .. knora_url)
     server.log("pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)
@@ -117,7 +117,8 @@ function pre_flight(prefix, identifier, cookie)
             -- server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
 
             if response_json.restrictedViewSettings.size ~= nil then
-                server.log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
+                server.log("pre_flight - restricted view settings - size: " ..
+                    tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
                 restrictedViewSize = response_json.restrictedViewSettings.size
             else
                 server.log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
@@ -140,4 +141,5 @@ function pre_flight(prefix, identifier, cookie)
         return 'deny'
     end
 end
+
 -------------------------------------------------------------------------------
