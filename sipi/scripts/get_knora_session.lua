@@ -1,7 +1,7 @@
 -- * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
 -- * SPDX-License-Identifier: Apache-2.0
 
-basexx = require( "basexx" )
+basexx = require("basexx")
 
 -------------------------------------------------------------------------------
 -- This function is called from the route to get the Knora session id from the cookie.
@@ -32,7 +32,7 @@ function get_session_id(cookie)
         send_error(500, "KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT not set")
         return nil
     end
-    
+
     host_port = webapi_hostname .. ':' .. webapi_port
     server.log("host_port: " .. host_port, server.loglevel.LOG_DEBUG)
 
@@ -42,7 +42,7 @@ function get_session_id(cookie)
 
 
 
-    
+
 
     -- tries to extract the Knora session id from the cookie:
     -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
@@ -51,7 +51,11 @@ function get_session_id(cookie)
     -- returns nil if it cannot find the session id (pattern does not match)
     server.log("extracted cookie: " .. cookie, server.loglevel.LOG_DEBUG)
     local session_id = string.match(cookie, "KnoraAuthentication" .. host_port_base32 .. "=([^%s;]+)")
-    server.log("extracted session_id: " .. session_id, server.loglevel.LOG_DEBUG)
+    if session_id == nil then
+        server.log("no session_id could be extracted from cookie: " .. cookie, server.loglevel.LOG_DEBUG)
+    else
+        server.log("extracted session_id: " .. session_id, server.loglevel.LOG_DEBUG)
+    end
 
     local session = {}
     session["id"] = session_id

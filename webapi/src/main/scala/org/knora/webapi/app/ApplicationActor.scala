@@ -27,7 +27,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.LiveActorMaker
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.MissingLastModificationDateOntologyException
-import dsp.errors.SipiException
 import dsp.errors.UnexpectedMessageException
 import dsp.errors.UnsupportedValueException
 import org.knora.webapi.http.directives.DSPApiDirectives
@@ -58,6 +57,7 @@ import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
@@ -71,6 +71,8 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.messages.ResponderRequest
+import akka.routing.RoundRobinPool
 
 /**
  * This is the first actor in the application. All other actors are children
@@ -138,6 +140,22 @@ class ApplicationActor(
     appActor = self
   )
 
+  val routerActor =
+    context.actorOf(
+      RoundRobinPool(1000).props(
+        Props(
+          new ApplicationRouterActor(
+            responderManager,
+            cacheServiceManager,
+            iiifServiceManager,
+            triplestoreManager,
+            appConfig
+          )
+        ).withDispatcher(KnoraDispatchers.KnoraActorDispatcher)
+      ),
+      "RouterActor"
+    )
+
   /**
    * This actor acts as the supervisor for its child actors.
    * Here we can override the default supervisor strategy.
@@ -194,6 +212,7 @@ class ApplicationActor(
   }
 
   def ready(): Receive = {
+
     /* Usually only called from tests */
     case AppStop() =>
       appStop()
@@ -373,12 +392,10 @@ class ApplicationActor(
       timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
 
     // Forward messages to the responder manager and the different store managers.
-    case msg: KnoraRequestV1      => future2Message(sender(), responderManager.receive(msg), log)
-    case msg: KnoraRequestV2      => future2Message(sender(), responderManager.receive(msg), log)
-    case msg: KnoraRequestADM     => future2Message(sender(), responderManager.receive(msg), log)
-    case msg: CacheServiceRequest => ActorUtil.zio2Message(sender(), cacheServiceManager.receive(msg), appConfig)
-    case msg: IIIFRequest         => ActorUtil.zio2Message(sender(), iiifServiceManager.receive(msg), appConfig)
-    case msg: TriplestoreRequest  => ActorUtil.zio2Message(sender(), triplestoreManager.receive(msg), appConfig)
+    case msg: ResponderRequest    => routerActor.forward(msg)
+    case msg: CacheServiceRequest => routerActor.forward(msg)
+    case msg: IIIFRequest         => routerActor.forward(msg)
+    case msg: TriplestoreRequest  => routerActor.forward(msg)
 
     case akka.actor.Status.Failure(ex: Exception) =>
       ex match {
