@@ -2020,120 +2020,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     }
 
-    "not create a property with an invalid salsah-gui:guiAttribute (invalid integer)" in {
-
-      val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
-
-      val propertyInfoContent = PropertyInfoContentV2(
-        propertyIri = propertyIri,
-        predicates = Map(
-          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
-          ),
-          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
-          ),
-          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
-          ),
-          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
-          ),
-          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          ),
-          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Textarea".toSmartIri))
-          ),
-          SalsahGui.External.GuiAttribute.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-            objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80.5"))
-          )
-        ),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
-      )
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
-    "not create a property with an invalid salsah-gui:guiAttribute (wrong enumerated value)" in {
-
-      val propertyIri = AnythingOntologyIri.makeEntityIri("wrongProperty")
-
-      val propertyInfoContent = PropertyInfoContentV2(
-        propertyIri = propertyIri,
-        predicates = Map(
-          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
-          ),
-          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("Thing")))
-          ),
-          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri))
-          ),
-          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("wrong property", Some("en"))
-            )
-          ),
-          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("An invalid property definition", Some("en"))
-            )
-          ),
-          SalsahGui.External.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.External.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Textarea".toSmartIri))
-          ),
-          SalsahGui.External.GuiAttribute.toSmartIri -> PredicateInfoV2(
-            predicateIri = SalsahGui.External.GuiAttribute.toSmartIri,
-            objects = Seq(StringLiteralV2("rows=10"), StringLiteralV2("cols=80"), StringLiteralV2("wrap=wrong"))
-          )
-        ),
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2Complex.HasValue.toSmartIri),
-        ontologySchema = ApiV2Complex
-      )
-
-      appActor ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        requestingUser = anythingAdminUser
-      )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
     "not allow a user to change the labels of a property if they are not a sysadmin or an admin in the ontology's project" in {
 
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
@@ -3975,7 +3861,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           .make("http://www.knora.org/ontology/salsah-gui#SimpleText")
           .fold(e => throw e.head, v => Some(v))
       val guiAttributes =
-        List("size=80")
+        Set("size=80")
           .map(attribute =>
             Schema.GuiAttribute
               .make(attribute)
@@ -4045,8 +3931,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         Iri.PropertyIri
           .make(AnythingOntologyIri.makeEntityIri("hasNothingness").toString())
           .fold(e => throw e.head, v => v)
-      val guiElement    = None
-      val guiAttributes = List()
+      val guiElement                              = None
+      val guiAttributes: Set[Schema.GuiAttribute] = Set.empty
       val guiObject =
         Schema.GuiObject
           .make(guiAttributes, guiElement)

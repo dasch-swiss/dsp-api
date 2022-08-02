@@ -52,6 +52,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
 
 import java.time.Instant
