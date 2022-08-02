@@ -226,10 +226,10 @@ class ProjectsADME2ESpec
 
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
 
-        //check that the custom IRI is correctly assigned
+        // check that the custom IRI is correctly assigned
         result.id should be(customProjectIri)
 
-        //check the rest of project info
+        // check the rest of project info
         result.shortcode should be("3333")
         result.shortname should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))

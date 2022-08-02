@@ -619,7 +619,7 @@ object PermissionUtilADM extends LazyLogging {
   def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] = {
 
     val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (k, v) => v.head }.toSet
-    //log.debug(s"removeDuplicatePermissions - result: $result")
+    // log.debug(s"removeDuplicatePermissions - result: $result")
     result
   }
 

@@ -801,8 +801,8 @@ abstract class AbstractPrequeryGenerator(
     if (!validComparisonOperators.contains(comparisonOperator))
       throw GravsearchException(
         s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators
-          .map(op => "'" + op + "'")
-          .mkString(", ")})"
+            .map(op => "'" + op + "'")
+            .mkString(", ")})"
       )
 
     // Generate a variable name representing the list node pointed to by the list value object
@@ -876,8 +876,8 @@ abstract class AbstractPrequeryGenerator(
     if (validComparisonOperators.nonEmpty && !validComparisonOperators(comparisonOperator))
       throw GravsearchException(
         s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators
-          .map(op => "'" + op + "'")
-          .mkString(", ")})"
+            .map(op => "'" + op + "'")
+            .mkString(", ")})"
       )
 
     // Does the variable refer to resource metadata?

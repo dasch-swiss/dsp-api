@@ -5,10 +5,10 @@
 
 package org.knora.webapi.store.iiif.impl
 
-import dsp.errors.SipiException
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.store.iiif.errors.SipiException
 import zio._
 
 /**
@@ -22,7 +22,7 @@ case class IIIFServiceMockImpl() extends IIIFService {
    */
   private val FAILURE_FILENAME: String = "failure.jp2"
 
-  def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Task[GetFileMetadataResponse] =
+  def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): UIO[GetFileMetadataResponse] =
     ZIO.succeed(
       GetFileMetadataResponse(
         originalFilename = Some("test2.tiff"),
@@ -38,31 +38,30 @@ case class IIIFServiceMockImpl() extends IIIFService {
 
   def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-  ): Task[SuccessResponseV2] =
+  ): UIO[SuccessResponseV2] =
     if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to move file to permanent storage"))
+      ZIO.die(SipiException("Sipi failed to move file to permanent storage"))
     } else {
       ZIO.succeed(SuccessResponseV2("Moved file to permanent storage"))
     }
 
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] =
+  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): UIO[SuccessResponseV2] =
     if (deleteTemporaryFileRequestV2.internalFilename == FAILURE_FILENAME) {
-      ZIO.fail(SipiException("Sipi failed to delete temporary file"))
+      ZIO.die(SipiException("Sipi failed to delete temporary file"))
     } else {
       ZIO.succeed(SuccessResponseV2("Deleted temporary file"))
     }
 
-  override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = ???
+  override def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): UIO[SipiGetTextFileResponse] = ???
 
-  override def getStatus(): Task[IIIFServiceStatusResponse] = ZIO.succeed(IIIFServiceStatusOK)
+  override def getStatus(): UIO[IIIFServiceStatusResponse] = ZIO.succeed(IIIFServiceStatusOK)
 }
 
 object IIIFServiceMockImpl {
 
-  val layer: ZLayer[Any, Nothing, IIIFService] = {
+  val layer: ZLayer[Any, Nothing, IIIFService] =
     ZLayer
       .succeed(IIIFServiceMockImpl())
       .tap(_ => ZIO.debug(">>> Mock Sipi IIIF Service Initialized <<<"))
-  }
 
 }

@@ -686,7 +686,6 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
 
         } yield PropertyTypesForNamedGraphResponseV1(properties = propertyTypes)
       case None => // get the property types for all named graphs (collect them by mapping over all named graphs)
-
         for {
           projectNamedGraphsResponse: NamedGraphsResponseV1 <- getNamedGraphs(
                                                                  userProfile = userProfile

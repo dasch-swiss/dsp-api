@@ -18,19 +18,17 @@ object Logging {
       label("level", level).highlight |-|
       label("message", quoted(line)).highlight
 
-  val fromDebug: ZLayer[Any, Nothing, Unit] = {
+  val fromDebug: ZLayer[Any, Nothing, Unit] =
     console(
       logLevel = LogLevel.Debug,
       format = textFormat
     )
-  }
 
-  val fromInfo: ZLayer[Any, Nothing, Unit] = {
+  val fromInfo: ZLayer[Any, Nothing, Unit] =
     console(
       logLevel = LogLevel.Info,
       format = colored
     )
-  }
 
   val slf4jFormat = line
 

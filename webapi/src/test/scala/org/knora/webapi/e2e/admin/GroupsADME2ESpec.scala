@@ -125,7 +125,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         val result: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
-        //check that the custom IRI is correctly assigned
+        // check that the custom IRI is correctly assigned
         result.id should be(customGroupIri)
         clientTestDataCollector.addFile(
           TestDataFileContent(
