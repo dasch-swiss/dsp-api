@@ -882,7 +882,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val parentNode                           = received.node
         val remainingChildren                    = parentNode.getChildren
         remainingChildren.size should be(4)
-        //Tailing children should be shifted to left
+        // Tailing children should be shifted to left
         remainingChildren.last.position should be(3)
 
         // node List015 should still have its child

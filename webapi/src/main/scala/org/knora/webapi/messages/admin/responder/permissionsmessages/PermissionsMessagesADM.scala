@@ -1091,13 +1091,12 @@ object PermissionADM {
   // Administrative Permissions
   ///////////////////////////////////////////////////////////////////////////
 
-  val ProjectResourceCreateAllPermission: PermissionADM = {
+  val ProjectResourceCreateAllPermission: PermissionADM =
     PermissionADM(
       name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
       additionalInformation = None,
       permissionCode = None
     )
-  }
 
   def projectResourceCreateRestrictedPermission(restriction: IRI): PermissionADM =
     PermissionADM(
@@ -1106,21 +1105,19 @@ object PermissionADM {
       permissionCode = None
     )
 
-  val ProjectAdminAllPermission: PermissionADM = {
+  val ProjectAdminAllPermission: PermissionADM =
     PermissionADM(
       name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
       additionalInformation = None,
       permissionCode = None
     )
-  }
 
-  val ProjectAdminGroupAllPermission: PermissionADM = {
+  val ProjectAdminGroupAllPermission: PermissionADM =
     PermissionADM(
       name = OntologyConstants.KnoraAdmin.ProjectAdminGroupAllPermission,
       additionalInformation = None,
       permissionCode = None
     )
-  }
 
   def projectAdminGroupRestrictedPermission(restriction: IRI): PermissionADM =
     PermissionADM(
@@ -1129,13 +1126,12 @@ object PermissionADM {
       permissionCode = None
     )
 
-  val ProjectAdminRightsAllPermission: PermissionADM = {
+  val ProjectAdminRightsAllPermission: PermissionADM =
     PermissionADM(
       name = OntologyConstants.KnoraAdmin.ProjectAdminRightsAllPermission,
       additionalInformation = None,
       permissionCode = None
     )
-  }
 
   ///////////////////////////////////////////////////////////////////////////
   // Object Access Permissions

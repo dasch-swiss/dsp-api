@@ -346,10 +346,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                                )
                                .toString()
                            )
-      //_ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
+      // _ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
       groupMembersResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
+      // _ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
       // get project member IRI from results rows
       groupMemberIris: Seq[IRI] =
@@ -755,7 +755,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             )
             .toString
         )
-      //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
+      // _ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
       _ <- appActor.ask(SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
 
@@ -771,7 +771,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           throw UpdateNotPerformedException("Group was not updated. Please report this as a possible bug.")
         )
 
-      //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
+      // _ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
 
     } yield GroupOperationResponseADM(group = updatedGroup)
 
@@ -888,7 +888,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       askString <- Future(
                      org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri).toString
                    )
-      //_ = log.debug("groupExists - query: {}", askString)
+      // _ = log.debug("groupExists - query: {}", askString)
 
       checkGroupExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                    = checkGroupExistsResponse.result
@@ -909,7 +909,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                        .checkGroupExistsByName(projectIri, name)
                        .toString
                    )
-      //_ = log.debug("groupExists - query: {}", askString)
+      // _ = log.debug("groupExists - query: {}", askString)
 
       checkUserExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                   = checkUserExistsResponse.result

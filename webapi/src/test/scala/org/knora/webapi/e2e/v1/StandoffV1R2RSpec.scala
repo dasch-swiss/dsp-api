@@ -193,7 +193,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the non existing standoff class
         assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#StandoffRot"))
@@ -258,7 +258,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the non existing standoff property
         assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#standoffRootTagHasDoc"))
@@ -330,7 +330,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the missing cardinality for StandoffParagraphTag
         assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#StandoffParagraphTag"))
@@ -401,7 +401,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the missing required property anything:standoffEventTagHasDescription
         assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#StandoffEventTag"))
@@ -477,7 +477,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the missing data type http://www.knora.org/ontology/knora-base#StandoffDateTag
         assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#StandoffEventTag"))
@@ -554,7 +554,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the wrong data type http://www.knora.org/ontology/knora-base#StandoffUriTag
         assert(responseAs[String].contains("http://www.knora.org/ontology/knora-base#StandoffUriTag"))
@@ -635,7 +635,7 @@ class StandoffV1R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
-        //println(responseAs[String])
+        // println(responseAs[String])
 
         // make sure the user gets informed about the data type for http://www.knora.org/ontology/standoff#StandoffRootTag that has no data type
         assert(responseAs[String].contains("http://www.knora.org/ontology/standoff#StandoffRootTag"))
