@@ -9,7 +9,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.IRI
 import dsp.errors.NotFoundException
-import dsp.errors.SipiException
 
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
@@ -21,6 +20,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRespons
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.store.iiif.errors.SipiException
 
 import scala.concurrent.Future
 
