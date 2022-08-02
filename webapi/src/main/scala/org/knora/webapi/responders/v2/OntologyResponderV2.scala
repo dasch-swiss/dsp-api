@@ -2341,17 +2341,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               )
             }
 
-        // Check the property's salsah-gui:guiElement and salsah-gui:guiAttribute.
-        _ = OntologyHelpers
-              .validateGuiAttributes(
-                propertyInfoContent = internalPropertyDef,
-                allGuiAttributeDefinitions = cacheData.guiAttributeDefinitions,
-                errorFun = { msg: String =>
-                  throw BadRequestException(msg)
-                }
-              )
-              .mapError(e => throw e)
-
         // If we're creating a link property, make the definition of the corresponding link value property.
         maybeLinkValuePropertyDef: Option[PropertyInfoContentV2] =
           if (isLinkProp) {

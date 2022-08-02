@@ -903,9 +903,9 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                   .getOrElse(List())
 
               // validate the gui attributes by creating value objects
-              guiAttributes = maybeGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute)).toList
+              guiAttributes = maybeGuiAttributes.map(guiAttribute => GuiAttribute.make(guiAttribute))
 
-              validatedGuiAttributes = Validation.validateAll(guiAttributes)
+              validatedGuiAttributes = Validation.validateAll(guiAttributes).map(_.toSet)
 
               // validate the combination of gui element and gui attribute by creating a GuiObject value object
               guiObject = Validation
