@@ -164,7 +164,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
       for {
-        //check if resourceIri already exists holding a lock on the IRI
+        // check if resourceIri already exists holding a lock on the IRI
         result <- stringFormatter.checkIriExists(resourceIri, appActor)
 
         _ = if (result) {
@@ -806,7 +806,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 internalPropertyIri,
                 throw OntologyConstraintException(
                   s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                    .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
+                      .toOntologySchema(ApiV2Complex)}> has no cardinality for property <$propertyIri>"
                 )
               )
 
@@ -815,7 +815,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               ) {
                 throw OntologyConstraintException(
                   s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
-                    .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
+                      .toOntologySchema(ApiV2Complex)}> does not allow more than one value for property <$propertyIri>"
                 )
               }
           }
@@ -835,7 +835,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 .mkString(", ")
             throw OntologyConstraintException(
               s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri
-                .toOntologySchema(ApiV2Complex)}>: $missingProps"
+                  .toOntologySchema(ApiV2Complex)}>: $missingProps"
             )
           }
 
@@ -1074,7 +1074,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             if (!propertyInfo.isLinkValueProp) {
               throw OntologyConstraintException(
                 s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
-                  .toOntologySchema(ApiV2Complex)}>"
+                    .toOntologySchema(ApiV2Complex)}>"
               )
             }
 
@@ -1095,8 +1095,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
               throw OntologyConstraintException(
                 s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint
-                  .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
-                  .toOntologySchema(ApiV2Complex)}>"
+                    .toOntologySchema(ApiV2Complex)}>, because it does not belong to class <${objectClassConstraint
+                    .toOntologySchema(ApiV2Complex)}>"
               )
             }
 
@@ -1106,7 +1106,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             if (otherValueContentV2.valueType != objectClassConstraint) {
               throw OntologyConstraintException(
                 s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2Complex)}> requires a value of type <${objectClassConstraint
-                  .toOntologySchema(ApiV2Complex)}>"
+                    .toOntologySchema(ApiV2Complex)}>"
               )
             }
         }
@@ -1402,8 +1402,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       _ = if (savedPropertyIris != expectedPropertyIris) {
             throw AssertionException(
               s"Resource <$resourceIri> was saved, but it has the wrong properties: expected (${expectedPropertyIris
-                .map(_.toSparql)
-                .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
+                  .map(_.toSparql)
+                  .mkString(", ")}), but saved (${savedPropertyIris.map(_.toSparql).mkString(", ")})"
             )
           }
 
@@ -2909,7 +2909,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     )
     val valueEvents: Seq[ResourceAndValueHistoryEvent] = valuesWithAskedVersionDate.map { case (propIri, readValue) =>
       val event =
-        //Is the given date a deletion date?
+        // Is the given date a deletion date?
         if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
           // Yes. Return a deleteValue event
           val deleteValueRequestBody = ValueEventBody(
@@ -2990,7 +2990,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       throw BadRequestException("No previous value IRI found for the value, Please report this as a bug.")
     )
 
-    //find the version of resource which has a value with previousValueIri
+    // find the version of resource which has a value with previousValueIri
     val (previousVersionDate, previousVersionOfResource): (ResourceHistoryEntry, ReadResourceV2) = allResourceVersions
       .find(resourceWithHist =>
         resourceWithHist._2.values.exists(item =>
@@ -3013,7 +3013,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     // Is the content of previous version of value the same as content of the current version?
     val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
-      //Yes. Permission must have been updated; return a permission update event.
+      // Yes. Permission must have been updated; return a permission update event.
       val updateValuePermissionsRequestBody = ValueEventBody(
         resourceIri = resourceAtGivenTime.resourceIri,
         resourceClassIri = resourceAtGivenTime.resourceClassIri,

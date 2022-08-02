@@ -93,12 +93,11 @@ object RepositoryUpdatePlan {
     plugin: UpgradePlugin,
     prBasedVersionString: Option[String] = None
   ) {
-    lazy val versionString: String = {
+    lazy val versionString: String =
       prBasedVersionString match {
         case Some(str) => str
         case None      => s"knora-base v$versionNumber"
       }
-    }
   }
 
   /**

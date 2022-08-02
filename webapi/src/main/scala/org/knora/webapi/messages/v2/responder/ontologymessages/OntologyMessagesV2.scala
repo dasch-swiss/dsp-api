@@ -2117,7 +2117,7 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
     that match {
       case otherPred: PredicateInfoV2 =>
         predicateIri == otherPred.predicateIri &&
-          objects.toSet == otherPred.objects.toSet
+        objects.toSet == otherPred.objects.toSet
 
       case _ => false
     }
@@ -3323,7 +3323,7 @@ object ClassInfoContentV2 {
                   if (extraRestrictionPredicates.nonEmpty) {
                     throw BadRequestException(
                       s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates
-                        .mkString(", ")}"
+                          .mkString(", ")}"
                     )
                   }
                 }

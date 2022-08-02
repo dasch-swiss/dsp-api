@@ -96,17 +96,17 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
           val allPartsFuture: Future[Map[Name, String]] = formData.parts
             .mapAsync[(Name, String)](1) {
               case b: BodyPart if b.name == JSON_PART =>
-                //Logger.debug(s"inside allPartsFuture - processing $JSON_PART")
+                // Logger.debug(s"inside allPartsFuture - processing $JSON_PART")
                 b.toStrict(2.seconds).map { strict =>
-                  //Logger.debug(strict.entity.data.utf8String)
+                  // Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 
               case b: BodyPart if b.name == XML_PART =>
-                //Logger.debug(s"inside allPartsFuture - processing $XML_PART")
+                // Logger.debug(s"inside allPartsFuture - processing $XML_PART")
 
                 b.toStrict(2.seconds).map { strict =>
-                  //Logger.debug(strict.entity.data.utf8String)
+                  // Logger.debug(strict.entity.data.utf8String)
                   (b.name, strict.entity.data.utf8String)
                 }
 

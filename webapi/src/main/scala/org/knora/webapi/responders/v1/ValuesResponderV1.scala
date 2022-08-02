@@ -768,7 +768,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                   resourceIri = resourceIri
                                 )
                                 .toString()
-        //_ = print(getFileValuesSparql)
+        // _ = print(getFileValuesSparql)
         getFileValuesResponse: SparqlSelectResult <- appActor
                                                        .ask(SparqlSelectRequest(getFileValuesSparql))
                                                        .mapTo[SparqlSelectResult]

@@ -59,10 +59,9 @@ case class IIIFServiceMockImpl() extends IIIFService {
 
 object IIIFServiceMockImpl {
 
-  val layer: ZLayer[Any, Nothing, IIIFService] = {
+  val layer: ZLayer[Any, Nothing, IIIFService] =
     ZLayer
       .succeed(IIIFServiceMockImpl())
       .tap(_ => ZIO.debug(">>> Mock Sipi IIIF Service Initialized <<<"))
-  }
 
 }
