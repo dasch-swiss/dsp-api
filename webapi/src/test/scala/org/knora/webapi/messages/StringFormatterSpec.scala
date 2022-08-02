@@ -5,18 +5,16 @@
 
 package org.knora.webapi.messages
 
-import org.knora.webapi._
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import java.time.Instant
 import java.util.UUID
-import dsp.constants.SalsahGui
 
 /**
  * Tests [[StringFormatter]].
@@ -1064,108 +1062,6 @@ class StringFormatterSpec extends CoreSpec() {
       )
       stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be(
         SharedOntologyTestDataADM.DOKUBIB_DATA_IRI
-      )
-    }
-
-    "parse the objects of salsah-gui:guiAttributeDefinition" in {
-      val hlistDef = "hlist(required):iri"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(hlistDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "hlist",
-          isRequired = true,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Iri,
-          unparsedString = hlistDef
-        )
-      )
-
-      val numpropsDef = "numprops:integer"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(numpropsDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "numprops",
-          isRequired = false,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
-          unparsedString = numpropsDef
-        )
-      )
-
-      val sizeDef = "size:integer"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(sizeDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "size",
-          isRequired = false,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
-          unparsedString = sizeDef
-        )
-      )
-
-      val maxlengthDef = "maxlength:integer"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(maxlengthDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "maxlength",
-          isRequired = false,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
-          unparsedString = maxlengthDef
-        )
-      )
-
-      val maxDef = "max(required):decimal"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(maxDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "max",
-          isRequired = true,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Decimal,
-          unparsedString = maxDef
-        )
-      )
-
-      val minDef = "min(required):decimal"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(minDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "min",
-          isRequired = true,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Decimal,
-          unparsedString = minDef
-        )
-      )
-
-      val widthDef = "width:percent"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(widthDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "width",
-          isRequired = false,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Percent,
-          unparsedString = widthDef
-        )
-      )
-
-      val rowsDef = "rows:integer"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(rowsDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "rows",
-          isRequired = false,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Integer,
-          unparsedString = rowsDef
-        )
-      )
-
-      val wrapDef = "wrap:string(soft|hard)"
-
-      stringFormatter.toSalsahGuiAttributeDefinition(wrapDef, throw AssertionException("not valid")) should ===(
-        SalsahGuiAttributeDefinition(
-          attributeName = "wrap",
-          isRequired = false,
-          allowedType = SalsahGui.SalsahGuiAttributeType.Str,
-          enumeratedValues = Set("soft", "hard"),
-          unparsedString = wrapDef
-        )
       )
     }
 
