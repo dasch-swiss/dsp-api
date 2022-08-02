@@ -1097,7 +1097,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       _ = if (standoffTagIrisFromMapping.map(_.toSmartIri) != standoffClassEntities.standoffClassInfoMap.keySet) {
             throw NotFoundException(
               s"the ontology responder could not find information about these standoff classes: ${(standoffTagIrisFromMapping
-                .map(_.toSmartIri) -- standoffClassEntities.standoffClassInfoMap.keySet).mkString(", ")}"
+                  .map(_.toSmartIri) -- standoffClassEntities.standoffClassInfoMap.keySet).mkString(", ")}"
             )
           }
 
@@ -1131,7 +1131,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             throw NotFoundException(
               s"the ontology responder could not find information about these standoff properties: " +
                 s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology)
-                  .mkString(", ")}"
+                    .mkString(", ")}"
             )
           }
 
@@ -1150,7 +1150,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
               throw NotFoundException(
                 s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound)
-                  .mkString(", ")}"
+                    .mkString(", ")}"
               )
             }
 
@@ -1168,7 +1168,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
               throw NotFoundException(
                 s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass)
-                  .mkString(", ")}"
+                    .mkString(", ")}"
               )
             }
 

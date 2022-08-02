@@ -213,7 +213,7 @@ object FileType {
     pageCount: Option[Int] = Some(1),
     dimX: Option[Int] = Some(100),
     dimY: Option[Int] = Some(100)
-  )                                                            extends FileType
+  ) extends FileType
   case class StillImageFile(dimX: Int = 100, dimY: Int = 100)  extends FileType
   case class MovingImageFile(dimX: Int = 100, dimY: Int = 100) extends FileType
   case object TextFile                                         extends FileType

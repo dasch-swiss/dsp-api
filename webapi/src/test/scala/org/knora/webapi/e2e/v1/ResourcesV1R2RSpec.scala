@@ -284,7 +284,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       Get(
         "/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?noresedit=true&reqtype=properties"
       ) ~> resourcesPathV1 ~> check {
-        //log.debug("==>> " + responseAs[String])
+        // log.debug("==>> " + responseAs[String])
         assert(status === StatusCodes.OK)
         assert(responseAs[String] contains "Physical description")
         assert(responseAs[String] contains "Location")
@@ -300,7 +300,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       Get(
         "/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fde6c38ce3401?noresedit=true&reqtype=properties"
       ) ~> resourcesPathV1 ~> check {
-        //log.debug("==>> " + responseAs[String])
+        // log.debug("==>> " + responseAs[String])
         assert(status === StatusCodes.OK)
         assert(responseAs[String] contains "preview")
         assert(responseAs[String] contains "Original filename")
@@ -828,7 +828,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         BasicHttpCredentials(anythingUserEmail, password)
       ) ~> resourcesPathV1 ~> check {
 
-        //println(response)
+        // println(response)
 
         // the route should reject the request because an IRI is wrong (formally valid though)
         assert(status == StatusCodes.NotFound, response.toString)
@@ -1837,16 +1837,18 @@ class ResourcesV1R2RSpec extends R2RSpec {
         maybeAppendValue(
           random = random,
           xmlStringBuilder = xmlStringBuilder,
-          value = s"""
-                     |<p0001-anything:hasText knoraType="richtext_value">This is a test in thing $i.</p0001-anything:hasText>
+          value =
+            s"""
+               |<p0001-anything:hasText knoraType="richtext_value">This is a test in thing $i.</p0001-anything:hasText>
                         """.stripMargin
         )
 
         maybeAppendValue(
           random = random,
           xmlStringBuilder = xmlStringBuilder,
-          value = s"""
-                     |<p0001-anything:hasTimeStamp knoraType="time_value">2019-08-28T15:13:10.968318Z</p0001-anything:hasTimeStamp>
+          value =
+            s"""
+               |<p0001-anything:hasTimeStamp knoraType="time_value">2019-08-28T15:13:10.968318Z</p0001-anything:hasTimeStamp>
                         """.stripMargin
         )
 

@@ -303,7 +303,7 @@ object SchemaErrorMessages {
     s"Value '$value' of gui attribute '$key' has the wrong attribute type."
   val GuiAttributeWrong = (guiElement: String, guiAttributes: Set[String], expectedGuiAttributes: Set[String]) =>
     s"Expected salsah-gui:guiAttribute '${expectedGuiAttributes.mkString(", ")}' for salsah-gui:guiElement '$guiElement', but found '${guiAttributes
-      .mkString(", ")}'."
+        .mkString(", ")}'."
   val GuiElementUnknown = (guiElement: String) =>
     s"Gui element '$guiElement' is unknown. Needs to be one of: ${Schema.guiElements.mkString(", ")}"
 

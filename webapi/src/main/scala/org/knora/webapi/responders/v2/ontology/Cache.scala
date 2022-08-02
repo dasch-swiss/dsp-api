@@ -738,7 +738,7 @@ object Cache extends LazyLogging {
             constraintValueToBeChecked,
             errorFun(
               s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
-                .toOntologySchema(errorSchema)} of " +
+                  .toOntologySchema(errorSchema)} of " +
                 s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}"
             )
           )
@@ -782,10 +782,10 @@ object Cache extends LazyLogging {
       if (!superClassesOfConstraintValueToBeChecked.contains(superPropertyConstraintValue)) {
         errorFun(
           s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
-            .toOntologySchema(errorSchema)} of " +
+              .toOntologySchema(errorSchema)} of " +
             s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}, because that is not a subclass of " +
             s"${superPropertyConstraintValue.toOntologySchema(errorSchema)}, which is the ${constraintPredicateIri
-              .toOntologySchema(errorSchema)} of " +
+                .toOntologySchema(errorSchema)} of " +
             s"a base property, ${superPropertyIri.toOntologySchema(errorSchema)}"
         )
       }

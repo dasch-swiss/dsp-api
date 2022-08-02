@@ -85,12 +85,11 @@ final case class TriplestoreServiceManager(
 }
 
 object TriplestoreServiceManager {
-  val layer: ZLayer[TriplestoreService & RepositoryUpdater, Nothing, TriplestoreServiceManager] = {
+  val layer: ZLayer[TriplestoreService & RepositoryUpdater, Nothing, TriplestoreServiceManager] =
     ZLayer {
       for {
         ts      <- ZIO.service[TriplestoreService]
         updater <- ZIO.service[RepositoryUpdater]
       } yield TriplestoreServiceManager(ts, updater)
     }
-  }
 }

@@ -180,14 +180,13 @@ case class CalendarDateV2(
   /**
    * The precision of this date.
    */
-  lazy val precision: DatePrecisionV2 = {
+  lazy val precision: DatePrecisionV2 =
     (maybeMonth, maybeDay) match {
       case (Some(_), Some(_)) => DatePrecisionDay
       case (Some(_), None)    => DatePrecisionMonth
       case (None, None)       => DatePrecisionYear
       case _                  => throw AssertionException("Unreachable code")
     }
-  }
 
   /**
    * Returns this date in Knora API v2 simple format, without the calendar.
@@ -243,7 +242,8 @@ case class CalendarDateV2(
         calendarSetInitTime(calendar)
 
       case _: CalendarNameIslamicCivil =>
-        val calendar: IslamicCalendar = new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH) //sets to civil calendar
+        val calendar: IslamicCalendar =
+          new IslamicCalendar(TimeZone.GMT_ZONE, ULocale.ENGLISH) // sets to civil calendar
         calendarSetInitTime(calendar)
     }
   }

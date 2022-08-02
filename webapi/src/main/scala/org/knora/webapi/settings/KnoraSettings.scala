@@ -222,7 +222,7 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   val triplestoreUsername: String     = config.getString("app.triplestore.fuseki.username")
   val triplestorePassword: String     = config.getString("app.triplestore.fuseki.password")
 
-  //used in the store package
+  // used in the store package
   val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
   val jwtSecretKey: String         = config.getString("app.jwt-secret-key")

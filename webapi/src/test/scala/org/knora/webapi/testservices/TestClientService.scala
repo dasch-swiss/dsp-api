@@ -357,7 +357,7 @@ object TestClientService {
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
-  val layer: ZLayer[AppConfig & TestActorSystemService, Nothing, TestClientService] = {
+  val layer: ZLayer[AppConfig & TestActorSystemService, Nothing, TestClientService] =
     ZLayer.scoped {
       for {
         // _          <- ZIO.debug(config.sipi)
@@ -366,6 +366,5 @@ object TestClientService {
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_)(tass.getActorSystem))
       } yield TestClientService(config, httpClient, tass.getActorSystem)
     }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
-  }
 
 }

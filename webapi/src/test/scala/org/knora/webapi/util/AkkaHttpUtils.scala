@@ -44,7 +44,7 @@ object AkkaHttpUtils extends LazyLogging {
         throw new Exception(other.toString())
     }
 
-    //FIXME: There is probably a better non blocking way of doing it.
+    // FIXME: There is probably a better non blocking way of doing it.
     Await.result(jsonFuture, Timeout(10.seconds).duration)
   }
 }

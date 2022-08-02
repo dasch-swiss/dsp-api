@@ -176,7 +176,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                               submittedInternalPropertyIri,
                                                               throw BadRequestException(
                                                                 s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                                                                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
+                                                                    .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
                                                               )
                                                             )
 
@@ -227,7 +227,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           ) {
             throw InconsistentRepositoryDataException(
               s"Resource class <${resourceInfo.resourceClassIri
-                .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
+                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property"
             )
           }
 
@@ -237,7 +237,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri
-                .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>"
+                  .toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>"
             )
           }
 
@@ -1760,7 +1760,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             submittedInternalPropertyIri,
             throw InconsistentRepositoryDataException(
               s"Resource <${deleteValueRequest.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"
+                  .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${deleteValueRequest.propertyIri}>"
             )
           )
 
@@ -2671,7 +2671,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         ) {
           throw BadRequestException(
             s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
-              .base64EncodeUuid(customValueUUID)}."
+                .base64EncodeUuid(customValueUUID)}."
           )
         }
         customValueUUID

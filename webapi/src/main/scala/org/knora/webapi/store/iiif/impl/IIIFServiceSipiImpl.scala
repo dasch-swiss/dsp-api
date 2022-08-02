@@ -332,7 +332,7 @@ object IIIFServiceSipiImpl {
       httpClient.close()
     }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
 
-  val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
+  val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
     ZLayer.scoped {
       for {
         config <- ZIO.service[AppConfig]
@@ -344,5 +344,4 @@ object IIIFServiceSipiImpl {
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }
-  }
 }

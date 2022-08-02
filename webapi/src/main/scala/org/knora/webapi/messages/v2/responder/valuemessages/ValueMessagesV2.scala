@@ -1491,10 +1491,10 @@ case class DateValueContentV2(
     that match {
       case thatDateValue: DateValueContentV2 =>
         valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-          valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-          valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-          valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-          valueHasCalendar == thatDateValue.valueHasCalendar
+        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+        valueHasCalendar == thatDateValue.valueHasCalendar
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
@@ -1503,11 +1503,11 @@ case class DateValueContentV2(
     currentVersion match {
       case thatDateValue: DateValueContentV2 =>
         valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-          valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-          valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-          valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-          valueHasCalendar == thatDateValue.valueHasCalendar &&
-          comment == thatDateValue.comment
+        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+        valueHasCalendar == thatDateValue.valueHasCalendar &&
+        comment == thatDateValue.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -1685,14 +1685,13 @@ case class TextValueContentV2(
   /**
    * Returns the IRIs of any resources that are target of standoff link tags in this text value.
    */
-  lazy val standoffLinkTagTargetResourceIris: Set[IRI] = {
+  lazy val standoffLinkTagTargetResourceIris: Set[IRI] =
     standoffLinkTagIriAttributes.map(_.value)
-  }
 
   /**
    * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
    */
-  lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] = {
+  lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] =
     standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) { case (acc, standoffTag: StandoffTagV2) =>
       if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
         val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
@@ -1704,8 +1703,6 @@ case class TextValueContentV2(
         acc
       }
     }
-
-  }
 
   override def valueHasString: String =
     maybeValueHasString.getOrElse(throw AssertionException("Text value has no valueHasString"))
@@ -2083,7 +2080,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema, valueHasInteger
     currentVersion match {
       case thatIntegerValue: IntegerValueContentV2 =>
         valueHasInteger == thatIntegerValue.valueHasInteger &&
-          comment == thatIntegerValue.comment
+        comment == thatIntegerValue.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2181,7 +2178,7 @@ case class DecimalValueContentV2(
     currentVersion match {
       case thatDecimalValue: DecimalValueContentV2 =>
         valueHasDecimal == thatDecimalValue.valueHasDecimal &&
-          comment == thatDecimalValue.comment
+        comment == thatDecimalValue.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2275,7 +2272,7 @@ case class BooleanValueContentV2(
     currentVersion match {
       case thatBooleanValue: BooleanValueContentV2 =>
         valueHasBoolean == thatBooleanValue.valueHasBoolean &&
-          comment == thatBooleanValue.comment
+        comment == thatBooleanValue.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2371,7 +2368,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema, valueHasGeometry: 
     currentVersion match {
       case thatGeomValue: GeomValueContentV2 =>
         valueHasGeometry == thatGeomValue.valueHasGeometry &&
-          comment == thatGeomValue.comment
+        comment == thatGeomValue.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2479,7 +2476,7 @@ case class IntervalValueContentV2(
     that match {
       case thatIntervalValueContent: IntervalValueContentV2 =>
         valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-          valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
+        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
@@ -2488,8 +2485,8 @@ case class IntervalValueContentV2(
     currentVersion match {
       case thatIntervalValueContent: IntervalValueContentV2 =>
         valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-          valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
-          comment == thatIntervalValueContent.comment
+        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
+        comment == thatIntervalValueContent.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2605,7 +2602,7 @@ case class TimeValueContentV2(
     currentVersion match {
       case thatTimeValueContent: TimeValueContentV2 =>
         valueHasTimeStamp == thatTimeValueContent.valueHasTimeStamp &&
-          comment == thatTimeValueContent.comment
+        comment == thatTimeValueContent.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2720,7 +2717,7 @@ case class HierarchicalListValueContentV2(
     currentVersion match {
       case thatListContent: HierarchicalListValueContentV2 =>
         valueHasListNode == thatListContent.valueHasListNode &&
-          comment == thatListContent.comment
+        comment == thatListContent.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2822,7 +2819,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema, valueHasColor: St
     currentVersion match {
       case thatColorContent: ColorValueContentV2 =>
         valueHasColor == thatColorContent.valueHasColor &&
-          comment == thatColorContent.comment
+        comment == thatColorContent.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -2922,7 +2919,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema, valueHasUri: String
     currentVersion match {
       case thatUriContent: UriValueContentV2 =>
         valueHasUri == thatUriContent.valueHasUri &&
-          comment == thatUriContent.comment
+        comment == thatUriContent.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -3027,7 +3024,7 @@ case class GeonameValueContentV2(
     currentVersion match {
       case thatGeonameContent: GeonameValueContentV2 =>
         valueHasGeonameCode == thatGeonameContent.valueHasGeonameCode &&
-          comment == thatGeonameContent.comment
+        comment == thatGeonameContent.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -3225,8 +3222,8 @@ case class StillImageFileValueContentV2(
     that match {
       case thatStillImage: StillImageFileValueContentV2 =>
         fileValue == thatStillImage.fileValue &&
-          dimX == thatStillImage.dimX &&
-          dimY == thatStillImage.dimY
+        dimX == thatStillImage.dimX &&
+        dimY == thatStillImage.dimY
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
@@ -3544,7 +3541,7 @@ case class TextFileValueContentV2(
     currentVersion match {
       case thatTextFile: TextFileValueContentV2 =>
         fileValue == thatTextFile.fileValue &&
-          comment == thatTextFile.comment
+        comment == thatTextFile.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -3637,7 +3634,7 @@ case class AudioFileValueContentV2(
     currentVersion match {
       case thatAudioFile: AudioFileValueContentV2 =>
         fileValue == thatAudioFile.fileValue &&
-          comment == thatAudioFile.comment
+        comment == thatAudioFile.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -3732,7 +3729,7 @@ case class MovingImageFileValueContentV2(
     currentVersion match {
       case thatVideoFile: MovingImageFileValueContentV2 =>
         fileValue == thatVideoFile.fileValue &&
-          comment == thatVideoFile.comment
+        comment == thatVideoFile.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -3868,7 +3865,7 @@ case class LinkValueContentV2(
     that match {
       case thatLinkValue: LinkValueContentV2 =>
         referredResourceIri == thatLinkValue.referredResourceIri &&
-          isIncomingLink == thatLinkValue.isIncomingLink
+        isIncomingLink == thatLinkValue.isIncomingLink
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
@@ -3877,8 +3874,8 @@ case class LinkValueContentV2(
     currentVersion match {
       case thatLinkValue: LinkValueContentV2 =>
         referredResourceIri == thatLinkValue.referredResourceIri &&
-          isIncomingLink == thatLinkValue.isIncomingLink &&
-          comment == thatLinkValue.comment
+        isIncomingLink == thatLinkValue.isIncomingLink &&
+        comment == thatLinkValue.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
