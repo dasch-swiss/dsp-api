@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v1
 import akka.pattern._
 import org.knora.webapi._
 import dsp.errors.NotFoundException
-import dsp.errors.SipiException
 
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
@@ -20,6 +19,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.store.iiif.errors.SipiException
 
 import java.util.UUID
 import scala.concurrent.Future

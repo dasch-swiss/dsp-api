@@ -48,6 +48,7 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.store.triplestore.errors._
 import spray.json._
 
 import java.io.BufferedInputStream
@@ -878,32 +879,32 @@ case class TriplestoreServiceHttpConnectorImpl(
           }
           case e: Exception => {
             val message = s"Failed to connect to triplestore."
-            val error   = TriplestoreConnectionException(message)
+            val error   = TriplestoreConnectionException(message, Some(e))
             ZIO.logError(error.toString()) *>
               ZIO.die(error)
           }
         }
+        .tap(_ => ZIO.logDebug(s"Executing Query: $request"))
         .orDie
 
     def checkResponse(response: CloseableHttpResponse, statusCode: Int): UIO[Unit] =
-      if (statusCode == 404) {
-        ZIO.die(NotFoundException("The requested data was not found"))
-      } else {
-        val statusCategory: Int = statusCode / 100
-        if (statusCategory != 2) {
+      if (statusCode / 100 == 2)
+        ZIO.unit
+      else {
+        val entity =
           Option(response.getEntity)
-            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
-            case Some(responseEntityStr) =>
-              val msg = s"Triplestore responded with HTTP code $statusCode: $responseEntityStr"
-              if (statusCode == 503 && responseEntityStr.contains("Query timed out"))
-                ZIO.die(TriplestoreTimeoutException(msg))
-              else
-                ZIO.die(TriplestoreResponseException(msg))
-            case None =>
-              ZIO.die(TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode"))
-          }
-        } else {
-          ZIO.unit
+            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
+
+        val statusResponseMsg =
+          s"Triplestore responded with HTTP code $statusCode"
+
+        (statusCode, entity) match {
+          case (404, _) => ZIO.die(NotFoundException.notFound)
+          case (500, _) => ZIO.die(TriplestoreResponseException(statusResponseMsg))
+          case (503, Some(response)) if response.contains("Query timed out") =>
+            ZIO.die(TriplestoreTimeoutException(s"$statusResponseMsg: $response"))
+          case (503, _) => ZIO.die(TriplestoreResponseException(statusResponseMsg))
+          case _        => ZIO.die(TriplestoreResponseException(statusResponseMsg))
         }
       }
 
@@ -915,10 +916,14 @@ case class TriplestoreServiceHttpConnectorImpl(
     (for {
       _ <- checkSimulateTimeout()
       // start      <- ZIO.attempt(java.lang.System.currentTimeMillis()).orDie
+      _          <- ZIO.logDebug("Executing query...")
       response   <- executeQuery()
       statusCode <- ZIO.attempt(response.getStatusLine.getStatusCode).orDie
+      _          <- ZIO.logDebug(s"Executing query done with status code: $statusCode")
       _          <- checkResponse(response, statusCode)
+      _          <- ZIO.logDebug("Checking response done.")
       result     <- processResponse(response)
+      _          <- ZIO.logDebug("Processing response done.")
       _          <- ZIO.attempt(response.close()).orDie // TODO: rewrite with ensuring
       // _          <- logTimeTook(start, statusCode)
     } yield result)
@@ -929,8 +934,12 @@ case class TriplestoreServiceHttpConnectorImpl(
    */
   private def returnResponseAsString(response: CloseableHttpResponse): UIO[String] =
     Option(response.getEntity) match {
-      case None                 => ZIO.succeed("")
-      case Some(responseEntity) => ZIO.attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)).orDie
+      case None => ZIO.succeed("")
+      case Some(responseEntity) =>
+        ZIO
+          .attempt(EntityUtils.toString(responseEntity, StandardCharsets.UTF_8))
+          .tapDefect(e => ZIO.logError(s"Failed to return response as string: $e"))
+          .orDie
     }
 
   /**

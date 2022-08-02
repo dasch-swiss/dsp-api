@@ -14,7 +14,6 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.IRI
 import dsp.errors.BadRequestException
-import dsp.errors.SipiException
 import dsp.errors.UnexpectedMessageException
 
 import org.knora.webapi.http.status.ApiStatusCodesV1
@@ -35,6 +34,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequest
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
 import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.store.iiif.errors.SipiException
+
 import spray.json.JsNumber
 import spray.json.JsObject
 
