@@ -19,19 +19,6 @@ import scala.util.matching.Regex
 // implementations in webapi project which needed to be added temporary in order
 // to avoid circular dependencies after moving value objects to separate project.
 object V2 {
-  val DE: String = "de"
-  val EN: String = "en"
-  val FR: String = "fr"
-  val IT: String = "it"
-  val RM: String = "rm"
-
-  val SupportedLanguageCodes: Set[String] = Set(
-    DE,
-    EN,
-    FR,
-    IT,
-    RM
-  )
 
   /**
    * Represents a string with language iso. Allows sorting inside collections by value.

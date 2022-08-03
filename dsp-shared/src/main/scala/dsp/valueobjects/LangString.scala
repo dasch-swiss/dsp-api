@@ -59,31 +59,6 @@ object LangString {
       )
 }
 
-/**
- * LanguageCode value object.
- */
-sealed abstract case class LanguageCode private (value: String)
-object LanguageCode { self =>
-  def make(value: String): Validation[ValidationException, LanguageCode] =
-    if (value.isEmpty) {
-      Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeMissing))
-    } else if (!V2.SupportedLanguageCodes.contains(value)) {
-      Validation.fail(ValidationException(LanguageCodeErrorMessages.LanguageCodeInvalid(value)))
-    } else {
-      Validation.succeed(new LanguageCode(value) {})
-    }
-
-  lazy val en: LanguageCode = new LanguageCode(V2.EN) {}
-  lazy val de: LanguageCode = new LanguageCode(V2.DE) {}
-  lazy val fr: LanguageCode = new LanguageCode(V2.FR) {}
-  lazy val it: LanguageCode = new LanguageCode(V2.IT) {}
-  lazy val rm: LanguageCode = new LanguageCode(V2.RM) {}
-}
-
 object LangStringErrorMessages {
   val LangStringValueEmpty = "String value cannot be empty."
-}
-object LanguageCodeErrorMessages {
-  val LanguageCodeMissing               = "LanguageCode cannot be empty."
-  def LanguageCodeInvalid(lang: String) = s"LanguageCode '$lang' is invalid."
 }
