@@ -13,10 +13,8 @@ import zio.test._
  * This spec is used to test the [[dsp.valueobjects.LangString]] value objects creation.
  */
 object LangStringSpec extends ZIOSpecDefault {
-  private val validLanguageCode   = "de"
-  private val invalidLanguageCode = "00"
 
-  def spec = (langStringTest)
+  def spec = (langStringTest + multiLangStringTest)
 
   private val langStringTest = suite("LangString")(
     suite("`make()` smart constructor")(
@@ -78,6 +76,41 @@ object LangStringSpec extends ZIOSpecDefault {
         assertTrue(unsafeValid.value == str) // TODO-BL: once logging works, figure out how to test for logging output
       }
     )
+  )
+
+  private val multiLangStringTest = suite("MultiLangString")(
+    test("pass an empty set of LangString and return an error") {
+      val res      = MultiLangString.make(Set.empty)
+      val expected = Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
+      assertTrue(res == expected)
+    },
+    test("pass a set of LangString with non unique languages and return an error") {
+      val langStrings = Set(
+        LangString.unsafeMake(LanguageCode.en, "english 1"),
+        LangString.unsafeMake(LanguageCode.en, "english 2"),
+        LangString.unsafeMake(LanguageCode.de, "german 1"),
+        LangString.unsafeMake(LanguageCode.de, "german 2"),
+        LangString.unsafeMake(LanguageCode.fr, "french 1")
+      )
+      val nonUniqueLanguages = Set(LanguageCode.en, LanguageCode.de)
+      val res                = MultiLangString.make(langStrings)
+      val expected =
+        Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
+      assertTrue(res == expected)
+    },
+    test("pass a valid set of LangString and return a MultiLangString") {
+      val langStrings = Set(
+        LangString.unsafeMake(LanguageCode.en, "string in english"),
+        LangString.unsafeMake(LanguageCode.de, "string in german"),
+        LangString.unsafeMake(LanguageCode.fr, "string in french")
+      )
+      (for {
+        res <- MultiLangString.make(langStrings)
+      } yield (
+        assertTrue(res.langStrings.size == 3) &&
+          assertTrue(res.langStrings == langStrings)
+      )).toZIO
+    }
   )
 
 }

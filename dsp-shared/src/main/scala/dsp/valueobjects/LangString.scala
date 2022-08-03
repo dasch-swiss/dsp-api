@@ -59,6 +59,31 @@ object LangString {
       )
 }
 
+/**
+ * MultiLangString value object
+ */
+sealed abstract case class MultiLangString private (langStrings: Set[LangString])
+
+object MultiLangString {
+  def make(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
+    if (values.isEmpty) {
+      Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
+    } else if (values.map(_.language).size < values.size) {
+      val nonUnique = values.toList.map(_.language).groupBy(identity).mapValues(_.size).filter(_._2 > 1).keys.toSet
+      Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUnique)))
+    } else {
+      Validation.succeed(new MultiLangString(values) {})
+    }
+}
+
 object LangStringErrorMessages {
   val LangStringValueEmpty = "String value cannot be empty."
+}
+
+object MultiLangStringErrorMessages {
+  val MultiLangStringEmptySet = "MultiLangString must consist of at least one LangStirng."
+  val LanguageNotUnique = (nonUniqueLanguages: Set[LanguageCode]) => {
+    val issuesString = nonUniqueLanguages.toList.map(_.value).sorted
+    s"Each Language must only appear once. $issuesString"
+  }
 }
