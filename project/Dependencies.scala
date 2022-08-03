@@ -22,10 +22,10 @@ object Dependencies {
   val scalaVersion      = "2.13.8"
   val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
-  val ZioJsonVersion    = "0.3.0-RC3"
+  val ZioJsonVersion    = "0.3.0-RC10"
   val ZioConfigVersion  = "3.0.1"
   val ZioSchemaVersion  = "0.2.0"
-  val ZioLoggingVersion = "2.0.0"
+  val ZioLoggingVersion = "2.0.1"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC15"
 
@@ -56,7 +56,7 @@ object Dependencies {
 
   // logging
   val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
-  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.4" // Scala 3 compatible
+  val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
   val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
 
   // Metrics
@@ -84,8 +84,8 @@ object Dependencies {
 
   // other
   val diff            = "com.sksamuel.diff"             % "diff"              % "1.1.11"
-  val gwtServlet      = "com.google.gwt"                % "gwt-servlet"       % "2.9.0"
-  val icu4j           = "com.ibm.icu"                   % "icu4j"             % "70.1"
+  val gwtServlet      = "com.google.gwt"                % "gwt-servlet"       % "2.10.0"
+  val icu4j           = "com.ibm.icu"                   % "icu4j"             % "71.1"
   val jakartaJSON     = "org.glassfish"                 % "jakarta.json"      % "2.0.1"
   val jodd            = "org.jodd"                      % "jodd"              % "3.2.7"
   val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "3.7.7"
@@ -101,8 +101,8 @@ object Dependencies {
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % akkaHttpVersion // Scala 3 incompatible
   val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % akkaVersion     // Scala 3 compatible
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
-  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
-  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
+  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.2"
+  val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.8.2"
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.3"
 
