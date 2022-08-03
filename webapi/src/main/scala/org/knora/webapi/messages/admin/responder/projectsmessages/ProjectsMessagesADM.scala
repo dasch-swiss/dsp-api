@@ -465,15 +465,15 @@ case class ProjectADM(
     that match {
       case otherProj: ProjectADM =>
         id == otherProj.id &&
-          shortname == otherProj.shortname &&
-          shortcode == otherProj.shortcode &&
-          longname == otherProj.longname &&
-          description.toSet == otherProj.description.toSet &&
-          keywords.toSet == otherProj.keywords.toSet &&
-          logo == otherProj.logo &&
-          ontologies.toSet == otherProj.ontologies.toSet &&
-          status == otherProj.status &&
-          selfjoin == otherProj.selfjoin
+        shortname == otherProj.shortname &&
+        shortcode == otherProj.shortcode &&
+        longname == otherProj.longname &&
+        description.toSet == otherProj.description.toSet &&
+        keywords.toSet == otherProj.keywords.toSet &&
+        logo == otherProj.logo &&
+        ontologies.toSet == otherProj.ontologies.toSet &&
+        status == otherProj.status &&
+        selfjoin == otherProj.selfjoin
 
       case _ => false
     }

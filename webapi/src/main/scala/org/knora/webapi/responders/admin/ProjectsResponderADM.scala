@@ -322,7 +322,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                )
                                .toString()
                            )
-      //_ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
+      // _ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
 
       projectMembersResponse <- appActor
                                   .ask(
@@ -401,7 +401,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                )
                                .toString()
                            )
-      //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
+      // _ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
       projectAdminMembersResponse <- appActor
                                        .ask(
@@ -410,7 +410,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                          )
                                        )
                                        .mapTo[SparqlExtendedConstructResponse]
-      //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
+      // _ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - result: ${MessageUtil.toSource(projectMembersResponse)}")
 
       statements = projectAdminMembersResponse.statements.toList
 
@@ -437,7 +437,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
       users: Seq[UserADM]               = maybeUsers.flatten
 
-      //_ = log.debug(s"projectMembersGetRequestADM - users: $users")
+      // _ = log.debug(s"projectMembersGetRequestADM - users: $users")
 
     } yield ProjectAdminMembersGetResponseADM(members = users)
 
@@ -783,7 +783,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     apiRequestID: UUID
   ): Future[ProjectOperationResponseADM] = {
 
-    //log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
+    // log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
     /**
      * The actual change project task run with an IRI lock.
@@ -1367,7 +1367,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                        .checkProjectExistsByIri(projectIri = projectIri)
                        .toString
                    )
-      //_ = log.debug("projectExists - query: {}", askString)
+      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
@@ -1387,7 +1387,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                        .checkProjectExistsByShortname(shortname = shortname)
                        .toString
                    )
-      //_ = log.debug("projectExists - query: {}", askString)
+      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
@@ -1407,7 +1407,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                        .checkProjectExistsByShortcode(shortcode = shortcode)
                        .toString
                    )
-      //_ = log.debug("projectExists - query: {}", askString)
+      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result

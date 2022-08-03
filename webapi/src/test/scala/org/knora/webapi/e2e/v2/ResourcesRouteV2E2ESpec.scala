@@ -771,7 +771,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     "return a graph of resources reachable via links to/from a given resource, excluding a specified property" in {
       val request = Get(
         s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both&excludeProperty=${URLEncoder
-          .encode("http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing", "UTF-8")}"
+            .encode("http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing", "UTF-8")}"
       )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)

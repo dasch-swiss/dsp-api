@@ -71,7 +71,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @return all the users as a sequence of [[UserDataV1]].
    */
   private def usersGetV1(userProfileV1: UserProfileV1): Future[Seq[UserDataV1]] =
-    //log.debug("usersGetV1")
+    // log.debug("usersGetV1")
     for {
       _ <- Future(
              if (!userProfileV1.permissionData.isSystemAdmin) {
@@ -132,7 +132,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
    * @return a [[UserDataV1]] describing the user.
    */
   private def userDataByIriGetV1(userIri: IRI, short: Boolean): Future[Option[UserDataV1]] =
-    //log.debug("userDataByIriGetV1 - userIri: {}", userIri)
+    // log.debug("userDataByIriGetV1 - userIri: {}", userIri)
     for {
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -260,11 +260,11 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                    )
                                    .toString()
                                )
-          //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
+          // _ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
           userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
-          //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+          // _ = log.debug(MessageUtil.toSource(userDataQueryResponse))
           maybeUserProfileV1 <- userDataQueryResponse2UserProfileV1(
                                   userDataQueryResponse = userDataQueryResponse
                                 )
@@ -329,7 +329,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
+      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
       userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
@@ -369,7 +369,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
+      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
       userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
@@ -408,7 +408,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                                .toString()
                            )
 
-      //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
+      // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
       userDataQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
@@ -421,7 +421,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                               case Some(projects) => projects
                               case None           => Seq.empty[IRI]
                             }
-      //_ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
+      // _ = log.debug("userDataByIriGetV1 - maybeUserDataV1: {}", maybeUserDataV1)
 
     } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
 

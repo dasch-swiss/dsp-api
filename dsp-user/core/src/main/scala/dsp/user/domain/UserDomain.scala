@@ -35,7 +35,7 @@ sealed abstract case class User private (
   password: PasswordHash,
   language: LanguageCode,
   status: UserStatus
-  //role: Role
+  // role: Role
 ) extends Ordered[User] { self =>
 
   /**
@@ -181,7 +181,7 @@ object User {
     password: PasswordHash,
     language: LanguageCode,
     status: UserStatus
-    //role: Role
+    // role: Role
   ): Validation[ValidationException, User] =
     Validation.succeed(new User(id, givenName, familyName, username, email, password, language, status) {})
 

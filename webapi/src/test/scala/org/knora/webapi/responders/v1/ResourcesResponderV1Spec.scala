@@ -702,7 +702,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     assert(
       sortedReceivedProps.length == sortedExpectedProps.length,
       s"\n********** expected these properties:\n${MessageUtil.toSource(sortedExpectedProps)}\n********** received these properties:\n${MessageUtil
-        .toSource(sortedReceivedProps)}"
+          .toSource(sortedReceivedProps)}"
     )
 
     sortedExpectedProps.zip(sortedReceivedProps).foreach { case (expectedProp: PropertyV1, receivedProp: PropertyV1) =>
@@ -718,7 +718,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       assert(
         receivedPropWithSortedAttr == expectedPropWithSortedAttr,
         s"These props do not match:\n********** Expected:\n${MessageUtil
-          .toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}"
+            .toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}"
       )
     }
   }
@@ -1029,7 +1029,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     }
 
     "return 27 resources containing 'Narrenschiff' in their label" in {
-      //http://0.0.0.0:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
+      // http://0.0.0.0:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
       // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
       // Because this resource is directly defined in knora-base, its property knora-base:hasComment
@@ -1050,7 +1050,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     }
 
     "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
-      //http://0.0.0.0:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
+      // http://0.0.0.0:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
       appActor ! ResourceSearchGetRequestV1(
         searchString = "Narrenschiff",
@@ -1066,7 +1066,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     }
 
     "return 19 resources containing 'a1r' in their label of type incunabula:page" in {
-      //http://0.0.0.0:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
+      // http://0.0.0.0:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
 
       appActor ! ResourceSearchGetRequestV1(
         searchString = "a1r",
@@ -1082,7 +1082,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     }
 
     "return 19 resources containing 'a1r' in their label of type knora-base:Representation" in {
-      //http://0.0.0.0:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
+      // http://0.0.0.0:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
 
       appActor ! ResourceSearchGetRequestV1(
         searchString = "a1r",

@@ -442,7 +442,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     assert(
       sortedReceivedProperties.size == sortedExpectedProperties.size,
       s"\n********** received these properties:\n${MessageUtil.toSource(sortedReceivedProperties)}\n********** expected these properties:\n${MessageUtil
-        .toSource(sortedExpectedProperties)}"
+          .toSource(sortedExpectedProperties)}"
     )
 
     sortedReceivedProperties.zip(sortedExpectedProperties).foreach {
@@ -450,7 +450,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         assert(
           receivedProp == expectedProp,
           s"These props do not match:\n*** Received:\n${MessageUtil
-            .toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}"
+              .toSource(receivedProp)}\n*** Expected:\n${MessageUtil.toSource(expectedProp)}"
         )
     }
   }

@@ -113,11 +113,11 @@ final case class UserHandler(repo: UserRepo) {
     password: PasswordHash,
     language: LanguageCode,
     status: UserStatus
-    //role: Role
+    // role: Role
   ): IO[Throwable, UserId] =
     (for {
       _      <- checkIfUsernameTaken(username) // TODO reserve username
-      _      <- checkIfEmailTaken(email) // TODO reserve email
+      _      <- checkIfEmailTaken(email)       // TODO reserve email
       id     <- UserId.make().toZIO
       user   <- User.make(id, givenName, familyName, username, email, password, language, status).toZIO
       userId <- repo.storeUser(user)
@@ -249,11 +249,10 @@ final case class UserHandler(repo: UserRepo) {
  * Companion object providing the layer with an initialized implementation
  */
 object UserHandler {
-  val layer: ZLayer[UserRepo, Nothing, UserHandler] = {
+  val layer: ZLayer[UserRepo, Nothing, UserHandler] =
     ZLayer {
       for {
         repo <- ZIO.service[UserRepo]
       } yield UserHandler(repo)
     }.tap(_ => ZIO.logInfo(">>> User handler initialized <<<"))
-  }
 }

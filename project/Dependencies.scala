@@ -17,7 +17,7 @@ object Dependencies {
   // versions
   val akkaHttpVersion   = "10.2.9"
   val akkaVersion       = "2.6.19"
-  val jenaVersion       = "4.4.0"
+  val jenaVersion       = "4.5.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
   val ZioVersion        = "2.0.0"
@@ -60,9 +60,9 @@ object Dependencies {
   val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.4"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.0" // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.5" // Scala 3 incompatible
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.5"  // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.21" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -88,8 +88,8 @@ object Dependencies {
   val icu4j           = "com.ibm.icu"                   % "icu4j"             % "70.1"
   val jakartaJSON     = "org.glassfish"                 % "jakarta.json"      % "2.0.1"
   val jodd            = "org.jodd"                      % "jodd"              % "3.2.7"
-  val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "3.4.4"
-  val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "3.4.4"
+  val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "3.7.7"
+  val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "3.7.7"
   val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.4"
   val scalaGraph      = "org.scala-graph"              %% "graph-core"        % "1.13.5" // Scala 3 incompatible
   val scallop         = "org.rogach"                   %% "scallop"           % "4.1.0"  // Scala 3 compatible

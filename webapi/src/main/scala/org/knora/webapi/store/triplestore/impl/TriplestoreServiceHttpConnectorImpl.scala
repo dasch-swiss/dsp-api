@@ -415,7 +415,7 @@ case class TriplestoreServiceHttpConnectorImpl(
         if (rdfDataObjects.isEmpty) {
           ZIO.succeed(DefaultRdfData.data)
         } else {
-          //prepend default data objects like those of knora-base, knora-admin, etc.
+          // prepend default data objects like those of knora-base, knora-admin, etc.
           ZIO.succeed(DefaultRdfData.data ++ NonEmptyChunk.fromIterable(rdfDataObjects.head, rdfDataObjects.tail))
         }
       } else { // don't prepend
@@ -442,7 +442,7 @@ case class TriplestoreServiceHttpConnectorImpl(
             uriBuilder <-
               ZIO.attempt {
                 val uriBuilder: URIBuilder = new URIBuilder(dataInsertPath)
-                uriBuilder.addParameter("graph", graphName) //Note: addParameter encodes the graphName URL
+                uriBuilder.addParameter("graph", graphName) // Note: addParameter encodes the graphName URL
                 uriBuilder
               }.orDie
 
@@ -1106,7 +1106,7 @@ object TriplestoreServiceHttpConnectorImpl {
       httpClient.close()
     }.tap(_ => ZIO.debug(">>> Release Triplestore Service Http Connector <<<")).orDie
 
-  val layer: ZLayer[AppConfig, Nothing, TriplestoreService] = {
+  val layer: ZLayer[AppConfig, Nothing, TriplestoreService] =
     ZLayer.scoped {
       for {
         config <- ZIO.service[AppConfig]
@@ -1114,6 +1114,5 @@ object TriplestoreServiceHttpConnectorImpl {
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
     }
-  }
 
 }

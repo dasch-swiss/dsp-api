@@ -2078,7 +2078,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         Future(
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString
         )
-      //_ = log.debug("projectByIriExists - query: {}", askString)
+      // _ = log.debug("projectByIriExists - query: {}", askString)
 
       askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result       = askResponse.result
@@ -2142,7 +2142,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                            )
                            .toString
                        )
-          //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
+          // _ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
 
           askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
           result       = askResponse.result

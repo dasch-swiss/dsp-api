@@ -50,7 +50,7 @@ trait InstrumentationSupport {
     trace(name)(future.andThen { case Success(_) =>
       metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
     })
-    //.andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))
+    // .andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))
   }
 
   //    def counter(name: String) = Kamon.metrics.counter(name)

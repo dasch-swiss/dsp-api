@@ -62,13 +62,13 @@ object ResponseCheckerV2 {
     assert(
       expectedResource.value(JsonLDKeywords.ID) == receivedResource.value(JsonLDKeywords.ID),
       s"Received resource Iri ${receivedResource
-        .value(JsonLDKeywords.ID)} does not match expected Iri ${expectedResource.value(JsonLDKeywords.ID)}"
+          .value(JsonLDKeywords.ID)} does not match expected Iri ${expectedResource.value(JsonLDKeywords.ID)}"
     )
 
     assert(
       expectedResource.value(JsonLDKeywords.TYPE) == receivedResource.value(JsonLDKeywords.TYPE),
       s"Received resource type ${receivedResource
-        .value(JsonLDKeywords.TYPE)} does not match expected type ${expectedResource.value(JsonLDKeywords.TYPE)}"
+          .value(JsonLDKeywords.TYPE)} does not match expected type ${expectedResource.value(JsonLDKeywords.TYPE)}"
     )
 
     assert(
@@ -79,7 +79,7 @@ object ResponseCheckerV2 {
     assert(
       expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys,
       s"property Iris are different for resource ${receivedResource
-        .value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}"
+          .value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}"
     )
 
     (expectedResource.value -- noPropertyKeys).foreach { case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>

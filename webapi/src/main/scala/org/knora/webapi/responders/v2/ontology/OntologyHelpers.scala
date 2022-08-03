@@ -357,7 +357,7 @@ object OntologyHelpers {
       if (missingLinkValueProps.nonEmpty) {
         throw InconsistentRepositoryDataException(
           s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps
-            .mkString(", ")}"
+              .mkString(", ")}"
         )
       }
 
@@ -368,7 +368,7 @@ object OntologyHelpers {
       if (missingLinkProps.nonEmpty) {
         throw InconsistentRepositoryDataException(
           s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps
-            .mkString(", ")}"
+              .mkString(", ")}"
         )
       }
 
@@ -411,7 +411,7 @@ object OntologyHelpers {
         if (cardinalitiesOnMissingProps.nonEmpty) {
           throw InconsistentRepositoryDataException(
             s"Class $classIri has one or more cardinalities on undefined properties: ${cardinalitiesOnMissingProps
-              .mkString(", ")}"
+                .mkString(", ")}"
           )
         }
 
@@ -439,7 +439,7 @@ object OntologyHelpers {
           if (cardinalitiesOnInvalidProps.nonEmpty) {
             throw InconsistentRepositoryDataException(
               s"Resource class $classIri has one or more cardinalities on properties that are not Knora resource properties: ${cardinalitiesOnInvalidProps
-                .mkString(", ")}"
+                  .mkString(", ")}"
             )
           }
 
@@ -488,7 +488,7 @@ object OntologyHelpers {
           if (cardinalitiesOnInvalidProps.nonEmpty) {
             throw InconsistentRepositoryDataException(
               s"Standoff class $classIri has one or more cardinalities on properties that are Knora resource properties: ${cardinalitiesOnInvalidProps
-                .mkString(", ")}"
+                  .mkString(", ")}"
             )
           }
 
@@ -614,8 +614,8 @@ object OntologyHelpers {
 
             errorFun(
               s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri
-                .toOntologySchema(errorSchema)}, but is not a subclass of that property's ${OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
-                .toOntologySchema(errorSchema)}, ${subjectClassConstraint.toOntologySchema(errorSchema)}"
+                  .toOntologySchema(errorSchema)}, but is not a subclass of that property's ${OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri
+                  .toOntologySchema(errorSchema)}, ${subjectClassConstraint.toOntologySchema(errorSchema)}"
             )
           }
 
@@ -646,7 +646,7 @@ object OntologyHelpers {
         val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(
           objectClassConstraintIri,
           errorFun(s"Property ${propertyIri
-            .toOntologySchema(schemaForErrors)} has no ${objectClassConstraintIri.toOntologySchema(schemaForErrors)}")
+              .toOntologySchema(schemaForErrors)} has no ${objectClassConstraintIri.toOntologySchema(schemaForErrors)}")
         )
 
         propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
@@ -656,8 +656,8 @@ object OntologyHelpers {
     if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
       errorFun(
         s"Class ${classIri.toOntologySchema(schemaForErrors).toSparql} has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps
-          .map(_.toOntologySchema(schemaForErrors).toSparql)
-          .mkString(", ")}"
+            .map(_.toOntologySchema(schemaForErrors).toSparql)
+            .mkString(", ")}"
       )
     }
   }
@@ -827,8 +827,8 @@ object OntologyHelpers {
              Validation.fail(
                BadRequestException(
                  s"In class ${internalClassDef.classIri.toOntologySchema(ApiV2Complex)}, cardinalities have been submitted for one or more link value properties: ${newLinkValuePropsInClass
-                   .map(_.toOntologySchema(ApiV2Complex))
-                   .mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically."
+                     .map(_.toOntologySchema(ApiV2Complex))
+                     .mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically."
                )
              )
            } else { Validation.succeed(()) }
@@ -930,7 +930,7 @@ object OntologyHelpers {
                Validation.fail(
                  BadRequestException(
                    s"Class <${classDefWithAddedLinkValueProps.classIri.toOntologySchema(ApiV2Complex)}> has a cardinality on property <${basePropertyIri
-                     .toOntologySchema(ApiV2Complex)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2Complex)}>"
+                       .toOntologySchema(ApiV2Complex)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2Complex)}>"
                  )
                )
 
@@ -1936,8 +1936,8 @@ object OntologyHelpers {
                 // No. Throw an exception.
                 errorFun(
                   s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality ${thisClassCardinality.cardinality} on ${thisClassProp
-                    .toOntologySchema(errorSchema)} is not compatible with the inherited cardinality ${baseClassCardinality.cardinality} on ${baseClassProp
-                    .toOntologySchema(errorSchema)}, because it is less restrictive"
+                      .toOntologySchema(errorSchema)} is not compatible with the inherited cardinality ${baseClassCardinality.cardinality} on ${baseClassProp
+                      .toOntologySchema(errorSchema)}, because it is less restrictive"
                 )
               } else {
                 // Yes. Filter out the inheritable one, because the directly defined one overrides it.
@@ -1986,7 +1986,7 @@ object OntologyHelpers {
         ) {
           errorFun(
             s"In class <${classIri.toOntologySchema(errorSchema)}>, there is more than one cardinality that would override the inherited cardinality $overriddenCardinality on <${baseClassProp
-              .toOntologySchema(errorSchema)}>"
+                .toOntologySchema(errorSchema)}>"
           )
         }
       }

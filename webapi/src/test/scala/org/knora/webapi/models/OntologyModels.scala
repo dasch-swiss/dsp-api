@@ -127,7 +127,7 @@ object CreatePropertyRequest {
                                    |      "@id" : "$ontologyName:$subjectName"
                                    |    },
                                    |""".stripMargin
-      case None              => ""
+      case None => ""
     }
     val superProperty = subPropertyOf.getOrElse("knora-api:hasValue")
 
@@ -224,7 +224,7 @@ object AddCardinalitiesRequest {
   ): AddCardinalitiesRequest = {
     val ontologyId                 = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)
-    val value                      = s"""
+    val value = s"""
                    |{
                    |  "@id" : "$ontologyId",
                    |  "@type" : "owl:Ontology",
