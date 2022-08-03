@@ -5,32 +5,20 @@
 
 package dsp.valueobjects
 
-import java.util.UUID
-import java.util.Base64
-import java.nio.ByteBuffer
-import scala.util.matching.Regex
-import org.apache.commons.validator.routines.UrlValidator
-import org.apache.commons.lang3.StringUtils
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
 import dsp.errors.BadRequestException
+import org.apache.commons.lang3.StringUtils
+import org.apache.commons.validator.routines.UrlValidator
+
+import java.nio.ByteBuffer
+import java.util.Base64
+import java.util.UUID
+import scala.util.matching.Regex
 
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order
 // to avoid circular dependencies after moving value objects to separate project.
 object V2 {
-  val DE: String = "de"
-  val EN: String = "en"
-  val FR: String = "fr"
-  val IT: String = "it"
-  val RM: String = "rm"
-
-  val SupportedLanguageCodes: Set[String] = Set(
-    DE,
-    EN,
-    FR,
-    IT,
-    RM
-  )
 
   /**
    * Represents a string with language iso. Allows sorting inside collections by value.
@@ -73,6 +61,12 @@ object V2IriValidation {
    * @return the same string, escaped or unescaped as requested.
    */
   def toSparqlEncodedString(s: String, errorFun: => Nothing): String = {
+// Findings about this method:
+// - there is more cases to handle according to docs (https://www.w3.org/TR/rdf-sparql-query#grammarEscapes) - we use 1.1 version right?
+// - `'` doesn't appear on that list, but this method escapes it
+// - why `\r` throws error instead of being escaped?
+// - fun fact is that if I remove  StringUtils.replaceEach, for example `\t` passes unescaped, why?
+
     if (s.isEmpty || s.contains("\r")) errorFun
 
     // http://www.morelab.deusto.es/code_injection/
@@ -85,36 +79,20 @@ object V2IriValidation {
   }
 
   /**
-   * The domain name used to construct IRIs.
-   */
-  val IriDomain: String = "rdfh.ch"
-
-  // Valid URL schemes.
-  private val schemes = Array("http", "https")
-
-  // A validator for URLs.
-  private val urlValidator =
-    new UrlValidator(
-      schemes,
-      UrlValidator.ALLOW_LOCAL_URLS
-    ) // local urls are URL-encoded IRIs as part of the whole URL
-
-  /**
-   * Returns `true` if a string is an IRI.
-   *
-   * @param s the string to be checked.
-   * @return `true` if the string is an IRI.
-   */
-  def isIri(s: String): Boolean =
-    urlValidator.isValid(s)
-
-  /**
    * Returns `true` if an IRI string looks like a Knora list IRI.
    *
    * @param iri the IRI to be checked.
    */
   def isKnoraListIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/lists/")
+
+  /**
+   * Returns `true` if an IRI string looks like a Knora role IRI.
+   *
+   * @param iri the IRI to be checked.
+   */
+  def isKnoraRoleIriStr(iri: IRI): Boolean =
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/roles/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
@@ -122,7 +100,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraUserIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/users/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora group IRI.
@@ -130,7 +108,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraGroupIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
+    Iri.isIri(iri) && iri.startsWith("http://rdfh.ch/groups/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora project IRI
@@ -138,7 +116,7 @@ object V2IriValidation {
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    Iri.isIri(iri) && (iri.startsWith("http://rdfh.ch/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -154,7 +132,7 @@ object V2IriValidation {
       DefaultSharedOntologiesProject
     )
 
-    isIri(iri) && builtInProjects.contains(iri)
+    Iri.isIri(iri) && builtInProjects.contains(iri)
   }
 
   val KnoraAdminOntologyLabel: String     = "knora-admin"
@@ -179,7 +157,7 @@ object V2IriValidation {
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
     val urlEncodedStr = encodeAllowEscapes(s)
 
-    if (urlValidator.isValid(urlEncodedStr)) {
+    if (Iri.urlValidator.isValid(urlEncodedStr)) {
       urlEncodedStr
     } else {
       errorFun

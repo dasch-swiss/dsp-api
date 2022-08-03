@@ -3,7 +3,7 @@ name: CI
 on:
   schedule:
     # run every midnight (on main) so that the first compile of the day from main is cached
-    - cron: '0 0 * * *'
+    - cron: "0 0 * * *"
   push:
   release:
     types: [published]
@@ -26,8 +26,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -48,8 +48,8 @@ jobs:
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
-# ------------------------------------------
-# ------------------------------------------
+  # ------------------------------------------
+  # ------------------------------------------
   client-test-data-tests:
     name: Run client-test-data
     runs-on: ubuntu-latest
@@ -67,8 +67,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -95,8 +95,8 @@ jobs:
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
-# ------------------------------------------
-# ------------------------------------------
+  # ------------------------------------------
+  # ------------------------------------------
   upgrade-integration-tests:
     name: Upgrade Integration Tests
     runs-on: ubuntu-latest
@@ -114,8 +114,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -132,7 +132,7 @@ jobs:
         # if: failure()
         uses: jwalton/gh-docker-logs@v1
         with:
-          shell: '/bin/sh'
+          shell: "/bin/sh"
       - name: cleanup before cache
         shell: bash
         run: |
@@ -187,12 +187,7 @@ jobs:
   # publish only on release
   publish:
     name: Publish (on release only)
-    needs: [
-      compile,
-      client-test-data-tests,
-      upgrade-integration-tests,
-      docs-build-test
-    ]
+    needs: [compile]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
@@ -209,8 +204,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/
@@ -255,9 +250,7 @@ jobs:
   # deploy documentation only on release
   deploy-docs:
     name: Deploy docs (on release only)
-    needs: [
-      docs-build-test
-    ]
+    needs: [docs-build-test]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
@@ -282,7 +275,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           CUSTOM_DOMAIN: docs-api.dasch.swiss
           REQUIREMENTS: docs/requirements.txt
-    
+
   fmtcheck:
     name: Check Formating
     runs-on: ubuntu-latest
@@ -300,8 +293,8 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: "temurin"
+          java-version: "17"
       - name: add docker compose v2
         run: |
           mkdir -p ~/.docker/cli-plugins/

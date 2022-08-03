@@ -119,11 +119,20 @@
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>A resource that can contain a two-dimensional still image file</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:label>Representation (Image)</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -134,25 +143,7 @@
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:comment>A resource that can contain a two-dimensional still image file</rdfs:comment>
-    <rdfs:label>Representation (Image)</rdfs:label>
-    <rdfs:subClassOf>
       <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
-        </owl:onProperty>
-      </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
@@ -172,6 +163,15 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
   </owl:Class>
   <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Representation">
     <rdfs:comment>A resource that can store a file</rdfs:comment>
@@ -185,31 +185,11 @@
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
-      <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Representation</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasFile"/>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -224,13 +204,33 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasFile"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Representation</rdfs:label>
   </owl:Class>
   <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Resource">
     <rdfs:comment>Represents something in the world, or an abstract thing</rdfs:comment>
@@ -287,9 +287,36 @@
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:minCardinality>
+        >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasComment"/>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasColor"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -298,6 +325,15 @@
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasComment"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -318,6 +354,8 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:label>Region</rdfs:label>
+    <rdfs:comment>Represents a geometric region of a resource. The geometry is represented currently as JSON string.</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -327,37 +365,10 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:label>Region</rdfs:label>
-    <rdfs:comment>Represents a geometric region of a resource. The geometry is represented currently as JSON string.</rdfs:comment>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasColor"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
     <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
     <knora-api:resourceIcon>region.gif</knora-api:resourceIcon>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Annotation">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -367,8 +378,6 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Annotation">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -376,23 +385,23 @@
         <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
     <rdfs:label>Annotation</rdfs:label>
-    <rdfs:comment>A generic class for representing annotations</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:minCardinality>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#isAnnotationOf"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>A generic class for representing annotations</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -419,20 +428,11 @@
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
   </owl:Class>
   <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#ArchiveRepresentation">
     <rdfs:label>Representation (Zip)</rdfs:label>
@@ -494,19 +494,10 @@
     <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -520,54 +511,12 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
         </owl:onProperty>
       </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasDDDFile"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Representation (3D)</rdfs:label>
-  </owl:Class>
-  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation"/>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
@@ -591,11 +540,62 @@
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Representation (3D)</rdfs:label>
+  </owl:Class>
+  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#XSLTransformation">
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation"/>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasTextFile"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:label>a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.</rdfs:label>
     <rdfs:comment>a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -607,13 +607,29 @@
     </rdfs:subClassOf>
   </owl:Class>
   <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#TextRepresentation">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
     <rdfs:comment>A resource containing a text file</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -626,17 +642,28 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:label>Representation (Text)</rdfs:label>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:label>Representation (Text)</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation">
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -651,26 +678,29 @@
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>Represents a file containing audio data</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Representation (Audio)</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#AudioRepresentation">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -680,18 +710,6 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:comment>Represents a file containing audio data</rdfs:comment>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Representation (Audio)</rdfs:label>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -701,6 +719,10 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation">
+    <rdfs:comment>A resource containing moving image data</rdfs:comment>
+    <rdfs:label>Representation (Movie)</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -719,34 +741,12 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#MovingImageRepresentation">
-    <rdfs:comment>A resource containing moving image data</rdfs:comment>
-    <rdfs:label>Representation (Movie)</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#versionArkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -759,6 +759,30 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasMovingImageFile"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#LinkObj">
+    <rdfs:comment>Represents a generic link object</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
+    <rdfs:label>Link Object</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
@@ -766,19 +790,15 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasIncomingLink"/>
+          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#LinkObj">
-    <rdfs:comment>Represents a generic link object</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -801,20 +821,7 @@
       <owl:Restriction>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#arkUrl"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
-    <rdfs:label>Link Object</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"/>
-        </owl:onProperty>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -826,21 +833,14 @@
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
     <knora-api:resourceIcon>link.gif</knora-api:resourceIcon>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
@@ -923,6 +923,13 @@
     <rdfs:comment>Represents a link in standoff markup from one resource to another.</rdfs:comment>
     <rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"/>
     <rdfs:label>has Standoff Link to</rdfs:label>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#isSequenceOf">
+    <knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
+    <knora-api:subjectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
+    <rdfs:comment>Indicates that this resource is a sequence of a video or audio resource</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo"/>
+    <rdfs:label>is sequence of</rdfs:label>
   </owl:ObjectProperty>
   <owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf">
     <knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Representation"/>
@@ -1065,6 +1072,12 @@
     <rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasValue"/>
     <rdfs:label>Geometry</rdfs:label>
   </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasSequenceBounds">
+    <knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Interval"/>
+    <rdfs:comment>Indicates the bounds of a sequence, i.e. the start and end point in the containing resource.</rdfs:comment>
+    <rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasValue"/>
+    <rdfs:label>Sequence Bounds</rdfs:label>
+  </owl:DatatypeProperty>
   <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasDocumentFile">
     <knora-api:objectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#File"/>
     <knora-api:subjectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#DocumentRepresentation"/>
@@ -1081,7 +1094,7 @@
   </owl:DatatypeProperty>
   <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#seqnum">
     <knora-api:objectType rdf:resource="http://www.w3.org/2001/XMLSchema#integer"/>
-    <rdfs:comment>Indicates the position of a resource within a sequence</rdfs:comment>
+    <rdfs:comment>Indicates the position of a resource within a compound object. Typically used to indicate the order of pages within a book or similar resource.</rdfs:comment>
     <rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasValue"/>
     <rdfs:label>Sequence number</rdfs:label>
   </owl:DatatypeProperty>

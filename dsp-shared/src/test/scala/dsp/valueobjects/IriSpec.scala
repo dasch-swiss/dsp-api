@@ -22,6 +22,8 @@ object IriSpec extends ZIOSpecDefault {
   val listIriWithUUIDVersion3    = "http://rdfh.ch/lists/0803/6_xROK_UN1S2ZVNSzLlSXQ"
   val validProjectIri            = "http://rdfh.ch/projects/0001"
   val projectIriWithUUIDVersion3 = "http://rdfh.ch/projects/tZjZhGSZMeCLA5VeUmwAmg"
+  val validRoleIri               = "http://rdfh.ch/roles/ZPKPVh8yQs6F7Oyukb8WIQ"
+  val roleIriWithUUIDVersion3    = "http://rdfh.ch/roles/Ul3IYhDMOQ2fyoVY0ePz0w"
   val validUserIri               = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
   val userIriWithUUIDVersion3    = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
@@ -153,6 +155,29 @@ object IriSpec extends ZIOSpecDefault {
     }
   )
 
+  private val RoleIriTest = suite("IriSpec - roleIri")(
+    test("pass an empty value and return an error") {
+      assertTrue(RoleIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing)))
+    },
+    test("pass an invalid value and return an error") {
+      assertTrue(
+        RoleIri.make(invalidIri) == Validation.fail(
+          BadRequestException(IriErrorMessages.RoleIriInvalid(invalidIri))
+        )
+      )
+    },
+    test("pass an invalid IRI containing unsupported UUID version and return an error") {
+      assertTrue(
+        RoleIri.make(roleIriWithUUIDVersion3) == Validation.fail(
+          BadRequestException(IriErrorMessages.UuidVersionInvalid)
+        )
+      )
+    },
+    test("pass a valid value and successfully create value object") {
+      assertTrue(RoleIri.make(validRoleIri).toOption.get.value == validRoleIri)
+    }
+  )
+
   private val UserIriTest = suite("IriSpec - UserIri")(
     test("pass an empty value and return an error") {
       assertTrue(UserIri.make("") == Validation.fail(BadRequestException(IriErrorMessages.UserIriMissing)))
@@ -160,7 +185,7 @@ object IriSpec extends ZIOSpecDefault {
     test("pass an invalid value and return an error") {
       assertTrue(
         UserIri.make(invalidIri) == Validation.fail(
-          BadRequestException(IriErrorMessages.UserIriInvalid)
+          BadRequestException(IriErrorMessages.UserIriInvalid(invalidIri))
         )
       )
     },

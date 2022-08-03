@@ -6,12 +6,29 @@
 package dsp.valueobjects
 
 import dsp.errors.BadRequestException
+import org.apache.commons.validator.routines.UrlValidator
 import zio.prelude.Validation
 import dsp.errors.ValidationException
 import scala.util.Try
 
 sealed trait Iri
 object Iri {
+
+  // A validator for URLs
+  val urlValidator =
+    new UrlValidator(
+      Array("http", "https"),       // valid URL schemes
+      UrlValidator.ALLOW_LOCAL_URLS // local URLs are URL-encoded IRIs as part of the whole URL
+    )
+
+  /**
+   * Returns `true` if a string is an IRI.
+   *
+   * @param s the string to be checked.
+   * @return `true` if the string is an IRI.
+   */
+  def isIri(s: String): Boolean =
+    urlValidator.isValid(s)
 
   /**
    * GroupIri value object.
@@ -114,6 +131,34 @@ object Iri {
   }
 
   /**
+   * RoleIri value object.
+   */
+  sealed abstract case class RoleIri private (value: String) extends Iri
+  object RoleIri {
+    def make(value: String): Validation[Throwable, RoleIri] =
+      if (value.isEmpty) {
+        Validation.fail(BadRequestException(IriErrorMessages.RoleIriMissing))
+      } else {
+        val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
+
+        if (!V2IriValidation.isKnoraRoleIriStr(value)) {
+          Validation.fail(BadRequestException(IriErrorMessages.RoleIriInvalid(value)))
+        } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
+          Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
+        } else {
+          val validatedValue = Validation(
+            V2IriValidation.validateAndEscapeIri(
+              value,
+              throw BadRequestException(IriErrorMessages.RoleIriInvalid(value))
+            )
+          )
+
+          validatedValue.map(new RoleIri(_) {})
+        }
+      }
+  }
+
+  /**
    * UserIri value object.
    */
   sealed abstract case class UserIri private (value: String) extends Iri
@@ -125,14 +170,14 @@ object Iri {
         val isUuid: Boolean = V2UuidValidation.hasUuidLength(value.split("/").last)
 
         if (!V2IriValidation.isKnoraUserIriStr(value)) {
-          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid))
+          Validation.fail(BadRequestException(IriErrorMessages.UserIriInvalid(value)))
         } else if (isUuid && !V2UuidValidation.isUuidVersion4Or5(value)) {
           Validation.fail(BadRequestException(IriErrorMessages.UuidVersionInvalid))
         } else {
           val validatedValue = Validation(
             V2IriValidation.validateAndEscapeUserIri(
               value,
-              throw BadRequestException(IriErrorMessages.UserIriInvalid)
+              throw BadRequestException(IriErrorMessages.UserIriInvalid(value))
             )
           )
 
@@ -170,8 +215,10 @@ object IriErrorMessages {
   val ListIriInvalid     = "List IRI is invalid"
   val ProjectIriMissing  = "Project IRI cannot be empty."
   val ProjectIriInvalid  = "Project IRI is invalid."
+  val RoleIriMissing     = "Role IRI cannot be empty."
+  val RoleIriInvalid     = (iri: String) => s"Role IRI: $iri is invalid."
   val UserIriMissing     = "User IRI cannot be empty."
-  val UserIriInvalid     = "User IRI is invalid."
+  val UserIriInvalid     = (iri: String) => s"User IRI: $iri is invalid."
   val UuidVersionInvalid = "Invalid UUID used to create IRI. Only versions 4 and 5 are supported."
   val PropertyIriMissing = "Property IRI cannot be empty."
 }

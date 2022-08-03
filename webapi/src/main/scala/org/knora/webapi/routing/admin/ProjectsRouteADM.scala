@@ -89,6 +89,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   )
   private def getProjects(): Route = path(ProjectsBasePath) {
     get { requestContext =>
+      log.info("All projects requested.")
       val requestMessage: Future[ProjectsGetRequestADM] = for {
         requestingUser <- getUserADM(
                             requestContext = requestContext

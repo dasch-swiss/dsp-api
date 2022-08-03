@@ -40,12 +40,11 @@ object TestActorSystemService {
       _  <- ZIO.fromFuture(implicit ec => system.terminate()).timeout(5.seconds).orDie
     } yield ()).tap(_ => ZIO.logDebug(">>> Release Test Actor System Service <<<"))
 
-  val layer: ZLayer[Any, Nothing, TestActorSystemService] = {
+  val layer: ZLayer[Any, Nothing, TestActorSystemService] =
     ZLayer.scoped {
       for {
         system <- ZIO.acquireRelease(acquire())(release(_))
       } yield TestActorSystemService(system)
     }
-  }
 
 }

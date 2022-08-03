@@ -7,6 +7,343 @@
     "@graph": [
         {
             "knora-api:isResourceClass": true,
+            "rdfs:label": "Audio Sequence Thing",
+            "knora-api:canBeInstantiated": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToProject"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:creationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLinkValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkToValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSequenceBounds"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSequenceOf"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSequenceOfValue"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 0
+                }
+            ],
+            "rdfs:comment": "A Resource representing a subsequence of an audio",
+            "@type": "owl:Class",
+            "@id": "anything:AudioSequenceThing"
+        },
+        {
+            "knora-api:isResourceClass": true,
+            "rdfs:label": "Audio Thing",
+            "knora-api:canBeInstantiated": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:AudioRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToProject"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:creationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasAudioFileValue"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLinkValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkToValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "rdfs:comment": "A Resource representing an audio",
+            "@type": "owl:Class",
+            "@id": "anything:AudioThing"
+        },
+        {
+            "knora-api:isResourceClass": true,
             "rdfs:label": "Blue thing",
             "knora-api:canBeInstantiated": true,
             "rdfs:subClassOf": [
@@ -2009,6 +2346,343 @@
             "@id": "anything:TrivialThing"
         },
         {
+            "knora-api:isResourceClass": true,
+            "rdfs:label": "Video Sequence Thing",
+            "knora-api:canBeInstantiated": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToProject"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:creationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLinkValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkToValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasSequenceBounds"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSequenceOf"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isSequenceOfValue"
+                    },
+                    "owl:cardinality": 1,
+                    "salsah-gui:guiOrder": 0
+                }
+            ],
+            "rdfs:comment": "A Resource representing a subsequence of a video",
+            "@type": "owl:Class",
+            "@id": "anything:VideoSequenceThing"
+        },
+        {
+            "knora-api:isResourceClass": true,
+            "rdfs:label": "Video Thing",
+            "knora-api:canBeInstantiated": true,
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:MovingImageRepresentation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "anything:hasTitle"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToProject"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:creationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLinkValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasMovingImageFileValue"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkToValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "rdfs:comment": "A Resource representing a video",
+            "@type": "owl:Class",
+            "@id": "anything:VideoThing"
+        },
+        {
             "rdfs:label": "A blue thing",
             "rdfs:subPropertyOf": {
                 "@id": "anything:hasOtherThing"
@@ -2471,6 +3145,29 @@
                 "@id": "salsah-gui:TimeStamp"
             },
             "@id": "anything:hasTimeStamp"
+        },
+        {
+            "rdfs:label": "Title",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "@type": "owl:ObjectProperty",
+            "salsah-gui:guiAttribute": [
+                "maxlength=255",
+                "size=80"
+            ],
+            "knora-api:objectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "salsah-gui:guiElement": {
+                "@id": "salsah-gui:SimpleText"
+            },
+            "@id": "anything:hasTitle"
         },
         {
             "rdfs:label": "URI",

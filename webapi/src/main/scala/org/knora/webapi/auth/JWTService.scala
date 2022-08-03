@@ -28,11 +28,10 @@ final case class JWTService(config: AppConfig) {
 }
 
 object JWTService {
-  val layer: ZLayer[AppConfig, Nothing, JWTService] = {
+  val layer: ZLayer[AppConfig, Nothing, JWTService] =
     ZLayer {
       for {
         config <- ZIO.service[AppConfig]
       } yield JWTService(config)
     }
-  }
 }

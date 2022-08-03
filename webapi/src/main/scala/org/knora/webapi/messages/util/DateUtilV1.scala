@@ -142,7 +142,6 @@ object DateUtilV1 {
 
     dateSegments.length match {
       case 1 => // year precision
-
         try {
           val intervalStart = new GregorianCalendar
           intervalStart.set(Calendar.ERA, era)
@@ -183,7 +182,6 @@ object DateUtilV1 {
         }
 
       case 2 => // month precision
-
         try {
           val intervalStart = new GregorianCalendar
           intervalStart.set(Calendar.ERA, era)
@@ -223,7 +221,6 @@ object DateUtilV1 {
         }
 
       case 3 => // day precision
-
         try {
           val exactDate = new GregorianCalendar
           exactDate.set(Calendar.ERA, era)
@@ -340,7 +337,7 @@ object DateUtilV1 {
     calendarType match {
       case KnoraCalendarV1.JULIAN => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
       case KnoraCalendarV1.GREGORIAN =>
-        new Date(java.lang.Long.MIN_VALUE) //for Gregorian: if calendar given in Gregorian cal
+        new Date(java.lang.Long.MIN_VALUE) // for Gregorian: if calendar given in Gregorian cal
       case _ => throw BadRequestException(s"Invalid calendar name: $calendarType")
     }
 

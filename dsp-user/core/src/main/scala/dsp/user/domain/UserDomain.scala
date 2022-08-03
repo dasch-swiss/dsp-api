@@ -5,12 +5,13 @@
 
 package dsp.user.domain
 
+import dsp.errors.ValidationException
 import dsp.valueobjects.Id.UserId
+import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 
 import java.util.UUID
-import dsp.errors.BadRequestException
 
 /**
  * Represents the user domain object.
@@ -34,7 +35,7 @@ sealed abstract case class User private (
   password: PasswordHash,
   language: LanguageCode,
   status: UserStatus
-  //role: Role
+  // role: Role
 ) extends Ordered[User] { self =>
 
   /**
@@ -48,7 +49,7 @@ sealed abstract case class User private (
    *  @param newValue  the new username
    *  @return the updated [[User]]
    */
-  def updateUsername(newValue: Username): Validation[BadRequestException, User] =
+  def updateUsername(newValue: Username): Validation[ValidationException, User] =
     User.make(
       self.id,
       self.givenName,
@@ -66,7 +67,7 @@ sealed abstract case class User private (
    *  @param newValue  the new email
    *  @return the updated [[User]]
    */
-  def updateEmail(newValue: Email): Validation[BadRequestException, User] =
+  def updateEmail(newValue: Email): Validation[ValidationException, User] =
     User.make(
       self.id,
       self.givenName,
@@ -84,7 +85,7 @@ sealed abstract case class User private (
    *  @param newValue  the new given name
    *  @return the updated [[User]]
    */
-  def updateGivenName(newValue: GivenName): Validation[BadRequestException, User] =
+  def updateGivenName(newValue: GivenName): Validation[ValidationException, User] =
     User.make(
       self.id,
       newValue,
@@ -102,7 +103,7 @@ sealed abstract case class User private (
    *  @param newValue  the new family name
    *  @return the updated [[User]]
    */
-  def updateFamilyName(newValue: FamilyName): Validation[BadRequestException, User] =
+  def updateFamilyName(newValue: FamilyName): Validation[ValidationException, User] =
     User.make(
       self.id,
       self.givenName,
@@ -120,7 +121,7 @@ sealed abstract case class User private (
    *  @param newValue  the new password
    *  @return the updated [[User]]
    */
-  def updatePassword(newValue: PasswordHash): Validation[BadRequestException, User] =
+  def updatePassword(newValue: PasswordHash): Validation[ValidationException, User] =
     User.make(
       self.id,
       self.givenName,
@@ -138,7 +139,7 @@ sealed abstract case class User private (
    *  @param newValue  the new language
    *  @return the updated [[User]]
    */
-  def updateLanguage(newValue: LanguageCode): Validation[BadRequestException, User] =
+  def updateLanguage(newValue: LanguageCode): Validation[ValidationException, User] =
     User.make(
       self.id,
       self.givenName,
@@ -157,7 +158,7 @@ sealed abstract case class User private (
    *  @param newValue  the new status
    *  @return the updated [[User]]
    */
-  def updateStatus(newValue: UserStatus): Validation[BadRequestException, User] =
+  def updateStatus(newValue: UserStatus): Validation[ValidationException, User] =
     User.make(
       self.id,
       self.givenName,
@@ -180,8 +181,8 @@ object User {
     password: PasswordHash,
     language: LanguageCode,
     status: UserStatus
-    //role: Role
-  ): Validation[BadRequestException, User] =
+    // role: Role
+  ): Validation[ValidationException, User] =
     Validation.succeed(new User(id, givenName, familyName, username, email, password, language, status) {})
 
 }

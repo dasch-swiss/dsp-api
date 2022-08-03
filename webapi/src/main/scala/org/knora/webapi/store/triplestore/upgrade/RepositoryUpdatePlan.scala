@@ -50,7 +50,8 @@ object RepositoryUpdatePlan {
       PluginForKnoraBaseVersion(versionNumber = 20, plugin = new UpgradePluginPR2018(log)),
       PluginForKnoraBaseVersion(versionNumber = 21, plugin = new UpgradePluginPR2079(log)),
       PluginForKnoraBaseVersion(versionNumber = 22, plugin = new UpgradePluginPR2081(log)),
-      PluginForKnoraBaseVersion(versionNumber = 23, plugin = new UpgradePluginPR2094(log))
+      PluginForKnoraBaseVersion(versionNumber = 23, plugin = new UpgradePluginPR2094(log)),
+      PluginForKnoraBaseVersion(versionNumber = 24, plugin = new NoopPlugin) // PR 2076
       // KEEP IT ON THE BOTTOM
       // From "versionNumber = 6" don't use prBasedVersionString!
     )
@@ -93,12 +94,11 @@ object RepositoryUpdatePlan {
     plugin: UpgradePlugin,
     prBasedVersionString: Option[String] = None
   ) {
-    lazy val versionString: String = {
+    lazy val versionString: String =
       prBasedVersionString match {
         case Some(str) => str
         case None      => s"knora-base v$versionNumber"
       }
-    }
   }
 
   /**

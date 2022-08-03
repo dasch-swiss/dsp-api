@@ -288,12 +288,11 @@ final case class RepositoryUpdater(
 }
 
 object RepositoryUpdater {
-  val layer: ZLayer[TriplestoreService & AppConfig, Nothing, RepositoryUpdater] = {
+  val layer: ZLayer[TriplestoreService & AppConfig, Nothing, RepositoryUpdater] =
     ZLayer {
       for {
         ts     <- ZIO.service[TriplestoreService]
         config <- ZIO.service[AppConfig]
       } yield RepositoryUpdater(ts, config)
     }
-  }
 }

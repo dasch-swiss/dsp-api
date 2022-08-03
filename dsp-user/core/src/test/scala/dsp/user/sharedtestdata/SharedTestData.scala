@@ -5,14 +5,15 @@
 
 package dsp.user.sharedtestdata
 
-import dsp.valueobjects.User._
-import dsp.user.domain.User
 import dsp.errors.BadRequestException
-import zio.prelude.Validation
+import dsp.user.domain.User
 import dsp.valueobjects.Id
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.User._
+import zio.prelude.Validation
 
 object SharedTestData {
-  val passwordStrength = PasswordStrength.make(12)
+  val passwordStrength = PasswordStrength(12)
 
   val userId1     = Id.UserId.make()
   val givenName1  = GivenName.make("GivenName1")
@@ -20,8 +21,7 @@ object SharedTestData {
   val username1   = Username.make("username1")
   val email1      = Email.make("email1@email.com")
   val password1 = for {
-    passwordStrength <- PasswordStrength.make(12)
-    password         <- PasswordHash.make("password1", passwordStrength)
+    password <- PasswordHash.make("password1", passwordStrength)
   } yield password
 
   val userId2     = Id.UserId.make()
@@ -30,8 +30,7 @@ object SharedTestData {
   val username2   = Username.make("username2")
   val email2      = Email.make("email2@email.com")
   val password2 = for {
-    passwordStrength <- PasswordStrength.make(12)
-    password         <- PasswordHash.make("password2", passwordStrength)
+    password <- PasswordHash.make("password2", passwordStrength)
   } yield password
 
   val userId3     = Id.UserId.make()
@@ -40,8 +39,7 @@ object SharedTestData {
   val username3   = Username.make("username3")
   val email3      = Email.make("email3@email.com")
   val password3 = for {
-    passwordStrength <- PasswordStrength.make(12)
-    password         <- PasswordHash.make("password3", passwordStrength)
+    password <- PasswordHash.make("password3", passwordStrength)
   } yield password
 
   val languageEn = LanguageCode.make("en")
