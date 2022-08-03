@@ -65,6 +65,14 @@ object LangString {
 sealed abstract case class MultiLangString private (langStrings: Set[LangString])
 
 object MultiLangString {
+
+  /**
+   * Creates a [[zio.prelude.Validation]] that either fails with a ValidationException, or succeeds with a MultiLangString.
+   * Ensures that the MultiLangString is not empty and that the languages are unique.
+   *
+   * @param values a set of LangString value objects
+   * @return a validation of a MultiLangString value object
+   */
   def make(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
     if (values.isEmpty) {
       Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
