@@ -202,7 +202,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(shared)
+  .dependsOn(shared, schemaCore)
 
 lazy val webapiJavaRunOptions = Seq(
   // "-showversion",
@@ -378,6 +378,24 @@ lazy val userCore = project
     ),
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+// schema projects
+
+lazy val schemaCore = project
+  .in(file("dsp-schema/core"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "schemaCore",
+    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)

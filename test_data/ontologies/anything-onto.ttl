@@ -9,7 +9,7 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @base <http://www.knora.org/ontology/0001/anything> .
 
-# A trivial ontology, used only for testing Knora.
+# A trivial ontology, used only for testing DSP API.
 
 
 <http://www.knora.org/ontology/0001/anything>
@@ -571,10 +571,75 @@
     rdfs:comment    "A thing with a region"@en ;
     rdfs:subClassOf [ a                  owl:Restriction ;
                       owl:onProperty     :thingHasRegion ;
-                      owl:minCardinality "0"^^xsd:nonNegativeInteger ],
+                      owl:minCardinality "0"^^xsd:nonNegativeInteger ] ,
                     [ a                  owl:Restriction ;
                       owl:onProperty     :thingHasRegionValue ;
                       owl:minCardinality "0"^^xsd:nonNegativeInteger ] .
+
+:hasTitle
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "Title"@en ;
+    knora-base:subjectClassConstraint knora-base:Resource ;
+    knora-base:objectClassConstraint  knora-base:TextValue ;
+    salsah-gui:guiElement             salsah-gui:SimpleText ;
+    salsah-gui:guiAttribute           "size=80",
+                                      "maxlength=255" .
+
+:VideoThing
+    rdf:type        owl:Class ;
+    rdfs:label      "Video Thing"@en ;
+    rdfs:comment    "A Resource representing a video"@en ;
+    rdfs:subClassOf knora-base:MovingImageRepresentation ,
+                    [ a                  owl:Restriction ;
+                      owl:onProperty     :hasTitle ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+
+:VideoSequenceThing
+    rdf:type        owl:Class ;
+    rdfs:label      "Video Sequence Thing"@en ;
+    rdfs:comment    "A Resource representing a subsequence of a video"@en ;
+    rdfs:subClassOf knora-base:Resource ,
+                    [ rdf:type             owl:Restriction ;
+                      owl:onProperty       knora-base:isSequenceOf ;
+                      owl:cardinality      "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type             owl:Restriction ;
+                      owl:onProperty       knora-base:isSequenceOfValue ;
+                      owl:cardinality      "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type             owl:Restriction ;
+                      owl:onProperty       knora-base:hasSequenceBounds ;
+                      owl:cardinality      "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ] .
+
+:AudioThing
+    rdf:type        owl:Class ;
+    rdfs:label      "Audio Thing"@en ;
+    rdfs:comment    "A Resource representing an audio"@en ;
+    rdfs:subClassOf knora-base:AudioRepresentation ,
+                    [ a                  owl:Restriction ;
+                      owl:onProperty     :hasTitle ;
+                      owl:maxCardinality "1"^^xsd:nonNegativeInteger ] .
+
+:AudioSequenceThing
+    rdf:type        owl:Class ;
+    rdfs:label      "Audio Sequence Thing"@en ;
+    rdfs:comment    "A Resource representing a subsequence of an audio"@en ;
+    rdfs:subClassOf knora-base:Resource ,
+                    [ rdf:type             owl:Restriction ;
+                      owl:onProperty       knora-base:isSequenceOf ;
+                      owl:cardinality      "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type             owl:Restriction ;
+                      owl:onProperty       knora-base:isSequenceOfValue ;
+                      owl:cardinality      "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ],
+                    [ rdf:type             owl:Restriction ;
+                      owl:onProperty       knora-base:hasSequenceBounds ;
+                      owl:cardinality      "1"^^xsd:nonNegativeInteger ;
+                      salsah-gui:guiOrder  "0"^^xsd:nonNegativeInteger ] .
+
 
 
 #################################################################

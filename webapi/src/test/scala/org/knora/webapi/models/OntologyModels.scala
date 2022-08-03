@@ -5,6 +5,9 @@
 
 package org.knora.webapi.models
 
+import dsp.valueobjects.LangString
+import dsp.valueobjects.LanguageCode
+
 import java.time.Instant
 import scala.annotation.tailrec
 
@@ -14,7 +17,7 @@ object Comments {
       case Some(value) =>
         s"""
            |    "rdfs:comment" : {
-           |      "@language" : "${value.language}",
+           |      "@language" : "${value.language.value}",
            |      "@value" : "${value.value}"
            |    },
            |""".stripMargin
@@ -22,19 +25,32 @@ object Comments {
     }
 }
 
-final case class LangString(language: String, value: String)
-
 sealed abstract case class CreateClassRequest private (value: String)
 object CreateClassRequest {
+
+  /**
+   * Makes a CreateClassRequest (JSON-LD).
+   *
+   * @param ontologyName         the ontology name
+   * @param lastModificationDate the LMD of the ontology
+   * @param className            name of the class to be created
+   * @param label                the label of the class
+   * @param comment              the comment of the class
+   * @param subClassOf           optional superclass. defaults to "knora-api:Resource". (Needs to be of format `PREFIX:ResourceName`)
+   *
+   * @return a JSON-LD representation of the request wrapped in a CreateClassRequest object
+   */
   def make(
     ontologyName: String,
     lastModificationDate: Instant,
     className: String,
-    label: LangString,
-    comment: Option[LangString]
+    label: LangString = LangString.unsafeMake(LanguageCode.en, "Label"),
+    comment: Option[LangString] = None,
+    subClassOf: Option[String] = None
   ): CreateClassRequest = {
     val ontologyId           = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val maybeComment: String = Comments.handleOptionalComment(comment)
+    val superClass           = subClassOf.getOrElse("knora-api:Resource")
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -47,13 +63,13 @@ object CreateClassRequest {
                    |    "@id" : "$ontologyName:$className",
                    |    "@type" : "owl:Class",
                    |    "rdfs:label" : {
-                   |      "@language" : "${label.language}",
+                   |      "@language" : "${label.language.value}",
                    |      "@value" : "${label.value}"
                    |    },
                    |    $maybeComment
                    |    "rdfs:subClassOf" : [
                    |      {
-                   |        "@id": "knora-api:Resource"
+                   |        "@id": "$superClass"
                    |      }
                    |    ]
                    |  } ],
@@ -81,6 +97,12 @@ object PropertyValueType {
   case object IntValue extends PropertyValueType {
     val value = "knora-api:IntValue"
   }
+  case object LinkValue extends PropertyValueType {
+    val value = "knora-api:LinkValue"
+  }
+  case object Resource extends PropertyValueType {
+    val value = "knora-api:Resource"
+  }
 }
 
 sealed abstract case class CreatePropertyRequest private (value: String)
@@ -91,8 +113,9 @@ object CreatePropertyRequest {
     propertyName: String,
     subjectClassName: Option[String],
     propertyType: PropertyValueType,
-    label: LangString,
-    comment: Option[LangString]
+    label: LangString = LangString.unsafeMake(LanguageCode.en, "Label"),
+    comment: Option[LangString] = None,
+    subPropertyOf: Option[String] = None
   ): CreatePropertyRequest = {
     val LocalHost_Ontology   = "http://0.0.0.0:3333/ontology"
     val ontologyId           = LocalHost_Ontology + s"/0001/$ontologyName/v2"
@@ -106,6 +129,7 @@ object CreatePropertyRequest {
                                    |""".stripMargin
       case None => ""
     }
+    val superProperty = subPropertyOf.getOrElse("knora-api:hasValue")
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -123,11 +147,11 @@ object CreatePropertyRequest {
                    |      },
                    |      $maybeComment
                    |      "rdfs:label" : {
-                   |        "@language" : "${label.language}",
+                   |        "@language" : "${label.language.value}",
                    |        "@value" : "${label.value}"
                    |      },
                    |      "rdfs:subPropertyOf" : {
-                   |        "@id" : "knora-api:hasValue"
+                   |        "@id" : "$superProperty"
                    |      }
                    |  } ],
                    |  "@context" : {
@@ -160,6 +184,10 @@ object CardinalityRestriction {
   case object MinCardinalityZero extends CardinalityRestriction {
     val cardinality = "owl:minCardinality"
     val value       = 0
+  }
+  case object CardinalityOne extends CardinalityRestriction {
+    val cardinality = "owl:cardinality"
+    val value       = 1
   }
 }
 

@@ -7,6 +7,7 @@ package dsp.valueobjects
 
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Role._
+import dsp.valueobjects.LanguageCode
 import zio.prelude.Validation
 import zio.test.ZIOSpecDefault
 import zio.test._
@@ -19,7 +20,7 @@ object RoleSpec extends ZIOSpecDefault {
   private val invalidLangStringValue   = "Invalid \r"
   private val validPermission          = Permission.View
   private val invalidPermission        = "mod"
-  private val validLangStringIsoCode   = V2.EN
+  private val validLangStringIsoCode   = LanguageCode.EN
   private val invalidLangStringIsoCode = "iso"
 
   def spec =

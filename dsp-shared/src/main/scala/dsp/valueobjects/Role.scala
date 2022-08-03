@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import dsp.errors.BadRequestException
+import dsp.valueobjects.LanguageCode
 import zio.prelude.Validation
 
 object Role {
@@ -19,7 +20,7 @@ object Role {
   sealed abstract case class LangString private (value: String, isoCode: String)
   object LangString {
     def isIsoCodeSupported(isoCode: String): Boolean =
-      V2.SupportedLanguageCodes.contains(isoCode.toLowerCase) // should only lower case be supported?
+      LanguageCode.SupportedLanguageCodes.contains(isoCode.toLowerCase) // should only lower case be supported?
 
     def make(value: String, isoCode: String): Validation[Throwable, LangString] =
       if (value.isEmpty) {

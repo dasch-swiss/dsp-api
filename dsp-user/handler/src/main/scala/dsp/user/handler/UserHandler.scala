@@ -8,16 +8,17 @@ package dsp.user.handler
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
+import dsp.errors.KnoraException
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.user.api.UserRepo
 import dsp.user.domain.User
 import dsp.valueobjects.Id.UserId
+import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 import zio._
 
 import java.util.UUID
-import dsp.errors.KnoraException
 
 /**
  * The user handler.

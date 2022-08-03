@@ -8,10 +8,12 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
+import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri.UserIri
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.User._
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
-import dsp.errors.BadRequestException
-
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -24,8 +26,6 @@ import zio.prelude.Validation
 import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
-import dsp.valueobjects.Iri.UserIri
-import dsp.valueobjects.User._
 
 object UsersRouteADM {
   val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")

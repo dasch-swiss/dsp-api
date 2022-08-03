@@ -182,7 +182,8 @@ object Dependencies {
   )
 
   val schemaCoreLibraryDependencies = Seq(
-    zioPrelude
+    zioPrelude,
+    zioTest % Test
   )
 
   val schemaRepoLibraryDependencies                  = Seq()

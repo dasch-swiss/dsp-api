@@ -31,11 +31,15 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 import org.knora.webapi.settings.KnoraSettingsImpl
+import zio.prelude.Validation
 
 import java.time.Instant
 import scala.collection.immutable
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 object OntologyHelpers {
 
@@ -774,144 +778,180 @@ object OntologyHelpers {
    * @param cacheData               the ontology cache.
    * @param existingLinkPropsToKeep the link properties that are already defined on the class and that
    *                                will be kept after the update.
-   * @return the updated class definition, and the cardinalities resulting from inheritance.
+   * @return A Validation containing either a Throwable or the updated class definition, and the cardinalities resulting from inheritance.
    */
   def checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
     internalClassDef: ClassInfoContentV2,
     allBaseClassIris: Set[SmartIri],
     cacheData: OntologyCacheData,
     existingLinkPropsToKeep: Set[SmartIri] = Set.empty
-  )(implicit stringFormatter: StringFormatter): (ClassInfoContentV2, Map[SmartIri, KnoraCardinalityInfo]) = {
-    // If the class has cardinalities, check that the properties are already defined as Knora properties.
-
-    val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
-      propertyIri =>
-        if (
-          !isKnoraResourceProperty(
-            propertyIri,
-            cacheData
-          ) || propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue
-        ) {
-          throw NotFoundException(s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}>")
-        }
-
-        cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
-    }
-
-    val existingLinkValuePropsToKeep = existingLinkPropsToKeep.map(_.fromLinkPropToLinkValueProp)
-    val newLinkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
-      .filter(_.isLinkProp)
-      .map(_.entityInfoContent.propertyIri) -- existingLinkPropsToKeep
-    val newLinkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
-      .filter(_.isLinkValueProp)
-      .map(_.entityInfoContent.propertyIri) -- existingLinkValuePropsToKeep
-
-    // Don't allow link value prop cardinalities to be included in the request.
-
-    if (newLinkValuePropsInClass.nonEmpty) {
-      throw BadRequestException(
-        s"In class ${internalClassDef.classIri.toOntologySchema(ApiV2Complex)}, cardinalities have been submitted for one or more link value properties: ${newLinkValuePropsInClass
-            .map(_.toOntologySchema(ApiV2Complex))
-            .mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically."
-      )
-    }
-
-    // Add a link value prop cardinality for each new link prop cardinality.
-
-    val linkValuePropCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = newLinkPropsInClass.map { linkPropIri =>
-      val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
-
-      // Ensure that the link value prop exists.
-      cacheData
-        .ontologies(linkValuePropIri.getOntologyFromEntity)
-        .properties
-        .getOrElse(linkValuePropIri, throw NotFoundException(s"Link value property <$linkValuePropIri> not found"))
-
-      linkValuePropIri -> internalClassDef.directCardinalities(linkPropIri)
-    }.toMap
-
-    val classDefWithAddedLinkValueProps: ClassInfoContentV2 = internalClassDef.copy(
-      directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
-    )
-
-    // Get the cardinalities that the class can inherit. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
-
-    val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
-      classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri: SmartIri =>
-        val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
-        ontology match {
-          case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities
-          case _                        => None
-        }
-      }.toMap
-
-    // Check that the cardinalities directly defined on the class are compatible with any inheritable
-    // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
-
-    val cardinalitiesForClassWithInheritance: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
-      classIri = internalClassDef.classIri,
-      thisClassCardinalities = classDefWithAddedLinkValueProps.directCardinalities,
-      inheritableCardinalities = cardinalitiesAvailableToInherit,
-      allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
-      errorSchema = ApiV2Complex,
-      errorFun = { msg: String =>
-        throw BadRequestException(msg)
+  )(implicit
+    stringFormatter: StringFormatter
+  ): Validation[Throwable, (ClassInfoContentV2, Map[SmartIri, KnoraCardinalityInfo])] = {
+    for {
+      // If the class has cardinalities, check that the properties are already defined as Knora properties.
+      propertyDefsForDirectCardinalities <- {
+        Validation
+          .validateAll(internalClassDef.directCardinalities.keySet.map { propertyIri =>
+            if (
+              propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue
+            )
+              Validation.fail(
+                BadRequestException(
+                  s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}> - must not use this built-in property directly."
+                )
+              )
+            else if (!isKnoraResourceProperty(propertyIri, cacheData))
+              Validation.fail(
+                NotFoundException(
+                  s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2Complex)}> - not found in ontology cache."
+                )
+              )
+            else {
+              Validation.succeed(cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri))
+            }
+          }.toList)
+          .map(_.toSet)
       }
-    )
 
-    // Check that the class is a subclass of all the classes that are subject class constraints of the Knora resource properties in its cardinalities.
+      existingLinkValuePropsToKeep = existingLinkPropsToKeep.map(_.fromLinkPropToLinkValueProp)
+      newLinkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
+                                             .filter(_.isLinkProp)
+                                             .map(_.entityInfoContent.propertyIri) -- existingLinkPropsToKeep
+      newLinkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
+                                                  .filter(_.isLinkValueProp)
+                                                  .map(_.entityInfoContent.propertyIri) -- existingLinkValuePropsToKeep
 
-    val knoraResourcePropertyIrisInCardinalities = cardinalitiesForClassWithInheritance.keySet.filter { propertyIri =>
-      isKnoraResourceProperty(
-        propertyIri = propertyIri,
-        cacheData = cacheData
-      )
-    }
+      // Don't allow link value prop cardinalities to be included in the request.
+      _ <- if (newLinkValuePropsInClass.nonEmpty) {
+             Validation.fail(
+               BadRequestException(
+                 s"In class ${internalClassDef.classIri.toOntologySchema(ApiV2Complex)}, cardinalities have been submitted for one or more link value properties: ${newLinkValuePropsInClass
+                     .map(_.toOntologySchema(ApiV2Complex))
+                     .mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically."
+               )
+             )
+           } else { Validation.succeed(()) }
 
-    val allClassCardinalityKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2] =
-      knoraResourcePropertyIrisInCardinalities.map { propertyIri =>
-        propertyIri -> cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri).entityInfoContent
-      }.toMap
+      // Add a link value prop cardinality for each new link prop cardinality.
 
-    checkSubjectClassConstraintsViaCardinalities(
-      internalClassDef = classDefWithAddedLinkValueProps,
-      allBaseClassIris = allBaseClassIris,
-      allClassCardinalityKnoraPropertyDefs = allClassCardinalityKnoraPropertyDefs,
-      errorSchema = ApiV2Complex,
-      errorFun = { msg: String =>
-        throw BadRequestException(msg)
-      }
-    )
+      linkValuePropCardinalitiesToAdd <-
+        Validation.fromTry(Try(newLinkPropsInClass.map { linkPropIri =>
+          val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
 
-    // It cannot have cardinalities both on property P and on a subproperty of P.
+          // Ensure that the link value prop exists.
+          cacheData
+            .ontologies(linkValuePropIri.getOntologyFromEntity)
+            .properties
+            .getOrElse(
+              linkValuePropIri,
+              throw NotFoundException(s"Link value property <$linkValuePropIri> not found")
+            )
 
-    val maybePropertyAndSubproperty: Option[(SmartIri, SmartIri)] = findPropertyAndSubproperty(
-      propertyIris = cardinalitiesForClassWithInheritance.keySet,
-      subPropertyOfRelations = cacheData.subPropertyOfRelations
-    )
+          linkValuePropIri -> internalClassDef.directCardinalities(linkPropIri)
+        }.toMap))
 
-    maybePropertyAndSubproperty match {
-      case Some((basePropertyIri, propertyIri)) =>
-        throw BadRequestException(
-          s"Class <${classDefWithAddedLinkValueProps.classIri.toOntologySchema(ApiV2Complex)}> has a cardinality on property <${basePropertyIri
-              .toOntologySchema(ApiV2Complex)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2Complex)}>"
+      classDefWithAddedLinkValueProps: ClassInfoContentV2 =
+        internalClassDef.copy(
+          directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
         )
 
-      case None => ()
-    }
+      // Get the cardinalities that the class can inherit. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
 
-    // Check for invalid cardinalities on boolean properties.
-    checkForInvalidBooleanCardinalities(
-      classIri = internalClassDef.classIri,
-      directCardinalities = internalClassDef.directCardinalities,
-      allPropertyDefs = cacheData.allPropertyDefs,
-      schemaForErrors = ApiV2Complex,
-      errorFun = { msg: String =>
-        throw BadRequestException(msg)
-      }
-    )
+      cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
+        classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri: SmartIri =>
+          val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
+          ontology match {
+            case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities
+            case _                        => None
+          }
+        }.toMap
 
-    (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
+      // Check that the cardinalities directly defined on the class are compatible with any inheritable
+      // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
+
+      cardinalitiesForClassWithInheritance <-
+        Validation.fromTry(
+          Try(
+            overrideCardinalities(
+              classIri = internalClassDef.classIri,
+              thisClassCardinalities = classDefWithAddedLinkValueProps.directCardinalities,
+              inheritableCardinalities = cardinalitiesAvailableToInherit,
+              allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
+              errorSchema = ApiV2Complex,
+              errorFun = { msg: String =>
+                throw BadRequestException(
+                  msg
+                )
+              }
+            )
+          )
+        )
+
+      // Check that the class is a subclass of all the classes that are subject class constraints of the Knora resource properties in its cardinalities.
+
+      knoraResourcePropertyIrisInCardinalities =
+        cardinalitiesForClassWithInheritance.keySet.filter { propertyIri =>
+          isKnoraResourceProperty(
+            propertyIri = propertyIri,
+            cacheData = cacheData
+          )
+        }
+
+      allClassCardinalityKnoraPropertyDefs: Map[SmartIri, PropertyInfoContentV2] =
+        knoraResourcePropertyIrisInCardinalities.map { propertyIri =>
+          propertyIri -> cacheData
+            .ontologies(propertyIri.getOntologyFromEntity)
+            .properties(propertyIri)
+            .entityInfoContent
+        }.toMap
+
+      _ <- Validation.fromTry(
+             Try(
+               checkSubjectClassConstraintsViaCardinalities(
+                 internalClassDef = classDefWithAddedLinkValueProps,
+                 allBaseClassIris = allBaseClassIris,
+                 allClassCardinalityKnoraPropertyDefs = allClassCardinalityKnoraPropertyDefs,
+                 errorSchema = ApiV2Complex,
+                 errorFun = { msg: String =>
+                   throw BadRequestException(msg)
+                 }
+               )
+             )
+           )
+
+      // It cannot have cardinalities both on property P and on a subproperty of P.
+
+      _ <- findPropertyAndSubproperty(
+             propertyIris = cardinalitiesForClassWithInheritance.keySet,
+             subPropertyOfRelations = cacheData.subPropertyOfRelations
+           ) match {
+             case Some((basePropertyIri, propertyIri)) =>
+               Validation.fail(
+                 BadRequestException(
+                   s"Class <${classDefWithAddedLinkValueProps.classIri.toOntologySchema(ApiV2Complex)}> has a cardinality on property <${basePropertyIri
+                       .toOntologySchema(ApiV2Complex)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2Complex)}>"
+                 )
+               )
+
+             case None => Validation.succeed(())
+           }
+
+      // Check for invalid cardinalities on boolean properties.
+      _ <- Validation.fromTry(
+             Try(
+               checkForInvalidBooleanCardinalities(
+                 classIri = internalClassDef.classIri,
+                 directCardinalities = internalClassDef.directCardinalities,
+                 allPropertyDefs = cacheData.allPropertyDefs,
+                 schemaForErrors = ApiV2Complex,
+                 errorFun = { msg: String =>
+                   throw BadRequestException(msg)
+                 }
+               )
+             )
+           )
+    } yield (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
   }
 
   /**

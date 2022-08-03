@@ -945,6 +945,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -1361,6 +1362,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               cacheData = cacheData,
               existingLinkPropsToKeep = existingReadClassInfo.linkProperties
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -1612,6 +1614,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(

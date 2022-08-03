@@ -81,6 +81,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     RdfDataObject(
       path = "test_data/ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(
+      path = "test_data/ontologies/sequences-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/sequences"
+    ),
+    RdfDataObject(
+      path = "test_data/all_data/sequences-data.ttl",
+      name = "http://www.knora.org/data/0001/sequences"
     )
   )
 
@@ -91,6 +99,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
+
+  private def collectClientTestData(fileName: String, fileContent: String, fileExtension: String = "json"): Unit =
+    clientTestDataCollector.addFile(
+      TestDataFileContent(
+        filePath = TestDataFilePath(
+          directoryPath = clientTestDataPath,
+          filename = fileName,
+          fileExtension = fileExtension
+        ),
+        text = fileContent
+      )
+    )
 
   private def successResponse(message: String): String =
     s"""{
@@ -208,16 +228,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "resource-preview",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("resource-preview", responseAsString)
     }
 
     "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
@@ -507,16 +518,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "testding",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("testding", responseAsString)
 
       // Check that the resource corresponds to the ontology.
       instanceChecker.check(
@@ -539,16 +541,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
       compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "thing-with-picture",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("thing-with-picture", responseAsString)
 
       // Check that the resource corresponds to the ontology.
       instanceChecker.check(
@@ -724,16 +717,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString       = responseToString(response)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "resource-graph",
-            fileExtension = "json"
-          ),
-          text = responseAsString
-        )
-      )
+      collectClientTestData("resource-graph", responseAsString)
 
       assert(response.status == StatusCodes.OK, responseAsString)
       val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
@@ -980,16 +964,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           |  }
           |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-values-request",
-            fileExtension = "json"
-          ),
-          text = createResourceWithValues
-        )
-      )
+      collectClientTestData("create-resource-with-values-request", createResourceWithValues)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1098,7 +1073,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
       // Check that the value is correct in the simple schema.
       val resourceSimpleAsJsonLD: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceSimpleGetResponseAsString)
-      println(resourceSimpleAsJsonLD.body)
       val foafName: String =
         resourceSimpleAsJsonLD.body.requireString("http://0.0.0.0:3333/ontology/0001/freetest/simple/v2#hasFoafName")
       assert(foafName == "this is a foaf name")
@@ -1146,16 +1120,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-creation-date",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-creation-date", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1202,16 +1167,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val customIRI: IRI = SharedTestDataADM.customResourceIRI
       val jsonLDEntity   = createResourceWithCustomIRI(customIRI)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-IRI-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-IRI-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1233,7 +1189,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      println(responseToString(response))
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
 
@@ -1245,7 +1200,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      println(responseToString(response))
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
 
@@ -1311,16 +1265,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val customValueIRI: IRI = SharedTestDataADM.customValueIRI
       val jsonLDEntity        = createResourceWithCustomValueIRI(customValueIRI)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-value-IRI-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-value-IRI-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1367,16 +1312,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            | }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-value-UUID-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-value-UUID-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1427,16 +1363,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            | }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-value-creationDate-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-with-custom-value-creationDate-request", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1498,15 +1425,9 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            | }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
+      collectClientTestData(
+        "create-resource-with-custom-resourceIRI-creationDate-ValueIri-ValueUUID-request",
+        jsonLDEntity
       )
 
       val request = Post(
@@ -1580,16 +1501,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-resource-as-user",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("create-resource-as-user", jsonLDEntity)
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1676,16 +1588,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("update-resource-metadata-request", jsonLDEntity)
 
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
@@ -1703,16 +1606,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-response",
-            fileExtension = "json"
-          ),
-          text = updateResponseAsString
-        )
-      )
+      collectClientTestData("update-resource-metadata-response", jsonLDEntity)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1764,16 +1658,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-request-with-last-mod-date",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("update-resource-metadata-request-with-last-mod-date", jsonLDEntity)
 
       val updateRequest = Put(
         s"$baseApiUrl/v2/resources",
@@ -1793,16 +1678,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       )
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-resource-metadata-response-with-last-mod-date",
-            fileExtension = "json"
-          ),
-          text = updateResponseAsString
-        )
-      )
+      collectClientTestData("update-resource-metadata-response-with-last-mod-date", jsonLDEntity)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1848,16 +1724,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-resource-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("delete-resource-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
@@ -1868,16 +1735,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-resource-response",
-            fileExtension = "json"
-          ),
-          text = updateResponseAsString
-        )
-      )
+      collectClientTestData("delete-resource-response", jsonLDEntity)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1892,16 +1750,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val responseType = previewJsonLD.requireString("@type")
       responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "deleted-resource-preview-response",
-            fileExtension = "json"
-          ),
-          text = previewResponseAsString
-        )
-      )
+      collectClientTestData("deleted-resource-preview-response", jsonLDEntity)
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1926,16 +1775,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "delete-resource-with-custom-delete-date-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("delete-resource-with-custom-delete-date-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/delete",
@@ -2128,16 +1968,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             |  }
             |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "erase-resource-request",
-            fileExtension = "json"
-          ),
-          text = jsonLDEntity
-        )
-      )
+      collectClientTestData("erase-resource-request", jsonLDEntity)
 
       val updateRequest = Post(
         s"$baseApiUrl/v2/resources/erase",
@@ -2400,6 +2231,176 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
       val editValueResponseDoc            = responseToJsonLDDocument(editValueResponse)
       assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
+    }
+
+    "correctly load and request resources that have a isSequenceOf relation to a video resource" in {
+      val cred   = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl = s"$baseApiUrl/v2/values"
+      val resUrl = s"$baseApiUrl/v2/resources"
+
+      // get the video resource
+      val videoResourceIri = URLEncoder.encode("http://rdfh.ch/0001/video-01", "UTF-8")
+      val videoGetRequest  = Get(s"$resUrl/$videoResourceIri") ~> addCredentials(cred)
+      val videoResponse    = singleAwaitingRequest(videoGetRequest)
+      assert(videoResponse.status == StatusCodes.OK)
+
+      // get the sequence reource pointing to the video resource
+      val sequenceResourceIri = URLEncoder.encode("http://rdfh.ch/0001/video-sequence-01", "UTF-8")
+      val sequenceGetRequest  = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
+      val sequenceResponse    = singleAwaitingRequest(sequenceGetRequest)
+      assert(sequenceResponse.status == StatusCodes.OK)
+
+      // get the isSequenceOfValue property on the sequence resource
+      val sequenceOfUuid     = "6CKp1AmZT1SRHYeSOUaJjA"
+      val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)
+      val sequenceOfResponse = singleAwaitingRequest(sequenceOfRequest)
+      assert(sequenceOfResponse.status == StatusCodes.OK)
+
+      // get the hasSequenceBounds property on the sequence resource
+      val sequenceBoundsUuid     = "vEDim4wvSfGnhSvX6fXcaA"
+      val sequenceBoundsRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceBoundsUuid") ~> addCredentials(cred)
+      val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
+      assert(sequenceBoundsResponse.status == StatusCodes.OK)
+    }
+
+    "correctly create and request additional resources that have a isSequenceOf relation to a video resource" in {
+      val cred   = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl = s"$baseApiUrl/v2/values"
+      val resUrl = s"$baseApiUrl/v2/resources"
+
+      // create another sequence of the video resource
+      val createSequenceJson: String =
+        """{
+          |  "@type" : "sequences:VideoSequence",
+          |  "knora-api:isSequenceOfValue" : {
+          |    "@type" : "knora-api:LinkValue",
+          |    "knora-api:linkValueHasTargetIri" : {
+          |      "@id" : "http://rdfh.ch/0001/video-01"
+          |    }
+          |  },
+          |  "knora-api:hasSequenceBounds" : {
+          |    "@type" : "knora-api:IntervalValue",
+          |    "knora-api:intervalValueHasEnd" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "3.4"
+          |    },
+          |    "knora-api:intervalValueHasStart" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "1.2"
+          |    }
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "second sequence",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "sequences" : "http://0.0.0.0:3333/ontology/0001/sequences/v2#"
+          |  }
+          |}""".stripMargin
+
+      val createSequenceRequest =
+        Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
+      val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
+      val createSequenceResponseAsString = responseToString(createSequenceResponse)
+      assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
+      val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
+      val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
+
+      // get the newly created sequence reource
+      val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
+      val sequenceResponse   = singleAwaitingRequest(sequenceGetRequest)
+      assert(sequenceResponse.status == StatusCodes.OK)
+      val getSequenceResponseBody = responseToJsonLDDocument(sequenceResponse).body
+      val sequenceOfUuid = getSequenceResponseBody
+        .requireObject(OntologyConstants.KnoraApiV2Complex.IsSequenceOfValue)
+        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val sequenceBoundsUuid = getSequenceResponseBody
+        .requireObject(OntologyConstants.KnoraApiV2Complex.HasSequenceBounds)
+        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+
+      // get the isSequenceOfValue property on the sequence resource
+      val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)
+      val sequenceOfResponse = singleAwaitingRequest(sequenceOfRequest)
+      assert(sequenceOfResponse.status == StatusCodes.OK)
+
+      // get the hasSequenceBounds property on the sequence resource
+      val sequenceBoundsRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceBoundsUuid") ~> addCredentials(cred)
+      val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
+      assert(sequenceBoundsResponse.status == StatusCodes.OK)
+    }
+
+    "correctly create and request resources that have a isSequenceOf-subproperty relation to an audio resource" in {
+      val cred   = BasicHttpCredentials(anythingUserEmail, password)
+      val valUrl = s"$baseApiUrl/v2/values"
+      val resUrl = s"$baseApiUrl/v2/resources"
+
+      // create another sequence of the video resource
+      val createSequenceJson: String =
+        """{
+          |  "@type" : "sequences:AudioSequence",
+          |  "sequences:isAnnotatedSequenceOfAudioValue" : {
+          |    "@type" : "knora-api:LinkValue",
+          |    "knora-api:linkValueHasTargetIri" : {
+          |      "@id" : "http://rdfh.ch/0001/audio-01"
+          |    }
+          |  },
+          |  "sequences:hasCustomSequenceBounds" : {
+          |    "@type" : "knora-api:IntervalValue",
+          |    "knora-api:intervalValueHasEnd" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "14.2"
+          |    },
+          |    "knora-api:intervalValueHasStart" : {
+          |      "@type" : "xsd:decimal",
+          |      "@value" : "9.9"
+          |    }
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "rdfs:label" : "custom audio sequence",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "sequences" : "http://0.0.0.0:3333/ontology/0001/sequences/v2#"
+          |  }
+          |}""".stripMargin
+
+      val createSequenceRequest =
+        Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
+      val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
+      val createSequenceResponseAsString = responseToString(createSequenceResponse)
+      assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
+      val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
+      val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
+
+      // get the newly created sequence reource
+      val sequenceGetRequest = Get(s"$resUrl/$sequenceResourceIri") ~> addCredentials(cred)
+      val sequenceResponse   = singleAwaitingRequest(sequenceGetRequest)
+      assert(sequenceResponse.status == StatusCodes.OK)
+      val getSequenceResponseBody = responseToJsonLDDocument(sequenceResponse).body
+      val sequenceOfUuid = getSequenceResponseBody
+        .requireObject("http://0.0.0.0:3333/ontology/0001/sequences/v2#isAnnotatedSequenceOfAudioValue")
+        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      val sequenceBoundsUuid = getSequenceResponseBody
+        .requireObject("http://0.0.0.0:3333/ontology/0001/sequences/v2#hasCustomSequenceBounds")
+        .requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+
+      // get the isSequenceOfValue property on the sequence resource
+      val sequenceOfRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceOfUuid") ~> addCredentials(cred)
+      val sequenceOfResponse = singleAwaitingRequest(sequenceOfRequest)
+      assert(sequenceOfResponse.status == StatusCodes.OK)
+
+      // get the hasSequenceBounds property on the sequence resource
+      val sequenceBoundsRequest  = Get(s"$valUrl/$sequenceResourceIri/$sequenceBoundsUuid") ~> addCredentials(cred)
+      val sequenceBoundsResponse = singleAwaitingRequest(sequenceBoundsRequest)
+      assert(sequenceBoundsResponse.status == StatusCodes.OK)
     }
   }
 }

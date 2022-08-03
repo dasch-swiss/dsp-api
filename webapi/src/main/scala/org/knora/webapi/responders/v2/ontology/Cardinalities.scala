@@ -9,9 +9,9 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.InternalSchema
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
@@ -178,6 +178,7 @@ object Cardinalities {
                 .filter(_.isLinkProp)                 // we are only interested in link properties
                 .map(_.entityInfoContent.propertyIri) // turn whatever is left back to a propertyIri
           )
+          .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
@@ -341,6 +342,7 @@ object Cardinalities {
                 .filter(_.isLinkProp)                 // we are only interested in link properties
                 .map(_.entityInfoContent.propertyIri) // turn whatever is left back to a propertyIri
           )
+          .fold(e => throw e.head, v => v)
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
       _ = Cache.checkOntologyReferencesInClassDef(
