@@ -365,7 +365,7 @@ class UsersADME2ESpec
 
         val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
 
-        //check that the custom IRI is correctly assigned
+        // check that the custom IRI is correctly assigned
         result.id should be(customUserIri)
 
         clientTestDataCollector.addFile(
@@ -431,7 +431,7 @@ class UsersADME2ESpec
 
         val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
 
-        //check that the special characters were escaped correctly
+        // check that the special characters were escaped correctly
         result.id should equal(otherCustomUserIri)
         result.givenName should equal("M\"Given 'Name")
         result.familyName should equal("M\tFamily Name")

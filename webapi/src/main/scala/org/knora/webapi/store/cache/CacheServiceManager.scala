@@ -140,11 +140,10 @@ final case class CacheServiceManager(cs: CacheService) {
 }
 
 object CacheServiceManager {
-  val layer: ZLayer[CacheService, Nothing, CacheServiceManager] = {
+  val layer: ZLayer[CacheService, Nothing, CacheServiceManager] =
     ZLayer {
       for {
         cache <- ZIO.service[CacheService]
       } yield CacheServiceManager(cache)
     }
-  }
 }

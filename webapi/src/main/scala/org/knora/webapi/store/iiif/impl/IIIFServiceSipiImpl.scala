@@ -26,12 +26,13 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-import dsp.errors.SipiException
+
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.domain._
+import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
 import spray.json._
 import zio._
@@ -56,15 +57,15 @@ case class IIIFServiceSipiImpl(
    * @param getFileMetadataRequest the request.
    * @return a [[GetFileMetadataResponse]] containing the requested metadata.
    */
-  def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Task[GetFileMetadataResponse] = {
+  def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): UIO[GetFileMetadataResponse] = {
     import SipiKnoraJsonResponseProtocol._
 
     for {
       url     <- ZIO.succeed(config.sipi.internalBaseUrl + getFileMetadataRequest.filePath + "/knora.json")
       request <- ZIO.succeed(new HttpGet(url))
       // _               <- ZIO.debug(request)
-      sipiResponseStr <- doSipiRequest(request)
-      sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse])
+      sipiResponseStr <- doSipiRequest(request).orDie
+      sipiResponse    <- ZIO.attempt(sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]).orDie
     } yield GetFileMetadataResponse(
       originalFilename = sipiResponse.originalFilename,
       originalMimeType = sipiResponse.originalMimeType,
@@ -85,7 +86,7 @@ case class IIIFServiceSipiImpl(
    */
   def moveTemporaryFileToPermanentStorage(
     moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
-  ): Task[SuccessResponseV2] = {
+  ): UIO[SuccessResponseV2] = {
 
     // create the JWT token with the necessary permission
     val jwtToken: UIO[String] = jwt.newToken(
@@ -123,7 +124,7 @@ case class IIIFServiceSipiImpl(
       url     <- moveFileUrl(token)
       entity  <- ZIO.succeed(requestEntity)
       request <- ZIO.succeed(request(url, entity))
-      _       <- doSipiRequest(request)
+      _       <- doSipiRequest(request).orDie
     } yield SuccessResponseV2("Moved file to permanent storage.")
   }
 
@@ -133,7 +134,7 @@ case class IIIFServiceSipiImpl(
    * @param deleteTemporaryFileRequestV2 the request.
    * @return a [[SuccessResponseV2]].
    */
-  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Task[SuccessResponseV2] = {
+  def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): UIO[SuccessResponseV2] = {
 
     val jwtToken: UIO[String] = jwt.newToken(
       deleteTemporaryFileRequestV2.requestingUser.id,
@@ -156,7 +157,7 @@ case class IIIFServiceSipiImpl(
       token   <- jwtToken
       url     <- deleteUrl(token)
       request <- ZIO.succeed(new HttpDelete(url))
-      _       <- doSipiRequest(request)
+      _       <- doSipiRequest(request).orDie
     } yield SuccessResponseV2("Deleted temporary file.")
   }
 
@@ -165,26 +166,26 @@ case class IIIFServiceSipiImpl(
    *
    * @param textFileRequest the request message.
    */
-  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): Task[SipiGetTextFileResponse] = {
+  def getTextFileRequest(textFileRequest: SipiGetTextFileRequest): UIO[SipiGetTextFileResponse] = {
 
     // helper method to handle errors
-    def handleErrors(ex: Throwable): ZIO[Any, Exception with KnoraException with Product, Nothing] = ex match {
+    def handleErrors(ex: Throwable) = ex match {
       case notFoundException: NotFoundException =>
-        ZIO.fail(
+        ZIO.die(
           NotFoundException(
             s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}"
           )
         )
 
       case badRequestException: BadRequestException =>
-        ZIO.fail(
+        ZIO.die(
           SipiException(
             s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}"
           )
         )
 
       case sipiException: SipiException =>
-        ZIO.fail(
+        ZIO.die(
           SipiException(
             s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}",
             sipiException.cause
@@ -195,7 +196,7 @@ case class IIIFServiceSipiImpl(
         ZIO.logError(
           s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}"
         ) *>
-          ZIO.fail(
+          ZIO.die(
             SipiException(
               s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}"
             )
@@ -331,7 +332,7 @@ object IIIFServiceSipiImpl {
       httpClient.close()
     }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
 
-  val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] = {
+  val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
     ZLayer.scoped {
       for {
         config <- ZIO.service[AppConfig]
@@ -343,5 +344,4 @@ object IIIFServiceSipiImpl {
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield IIIFServiceSipiImpl(config, jwtService, httpClient)
     }
-  }
 }

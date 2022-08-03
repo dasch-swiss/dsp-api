@@ -203,7 +203,7 @@ case class CacheServiceInMemImpl(
  * Companion object providing the layer with an initialized implementation
  */
 object CacheServiceInMemImpl {
-  val layer: ZLayer[Any, Nothing, CacheService] = {
+  val layer: ZLayer[Any, Nothing, CacheService] =
     ZLayer {
       for {
         users    <- TMap.empty[String, UserADM].commit
@@ -211,5 +211,4 @@ object CacheServiceInMemImpl {
         lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
     }.tap(_ => ZIO.debug(">>> In-Memory Cache Service Initialized <<<"))
-  }
 }

@@ -282,7 +282,7 @@ class AuthenticationV2E2ESpec
 
       val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
+      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
@@ -298,21 +298,21 @@ class AuthenticationV2E2ESpec
 
       val request  = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
+      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong token in header" in {
       val request  = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
+      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
 
     "fail authentication with wrong token as parameter" in {
       val request  = Get(baseApiUrl + "/v2/authentication?token=123456")
       val response = singleAwaitingRequest(request)
-      //log.debug("==>> " + responseAs[String])
+      // log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
     }
   }
@@ -336,7 +336,7 @@ class AuthenticationV2E2ESpec
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
-      //println(response.toString)
+      // println(response.toString)
 
       val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
 

@@ -65,7 +65,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
   private def projectsGetRequestV1(
     userProfile: Option[UserProfileV1]
   ): Future[ProjectsResponseV1] =
-    //log.debug("projectsGetRequestV1")
+    // log.debug("projectsGetRequestV1")
     for {
       projects <- projectsGetV1(
                     userProfile = userProfile
@@ -97,10 +97,10 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                                .getProjects()
                                .toString()
                            )
-      //_ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
+      // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
       projectsResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
+      // _ = log.debug(s"getProjectsResponseV1 - result: $projectsResponse")
 
       projectsResponseRows: Seq[VariableResultsRow] = projectsResponse.results.bindings
 
@@ -113,7 +113,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
             }
           )
         }
-      //_ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
+      // _ = log.debug(s"getProjectsResponseV1 - projectsWithProperties: $projectsWithProperties")
 
       ontologiesForProjects <- getOntologiesForProjects(
                                  userProfile = userProfile
@@ -238,7 +238,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     projectIri: IRI,
     userProfile: Option[UserProfileV1] = None
   ): Future[ProjectInfoResponseV1] =
-    //log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
+    // log.debug("projectInfoByIRIGetRequestV1 - projectIRI: {}", projectIRI)
     for {
       maybeProjectInfo: Option[ProjectInfoV1] <- projectInfoByIRIGetV1(
                                                    projectIri = projectIri,
@@ -265,7 +265,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     projectIri: IRI,
     userProfile: Option[UserProfileV1] = None
   ): Future[Option[ProjectInfoV1]] =
-    //log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
+    // log.debug("projectInfoByIRIGetV1 - projectIRI: {}", projectIri)
     for {
       sparqlQuery <- Future(
                        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -298,7 +298,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
           None
         }
 
-      //_ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
+      // _ = log.debug("projectInfoByIRIGetV1 - projectInfo: {}", projectInfo)
 
     } yield projectInfo
 
@@ -315,7 +315,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     shortName: String,
     userProfile: Option[UserProfileV1]
   ): Future[ProjectInfoResponseV1] =
-    //log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
+    // log.debug("projectInfoByShortnameGetRequestV1 - shortName: {}", shortName)
     for {
       sparqlQueryString <- Future(
                              org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -324,10 +324,10 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                                )
                                .toString()
                            )
-      //_ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
+      // _ = log.debug(s"getProjectInfoByShortnameGetRequest - query: $sparqlQueryString")
 
       projectResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"getProjectInfoByShortnameGetRequest - result: $projectResponse")
+      // _ = log.debug(s"getProjectInfoByShortnameGetRequest - result: $projectResponse")
 
       // get project IRI from results rows
       projectIri: IRI =
@@ -373,7 +373,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
     ontologies: Seq[IRI],
     userProfile: Option[UserProfileV1]
   ): ProjectInfoV1 =
-    //log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
+    // log.debug("createProjectInfoV1 - projectResponse: {}", projectResponse)
     if (projectResponse.nonEmpty) {
 
       val projectProperties: Map[String, Seq[String]] = projectResponse.groupBy(_.rowMap("p")).map {
@@ -446,7 +446,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                        .checkProjectExistsByIri(projectIri = projectIri)
                        .toString
                    )
-      //_ = log.debug("projectExists - query: {}", askString)
+      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
@@ -466,7 +466,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                        .checkProjectExistsByShortname(shortname = shortname)
                        .toString
                    )
-      //_ = log.debug("projectExists - query: {}", askString)
+      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
@@ -486,7 +486,7 @@ class ProjectsResponderV1(responderData: ResponderData) extends Responder(respon
                        .checkProjectExistsByShortcode(shortcode = shortcode)
                        .toString
                    )
-      //_ = log.debug("projectExists - query: {}", askString)
+      // _ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result                      = checkProjectExistsResponse.result
