@@ -17,7 +17,7 @@ object Dependencies {
   // versions
   val akkaHttpVersion   = "10.2.9"
   val akkaVersion       = "2.6.19"
-  val jenaVersion       = "4.4.0"
+  val jenaVersion       = "4.5.0"
   val metricsVersion    = "4.0.1"
   val scalaVersion      = "2.13.8"
   val ZioVersion        = "2.0.0"
@@ -46,7 +46,7 @@ object Dependencies {
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % akkaVersion     // Scala 3 compatible
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion // Scala 3 incompatible
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.0.0"         // Scala 3 incompatible
+  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"         // Scala 3 incompatible
   val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion // Scala 3 incompatible
   val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % akkaVersion     // Scala 3 compatible
   val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % akkaVersion     // Scala 3 compatible
@@ -60,7 +60,7 @@ object Dependencies {
   val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
 
   // Metrics
-  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.4"
+  val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
   val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.0" // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.5" // Scala 3 incompatible
 
@@ -69,14 +69,15 @@ object Dependencies {
     "commons-validator" % "commons-validator" % "1.7" exclude ("commons-logging", "commons-logging")
 
   // authentication
-  val jwtSprayJson = "com.pauldijou" %% "jwt-spray-json" % "5.0.0" // Scala 3 incompatible
+  val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
+  // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.6.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.7.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
   val ehcache = "net.sf.ehcache" % "ehcache" % "2.10.9.2"
-  val jedis   = "redis.clients"  % "jedis"   % "4.2.1"
+  val jedis   = "redis.clients"  % "jedis"   % "4.2.3"
 
   // serialization
   val chill = "com.twitter" %% "chill" % "0.10.0" // Scala 3 incompatible
@@ -86,14 +87,14 @@ object Dependencies {
   val gwtServlet      = "com.google.gwt"                % "gwt-servlet"       % "2.9.0"
   val icu4j           = "com.ibm.icu"                   % "icu4j"             % "70.1"
   val jakartaJSON     = "org.glassfish"                 % "jakarta.json"      % "2.0.1"
-  val jodd            = "org.jodd"                      % "jodd"              % "3.2.6"
+  val jodd            = "org.jodd"                      % "jodd"              % "3.2.7"
   val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "3.7.7"
   val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "3.7.7"
-  val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.3"
-  val scalaGraph      = "org.scala-graph"              %% "graph-core"        % "1.13.1" // Scala 3 incompatible
+  val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.4"
+  val scalaGraph      = "org.scala-graph"              %% "graph-core"        % "1.13.5" // Scala 3 incompatible
   val scallop         = "org.rogach"                   %% "scallop"           % "4.1.0"  // Scala 3 compatible
   val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
-  val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.2.0"
+  val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
 
   // test
@@ -102,8 +103,8 @@ object Dependencies {
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.7.6"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.7.6"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.12"        // Scala 3 compatible
-  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.2"
+  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
+  val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.3"
 
   // found/added by the plugin but deleted anyway
   val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.12.0"
@@ -188,49 +189,85 @@ object Dependencies {
   val schemaRepoEventStoreServiceLibraryDependencies = Seq()
   val schemaRepoSearchServiceLibraryDependencies     = Seq()
 
-  // user slice dependencies
+  // user projects dependencies
   val userInterfaceLibraryDependencies = Seq(
+    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
   val userHandlerLibraryDependencies = Seq(
-    springSecurityCore,
     bouncyCastle,
+    slf4j % Test,
+    springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
   val userCoreLibraryDependencies = Seq(
-    springSecurityCore,
     bouncyCastle,
+    slf4j % Test,
+    springSecurityCore,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
   val userRepoLibraryDependencies = Seq(
+    slf4j % Test,
     zio,
     zioMacros,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
-  val sharedLibraryDependencies = Seq(
+
+  // role projects dependencies
+  val roleInterfaceLibraryDependencies = Seq(
+    slf4j % Test,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val roleHandlerLibraryDependencies = Seq(
+    bouncyCastle,
+    slf4j % Test,
     springSecurityCore,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val roleCoreLibraryDependencies = Seq(
+    bouncyCastle,
+    slf4j % Test,
+    springSecurityCore,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+  val roleRepoLibraryDependencies = Seq(
+    slf4j % Test,
+    zio,
+    zioMacros,
+    zioTest    % Test,
+    zioTestSbt % Test
+  )
+
+  // shared project dependencies
+  val sharedLibraryDependencies = Seq(
     bouncyCastle,
     commonsLang3,
     commonsValidator,
     gwtServlet,
-    zioPrelude,
     scalaLogging,
+    slf4j % Test,
+    springSecurityCore,
+    zioPrelude,
     zioTest    % Test,
-    zioTestSbt % Test,
-    slf4j      % Test
+    zioTestSbt % Test
   )
 }

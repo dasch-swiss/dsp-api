@@ -7,7 +7,6 @@ package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi.CoreSpec
-import dsp.errors.TriplestoreTimeoutException
 import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
 
 import scala.concurrent.duration._
@@ -27,6 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataConten
 import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
 

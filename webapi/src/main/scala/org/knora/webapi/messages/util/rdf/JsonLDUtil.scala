@@ -1248,7 +1248,7 @@ object JsonLDUtil {
         // Yes. This shouldn't happen, so throw InconsistentRepositoryDataException.
         throw InconsistentRepositoryDataException(
           s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes
-            .map(_.toString)).mkString(", ")}"
+              .map(_.toString)).mkString(", ")}"
         )
       } else {
         // No. Use the long prefixes.

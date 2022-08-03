@@ -240,7 +240,7 @@ class PermissionsResponderADMSpec
             DuplicateValueException(
               s"An administrative permission for project: '${SharedTestDataADM.IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
+                    .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
                 s"Use its IRI ${perm002_a1.iri} to modify it, if necessary."
             )
           )
@@ -560,7 +560,7 @@ class PermissionsResponderADMSpec
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
+                    .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d1.iri} to modify it, if necessary."
             )
           )
@@ -586,7 +586,7 @@ class PermissionsResponderADMSpec
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
+                    .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d2.iri} to modify it, if necessary."
             )
           )
@@ -611,7 +611,7 @@ class PermissionsResponderADMSpec
               s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
+                    .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d4.iri} to modify it, if necessary."
             )
           )
@@ -639,7 +639,7 @@ class PermissionsResponderADMSpec
                 s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
                 "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
-                  .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
+                    .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${perm003_d5.iri} to modify it, if necessary."
             )
           )

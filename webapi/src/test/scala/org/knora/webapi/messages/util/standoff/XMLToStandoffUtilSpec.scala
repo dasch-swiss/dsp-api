@@ -224,7 +224,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         standoffDiffs = criticalTextDiffs
       )
 
-      //println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
+      // println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
 
       val expectedCriticalTextDiffsAsXml =
         """<?xml version="1.0" encoding="UTF-8"?>

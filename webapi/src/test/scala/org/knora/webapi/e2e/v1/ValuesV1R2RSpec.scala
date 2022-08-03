@@ -149,7 +149,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     "get a link value" in {
       Get(
         s"/v1/links/${URLEncoder.encode("http://rdfh.ch/0001/contained-thing-1", "UTF-8")}/${URLEncoder
-          .encode("http://www.knora.org/ontology/0001/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/containing-thing", "UTF-8")}"
+            .encode("http://www.knora.org/ontology/0001/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/containing-thing", "UTF-8")}"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
 
@@ -263,7 +263,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     "get the version history of a value" in {
       Get(
         s"/v1/values/history/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}/${URLEncoder
-          .encode("http://www.knora.org/ontology/0001/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}"
+            .encode("http://www.knora.org/ontology/0001/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
 
@@ -343,7 +343,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     "get a link value with a comment" in {
       Get(
         s"/v1/links/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}/${URLEncoder
-          .encode("http://www.knora.org/ontology/0001/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/another-thing", "UTF-8")}"
+            .encode("http://www.knora.org/ontology/0001/anything#hasOtherThing", "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/another-thing", "UTF-8")}"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
 

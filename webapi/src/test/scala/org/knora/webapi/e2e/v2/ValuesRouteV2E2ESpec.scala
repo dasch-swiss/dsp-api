@@ -3944,8 +3944,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
            |    "@id" : "${textValueWithStandoffIri.get}",
            |    "@type" : "knora-api:TextValue",
            |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(
-          textValue2AsXmlWithStandardMapping
-        )},
+            textValue2AsXmlWithStandardMapping
+          )},
            |    "knora-api:textValueHasMapping" : {
            |      "@id": "$standardMappingIri"
            |    }
@@ -5382,7 +5382,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       // Request the resource as it was before the value was deleted.
 
       val getRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}?version=${URLEncoder
-        .encode("2018-05-28T15:52:03.897Z", "UTF-8")}")
+          .encode("2018-05-28T15:52:03.897Z", "UTF-8")}")
       val getResponse: HttpResponse = singleAwaitingRequest(getRequest)
       val getResponseAsString       = responseToString(getResponse)
       assert(getResponse.status == StatusCodes.OK, getResponseAsString)

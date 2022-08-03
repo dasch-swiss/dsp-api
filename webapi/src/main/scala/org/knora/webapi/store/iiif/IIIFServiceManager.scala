@@ -36,11 +36,10 @@ final case class IIIFServiceManager(iiifs: IIIFService) {
 }
 
 object IIIFServiceManager {
-  val layer: ZLayer[IIIFService, Nothing, IIIFServiceManager] = {
+  val layer: ZLayer[IIIFService, Nothing, IIIFServiceManager] =
     ZLayer {
       for {
         iiif <- ZIO.service[IIIFService]
       } yield IIIFServiceManager(iiif)
     }
-  }
 }
