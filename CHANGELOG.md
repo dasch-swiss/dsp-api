@@ -1,5 +1,17 @@
 # Changelog
 
+### [23.0.4](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.3...v23.0.4) (2022-08-03)
+
+
+### Bug Fixes
+
+* **sipi:** SIPI returns 404 instead of images if cookie is invalid (DEV-1135) ([#2142](https://www.github.com/dasch-swiss/dsp-api/issues/2142)) ([eb797f0](https://www.github.com/dasch-swiss/dsp-api/commit/eb797f06809bc8e4da386ca2498de3e5676cbbbf))
+
+
+### Maintenance
+
+* update dependencies ([4cd9812](https://www.github.com/dasch-swiss/dsp-api/commit/4cd98123dd02adcc2fa6ffa7617d33b7440a5ea7))
+
 ### [23.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.2...v23.0.3) (2022-08-02)
 
 
