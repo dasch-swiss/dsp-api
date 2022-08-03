@@ -88,14 +88,13 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
     def makeNode(node: ListChildNodeADM): JsonLDObject = {
       val label: Map[IRI, JsonLDString] =
         makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
-      val comment: Map[IRI, JsonLDString] = {
+      val comment: Map[IRI, JsonLDString] =
         makeMapIriToJSONLDString(
           OntologyConstants.Rdfs.Comment,
           node.comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
           userLang,
           fallbackLang
         )
-      }
 
       val position: Map[IRI, JsonLDInt] = Map(
         OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(

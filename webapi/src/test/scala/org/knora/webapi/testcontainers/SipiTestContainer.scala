@@ -62,11 +62,10 @@ object SipiTestContainer {
     container.stop()
   }.orDie.tap(_ => ZIO.debug(">>> Release Sipi TestContainer <<<"))
 
-  val layer: ZLayer[Any, Nothing, SipiTestContainer] = {
+  val layer: ZLayer[Any, Nothing, SipiTestContainer] =
     ZLayer.scoped {
       for {
         tc <- ZIO.acquireRelease(acquire)(release(_)).orDie
       } yield SipiTestContainer(tc)
     }
-  }
 }

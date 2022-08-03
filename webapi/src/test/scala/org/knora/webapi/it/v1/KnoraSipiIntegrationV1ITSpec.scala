@@ -1053,7 +1053,7 @@ class KnoraSipiIntegrationV1ITSpec
       checkResponseOK(sipiGetRequest)
     }
 
-    //TODO: activate the following two tests after video support is implemented in sipi
+    // TODO: activate the following two tests after video support is implemented in sipi
     "create a resource with a video file attached" ignore {
       // Upload the video file to Sipi.
       val zipUploadResponse: SipiUploadResponse = uploadToSipi(

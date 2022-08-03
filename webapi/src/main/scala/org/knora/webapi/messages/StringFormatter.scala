@@ -11,8 +11,8 @@ import akka.pattern._
 import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
-import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
@@ -181,87 +181,6 @@ object StringFormatter {
    * @param prefixLabel the prefix label.
    */
   case class XmlImportNamespaceInfoV1(namespace: IRI, prefixLabel: String)
-
-  /**
-   * Represents a parsed object of the property `salsah-gui:guiAttributeDefinition`.
-   *
-   * @param attributeName    the name of the attribute.
-   * @param isRequired       `true` if the attribute is required.
-   * @param allowedType      the type of the attribute's value.
-   * @param enumeratedValues the allowed values, if this is an enumerated string attribute.
-   */
-  case class SalsahGuiAttributeDefinition(
-    attributeName: String,
-    isRequired: Boolean,
-    allowedType: SalsahGui.SalsahGuiAttributeType.Value,
-    enumeratedValues: Set[String] = Set.empty[String],
-    unparsedString: String
-  )
-
-  /**
-   * Represents a parsed object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param attributeName  the name of the attribute.
-   * @param attributeValue the value of the attribute.
-   */
-  case class SalsahGuiAttribute(attributeName: String, attributeValue: SalsahGuiAttributeValue)
-
-  /**
-   * Represents a parsed value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   */
-  sealed trait SalsahGuiAttributeValue {
-    def attributeType: SalsahGui.SalsahGuiAttributeType.Value
-  }
-
-  /**
-   * Represents a parsed integer value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the integer value.
-   */
-  case class SalsahGuiIntegerAttributeValue(value: Int) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Integer
-  }
-
-  /**
-   * Represents a parsed percent value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the percent value.
-   */
-  case class SalsahGuiPercentAttributeValue(value: Int) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Percent
-  }
-
-  /**
-   * Represents a parsed decimal value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the decimal value.
-   */
-  case class SalsahGuiDecimalAttributeValue(value: BigDecimal) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Decimal
-  }
-
-  /**
-   * Represents a parsed string value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the string value.
-   */
-  case class SalsahGuiStringAttributeValue(value: String) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Str
-  }
-
-  /**
-   * Represents a parsed IRI value of an attribute that is the object of the property `salsah-gui:guiAttribute`.
-   *
-   * @param value the IRI value.
-   */
-  case class SalsahGuiIriAttributeValue(value: IRI) extends SalsahGuiAttributeValue {
-    override val attributeType: SalsahGui.SalsahGuiAttributeType.Value =
-      SalsahGui.SalsahGuiAttributeType.Iri
-  }
 
   /*
 
@@ -695,16 +614,6 @@ class StringFormatter private (
     maybeSettings.map(_.arkAssignedNumber)
   }
 
-  // Valid URL schemes.
-  private val schemes = Array("http", "https")
-
-  // A validator for URLs.
-  private val urlValidator =
-    new UrlValidator(
-      schemes,
-      UrlValidator.ALLOW_LOCAL_URLS
-    ) // local urls are URL-encoded Knora IRIs as part of the whole URL
-
   // The hostname used in internal Knora IRIs.
   private val InternalIriHostname = "www.knora.org"
 
@@ -829,14 +738,6 @@ class StringFormatter private (
   ).r
 
   private val ApiVersionNumberRegex: Regex = "^v[0-9]+.*$".r
-
-  // Parses an object of salsah-gui:guiAttributeDefinition.
-  private val SalsahGuiAttributeDefinitionRegex: Regex =
-    """^(\p{L}+)(\(required\))?:(\p{L}+)(\(([\p{L}\|]+)\))?$""".r
-
-  // Parses an object of salsa-gui:guiAttribute.
-  private val SalsahGuiAttributeRegex: Regex =
-    """^(\p{L}+)=(.+)$""".r
 
   // A regex for matching a string containing an email address.
   private val EmailAddressRegex: Regex =
@@ -1330,7 +1231,7 @@ class StringFormatter private (
     }
 
     private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
-      //Construct the string representation of this IRI in the target schema.
+      // Construct the string representation of this IRI in the target schema.
       val entityName            = getEntityName
       val convertedOntologyIri  = getOntologyFromEntity.toOntologySchema(targetSchema)
       val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName
@@ -1628,15 +1529,6 @@ class StringFormatter private (
     }
 
   /**
-   * Returns `true` if a string is an IRI.
-   *
-   * @param s the string to be checked.
-   * @return `true` if the string is an IRI.
-   */
-  def isIri(s: String): Boolean =
-    urlValidator.isValid(s)
-
-  /**
    * Checks that a string represents a valid IRI. Also encodes the IRI, preserving existing %-escapes.
    *
    * @param s        the string to be checked.
@@ -1647,7 +1539,7 @@ class StringFormatter private (
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
     val urlEncodedStr = encodeAllowEscapes(s)
 
-    if (urlValidator.isValid(urlEncodedStr)) {
+    if (Iri.urlValidator.isValid(urlEncodedStr)) {
       urlEncodedStr
     } else {
       errorFun
@@ -1674,7 +1566,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraProjectIriStr(iri: IRI): Boolean =
-    isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
+    Iri.isIri(iri) && (iri.startsWith("http://" + IriDomain + "/projects/") || isKnoraBuiltInProjectIriStr(iri))
 
   /**
    * Returns `true` if an IRI string looks like a Knora built-in IRI:
@@ -1690,7 +1582,7 @@ class StringFormatter private (
       OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject
     )
 
-    isIri(iri) && builtInProjects.contains(iri)
+    Iri.isIri(iri) && builtInProjects.contains(iri)
   }
 
   /**
@@ -1699,7 +1591,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraListIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/lists/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora user IRI.
@@ -1707,7 +1599,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraUserIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/users/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora group IRI.
@@ -1715,7 +1607,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraGroupIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/groups/")
 
   /**
    * Returns `true` if an IRI string looks like a Knora permission IRI.
@@ -1723,7 +1615,7 @@ class StringFormatter private (
    * @param iri the IRI to be checked.
    */
   def isKnoraPermissionIriStr(iri: IRI): Boolean =
-    isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
+    Iri.isIri(iri) && iri.startsWith("http://" + IriDomain + "/permissions/")
 
   /**
    * Checks that a string represents a valid resource identifier in a standoff link.
@@ -1816,109 +1708,6 @@ class StringFormatter private (
    */
   def toJsonEncodedString(s: String): String =
     JsString(s).compactPrint
-
-  /**
-   * Parses an object of `salsah-gui:guiAttributeDefinition`.
-   *
-   * @param s        the string to be parsed.
-   * @param errorFun a function that throws an exception. It will be called if the string is invalid.
-   * @return a [[SalsahGuiAttributeDefinition]].
-   */
-  def toSalsahGuiAttributeDefinition(s: String, errorFun: => Nothing): SalsahGuiAttributeDefinition =
-    s match {
-      case SalsahGuiAttributeDefinitionRegex(attributeName, required, allowedTypeStr, _, enumeratedValuesStr) =>
-        val allowedType: SalsahGui.SalsahGuiAttributeType.Value =
-          SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
-
-        val enumeratedValues: Set[String] = Option(enumeratedValuesStr) match {
-          case Some(enumeratedValuesStr) =>
-            if (allowedType != SalsahGui.SalsahGuiAttributeType.Str) {
-              errorFun
-            }
-
-            enumeratedValuesStr.split('|').toSet
-
-          case None => Set.empty[String]
-        }
-
-        SalsahGuiAttributeDefinition(
-          attributeName = attributeName,
-          isRequired = Option(required).nonEmpty,
-          allowedType = allowedType,
-          enumeratedValues = enumeratedValues,
-          unparsedString = s
-        )
-
-      case _ =>
-        errorFun
-    }
-
-  /**
-   * Parses an object of `salsah-gui:guiAttribute`.
-   *
-   * @param s             the string to be parsed.
-   * @param attributeDefs the values of `salsah-gui:guiAttributeDefinition` for the property.
-   * @param errorFun      a function that throws an exception. It will be called if the string is invalid.
-   * @return a [[SalsahGuiAttribute]].
-   */
-  def toSalsahGuiAttribute(
-    s: String,
-    attributeDefs: Set[SalsahGuiAttributeDefinition],
-    errorFun: => Nothing
-  ): SalsahGuiAttribute =
-    // Try to parse the expression using a regex.
-    s match {
-      case SalsahGuiAttributeRegex(attributeName: String, attributeValue: String) =>
-        // The regex matched. Get the attribute definition corresponding to the attribute name.
-        val attributeDef = attributeDefs.find(_.attributeName == attributeName).getOrElse(errorFun)
-
-        // Try to parse the value as the type given in the attribute definition.
-        val maybeParsedAttrValue: Option[SalsahGuiAttributeValue] = attributeDef.allowedType match {
-          case SalsahGui.SalsahGuiAttributeType.Integer =>
-            catching(classOf[NumberFormatException]).opt(attributeValue.toInt).map(SalsahGuiIntegerAttributeValue)
-
-          case SalsahGui.SalsahGuiAttributeType.Decimal =>
-            catching(classOf[NumberFormatException]).opt(BigDecimal(attributeValue)).map(SalsahGuiDecimalAttributeValue)
-
-          case SalsahGui.SalsahGuiAttributeType.Percent =>
-            if (attributeValue.endsWith("%")) {
-              val intStr = attributeValue.stripSuffix("%")
-              catching(classOf[NumberFormatException]).opt(intStr.toInt).map(SalsahGuiPercentAttributeValue)
-            } else {
-              None
-            }
-
-          case SalsahGui.SalsahGuiAttributeType.Iri =>
-            if (attributeValue.startsWith("<") && attributeValue.endsWith(">")) {
-              val iriWithoutAngleBrackets = attributeValue.substring(1, attributeValue.length - 1)
-
-              catching(classOf[ParseException])
-                .opt(validateAndEscapeIri(iriWithoutAngleBrackets, throw new ParseException("Couldn't parse IRI", 1)))
-                .map(SalsahGuiIriAttributeValue)
-            } else {
-              None
-            }
-
-          case SalsahGui.SalsahGuiAttributeType.Str =>
-            if (attributeDef.enumeratedValues.nonEmpty && !attributeDef.enumeratedValues.contains(attributeValue)) {
-              errorFun
-            }
-
-            Some(SalsahGuiStringAttributeValue(attributeValue))
-
-          case _ => None
-        }
-
-        maybeParsedAttrValue match {
-          case Some(parsedAttrValue) =>
-            SalsahGuiAttribute(attributeName = attributeName, attributeValue = parsedAttrValue)
-          case None => errorFun
-        }
-
-      case _ =>
-        // The expression couldn't be parsed.
-        errorFun
-    }
 
   /**
    * Parses an `xsd:dateTimeStamp`.

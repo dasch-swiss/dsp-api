@@ -601,7 +601,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     row.rowMap.get("isLinkValue"),
                     throw InconsistentRepositoryDataException(
                       s"Invalid boolean for isLinkValue: ${row.rowMap
-                        .get("isLinkValue")}"
+                          .get("isLinkValue")}"
                     )
                   )
                 )
@@ -627,7 +627,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             row.rowMap.get("isLinkValue"),
                             throw InconsistentRepositoryDataException(
                               s"Invalid boolean for isLinkValue: ${row.rowMap
-                                .get("isLinkValue")}"
+                                  .get("isLinkValue")}"
                             )
                           )
                         )
@@ -1858,7 +1858,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // change sequence of futures to future of sequences
       sparqlTemplateResourcesToCreate: Seq[SparqlTemplateResourceToCreate] <- Future.sequence(resourceCreationFutures)
 
-      //create a sparql query for all the resources to be created
+      // create a sparql query for all the resources to be created
       createMultipleResourcesSparql: String = generateSparqlForNewResources(
                                                 resourcesToCreate = sparqlTemplateResourcesToCreate,
                                                 projectIri = projectIri,
@@ -2732,7 +2732,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                          )
                          .toString()
 
-        //_ = print(sparqlUpdate)
+        // _ = print(sparqlUpdate)
 
         // Do the update.
         sparqlUpdateResponse <- appActor.ask(SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]

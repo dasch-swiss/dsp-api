@@ -37,11 +37,10 @@ object FusekiTestContainer {
     container.stop()
   }.orDie.tap(_ => ZIO.debug(">>> Release Fuseki TestContainer <<<"))
 
-  val layer: ZLayer[Any, Nothing, FusekiTestContainer] = {
+  val layer: ZLayer[Any, Nothing, FusekiTestContainer] =
     ZLayer.scoped {
       for {
         tc <- ZIO.acquireRelease(acquire)(release(_)).orDie
       } yield FusekiTestContainer(tc)
     }
-  }
 }

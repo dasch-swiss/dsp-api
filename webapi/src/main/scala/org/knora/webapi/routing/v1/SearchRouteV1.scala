@@ -44,7 +44,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       key -> value.reverse
     }
 
-    //println(params)
+    // println(params)
 
     params.get("searchtype") match {
       case Some(List("extended")) => ()
