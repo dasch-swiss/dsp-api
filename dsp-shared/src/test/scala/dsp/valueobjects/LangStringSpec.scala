@@ -125,6 +125,20 @@ object LangStringSpec extends ZIOSpecDefault {
         } yield assertTrue(result.language.value == "en") &&
           assertTrue(result.value == stringValue)).toZIO
       }
+    ),
+    suite("`unsafeMake()` unsafe constructor")(
+      test("create a valid LangString through the unsafe method") {
+        val str         = "some langstring"
+        val unsafeValid = LangString.unsafeMake(LanguageCode.en, str)
+        assertTrue(unsafeValid.language.value == "en") &&
+        assertTrue(unsafeValid.value == str)
+      },
+      test("create an invalid LangString through the unsafe method") {
+        val str         = ""
+        val unsafeValid = LangString.unsafeMake(LanguageCode.en, str)
+        assertTrue(unsafeValid.language.value == "en") &&
+        assertTrue(unsafeValid.value == str) // TODO-BL: once logging works, figure out how to test for logging output
+      }
     )
   )
 

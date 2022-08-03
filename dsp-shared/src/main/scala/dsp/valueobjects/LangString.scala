@@ -2,6 +2,7 @@ package dsp.valueobjects
 
 import dsp.errors.ValidationException
 import zio.prelude.Validation
+import zio._
 
 /**
  * LangString value object
@@ -46,7 +47,16 @@ object LangString {
    * @return a LanguageCode value object
    */
   def unsafeMake(language: LanguageCode, value: String): LangString =
-    new LangString(language, value) {}
+    LangString
+      .make(language = language, value = value)
+      .fold(
+        e => {
+          val unsafe = new LangString(language, value) {}
+          ZIO.logWarning(s"Called unsafeMake() for an invalid $unsafe: $e") // TODO-BL: get this to actually log
+          unsafe
+        },
+        langString => langString
+      )
 }
 
 /**
