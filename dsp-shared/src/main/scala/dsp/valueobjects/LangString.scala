@@ -52,11 +52,18 @@ object LangString {
       .fold(
         e => {
           val unsafe = new LangString(language, value) {}
-          ZIO.logWarning(s"Called unsafeMake() for an invalid $unsafe: $e") // TODO-BL: get this to actually log
+          executeZioLog(ZIO.logWarning(s"Called unsafeMake() for an invalid $unsafe: $e"))
           unsafe
         },
         langString => langString
       )
+
+  private def executeZioLog(z: UIO[Unit]): Unit = { // TODO-BL: this should not be necessary!
+    val runtime = Runtime.default
+    Unsafe.unsafe { implicit unsafe =>
+      runtime.unsafe.run(z).getOrThrowFiberFailure()
+    }
+  }
 }
 
 /**
