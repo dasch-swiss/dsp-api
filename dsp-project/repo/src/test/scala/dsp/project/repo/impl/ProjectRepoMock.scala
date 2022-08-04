@@ -83,9 +83,13 @@ final case class ProjectRepoMock(
    */
   override def deleteProject(id: ProjectId): IO[Option[Nothing], ProjectId] =
     (for {
+      _ <- projects.get(id.uuid).some
       _ <- projects.delete(id.uuid)                              // removes the values (Project) for the key (UUID)
       _ <- lookupTableShortCodeToUuid.delete(id.shortCode.value) // remove the project also from the lookup table
-    } yield id).commit.tap(_ => ZIO.logDebug(s"Deleted project: ${id}"))
+    } yield id).commit.tapBoth(
+      _ => ZIO.logDebug(s"Did not delete project '${id.uuid}' because it was not in the repository"),
+      _ => ZIO.logDebug(s"Deleted project: ${id.uuid}")
+    )
 
 }
 
