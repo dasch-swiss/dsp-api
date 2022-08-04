@@ -5,29 +5,22 @@
 
 package dsp.project.repo.impl
 
-import dsp.errors.BadRequestException
 import dsp.project.api.ProjectRepo
-// import dsp.user.domain.User
-// import dsp.user.repo.impl.UserRepoLive
-// import dsp.user.repo.impl.UserRepoMock
-// import dsp.valueobjects.User._
-import zio._
-import zio.prelude.Validation
-import zio.prelude.ZValidation
-import zio.test._
-import zio.test.Assertion._
 import dsp.project.domain.Project
-import dsp.valueobjects.ProjectId
 import dsp.valueobjects
 import dsp.valueobjects.Project._
+import dsp.valueobjects.ProjectId
+import zio._
+import zio.prelude.Validation
+import zio.test.Assertion._
+import zio.test._
 
-// /**
-//  * This spec is used to test all [[dsp.user.repo.ProjectRepo]] implementations.
-//  */
+/**
+ * This spec is used to test all [[dsp.user.repo.ProjectRepo]] implementations.
+ */
 object ProjectRepoImplSpec extends ZIOSpecDefault {
 
-//   def spec = (userRepoMockTests + userRepoLiveTests) // XXX: remove
-  def spec = (projectRepoMockTest)
+  def spec = (projectRepoMockTest + projectRepoLiveTest)
 
   val getProjectTest = suite("retrieve a single project")(
     test("store a project and retrieve it by ID") {
@@ -187,12 +180,12 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     deleteProject
   )
 
-  val projectRepoMockTest = suite("ProjectRepoMock")(
+  val projectRepoMockTest = suite("ProjectRepo - Mock")(
     projectTests
   ).provide(ProjectRepoMock.layer)
 
-//   val userRepoLiveTests = suite("UserRepoLive")(
-//     userTests
-//   ).provide(UserRepoLive.layer)
+  val projectRepoLiveTest = suite("ProjectRepo - Live")(
+    projectTests
+  ).provide(ProjectRepoMock.layer)
 
 }

@@ -5,97 +5,103 @@
 
 package dsp.project.repo.impl
 
-// import dsp.errors.NotFoundException
-// import dsp.user.api.UserRepo
-// import dsp.user.domain.Iri
-// import dsp.user.domain.User
-// import dsp.user.domain.UserId
+import dsp.project.api.ProjectRepo
+import dsp.project.domain.Project
+import dsp.valueobjects.ProjectId
 import zio._
 import zio.stm.TMap
 
-// import java.util.UUID
+import java.util.UUID
 
-// TODO: the following needs to be updated
+/**
+ * Project repo live implementation.
+ *
+ * @param projects    a map of projects (UUID -> Project).
+ * @param lookupTable a map of projects (shortCode -> UUID).
+ */
+final case class ProjectRepoLive(
+  projects: TMap[UUID, Project],
+  lookupTableShortCodeToUuid: TMap[String, UUID]
+) extends ProjectRepo {
 
-// /**
-//  * User repository live implementation
-//  *
-//  * @param users       a map of users (UUID -> User).
-//  * @param lookupTable a map of username/email to UUID.
-//  */
-// final case class UserRepoLive(
-//   users: TMap[UUID, User],
-//   lookupTable: TMap[String, UUID] // sealed trait for key type
-// ) extends UserRepo {
+  /**
+   * @inheritDoc
+   */
+  override def storeProject(project: Project): UIO[ProjectId] =
+    (for {
+      _ <- projects.put(project.id.uuid, project)
+      _ <- lookupTableShortCodeToUuid.put(project.id.shortCode.value, project.id.uuid)
+    } yield project.id).commit.tap(id => ZIO.logInfo(s"Stored project: ${id.uuid}"))
 
-//   /**
-//    * @inheritDoc
-//    *
-//    * Stores the user with key UUID in the users map.
-//    * Stores the username and email with the associated UUID in the lookup table.
-//    */
-//   def storeUser(user: User): UIO[UserId] =
-//     (for {
-//       _ <- users.put(user.id.uuid, user)
-//       _ <- lookupTable.put(user.username.value, user.id.uuid)
-//       _ <- lookupTable.put(user.email.value, user.id.uuid)
-//     } yield user.id).commit.tap(_ => ZIO.logDebug(s"Stored user: ${user.id}"))
+  /**
+   * @inheritDoc
+   */
+  override def getProjects(): UIO[List[Project]] =
+    projects.values.commit.tap(projectList => ZIO.logInfo(s"Looked up all projects, found ${projectList.size}"))
 
-//   /**
-//    * @inheritDoc
-//    */
-//   def getUsers(): UIO[List[User]] = users.values.commit
+  /**
+   * @inheritDoc
+   */
+  override def getProjectById(id: ProjectId): IO[Option[Nothing], Project] =
+    projects
+      .get(id.uuid)
+      .commit
+      .some
+      .tapBoth(
+        _ => ZIO.logInfo(s"Could not find project with UUID '${id.uuid}'"),
+        _ => ZIO.logInfo(s"Looked up project by UUID '${id.uuid}'")
+      )
 
-//   /**
-//    * @inheritDoc
-//    */
-//   def getUserById(id: UserId): IO[Option[Nothing], User] =
-//     (for {
-//       user <- users.get(id.uuid).some
-//     } yield user).commit.tap(_ => ZIO.logDebug(s"Found user by ID: ${id}"))
+  /**
+   * @inheritDoc
+   */
+  override def getProjectByShortCode(shortCode: String): IO[Option[Nothing], Project] =
+    (for {
+      uuid    <- lookupTableShortCodeToUuid.get(shortCode).some
+      project <- projects.get(uuid).some
+    } yield project).commit.tapBoth(
+      _ => ZIO.logInfo(s"Couldn't find project with shortCode '${shortCode}'"),
+      _ => ZIO.logInfo(s"Looked up project by shortCode '${shortCode}'")
+    )
 
-//   /**
-//    * @inheritDoc
-//    */
-//   def getUserByUsernameOrEmail(usernameOrEmail: String): IO[Option[Nothing], User] =
-//     (for {
-//       iri  <- lookupTable.get(usernameOrEmail).some
-//       user <- users.get(iri).some
-//     } yield user).commit.tap(_ => ZIO.logDebug(s"Found user by username or email: ${usernameOrEmail}"))
+  /**
+   * @inheritDoc
+   */
+  override def checkShortCodeExists(shortCode: String): IO[Option[Nothing], Unit] =
+    lookupTableShortCodeToUuid
+      .get(shortCode)
+      .commit
+      .some
+      .tapBoth(
+        _ => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', project not found."),
+        uuid => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', found project with UUID '$uuid'.")
+      )
+      .map(_ => ()) // TODO-BL: wouldn't it be more elegant to return the UUID here?
 
-//   /**
-//    * @inheritDoc
-//    */
-//   def checkUsernameOrEmailExists(usernameOrEmail: String): IO[Option[Nothing], Unit] =
-//     (for {
-//       iriOption: Option[UUID] <- lookupTable.get(usernameOrEmail)
-//       _ = iriOption match {
-//             case None    => ZIO.succeed(()) // username or email does not exist
-//             case Some(_) => ZIO.fail(None)  // username or email does exist
-//           }
-//     } yield ()).commit.tap(_ => ZIO.logInfo(s"Username/email '${usernameOrEmail}' was checked"))
+  /**
+   * @inheritDoc
+   */
+  override def deleteProject(id: ProjectId): IO[Option[Nothing], ProjectId] =
+    (for {
+      _ <- projects.get(id.uuid).some
+      _ <- projects.delete(id.uuid)                              // removes the values (Project) for the key (UUID)
+      _ <- lookupTableShortCodeToUuid.delete(id.shortCode.value) // remove the project also from the lookup table
+    } yield id).commit.tapBoth(
+      _ => ZIO.logDebug(s"Did not delete project '${id.uuid}' because it was not in the repository"),
+      _ => ZIO.logDebug(s"Deleted project: ${id.uuid}")
+    )
 
-//   /**
-//    * @inheritDoc
-//    */
-//   def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
-//     (for {
-//       user <- users.get(id.uuid).some
-//       _    <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
-//       _    <- lookupTable.delete(user.username.value) // remove the user also from the lookup table
-//     } yield id).commit.tap(_ => ZIO.logDebug(s"Deleted user: ${id}"))
-// }
+}
 
-// /**
-//  * Companion object providing the layer with an initialized implementation of UserRepo
-//  */
-// object UserRepoLive {
-//   val layer: ZLayer[Any, Nothing, UserRepo] = {
-//     ZLayer {
-//       for {
-//         users       <- TMap.empty[UUID, User].commit
-//         lookupTable <- TMap.empty[String, UUID].commit
-//       } yield UserRepoLive(users, lookupTable)
-//     }.tap(_ => ZIO.debug(">>> User repository initialized <<<"))
-//   }
-// }
+/**
+ * Companion object providing the layer with an initialized implementation of ProjectRepo
+ */
+object ProjectRepoMock {
+  val layer: ZLayer[Any, Nothing, ProjectRepo] =
+    ZLayer {
+      for {
+        projects <- TMap.empty[UUID, Project].commit
+        lookUp   <- TMap.empty[String, UUID].commit
+      } yield ProjectRepoLive(projects, lookUp)
+    }.tap(_ => ZIO.logInfo(">>> Project repository initialized <<<"))
+}
