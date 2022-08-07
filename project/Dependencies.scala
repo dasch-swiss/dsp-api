@@ -101,7 +101,7 @@ object Dependencies {
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % akkaHttpVersion // Scala 3 incompatible
   val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % akkaVersion     // Scala 3 compatible
   val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
-  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.2"
+  val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.3"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.8.2"
   val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.3"
