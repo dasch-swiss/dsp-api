@@ -27,7 +27,7 @@ trait UserRepo {
    *   When used, we should do it like: ...store(...).orDie
    *
    * @param user the user to write
-   * @return     Unit
+   * @return     the Id of the stored user
    */
   def storeUser(user: User): UIO[UserId]
 
@@ -42,7 +42,7 @@ trait UserRepo {
    * Retrieves the user from the repository by ID.
    *
    * @param id the user's ID
-   * @return an optional [[User]]
+   * @return a [[User]] or None if not found
    */
   def getUserById(id: UserId): IO[Option[Nothing], User]
 
@@ -50,7 +50,7 @@ trait UserRepo {
    * Retrieves the user from the repository by username.
    *
    * @param username username of the user.
-   * @return an optional [[User]].
+   * @return a [[User]] or None if not found
    */
   def getUserByUsername(username: Username): IO[Option[Nothing], User]
 
@@ -58,7 +58,7 @@ trait UserRepo {
    * Retrieves the user from the repository by email.
    *
    * @param email email of the user.
-   * @return an optional [[User]].
+   * @return a [[User]] or None if not found
    */
   def getUserByEmail(email: Email): IO[Option[Nothing], User]
 
@@ -66,7 +66,7 @@ trait UserRepo {
    * Checks if a username exists in the repo.
    *
    * @param username username of the user.
-   * @return Unit in case of success
+   * @return Unit or None if not found
    */
   def checkIfUsernameExists(username: Username): IO[Option[Nothing], Unit]
 
@@ -74,7 +74,7 @@ trait UserRepo {
    * Checks if an email exists in the repo.
    *
    * @param email email of the user.
-   * @return Unit in case of success
+   * @return Unit or None if not found
    */
   def checkIfEmailExists(email: Email): IO[Option[Nothing], Unit]
 
@@ -82,7 +82,7 @@ trait UserRepo {
    * Deletes a [[User]] from the repository by its [[UserId]].
    *
    * @param id the user ID
-   * @return   Unit or None if not found
+   * @return   the Id of the User or None if not found
    */
   def deleteUser(id: UserId): IO[Option[Nothing], UserId]
 }

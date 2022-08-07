@@ -6,12 +6,14 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi._
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.User._
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.KnoraResponseADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsADMJsonProtocol
@@ -24,7 +26,6 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import spray.json._
 
 import java.util.UUID
-import dsp.valueobjects.User._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

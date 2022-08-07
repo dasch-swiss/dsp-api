@@ -571,21 +571,38 @@ containing metadata about the link. We can visualise the result as the following
 Knora allows a user to see a link if the requesting user has permission to see the source and target resources as well
 as the `kb:LinkValue`.
 
-### Part-of (part-whole) relation between resources
+### Part-Whole-Relations between Resources
+
+#### isPartOf
+
 A special case of linked resources are _part-of related resources_, i.e. a resource consisting of several other resources. 
 In order to create a part-of relation between two resources, the resource that is part of another resource needs to have
 a property that is a subproperty of `kb:isPartOf`. This property needs to point to the resource class it is part of via 
-its predicate `knora-api:objectType`.
+its predicate `kb:objectType`.
 `kb:isPartOf` itself is a subproperty of `kb:hasLinkTo`. Same as described above for link properties, a corresponding 
 part-of value property is created automatically. This value property has the same name as the part-of property with 
 `Value` appended. For example, if in an ontology `data` a property `data:partOf` was defined, the corresponding value 
 property would be named `data:partOfValue`. This newly created property `data:partOfValue` is defined as a subproperty 
 of `kb:isPartOfValue`.
 
-Part-of relations are recommended for resources of type `StillImageRepresentation`. In that case, the resource that is 
-part of another resource needs to have a property that is a subproperty of `knora-api:seqnum` with an integer as value. 
+Part-of relations are recommended for resources of type `kb:StillImageRepresentation`. In that case, the resource that is 
+part of another resource needs to have a property that is a subproperty of `kb:seqnum` with an integer as value. 
 A client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the 
 pages of a book like in [this](https://docs.dasch.swiss/DSP-API/01-introduction/example-project/#resource-classes) example).
+
+#### isSequenceOf
+
+Similar to `kb:isPartOf` for `kb:StillImageRepresentations`, part-whole-relations can be defined for resources that have a time 
+dimension by using `kb:isSequenceOf`. You can use it for video or audio resources that are subtypes of `kb:MovingImageRepresentation` 
+and `kb:AudioRepresentation`.
+
+`kb:isSequenceOf` is intended to be used in combination with the property `kb:hasSequenceBounds` which points to a `kb:IntervalValue`.
+This defines the start and end point of the subseqence in relation to the entire audio/video resource as an [interval](#intervalvalue). 
+A dedicated frontend behaviour is planned, if these properties are used in combination.
+
+There is an important difference between `kb:isSequenceOf` and `kb:isPartOf`: For `kb:isPartOf`, each part *is a* `kb:StillImageRepresentation` and 
+the whole consists of multiple such parts. In `kb:isSequenceOf` on the other hand, the whole is one `kb:MovingImageRepresentation` or `kb:AudioRepresentation`.
+The parts only define which sub-sequence of this representation they are.
 
 ### Text with Standoff Markup
 

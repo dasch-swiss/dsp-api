@@ -11,13 +11,15 @@ import akka.actor.ExtendedActorSystem
 import akka.actor.Extension
 import akka.actor.ExtensionId
 import akka.actor.ExtensionIdProvider
-import com.typesafe.scalalogging.Logger
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
+import com.typesafe.scalalogging.Logger
 import dsp.errors.FeatureToggleException
 import dsp.errors.FileWriteException
+import dsp.valueobjects.User
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
+import zio.prelude.ZValidation
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -220,7 +222,7 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   val triplestoreUsername: String     = config.getString("app.triplestore.fuseki.username")
   val triplestorePassword: String     = config.getString("app.triplestore.fuseki.password")
 
-  //used in the store package
+  // used in the store package
   val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
   val jwtSecretKey: String         = config.getString("app.jwt-secret-key")
@@ -243,7 +245,10 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
 
   val allowReloadOverHTTP: Boolean = config.getBoolean("app.allow-reload-over-http")
 
-  val bcryptPasswordStrength: Int = config.getInt("app.bcrypt-password-strength")
+  val bcryptPasswordStrength =
+    User.PasswordStrength
+      .make(config.getInt("app.bcrypt-password-strength"))
+      .fold(e => throw new ConfigurationException(e.head), v => v)
 
   // Client test data service
 

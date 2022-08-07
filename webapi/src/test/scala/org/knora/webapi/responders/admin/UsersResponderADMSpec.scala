@@ -9,13 +9,14 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import dsp.valueobjects.User._
-import dsp.valueobjects.V2
-import org.knora.webapi._
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.User._
+import dsp.valueobjects.V2
+import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetRequestADM
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupMembersGetResponseADM
@@ -218,7 +219,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             familyName = FamilyName.make("Duck").fold(e => throw e.head, v => v),
             password = Password.make("test").fold(e => throw e.head, v => v),
             status = UserStatus.make(true).fold(error => throw error.head, value => value),
-            lang = LanguageCode.make("en").fold(e => throw e.head, v => v),
+            lang = LanguageCode.en,
             systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
           ),
           requestingUser = SharedTestDataADM.anonymousUser,
@@ -242,7 +243,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             familyName = FamilyName.make("Duck").fold(e => throw e.head, v => v),
             password = Password.make("test").fold(e => throw e.head, v => v),
             status = UserStatus.make(true).fold(error => throw error.head, value => value),
-            lang = LanguageCode.make("en").fold(e => throw e.head, v => v),
+            lang = LanguageCode.en,
             systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
           ),
           SharedTestDataADM.anonymousUser,
@@ -260,7 +261,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             familyName = FamilyName.make("Duck").fold(e => throw e.head, v => v),
             password = Password.make("test").fold(e => throw e.head, v => v),
             status = UserStatus.make(true).fold(error => throw error.head, value => value),
-            lang = LanguageCode.make("en").fold(e => throw e.head, v => v),
+            lang = LanguageCode.en,
             systemAdmin = SystemAdmin.make(false).fold(e => throw e.head, v => v)
           ),
           SharedTestDataADM.anonymousUser,

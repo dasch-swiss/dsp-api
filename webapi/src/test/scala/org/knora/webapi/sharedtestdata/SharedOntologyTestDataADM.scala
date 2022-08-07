@@ -67,6 +67,6 @@ object SharedOntologyTestDataADM {
   val WEBERN_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0806/webern/v2"
   val WEBERN_DATA_IRI: IRI               = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0806/webern"
 
-  //foo ontology
+  // foo ontology
   val FOO_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/00FF/foo/v2"
 }

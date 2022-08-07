@@ -23,11 +23,10 @@ object RedisTestContainer {
     container.stop()
   }.orDie.tap(_ => ZIO.debug(">>> Release Redis TestContainer <<<"))
 
-  val layer: ZLayer[Any, Nothing, RedisTestContainer] = {
+  val layer: ZLayer[Any, Nothing, RedisTestContainer] =
     ZLayer.scoped {
       for {
         tc <- ZIO.acquireRelease(acquireRedisTestContainer)(releaseRedisTestContainer(_)).orDie
       } yield RedisTestContainer(tc)
     }
-  }
 }

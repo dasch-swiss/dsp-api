@@ -204,7 +204,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     requestingUser: UserADM
   ): Future[PermissionsDataADM] = {
     // find out which project each group belongs to
-    //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
+    // _ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
 
     val groupFutures: Seq[Future[(IRI, IRI)]] = if (groupIris.nonEmpty) {
       groupIris.map { groupIri =>
@@ -234,7 +234,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
     for {
       groups: Seq[(IRI, IRI)] <- groupsFuture
-      //_ = log.debug(s"permissionsProfileGetV1 - groups: {}", MessageUtil.toSource(groups))
+      // _ = log.debug(s"permissionsProfileGetV1 - groups: {}", MessageUtil.toSource(groups))
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectMember' group for each project */
       projectMembers: Seq[(IRI, IRI)] =
@@ -246,7 +246,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           Seq.empty[(IRI, IRI)]
         }
-      //_ = log.debug(s"permissionsProfileGetV1 - projectMembers: {}", MessageUtil.toSource(projectMembers))
+      // _ = log.debug(s"permissionsProfileGetV1 - projectMembers: {}", MessageUtil.toSource(projectMembers))
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#ProjectAdmin' group for each project */
       projectAdmins: Seq[(IRI, IRI)] =
@@ -258,7 +258,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           Seq.empty[(IRI, IRI)]
         }
-      //_ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
+      // _ = log.debug("permissionsProfileGetV1 - projectAdmins: {}", MessageUtil.toSource(projectAdmins))
 
       /* materialize implicit membership in 'http://www.knora.org/ontology/knora-base#SystemAdmin' group */
       systemAdmin: Seq[(IRI, IRI)] =
@@ -267,7 +267,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           Seq.empty[(IRI, IRI)]
         }
-      //_ = log.debug(s"permissionsProfileGetV1 - systemAdmin: {}", MessageUtil.toSource(systemAdmin))
+      // _ = log.debug(s"permissionsProfileGetV1 - systemAdmin: {}", MessageUtil.toSource(systemAdmin))
 
       /* combine explicit groups with materialized implicit groups */
       /* here we don't add the KnownUser group, as this would inflate the whole thing. */
@@ -290,7 +290,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                  groupsPerProject = groupsPerProject,
                  administrativePermissionsPerProject = administrativePermissionsPerProject
                )
-      //_ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
+      // _ = log.debug(s"permissionsDataGetV1 - resulting permissionData: {}", result)
 
     } yield result
   }
@@ -327,7 +327,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 permissionsListBuffer += (("ProjectAdmin", administrativePermissionsOnProjectAdminGroup))
               }
             }
-        //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
+        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectAdminGroup: $administrativePermissionsOnProjectAdminGroup")
 
         /* Get administrative permissions for custom groups (all groups other than the built-in groups) */
         administrativePermissionsOnCustomGroups: Set[PermissionADM] <- {
@@ -347,7 +347,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 permissionsListBuffer += (("CustomGroups", administrativePermissionsOnCustomGroups))
               }
             }
-        //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
+        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnCustomGroups: $administrativePermissionsOnCustomGroups")
 
         /* Get administrative permissions for the knora-base:ProjectMember group */
         administrativePermissionsOnProjectMemberGroup: Set[PermissionADM] <-
@@ -362,7 +362,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }
               }
             }
-        //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
+        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnProjectMemberGroup: $administrativePermissionsOnProjectMemberGroup")
 
         /* Get administrative permissions for the knora-base:KnownUser group */
         administrativePermissionsOnKnownUserGroup: Set[PermissionADM] <- administrativePermissionForGroupsGetADM(
@@ -376,7 +376,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 }
               }
             }
-        //_ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
+        // _ = log.debug(s"userAdministrativePermissionsGetV1 - project: $projectIri, administrativePermissionsOnKnownUserGroup: $administrativePermissionsOnKnownUserGroup")
 
         projectAdministrativePermissions: (IRI, Set[PermissionADM]) = permissionsListBuffer.length match {
                                                                         case 1 =>
@@ -430,7 +430,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /* Get administrative permissions for each group and combine them */
     val gpf: Seq[Future[Seq[PermissionADM]]] = for {
       groupIri <- groups
-      //_ = log.debug(s"administrativePermissionForGroupsGetADM - projectIri: $projectIri, groupIri: $groupIri")
+      // _ = log.debug(s"administrativePermissionForGroupsGetADM - projectIri: $projectIri, groupIri: $groupIri")
 
       groupPermissions: Future[Seq[PermissionADM]] = administrativePermissionForProjectGroupGetADM(
                                                        projectIri,
@@ -460,7 +460,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       /* Remove possible duplicate permissions */
       result: Set[PermissionADM] = PermissionUtilADM.removeDuplicatePermissions(combined)
 
-      //_ = log.debug(s"administrativePermissionForGroupsGetADM - result: $result")
+      // _ = log.debug(s"administrativePermissionForGroupsGetADM - result: $result")
     } yield result
     result
   }
@@ -486,10 +486,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      //_ = log.debug(s"administrativePermissionsForProjectGetRequestADM - query: $sparqlQueryString")
+      // _ = log.debug(s"administrativePermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
       permissionsQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"getProjectAdministrativePermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
+      // _ = log.debug(s"getProjectAdministrativePermissionsV1 - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
@@ -500,7 +500,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
             (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
           }
-      //_ = log.debug(s"administrativePermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
+      // _ = log.debug(s"administrativePermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
 
       administrativePermissions: Seq[AdministrativePermissionADM] =
         permissionsWithProperties.map { case (permissionIri: IRI, propsMap: Map[String, String]) =>
@@ -580,10 +580,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      //_ = log.debug(s"administrativePermissionForProjectGroupGetADM - query: $sparqlQueryString")
+      // _ = log.debug(s"administrativePermissionForProjectGroupGetADM - query: $sparqlQueryString")
 
       permissionQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"administrativePermissionForProjectGroupGetADM - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+      // _ = log.debug(s"administrativePermissionForProjectGroupGetADM - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -619,7 +619,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         } else {
           None
         }
-      //_ = log.debug(s"administrativePermissionForProjectGroupGetADM - projectIri: $projectIRI, groupIri: $groupIRI, administrativePermission: $permission")
+      // _ = log.debug(s"administrativePermissionForProjectGroupGetADM - projectIri: $projectIRI, groupIri: $groupIRI, administrativePermission: $permission")
     } yield permission
 
   /**
@@ -686,7 +686,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                 throw DuplicateValueException(
                   s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
                     s"This permission currently has the scope '${PermissionUtilADM
-                      .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
+                        .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
                     s"Use its IRI ${ap.iri} to modify it, if necessary."
                 )
               case None => ()
@@ -816,10 +816,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      //_ = log.debug(s"objectAccessPermissionsForResourceGetV1 - query: $sparqlQueryString")
+      // _ = log.debug(s"objectAccessPermissionsForResourceGetV1 - query: $sparqlQueryString")
 
       permissionQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"objectAccessPermissionsForResourceGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+      // _ = log.debug(s"objectAccessPermissionsForResourceGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -874,10 +874,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      //_ = log.debug(s"objectAccessPermissionsForValueGetV1 - query: $sparqlQueryString")
+      // _ = log.debug(s"objectAccessPermissionsForValueGetV1 - query: $sparqlQueryString")
 
       permissionQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"objectAccessPermissionsForValueGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
+      // _ = log.debug(s"objectAccessPermissionsForValueGetV1 - result: ${MessageUtil.toSource(permissionQueryResponse)}")
 
       permissionQueryResponseRows: Seq[VariableResultsRow] = permissionQueryResponse.results.bindings
 
@@ -927,10 +927,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                )
                                .toString()
                            )
-      //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - query: $sparqlQueryString")
+      // _ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - query: $sparqlQueryString")
 
       permissionsQueryResponse <- appActor.ask(SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-      //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
+      // _ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - result: ${MessageUtil.toSource(permissionsQueryResponse)}")
 
       /* extract response rows */
       permissionsQueryResponseRows: Seq[VariableResultsRow] = permissionsQueryResponse.results.bindings
@@ -941,7 +941,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           .map { case (permissionIri: String, rows: Seq[VariableResultsRow]) =>
             (permissionIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
           }
-      //_ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
+      // _ = log.debug(s"defaultObjectAccessPermissionsForProjectGetRequestADM - permissionsWithProperties: $permissionsWithProperties")
 
       permissions: Seq[DefaultObjectAccessPermissionADM] = permissionsWithProperties.map {
                                                              case (permissionIri: IRI, propsMap: Map[String, String]) =>
@@ -1173,7 +1173,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     /* Get default object access permissions for each group and combine them */
     val gpf: Seq[Future[Seq[PermissionADM]]] = for {
       groupIri <- groups
-      //_ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
+      // _ = log.debug(s"userDefaultObjectAccessPermissionsGetV1 - projectIri: $projectIri, groupIri: $groupIri")
 
       groupPermissions: Future[Seq[PermissionADM]] = defaultObjectAccessPermissionGetADM(
                                                        projectIri = projectIri,
@@ -1625,7 +1625,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                   s"A default object access permission for project: '${createRequest.forProject}' " +
                     errorMessage + "combination already exists. " +
                     s"This permission currently has the scope '${PermissionUtilADM
-                      .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
+                        .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
                     s"Use its IRI ${doap.iri} to modify it, if necessary."
                 )
               case None => ()
@@ -1851,7 +1851,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                           updatedPermission.asInstanceOf[AdministrativePermissionADM]
                         )
                       case doap: DefaultObjectAccessPermissionADM =>
-                        //No. It is a default object access permission
+                        // No. It is a default object access permission
                         for {
                           // if a doap permission has a group defined, it cannot have either resourceClass or property
                           _ <- updatePermission(
@@ -1943,7 +1943,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                           updatedPermission.asInstanceOf[AdministrativePermissionADM]
                         )
                       case doap: DefaultObjectAccessPermissionADM =>
-                        //No. It is a default object access permission.
+                        // No. It is a default object access permission.
                         val verifiedPermissions =
                           PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(
                             changeHasPermissionsRequest.hasPermissions
@@ -2039,7 +2039,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                             s"Only a default object access permission defined for a resource class can be updated."
                         )
                       case doap: DefaultObjectAccessPermissionADM =>
-                        //No. It is a default object access permission.
+                        // No. It is a default object access permission.
                         for {
                           _ <- updatePermission(
                                  permissionIri = doap.iri,
@@ -2129,7 +2129,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                             s"Only a default object access permission defined for a property can be updated."
                         )
                       case doap: DefaultObjectAccessPermissionADM =>
-                        //No. It is a default object access permission.
+                        // No. It is a default object access permission.
                         for {
                           _ <- updatePermission(
                                  permissionIri = doap.iri,

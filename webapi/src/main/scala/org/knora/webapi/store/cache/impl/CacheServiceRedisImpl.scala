@@ -278,7 +278,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 }
 
 object CacheServiceRedisImpl {
-  val layer: ZLayer[RedisConfig, Nothing, CacheService] = {
+  val layer: ZLayer[RedisConfig, Nothing, CacheService] =
     ZLayer {
       for {
         config <- ZIO.service[RedisConfig]
@@ -288,5 +288,4 @@ object CacheServiceRedisImpl {
                   .orDie // the Redis Client Pool
       } yield CacheServiceRedisImpl(pool)
     }.tap(_ => ZIO.debug(">>> Redis Cache Service Initialized <<<"))
-  }
 }

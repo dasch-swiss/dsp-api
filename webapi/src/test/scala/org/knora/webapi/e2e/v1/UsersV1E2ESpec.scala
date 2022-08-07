@@ -194,7 +194,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
           BasicHttpCredentials(rootCreds.email, rootCreds.password)
         )
         val response: HttpResponse = singleAwaitingRequest(request)
-        //log.debug(s"response: ${response.toString}")
+        // log.debug(s"response: ${response.toString}")
         assert(response.status === StatusCodes.OK)
 
         val groups: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[IRI]]

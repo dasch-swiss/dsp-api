@@ -315,11 +315,10 @@ sealed trait EntityInfoV1 {
   /**
    * Returns a [[Map]] of predicate IRIs to [[PredicateInfoV1]] objects.
    */
-  lazy val predicates: Map[IRI, PredicateInfoV1] = {
+  lazy val predicates: Map[IRI, PredicateInfoV1] =
     entityInfoContent.predicates.map { case (smartIri, predicateInfoV2) =>
       smartIri.toString -> new PredicateInfoV1(predicateInfoV2)
     }
-  }
 
   /**
    * Returns an object for a given predicate. If requested, attempts to return the object in the user's preferred

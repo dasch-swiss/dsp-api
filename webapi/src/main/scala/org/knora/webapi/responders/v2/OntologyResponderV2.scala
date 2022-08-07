@@ -390,7 +390,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           if (missingOntologies.nonEmpty) {
             throw BadRequestException(
               s"One or more requested ontologies were not found: ${missingOntologies
-                .mkString(", ")}"
+                  .mkString(", ")}"
             )
           }
 
@@ -945,6 +945,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -1124,8 +1125,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ = if (wrongProperties.nonEmpty) {
               throw BadRequestException(
                 s"One or more submitted properties do not have cardinalities in class ${changeGuiOrderRequest.classInfoContent.classIri}: ${wrongProperties
-                  .map(_.toOntologySchema(ApiV2Complex))
-                  .mkString(", ")}"
+                    .map(_.toOntologySchema(ApiV2Complex))
+                    .mkString(", ")}"
               )
             }
 
@@ -1312,7 +1313,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ = if (redundantCardinalities.nonEmpty) {
               throw BadRequestException(
                 s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities
-                  .mkString(", ")}"
+                    .mkString(", ")}"
               )
             }
 
@@ -1361,6 +1362,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               cacheData = cacheData,
               existingLinkPropsToKeep = existingReadClassInfo.linkProperties
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -1612,6 +1614,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
             )
+            .fold(e => throw e.head, v => v)
 
         // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
         _ = Cache.checkOntologyReferencesInClassDef(
@@ -2046,7 +2049,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                    entityIri = internalLinkValuePropertyIri,
                    errorFun = throw BadRequestException(
                      s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri
-                       .toOntologySchema(ApiV2Complex)}, is used in data or ontologies"
+                         .toOntologySchema(ApiV2Complex)}, is used in data or ontologies"
                    )
                  )
 
@@ -2177,7 +2180,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
               throw BadRequestException(
                 s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: ${sortedSubjects
-                  .mkString(", ")}"
+                    .mkString(", ")}"
               )
             }
 
@@ -2337,15 +2340,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 "New link value properties cannot be created directly. Create a link property instead."
               )
             }
-
-        // Check the property's salsah-gui:guiElement and salsah-gui:guiAttribute.
-        _ = OntologyHelpers.validateGuiAttributes(
-              propertyInfoContent = internalPropertyDef,
-              allGuiAttributeDefinitions = cacheData.guiAttributeDefinitions,
-              errorFun = { msg: String =>
-                throw BadRequestException(msg)
-              }
-            )
 
         // If we're creating a link property, make the definition of the corresponding link value property.
         maybeLinkValuePropertyDef: Option[PropertyInfoContentV2] =
@@ -2753,6 +2747,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeUnescapedNewLinkValuePropertyDef.map { unescapedNewLinkPropertyDef =>
             unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = unescapedNewLinkPropertyDef,
+              isEditable = true,
               isResourceProp = true,
               isLinkValueProp = true
             )
@@ -3277,6 +3272,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeNewLinkValuePropertyDef.map { newLinkPropertyDef: PropertyInfoContentV2 =>
             newLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = newLinkPropertyDef,
+              isEditable = true,
               isResourceProp = true,
               isLinkValueProp = true
             )
