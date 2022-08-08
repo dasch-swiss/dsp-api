@@ -46,12 +46,12 @@ object Project {
   object ShortName { self =>
     def make(value: String): Validation[Throwable, ShortName] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.ShortNameMissing))
       } else {
         val validatedValue = Validation(
           V2ProjectIriValidation.validateAndEscapeProjectShortname(
             value,
-            throw BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+            throw BadRequestException(ProjectErrorMessages.ShortNameInvalid)
           )
         )
         validatedValue.map(new ShortName(_) {})
@@ -72,7 +72,7 @@ object Project {
   object Name { self =>
     def make(value: String): Validation[Throwable, Name] =
       if (value.isEmpty) {
-        Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
+        Validation.fail(BadRequestException(ProjectErrorMessages.NameMissing))
       } else {
         Validation.succeed(new Name(value) {})
       }
@@ -174,10 +174,10 @@ object Project {
 object ProjectErrorMessages {
   val ShortcodeMissing           = "Shortcode cannot be empty."
   val ShortcodeInvalid           = "Shortcode is invalid."
-  val ShortnameMissing           = "Shortname cannot be empty."
-  val ShortnameInvalid           = "Shortname is invalid."
-  val LongnameMissing            = "Longname cannot be empty."
-  val LongnameInvalid            = "Longname is invalid."
+  val ShortNameMissing           = "Shortname cannot be empty."
+  val ShortNameInvalid           = "Shortname is invalid."
+  val NameMissing                = "Longname cannot be empty."
+  val NameInvalid                = "Longname is invalid."
   val ProjectDescriptionsMissing = "Description cannot be empty."
   val ProjectDescriptionsInvalid = "Description is invalid."
   val KeywordsMissing            = "Keywords cannot be empty."

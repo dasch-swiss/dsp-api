@@ -16,9 +16,9 @@ import dsp.errors.BadRequestException
 object ProjectSpec extends ZIOSpecDefault {
   private val validShortcode   = "1234"
   private val invalidShortcode = "12345"
-  private val validShortname   = "validShortname"
+  private val validShortName   = "validShortname"
   private val invalidShortname = "~!@#$%^&*()_+"
-  private val validLongname    = "That is the project longname"
+  private val validName        = "That is the project longname"
   private val validDescription = Seq(
     V2.StringLiteralV2(value = "Valid project description", language = Some("en"))
   )
@@ -26,7 +26,7 @@ object ProjectSpec extends ZIOSpecDefault {
   private val validLogo     = "/fu/bar/baz.jpg"
 
   def spec =
-    (shortcodeTest + shortnameTest + longnameTest + projectDescriptionsTest + keywordsTest + logoTest + projectStatusTest + projectSelfJoinTest)
+    (shortcodeTest + shortNameTest + nameTest + projectDescriptionsTest + keywordsTest + logoTest + projectStatusTest + projectSelfJoinTest)
 
   private val shortcodeTest = suite("ProjectSpec - Shortcode")(
     test("pass an empty value and return an error") {
@@ -60,48 +60,48 @@ object ProjectSpec extends ZIOSpecDefault {
     }
   )
 
-  private val shortnameTest = suite("ProjectSpec - Shortname")(
+  private val shortNameTest = suite("ProjectSpec - ShortName")(
     test("pass an empty value and return an error") {
       assertTrue(
-        Shortname.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        ShortName.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.ShortNameMissing))
       ) &&
       assertTrue(
-        Shortname.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
+        ShortName.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.ShortNameMissing))
       )
     },
     test("pass an invalid value and return an error") {
       assertTrue(
-        Shortname.make(invalidShortname) == Validation.fail(
-          BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+        ShortName.make(invalidShortname) == Validation.fail(
+          BadRequestException(ProjectErrorMessages.ShortNameInvalid)
         )
       ) &&
       assertTrue(
-        Shortname.make(Some(invalidShortname)) == Validation.fail(
-          BadRequestException(ProjectErrorMessages.ShortnameInvalid)
+        ShortName.make(Some(invalidShortname)) == Validation.fail(
+          BadRequestException(ProjectErrorMessages.ShortNameInvalid)
         )
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Shortname.make(validShortname).toOption.get.value == validShortname) &&
-      assertTrue(Shortname.make(Option(validShortname)).getOrElse(null).get.value == validShortname)
+      assertTrue(ShortName.make(validShortName).toOption.get.value == validShortName) &&
+      assertTrue(ShortName.make(Option(validShortName)).getOrElse(null).get.value == validShortName)
     },
     test("successfully validate passing None") {
       assertTrue(
-        ShortCode.make(None) == Validation.succeed(None)
+        ShortName.make(None) == Validation.succeed(None)
       )
     }
   )
 
-  private val longnameTest = suite("ProjectSpec - Longname")(
+  private val nameTest = suite("ProjectSpec - Name")(
     test("pass an empty value and return an error") {
-      assertTrue(Longname.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))) &&
+      assertTrue(Name.make("") == Validation.fail(BadRequestException(ProjectErrorMessages.NameMissing))) &&
       assertTrue(
-        Longname.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
+        Name.make(Some("")) == Validation.fail(BadRequestException(ProjectErrorMessages.NameMissing))
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Longname.make(validLongname).toOption.get.value == validLongname) &&
-      assertTrue(Longname.make(Option(validLongname)).getOrElse(null).get.value == validLongname)
+      assertTrue(Name.make(validName).toOption.get.value == validName) &&
+      assertTrue(Name.make(Option(validName)).getOrElse(null).get.value == validName)
     },
     test("successfully validate passing None") {
       assertTrue(
