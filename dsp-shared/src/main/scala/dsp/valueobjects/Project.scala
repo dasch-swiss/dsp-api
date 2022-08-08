@@ -68,6 +68,7 @@ object Project {
    * Project Name value object.
    * (Formerly `Longname`)
    */
+  // TODO-BL: this should be multi-lang-string, I suppose
   sealed abstract case class Name private (value: String)
   object Name { self =>
     def make(value: String): Validation[Throwable, Name] =

@@ -175,6 +175,5 @@ object ProjectId {
 }
 
 object IdErrorMessages {
-  def IriDoesNotContainUuid(iri: Iri) = s"No UUID can be extracted from IRI '$iri'"
-  // TODO-BL: we should have iri.value accessible even on the abstract iIRI
+  def IriDoesNotContainUuid(iri: Iri) = s"No UUID can be extracted from IRI '${iri.value}'"
 }

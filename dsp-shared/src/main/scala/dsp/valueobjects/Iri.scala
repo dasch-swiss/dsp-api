@@ -11,7 +11,9 @@ import zio.prelude.Validation
 import dsp.errors.ValidationException
 import scala.util.Try
 
-sealed trait Iri
+sealed trait Iri {
+  val value: String
+}
 object Iri {
 
   // A validator for URLs
