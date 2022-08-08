@@ -111,7 +111,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    *  @param id  the project's ID
    *  @return either a NotFoundException or the project ID of the successfully deleted project
    */
-  def deleteUser(id: ProjectId): IO[NotFoundException, ProjectId] =
+  def deleteProject(id: ProjectId): IO[NotFoundException, ProjectId] =
     (for {
       _ <- repo
              .deleteProject(id)
