@@ -68,6 +68,7 @@ final case class ProjectRepoLive(
    * @inheritDoc
    */
   override def checkShortCodeExists(shortCode: String): IO[Option[Nothing], Unit] =
+    // TODO-BL: why do we use String instead of the valueObject here?
     lookupTableShortCodeToUuid
       .get(shortCode)
       .commit
