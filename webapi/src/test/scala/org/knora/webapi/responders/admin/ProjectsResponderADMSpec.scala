@@ -182,7 +182,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = ShortCode.make(shortCode).fold(error => throw error.head, value => value), // lower case
-            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -275,7 +275,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = ShortCode.make("1112").fold(error => throw error.head, value => value), // lower case
-            longname = Some(Longname.make("project longname").fold(error => throw error.head, value => value)),
+            longname = Some(Name.make("project longname").fold(error => throw error.head, value => value)),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -307,8 +307,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("project_with_character").fold(error => throw error.head, value => value),
             shortcode = ShortCode.make("1312").fold(error => throw error.head, value => value), // lower case
-            longname =
-              Longname.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
+            longname = Name.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -340,7 +339,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = ShortCode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
@@ -360,7 +359,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = ShortCode.make("111C").fold(error => throw error.head, value => value), // lower case
-            longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
+            longname = Name.make(Some("project longname")).fold(error => throw error.head, value => value),
             description = ProjectDescription
               .make(Seq(V2.StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),

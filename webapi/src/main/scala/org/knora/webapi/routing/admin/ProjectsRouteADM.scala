@@ -136,9 +136,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
         val id: Validation[Throwable, Option[ProjectIri]]          = ProjectIri.make(apiRequest.id)
-        val shortname: Validation[Throwable, Shortname]            = Shortname.make(apiRequest.shortname)
+        val shortname: Validation[Throwable, ShortName]            = ShortName.make(apiRequest.shortname)
         val shortcode: Validation[Throwable, ShortCode]            = ShortCode.make(apiRequest.shortcode)
-        val longname: Validation[Throwable, Option[Longname]]      = Longname.make(apiRequest.longname)
+        val longname: Validation[Throwable, Option[Name]]          = Name.make(apiRequest.longname)
         val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
         val keywords: Validation[Throwable, Keywords]              = Keywords.make(apiRequest.keywords)
         val logo: Validation[Throwable, Option[Logo]]              = Logo.make(apiRequest.logo)

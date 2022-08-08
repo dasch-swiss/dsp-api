@@ -15,7 +15,7 @@ object Project {
   // TODO-mpro: longname, description, keywords, logo are missing enhanced validation
 
   /**
-   * Project Shortcode value object.
+   * Project ShortCode value object.
    */
   sealed abstract case class ShortCode private (value: String)
   object ShortCode { self =>
@@ -40,11 +40,11 @@ object Project {
   }
 
   /**
-   * Project Shortname value object.
+   * Project ShortName value object.
    */
-  sealed abstract case class Shortname private (value: String)
-  object Shortname { self =>
-    def make(value: String): Validation[Throwable, Shortname] =
+  sealed abstract case class ShortName private (value: String)
+  object ShortName { self =>
+    def make(value: String): Validation[Throwable, ShortName] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(ProjectErrorMessages.ShortnameMissing))
       } else {
@@ -54,10 +54,10 @@ object Project {
             throw BadRequestException(ProjectErrorMessages.ShortnameInvalid)
           )
         )
-        validatedValue.map(new Shortname(_) {})
+        validatedValue.map(new ShortName(_) {})
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Shortname]] =
+    def make(value: Option[String]): Validation[Throwable, Option[ShortName]] =
       value match {
         case Some(v) => self.make(v).map(Some(_))
         case None    => Validation.succeed(None)
@@ -65,18 +65,19 @@ object Project {
   }
 
   /**
-   * Project Longname value object.
+   * Project Name value object.
+   * (Formerly `Longname`)
    */
-  sealed abstract case class Longname private (value: String)
-  object Longname { self =>
-    def make(value: String): Validation[Throwable, Longname] =
+  sealed abstract case class Name private (value: String)
+  object Name { self =>
+    def make(value: String): Validation[Throwable, Name] =
       if (value.isEmpty) {
         Validation.fail(BadRequestException(ProjectErrorMessages.LongnameMissing))
       } else {
-        Validation.succeed(new Longname(value) {})
+        Validation.succeed(new Name(value) {})
       }
 
-    def make(value: Option[String]): Validation[Throwable, Option[Longname]] =
+    def make(value: Option[String]): Validation[Throwable, Option[Name]] =
       value match {
         case None    => Validation.succeed(None)
         case Some(v) => self.make(v).map(Some(_))

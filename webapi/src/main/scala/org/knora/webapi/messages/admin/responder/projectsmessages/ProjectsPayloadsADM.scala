@@ -13,9 +13,9 @@ import dsp.valueobjects.Project._
  */
 final case class ProjectCreatePayloadADM(
   id: Option[ProjectIri] = None,
-  shortname: Shortname,
+  shortname: ShortName,
   shortcode: ShortCode,
-  longname: Option[Longname] = None,
+  longname: Option[Name] = None,
   description: ProjectDescription,
   keywords: Keywords,
   logo: Option[Logo] = None,
