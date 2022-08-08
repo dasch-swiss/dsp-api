@@ -89,7 +89,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    * @param description the project descriptions
    * @return either a throwable if creation failed, or the ID of the newly created project
    */
-  def createProject(
+  def createProject( // TODO-BL: why don't we simply pass the Project value object here?
     shortCode: ShortCode,
     name: String,       // TODO-BL: make ValueObject
     description: String // TODO-BL: make ValueObject

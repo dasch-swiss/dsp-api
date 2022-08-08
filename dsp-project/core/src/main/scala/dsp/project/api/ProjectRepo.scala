@@ -52,6 +52,7 @@ trait ProjectRepo {
    * @return an optional [[Project]].
    */
   def getProjectByShortCode(shortCode: String): IO[Option[Nothing], Project]
+  // TODO-BL: why string not value object?
 
   /**
    * Checks if a project ShortCode exists in the repo.

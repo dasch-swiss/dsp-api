@@ -68,15 +68,15 @@ final case class ProjectRepoMock(
    * @inheritDoc
    */
   override def checkShortCodeExists(shortCode: String): IO[Option[Nothing], Unit] =
-    lookupTableShortCodeToUuid
-      .get(shortCode)
-      .commit
-      .some
-      .tapBoth(
-        _ => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', project not found."),
-        uuid => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', found project with UUID '$uuid'.")
-      )
-      .map(_ => ()) // TODO-BL: wouldn't it be more elegant to return the UUID here?
+    (for {
+      exists <- lookupTableShortCodeToUuid.contains(shortCode).commit
+      _ <- if (exists) ZIO.fail(None) // project shortcode does exist
+           else ZIO.succeed(()) // project shortcode does not exist
+    } yield ()).tapBoth(
+      _ => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', project not found."),
+      uuid => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', found project with UUID '$uuid'.")
+    )
+  // TODO-BL: wouldn't it be more elegant to return the UUID here?
 
   /**
    * @inheritDoc

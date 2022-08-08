@@ -130,9 +130,9 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     test("not return that a shortCode exists if it does not exist") {
       val shortCodeString = "0000"
       for {
-        res <- ProjectRepo.checkShortCodeExists(shortCodeString).exit
+        res <- ProjectRepo.checkShortCodeExists(shortCodeString)
       } yield (
-        assert(res)(fails(equalTo(None)))
+        assert(res)(isUnit)
       )
     },
     test("return that a shortCode exists if it does indeed exist") {
@@ -142,9 +142,9 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
         id        <- ProjectId.make(shortCode).toZIO
         project   <- Project.make(id, "projectName", "project description").toZIO
         storedId  <- ProjectRepo.storeProject(project)
-        res       <- ProjectRepo.checkShortCodeExists(shortCodeString)
+        res       <- ProjectRepo.checkShortCodeExists(shortCodeString).exit
       } yield (
-        assert(res)(isUnit)
+        assert(res)(fails(equalTo(None)))
       )
     }
   )
@@ -186,6 +186,6 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
 
   val projectRepoLiveTest = suite("ProjectRepo - Live")(
     projectTests
-  ).provide(ProjectRepoMock.layer)
+  ).provide(ProjectRepoLive.layer)
 
 }
