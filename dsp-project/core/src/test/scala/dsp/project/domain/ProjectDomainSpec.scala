@@ -44,9 +44,8 @@ object ProjectDomainSpec extends ZIOSpecDefault {
 
   val projectCompareTests = suite("compare projects")(
     test("compare projects by IRI") {
-      val uuidList   = List(UUID.randomUUID(), UUID.randomUUID()).sorted
-      val iri1String = s"http://rdfh.ch/projects/${uuidList.head}"
-      val iri2String = s"http://rdfh.ch/projects/${uuidList.reverse.head}"
+      val iri1String = s"http://rdfh.ch/projects/d78c6cc8-0a18-4131-af72-4bb6cb688bed"
+      val iri2String = s"http://rdfh.ch/projects/f4184d7a-caf7-4ab9-991e-d5da9eb7ec17"
       (for {
         iri1             <- Iri.ProjectIri.make(iri1String)
         iri2             <- Iri.ProjectIri.make(iri2String)
