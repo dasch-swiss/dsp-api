@@ -88,6 +88,7 @@ object Project {
   /**
    * ProjectDescription value object.
    */
+  // TODO-BL: should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
   sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =
