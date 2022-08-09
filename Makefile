@@ -202,15 +202,36 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
 .PHONY: test
-test: build ## runs all tests
-	sbt -v "shared/test"
+test: build test-shared test-user-slice test-role-slice ## runs all tests
 	sbt -v "sipi/test"
+	sbt -v "webapi/test"
+	
+.PHONY: test-shared
+test-shared: ## tests the shared projects (build is not called from this target)
+	sbt -v "shared/test"
+	sbt -v "valueObjects/test"
+
+.PHONY: test-user-slice
+test-user-slice: ## tests all projects relating to the user slice (build is not called from this target)
 	sbt -v "userCore/test"
 	sbt -v "userHandler/test"
 	sbt -v "userInterface/test"
 	sbt -v "userRepo/test"
-	sbt -v "valueObjects/test"
-	sbt -v "webapi/test"
+
+.PHONY: test-role-slice
+test-role-slice: ## tests all projects relating to the role slice (build is not called from this target)
+	sbt -v "roleCore/test"
+	sbt -v "roleHandler/test"
+	sbt -v "roleInterface/test"
+	sbt -v "roleRepo/test"
+
+.PHONY: test-project-slice
+test-project-slice: ## tests all projects relating to the project slice (build is not called from this target)
+	sbt -v "projectCore/test"
+	sbt -v "projectHandler/test"
+	sbt -v "projectInterface/test"
+	sbt -v "projectRepo/test"
+
 
 
 #################################
