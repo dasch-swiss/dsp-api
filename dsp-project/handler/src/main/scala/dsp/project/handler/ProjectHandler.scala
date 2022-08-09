@@ -70,7 +70,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    * @return either a DuplicatedValueException or Unit if the short code is not taken
    */
   private def checkIfShortCodeTaken(shortCode: ShortCode): IO[DuplicateValueException, Unit] =
-    // TODO-BL: wound't it be nicer to return the ID of the project here
+    // TODO-BL: [discuss] wound't it be nicer to return the ID of the project here
     for {
       _ <- repo
              .checkShortCodeExists(shortCode.value)
@@ -89,7 +89,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    * @param description the project descriptions
    * @return either a throwable if creation failed, or the ID of the newly created project
    */
-  def createProject( // TODO-BL: why don't we simply pass the Project value object here?
+  def createProject( // TODO-BL: [discuss] why don't we simply pass the Project value object here?
     shortCode: ShortCode,
     name: Name,
     description: ProjectDescription

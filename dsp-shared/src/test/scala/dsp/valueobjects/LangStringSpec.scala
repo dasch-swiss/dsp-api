@@ -73,7 +73,7 @@ object LangStringSpec extends ZIOSpecDefault {
         val str         = ""
         val unsafeValid = LangString.unsafeMake(LanguageCode.en, str)
         assertTrue(unsafeValid.language.value == "en") &&
-        assertTrue(unsafeValid.value == str) // TODO-BL: figure out how to test for logging output
+        assertTrue(unsafeValid.value == str) // TODO-BL: [discuss] figure out how to test for logging output
       }
     )
   )

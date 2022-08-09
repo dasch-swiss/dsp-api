@@ -58,7 +58,7 @@ object LangString {
         langString => langString
       )
 
-  private def executeZioLog(z: UIO[Unit]): Unit = { // TODO-BL: this should not be necessary!
+  private def executeZioLog(z: UIO[Unit]): Unit = { // TODO-BL: [discuss] this should not be necessary!
     val runtime = Runtime.default
     Unsafe.unsafe { implicit unsafe =>
       runtime.unsafe.run(z).getOrThrowFiberFailure()

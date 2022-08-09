@@ -9,6 +9,7 @@ import zio.prelude.Validation
 import dsp.errors.BadRequestException
 
 // TODO-BL: revisit those
+// TODO-BL: replace all Throwables with ValidationException
 
 object Project {
 
@@ -68,7 +69,7 @@ object Project {
    * Project Name value object.
    * (Formerly `Longname`)
    */
-  // TODO-BL: this should be multi-lang-string, I suppose
+  // TODO-BL: [domain-model] this should be multi-lang-string, I suppose
   sealed abstract case class Name private (value: String)
   object Name { self =>
     def make(value: String): Validation[Throwable, Name] =
@@ -88,7 +89,7 @@ object Project {
   /**
    * ProjectDescription value object.
    */
-  // TODO-BL: should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
+  // TODO-BL: [domain-model] should probably be MultiLangString; should probably be called `Description` as it's clear that it's part of Project
   sealed abstract case class ProjectDescription private (value: Seq[V2.StringLiteralV2]) // make it plural
   object ProjectDescription { self =>
     def make(value: Seq[V2.StringLiteralV2]): Validation[Throwable, ProjectDescription] =

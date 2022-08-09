@@ -91,7 +91,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     )
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
-  // TODO-BL: do we test private methods
+  // TODO-BL: [discuss] (how) do we test private methods
 //   private val checkIfShortCodeTakenTests = suite("check if a shortcode is already taken")(
 //     test("return nothing if the repo is empty") {
 //       for {
@@ -110,10 +110,9 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     },
     test("fail to create a project with an occupied shortCode") {
       for {
-        handler   <- ZIO.service[ProjectHandler]
-        shortCode <- ShortCode.make("0000").toZIO
-        id        <- handler.createProject(shortCode, name, description)
-        res       <- handler.createProject(shortCode, name2, description2).exit
+        handler <- ZIO.service[ProjectHandler]
+        id      <- handler.createProject(shortCode, name, description)
+        res     <- handler.createProject(shortCode, name2, description2).exit
       } yield assert(res)(fails(isSubtype[DuplicateValueException](anything)))
     } // TODO-BL: as soon as we have more illegal states, maybe they can be tested here?
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)

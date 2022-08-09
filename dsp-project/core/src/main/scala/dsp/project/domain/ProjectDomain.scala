@@ -24,14 +24,14 @@ sealed abstract case class Project private (
   id: ProjectId,
   name: Name,
   description: ProjectDescription
-  // TODO-BL: missing status, shortname, selfjoin
+  // TODO-BL: [domain-model] missing status, shortname, selfjoin
 ) extends Ordered[Project] { self =>
 
   /**
    * Allows to sort collections of [[Project]]s. Sorting is done by the IRI.
    */
   def compare(that: Project): Int = self.id.iri.toString().compareTo(that.id.iri.toString())
-  // TODO-BL: by which field should a project be sorted by? shortcode? name? IRI?
+  // TODO-BL: [discuss] by which field should a project be sorted by? shortcode? name? IRI?
 
   /**
    * Update the name of the project.
