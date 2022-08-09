@@ -209,7 +209,6 @@ test: build test-shared test-user-slice test-role-slice ## runs all tests
 .PHONY: test-shared
 test-shared: ## tests the shared projects (build is not called from this target)
 	sbt -v "shared/test"
-	sbt -v "valueObjects/test"
 
 .PHONY: test-user-slice
 test-user-slice: ## tests all projects relating to the user slice (build is not called from this target)

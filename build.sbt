@@ -28,7 +28,26 @@ lazy val buildSettings = Seq(
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "root", file("."))
-  .aggregate(webapi, sipi, shared, valueObjects, userCore, userHandler, userRepo, userInterface)
+  .aggregate(
+    webapi,
+    sipi,
+    shared,
+    // user
+    userCore,
+    userHandler,
+    userRepo,
+    userInterface,
+    // role
+    roleCore,
+    roleHandler,
+    roleRepo,
+    roleInterface,
+    // project
+    projectCore,
+    projectHandler,
+    projectRepo,
+    projectInterface
+  )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
     // values set for all sub-projects
@@ -231,16 +250,6 @@ lazy val webapiJavaTestOptions = Seq(
 //////////////////////////////////////
 // DSP's new codebase
 //////////////////////////////////////
-
-// Value Objects project
-
-lazy val valueObjects = project
-  .in(file("dsp-value-objects"))
-  .settings(
-    name := "valueObjects",
-    libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
 
 // Role projects
 

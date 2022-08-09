@@ -10,7 +10,7 @@ import dsp.project.domain.Project
 import zio._
 
 import java.util.UUID
-import dsp.valueobjects.ProjectId
+import dsp.valueobjects._
 import dsp.valueobjects.Project._
 import dsp.errors.NotFoundException
 import dsp.valueobjects
