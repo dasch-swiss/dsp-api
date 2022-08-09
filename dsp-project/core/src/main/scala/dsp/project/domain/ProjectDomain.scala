@@ -22,10 +22,9 @@ import dsp.errors.ValidationException
  */
 sealed abstract case class Project private (
   id: ProjectId,
-  name: String,
-  description: String
-  // TODO-BL: add project status here
-  // TODO-BL: use project valueobjects for things like name, description, etc.
+  name: Name,
+  description: ProjectDescription
+  // TODO-BL: missing status, shortname, selfjoin
 ) extends Ordered[Project] { self =>
 
   /**
@@ -40,7 +39,7 @@ sealed abstract case class Project private (
    * @param name the new name
    * @return the updated Project
    */
-  def updateProjectName(name: String): Validation[ValidationException, Project] =
+  def updateProjectName(name: Name): Validation[ValidationException, Project] =
     Project.make(
       id = self.id,
       name = name,
@@ -53,7 +52,7 @@ sealed abstract case class Project private (
    * @param description the new description
    * @return the updated Project
    */
-  def updateProjectDescription(description: String): Validation[ValidationException, Project] =
+  def updateProjectDescription(description: ProjectDescription): Validation[ValidationException, Project] =
     Project.make(
       id = self.id,
       name = self.name,
@@ -63,8 +62,8 @@ sealed abstract case class Project private (
 object Project {
   def make(
     id: ProjectId,
-    name: String,       // TODO-BL: make LangString as soon as we have it
-    description: String // TODO-BL: make LangString as soon as we have it
+    name: Name,
+    description: ProjectDescription
   ): Validation[ValidationException, Project] =
     Validation.succeed(new Project(id = id, name = name, description = description) {})
 

@@ -12,6 +12,7 @@ import zio.test._
 import java.util.UUID
 import dsp.valueobjects.Iri
 import dsp.valueobjects.ProjectId
+import dsp.valueobjects.V2
 
 /**
  * This spec is used to test [[dsp.project.domain.ProjectDomain]].
@@ -23,10 +24,11 @@ object ProjectDomainSpec extends ZIOSpecDefault {
   private val iri = Iri.ProjectIri
     .make(s"http://rdfh.ch/projects/${UUID.randomUUID()}")
     .fold(e => throw e.head, v => v)
-  private val id          = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
-  private val name        = "proj"
-  private val description = "A Project"
-  // TODO-BL: these should be langString/valueobjects
+  private val id   = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
+  private val name = Name.make("proj").fold(e => throw e.head, v => v)
+  private val description = ProjectDescription
+    .make(Seq(V2.StringLiteralV2("A Project", Some("en"))))
+    .fold(e => throw e.head, v => v)
 
   override def spec = suite("Project")(projectCreateTests + projectCompareTests + projectUpdateTests)
 
@@ -66,8 +68,8 @@ object ProjectDomainSpec extends ZIOSpecDefault {
 
   val projectUpdateTests = suite("update project")(
     test("update a project name when provided a valid new name") {
-      val newName = "new project name"
       (for {
+        newName        <- Name.make("new project name")
         project        <- Project.make(id, name, description)
         updatedProject <- project.updateProjectName(newName)
       } yield (
@@ -79,8 +81,8 @@ object ProjectDomainSpec extends ZIOSpecDefault {
       )).toZIO
     },
     test("update a project description when provided a valid new description") {
-      val newDescription = "new project name"
       (for {
+        newDescription <- ProjectDescription.make(Seq(V2.StringLiteralV2("new project name", Some("en"))))
         project        <- Project.make(id, name, description)
         updatedProject <- project.updateProjectDescription(newDescription)
       } yield (

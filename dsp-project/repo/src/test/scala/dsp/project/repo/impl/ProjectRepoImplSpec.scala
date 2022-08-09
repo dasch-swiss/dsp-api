@@ -27,7 +27,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         shortCode     <- ShortCode.make("0000").toZIO
         id            <- ProjectId.make(shortCode).toZIO
-        project       <- Project.make(id, "projectName", "project description").toZIO
+        name          <- Name.make("projectName").toZIO
+        project       <- Project.make(id, name, "project description").toZIO
         _             <- ProjectRepo.storeProject(project)
         storedProject <- ProjectRepo.getProjectById(id)
       } yield (
@@ -38,7 +39,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         shortCode     <- ShortCode.make("0000").toZIO
         id            <- ProjectId.make(shortCode).toZIO
-        project       <- Project.make(id, "projectName", "project description").toZIO
+        name          <- Name.make("projectName").toZIO
+        project       <- Project.make(id, name, "project description").toZIO
         _             <- ProjectRepo.storeProject(project)
         storedProject <- ProjectRepo.getProjectByShortCode(shortCode.value)
       } yield (
@@ -49,7 +51,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         shortCode1    <- ShortCode.make("0000").toZIO
         id1           <- ProjectId.make(shortCode1).toZIO
-        project1      <- Project.make(id1, "projectName", "project description").toZIO
+        name1         <- Name.make("projectName").toZIO
+        project1      <- Project.make(id1, name1, "project description").toZIO
         _             <- ProjectRepo.storeProject(project1)
         shortCode2    <- ShortCode.make("0001").toZIO
         id2           <- ProjectId.make(shortCode2).toZIO
@@ -60,7 +63,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         shortCode1    <- ShortCode.make("0000").toZIO
         id1           <- ProjectId.make(shortCode1).toZIO
-        project1      <- Project.make(id1, "projectName", "project description").toZIO
+        name1         <- Name.make("projectName").toZIO
+        project1      <- Project.make(id1, name1, "project description").toZIO
         _             <- ProjectRepo.storeProject(project1)
         shortCode2    <- ShortCode.make("0001").toZIO
         storedProject <- ProjectRepo.getProjectByShortCode(shortCode2.value).exit
@@ -72,12 +76,14 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     val project1 = (for {
       shortCode <- ShortCode.make("0000")
       id        <- ProjectId.make(shortCode)
-      project   <- Project.make(id, "project1", "project description")
+      name      <- Name.make("projectName")
+      project   <- Project.make(id, name, "project description")
     } yield project).toZIO.orDie
     val project2 = (for {
       shortCode <- ShortCode.make("0001")
       id        <- ProjectId.make(shortCode)
-      project   <- Project.make(id, "project2", "project description")
+      name      <- Name.make("projectName")
+      project   <- Project.make(id, name, "project description")
     } yield project).toZIO.orDie
 
     test("get no project from an empty repository") {
@@ -119,7 +125,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     for {
       shortCode <- ShortCode.make("0000").toZIO
       id        <- ProjectId.make(shortCode).toZIO
-      project   <- Project.make(id, "projectName", "project description").toZIO
+      name      <- Name.make("projectName").toZIO
+      project   <- Project.make(id, name, "project description").toZIO
       storedId  <- ProjectRepo.storeProject(project)
     } yield (
       assertTrue(id == storedId)
@@ -140,7 +147,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         shortCode <- ShortCode.make(shortCodeString).toZIO
         id        <- ProjectId.make(shortCode).toZIO
-        project   <- Project.make(id, "projectName", "project description").toZIO
+        name      <- Name.make("projectName").toZIO
+        project   <- Project.make(id, name, "project description").toZIO
         storedId  <- ProjectRepo.storeProject(project)
         res       <- ProjectRepo.checkShortCodeExists(shortCodeString).exit
       } yield (
@@ -163,7 +171,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         shortCode <- ShortCode.make("0000").toZIO
         id        <- ProjectId.make(shortCode).toZIO
-        project   <- Project.make(id, "projectName", "project description").toZIO
+        name      <- Name.make("projectName").toZIO
+        project   <- Project.make(id, name, "project description").toZIO
         storedId  <- ProjectRepo.storeProject(project)
         res       <- ProjectRepo.deleteProject(id)
       } yield (

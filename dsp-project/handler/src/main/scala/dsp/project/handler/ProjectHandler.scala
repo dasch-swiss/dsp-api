@@ -91,8 +91,8 @@ final case class ProjectHandler(repo: ProjectRepo) {
    */
   def createProject( // TODO-BL: why don't we simply pass the Project value object here?
     shortCode: ShortCode,
-    name: String,       // TODO-BL: make ValueObject
-    description: String // TODO-BL: make ValueObject
+    name: Name,
+    description: ProjectDescription
   ): IO[Throwable, ProjectId] =
     (for {
       _         <- checkIfShortCodeTaken(shortCode) // TODO: reserve shortcode
