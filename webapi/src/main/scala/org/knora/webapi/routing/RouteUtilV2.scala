@@ -25,7 +25,6 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.v2.responder.KnoraResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.ExecutionContext

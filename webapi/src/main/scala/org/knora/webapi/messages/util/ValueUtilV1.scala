@@ -25,7 +25,6 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateVal
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceCreateValueResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.ExecutionContext

@@ -25,7 +25,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.GroupedProps.ValueLiterals
 import org.knora.webapi.messages.util.GroupedProps.ValueProps
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.responders.ResponderManager
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future

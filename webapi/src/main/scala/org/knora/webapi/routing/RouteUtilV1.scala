@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV
 import org.knora.webapi.messages.v1.responder.valuemessages.TextFileValueV1
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.iiif.errors.SipiException
 

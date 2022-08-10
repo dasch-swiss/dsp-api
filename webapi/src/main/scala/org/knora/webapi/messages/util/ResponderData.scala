@@ -15,6 +15,8 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
  *
  * @param system   the actor system.
  * @param appActor the main application actor.
+ * @param knoraSetting the application settings.
+ * @param cacheServiceSettings the cache service part of the settings.
  */
 case class ResponderData(
   system: ActorSystem,
