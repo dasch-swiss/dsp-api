@@ -1,4 +1,3 @@
-import rapture.core.booleanRepresentations.trueFalse
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}

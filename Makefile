@@ -203,34 +203,34 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 
 .PHONY: test
 test: build test-shared test-user-slice test-role-slice ## runs all tests
-	sbt -v "sipi/test"
-	sbt -v "webapi/test"
+	sbt -v coverage "sipi/test"
+	sbt -v coverage "webapi/test"
+	sbt coverageAggregate
 	
 .PHONY: test-shared
 test-shared: ## tests the shared projects (build is not called from this target)
-	sbt -v "shared/test"
+	sbt -v coverage "shared/test"
 
 .PHONY: test-user-slice
 test-user-slice: ## tests all projects relating to the user slice (build is not called from this target)
-	sbt -v "userCore/test"
-	sbt -v "userHandler/test"
-	sbt -v "userInterface/test"
-	sbt -v "userRepo/test"
+	sbt -v coverage "userCore/test"
+	sbt -v coverage "userHandler/test"
+	sbt -v coverage "userInterface/test"
+	sbt -v coverage "userRepo/test"
 
 .PHONY: test-role-slice
 test-role-slice: ## tests all projects relating to the role slice (build is not called from this target)
-	sbt -v "roleCore/test"
-	sbt -v "roleHandler/test"
-	sbt -v "roleInterface/test"
-	sbt -v "roleRepo/test"
+	sbt -v coverage "roleCore/test"
+	sbt -v coverage "roleHandler/test"
+	sbt -v coverage "roleInterface/test"
+	sbt -v coverage "roleRepo/test"
 
 .PHONY: test-project-slice
 test-project-slice: ## tests all projects relating to the project slice (build is not called from this target)
-	sbt -v "projectCore/test"
-	sbt -v "projectHandler/test"
-	sbt -v "projectInterface/test"
-	sbt -v "projectRepo/test"
-
+	sbt -v coverage "projectCore/test"
+	sbt -v coverage "projectHandler/test"
+	sbt -v coverage "projectInterface/test"
+	sbt -v coverage "projectRepo/test"
 
 
 #################################
