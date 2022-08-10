@@ -21,7 +21,7 @@ lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
 lazy val buildSettings = Seq(
   organization := "org.knora",
-  version := (ThisBuild / version).value
+  version      := (ThisBuild / version).value
 )
 
 lazy val rootBaseDir = ThisBuild / baseDirectory
@@ -33,8 +33,8 @@ lazy val root: Project = Project(id = "root", file("."))
     // values set for all sub-projects
     // These are normal sbt settings to configure for release, skip if already defined
     Global / onChangedBuildSource := ReloadOnSourceChanges,
-    ThisBuild / licenses := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    ThisBuild / homepage := Some(url("https://github.com/dasch-swiss/dsp-api")),
+    ThisBuild / licenses          := Seq("Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    ThisBuild / homepage          := Some(url("https://github.com/dasch-swiss/dsp-api")),
     ThisBuild / scmInfo := Some(
       ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
     ),
@@ -45,7 +45,7 @@ lazy val root: Project = Project(id = "root", file("."))
     ThisBuild / version ~= (_.replace('+', '-')),
     // use Ctrl-c to stop current task but not quit SBT
     Global / cancelable := true,
-    publish / skip := true
+    publish / skip      := true
   )
 
 addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll")
@@ -60,11 +60,11 @@ lazy val sipi: Project = Project(id = "sipi", base = file("sipi"))
   .settings(
     Compile / packageDoc / mappings := Seq(),
     Compile / packageSrc / mappings := Seq(),
-    Docker / dockerRepository := Some("daschswiss"),
-    Docker / packageName := "knora-sipi",
-    dockerUpdateLatest := true,
-    dockerBaseImage := Dependencies.sipiImage,
-    Docker / maintainer := "support@dasch.swiss",
+    Docker / dockerRepository       := Some("daschswiss"),
+    Docker / packageName            := "knora-sipi",
+    dockerUpdateLatest              := true,
+    dockerBaseImage                 := Dependencies.sipiImage,
+    Docker / maintainer             := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(1024),
     Docker / defaultLinuxInstallLocation := "/sipi",
     Universal / mappings ++= {
@@ -140,12 +140,12 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-Yresolve-term-conflict:package",
       "-Ymacro-annotations"
     ),
-    logLevel := Level.Info,
+    logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
-    Test / fork := true,                // run tests in a forked JVM
+    Test / fork               := true,  // run tests in a forked JVM
     Test / testForkedParallel := false, // not run forked tests in parallel
-    Test / parallelExecution := false,  // not run non-forked tests in parallel
+    Test / parallelExecution  := false, // not run non-forked tests in parallel
     // Global / concurrentRestrictions += Tags.limit(Tags.Test, 1), // restrict the number of concurrently executing tests in all projects
     Test / javaOptions ++= Seq("-Dconfig.resource=fuseki.conf") ++ webapiJavaTestOptions,
     // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
@@ -176,10 +176,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // add dockerCommands used to create the image
     // docker:stage, docker:publishLocal, docker:publish, docker:clean
     Docker / dockerRepository := Some("daschswiss"),
-    Docker / packageName := "knora-api",
-    dockerUpdateLatest := true,
-    dockerBaseImage := "eclipse-temurin:17-jre-focal",
-    Docker / maintainer := "support@dasch.swiss",
+    Docker / packageName      := "knora-api",
+    dockerUpdateLatest        := true,
+    dockerBaseImage           := "eclipse-temurin:17-jre-focal",
+    Docker / maintainer       := "support@dasch.swiss",
     Docker / dockerExposedPorts ++= Seq(3333),
     Docker / defaultLinuxInstallLocation := "/opt/docker",
     // use filterNot to return all items that do NOT meet the criteria
@@ -201,20 +201,20 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     ),
     buildInfoPackage := "org.knora.webapi.http.version"
   )
-  .dependsOn(shared)
+  .dependsOn(shared, schemaCore)
 
 lazy val webapiJavaRunOptions = Seq(
   // "-showversion",
   "-Xms1G",
   "-Xmx1G",
   // "-verbose:gc",
-  //"-XX:+UseG1GC",
-  //"-XX:MaxGCPauseMillis=500"
+  // "-XX:+UseG1GC",
+  // "-XX:MaxGCPauseMillis=500"
   "-Dcom.sun.management.jmxremote",
   // "-Dcom.sun.management.jmxremote.port=1617",
   "-Dcom.sun.management.jmxremote.authenticate=false",
   "-Dcom.sun.management.jmxremote.ssl=false"
-  //"-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
+  // "-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
 )
 
 lazy val webapiJavaTestOptions = Seq(
@@ -222,9 +222,9 @@ lazy val webapiJavaTestOptions = Seq(
   "-Xms1G",
   "-Xmx1G"
   // "-verbose:gc",
-  //"-XX:+UseG1GC",
-  //"-XX:MaxGCPauseMillis=500",
-  //"-XX:MaxMetaspaceSize=4096m"
+  // "-XX:+UseG1GC",
+  // "-XX:MaxGCPauseMillis=500",
+  // "-XX:MaxMetaspaceSize=4096m"
 )
 
 //////////////////////////////////////
@@ -346,7 +346,7 @@ lazy val userHandler = project
   .dependsOn(
     shared,
     userCore % "compile->compile;test->test",
-    userRepo % "test->test" //userHandler tests need mock implementation of UserRepo
+    userRepo % "test->test" // userHandler tests need mock implementation of UserRepo
   )
 
 lazy val userRepo = project
@@ -377,6 +377,24 @@ lazy val userCore = project
     ),
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+// schema projects
+
+lazy val schemaCore = project
+  .in(file("dsp-schema/core"))
+  .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
+    name := "schemaCore",
+    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)

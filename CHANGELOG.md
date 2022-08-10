@@ -1,5 +1,45 @@
 # Changelog
 
+## [24.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.3...v24.0.0) (2022-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* add isSequenceOf to knora-base ontology (DEV-745) (#2061)
+
+### Bug Fixes
+
+* **sipi:** SIPI returns 404 instead of images if cookie is invalid (DEV-1135) ([#2142](https://www.github.com/dasch-swiss/dsp-api/issues/2142)) ([eb797f0](https://www.github.com/dasch-swiss/dsp-api/commit/eb797f06809bc8e4da386ca2498de3e5676cbbbf))
+
+
+### Enhancements
+
+* add isSequenceOf to knora-base ontology (DEV-745) ([#2061](https://www.github.com/dasch-swiss/dsp-api/issues/2061)) ([74366d4](https://www.github.com/dasch-swiss/dsp-api/commit/74366d42c88fd05e129abba1ec77d438c7a5b189))
+
+
+### Maintenance
+
+* **dependencies:** bulk upgrade dependencies ([#2144](https://www.github.com/dasch-swiss/dsp-api/issues/2144)) ([4602150](https://www.github.com/dasch-swiss/dsp-api/commit/4602150013d8a0ad018a85cad7ee337cecf9023e))
+* update dependencies ([4cd9812](https://www.github.com/dasch-swiss/dsp-api/commit/4cd98123dd02adcc2fa6ffa7617d33b7440a5ea7))
+
+### [23.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.2...v23.0.3) (2022-08-02)
+
+
+### Bug Fixes
+
+* **triplestore-connector:** stack crashes on invalid search (DEV-1154) ([#2140](https://www.github.com/dasch-swiss/dsp-api/issues/2140)) ([e5426dc](https://www.github.com/dasch-swiss/dsp-api/commit/e5426dca0888ca7ab064cbe292904217dbe8b17f))
+
+
+### Maintenance
+
+* **dependencies:** update akka-http-cors to 1.1.3 ([#2103](https://www.github.com/dasch-swiss/dsp-api/issues/2103)) ([5d0d522](https://www.github.com/dasch-swiss/dsp-api/commit/5d0d52267ce9e702215c7b2a6527df7e0eb822ef))
+* **dependencies:** update jwt-spray-json to 9.0.2 ([#2111](https://www.github.com/dasch-swiss/dsp-api/issues/2111)) ([6e54443](https://www.github.com/dasch-swiss/dsp-api/commit/6e54443e4c2234e432d54ca25b7ecbd3a8656a2f))
+* **dependencies:** update Saxon-HE to 11.4 ([#2137](https://www.github.com/dasch-swiss/dsp-api/issues/2137)) ([08c9f68](https://www.github.com/dasch-swiss/dsp-api/commit/08c9f68d427b230327aea149192c907cc3387092))
+* **dependencies:** update scalatest to 3.2.13 ([#2138](https://www.github.com/dasch-swiss/dsp-api/issues/2138)) ([a345079](https://www.github.com/dasch-swiss/dsp-api/commit/a345079999de24cabed8235f055bab46cdf6094b))
+* **dependencies:** update spring-security-core to 5.6.6 ([#2130](https://www.github.com/dasch-swiss/dsp-api/issues/2130)) ([c83645d](https://www.github.com/dasch-swiss/dsp-api/commit/c83645d6c4a4d949d40c0ec1507106c6071434c2))
+* **dependencies:** update spring-security-core to 5.7.2 ([#2139](https://www.github.com/dasch-swiss/dsp-api/issues/2139)) ([3a12562](https://www.github.com/dasch-swiss/dsp-api/commit/3a1256216022770eca0515b21c8ea663ba6b3425))
+* **dependencies:** update titanium-json-ld to 1.3.1 ([#2104](https://www.github.com/dasch-swiss/dsp-api/issues/2104)) ([4850525](https://www.github.com/dasch-swiss/dsp-api/commit/4850525494aa2f949b7dfaa2fb1be6f7ff14b684))
+
 ### [23.0.2](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.1...v23.0.2) (2022-07-29)
 
 

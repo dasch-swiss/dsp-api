@@ -5,11 +5,11 @@
 
 package dsp.valueobjects
 
+import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
-import dsp.errors.BadRequestException
-import zio.prelude.ZValidation
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.
@@ -30,11 +30,9 @@ object UserSpec extends ZIOSpecDefault {
   private val validPassword                               = "pass-word"
   private val validGivenName                              = "John"
   private val validFamilyName                             = "Rambo"
-  private val validLanguageCode                           = "de"
-  private val invalidLanguageCode                         = "00"
 
   def spec =
-    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + languageCodeTest + systemAdminTest)
+    (usernameTest + emailTest + givenNameTest + familyNameTest + passwordTest + passwordHashTest + systemAdminTest)
 
   private val usernameTest = suite("Username")(
     test("pass an empty value and return an error") {
@@ -192,24 +190,6 @@ object UserSpec extends ZIOSpecDefault {
       assertTrue(
         PasswordStrength.make(12) == Validation.succeed(PasswordStrength(12))
       )
-    }
-  )
-
-  private val languageCodeTest = suite("LanguageCode")(
-    test("pass an empty value and return an error") {
-      assertTrue(
-        LanguageCode.make("") == Validation.fail(BadRequestException(UserErrorMessages.LanguageCodeMissing))
-      )
-    },
-    test("pass an invalid value and return an error") {
-      assertTrue(
-        LanguageCode.make(invalidLanguageCode) == Validation.fail(
-          BadRequestException(UserErrorMessages.LanguageCodeInvalid)
-        )
-      )
-    },
-    test("pass a valid value and successfully create value object") {
-      assertTrue(LanguageCode.make(validLanguageCode).toOption.get.value == validLanguageCode)
     }
   )
 

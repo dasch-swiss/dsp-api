@@ -194,7 +194,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
 
     throw GravsearchException(
       s"One or more variables in the Gravsearch CONSTRUCT clause have unknown or invalid types: ${invalidVariablesWithTypes
-        .mkString(", ")}"
+          .mkString(", ")}"
     )
   }
 
@@ -244,11 +244,10 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(
   /**
    * The variables used in [[GroupConcat]] expressions in the prequery, grouped by resource entity.
    */
-  private val valueGroupConcatVariablesPerResource: Map[Entity, Set[QueryVariable]] = {
+  private val valueGroupConcatVariablesPerResource: Map[Entity, Set[QueryVariable]] =
     valueGroupConcatsPerResource.map { case (resourceEntity: Entity, groupConcats: Set[GroupConcat]) =>
       resourceEntity -> groupConcats.map(_.outputVariable)
     }
-  }
 
   /**
    * A GROUP_CONCAT expression for each value variable.

@@ -801,7 +801,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
    * @return a list of [[SearchResultPage]] objects.
    */
   private def makePaging(offset: Int, limit: Int, resultCount: Int): Seq[SearchResultPage] = {
-    val pageRemainder  = resultCount   % limit
+    val pageRemainder  = resultCount % limit
     val numPages       = (resultCount / limit) + (if (pageRemainder > 0) 1 else 0)
     val currentPageNum = offset / limit // The offset might put us in the middle of a page, but that's OK.
 

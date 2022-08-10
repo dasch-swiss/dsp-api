@@ -113,9 +113,9 @@ final case class UserRepoLive(
   def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
     (for {
       user: User <- users.get(id.uuid).some
-      _          <- users.delete(id.uuid) // removes the values (User) for the key (UUID)
+      _          <- users.delete(id.uuid)                           // removes the values (User) for the key (UUID)
       _          <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
-      _          <- lookupTableEmailToUuid.delete(user.email) // remove the user also from the lookup table
+      _          <- lookupTableEmailToUuid.delete(user.email)       // remove the user also from the lookup table
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted user: ${id}"))
 }
 
@@ -123,7 +123,7 @@ final case class UserRepoLive(
  * Companion object providing the layer with an initialized implementation of UserRepo
  */
 object UserRepoLive {
-  val layer: ZLayer[Any, Nothing, UserRepo] = {
+  val layer: ZLayer[Any, Nothing, UserRepo] =
     ZLayer {
       for {
         users       <- TMap.empty[UUID, User].commit
@@ -131,5 +131,4 @@ object UserRepoLive {
         lutEmail    <- TMap.empty[Email, UUID].commit
       } yield UserRepoLive(users, lutUsername, lutEmail)
     }.tap(_ => ZIO.logInfo(">>> User repository initialized <<<"))
-  }
 }

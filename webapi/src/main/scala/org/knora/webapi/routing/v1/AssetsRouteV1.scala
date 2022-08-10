@@ -42,15 +42,15 @@ class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
 
           val dummyImage = if (text.contains("http://rdfh.ch/0a077e5a93bf".toCharArray)) {
-            //calling this should get me here: http://localhost:3333/v1/assets/http%3A%2F%2Frdfh.ch%2F0a077e5a93bf
+            // calling this should get me here: http://localhost:3333/v1/assets/http%3A%2F%2Frdfh.ch%2F0a077e5a93bf
             val tmpImage = ImageIO.read(Paths.get("_assets/4KUN_7_000169.png").toFile)
             tmpImage
           } else {
             /* make dummy images with the image name as content */
             val tmpImage    = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
             val g: Graphics = tmpImage.getGraphics
-            //g.setColor(new Color(0,0,0)) //background color
-            g.setColor(new Color(255, 125, 65)) //background color
+            // g.setColor(new Color(0,0,0)) //background color
+            g.setColor(new Color(255, 125, 65)) // background color
             g.fillRect(0, 0, width, height)
             g.setColor(new Color(0, 0, 0)) // foreground color
             g.setFont(g.getFont.deriveFont(Font.BOLD, 8f))

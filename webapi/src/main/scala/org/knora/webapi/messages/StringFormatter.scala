@@ -1231,7 +1231,7 @@ class StringFormatter private (
     }
 
     private def internalToExternalEntityIri(targetSchema: ApiV2Schema): SmartIri = {
-      //Construct the string representation of this IRI in the target schema.
+      // Construct the string representation of this IRI in the target schema.
       val entityName            = getEntityName
       val convertedOntologyIri  = getOntologyFromEntity.toOntologySchema(targetSchema)
       val convertedEntityIriStr = convertedOntologyIri.toString + "#" + entityName

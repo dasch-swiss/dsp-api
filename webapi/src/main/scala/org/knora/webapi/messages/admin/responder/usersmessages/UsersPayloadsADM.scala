@@ -6,6 +6,7 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
 import dsp.valueobjects.Iri.UserIri
+import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
 
 /**
