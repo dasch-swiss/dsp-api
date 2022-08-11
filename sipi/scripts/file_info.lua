@@ -118,6 +118,7 @@ local archive_extensions = {
     "zip",
     "tar",
     "gz",
+    "gzip",
     "7z"
 }
 
