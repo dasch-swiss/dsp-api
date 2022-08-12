@@ -287,5 +287,5 @@ object CacheServiceRedisImpl {
                   .onError(ZIO.logErrorCause(_))
                   .orDie // the Redis Client Pool
       } yield CacheServiceRedisImpl(pool)
-    }.tap(_ => ZIO.debug(">>> Redis Cache Service Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> Redis Cache Service Initialized <<<"))
 }

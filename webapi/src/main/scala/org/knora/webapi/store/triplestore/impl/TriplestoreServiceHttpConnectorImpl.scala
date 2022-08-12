@@ -1096,7 +1096,7 @@ object TriplestoreServiceHttpConnectorImpl {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.debug(">>> Acquire Triplestore Service Http Connector <<<")).orDie
+  }.tap(_ => ZIO.logInfo(">>> Acquire Triplestore Service Http Connector <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
@@ -1104,13 +1104,12 @@ object TriplestoreServiceHttpConnectorImpl {
   private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] =
     ZIO.attemptBlocking {
       httpClient.close()
-    }.tap(_ => ZIO.debug(">>> Release Triplestore Service Http Connector <<<")).orDie
+    }.tap(_ => ZIO.logInfo(">>> Release Triplestore Service Http Connector <<<")).orDie
 
   val layer: ZLayer[AppConfig, Nothing, TriplestoreService] =
     ZLayer.scoped {
       for {
-        config <- ZIO.service[AppConfig]
-        // _          <- ZIO.debug(config)
+        config     <- ZIO.service[AppConfig]
         httpClient <- ZIO.acquireRelease(acquire(config))(release(_))
       } yield TriplestoreServiceHttpConnectorImpl(config, httpClient)
     }

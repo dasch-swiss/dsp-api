@@ -3,83 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.app
+package org.knora.webapi.core
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.OneForOneStrategy
-import akka.actor.Props
-import akka.actor.Stash
-import akka.actor.SupervisorStrategy._
-import akka.actor.Timers
-import akka.event.Logging
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.stream.Materializer
-import akka.util.Timeout
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.typesafe.scalalogging.Logger
 import org.knora.webapi.config.AppConfig
-import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.MissingLastModificationDateOntologyException
-import dsp.errors.UnexpectedMessageException
-import dsp.errors.UnsupportedValueException
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.http.version.ServerVersion
-import org.knora.webapi.messages.ResponderRequest._
-import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.routing._
-import org.knora.webapi.routing.admin._
-import org.knora.webapi.routing.v1._
-import org.knora.webapi.routing.v2._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.util.ActorUtil.future2Message
-import org.knora.webapi.util.cache.CacheUtil
-
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFRequest
-import org.knora.webapi.util.ActorUtil
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.messages.ResponderRequest
+import org.knora.webapi.http.HttpServer
 import zio._
+import org.knora.webapi.util.cache.CacheUtil
+import org.knora.webapi.settings.KnoraSettings
 
 /**
-  * The application bootstrapper
-  */
-object AppBoot {
+ * The application bootstrapper
+ */
+object Boot {
 
-  val run: ZIO[AppServer with AppConfig, Nothing, Unit] =
-    for {
-      _      <- ZIO.logInfo("AppBoot run initiated")
-      server <- ZIO.service[AppServer]
+  val startup: ZIO[Scope with HttpServer with AppConfig, Nothing, Nothing] =
+    (for {
+      server <- ZIO.service[HttpServer]
+      sys    <- server.actorSystem
       _      <- server.start
+      _      <- ZIO.attempt(CacheUtil.createCaches(KnoraSettings(sys).caches)).orDie
       _      <- printBanner
-      _      <- Clock.sleep(5.seconds)
-      _      <- server.stop
-    } yield ()
+      _      <- ZIO.never
+    } yield ()).forever
 
   /**
    * Starts the Knora-API server.
@@ -89,11 +34,6 @@ object AppBoot {
    * @param retryCnt            how many times was this command tried
    */
   def start(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = ???
-
-  /**
-   * Stops Knora-API.
-   */
-  def stop(): Unit = ???
 
   /**
    * Prints the welcome message
@@ -124,7 +64,7 @@ object AppBoot {
       // which repository are we using
       _ <-
         ZIO.logInfo(s"DB-Name:   ${config.triplestore.fuseki.repositoryName}\t DB-Type: ${config.triplestore.dbtype}")
-      _ <- ZIO.logInfo(s"DB-Server: ${config.triplestore.host}\t\t DB Port: ${config.triplestore.fuseki.port}")
+      _ <- ZIO.logInfo(s"DB-Server: ${config.triplestore.host}\t DB Port: ${config.triplestore.fuseki.port}")
     } yield ()
   }
 

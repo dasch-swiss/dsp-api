@@ -9,6 +9,9 @@ import scala.concurrent.duration
 import typesafe._
 import magnolia._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
+import java.nio.file.Paths
 
 /**
  * Represents (eventually) the complete configuration as defined in application.conf.
@@ -26,7 +29,9 @@ final case class AppConfig(
   allowReloadOverHttp: Boolean,
   knoraApi: KnoraAPI,
   sipi: Sipi,
-  triplestore: Triplestore
+  ark: Ark,
+  triplestore: Triplestore,
+  shacl: Shacl
 ) {
   val jwtLongevityAsDuration = scala.concurrent.duration.Duration(jwtLongevity)
 }
@@ -38,18 +43,31 @@ final case class KnoraAPI(
   externalHost: String,
   externalPort: Int
 ) {
-  def internalKnoraApiHostPort: String = internalHost + (if (internalPort != 80)
+  val internalKnoraApiHostPort: String = internalHost + (if (internalPort != 80)
                                                            ":" + internalPort
                                                          else "")
-  def internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
+  val internalKnoraApiBaseUrl: String = "http://" + internalHost + (if (internalPort != 80)
                                                                       ":" + internalPort
                                                                     else "")
-  def externalKnoraApiHostPort: String = externalHost + (if (externalPort != 80)
+  val externalKnoraApiHostPort: String = externalHost + (if (externalPort != 80)
                                                            ":" + externalPort
                                                          else "")
-  def externalKnoraApiBaseUrl: String = externalProtocol + "://" + externalHost + (if (externalPort != 80)
+  val externalKnoraApiBaseUrl: String = externalProtocol + "://" + externalHost + (if (externalPort != 80)
                                                                                      ":" + externalPort
                                                                                    else "")
+
+  /**
+   * If the external hostname is localhost or 0.0.0.0, include the configured
+   * external port number in ontology IRIs for manual testing.
+   */
+  val externalOntologyIriHostAndPort: String =
+    if (externalHost == "0.0.0.0" || externalHost == "localhost") {
+      externalKnoraApiHostPort
+    } else {
+      // Otherwise, don't include any port number in IRIs, so the IRIs will work both with http
+      // and with https.
+      externalHost
+    }
 }
 
 final case class Sipi(
@@ -84,6 +102,11 @@ final case class V2(
   deleteTempFileRoute: String
 )
 
+final case class Ark(
+  resolver: String,
+  assignedNumber: Int
+)
+
 final case class Triplestore(
   dbtype: String,
   useHttps: Boolean,
@@ -113,6 +136,12 @@ final case class Fuseki(
   password: String
 )
 
+final case class Shacl(
+  shapesDir: String
+) {
+  val shapesDirPath = Paths.get(shapesDir)
+}
+
 /**
  * Loads the applicaton configuration using ZIO-Config. ZIO-Config is capable of loading
  * the Typesafe-Config format.
@@ -132,10 +161,26 @@ object AppConfig {
   private val config: IO[ReadError[String], AppConfig] = read(descriptor[AppConfig].mapKey(toKebabCase) from source)
 
   /**
-   * Live configuration reading from application.conf.
+   * Live configuration reading from application.conf and initializing StringFormater for live
    */
   val live: ZLayer[Any, Nothing, AppConfig] =
     ZLayer {
-      config.orDie
-    }.tap(_ => ZIO.debug(">>> AppConfig Initialized <<<"))
+      for {
+        c <- config.orDie
+        _ <- ZIO.attempt(StringFormatter.init(c)).orDie   // needs early init before first usage
+        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie // needs early init before first usage
+      } yield c
+    }.tap(_ => ZIO.logInfo(">>> AppConfig Live Initialized <<<"))
+
+  /**
+   * Test configuration reading from application.conf and initializing StringFormater for tests
+   */
+  val test: ZLayer[Any, Nothing, AppConfig] =
+    ZLayer {
+      for {
+        c <- config.orDie
+        _ <- ZIO.attempt(StringFormatter.initForTest()).orDie // needs early init before first usage
+        _ <- ZIO.attempt(RdfFeatureFactory.init(c)).orDie     // needs early init before first usage
+      } yield c
+    }.tap(_ => ZIO.logInfo(">>> AppConfig Test Initialized <<<"))
 }

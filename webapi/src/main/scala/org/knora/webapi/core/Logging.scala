@@ -1,10 +1,16 @@
+/*
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.core
 
 import zio.LogLevel
 import zio.logging.LogFormat._
 import zio.logging._
 import zio.ZLayer
-import zio.logging.backend.SLF4J
+import org.knora.webapi.config.AppConfig
+import zio._
 
 object Logging {
   val logFormat             = "[correlation-id = %s] %s"
@@ -24,15 +30,6 @@ object Logging {
       format = textFormat
     )
 
-  val fromInfo: ZLayer[Any, Nothing, Unit] =
-    console(
-      logLevel = LogLevel.Info,
-      format = colored
-    )
-
-  val slf4jFormat = line
-
-  val slf4j =
-    SLF4J.slf4j(LogLevel.Debug, slf4jFormat, _ => "zio-slf4j-logger")
+  val stdout = console(logLevel = LogLevel.Debug, format = colored)
 
 }

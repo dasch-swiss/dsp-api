@@ -30,18 +30,18 @@ object Dependencies {
   val ZioPreludeVersion = "1.0.0-RC15"
 
   // ZIO - all Scala 3 compatible
-  val zio               = "dev.zio" %% "zio"                 % ZioVersion
-  val zioMacros         = "dev.zio" %% "zio-macros"          % ZioVersion
-  val zioHttp           = "io.d11"  %% "zhttp"               % ZioHttpVersion
-  val zioJson           = "dev.zio" %% "zio-json"            % ZioJsonVersion
-  val zioPrelude        = "dev.zio" %% "zio-prelude"         % ZioPreludeVersion
-  val zioLogging        = "dev.zio" %% "zio-logging"         % ZioLoggingVersion
-  val zioLoggingSlf4j   = "dev.zio" %% "zio-logging-slf4j"   % ZioLoggingVersion
-  val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
-  val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
-  val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
+  val zio                   = "dev.zio" %% "zio"                      % ZioVersion
+  val zioMacros             = "dev.zio" %% "zio-macros"               % ZioVersion
+  val zioHttp               = "io.d11"  %% "zhttp"                    % ZioHttpVersion
+  val zioJson               = "dev.zio" %% "zio-json"                 % ZioJsonVersion
+  val zioPrelude            = "dev.zio" %% "zio-prelude"              % ZioPreludeVersion
+  val zioLogging            = "dev.zio" %% "zio-logging"              % ZioLoggingVersion
+  val zioLoggingSlf4jBridge = "dev.zio" %% "zio-logging-slf4j-bridge" % ZioLoggingVersion
+  val zioConfig             = "dev.zio" %% "zio-config"               % ZioConfigVersion
+  val zioConfigMagnolia     = "dev.zio" %% "zio-config-magnolia"      % ZioConfigVersion
+  val zioConfigTypesafe     = "dev.zio" %% "zio-config-typesafe"      % ZioConfigVersion
+  val zioTest               = "dev.zio" %% "zio-test"                 % "2.0.0"
+  val zioTestSbt            = "dev.zio" %% "zio-test-sbt"             % "2.0.0"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % akkaVersion     // Scala 3 compatible
@@ -115,7 +115,7 @@ object Dependencies {
     akkaHttpCors,
     akkaHttpSprayJson,
     akkaHttpTestkit % Test,
-    akkaSlf4j       % Runtime,
+    akkaSlf4j,
     akkaStream,
     akkaStreamTestkit % Test,
     akkaTestkit       % Test,
@@ -134,8 +134,7 @@ object Dependencies {
     jwtSprayJson,
     kamonCore,
     kamonScalaFuture,
-    logbackClassic % Runtime,
-    rdf4jClient    % Test,
+    rdf4jClient % Test,
     rdf4jShacl,
     saxonHE,
     scalaGraph,
@@ -155,7 +154,7 @@ object Dependencies {
     zioHttp,
     zioJson,
     zioLogging,
-    zioLoggingSlf4j,
+    zioLoggingSlf4jBridge,
     zioMacros,
     zioPrelude,
     zioTest    % Test,

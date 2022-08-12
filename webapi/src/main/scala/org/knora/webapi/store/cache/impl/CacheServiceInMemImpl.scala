@@ -210,5 +210,5 @@ object CacheServiceInMemImpl {
         projects <- TMap.empty[String, ProjectADM].commit
         lut      <- TMap.empty[String, String].commit
       } yield CacheServiceInMemImpl(users, projects, lut)
-    }.tap(_ => ZIO.debug(">>> In-Memory Cache Service Initialized <<<"))
+    }.tap(_ => ZIO.logInfo(">>> In-Memory Cache Service Initialized <<<"))
 }

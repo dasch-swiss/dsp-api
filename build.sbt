@@ -173,7 +173,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     // add 'config' directory to the classpath of the start script,
     Universal / scriptClasspath := Seq("webapi/scripts", "knora-ontologies", "../config/") ++ scriptClasspath.value,
     // need this here, so that the Manifest inside the jars has the correct main class set.
-    Compile / mainClass := Some("org.knora.webapi.app.Main"),
+    Compile / mainClass := Some("org.knora.webapi.App"),
     // add dockerCommands used to create the image
     // docker:stage, docker:publishLocal, docker:publish, docker:clean
     Docker / dockerRepository := Some("daschswiss"),

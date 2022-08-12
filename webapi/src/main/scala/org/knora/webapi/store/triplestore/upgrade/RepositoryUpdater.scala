@@ -53,7 +53,7 @@ object RepositoryUpdater {
         ts     <- ZIO.service[TriplestoreService]
         config <- ZIO.service[AppConfig]
       } yield new RepositoryUpdater {
-        
+
         private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
         // A SPARQL query to find out the knora-base version in a repository.

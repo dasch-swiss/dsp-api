@@ -36,7 +36,7 @@ object ActorUtil {
    */
   private val runtime =
     Unsafe.unsafe { implicit u =>
-      Runtime.unsafe.fromLayer(Logging.slf4j)
+      Runtime.unsafe.fromLayer(Logging.stdout)
     }
 
   /**

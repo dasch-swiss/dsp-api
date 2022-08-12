@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.app
+package org.knora.webapi
 
-import akka.actor.Terminated
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.ActorSystem
+import org.knora.webapi.core.AppRouter
+import org.knora.webapi.core.Boot
 import org.knora.webapi.core.Logging
-import org.knora.webapi.messages.app.appmessages.AppStart
+import org.knora.webapi.http.HttpServer
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -18,17 +20,16 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
+import zio.logging.slf4j.bridge.Slf4jBridge
 
-import java.util.concurrent.TimeUnit
-
-object Main extends ZIOAppDefault {
+object App extends ZIOAppDefault {
 
   /**
    * The effect layers which will be used to run the managers effect.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers =
-    ZLayer.make[AppConfig](
+  lazy val layers =
+    ZLayer.make[core.ActorSystem with HttpServer with AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
@@ -38,12 +39,17 @@ object Main extends ZIOAppDefault {
       TriplestoreServiceManager.layer,
       TriplestoreServiceHttpConnectorImpl.layer,
       RepositoryUpdater.layer,
-      Logging.slf4j
+      Logging.stdout,
+      Slf4jBridge.initialize,
+      HttpServer.layer,
+      AppRouter.layer,
+      ActorSystem.layer
     )
 
-  val workflow = AppBoot.run
-
-  val run = workflow.provide(AppServer.layer ++ AppConfig.live)
+  override def run =
+    ZIO
+      .scoped(Boot.startup)
+      .provide(layers, Runtime.removeDefaultLoggers)
 
   /**
    * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be

@@ -29,7 +29,8 @@ object AppConfigForTestContainers {
     val alteredTriplestore = oldConfig.triplestore.copy(fuseki = alteredFuseki)
     val alteredSipi        = oldConfig.sipi.copy(internalPort = newSipiPort)
 
-    val newConfig: AppConfig = oldConfig.copy(allowReloadOverHttp = true, triplestore = alteredTriplestore, sipi = alteredSipi)
+    val newConfig: AppConfig =
+      oldConfig.copy(allowReloadOverHttp = true, triplestore = alteredTriplestore, sipi = alteredSipi)
 
     ZIO.succeed(newConfig)
   }

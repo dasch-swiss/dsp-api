@@ -322,7 +322,7 @@ object IIIFServiceSipiImpl {
       .build()
 
     httpClient
-  }.tap(_ => ZIO.debug(">>> Acquire Sipi IIIF Service <<<")).orDie
+  }.tap(_ => ZIO.logInfo(">>> Acquire Sipi IIIF Service <<<")).orDie
 
   /**
    * Releases the httpClient, freeing all resources.
@@ -330,7 +330,7 @@ object IIIFServiceSipiImpl {
   private def release(httpClient: CloseableHttpClient): URIO[Any, Unit] =
     ZIO.attemptBlocking {
       httpClient.close()
-    }.tap(_ => ZIO.debug(">>> Release Sipi IIIF Service <<<")).orDie
+    }.tap(_ => ZIO.logInfo(">>> Release Sipi IIIF Service <<<")).orDie
 
   val layer: ZLayer[AppConfig & JWTService, Nothing, IIIFService] =
     ZLayer.scoped {

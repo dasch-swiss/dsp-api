@@ -60,7 +60,10 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
                                                                  ":" + externalKnoraApiPort
                                                                else "")
 
-  // If the external hostname is localhost, include the configured external port number in ontology IRIs for manual testing.
+  /**
+   * If the external hostname is localhost or 0.0.0.0, include the configured
+   * external port number in ontology IRIs for manual testing.
+   */
   val externalOntologyIriHostAndPort: String =
     if (externalKnoraApiHost == "0.0.0.0" || externalKnoraApiHost == "localhost") {
       externalKnoraApiHostPort
