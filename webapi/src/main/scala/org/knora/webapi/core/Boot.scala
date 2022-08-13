@@ -10,17 +10,20 @@ import org.knora.webapi.http.HttpServer
 import zio._
 import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 
 /**
  * The application bootstrapper
  */
 object Boot {
 
-  val startup: ZIO[Scope with HttpServer with AppConfig, Nothing, Nothing] =
+  val startup: ZIO[Scope with HttpServer with TriplestoreService with AppConfig, Nothing, Nothing] =
     (for {
       server <- ZIO.service[HttpServer]
       sys    <- server.actorSystem
       _      <- server.start
+      _      <- checkTriplestoreService
       _      <- ZIO.attempt(CacheUtil.createCaches(KnoraSettings(sys).caches)).orDie
       _      <- printBanner
       _      <- ZIO.never
@@ -34,6 +37,20 @@ object Boot {
    * @param retryCnt            how many times was this command tried
    */
   def start(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = ???
+
+  /**
+   * Checks if the TriplestoreService is running and the repository is properly initialized
+   */
+  private val checkTriplestoreService: ZIO[TriplestoreService with AppConfig, Nothing, Unit] =
+    for {
+      ts     <- ZIO.service[TriplestoreService]
+      status <- ts.checkTriplestore().map(_.triplestoreStatus)
+      _ <- status match {
+             case TriplestoreStatus.Available(msg)      => ZIO.logInfo(msg)
+             case TriplestoreStatus.NotInitialized(msg) => ZIO.die(new Exception(msg))
+             case TriplestoreStatus.Unavailable(msg)    => ZIO.die(new Exception(msg))
+           }
+    } yield ()
 
   /**
    * Prints the welcome message

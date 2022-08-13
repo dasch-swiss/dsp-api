@@ -64,6 +64,7 @@ import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
 
@@ -486,23 +487,20 @@ case class TriplestoreServiceHttpConnectorImpl(
     val triplestoreAvailableResponse =
       ZIO.succeed(
         CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.ServiceAvailable,
-          msg = "Triplestore is available."
+          triplestoreStatus = TriplestoreStatus.Available("Triplestore is available.")
         )
       )
 
     val triplestoreNotInitializedResponse =
       ZIO.succeed(
         CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.NotInitialized,
-          msg = s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}"
+          triplestoreStatus = TriplestoreStatus.NotInitialized(s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}")
         )
       )
 
     def triplestoreUnavailableResponse(cause: String) =
       CheckTriplestoreResponse(
-        triplestoreStatus = TriplestoreStatus.ServiceUnavailable,
-        msg = s"Triplestore not available: $cause"
+        triplestoreStatus = TriplestoreStatus.Unavailable(s"Triplestore not available: $cause")
       )
 
     ZIO

@@ -21,6 +21,7 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorIm
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
 import zio.logging.slf4j.bridge.Slf4jBridge
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 
 object App extends ZIOAppDefault {
 
@@ -29,7 +30,7 @@ object App extends ZIOAppDefault {
    * Can be overriden in specs that need other implementations.
    */
   lazy val layers =
-    ZLayer.make[core.ActorSystem with HttpServer with AppConfig](
+    ZLayer.make[core.ActorSystem with HttpServer with TriplestoreService with AppConfig](
       CacheServiceManager.layer,
       CacheServiceInMemImpl.layer,
       IIIFServiceManager.layer,
