@@ -1,5 +1,27 @@
 # Changelog
 
+## [24.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.3...v24.0.0) (2022-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* add isSequenceOf to knora-base ontology (DEV-745) (#2061)
+
+### Bug Fixes
+
+* **sipi:** SIPI returns 404 instead of images if cookie is invalid (DEV-1135) ([#2142](https://www.github.com/dasch-swiss/dsp-api/issues/2142)) ([eb797f0](https://www.github.com/dasch-swiss/dsp-api/commit/eb797f06809bc8e4da386ca2498de3e5676cbbbf))
+
+
+### Enhancements
+
+* add isSequenceOf to knora-base ontology (DEV-745) ([#2061](https://www.github.com/dasch-swiss/dsp-api/issues/2061)) ([74366d4](https://www.github.com/dasch-swiss/dsp-api/commit/74366d42c88fd05e129abba1ec77d438c7a5b189))
+
+
+### Maintenance
+
+* **dependencies:** bulk upgrade dependencies ([#2144](https://www.github.com/dasch-swiss/dsp-api/issues/2144)) ([4602150](https://www.github.com/dasch-swiss/dsp-api/commit/4602150013d8a0ad018a85cad7ee337cecf9023e))
+* update dependencies ([4cd9812](https://www.github.com/dasch-swiss/dsp-api/commit/4cd98123dd02adcc2fa6ffa7617d33b7440a5ea7))
+
 ### [23.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.2...v23.0.3) (2022-08-02)
 
 

@@ -23,7 +23,7 @@ object Dependencies {
   val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC10"
-  val ZioConfigVersion  = "3.0.1"
+  val ZioConfigVersion  = "3.0.2"
   val ZioSchemaVersion  = "0.2.0"
   val ZioLoggingVersion = "2.0.1"
   val ZioZmxVersion     = "2.0.0-RC4"
@@ -61,7 +61,7 @@ object Dependencies {
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.5"  // Scala 3 compatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.6"  // Scala 3 compatible
   val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.21" // Scala 3 incompatible
 
   // input validation
@@ -88,8 +88,8 @@ object Dependencies {
   val icu4j           = "com.ibm.icu"                   % "icu4j"             % "71.1"
   val jakartaJSON     = "org.glassfish"                 % "jakarta.json"      % "2.0.1"
   val jodd            = "org.jodd"                      % "jodd"              % "3.2.7"
-  val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "3.7.7"
-  val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "3.7.7"
+  val rdf4jClient     = "org.eclipse.rdf4j"             % "rdf4j-client"      % "4.1.0"
+  val rdf4jShacl      = "org.eclipse.rdf4j"             % "rdf4j-shacl"       % "4.1.0"
   val saxonHE         = "net.sf.saxon"                  % "Saxon-HE"          % "11.4"
   val scalaGraph      = "org.scala-graph"              %% "graph-core"        % "1.13.5" // Scala 3 incompatible
   val scallop         = "org.rogach"                   %% "scallop"           % "4.1.0"  // Scala 3 compatible
