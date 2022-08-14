@@ -63,11 +63,10 @@ final case class RoleRepoLive(
  * Companion object providing the layer with an initialized implementation of [[RoleRepo]]
  */
 object RoleRepoLive {
-  val layer: ZLayer[Any, Nothing, RoleRepo] = {
+  val layer: ZLayer[Any, Nothing, RoleRepo] =
     ZLayer {
       for {
         roles <- TMap.empty[UUID, Role].commit
       } yield RoleRepoLive(roles)
     }.tap(_ => ZIO.logInfo(">>> Role repository initialized <<<"))
-  }
 }

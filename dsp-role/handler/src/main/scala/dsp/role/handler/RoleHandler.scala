@@ -138,11 +138,10 @@ final case class RoleHandler(repo: RoleRepo) {
  * Companion object providing the layer with an initialized implementation
  */
 object RoleHandler {
-  val layer: ZLayer[RoleRepo, Nothing, RoleHandler] = {
+  val layer: ZLayer[RoleRepo, Nothing, RoleHandler] =
     ZLayer {
       for {
         repo <- ZIO.service[RoleRepo]
       } yield RoleHandler(repo)
     }.tap(_ => ZIO.logInfo(">>> Role Handler initilaized <<<"))
-  }
 }
