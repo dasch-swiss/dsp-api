@@ -247,35 +247,6 @@ jobs:
         with:
           url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
 
-  # deploy documentation only on release
-  deploy-docs:
-    name: Deploy docs (on release only)
-    needs: [docs-build-test]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
-    steps:
-      - name: checkout source
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - name: add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
-          npm install --global typedoc
-          sudo apt-get install graphviz
-      - name: deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@1.16
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          CUSTOM_DOMAIN: docs-api.dasch.swiss
-          REQUIREMENTS: docs/requirements.txt
-
   fmtcheck:
     name: Check Formating
     runs-on: ubuntu-latest
