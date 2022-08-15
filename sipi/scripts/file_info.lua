@@ -39,9 +39,11 @@ local APPLICATION_PPT = "application/vnd.ms-powerpoint"
 local APPLICATION_PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
 local APPLICATION_ZIP = "application/zip"
 local APPLICATION_TAR = "application/x-tar"
-local APPLICATION_ISO = "application/x-iso9660-image"
+local APPLICATION_GZ = "application/gzip"
 local APPLICATION_GZIP = "application/gzip"
 local APPLICATION_7Z = "application/x-7z-compressed"
+local APPLICATION_TGZ = "application/x-compress"
+local APPLICATION_Z = "application/x-compress"
 local VIDEO_MP4 = "video/mp4"
 
 
@@ -69,7 +71,6 @@ local text_mime_types = {
 
 local document_mime_types = {
     APPLICATION_PDF,
-    APPLICATION_ISO,
     APPLICATION_DOC,
     APPLICATION_DOCX,
     APPLICATION_XLS,
@@ -82,7 +83,9 @@ local archive_mime_types = {
     APPLICATION_TAR,
     APPLICATION_ZIP,
     APPLICATION_GZIP,
-    APPLICATION_7Z
+    APPLICATION_7Z,
+    APPLICATION_TGZ,
+    APPLICATION_Z
 }
 
 local video_mime_types = {
@@ -105,7 +108,6 @@ local text_extensions = {
 
 local document_extensions = {
     "pdf",
-    "iso",
     "doc",
     "docx",
     "xls",
@@ -119,7 +121,9 @@ local archive_extensions = {
     "tar",
     "gz",
     "gzip",
-    "7z"
+    "7z",
+    "tgz",
+    "z"
 }
 
 local video_extensions = {
