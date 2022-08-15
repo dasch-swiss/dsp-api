@@ -2178,10 +2178,10 @@ object Cardinality extends Enumeration {
         false
       } else {
         self.cardinality match {
-          case MustHaveOne  => false
-          case MustHaveSome => that.cardinality == MustHaveOne
-          case MayHaveOne   => that.cardinality == MustHaveOne || that.cardinality == MayHaveOne
-          case MayHaveMany  => true
+          case MustHaveOne  => true
+          case MustHaveSome => that.cardinality == MayHaveMany
+          case MayHaveOne   => that.cardinality == MayHaveMany
+          case MayHaveMany  => false
         }
       }
   }
