@@ -859,13 +859,21 @@ object OntologyHelpers {
       // Get the cardinalities that the class can inherit. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
 
       cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
-        classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri: SmartIri =>
-          val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
-          ontology match {
-            case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities
-            case _                        => None
-          }
-        }.toMap
+        classDefWithAddedLinkValueProps.subClassOf.foldLeft(Map[SmartIri, KnoraCardinalityInfo]()) {
+          (acc: Map[SmartIri, KnoraCardinalityInfo], baseClassIri: SmartIri) =>
+            val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
+            val cardinalitiesOfBaseClass: List[(SmartIri, KnoraCardinalityInfo)] = ontology match {
+              case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
+              case _                        => List.empty
+            }
+            val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, cardinality) =>
+              acc.get(iri) match {
+                case Some(value) if value.isStricterThan(cardinality) => (iri, value)
+                case _                                                => (iri, cardinality)
+              }
+            }.toMap
+            acc ++ additionalCardinalities
+        }
 
       // Check that the cardinalities directly defined on the class are compatible with any inheritable
       // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
@@ -1927,12 +1935,7 @@ object OntologyHelpers {
             if (thisClassProp == baseClassProp || basePropsOfThisClassProp.contains(baseClassProp)) {
               // Yes. Is the directly defined one at least as restrictive as the inheritable one?
 
-              if (
-                !Cardinality.isCompatible(
-                  directCardinality = thisClassCardinality.cardinality,
-                  inheritableCardinality = baseClassCardinality.cardinality
-                )
-              ) {
+              if (!baseClassCardinality.isStricterThan(thisClassCardinality)) {
                 // No. Throw an exception.
                 errorFun(
                   s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality ${thisClassCardinality.cardinality} on ${thisClassProp

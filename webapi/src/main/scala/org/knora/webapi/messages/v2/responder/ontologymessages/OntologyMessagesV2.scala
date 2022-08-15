@@ -2158,7 +2158,7 @@ object Cardinality extends Enumeration {
    * @param cardinality the Knora cardinality.
    * @param guiOrder    the SALSAH GUI order.
    */
-  case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) {
+  case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) { self =>
     override def toString: String = guiOrder match {
       case Some(definedGuiOrder) => s"$cardinality (guiOrder $definedGuiOrder)"
       case None                  => cardinality.toString
@@ -2166,14 +2166,32 @@ object Cardinality extends Enumeration {
 
     def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean =
       that.cardinality == cardinality
+
+    /**
+     * Checks whether a cardinality is stricter than another one.
+     *
+     * @param that      the cardinality to be compared against
+     * @return          `true` if the present cardinality is stricter than `that`
+     */
+    def isStricterThan(that: KnoraCardinalityInfo): Boolean =
+      if (self.cardinality == that.cardinality) {
+        false
+      } else {
+        self.cardinality match {
+          case MustHaveOne  => false
+          case MustHaveSome => that.cardinality == MustHaveOne
+          case MayHaveOne   => that.cardinality == MustHaveOne || that.cardinality == MayHaveOne
+          case MayHaveMany  => true
+        }
+      }
   }
 
   type Cardinality = Value
 
-  val MayHaveOne: Value   = Value(0, "0-1")
-  val MayHaveMany: Value  = Value(1, "0-n")
-  val MustHaveOne: Value  = Value(2, "1")
-  val MustHaveSome: Value = Value(3, "1-n")
+  val MustHaveOne: Value  = Value(0, "1")
+  val MustHaveSome: Value = Value(1, "1-n")
+  val MayHaveOne: Value   = Value(2, "0-1")
+  val MayHaveMany: Value  = Value(3, "0-n")
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
