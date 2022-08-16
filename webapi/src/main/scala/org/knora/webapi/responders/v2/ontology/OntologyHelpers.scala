@@ -867,13 +867,23 @@ object OntologyHelpers {
               case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
               case _                        => List.empty
             }
-            // if there are multiple instances of the same property the class gets through inheritance, take the strictest cardinality defined on that property
-            val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, knoraCardinality) =>
+
+            val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, nextBaseClassCardinality) =>
+              // if there are multiple instances of the same property the class gets through inheritance, keep only the strictest one
               acc.get(iri) match {
-                case Some(cardinalityInfo)
-                    if cardinalityInfo.cardinality.isStricterThan(knoraCardinality.cardinality) =>
-                  (iri, cardinalityInfo)
-                case _ => (iri, knoraCardinality)
+                // if the previous base class cardinality is stricter than the next base class cardinality, keep the previous
+                case Some(previousCardinality)
+                    if previousCardinality.cardinality.isStricterThan(nextBaseClassCardinality.cardinality) =>
+                  (iri, previousCardinality)
+                // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the accumulator with cardinality of "1", because only this is stricter than both
+                case Some(previousCardinality)
+                    if (
+                      (nextBaseClassCardinality.cardinality == MustHaveSome || nextBaseClassCardinality.cardinality == MayHaveOne) &&
+                        (previousCardinality.cardinality == MustHaveSome || previousCardinality.cardinality == MayHaveOne)
+                    ) =>
+                  (iri, KnoraCardinalityInfo(MustHaveOne, previousCardinality.guiOrder))
+                // in all other cases, keep the next base class cardinality
+                case _ => (iri, nextBaseClassCardinality)
               }
             }.toMap
             acc ++ additionalCardinalities
@@ -1942,8 +1952,8 @@ object OntologyHelpers {
               if (baseClassCardinality.cardinality.isStricterThan(thisClassCardinality.cardinality)) {
                 // No. Throw an exception.
                 errorFun(
-                  s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality ${thisClassCardinality.cardinality} on ${thisClassProp
-                      .toOntologySchema(errorSchema)} is not compatible with the inherited cardinality ${baseClassCardinality.cardinality} on ${baseClassProp
+                  s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality '${thisClassCardinality.cardinality.value}' on ${thisClassProp
+                      .toOntologySchema(errorSchema)} is not compatible with the inherited or allowed cardinality '${baseClassCardinality.cardinality.value}' on ${baseClassProp
                       .toOntologySchema(errorSchema)}, because it is less restrictive"
                 )
               } else {
