@@ -2257,26 +2257,6 @@ object Cardinality extends Enumeration {
   def knoraCardinality2OwlCardinality(knoraCardinality: KnoraCardinalityInfo): OwlCardinalityInfo =
     knoraCardinality2OwlCardinalityMap(knoraCardinality.cardinality).copy(guiOrder = knoraCardinality.guiOrder)
 
-  /**
-   * Checks whether a cardinality that is directly defined on a class is compatible with an inherited cardinality on the
-   * same property. This will be true only if the directly defined cardinality is at least as restrictive as the
-   * inherited one.
-   *
-   * @param directCardinality      the directly defined cardinality.
-   * @param inheritableCardinality the inherited cardinality.
-   * @return `true` if the directly defined cardinality is compatible with the inherited one.
-   */
-  def isCompatible(directCardinality: Value, inheritableCardinality: Value): Boolean =
-    if (directCardinality == inheritableCardinality) {
-      true
-    } else {
-      inheritableCardinality match {
-        case MayHaveOne   => directCardinality == MustHaveOne
-        case MayHaveMany  => true
-        case MustHaveOne  => false
-        case MustHaveSome => directCardinality == MustHaveOne
-      }
-    }
 }
 
 /**
