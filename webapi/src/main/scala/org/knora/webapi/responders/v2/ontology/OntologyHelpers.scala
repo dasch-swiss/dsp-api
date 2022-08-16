@@ -866,6 +866,7 @@ object OntologyHelpers {
               case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
               case _                        => List.empty
             }
+            // if there are multiple instances of the same property the class gets through inheritance, take the strictest cardinality defined on that property
             val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, cardinality) =>
               acc.get(iri) match {
                 case Some(value) if value.isStricterThan(cardinality) => (iri, value)

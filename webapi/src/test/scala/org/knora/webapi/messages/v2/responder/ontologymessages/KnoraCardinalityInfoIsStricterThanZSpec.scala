@@ -9,7 +9,7 @@ import zio.test._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 /**
- * Tests [[isStricterThan()]].
+ * Tests the comparison forstrictness of cardinalities with [[isStricterThan()]].
  */
 object KnoraCardinalityInfoIsStricterThanZSpec extends ZIOSpecDefault {
 
