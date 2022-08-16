@@ -139,7 +139,7 @@ class InstanceChecker(instanceInspector: InstanceInspector) extends LazyLogging 
         (cardinality == MustHaveSome && numberOfObjects == 0)
       ) {
         throwAndLogAssertionException(
-          s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is $cardinality"
+          s"Property $instancePropertyName has $numberOfObjects objects, but its cardinality is ${cardinality.value}"
         )
       }
     }
