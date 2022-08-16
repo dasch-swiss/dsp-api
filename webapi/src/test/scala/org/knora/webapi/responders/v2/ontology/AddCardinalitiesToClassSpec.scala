@@ -6,6 +6,7 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.util.Timeout
+import dsp.schema.domain.MayHaveOne
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -17,10 +18,10 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassesGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
@@ -91,8 +92,7 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
               objects = Vector(SmartIriLiteralV2(value = OntologyConstants.Owl.Class.toSmartIri))
             )
           ),
-          directCardinalities =
-            Map(newPropertyIri -> Cardinality.KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne))
+          directCardinalities = Map(newPropertyIri -> KnoraCardinalityInfo(cardinality = MayHaveOne))
         ),
         lastModificationDate = ontologyLastModificationDate,
         apiRequestID = UUID.randomUUID,

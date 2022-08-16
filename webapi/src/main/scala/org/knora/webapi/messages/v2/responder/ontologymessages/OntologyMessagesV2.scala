@@ -13,6 +13,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
+import dsp.schema.domain._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.apache.commons.lang3.builder.HashCodeBuilder
@@ -26,8 +27,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -2126,7 +2127,7 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
 /**
  * Represents the OWL cardinalities that Knora supports.
  */
-object Cardinality extends Enumeration {
+object OwlCardinality extends Enumeration {
 
   /**
    * Represents information about an OWL cardinality.
@@ -2158,48 +2159,25 @@ object Cardinality extends Enumeration {
    * @param cardinality the Knora cardinality.
    * @param guiOrder    the SALSAH GUI order.
    */
-  case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) { self =>
+  case class KnoraCardinalityInfo(cardinality: Cardinality, guiOrder: Option[Int] = None) { self =>
     override def toString: String = guiOrder match {
-      case Some(definedGuiOrder) => s"$cardinality (guiOrder $definedGuiOrder)"
-      case None                  => cardinality.toString
+      case Some(definedGuiOrder) => s"${cardinality.value} (guiOrder $definedGuiOrder)"
+      case None                  => cardinality.value
     }
 
     def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean =
       that.cardinality == cardinality
 
-    /**
-     * Checks whether a cardinality is stricter than another one.
-     *
-     * @param that      the cardinality to be compared against
-     * @return          `true` if the present cardinality is stricter than `that`
-     */
-    def isStricterThan(that: KnoraCardinalityInfo): Boolean =
-      if (self.cardinality == that.cardinality) {
-        false
-      } else {
-        self.cardinality match {
-          case MustHaveOne  => true
-          case MustHaveSome => that.cardinality == MayHaveMany
-          case MayHaveOne   => that.cardinality == MayHaveMany
-          case MayHaveMany  => false
-        }
-      }
   }
-
-  type Cardinality = Value
-
-  val MustHaveOne: Value  = Value(0, "1")
-  val MustHaveSome: Value = Value(1, "1-n")
-  val MayHaveOne: Value   = Value(2, "0-1")
-  val MayHaveMany: Value  = Value(3, "0-n")
-
-  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
   /**
    * The valid mappings between Knora cardinalities and OWL cardinalities.
    */
-  private val knoraCardinality2OwlCardinalityMap: Map[Value, OwlCardinalityInfo] = Map(
-    MayHaveOne -> OwlCardinalityInfo(owlCardinalityIri = OntologyConstants.Owl.MaxCardinality, owlCardinalityValue = 1),
+  private val knoraCardinality2OwlCardinalityMap: Map[Cardinality, OwlCardinalityInfo] = Map(
+    MayHaveOne -> OwlCardinalityInfo(
+      owlCardinalityIri = OntologyConstants.Owl.MaxCardinality,
+      owlCardinalityValue = 1
+    ),
     MayHaveMany -> OwlCardinalityInfo(
       owlCardinalityIri = OntologyConstants.Owl.MinCardinality,
       owlCardinalityValue = 0
@@ -2211,22 +2189,9 @@ object Cardinality extends Enumeration {
     )
   )
 
-  private val owlCardinality2KnoraCardinalityMap: Map[OwlCardinalityInfo, Value] =
+  private val owlCardinality2KnoraCardinalityMap: Map[OwlCardinalityInfo, Cardinality] =
     knoraCardinality2OwlCardinalityMap.map { case (knoraC, owlC) =>
       (owlC, knoraC)
-    }
-
-  /**
-   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-   * [[InconsistentRepositoryDataException]].
-   *
-   * @param name the name of the value.
-   * @return the requested value.
-   */
-  def lookup(name: String): Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw InconsistentRepositoryDataException(s"Cardinality not found: $name")
     }
 
   /**
@@ -2772,7 +2737,7 @@ case class ReadClassInfoV2(
 
     // Add cardinalities that this class inherits in the target schema but not in the source schema.
 
-    val baseClassesInTargetSchema = allBaseClasses.map(_.toOntologySchema(targetSchema))
+    val baseClassesInTargetSchema: Seq[SmartIri] = allBaseClasses.map(_.toOntologySchema(targetSchema))
 
     val inheritedCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = baseClassesInTargetSchema.flatMap {
       baseClassIri =>
@@ -2810,10 +2775,10 @@ case class ReadClassInfoV2(
       cardinalityInfo.guiOrder
     }.toIndexedSeq.map { case (propertyIri: SmartIri, cardinalityInfo: KnoraCardinalityInfo) =>
       val prop2card: (IRI, JsonLDInt) = cardinalityInfo.cardinality match {
-        case Cardinality.MayHaveMany  => OntologyConstants.Owl.MinCardinality -> JsonLDInt(0)
-        case Cardinality.MayHaveOne   => OntologyConstants.Owl.MaxCardinality -> JsonLDInt(1)
-        case Cardinality.MustHaveOne  => OntologyConstants.Owl.Cardinality    -> JsonLDInt(1)
-        case Cardinality.MustHaveSome => OntologyConstants.Owl.MinCardinality -> JsonLDInt(1)
+        case MayHaveMany  => OntologyConstants.Owl.MinCardinality -> JsonLDInt(0)
+        case MayHaveOne   => OntologyConstants.Owl.MaxCardinality -> JsonLDInt(1)
+        case MustHaveOne  => OntologyConstants.Owl.Cardinality    -> JsonLDInt(1)
+        case MustHaveSome => OntologyConstants.Owl.MinCardinality -> JsonLDInt(1)
       }
 
       // If we're using the complex schema and the cardinality is inherited, add an annotation to say so.
@@ -3355,7 +3320,7 @@ object ClassInfoContentV2 {
                   guiOrder = guiOrder
                 )
 
-                val knoraCardinalityInfo = Cardinality.owlCardinality2KnoraCardinality(
+                val knoraCardinalityInfo = OwlCardinality.owlCardinality2KnoraCardinality(
                   propertyIri = onProperty.toString,
                   owlCardinality = owlCardinalityInfo
                 )

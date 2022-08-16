@@ -6,9 +6,10 @@
 @import org.knora.webapi._
 @import dsp.errors.{AssertionException, InconsistentRepositoryDataException, SparqlGenerationException}
 @import org.knora.webapi.messages.v1.responder.ontologymessages._
-@import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+@import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 @import org.knora.webapi.messages.OntologyConstants
 @import org.knora.webapi.messages.StringFormatter.XmlImportNamespaceInfoV1
+@import dsp.schema.domain._
 
 @**
  * Generates an XML schema based on ontology definitions.
@@ -35,11 +36,10 @@
  * SPDX-License-Identifier: Apache-2.0
 -->
 <xs:schema elementFormDefault="qualified" targetNamespace="@{targetNamespaceInfo.namespace}"
-           xmlns="@{targetNamespaceInfo.namespace}" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           @for(namespaceInfo <- importedNamespaces) {
-               xmlns:@{namespaceInfo.prefixLabel}="@{namespaceInfo.namespace}"
-           }
-           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
+    xmlns="@{targetNamespaceInfo.namespace}"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           @for(namespaceInfo <- importedNamespaces) { xmlns:@{namespaceInfo.prefixLabel}="@{namespaceInfo.namespace}"
+           } xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" vc:minVersion="1.0">
     @for(namespaceInfo <- importedNamespaces) {
         <xs:import namespace="@{namespaceInfo.namespace}" schemaLocation="@{namespaceInfo.prefixLabel}.xsd"/>
     }
@@ -48,15 +48,15 @@
 
         @defining(getEntityName(resourceClassIri)) { resourceClassName =>
 
-            <xs:element name="@resourceClassName">
-                <xs:complexType>
-                    <xs:complexContent>
-                        <xs:extension base="@{knoraXmlImportNamespacePrefixLabel}:resourceType">
-                            <xs:sequence>
-                                <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:label" minOccurs="1" maxOccurs="1"/>
+<xs:element name="@resourceClassName">
+<xs:complexType>
+    <xs:complexContent>
+        <xs:extension base="@{knoraXmlImportNamespacePrefixLabel}:resourceType">
+            <xs:sequence>
+                <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:label" minOccurs="1" maxOccurs="1"/>
 
                                 @if(resourceClassInfo.fileValueProperties.nonEmpty) {
-                                    <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
+                <xs:element ref="@{knoraXmlImportNamespacePrefixLabel}:file" minOccurs="1" maxOccurs="1"/>
                                 }
 
                                 @for((propertyIri, cardinalityInfo) <- resourceClassInfo.knoraResourceCardinalities.toVector.sortBy(_._1)) {
@@ -69,40 +69,28 @@
 
                                                 @defining(getNamespacePrefixLabel(propertyIri)) { propertyNamespacePrefixLabel =>
 
-                                                    @if(propertyNamespacePrefixLabel == targetNamespaceInfo.prefixLabel) {
+                                                    @if(propertyNamespacePrefixLabel == targetNamespaceInfo.prefixLabel) { name="@{getEntityName(propertyIri)}"
 
-                                                        name="@{getEntityName(propertyIri)}"
-
-                                                    } else {
-
-                                                        name="@{propertyNamespacePrefixLabel}__@{getEntityName(propertyIri)}"
+                                                    } else { name="@{propertyNamespacePrefixLabel}__@{getEntityName(propertyIri)}"
                                                     }
 
                                                 }
 
                                                 @cardinalityInfo.cardinality match {
 
-                                                    case Cardinality.MayHaveOne => {
-
-                                                        minOccurs="0" maxOccurs="1"
+                                                    case MayHaveOne => { minOccurs="0" maxOccurs="1"
                     
                                                     }
 
-                                                    case Cardinality.MayHaveMany => {
-
-                                                        minOccurs="0" maxOccurs="unbounded"
+                                                    case MayHaveMany => { minOccurs="0" maxOccurs="unbounded"
 
                                                     }
 
-                                                    case Cardinality.MustHaveOne => {
-
-                                                        minOccurs="1" maxOccurs="1"
+                                                    case MustHaveOne => { minOccurs="1" maxOccurs="1"
 
                                                     }
 
-                                                    case Cardinality.MustHaveSome => {
-
-                                                        minOccurs="1" maxOccurs="unbounded"
+                                                    case MustHaveSome => { minOccurs="1" maxOccurs="unbounded"
 
                                                     }
                                                 }
@@ -113,13 +101,9 @@
 
                                                             @defining(getNamespacePrefixLabel(propertyObjectClassConstraint)) { targetResourceClassNamespacePrefixLabel =>
 
-                                                                @if(targetResourceClassNamespacePrefixLabel == targetNamespaceInfo.prefixLabel) {
+                                                                @if(targetResourceClassNamespacePrefixLabel == targetNamespaceInfo.prefixLabel) { type="@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
 
-                                                                    type="@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
-
-                                                                } else {
-                                                                
-                                                                    type="@{targetResourceClassNamespacePrefixLabel}:@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
+                                                                } else { type="@{targetResourceClassNamespacePrefixLabel}:@{getEntityName(propertyObjectClassConstraint)}_linkValueType"
 
                                                                 }
 
@@ -129,75 +113,51 @@
 
                                                         @propertyObjectClassConstraint match {
 
-                                                            case OntologyConstants.KnoraBase.TextValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:richtextValueType"
+                                                            case OntologyConstants.KnoraBase.TextValue => { type="@{knoraXmlImportNamespacePrefixLabel}:richtextValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.IntValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:intValueType"
+                                                            case OntologyConstants.KnoraBase.IntValue => { type="@{knoraXmlImportNamespacePrefixLabel}:intValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.BooleanValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:booleanValueType"
+                                                            case OntologyConstants.KnoraBase.BooleanValue => { type="@{knoraXmlImportNamespacePrefixLabel}:booleanValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.UriValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:uriValueType"
+                                                            case OntologyConstants.KnoraBase.UriValue => { type="@{knoraXmlImportNamespacePrefixLabel}:uriValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.DecimalValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:decimalValueType"
+                                                            case OntologyConstants.KnoraBase.DecimalValue => { type="@{knoraXmlImportNamespacePrefixLabel}:decimalValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.DateValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:dateValueType"
+                                                            case OntologyConstants.KnoraBase.DateValue => { type="@{knoraXmlImportNamespacePrefixLabel}:dateValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.ColorValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:colorValueType"
+                                                            case OntologyConstants.KnoraBase.ColorValue => { type="@{knoraXmlImportNamespacePrefixLabel}:colorValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.GeomValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:geomValueType"
+                                                            case OntologyConstants.KnoraBase.GeomValue => { type="@{knoraXmlImportNamespacePrefixLabel}:geomValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.ListValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:hlistValueType"
+                                                            case OntologyConstants.KnoraBase.ListValue => { type="@{knoraXmlImportNamespacePrefixLabel}:hlistValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.IntervalValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:intervalValueType"
+                                                            case OntologyConstants.KnoraBase.IntervalValue => { type="@{knoraXmlImportNamespacePrefixLabel}:intervalValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.TimeValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:timeValueType"
+                                                            case OntologyConstants.KnoraBase.TimeValue => { type="@{knoraXmlImportNamespacePrefixLabel}:timeValueType"
 
                                                             }
 
-                                                            case OntologyConstants.KnoraBase.GeonameValue => {
-
-                                                                type="@{knoraXmlImportNamespacePrefixLabel}:geonameValueType"
+                                                            case OntologyConstants.KnoraBase.GeonameValue => { type="@{knoraXmlImportNamespacePrefixLabel}:geonameValueType"
 
                                                             }
 
@@ -222,12 +182,12 @@
                                 }
 
                             </xs:sequence>
-                        </xs:extension>
-                    </xs:complexContent>
-                </xs:complexType>
-            </xs:element>
+</xs:extension>
+</xs:complexContent>
+</xs:complexType>
+</xs:element>
 
-            <xs:complexType name="@{resourceClassName}_linkValueType">
+<xs:complexType name="@{resourceClassName}_linkValueType">
                 <xs:sequence>
                     <xs:element name="@resourceClassName" type="@{knoraXmlImportNamespacePrefixLabel}:linkValueType"/>
                 </xs:sequence>
@@ -237,4 +197,4 @@
 
     }
     
-</xs:schema>
+        </xs:schema>

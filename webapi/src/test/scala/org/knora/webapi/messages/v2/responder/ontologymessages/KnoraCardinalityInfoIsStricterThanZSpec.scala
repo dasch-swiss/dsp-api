@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import dsp.schema.domain._
 import zio.test._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
 
 /**
  * Tests the comparison forstrictness of cardinalities with [[isStricterThan()]].
@@ -15,10 +15,10 @@ object KnoraCardinalityInfoIsStricterThanZSpec extends ZIOSpecDefault {
 
   def spec = (mustHaveOneTest + mustHaveSomeTest + mayHaveOneTest + mayHaveManyTest)
 
-  val mustHaveOne  = KnoraCardinalityInfo(MustHaveOne, None)  // "1"
-  val mustHaveSome = KnoraCardinalityInfo(MustHaveSome, None) // "1-n"
-  val mayHaveOne   = KnoraCardinalityInfo(MayHaveOne, None)   // "0-1"
-  val mayHaveMany  = KnoraCardinalityInfo(MayHaveMany, None)  // "0-n"
+  val mustHaveOne  = MustHaveOne  // "1"
+  val mustHaveSome = MustHaveSome // "1-n"
+  val mayHaveOne   = MayHaveOne   // "0-1"
+  val mayHaveMany  = MayHaveMany  // "0-n"
 
   private val mustHaveOneTest = suite("MustHaveOneTest")(
     test("cardinality of '1' is NOT stricter than cardinality of '1'") {

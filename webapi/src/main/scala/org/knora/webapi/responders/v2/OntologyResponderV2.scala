@@ -9,6 +9,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.schema.domain._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -27,14 +28,14 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ontology.Cache
 import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
-import org.knora.webapi.responders.v2.ontology.Cardinalities
+import org.knora.webapi.responders.v2.ontology.CardinalityHandler
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers
 import org.knora.webapi.util._
 
@@ -1321,7 +1322,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         hasCardinality: Option[(SmartIri, KnoraCardinalityInfo)] =
           addCardinalitiesRequest.classInfoContent.directCardinalities.find {
             case (_, constraint: KnoraCardinalityInfo) =>
-              constraint.cardinality == Cardinality.MustHaveSome || constraint.cardinality == Cardinality.MustHaveOne
+              constraint.cardinality == MustHaveSome || constraint.cardinality == MustHaveOne
           }
 
         _ <- hasCardinality match {
@@ -1774,7 +1775,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                       apiRequestID = canDeleteCardinalitiesFromClassRequest.apiRequestID,
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
                       task = () =>
-                        Cardinalities.canDeleteCardinalitiesFromClass(
+                        CardinalityHandler.canDeleteCardinalitiesFromClass(
                           settings,
                           appActor,
                           deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
@@ -1814,7 +1815,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                       apiRequestID = deleteCardinalitiesFromClassRequest.apiRequestID,
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
                       task = () =>
-                        Cardinalities.deleteCardinalitiesFromClass(
+                        CardinalityHandler.deleteCardinalitiesFromClass(
                           settings,
                           appActor,
                           deleteCardinalitiesFromClassRequest = deleteCardinalitiesFromClassRequest,

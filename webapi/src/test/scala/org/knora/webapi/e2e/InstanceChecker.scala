@@ -6,15 +6,16 @@
 package org.knora.webapi.e2e
 
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi._
 import dsp.errors.AssertionException
+import dsp.schema.domain._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 
 import java.net.URLEncoder

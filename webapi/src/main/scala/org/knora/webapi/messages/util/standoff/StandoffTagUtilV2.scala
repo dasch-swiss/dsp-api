@@ -6,11 +6,12 @@
 package org.knora.webapi.messages.util.standoff
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.IRI
+import com.typesafe.scalalogging.Logger
 import dsp.errors._
+import dsp.schema.domain._
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -23,7 +24,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValue
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
 import org.knora.webapi.messages.v1.responder.valuemessages.UpdateValueV1
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -208,7 +209,7 @@ object StandoffTagUtilV2 {
 
       // filter all the required props
       val mustExistOnce: Set[SmartIri] = classSpecificProps.filter { case (propIri, card) =>
-        card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
+        card.cardinality == MustHaveOne || card.cardinality == MustHaveSome
       }.keySet
 
       // check if all the min cardinalities are respected
@@ -225,7 +226,7 @@ object StandoffTagUtilV2 {
 
       // filter all the props that have a limited occurrence
       val mayExistOnce = classSpecificProps.filter { case (propIri, card) =>
-        card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MayHaveOne
+        card.cardinality == MustHaveOne || card.cardinality == MayHaveOne
       }.keySet
 
       // check if all the max cardinalities are respected
