@@ -2630,7 +2630,7 @@ sealed trait ReadEntityInfoV2 {
  * @param isStandoffClass         `true` if this is a subclass of `knora-base:StandoffTag`.
  * @param isValueClass            `true` if the class is a Knora value class.
  * @param canBeInstantiated       `true` if the class is a Knora resource class that can be instantiated via the API.
- * @param inheritedCardinalities  a [[Map]] of properties to [[Cardinality.Value]] objects representing the class's
+ * @param inheritedCardinalities  a [[Map]] of properties to [[Cardinality]] objects representing the class's
  *                                inherited cardinalities on those properties.
  * @param standoffDataType        if this is a standoff tag class, the standoff datatype tag class (if any) that it
  *                                is a subclass of.
@@ -3066,7 +3066,7 @@ case class DatatypeInfoV2(onDatatype: SmartIri, pattern: Option[String] = None)
  *
  * @param classIri            the IRI of the class.
  * @param predicates          a [[Map]] of predicate IRIs to [[PredicateInfoV2]] objects.
- * @param directCardinalities a [[Map]] of properties to [[Cardinality.Value]] objects representing the cardinalities
+ * @param directCardinalities a [[Map]] of properties to [[Cardinality]] objects representing the cardinalities
  *                            that are directly defined on the class (as opposed to inherited) on those properties.
  * @param datatypeInfo        if the class's `rdf:type` is `rdfs:Datatype`, a [[DatatypeInfoV2]] describing it.
  * @param subClassOf          the classes that this class is a subclass of.
