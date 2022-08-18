@@ -10,31 +10,16 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.messages.app.appmessages.AppState
-import org.knora.webapi.messages.app.appmessages.AppStates
-import org.knora.webapi.messages.app.appmessages.GetAppState
+import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.core.State
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 
-/**
- * Provides AppState actor access logic
- */
-trait AppStateAccess {
-  this: RejectingRoute =>
-
-  override implicit val timeout: Timeout = 2998.millis
-
-  protected def getAppState: Future[AppState] =
-    for {
-
-      state <- appActor.ask(GetAppState()).mapTo[AppState]
-
-    } yield state
-
-}
+import zio._
+import akka.http.interop.ZIOSupport
 
 /**
  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
@@ -42,8 +27,25 @@ trait AppStateAccess {
  * If the current state of the application is anything other then [[AppStates.Running]], then return [[StatusCodes.ServiceUnavailable]].
  * If the current state of the application is [[AppStates.Running]], then reject requests to paths as defined
  * in 'application.conf'.
+ *
+ * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with AppStateAccess {
+class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
+
+  /**
+   * Gets the app state from the State service
+   */
+  private val getAppState: Future[AppState] =
+    Unsafe.unsafe { implicit u =>
+      Runtime.default.unsafe
+        .runToFuture(
+          (for {
+            svc   <- ZIO.service[State]
+            state <- svc.get
+          } yield state).provide(State.layer)
+        )
+
+    }
 
   /**
    * Returns the route.
@@ -63,10 +65,10 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) wi
 
         case Success(appState) =>
           appState match {
-            case AppStates.Running if rejectSeq.flatten.isEmpty =>
+            case AppState.Running if rejectSeq.flatten.isEmpty =>
               // route is allowed. by rejecting, I'm letting it through so that some other route can match
               reject()
-            case AppStates.Running if rejectSeq.flatten.nonEmpty =>
+            case AppState.Running if rejectSeq.flatten.nonEmpty =>
               // route not allowed. will complete request.
               val msg = s"Request to $wholePath not allowed as per configuration for routes to reject."
               log.info(msg)

@@ -146,8 +146,8 @@ object CacheServiceManager {
         /**
          * Pings the cache service to see if it is available.
          */
-        def ping(): Task[CacheServiceStatusResponse] =
-          cs.ping()
+        def ping(): UIO[CacheServiceStatusResponse] =
+          cs.getStatus
       }
     }
 }

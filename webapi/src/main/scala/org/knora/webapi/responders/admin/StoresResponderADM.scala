@@ -11,7 +11,6 @@ import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
-import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
@@ -24,6 +23,7 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future
+import akka.http.scaladsl.util.FastFuture
 
 /**
  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
@@ -62,7 +62,8 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
     log.debug(s"resetTriplestoreContent - called")
 
     for {
-      value: Boolean <- (appActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
+      // FIXME: need to call directly into the State service
+      value: Boolean <- FastFuture.successful(settings.allowReloadOverHTTP)
       _ = if (!value) {
             throw ForbiddenException(
               "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"

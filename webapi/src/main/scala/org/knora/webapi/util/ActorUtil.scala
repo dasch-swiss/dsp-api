@@ -14,7 +14,7 @@ import dsp.errors.ExceptionUtil
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.Logging
+import org.knora.webapi.logging.Logging
 import zio.Cause._
 import zio.Unsafe.unsafe
 import zio._
@@ -34,10 +34,10 @@ object ActorUtil {
    * allocated immediately, and not released until the `Runtime` is shut down or
    * the end of the application.
    */
-  private val runtime =
-    Unsafe.unsafe { implicit u =>
-      Runtime.unsafe.fromLayer(Logging.stdout)
-    }
+  // private val runtime =
+  //   Unsafe.unsafe { implicit u =>
+  //     Runtime.unsafe.fromLayer(Logging.stdout)
+  //   }
 
   /**
    * Transforms ZIO Task returned to the receive method of an actor to a message. Used mainly during the refactoring
@@ -52,7 +52,7 @@ object ActorUtil {
    */
   def zio2Message[A](sender: ActorRef, zioTask: zio.Task[A], appConfig: AppConfig, log: Logger): Unit =
     Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(
+      Runtime.default.unsafe.run(
         zioTask.foldCause(cause => handleCause(cause, sender, log), success => sender ! success)
       )
     }

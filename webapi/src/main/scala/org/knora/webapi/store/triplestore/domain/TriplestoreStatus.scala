@@ -11,7 +11,7 @@ package org.knora.webapi.store.triplestore.domain
  * - NotInitialized: Triplestore is responding to HTTP requests but the repository defined in 'application.conf' is missing.
  * - Available: Everything is OK.
  */
-trait TriplestoreStatus {
+sealed trait TriplestoreStatus {
   val msg: String
 }
 object TriplestoreStatus {

@@ -10,6 +10,7 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
+import akka.pattern._
 import akka.event.LoggingReceive
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core
@@ -24,10 +25,15 @@ import zio._
 import zio.macros.accessible
 
 import scala.concurrent.ExecutionContext
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import akka.util.Timeout
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 
 @accessible
 trait AppRouter {
   val ref: ActorRef
+  val populateOntologyCaches: UIO[Unit]
 }
 
 object AppRouter {
@@ -49,7 +55,7 @@ object AppRouter {
 
         implicit val executionContext: ExecutionContext = system.dispatcher
 
-        override val ref: ActorRef = system.actorOf(
+        val ref: ActorRef = system.actorOf(
           Props(
             new core.actors.RoutingActor(
               cacheServiceManager,
@@ -60,6 +66,18 @@ object AppRouter {
           ),
           name = APPLICATION_MANAGER_ACTOR_NAME
         )
+
+        /* Calls into the OntologyResponderV2 to initiate loading of the ontologies into the cache. */
+        val populateOntologyCaches: UIO[Unit] = {
+
+          val request = LoadOntologiesRequestV2(requestingUser = KnoraSystemInstances.Users.SystemUser)
+          val timeout = Timeout(new scala.concurrent.duration.FiniteDuration(3, scala.concurrent.duration.SECONDS))
+
+          for {
+            response <- ZIO.fromFuture(_ => (ref.ask(request)(timeout)).mapTo[SuccessResponseV2]).orDie
+            _        <- ZIO.logInfo(response.message)
+          } yield ()
+        }
       }
     }.tap(_ => ZIO.logInfo(">>> AppRouter Initialized <<<"))
 }

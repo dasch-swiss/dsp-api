@@ -31,7 +31,6 @@ import dsp.errors.UnsupportedValueException
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.ResponderRequest._
-import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
@@ -239,7 +238,7 @@ class RoutingActor(
 
     case other =>
       throw UnexpectedMessageException(
-        s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
+        s"RoutingActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
       )
   }
 

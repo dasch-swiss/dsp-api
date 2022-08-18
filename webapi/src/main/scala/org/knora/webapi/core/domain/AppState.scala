@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.messages.app.appmessages
+package org.knora.webapi.core.domain
 
 sealed trait ApplicationRequest
 
@@ -160,8 +160,7 @@ case object CheckCacheService extends ApplicationRequest
  * Application States at Startup
  */
 sealed trait AppState
-
-object AppStates {
+object AppState {
 
   case object Stopped extends AppState
 

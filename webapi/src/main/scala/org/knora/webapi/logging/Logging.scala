@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.core
+package org.knora.webapi.logging
 
 import zio.LogLevel
 import zio.logging.LogFormat._
@@ -30,6 +30,7 @@ object Logging {
       format = textFormat
     )
 
-  val stdout = console(logLevel = LogLevel.Debug, format = colored)
+  val toConsole     = console(logLevel = LogLevel.Info, format = LogFormat.default)
+  val toConsoleJson = consoleJson(logLevel = LogLevel.Info, format = LogFormat.default)
 
 }

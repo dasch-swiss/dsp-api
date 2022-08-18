@@ -9,9 +9,9 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.Boot
-import org.knora.webapi.core.Logging
-import org.knora.webapi.http.HttpServer
+import org.knora.webapi.core.Bootstrap
+import org.knora.webapi.logging.Logging
+import org.knora.webapi.core.HttpServer
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
@@ -22,35 +22,16 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
 import zio.logging.slf4j.bridge.Slf4jBridge
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.core.State
+import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.iiif.api.IIIFService
 
-object App extends ZIOAppDefault {
+object App extends ZIOApp {
 
-  /**
-   * The effect layers which will be used to run the managers effect.
-   * Can be overriden in specs that need other implementations.
-   */
-  lazy val layers =
-    ZLayer.make[core.ActorSystem with HttpServer with TriplestoreService with AppConfig](
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer,
-      AppConfig.live,
-      JWTService.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      Logging.stdout,
-      Slf4jBridge.initialize,
-      HttpServer.layer,
-      AppRouter.layer,
-      ActorSystem.layer
-    )
+  override val bootstrap = Bootstrap.bootstrap.environment
 
-  override def run =
-    ZIO
-      .scoped(Boot.startup)
-      .provide(layers, Runtime.removeDefaultLoggers)
+  /* It all starts here */
+  val run = ZIO.scoped(Bootstrap.startup(true, true))
 
   /**
    * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be

@@ -11,9 +11,9 @@ import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.messages.app.appmessages.AppState
-import org.knora.webapi.messages.app.appmessages.AppStates
-import org.knora.webapi.messages.app.appmessages.GetAppState
+import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.core.State
+
 import spray.json.JsObject
 import spray.json.JsString
 
@@ -21,80 +21,83 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import akka.http.scaladsl.util.FastFuture
 
-case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
+import zio._
+import akka.http.interop.ZIOSupport
 
 /**
  * Provides health check logic
  */
 trait HealthCheck {
-  this: HealthRoute =>
 
-  override implicit val timeout: Timeout = 2997.millis
-
-  protected def healthCheck(): Future[HttpResponse] =
+  protected val healthCheck: ZIO[State, Nothing, HttpResponse] =
     for {
-
-      state: AppState <-
-        appActor
-          .ask(GetAppState())
-          .mapTo[AppState]
-          .fallbackTo(FastFuture.successful(AppStates.Stopped))
-
-      result: HealthCheckResult =
-        state match {
-          case AppStates.Stopped    => unhealthy("Stopped. Please retry later.")
-          case AppStates.StartingUp => unhealthy("Starting up. Please retry later.")
-          case AppStates.WaitingForTriplestore =>
-            unhealthy("Waiting for triplestore. Please retry later.")
-          case AppStates.TriplestoreReady =>
-            unhealthy("Triplestore ready. Please retry later.")
-          case AppStates.UpdatingRepository =>
-            unhealthy("Updating repository. Please retry later.")
-          case AppStates.RepositoryUpToDate =>
-            unhealthy("Repository up to date. Please retry later.")
-          case AppStates.CreatingCaches => unhealthy("Creating caches. Please retry later.")
-          case AppStates.CachesReady    => unhealthy("Caches ready. Please retry later.")
-          case AppStates.UpdatingSearchIndex =>
-            unhealthy("Updating search index. Please retry later.")
-          case AppStates.SearchIndexReady =>
-            unhealthy("Search index ready. Please retry later.")
-          case AppStates.LoadingOntologies =>
-            unhealthy("Loading ontologies. Please retry later.")
-          case AppStates.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
-          case AppStates.WaitingForIIIFService =>
-            unhealthy("Waiting for IIIF service. Please retry later.")
-          case AppStates.IIIFServiceReady =>
-            unhealthy("IIIF service ready. Please retry later.")
-          case AppStates.WaitingForCacheService =>
-            unhealthy("Waiting for cache service. Please retry later.")
-          case AppStates.CacheServiceReady =>
-            unhealthy("Cache service ready. Please retry later.")
-          case AppStates.MaintenanceMode =>
-            unhealthy("Application is in maintenance mode. Please retry later.")
-          case AppStates.Running => healthy()
-        }
-
-      response = createResponse(result)
-
+      svc      <- ZIO.service[State]
+      state    <- svc.get
+      result   <- createResult(state)
+      response <- createResponse(result)
     } yield response
 
-  protected def createResponse(result: HealthCheckResult): HttpResponse =
-    HttpResponse(
-      status = statusCode(result.status),
-      entity = HttpEntity(
-        ContentTypes.`application/json`,
-        JsObject(
-          "name"     -> JsString(result.name),
-          "severity" -> JsString(result.severity),
-          "status"   -> JsString(status(result.status)),
-          "message"  -> JsString(result.message)
-        ).compactPrint
+  private def createResult(state: AppState): UIO[HealthCheckResult] =
+    ZIO
+      .attempt(
+        state match {
+          case AppState.Stopped    => unhealthy("Stopped. Please retry later.")
+          case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
+          case AppState.WaitingForTriplestore =>
+            unhealthy("Waiting for triplestore. Please retry later.")
+          case AppState.TriplestoreReady =>
+            unhealthy("Triplestore ready. Please retry later.")
+          case AppState.UpdatingRepository =>
+            unhealthy("Updating repository. Please retry later.")
+          case AppState.RepositoryUpToDate =>
+            unhealthy("Repository up to date. Please retry later.")
+          case AppState.CreatingCaches => unhealthy("Creating caches. Please retry later.")
+          case AppState.CachesReady    => unhealthy("Caches ready. Please retry later.")
+          case AppState.UpdatingSearchIndex =>
+            unhealthy("Updating search index. Please retry later.")
+          case AppState.SearchIndexReady =>
+            unhealthy("Search index ready. Please retry later.")
+          case AppState.LoadingOntologies =>
+            unhealthy("Loading ontologies. Please retry later.")
+          case AppState.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
+          case AppState.WaitingForIIIFService =>
+            unhealthy("Waiting for IIIF service. Please retry later.")
+          case AppState.IIIFServiceReady =>
+            unhealthy("IIIF service ready. Please retry later.")
+          case AppState.WaitingForCacheService =>
+            unhealthy("Waiting for cache service. Please retry later.")
+          case AppState.CacheServiceReady =>
+            unhealthy("Cache service ready. Please retry later.")
+          case AppState.MaintenanceMode =>
+            unhealthy("Application is in maintenance mode. Please retry later.")
+          case AppState.Running => healthy
+        }
       )
-    )
+      .orDie
+
+  private def createResponse(result: HealthCheckResult): UIO[HttpResponse] =
+    ZIO
+      .attempt(
+        HttpResponse(
+          status = statusCode(result.status),
+          entity = HttpEntity(
+            ContentTypes.`application/json`,
+            JsObject(
+              "name"     -> JsString("AppState"),
+              "severity" -> JsString("non fatal"),
+              "status"   -> JsString(status(result.status)),
+              "message"  -> JsString(result.message)
+            ).compactPrint
+          )
+        )
+      )
+      .orDie
 
   private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
 
   private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
+
+  private case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
   private def unhealthy(str: String) =
     HealthCheckResult(
@@ -104,7 +107,7 @@ trait HealthCheck {
       message = str
     )
 
-  private def healthy() =
+  private val healthy =
     HealthCheckResult(
       name = "AppState",
       severity = "non fatal",
@@ -116,7 +119,7 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck {
+class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck with ZIOSupport {
 
   /**
    * Returns the route.
@@ -124,7 +127,8 @@ class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
   override def makeRoute(): Route =
     path("health") {
       get { requestContext =>
-        requestContext.complete(healthCheck())
+        val res: ZIO[Any,Nothing,HttpResponse] = healthCheck.provide(State.layer)
+        requestContext.complete(res)
       }
     }
 }

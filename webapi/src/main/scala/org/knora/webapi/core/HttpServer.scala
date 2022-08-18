@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.http
+package org.knora.webapi.core
 
 import akka.actor.Actor
 import akka.actor.ActorLogging

@@ -6,40 +6,74 @@
 package org.knora.webapi.core
 
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.http.HttpServer
 import zio._
 import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
+import org.knora.webapi.store.iiif.api.IIIFService
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
+import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
+import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
+import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 
 /**
  * The application bootstrapper
  */
-object Boot {
+object Bootstrap {
 
-  val startup: ZIO[Scope with HttpServer with TriplestoreService with AppConfig, Nothing, Nothing] =
+  val bootstrap = ZEnvironment()
+    ZLayer.make[
+      ActorSystem with AppConfig with AppRouter with CacheServiceManager with CacheService with HttpServer with IIIFServiceManager with IIIFService with JWTService with RepositoryUpdater with TriplestoreServiceManager with TriplestoreService
+    ](
+      ActorSystem.layer,
+      AppConfig.live,
+      AppRouter.layer,
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      HttpServer.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer,
+      JWTService.layer,
+      RepositoryUpdater.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer
+    )
+
+  /**
+   * Initiates the startup sequence of the DSP-API server.
+   *
+   * @param requiresRepository  if `true`, check if it is running, run upgrading and loading ontology cache.
+   *                                If `false`, check if it is running but don't run upgrading AND loading ontology cache.
+   * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
+   */
+  def startup(
+    requiresRepository: Boolean,
+    requiresIIIFService: Boolean
+  ) =
     (for {
-      server <- ZIO.service[HttpServer]
-      sys    <- server.actorSystem
-      _      <- server.start
-      _      <- checkTriplestoreService
-      _      <- ZIO.attempt(CacheUtil.createCaches(KnoraSettings(sys).caches)).orDie
-      _      <- printBanner
-      _      <- ZIO.never
+      _ <- ZIO.service[HttpServer].flatMap(server => server.start)
+      _ <- checkTriplestoreService
+      _ <- upgradeRepository(requiresRepository)
+      _ <- buildAllCaches
+      _ <- populateOntologyCaches(requiresRepository)
+      _ <- checkIIIFService(requiresIIIFService)
+      _ <- checkCacheService
+      _ <- printBanner
+      _ <- ZIO.never
     } yield ()).forever
 
   /**
-   * Starts the Knora-API server.
-   *
-   * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
-   * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
-   * @param retryCnt            how many times was this command tried
-   */
-  def start(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = ???
-
-  /**
-   * Checks if the TriplestoreService is running and the repository is properly initialized
+   * Checks if the TriplestoreService is running and the repository is properly initialized.
    */
   private val checkTriplestoreService: ZIO[TriplestoreService with AppConfig, Nothing, Unit] =
     for {
@@ -51,6 +85,66 @@ object Boot {
              case TriplestoreStatus.Unavailable(msg)    => ZIO.die(new Exception(msg))
            }
     } yield ()
+
+  /**
+   * Initiates repository upgrade if `requiresRepository` is `true` an logs the result.
+   */
+  private def upgradeRepository(requiresRepository: Boolean): ZIO[RepositoryUpdater, Nothing, Unit] =
+    if (requiresRepository)
+      ZIO
+        .service[RepositoryUpdater]
+        .flatMap(svc => svc.maybeUpgradeRepository)
+        .flatMap(response => ZIO.logInfo(response.message))
+    else
+      ZIO.unit
+
+  /* Initiates building of all caches */
+  private val buildAllCaches: ZIO[ActorSystem, Nothing, Unit] =
+    ZIO
+      .service[ActorSystem]
+      .map(_.settings)
+      .flatMap(settings => ZIO.attempt(CacheUtil.createCaches(settings.caches)))
+      .orDie
+
+  /* Initiates population of the ontology caches if `requiresRepository` is `true` */
+  private def populateOntologyCaches(requiresRepository: Boolean): ZIO[AppRouter, Nothing, Unit] =
+    if (requiresRepository)
+      ZIO
+        .service[AppRouter]
+        .flatMap(svc => svc.populateOntologyCaches)
+    else
+      ZIO.unit
+
+  /* Checks if the IIIF service is running */
+  private def checkIIIFService(requiresIIIFService: Boolean): ZIO[IIIFService, Nothing, Unit] =
+    if (requiresIIIFService)
+      ZIO
+        .service[IIIFService]
+        .flatMap(svc => svc.getStatus())
+        .flatMap(status =>
+          status match {
+            case IIIFServiceStatusOK =>
+              ZIO.logInfo("IIIF service running")
+            case IIIFServiceStatusNOK =>
+              ZIO.logError("IIIF service not running") *> ZIO.die(new Exception("IIIF service not running"))
+          }
+        )
+    else
+      ZIO.unit
+
+  /* Checks if the Cache service is running */
+  private val checkCacheService =
+    ZIO
+      .service[CacheService]
+      .flatMap(svc => svc.getStatus)
+      .flatMap(status =>
+        status match {
+          case CacheServiceStatusNOK =>
+            ZIO.logError("Cache service not running.") *> ZIO.die(new Exception("Cache service not running."))
+          case CacheServiceStatusOK =>
+            ZIO.logInfo("Cache service running.")
+        }
+      )
 
   /**
    * Prints the welcome message

@@ -265,7 +265,7 @@ case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
   /**
    * Pings the Redis store to see if it is available.
    */
-  def ping(): Task[CacheServiceStatusResponse] = ZIO.attemptBlocking {
+  val getStatus: UIO[CacheServiceStatusResponse] = ZIO.attemptBlocking {
 
     val conn: Jedis = pool.getResource
     try {

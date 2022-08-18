@@ -195,7 +195,7 @@ case class CacheServiceInMemImpl(
   /**
    * Pings the in-memory cache to see if it is available.
    */
-  def ping(): Task[CacheServiceStatusResponse] =
+  val getStatus: UIO[CacheServiceStatusResponse] =
     ZIO.succeed(CacheServiceStatusOK)
 }
 
