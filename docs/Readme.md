@@ -3,7 +3,7 @@
 ## MkDocs Documentation
 
 This folder contains the sources to the DSP-API documentation website published
-under <http://docs-api.dasch.swiss>
+under <https://docs.dasch.swiss/>
 
 The `src` folder contains the following documentation sources:
 
