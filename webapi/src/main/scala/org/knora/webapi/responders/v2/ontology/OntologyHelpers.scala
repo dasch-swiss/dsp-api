@@ -857,37 +857,10 @@ object OntologyHelpers {
           directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
         )
 
-      // Get the cardinalities that the class can inherit. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
+      // Determine the strictest cardinality the class inherits. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
 
       cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
-        classDefWithAddedLinkValueProps.subClassOf.foldLeft(Map[SmartIri, KnoraCardinalityInfo]()) {
-          (acc: Map[SmartIri, KnoraCardinalityInfo], baseClassIri: SmartIri) =>
-            val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
-            val cardinalitiesOfBaseClass: List[(SmartIri, KnoraCardinalityInfo)] = ontology match {
-              case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
-              case _                        => List.empty
-            }
-
-            val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, nextBaseClassCardinality) =>
-              // if there are multiple instances of the same property the class gets through inheritance, keep only the strictest one
-              acc.get(iri) match {
-                // if the previous base class cardinality is stricter than the next base class cardinality, keep the previous
-                case Some(previousCardinality)
-                    if previousCardinality.cardinality.isStricterThan(nextBaseClassCardinality.cardinality) =>
-                  (iri, previousCardinality)
-                // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the accumulator with cardinality of "1", because only this is stricter than both
-                case Some(previousCardinality)
-                    if (
-                      (nextBaseClassCardinality.cardinality == MustHaveSome || nextBaseClassCardinality.cardinality == MayHaveOne) &&
-                        (previousCardinality.cardinality == MustHaveSome || previousCardinality.cardinality == MayHaveOne)
-                    ) =>
-                  (iri, KnoraCardinalityInfo(MustHaveOne, previousCardinality.guiOrder))
-                // in all other cases, keep the next base class cardinality
-                case _ => (iri, nextBaseClassCardinality)
-              }
-            }.toMap
-            acc ++ additionalCardinalities
-        }
+        getStrictestCardinalitiesFromClasses(classDefWithAddedLinkValueProps.subClassOf, cacheData)
 
       // Check that the cardinalities directly defined on the class are compatible with any inheritable
       // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
@@ -975,6 +948,47 @@ object OntologyHelpers {
            )
     } yield (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
   }
+
+  /**
+   * Given a set of class IRIs, determines the strictest cardinality for each referenced property. This method is used to check if an
+   * inherited property of a class uses a cardinality that is compatible with the cardinalities of the class' super class.
+   *
+   * @param classes           the set of class IRIs.
+   * @param cacheData         the ontology cache data. It is needed to get the class definitions from the cache
+   * @return                  a map with the property IRIs and their respective cardinality definitions
+   */
+  def getStrictestCardinalitiesFromClasses(
+    classes: Set[SmartIri],
+    cacheData: OntologyCacheData
+  ): Map[SmartIri, KnoraCardinalityInfo] =
+    classes.foldLeft(Map[SmartIri, KnoraCardinalityInfo]()) {
+      (acc: Map[SmartIri, KnoraCardinalityInfo], baseClassIri: SmartIri) =>
+        val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
+        val cardinalitiesOfBaseClass: List[(SmartIri, KnoraCardinalityInfo)] = ontology match {
+          case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
+          case _                        => List.empty
+        }
+
+        val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, nextBaseClassCardinality) =>
+          // if there are multiple instances of the same property the class gets through inheritance, keep only the strictest one
+          acc.get(iri) match {
+            // if the previous base class cardinality is stricter than the next base class cardinality, keep the previous
+            case Some(previousCardinality)
+                if previousCardinality.cardinality.isStricterThan(nextBaseClassCardinality.cardinality) =>
+              (iri, previousCardinality)
+            // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the accumulator with cardinality of "1", because only this is stricter than both
+            case Some(previousCardinality)
+                if (
+                  (nextBaseClassCardinality.cardinality == MustHaveSome || nextBaseClassCardinality.cardinality == MayHaveOne) &&
+                    (previousCardinality.cardinality == MustHaveSome || previousCardinality.cardinality == MayHaveOne)
+                ) =>
+              (iri, KnoraCardinalityInfo(MustHaveOne, previousCardinality.guiOrder))
+            // in all other cases, keep the next base class cardinality
+            case _ => (iri, nextBaseClassCardinality)
+          }
+        }.toMap
+        acc ++ additionalCardinalities
+    }
 
   /**
    * Given a set of property IRIs, determines whether the set contains a property P and a subproperty of P.
