@@ -231,16 +231,6 @@ lazy val webapiJavaTestOptions = Seq(
 // DSP's new codebase
 //////////////////////////////////////
 
-// Value Objects project
-
-lazy val valueObjects = project
-  .in(file("dsp-value-objects"))
-  .settings(
-    name := "valueObjects",
-    libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-
 // Role projects
 
 lazy val roleInterface = project
