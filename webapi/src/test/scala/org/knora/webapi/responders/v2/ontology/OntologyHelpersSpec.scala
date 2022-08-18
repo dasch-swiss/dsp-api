@@ -50,12 +50,12 @@ class OntologyHelpersSpec extends CoreSpec {
 
   "The ontology helper" should {
 
-    "check which is the least strict cardinalities allowed for a subclass that is inherited from its superclasses" in {
+    "determine the least strict cardinality allowed for a property from a list of classes" in {
 
       val cacheDataFuture: Future[OntologyCacheData] = Cache.getCacheData
       val cacheData: OntologyCacheData               = Await.result(cacheDataFuture, 2.seconds)
 
-      // define the super classes
+      // define the classes
       val mayHaveMany  = freetestOntologyIri.makeEntityIri("PubMayHaveMany").toOntologySchema(InternalSchema)  // 0-n
       val mustHaveSome = freetestOntologyIri.makeEntityIri("PubMustHaveSome").toOntologySchema(InternalSchema) // 1-n
       val mayHaveOne   = freetestOntologyIri.makeEntityIri("PubMayHaveOne").toOntologySchema(InternalSchema)   // 0-1
