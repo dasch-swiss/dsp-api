@@ -950,8 +950,10 @@ object OntologyHelpers {
   }
 
   /**
-   * Given a set of class IRIs, determines the strictest cardinality for each referenced property. This method is used to check if an
-   * inherited property of a class uses a cardinality that is compatible with the cardinalities of the class' super class.
+   * Given a set of class IRIs, determines the strictest cardinality for each referenced property. It is possible that the strictest
+   * cardinality is stricter than all the used ones.
+   * This method is used to check if an inherited property of a class uses a cardinality that is compatible with the cardinalities
+   * of the class' super class.
    *
    * @param classes           the set of class IRIs.
    * @param cacheData         the ontology cache data. It is needed to get the class definitions from the cache
@@ -970,13 +972,14 @@ object OntologyHelpers {
         }
 
         val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, nextBaseClassCardinality) =>
-          // if there are multiple instances of the same property the class gets through inheritance, keep only the strictest one
+          // if there are multiple instances of the same property the class gets from inheritance, keep only the strictest one
           acc.get(iri) match {
             // if the previous base class cardinality is stricter than the next base class cardinality, keep the previous
             case Some(previousCardinality)
                 if previousCardinality.cardinality.isStricterThan(nextBaseClassCardinality.cardinality) =>
               (iri, previousCardinality)
-            // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the accumulator with cardinality of "1", because only this is stricter than both
+            // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the
+            // accumulator with cardinality of "1", because only this is stricter than both
             case Some(previousCardinality)
                 if (
                   (nextBaseClassCardinality.cardinality == MustHaveSome || nextBaseClassCardinality.cardinality == MayHaveOne) &&

@@ -104,27 +104,14 @@
     rdfs:subPropertyOf                knora-base:hasValue ;
     rdfs:label                        "Publikationsdatum"@de,
                                       "Publication date"@en ;
-    knora-base:subjectClassConstraint :Publication ;
     knora-base:objectClassConstraint  knora-base:TextValue ;
     salsah-gui:guiElement             salsah-gui:SimpleText ;
     salsah-gui:guiAttribute           "size=80",
                                       "maxlength=255" .
 
-
-:Publication
-    rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:Resource,
-                            [ rdf:type            owl:Restriction ;
-                              owl:onProperty      :hasPublicationDate ;
-                              owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
-                              salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger ];
-    rdfs:label              "Publikation"@de,
-                            "Publication"@en ;
-    rdfs:comment            """A comment"""@de .
-
 :PubMayHaveMany
     rdf:type        owl:Class ;
-    rdfs:subClassOf :Publication,
+    rdfs:subClassOf knora-base:Resource,
                         [ rdf:type            owl:Restriction ;
                           owl:onProperty      :hasPublicationDate ;
                           owl:minCardinality  "0"^^xsd:nonNegativeInteger ;
@@ -134,7 +121,7 @@
 
 :PubMayHaveOne
     rdf:type        owl:Class ;
-    rdfs:subClassOf :Publication,
+    rdfs:subClassOf knora-base:Resource,
                         [ rdf:type            owl:Restriction ;
                           owl:onProperty      :hasPublicationDate ;
                           owl:maxCardinality  "1"^^xsd:nonNegativeInteger ;
@@ -144,7 +131,7 @@
 
 :PubMustHaveSome
     rdf:type        owl:Class ;
-    rdfs:subClassOf :Publication,
+    rdfs:subClassOf knora-base:Resource,
                         [ rdf:type            owl:Restriction ;
                           owl:onProperty      :hasPublicationDate ;
                           owl:minCardinality  "1"^^xsd:nonNegativeInteger ;
@@ -154,7 +141,7 @@
 
 :PubMustHaveOne
     rdf:type        owl:Class ;
-    rdfs:subClassOf :Publication ,
+    rdfs:subClassOf knora-base:Resource,
                         [ rdf:type            owl:Restriction ;
                           owl:onProperty      :hasPublicationDate ;
                           owl:cardinality  "1"^^xsd:nonNegativeInteger ;
