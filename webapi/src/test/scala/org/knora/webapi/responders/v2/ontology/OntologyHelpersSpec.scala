@@ -6,31 +6,18 @@
 package org.knora.webapi.responders.v2.ontology
 
 import dsp.schema.domain._
-import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.responders.v2.ontology.Cache._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-import java.util.UUID
-import scala.concurrent.duration._
-import scala.concurrent.Future
 import scala.concurrent.Await
-import org.knora.webapi.InternalSchema
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.OntologyHelpers]].
