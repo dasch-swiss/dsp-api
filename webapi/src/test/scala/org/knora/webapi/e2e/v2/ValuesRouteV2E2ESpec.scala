@@ -37,8 +37,6 @@ import org.knora.webapi.util._
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
-  
-
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val anythingUserEmail = SharedTestDataADM.anythingUser1.email

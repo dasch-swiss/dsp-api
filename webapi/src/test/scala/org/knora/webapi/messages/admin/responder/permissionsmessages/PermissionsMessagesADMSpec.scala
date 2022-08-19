@@ -867,9 +867,9 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                 = IMAGES_PROJECT_IRI
-      val allowedResourceClassIri01  = s"$IMAGES_ONTOLOGY_IRI#bild"
-      val allowedResourceClassIri02  = s"$IMAGES_ONTOLOGY_IRI#bildformat"
+      val projectIri                = IMAGES_PROJECT_IRI
+      val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
+      val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
 
       val result1 = SharedTestDataADM.imagesReviewerUser.permissions
         .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)

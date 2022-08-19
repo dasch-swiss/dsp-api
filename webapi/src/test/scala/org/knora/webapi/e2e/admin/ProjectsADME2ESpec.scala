@@ -53,8 +53,6 @@ class ProjectsADME2ESpec
     with ProjectsADMJsonProtocol
     with TriplestoreJsonProtocol {
 
-  
-
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass
   private val projectIri       = SharedTestDataADM.imagesProject.id

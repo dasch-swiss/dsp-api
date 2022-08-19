@@ -47,7 +47,6 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
     "test"
   )
 
-
   private val multiUserIri    = SharedTestDataV1.multiuserUser.userData.user_id.get
   private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 

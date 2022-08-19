@@ -99,9 +99,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     duration: zio.Duration = 666.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
-        akka.http.scaladsl.Http().singleRequest(request)
-      )
+      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ => akka.http.scaladsl.Http().singleRequest(request))
       .timeout(duration)
       .some
       .mapError(error =>

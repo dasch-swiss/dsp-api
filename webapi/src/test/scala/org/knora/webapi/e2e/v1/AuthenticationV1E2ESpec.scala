@@ -39,8 +39,6 @@ class AuthenticationV1E2ESpec
     with SessionJsonProtocol
     with TriplestoreJsonProtocol {
 
-  
-
   private val rootIri      = SharedTestDataV1.rootUser.userData.user_id.get
   private val rootIriEnc   = java.net.URLEncoder.encode(rootIri, "utf-8")
   private val rootEmail    = SharedTestDataV1.rootUser.userData.email.get

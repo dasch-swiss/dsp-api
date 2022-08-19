@@ -14,8 +14,6 @@ import dsp.errors.ValidationException
  * This spec is used to test the [[dsp.valueobjects.LangString]] value objects creation.
  */
 object LangStringSpec extends ZIOSpecDefault {
-  
-  
 
   def spec = (langStringTest)
 

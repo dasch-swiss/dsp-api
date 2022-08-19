@@ -39,8 +39,6 @@ class AuthenticationV2E2ESpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 
-  
-
   private val rootIri              = SharedTestDataADM.rootUser.id
   private val rootIriEnc           = java.net.URLEncoder.encode(rootIri, "utf-8")
   private val rootUsername         = SharedTestDataADM.rootUser.username

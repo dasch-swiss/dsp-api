@@ -32,7 +32,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 class AddCardinalitiesToClassSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  
+
   private val freeTestOntology = RdfDataObject(
     path = "test_data/ontologies/freetest-onto.ttl",
     name = "http://www.knora.org/ontology/0001/freetest"

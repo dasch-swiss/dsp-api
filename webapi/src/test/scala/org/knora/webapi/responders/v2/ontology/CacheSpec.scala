@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-
 import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.Future

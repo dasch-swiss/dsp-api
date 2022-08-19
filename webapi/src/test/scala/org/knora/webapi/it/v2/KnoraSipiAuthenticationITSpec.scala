@@ -37,8 +37,8 @@ class KnoraSipiAuthenticationITSpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 
-  private val anythingUserEmail   = SharedTestDataADM.anythingAdminUser.email
-  private val password            = SharedTestDataADM.testPass
+  private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
+  private val password          = SharedTestDataADM.testPass
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
@@ -92,7 +92,6 @@ class KnoraSipiAuthenticationITSpec
     }
 
     "accept a token in Sipi that has been signed by Knora" in {
-      
 
       // The image to be uploaded.
       assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")

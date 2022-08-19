@@ -2066,7 +2066,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   // Helper Methods //
   ////////////////////
 
-
   /**
    * Helper method for checking if a list node identified by IRI exists and is a root node.
    *

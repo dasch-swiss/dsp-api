@@ -38,8 +38,6 @@ object FilesADME2ESpec {
  */
 class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
-  
-
   private val anythingAdminEmail    = SharedTestDataV1.anythingAdminUser.userData.email.get
   private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")
   private val normalUserEmail       = SharedTestDataV1.normalUser.userData.email.get

@@ -111,7 +111,7 @@ final case class UserRepoMock(
   /**
    * @inheritDoc
    */
-  def deleteUser(id: UserId): IO[Option[Nothing], UserId] = {
+  def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
     // val userStatusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
 
     (for {
@@ -121,7 +121,6 @@ final case class UserRepoMock(
       _ <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
       _ <- lookupTableEmailToUuid.delete(user.email)       // remove the user also from the lookup table
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted user: ${id}"))
-  }
 
 }
 

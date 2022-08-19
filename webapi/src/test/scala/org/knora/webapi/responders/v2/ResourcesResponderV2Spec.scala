@@ -555,8 +555,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
   }
 
-  
-
   // The default timeout for receiving reply messages from actors.
   private val timeout = 30.seconds
 

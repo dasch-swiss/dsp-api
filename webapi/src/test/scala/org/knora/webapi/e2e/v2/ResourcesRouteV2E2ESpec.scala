@@ -2111,7 +2111,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
       val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
       DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
-      val auth                         = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
+      val auth = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it
       val createResourceClass =
@@ -2302,7 +2302,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
       val createSequenceRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
-      val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
+      val createSequenceResponse = singleAwaitingRequest(createSequenceRequest)
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
@@ -2371,7 +2371,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
       val createSequenceRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
-      val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
+      val createSequenceResponse = singleAwaitingRequest(createSequenceRequest)
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")

@@ -37,9 +37,9 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
       val model: RdfModel = trigFileToModel("../test_data/upgrade/pr2081.trig")
 
       // Store previous values
-      val resource1CreationDate         = getDateValue(model, resource1, creationDate)
-      val resource2CreationDate         = getDateValue(model, resource2, creationDate)
-      val resource3CreationDate         = getDateValue(model, resource3, creationDate) // only this one should stay the same
+      val resource1CreationDate = getDateValue(model, resource1, creationDate)
+      val resource2CreationDate = getDateValue(model, resource2, creationDate)
+      val resource3CreationDate = getDateValue(model, resource3, creationDate) // only this one should stay the same
 
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR2081(log)
