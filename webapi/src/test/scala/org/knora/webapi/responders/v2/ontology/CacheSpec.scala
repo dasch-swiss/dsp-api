@@ -50,9 +50,11 @@ class CacheSpec extends CoreSpec {
     )
   )
 
-  "The basic functionality of the ontology cache" should {
+  val CACHE_NOT_AVAILABLE_ERROR = "Cache not available"
 
-    "successfully get the ontology cache" in {
+  "The cache" should {
+
+    "successfully load the cache cata" in {
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
         cacheData: Cache.OntologyCacheData <- Cache.getCacheData
       } yield cacheData.ontologies
@@ -61,176 +63,73 @@ class CacheSpec extends CoreSpec {
         res.size should equal(13)
       }
     }
-  }
 
-  "Updating the ontology cache," when {
+    "when a property was removed from an ontology, remove it from the cache as well." in {
+      val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+      val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
 
-    val CACHE_NOT_AVAILABLE_ERROR = "Cache not available"
+      val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData
+      val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
 
-    "removing a property from an ontology," should {
+      val previousBooksMaybe = previousCacheData.ontologies.get(iri)
 
-      "remove the property from the cache." in {
-        val iri: SmartIri       = stringFormatter.toSmartIri(rdfDataObjects.head.name)
-        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasTitle")
+      previousBooksMaybe match {
+        case Some(previousBooks) =>
+          // copy books-onto but remove :hasTitle property
+          val newBooks = previousBooks.copy(
+            ontologyMetadata = previousBooks.ontologyMetadata.copy(
+              lastModificationDate = Some(Instant.now())
+            ),
+            properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap
+          )
 
-        val previousCacheDataFuture: Future[Cache.OntologyCacheData] = Cache.getCacheData
-        val previousCacheData: Cache.OntologyCacheData               = Await.result(previousCacheDataFuture, 2 seconds)
+          // store new ontology to cache
+          val newCacheData = previousCacheData.copy(
+            ontologies = previousCacheData.ontologies + (iri -> newBooks)
+          )
+          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
+          Await.ready(updatedCacheFuture, 1.second)
 
-        val previousBooksMaybe = previousCacheData.ontologies.get(iri)
+          // read back the cache
+          val newCachedCacheDataFuture = for {
+            cacheData <- Cache.getCacheData
+          } yield cacheData
+          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
-        previousBooksMaybe match {
-          case Some(previousBooks) =>
-            // copy books-onto but remove :hasTitle property
-            val newBooks = previousBooks.copy(
-              ontologyMetadata = previousBooks.ontologyMetadata.copy(
-                lastModificationDate = Some(Instant.now())
-              ),
-              properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap
-            )
+          // ensure that the cache updated correctly
+          val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
+          newCachedBooksMaybe match {
+            case Some(newCachedBooks) =>
+              // check length
+              assert(newCachedBooks.properties.size != previousBooks.properties.size)
+              assert(newCachedBooks.properties.size == newBooks.properties.size)
 
-            // store new ontology to cache
-            val newCacheData = previousCacheData.copy(
-              ontologies = previousCacheData.ontologies + (iri -> newBooks)
-            )
-            val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
-            Await.ready(updatedCacheFuture, 1.second)
+              // check actual property
+              previousBooks.properties should contain key hasTitlePropertyIri
+              newCachedBooks.properties should not contain key(hasTitlePropertyIri)
 
-            // read back the cache
-            val newCachedCacheDataFuture = for {
-              cacheData <- Cache.getCacheData
-            } yield cacheData
-            val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+            case None => fail("no books found in cache after update")
+          }
 
-            // ensure that the cache updated correctly
-            val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
-            newCachedBooksMaybe match {
-              case Some(newCachedBooks) =>
-                // check length
-                assert(newCachedBooks.properties.size != previousBooks.properties.size)
-                assert(newCachedBooks.properties.size == newBooks.properties.size)
-
-                // check actual property
-                previousBooks.properties should contain key hasTitlePropertyIri
-                newCachedBooks.properties should not contain key(hasTitlePropertyIri)
-
-              case None => fail("no books found in cache after update")
-            }
-
-          case None => fail("no books found in cache before update")
-        }
+        case None => fail("no books found in cache before update")
       }
     }
 
-    "adding a property to an ontology," should {
+    "when a property was added to an ontology, add a value property to the cache." in {
 
-      "add a value property to the cache." in {
+      val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
+      val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
 
-        val iri: SmartIri             = stringFormatter.toSmartIri(rdfDataObjects.head.name)
-        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${rdfDataObjects.head.name}#hasDescription")
+      val previousCacheDataFuture = Cache.getCacheData
+      val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
-        val previousCacheDataFuture = Cache.getCacheData
-        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
-
-        val previousBooksMaybe = previousCacheData.ontologies.get(iri)
-        previousBooksMaybe match {
-          case Some(previousBooks) =>
-            // copy books-onto but add :hasDescription property
-            val descriptionProp = ReadPropertyInfoV2(
-              entityInfoContent = PropertyInfoContentV2(
-                propertyIri = hasDescriptionPropertyIri,
-                predicates = Map(
-                  stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
-                    Seq(
-                      StringLiteralV2("A Description", language = Some("en")),
-                      StringLiteralV2("Eine Beschreibung", language = Some("de"))
-                    )
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
-                    Seq(SmartIriLiteralV2(iri))
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue)))
-                  ),
-                  stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.SimpleText)))
-                  ),
-                  stringFormatter.toSmartIri(SalsahGui.GuiAttribute) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiAttribute),
-                    Seq(
-                      StringLiteralV2("size=80"),
-                      StringLiteralV2("maxlength=255")
-                    )
-                  )
-                ),
-                subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasValue)),
-                ontologySchema = InternalSchema
-              ),
-              isResourceProp = true,
-              isEditable = true
-            )
-            val newProps = previousBooks.properties + (hasDescriptionPropertyIri -> descriptionProp)
-            val newBooks = previousBooks.copy(
-              ontologyMetadata = previousBooks.ontologyMetadata.copy(
-                lastModificationDate = Some(Instant.now())
-              ),
-              properties = newProps
-            )
-
-            // store new ontology to cache
-            val newCacheData = previousCacheData.copy(
-              ontologies = previousCacheData.ontologies + (iri -> newBooks)
-            )
-            val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
-            Await.ready(updatedCacheFuture, 1.second)
-
-            // read back the cache
-            val newCachedCacheDataFuture = for {
-              cacheData <- Cache.getCacheData
-            } yield cacheData
-            val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
-
-            // ensure that the cache updated correctly
-            val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
-            newCachedBooksMaybe match {
-              case Some(newCachedBooks) =>
-                // check length
-                assert(newCachedBooks.properties.size != previousBooks.properties.size)
-                assert(newCachedBooks.properties.size == newBooks.properties.size)
-
-                // check actual property
-                previousBooks.properties should not contain key(hasDescriptionPropertyIri)
-                newCachedBooks.properties should contain key hasDescriptionPropertyIri
-
-              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
-            }
-
-          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
-        }
-      }
-
-      "add a link property and a link value property to the cache." in {
-
-        val ontologyIri        = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books")
-        val hasPagePropertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPage")
-        val pagePropertyIri    = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#Page")
-        val hasPageValuePropertyIri =
-          stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
-        val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
-
-        val previousCacheData = Await.result(Cache.getCacheData, 2 seconds)
-        previousCacheData.ontologies.get(ontologyIri) match {
-          case Some(previousBooks) =>
-            // copy books-ontology but add link from book to page
-            val linkPropertyInfoContent = PropertyInfoContentV2(
-              propertyIri = hasPagePropertyIri,
+      val previousBooksMaybe = previousCacheData.ontologies.get(iri)
+      previousBooksMaybe match {
+        case Some(previousBooks) =>
+          // copy books-onto but add :hasDescription property
+          val descriptionProp = ReadPropertyInfoV2(
+            entityInfoContent = PropertyInfoContentV2(
+              propertyIri = hasDescriptionPropertyIri,
               predicates = Map(
                 stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
@@ -239,90 +138,184 @@ class CacheSpec extends CoreSpec {
                 stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
                   Seq(
-                    StringLiteralV2("Seite im Buch", language = Some("de")),
-                    StringLiteralV2("Page in the book", language = Some("en"))
+                    StringLiteralV2("A Description", language = Some("en")),
+                    StringLiteralV2("Eine Beschreibung", language = Some("de"))
                   )
                 ),
                 stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
-                  Seq(SmartIriLiteralV2(bookIri))
+                  Seq(SmartIriLiteralV2(iri))
                 ),
                 stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                  Seq(SmartIriLiteralV2(pagePropertyIri))
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue)))
                 ),
                 stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
                   predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
-                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.Searchbox)))
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.SimpleText)))
+                ),
+                stringFormatter.toSmartIri(SalsahGui.GuiAttribute) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiAttribute),
+                  Seq(
+                    StringLiteralV2("size=80"),
+                    StringLiteralV2("maxlength=255")
+                  )
                 )
               ),
-              subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkTo)),
+              subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasValue)),
               ontologySchema = InternalSchema
-            )
-            val hasPageProperties = ReadPropertyInfoV2(
-              entityInfoContent = linkPropertyInfoContent,
-              isResourceProp = true,
-              isEditable = true,
-              isLinkProp = true
-            )
-            val hasPageValueProperties = ReadPropertyInfoV2(
-              entityInfoContent = OntologyHelpers.linkPropertyDefToLinkValuePropertyDef(linkPropertyInfoContent),
-              isResourceProp = true,
-              isEditable = true,
-              isLinkValueProp = true
-            )
-            val newProps = previousBooks.properties +
-              (hasPagePropertyIri      -> hasPageProperties) +
-              (hasPageValuePropertyIri -> hasPageValueProperties)
-            val newBooks = previousBooks.copy(
-              ontologyMetadata = previousBooks.ontologyMetadata.copy(
-                lastModificationDate = Some(Instant.now())
-              ),
-              properties = newProps
-            )
+            ),
+            isResourceProp = true,
+            isEditable = true
+          )
+          val newProps = previousBooks.properties + (hasDescriptionPropertyIri -> descriptionProp)
+          val newBooks = previousBooks.copy(
+            ontologyMetadata = previousBooks.ontologyMetadata.copy(
+              lastModificationDate = Some(Instant.now())
+            ),
+            properties = newProps
+          )
 
-            // store new ontology to cache
-            val newCacheData = previousCacheData.copy(
-              ontologies = previousCacheData.ontologies + (ontologyIri -> newBooks)
-            )
-            val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
-            Await.ready(updatedCacheFuture, 1.second)
+          // store new ontology to cache
+          val newCacheData = previousCacheData.copy(
+            ontologies = previousCacheData.ontologies + (iri -> newBooks)
+          )
+          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
+          Await.ready(updatedCacheFuture, 1.second)
 
-            // read back the cache
-            val newCachedCacheData = Await.result(Cache.getCacheData, 2 seconds)
+          // read back the cache
+          val newCachedCacheDataFuture = for {
+            cacheData <- Cache.getCacheData
+          } yield cacheData
+          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
-            // ensure that the cache updated correctly
-            newCachedCacheData.ontologies.get(ontologyIri) match {
-              case Some(newCachedBooks) =>
-                // check length
-                assert(newCachedBooks.properties.size != previousBooks.properties.size)
-                assert(newCachedBooks.properties.size == newBooks.properties.size)
+          // ensure that the cache updated correctly
+          val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
+          newCachedBooksMaybe match {
+            case Some(newCachedBooks) =>
+              // check length
+              assert(newCachedBooks.properties.size != previousBooks.properties.size)
+              assert(newCachedBooks.properties.size == newBooks.properties.size)
 
-                // check actual property
-                previousBooks.properties should not contain key(hasPagePropertyIri)
-                previousBooks.properties should not contain key(hasPageValuePropertyIri)
-                newCachedBooks.properties should contain key (hasPagePropertyIri)
-                newCachedBooks.properties should contain key (hasPageValuePropertyIri)
+              // check actual property
+              previousBooks.properties should not contain key(hasDescriptionPropertyIri)
+              newCachedBooks.properties should contain key hasDescriptionPropertyIri
 
-                // check isEditable == true
-                val newHasPageValuePropertyMaybe = newCachedBooks.properties.get(hasPageValuePropertyIri)
-                newHasPageValuePropertyMaybe should not equal (None)
-                newHasPageValuePropertyMaybe match {
-                  case Some(newHasPageValueProperty) =>
-                    assert(newHasPageValueProperty.isEditable)
-                    assert(newHasPageValueProperty.isLinkValueProp)
+            case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+          }
 
-                  case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
-                }
-
-                newCachedBooks should equal(newBooks)
-
-              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
-            }
-
-          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
-        }
+        case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
       }
     }
+
+    "when a property was added to an ontology, add a link property and a link value property to the cache." in {
+
+      val ontologyIri        = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books")
+      val hasPagePropertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPage")
+      val pagePropertyIri    = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#Page")
+      val hasPageValuePropertyIri =
+        stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
+      val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
+
+      val previousCacheData = Await.result(Cache.getCacheData, 2 seconds)
+      previousCacheData.ontologies.get(ontologyIri) match {
+        case Some(previousBooks) =>
+          // copy books-ontology but add link from book to page
+          val linkPropertyInfoContent = PropertyInfoContentV2(
+            propertyIri = hasPagePropertyIri,
+            predicates = Map(
+              stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
+                predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
+                Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
+              ),
+              stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
+                predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
+                Seq(
+                  StringLiteralV2("Seite im Buch", language = Some("de")),
+                  StringLiteralV2("Page in the book", language = Some("en"))
+                )
+              ),
+              stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
+                predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
+                Seq(SmartIriLiteralV2(bookIri))
+              ),
+              stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
+                predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
+                Seq(SmartIriLiteralV2(pagePropertyIri))
+              ),
+              stringFormatter.toSmartIri(SalsahGui.GuiElementClass) -> PredicateInfoV2(
+                predicateIri = stringFormatter.toSmartIri(SalsahGui.GuiElementClass),
+                Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(SalsahGui.Searchbox)))
+              )
+            ),
+            subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkTo)),
+            ontologySchema = InternalSchema
+          )
+          val hasPageProperties = ReadPropertyInfoV2(
+            entityInfoContent = linkPropertyInfoContent,
+            isResourceProp = true,
+            isEditable = true,
+            isLinkProp = true
+          )
+          val hasPageValueProperties = ReadPropertyInfoV2(
+            entityInfoContent = OntologyHelpers.linkPropertyDefToLinkValuePropertyDef(linkPropertyInfoContent),
+            isResourceProp = true,
+            isEditable = true,
+            isLinkValueProp = true
+          )
+          val newProps = previousBooks.properties +
+            (hasPagePropertyIri      -> hasPageProperties) +
+            (hasPageValuePropertyIri -> hasPageValueProperties)
+          val newBooks = previousBooks.copy(
+            ontologyMetadata = previousBooks.ontologyMetadata.copy(
+              lastModificationDate = Some(Instant.now())
+            ),
+            properties = newProps
+          )
+
+          // store new ontology to cache
+          val newCacheData = previousCacheData.copy(
+            ontologies = previousCacheData.ontologies + (ontologyIri -> newBooks)
+          )
+          val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)
+          Await.ready(updatedCacheFuture, 1.second)
+
+          // read back the cache
+          val newCachedCacheData = Await.result(Cache.getCacheData, 2 seconds)
+
+          // ensure that the cache updated correctly
+          newCachedCacheData.ontologies.get(ontologyIri) match {
+            case Some(newCachedBooks) =>
+              // check length
+              assert(newCachedBooks.properties.size != previousBooks.properties.size)
+              assert(newCachedBooks.properties.size == newBooks.properties.size)
+
+              // check actual property
+              previousBooks.properties should not contain key(hasPagePropertyIri)
+              previousBooks.properties should not contain key(hasPageValuePropertyIri)
+              newCachedBooks.properties should contain key (hasPagePropertyIri)
+              newCachedBooks.properties should contain key (hasPageValuePropertyIri)
+
+              // check isEditable == true
+              val newHasPageValuePropertyMaybe = newCachedBooks.properties.get(hasPageValuePropertyIri)
+              newHasPageValuePropertyMaybe should not equal (None)
+              newHasPageValuePropertyMaybe match {
+                case Some(newHasPageValueProperty) =>
+                  assert(newHasPageValueProperty.isEditable)
+                  assert(newHasPageValueProperty.isLinkValueProp)
+
+                case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+              }
+
+              newCachedBooks should equal(newBooks)
+
+            case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+          }
+
+        case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
+      }
+    }
+
   }
+
 }
