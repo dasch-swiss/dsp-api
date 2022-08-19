@@ -37,7 +37,7 @@ class OntologyHelpersSpec extends CoreSpec {
 
   "The ontology helper" should {
 
-    "determine the least strict cardinality allowed for a property from a list of classes" in {
+    "determine the least strict cardinality allowed for a (inherited) property from a list of classes" in {
 
       val cacheDataFuture: Future[OntologyCacheData] = Cache.getCacheData
       val cacheData: OntologyCacheData               = Await.result(cacheDataFuture, 2.seconds)
@@ -50,23 +50,23 @@ class OntologyHelpersSpec extends CoreSpec {
 
       val hasPublicationDateProperty = freetestOntologyIri.makeEntityIri("hasPublicationDate")
 
-      // define all test cases and the expected results (as comment)
+      // define all test cases and the expected results (see comments)
       val testCases: List[Set[SmartIri]] = List(
-        Set(mayHaveMany),                                       // 0-n               => 0-n
-        Set(mustHaveSome),                                      // 1-n               => 1-n
-        Set(mayHaveOne),                                        // 0-1               => 0-1
-        Set(mustHaveOne),                                       // 1                 => 1
-        Set(mayHaveMany, mustHaveSome),                         // 0-n, 1-n          => 1-n
-        Set(mayHaveMany, mayHaveOne),                           // 0-n, 0-1          => 0-1
-        Set(mayHaveMany, mustHaveOne),                          // 0-n, 1            => 1
-        Set(mustHaveSome, mayHaveOne),                          // 1-n, 0-1          => 1
-        Set(mustHaveSome, mustHaveOne),                         // 1-n, 1            => 1
-        Set(mayHaveOne, mustHaveOne),                           // 0-1, 1            => 1
-        Set(mayHaveMany, mustHaveSome, mayHaveOne),             // 0-n, 1-n, 0-1     => 1
-        Set(mayHaveMany, mustHaveSome, mustHaveOne),            // 0-n, 1-n, 1       => 1
-        Set(mayHaveMany, mayHaveOne, mustHaveOne),              // 0-n, 0-1, 1       => 1
-        Set(mustHaveSome, mayHaveOne, mustHaveOne),             // 1-n, 0-1, 1       => 1
-        Set(mayHaveMany, mustHaveSome, mayHaveOne, mustHaveOne) // 0-n, 1-n, 0-1, 1  => 1
+        Set(mayHaveMany),                                       // given: 0-n               => expected result: 0-n
+        Set(mustHaveSome),                                      // given: 1-n               => expected result: 1-n
+        Set(mayHaveOne),                                        // given: 0-1               => expected result: 0-1
+        Set(mustHaveOne),                                       // given: 1                 => expected result: 1
+        Set(mayHaveMany, mustHaveSome),                         // given: 0-n, 1-n          => expected result: 1-n
+        Set(mayHaveMany, mayHaveOne),                           // given: 0-n, 0-1          => expected result: 0-1
+        Set(mayHaveMany, mustHaveOne),                          // given: 0-n, 1            => expected result: 1
+        Set(mustHaveSome, mayHaveOne),                          // given: 1-n, 0-1          => expected result: 1
+        Set(mustHaveSome, mustHaveOne),                         // given: 1-n, 1            => expected result: 1
+        Set(mayHaveOne, mustHaveOne),                           // given: 0-1, 1            => expected result: 1
+        Set(mayHaveMany, mustHaveSome, mayHaveOne),             // given: 0-n, 1-n, 0-1     => expected result: 1
+        Set(mayHaveMany, mustHaveSome, mustHaveOne),            // given: 0-n, 1-n, 1       => expected result: 1
+        Set(mayHaveMany, mayHaveOne, mustHaveOne),              // given: 0-n, 0-1, 1       => expected result: 1
+        Set(mustHaveSome, mayHaveOne, mustHaveOne),             // given: 1-n, 0-1, 1       => expected result: 1
+        Set(mayHaveMany, mustHaveSome, mayHaveOne, mustHaveOne) // given: 0-n, 1-n, 0-1, 1  => expected result: 1
       )
 
       // Expected results: 0-n, 1-n, 0-1, 1, 1-n, 0-1, 1, 1, 1, 1, 1, 1, 1, 1, 1

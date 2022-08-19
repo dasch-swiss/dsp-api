@@ -511,7 +511,7 @@ object CardinalityHandler {
    * @param internalOntologyIri the ontology containing the class.
    * @return `true` if the cardinality is defined on the class, `false` otherwise
    */
-  def isCardinalityDefinedOnClass(
+  private def isCardinalityDefinedOnClass(
     cacheData: Cache.OntologyCacheData,
     propertyIri: SmartIri,
     cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
@@ -530,7 +530,7 @@ object CardinalityHandler {
 
     // if cardinality is inherited, it's not directly defined on that class
     if (readClassInfo.inheritedCardinalities.keySet.contains(propertyIri)) {
-      return FastFuture.successful(false)
+      FastFuture.successful(false)
     }
 
     val currentClassState: ClassInfoContentV2 = readClassInfo.entityInfoContent
