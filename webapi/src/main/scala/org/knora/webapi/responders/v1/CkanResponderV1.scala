@@ -35,7 +35,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import akka.http.scaladsl.util.FastFuture
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published

@@ -6,7 +6,6 @@
 package org.knora.webapi.responders.v2.ontology
 
 import java.util.UUID
-import scala.concurrent.duration._
 
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec

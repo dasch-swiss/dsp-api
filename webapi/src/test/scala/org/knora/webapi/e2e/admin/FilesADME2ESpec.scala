@@ -5,10 +5,8 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Cookie
-import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
