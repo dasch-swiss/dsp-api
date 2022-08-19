@@ -530,7 +530,7 @@ object CardinalityHandler {
 
     // if cardinality is inherited, it's not directly defined on that class
     if (readClassInfo.inheritedCardinalities.keySet.contains(propertyIri)) {
-      FastFuture.successful(false)
+      return FastFuture.successful(false)
     }
 
     val currentClassState: ClassInfoContentV2 = readClassInfo.entityInfoContent
