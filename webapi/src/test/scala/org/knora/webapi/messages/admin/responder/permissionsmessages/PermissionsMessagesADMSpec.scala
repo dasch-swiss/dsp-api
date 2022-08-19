@@ -870,7 +870,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val projectIri                 = IMAGES_PROJECT_IRI
       val allowedResourceClassIri01  = s"$IMAGES_ONTOLOGY_IRI#bild"
       val allowedResourceClassIri02  = s"$IMAGES_ONTOLOGY_IRI#bildformat"
-      val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result1 = SharedTestDataADM.imagesReviewerUser.permissions
         .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)

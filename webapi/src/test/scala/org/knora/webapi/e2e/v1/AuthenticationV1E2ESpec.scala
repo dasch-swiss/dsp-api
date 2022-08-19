@@ -41,7 +41,7 @@ class AuthenticationV1E2ESpec
     with SessionJsonProtocol
     with TriplestoreJsonProtocol {
 
-  private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
+  
 
   private val rootIri      = SharedTestDataV1.rootUser.userData.user_id.get
   private val rootIriEnc   = java.net.URLEncoder.encode(rootIri, "utf-8")

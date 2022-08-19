@@ -30,8 +30,7 @@ object TestActorSystemService {
    */
   private def release(system: ActorSystem) =
     (for {
-      ec <- ZIO.executor.map(_.asExecutionContext)
-      _  <- ZIO.fromFuture(implicit ec => system.terminate()).timeout(5.seconds).orDie
+      _  <- ZIO.fromFuture(_ => system.terminate()).timeout(5.seconds).orDie
     } yield ()).tap(_ => ZIO.logDebug(">>> Release Test Actor System Service <<<"))
 
   val layer: ZLayer[Any, Nothing, TestActorSystemService] =

@@ -1116,7 +1116,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         userADM = OntologyResponderV1Spec.userProfileWithEnglish
       )
 
-      expectMsgPF(timeout) { case msg: PropertyTypesForNamedGraphResponseV1 =>
+      expectMsgPF(timeout) { case _: PropertyTypesForNamedGraphResponseV1 =>
         // simply checks that no error occurred when getting the property definitions for all vocabularies
         ()
       }

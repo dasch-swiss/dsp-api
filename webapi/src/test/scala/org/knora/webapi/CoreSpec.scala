@@ -225,7 +225,7 @@ abstract class CoreSpec(_system: ActorSystem)
           _   <- ZIO.logInfo("... loading test data done.")
           _   <- ZIO.logInfo("Loading load ontologies into cache started ...")
           _ <- ZIO
-                 .fromFuture(implicit ec =>
+                 .fromFuture(_ =>
                    appActor
                      .ask(LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser))(
                        akka.util.Timeout.create(2.minutes)
@@ -236,7 +236,7 @@ abstract class CoreSpec(_system: ActorSystem)
           _ <- ZIO.logInfo("CacheServiceFlushDB started ...")
           _ <-
             ZIO
-              .fromFuture(implicit ec =>
+              .fromFuture(_ =>
                 appActor
                   .ask(CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser))(akka.util.Timeout.create(30.seconds))
               )

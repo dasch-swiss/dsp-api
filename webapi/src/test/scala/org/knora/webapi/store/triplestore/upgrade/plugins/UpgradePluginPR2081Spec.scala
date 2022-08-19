@@ -39,10 +39,7 @@ class UpgradePluginPR2081Spec extends UpgradePluginSpec with LazyLogging {
       // Store previous values
       val resource1CreationDate         = getDateValue(model, resource1, creationDate)
       val resource2CreationDate         = getDateValue(model, resource2, creationDate)
-      val resource2LastModificationDate = getDateValue(model, resource2, lastModificationDate)
       val resource3CreationDate         = getDateValue(model, resource3, creationDate) // only this one should stay the same
-      val resource3LastModificationDate = getDateValue(model, resource3, lastModificationDate)
-      val resource3DeletionDate         = getDateValue(model, resource3, deletionDate)
 
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR2081(log)

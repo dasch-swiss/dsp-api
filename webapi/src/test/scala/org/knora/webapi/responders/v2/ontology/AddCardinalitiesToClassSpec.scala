@@ -33,7 +33,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 class AddCardinalitiesToClassSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout                          = 10.seconds
+  
   private val freeTestOntology = RdfDataObject(
     path = "test_data/ontologies/freetest-onto.ttl",
     name = "http://www.knora.org/ontology/0001/freetest"
@@ -96,7 +96,7 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
         requestingUser = user
       )
       appActor ! addCardinalitiesRequest
-      val addCardinalitiesResponse = expectMsgType[ReadOntologyV2]
+      expectMsgType[ReadOntologyV2]
 
       // assert that the cardinalities for `:hasAuthor` and `:hasName` is still only once in the triplestore
       val countAfterwards = getCardinalityCountFromTriplestore(classIri, propertyIri)

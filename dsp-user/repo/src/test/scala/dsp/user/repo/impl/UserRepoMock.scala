@@ -112,7 +112,7 @@ final case class UserRepoMock(
    * @inheritDoc
    */
   def deleteUser(id: UserId): IO[Option[Nothing], UserId] = {
-    val userStatusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
+    // val userStatusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
 
     (for {
       user: User <- users.get(id.uuid).some

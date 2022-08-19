@@ -507,7 +507,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+      expectMsgPF(timeout) { case _: CreateValueResponseV1 =>
         ()
       }
 
@@ -1337,7 +1337,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: IntegerValueV1, _, _: IRI, _) =>
         newValue should ===(IntegerValueV1(seqnum))
       }
     }
@@ -1371,7 +1371,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TimeValueV1, _, _: IRI, _) =>
         newValue should ===(TimeValueV1(timeStamp))
       }
     }

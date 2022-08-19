@@ -451,7 +451,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         derivedText = criticalTextWithStandoff.text
       )
 
-      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+      standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
         standoffDiffs = criticalTextDiffs
@@ -510,7 +510,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         derivedText = criticalTextWithStandoff.text
       )
 
-      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+      standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
         standoffDiffs = criticalTextDiffs

@@ -44,7 +44,7 @@ class VersionRouteITSpec extends ITKnoraLiveSpec(VersionRouteITSpec.config) {
       val value = responseBodyJson.fields(field).toString().replaceAll("\"", "")
       result = !value.equals("")
     } catch {
-      case nse: NoSuchElementException => result = false
+      case _: NoSuchElementException => result = false
     }
     result
   }

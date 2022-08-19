@@ -751,7 +751,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         (
           propIri,
           propValues.sortBy { valueObject: ResourceCreateValueResponseV1 =>
-            val stringValue = valueObject.value.textval.map { case (valType: LiteralValueType.Value, value: String) =>
+            val stringValue = valueObject.value.textval.map { case (_: LiteralValueType.Value, value: String) =>
               value // get string and ignore value type
             }.head  // each value is represented by a map consisting of only one item (e.g. string -> "book title")
             stringValue
@@ -1313,7 +1313,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         iri = newBookResourceIri.get,
         userADM = SharedTestDataADM.incunabulaProjectAdminUser
       )
-      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+      expectMsgPF(timeout) { case _: ResourceFullResponseV1 =>
         () // If we got a ResourceFullResponseV1, the operation succeeded.
       }
     }

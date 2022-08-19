@@ -39,8 +39,7 @@ import org.knora.webapi.util._
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 
-  private implicit def default(implicit system: ActorSystem): RouteTestTimeout =
-    RouteTestTimeout(settings.defaultTimeout)
+  
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

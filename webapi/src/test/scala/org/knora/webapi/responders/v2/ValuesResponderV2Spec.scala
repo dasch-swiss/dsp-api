@@ -4376,7 +4376,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "delete a link between two resources" in {
       val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
       val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val linkValueIRI                              = linkValueIri.get

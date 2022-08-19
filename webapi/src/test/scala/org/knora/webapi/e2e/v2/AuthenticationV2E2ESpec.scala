@@ -5,10 +5,8 @@
 
 package org.knora.webapi.e2e.v2
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -41,8 +39,7 @@ class AuthenticationV2E2ESpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 
-  private implicit def default(implicit system: ActorSystem): RouteTestTimeout =
-    RouteTestTimeout(settings.defaultTimeout)
+  
 
   private val rootIri              = SharedTestDataADM.rootUser.id
   private val rootIriEnc           = java.net.URLEncoder.encode(rootIri, "utf-8")
@@ -52,8 +49,6 @@ class AuthenticationV2E2ESpec
   private val rootEmailEnc         = java.net.URLEncoder.encode(rootEmail, "utf-8")
   private val inactiveUserEmail    = SharedTestDataADM.inactiveUser.email
   private val inactiveUserEmailEnc = java.net.URLEncoder.encode(inactiveUserEmail, "utf-8")
-  private val wrongEmail           = "wrong@example.com"
-  private val wrongEmailEnc        = java.net.URLEncoder.encode(wrongEmail, "utf-8")
   private val testPass             = java.net.URLEncoder.encode("test", "utf-8")
   private val wrongPass            = java.net.URLEncoder.encode("wrong", "utf-8")
 

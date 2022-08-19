@@ -89,7 +89,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
         Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
           BasicHttpCredentials(rootUserEmail, password)
         )
-      val response: HttpResponse = singleAwaitingRequest(request)
+      singleAwaitingRequest(request)
     }
 
     "not allow a user from another project to create a resource" in {
@@ -111,7 +111,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
         Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
           BasicHttpCredentials(incunabulaUserEmail, password)
         )
-      val response: HttpResponse = singleAwaitingRequest(request)
+      singleAwaitingRequest(request)
     }
   }
 

@@ -2109,8 +2109,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "correctly update the ontology cache when adding a resource, so that the resource can afterwards be found by gravsearch" in {
-      var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
-      val ontologiesPath               = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
+      val freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
+      DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
       val auth                         = BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, SharedTestDataADM.testPass)
 
       // create a new resource class and add a property with cardinality to it
@@ -2161,7 +2161,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val createResourceClassResponse: HttpResponse = singleAwaitingRequest(createResourceClassRequest)
 
       assert(createResourceClassResponse.status == StatusCodes.OK, createResourceClassResponse.toString)
-      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(createResourceClassResponse)
 
       // create an instance of the class
       val createResourceWithValues: String =
@@ -2229,7 +2228,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           auth
         )
       val editValueResponse: HttpResponse = singleAwaitingRequest(editValueRequest)
-      val editValueResponseDoc            = responseToJsonLDDocument(editValueResponse)
       assert(editValueResponse.status == StatusCodes.OK, responseToString(editValueResponse))
     }
 
@@ -2305,7 +2303,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val createSequenceRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
       val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
-      val createSequenceResponseAsString = responseToString(createSequenceResponse)
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")
@@ -2375,7 +2372,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val createSequenceRequest =
         Post(resUrl, HttpEntity(RdfMediaTypes.`application/ld+json`, createSequenceJson)) ~> addCredentials(cred)
       val createSequenceResponse         = singleAwaitingRequest(createSequenceRequest)
-      val createSequenceResponseAsString = responseToString(createSequenceResponse)
       assert(createSequenceResponse.status == StatusCodes.OK, createSequenceResponse.toString)
       val createSequenceResponseBody = responseToJsonLDDocument(createSequenceResponse).body
       val sequenceResourceIri        = URLEncoder.encode(createSequenceResponseBody.requireString(JsonLDKeywords.ID), "UTF-8")

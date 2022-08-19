@@ -1333,35 +1333,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-   * Helper method for checking if a project exists.
-   *
-   * @param maybeIri       the IRI of the project.
-   * @param maybeShortname the shortname of the project.
-   * @param maybeShortcode the shortcode of the project.
-   * @return a [[Boolean]].
-   */
-
-  /**
-   * Helper method for checking if a project identified by IRI exists.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a [[Boolean]].
-   */
-  private def projectByIriExists(projectIri: IRI): Future[Boolean] =
-    for {
-      askString <- Future(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                       .checkProjectExistsByIri(projectIri = projectIri)
-                       .toString
-                   )
-      // _ = log.debug("projectExists - query: {}", askString)
-
-      checkProjectExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result                      = checkProjectExistsResponse.result
-
-    } yield result
-
-  /**
    * Helper method for checking if a project identified by shortname exists.
    *
    * @param shortname the shortname of the project.

@@ -99,7 +99,7 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
     duration: zio.Duration = 666.seconds
   ): Task[akka.http.scaladsl.model.HttpResponse] =
     ZIO
-      .fromFuture[akka.http.scaladsl.model.HttpResponse](executionContext =>
+      .fromFuture[akka.http.scaladsl.model.HttpResponse](_ =>
         akka.http.scaladsl.Http().singleRequest(request)
       )
       .timeout(duration)
@@ -204,51 +204,6 @@ final case class TestClientService(config: AppConfig, httpClient: CloseableHttpC
       response     <- doSipiRequest(req)
       sipiResponse <- ZIO.succeed(response.parseJson.asJsObject.convertTo[SipiUploadResponse])
     } yield sipiResponse
-  }
-
-  /**
-   * Makes an HTTP request to DSP-API and returns the response.
-   *
-   * @param request the HTTP request.
-   * @return DSP-API's response.
-   */
-  private def doDspApiRequest(request: http.HttpRequest): Task[String] = {
-    val targetHost: HttpHost =
-      new HttpHost(config.knoraApi.internalHost, config.knoraApi.internalPort, "http")
-    val httpContext: HttpClientContext               = HttpClientContext.create()
-    var maybeResponse: Option[CloseableHttpResponse] = None
-
-    val response: Task[String] = ZIO.attemptBlocking {
-      maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
-
-      val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-        case Some(responseEntity) => EntityUtils.toString(responseEntity)
-        case None                 => ""
-      }
-
-      val statusCode: Int     = maybeResponse.get.getStatusLine.getStatusCode
-      val statusCategory: Int = statusCode / 100
-
-      // Was the request successful?
-      if (statusCategory == 2) {
-        // Yes.
-        responseEntityStr
-      } else {
-        // No. Throw an appropriate exception.
-        if (statusCode == 404) {
-          throw NotFoundException(responseEntityStr)
-        } else {
-          throw BadRequestException(s"DSP-API responded with HTTP status code $statusCode: $responseEntityStr")
-        }
-      }
-    }
-
-    maybeResponse match {
-      case Some(response) => response.close()
-      case None           => ()
-    }
-
-    response
   }
 
   /**

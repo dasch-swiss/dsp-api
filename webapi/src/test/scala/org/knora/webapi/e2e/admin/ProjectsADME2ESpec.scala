@@ -55,7 +55,7 @@ class ProjectsADME2ESpec
     with ProjectsADMJsonProtocol
     with TriplestoreJsonProtocol {
 
-  private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
+  
 
   private val rootEmail        = SharedTestDataADM.rootUser.email
   private val testPass         = SharedTestDataADM.testPass

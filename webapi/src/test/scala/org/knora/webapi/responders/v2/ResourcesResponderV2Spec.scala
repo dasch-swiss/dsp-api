@@ -555,24 +555,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
   }
 
-  private def getDeleteDate(resourceIri: IRI): Instant = {
-    val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-      .getDeleteDate(
-        entityIri = resourceIri
-      )
-      .toString()
-
-    appActor ! SparqlSelectRequest(sparqlQuery)
-
-    expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
-      val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
-
-      stringFormatter.xsdDateTimeStampToInstant(
-        savedDeleteDateStr,
-        throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
-      )
-    }
-  }
+  
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 30.seconds

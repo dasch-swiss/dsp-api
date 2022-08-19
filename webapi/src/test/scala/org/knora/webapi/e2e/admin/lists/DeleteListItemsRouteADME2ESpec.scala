@@ -90,9 +90,6 @@ class DeleteListItemsRouteADME2ESpec
     "test"
   )
 
-  private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
-  private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-
   "The List Items Route (/admin/lists)" when {
     "deleting list items" should {
       "return forbidden exception when requesting user is not system or project admin" in {
@@ -248,8 +245,6 @@ class DeleteListItemsRouteADME2ESpec
         )
 
         val response: HttpResponse = singleAwaitingRequest(request)
-        val responseStr            = responseToString(response)
-
         response.status should be(StatusCodes.BadRequest)
       }
     }

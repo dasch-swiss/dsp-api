@@ -61,7 +61,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           timeout,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -105,7 +105,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -121,7 +121,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -158,7 +158,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -170,7 +170,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }

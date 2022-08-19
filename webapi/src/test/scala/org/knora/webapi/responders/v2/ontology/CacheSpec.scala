@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import akka.util.Timeout
 
 import java.time.Instant
 import scala.concurrent.Await
@@ -33,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 class CacheSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout: Timeout                 = settings.defaultTimeout
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -85,7 +83,7 @@ class CacheSpec extends CoreSpec {
             )
 
             // store new ontology to cache
-            val newCacheData = previousCacheData.copy(
+            previousCacheData.copy(
               ontologies = previousCacheData.ontologies + (iri -> newBooks)
             )
             val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
@@ -181,7 +179,7 @@ class CacheSpec extends CoreSpec {
             )
 
             // store new ontology to cache
-            val newCacheData = previousCacheData.copy(
+            previousCacheData.copy(
               ontologies = previousCacheData.ontologies + (iri -> newBooks)
             )
             val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(iri, newBooks)
@@ -278,7 +276,7 @@ class CacheSpec extends CoreSpec {
             )
 
             // store new ontology to cache
-            val newCacheData = previousCacheData.copy(
+            previousCacheData.copy(
               ontologies = previousCacheData.ontologies + (ontologyIri -> newBooks)
             )
             val updatedCacheFuture = Cache.cacheUpdatedOntologyWithoutUpdatingMaps(ontologyIri, newBooks)

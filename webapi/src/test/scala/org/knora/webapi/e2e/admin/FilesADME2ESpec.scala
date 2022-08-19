@@ -40,7 +40,7 @@ object FilesADME2ESpec {
  */
 class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
-  private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
+  
 
   private val anythingAdminEmail    = SharedTestDataV1.anythingAdminUser.userData.email.get
   private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")

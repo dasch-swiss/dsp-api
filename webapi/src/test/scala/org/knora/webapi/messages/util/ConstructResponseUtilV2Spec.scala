@@ -19,7 +19,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequenceV2
 import org.knora.webapi.responders.v2.ResourcesResponderV2SpecFullData
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2
@@ -36,7 +35,6 @@ class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
   private val anonymousUser                             = SharedTestDataADM.anonymousUser
   private val resourcesResponderV2SpecFullData          = new ResourcesResponderV2SpecFullData
   private val constructResponseUtilV2SpecFullData       = new ConstructResponseUtilV2SpecFullData
-  private val rdfFormatUtil                             = RdfFeatureFactory.getRdfFormatUtil()
 
   "ConstructResponseUtilV2" should {
 

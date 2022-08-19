@@ -40,14 +40,9 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
   private val rootUserIri   = rootUser.userData.user_id.get
   private val rootUserEmail = rootUser.userData.email.get
 
-  private val normalUser    = SharedTestDataV1.normalUser
-  private val normalUserIri = normalUser.userData.user_id.get
-
   private val incunabulaUser      = SharedTestDataV1.incunabulaProjectAdminUser
   private val incunabulaUserIri   = incunabulaUser.userData.user_id.get
   private val incunabulaUserEmail = incunabulaUser.userData.email.get
-
-  private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
 
   "The UsersResponder " when {
 

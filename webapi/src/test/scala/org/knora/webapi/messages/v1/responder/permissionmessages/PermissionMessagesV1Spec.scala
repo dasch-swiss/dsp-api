@@ -65,7 +65,6 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
       val projectIri                 = IMAGES_PROJECT_IRI
       val allowedResourceClassIri01  = s"$IMAGES_ONTOLOGY_IRI#bild"
       val allowedResourceClassIri02  = s"$IMAGES_ONTOLOGY_IRI#bildformat"
-      val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
       val result1 = SharedTestDataV1.imagesReviewerUser.permissionData
         .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)

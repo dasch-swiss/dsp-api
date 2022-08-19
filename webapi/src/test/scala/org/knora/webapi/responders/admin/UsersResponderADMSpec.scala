@@ -549,7 +549,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
           rootUser,
           UUID.randomUUID()
         )
-        val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
+        expectMsgType[UserOperationResponseADM](timeout)
 
         appActor ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser)
         val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)

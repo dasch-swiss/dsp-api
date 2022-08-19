@@ -16,7 +16,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.knora.webapi._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
@@ -37,15 +36,12 @@ class KnoraSipiAuthenticationITSpec
     extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config)
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val anythingUserEmail   = SharedTestDataADM.anythingAdminUser.email
-  private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
   private val password            = SharedTestDataADM.testPass
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
-  private val incunabulaImageDirPath  = Paths.get("..", "sipi/images/0803")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -96,7 +92,7 @@ class KnoraSipiAuthenticationITSpec
     }
 
     "accept a token in Sipi that has been signed by Knora" in {
-      val invalidToken = "a_invalid_token"
+      
 
       // The image to be uploaded.
       assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")

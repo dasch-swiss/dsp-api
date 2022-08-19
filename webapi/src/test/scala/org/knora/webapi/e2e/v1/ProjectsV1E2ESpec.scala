@@ -40,7 +40,6 @@ class ProjectsV1E2ESpec
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
   private val rootEmail           = SharedTestDataV1.rootUser.userData.email.get
-  private val rootEmailEnc        = java.net.URLEncoder.encode(rootEmail, "utf-8")
   private val testPass            = java.net.URLEncoder.encode("test", "utf-8")
   private val projectIri          = SharedTestDataV1.imagesProjectInfo.id
   private val projectIriEnc       = java.net.URLEncoder.encode(projectIri, "utf-8")

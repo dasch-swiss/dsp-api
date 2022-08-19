@@ -24,7 +24,6 @@ import dsp.errors.NotFoundException
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -51,7 +50,6 @@ class PermissionsResponderADMSpec
     extends CoreSpec(PermissionsResponderADMSpec.config)
     with ImplicitSender
     with PrivateMethodTester {
-  private val stringFormatter = StringFormatter.getGeneralInstance
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
@@ -61,8 +59,7 @@ class PermissionsResponderADMSpec
   /* define private method access */
   private val userAdministrativePermissionsGetADM =
     PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]](Symbol("userAdministrativePermissionsGetADM"))
-  private val defaultObjectAccessPermissionsForGroupsGetADM =
-    PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
+  PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
