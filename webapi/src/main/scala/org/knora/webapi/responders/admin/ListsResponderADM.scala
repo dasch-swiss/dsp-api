@@ -2066,12 +2066,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   // Helper Methods //
   ////////////////////
 
-  /**
-   * Helper method for checking if a project identified by IRI exists.
-   *
-   * @param projectIri the IRI of the project.
-   * @return a [[Boolean]].
-   */
 
   /**
    * Helper method for checking if a list node identified by IRI exists and is a root node.

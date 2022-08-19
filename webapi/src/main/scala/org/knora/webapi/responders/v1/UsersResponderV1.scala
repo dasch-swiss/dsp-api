@@ -669,11 +669,4 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     true
   }
 
-  /**
-   * Removes the user profile from cache.
-   *
-   * @param userIri the user's IRI und which a profile could be cached.
-   * @param email   the user's email under which a profile could be cached.
-   */
-
 }

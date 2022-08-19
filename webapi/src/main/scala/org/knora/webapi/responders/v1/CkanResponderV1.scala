@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import akka.http.scaladsl.util.FastFuture
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
@@ -267,15 +268,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
           userProfile = userProfile
         )
 
-        bookResourceFuture flatMap { case (_, bInfo, bProps) =>
-          flattenInfo(bInfo)
+        bookResourceFuture flatMap { case (_, _, bProps) =>
           val bPropsMap = flattenProps(bProps)
           val files = pageIris map { pageIri =>
             getResource(
               iri = pageIri,
               userProfile = userProfile
-            ) map { case (pIri, pInfo, pProps) =>
-              flattenInfo(pInfo)
+            ) map { case (pIri, _, pProps) =>
               val pPropsMap = flattenProps(pProps)
               CkanProjectDatasetFileV1(
                 ckan_title = pPropsMap.getOrElse("Page identifier", ""),
@@ -375,16 +374,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                  }
       } yield result
     }
-
-  /**
-   * Get IRIs of a certain type inside a certain project
-   *
-   * @param projectIri
-   * @param resType
-   * @param limit
-   * @param userProfile
-   * @return
-   */
 
   /**
    * Get all information there is about these resources
