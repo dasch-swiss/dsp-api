@@ -51,61 +51,35 @@ class OntologyHelpersSpec extends CoreSpec {
 
       val hasPublicationDateProperty = freetestOntologyIri.makeEntityIri("hasPublicationDate")
 
-      // define all test cases and the expected results (see comments)
-      val testCases: List[Set[SmartIri]] = List(
-        Set(mayHaveMany),                                       // given: 0-n               => expected result: 0-n
-        Set(mustHaveSome),                                      // given: 1-n               => expected result: 1-n
-        Set(mayHaveOne),                                        // given: 0-1               => expected result: 0-1
-        Set(mustHaveOne),                                       // given: 1                 => expected result: 1
-        Set(mayHaveMany, mustHaveSome),                         // given: 0-n, 1-n          => expected result: 1-n
-        Set(mayHaveMany, mayHaveOne),                           // given: 0-n, 0-1          => expected result: 0-1
-        Set(mayHaveMany, mustHaveOne),                          // given: 0-n, 1            => expected result: 1
-        Set(mustHaveSome, mayHaveOne),                          // given: 1-n, 0-1          => expected result: 1
-        Set(mustHaveSome, mustHaveOne),                         // given: 1-n, 1            => expected result: 1
-        Set(mayHaveOne, mustHaveOne),                           // given: 0-1, 1            => expected result: 1
-        Set(mayHaveMany, mustHaveSome, mayHaveOne),             // given: 0-n, 1-n, 0-1     => expected result: 1
-        Set(mayHaveMany, mustHaveSome, mustHaveOne),            // given: 0-n, 1-n, 1       => expected result: 1
-        Set(mayHaveMany, mayHaveOne, mustHaveOne),              // given: 0-n, 0-1, 1       => expected result: 1
-        Set(mustHaveSome, mayHaveOne, mustHaveOne),             // given: 1-n, 0-1, 1       => expected result: 1
-        Set(mayHaveMany, mustHaveSome, mayHaveOne, mustHaveOne) // given: 0-n, 1-n, 0-1, 1  => expected result: 1
+      // define all test cases and the expected results
+      val testCases: List[(Set[SmartIri], Option[Cardinality])] = List(
+        (Set(mayHaveMany), Some(MayHaveMany)),
+        (Set(mustHaveSome), Some(MustHaveSome)),
+        (Set(mayHaveOne), Some(MayHaveOne)),
+        (Set(mustHaveOne), Some(MustHaveOne)),
+        (Set(mayHaveMany, mustHaveSome), Some(MustHaveSome)),
+        (Set(mayHaveMany, mayHaveOne), Some(MayHaveOne)),
+        (Set(mayHaveMany, mustHaveOne), Some(MustHaveOne)),
+        (Set(mustHaveSome, mayHaveOne), Some(MustHaveOne)),
+        (Set(mustHaveSome, mustHaveOne), Some(MustHaveOne)),
+        (Set(mayHaveOne, mustHaveOne), Some(MustHaveOne)),
+        (Set(mayHaveMany, mustHaveSome, mayHaveOne), Some(MustHaveOne)),
+        (Set(mayHaveMany, mustHaveSome, mustHaveOne), Some(MustHaveOne)),
+        (Set(mayHaveMany, mayHaveOne, mustHaveOne), Some(MustHaveOne)),
+        (Set(mustHaveSome, mayHaveOne, mustHaveOne), Some(MustHaveOne)),
+        (Set(mayHaveMany, mustHaveSome, mayHaveOne, mustHaveOne), Some(MustHaveOne))
       )
 
-      // Expected results: 0-n, 1-n, 0-1, 1, 1-n, 0-1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-      val expectedResults: List[Option[Cardinality]] = List(
-        Some(MayHaveMany),
-        Some(MustHaveSome),
-        Some(MayHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveSome),
-        Some(MayHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne),
-        Some(MustHaveOne)
-      )
+      def getStrictest(classes: Set[SmartIri]): Option[Cardinality] =
+        OntologyHelpers
+          .getStrictestCardinalitiesFromClasses(classes, cacheData)
+          .get(hasPublicationDateProperty)
+          .map(card => card.cardinality)
 
-      // call method to all test cases
-      val strictestCardinalitiesForAllCases: List[Map[SmartIri, KnoraCardinalityInfo]] = testCases.map(testCase =>
-        OntologyHelpers.getStrictestCardinalitiesFromClasses(
-          testCase,
-          cacheData
-        )
-      )
+      testCases.map { case (testCase: Set[SmartIri], expectedResult: Option[Cardinality]) =>
+        assert(getStrictest(testCase) == expectedResult)
+      }
 
-      val results: List[Option[Cardinality]] =
-        strictestCardinalitiesForAllCases.map((strictestCards: Map[SmartIri, KnoraCardinalityInfo]) =>
-          strictestCards.get(hasPublicationDateProperty) match {
-            case None       => None
-            case Some(card) => Some(card.cardinality)
-          }
-        )
-
-      assert(results == expectedResults)
     }
   }
 }
