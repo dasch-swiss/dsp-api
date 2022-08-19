@@ -11,7 +11,7 @@ import akka.pattern._
 import akka.util.Timeout
 import dsp.constants.SalsahGui
 import dsp.errors._
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple

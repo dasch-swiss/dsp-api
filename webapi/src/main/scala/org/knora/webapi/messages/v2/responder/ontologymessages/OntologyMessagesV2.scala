@@ -13,7 +13,8 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality
+import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.apache.commons.lang3.builder.HashCodeBuilder

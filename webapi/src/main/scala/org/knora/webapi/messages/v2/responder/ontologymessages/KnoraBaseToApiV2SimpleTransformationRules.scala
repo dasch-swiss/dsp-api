@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

@@ -8,7 +8,7 @@ package org.knora.webapi.responders.v2
 import akka.testkit.ImplicitSender
 import dsp.constants.SalsahGui
 import dsp.errors._
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
 import org.knora.webapi._

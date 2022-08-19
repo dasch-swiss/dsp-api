@@ -6,7 +6,7 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.util.Timeout
-import dsp.schema.domain.MayHaveOne
+import dsp.schema.domain.Cardinality.MayHaveOne
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._

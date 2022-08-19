@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import dsp.errors._
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

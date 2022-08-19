@@ -5,7 +5,8 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._

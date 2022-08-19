@@ -5,6 +5,8 @@
 
 package dsp.schema.domain
 
+import Cardinality._
+
 /**
  * Represents a cardinality value object.
  */
@@ -33,15 +35,34 @@ sealed trait Cardinality { self =>
       }
     }
 }
-object MustHaveOne extends Cardinality {
-  override val value: String = "1"
-}
-object MustHaveSome extends Cardinality {
-  override val value: String = "1-n"
-}
-object MayHaveOne extends Cardinality {
-  override val value: String = "0-1"
-}
-object MayHaveMany extends Cardinality {
-  override val value: String = "0-n"
+
+object Cardinality {
+
+  /**
+   * The cardinality of a property that must have one value.
+   */
+  final case object MustHaveOne extends Cardinality {
+    override val value: String = "1"
+  }
+
+  /**
+   * The cardinality of a property that must have at least one value.
+   */
+  final case object MustHaveSome extends Cardinality {
+    override val value: String = "1-n"
+  }
+
+  /**
+   * The cardinality of a property that may have one value.
+   */
+  final case object MayHaveOne extends Cardinality {
+    override val value: String = "0-1"
+  }
+
+  /**
+   * The cardinality of a property that may have one or more values.
+   */
+  final case object MayHaveMany extends Cardinality {
+    override val value: String = "0-n"
+  }
 }

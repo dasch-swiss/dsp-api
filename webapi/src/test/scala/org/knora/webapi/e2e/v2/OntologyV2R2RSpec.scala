@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi._

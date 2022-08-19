@@ -10,7 +10,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import dsp.errors._
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

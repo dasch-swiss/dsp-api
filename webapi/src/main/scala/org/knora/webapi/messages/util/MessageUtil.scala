@@ -5,7 +5,8 @@
 
 package org.knora.webapi.messages.util
 
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality
+import dsp.schema.domain.Cardinality._
 import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.messages.SmartIri

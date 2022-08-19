@@ -9,7 +9,7 @@ import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
 import dsp.errors._
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants

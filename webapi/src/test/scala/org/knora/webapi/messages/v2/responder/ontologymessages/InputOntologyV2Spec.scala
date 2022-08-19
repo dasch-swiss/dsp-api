@@ -6,7 +6,7 @@
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
 import dsp.errors.BadRequestException
-import dsp.schema.domain._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
