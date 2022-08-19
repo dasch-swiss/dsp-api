@@ -5,10 +5,11 @@
 
 package dsp.valueobjects
 
-import dsp.valueobjects.Iri._
 import zio.prelude.Validation
 import zio.test._
+
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Iri._
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.

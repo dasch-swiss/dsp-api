@@ -1,7 +1,5 @@
 package org.knora.webapi.responders
 
-import org.knora.webapi.IRI
-import dsp.errors.ApplicationLockException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -9,6 +7,9 @@ import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
+import dsp.errors.ApplicationLockException
+import org.knora.webapi.IRI
 
 /**
  * Tests [[IriLocker]].

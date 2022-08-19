@@ -8,17 +8,18 @@ package org.knora.webapi.responders.v2
 import akka.pattern.ask
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import org.knora.webapi._
+
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.models.standoffmodels.DefineStandoffMapping
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * Tests [[StandoffResponderV2]].

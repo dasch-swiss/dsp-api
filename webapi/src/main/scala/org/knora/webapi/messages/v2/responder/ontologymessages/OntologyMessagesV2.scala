@@ -8,6 +8,13 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import akka.actor.ActorRef
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.apache.commons.lang3.builder.HashCodeBuilder
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
@@ -15,7 +22,6 @@ import dsp.errors.DataConversionException
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Schema
-import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -30,11 +36,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.OwlCardinalityInfo
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.settings.KnoraSettingsImpl
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

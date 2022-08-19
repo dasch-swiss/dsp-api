@@ -5,11 +5,12 @@
 
 package org.knora.webapi.store.iiif.impl
 
+import zio._
+
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.errors.SipiException
-import zio._
 
 /**
  * Can be used in place of [[IIIFServiceSipiImpl]] for tests without an actual Sipi server, by returning hard-coded

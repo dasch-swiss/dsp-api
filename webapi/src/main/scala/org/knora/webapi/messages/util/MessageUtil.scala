@@ -6,12 +6,13 @@
 package org.knora.webapi.messages.util
 
 import org.apache.commons.text.StringEscapeUtils
-import org.knora.webapi.OntologySchema
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 
 import java.time.Instant
 import scala.reflect.runtime.{universe => ru}
+
+import org.knora.webapi.OntologySchema
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 
 /**
  * Utility functions for working with Akka messages.

@@ -7,6 +7,7 @@ package org.knora.webapi.http.status
 
 import akka.http.scaladsl.model.StatusCode
 import akka.http.scaladsl.model.StatusCodes
+
 import dsp.errors._
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 

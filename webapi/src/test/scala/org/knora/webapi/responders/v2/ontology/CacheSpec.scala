@@ -5,31 +5,27 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import akka.actor.Props
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.InternalSchema
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.util.cache.CacheUtil
+import akka.util.Timeout
 
 import java.time.Instant
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import akka.util.Timeout
+
 import dsp.constants.SalsahGui
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.InternalSchema
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.PropertyInfoContentV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].

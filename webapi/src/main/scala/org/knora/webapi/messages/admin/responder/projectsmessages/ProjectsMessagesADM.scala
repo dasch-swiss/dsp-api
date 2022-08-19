@@ -7,19 +7,6 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.knora.webapi.IRI
-import org.knora.webapi.annotation.ApiMayChange
-import org.knora.webapi.annotation.ServerUnique
-import dsp.errors.BadRequestException
-import dsp.errors.DataConversionException
-import dsp.errors.OntologyConstraintException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
@@ -27,7 +14,21 @@ import spray.json.RootJsonFormat
 
 import java.nio.file.Path
 import java.util.UUID
+
+import dsp.errors.BadRequestException
+import dsp.errors.DataConversionException
+import dsp.errors.OntologyConstraintException
 import dsp.valueobjects.V2
+import org.knora.webapi.IRI
+import org.knora.webapi.annotation.ApiMayChange
+import org.knora.webapi.annotation.ServerUnique
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

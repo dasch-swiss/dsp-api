@@ -10,6 +10,11 @@ import akka.http.scaladsl.server.Directives.complete
 import akka.http.scaladsl.server.Directives.extractRequest
 import akka.http.scaladsl.server.ExceptionHandler
 import com.typesafe.scalalogging.LazyLogging
+import spray.json.JsNumber
+import spray.json.JsObject
+import spray.json.JsString
+import spray.json.JsValue
+
 import dsp.errors.InternalServerException
 import dsp.errors.RequestRejectedException
 import org.knora.webapi.http.status.ApiStatusCodesV1
@@ -19,11 +24,6 @@ import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.JsonLDObject
 import org.knora.webapi.messages.util.rdf.JsonLDString
 import org.knora.webapi.settings.KnoraSettingsImpl
-import spray.json.JsNumber
-import spray.json.JsObject
-import spray.json.JsString
-import spray.json.JsValue
-import dsp.errors.BadRequestException
 
 /**
  * The Knora exception handler is used by akka-http to convert any exceptions thrown during route processing
@@ -180,40 +180,6 @@ object KnoraExceptionHandler extends LazyLogging {
    * @param ex the exception to be converted.
    * @return an [[HttpResponse]] in HTML format.
    */
-  private def exceptionToHtmlHttpResponseV1(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
-    // Get the API status code that corresponds to the exception.
-    val apiStatus: ApiStatusCodesV1.Value = ApiStatusCodesV1.fromException(ex)
-
-    // Convert the API status code to the corresponding HTTP status code.
-    val httpStatus: StatusCode = ApiStatusCodesV1.toHttpStatus(apiStatus)
-
-    // Generate an HTTP response containing the error message, the API status code, and the HTTP status code.
-    HttpResponse(
-      status = httpStatus,
-      entity = HttpEntity(
-        ContentTypes.`text/xml(UTF-8)`,
-        <html xmlns="http://www.w3.org/1999/xhtml">
-                    <head>
-                        <title>Error</title>
-                    </head>
-                    <body>
-                        <h2>Error</h2>
-                        <p>
-                            <code>
-                                {makeClientErrorMessage(ex, settings)}
-                            </code>
-                        </p>
-                        <h2>Status code</h2>
-                        <p>
-                            <code>
-                                {apiStatus.id}
-                            </code>
-                        </p>
-                    </body>
-                </html>.toString()
-      )
-    )
-  }
 
   /**
    * Converts an exception to an HTTP response in HTML format specific to `V2`.
@@ -221,32 +187,6 @@ object KnoraExceptionHandler extends LazyLogging {
    * @param ex the exception to be converted.
    * @return an [[HttpResponse]] in HTML format.
    */
-  private def exceptionToHtmlHttpResponseV2(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
-
-    // Get the HTTP status code that corresponds to the exception.
-    val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
-
-    // Generate an HTTP response containing the error message and the HTTP status code.
-    HttpResponse(
-      status = httpStatus,
-      entity = HttpEntity(
-        ContentTypes.`text/xml(UTF-8)`,
-        <html xmlns="http://www.w3.org/1999/xhtml">
-                    <head>
-                        <title>Error</title>
-                    </head>
-                    <body>
-                        <h2>Error</h2>
-                        <p>
-                            <code>
-                                {makeClientErrorMessage(ex, settings)}
-                            </code>
-                        </p>
-                    </body>
-                </html>.toString()
-      )
-    )
-  }
 
   /**
    * Converts an exception to an HTTP response in HTML format specific to `ADM`.
@@ -254,32 +194,6 @@ object KnoraExceptionHandler extends LazyLogging {
    * @param ex the exception to be converted.
    * @return an [[HttpResponse]] in HTML format.
    */
-  private def exceptionToHtmlHttpResponseADM(ex: Throwable, settings: KnoraSettingsImpl): HttpResponse = {
-
-    // Get the HTTP status code that corresponds to the exception.
-    val httpStatus: StatusCode = ApiStatusCodesV2.fromException(ex)
-
-    // Generate an HTTP response containing the error message and the HTTP status code.
-    HttpResponse(
-      status = httpStatus,
-      entity = HttpEntity(
-        ContentTypes.`text/xml(UTF-8)`,
-        <html xmlns="http://www.w3.org/1999/xhtml">
-                    <head>
-                        <title>Error</title>
-                    </head>
-                    <body>
-                        <h2>Error</h2>
-                        <p>
-                            <code>
-                                {makeClientErrorMessage(ex, settings)}
-                            </code>
-                        </p>
-                    </body>
-                </html>.toString()
-      )
-    )
-  }
 
   /**
    * Given an exception, returns an error message suitable for clients.

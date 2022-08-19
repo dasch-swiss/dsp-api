@@ -6,6 +6,11 @@
 package org.knora.webapi.messages.v1.responder.resourcemessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json._
+
+import java.time.Instant
+import java.util.UUID
+
 import dsp.constants.SalsahGui
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
@@ -19,10 +24,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
-import spray.json._
-
-import java.time.Instant
-import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -1089,7 +1090,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
 
       val properties: Map[String, JsValue] = jsonObj.fields - "res_id" - "iconsrc"
 
-      val propsConverted: Seq[PropertyGetV1] = properties.map { case (propname: String, prop: JsValue) =>
+      val propsConverted: Seq[PropertyGetV1] = properties.map { case (_: String, prop: JsValue) =>
         val propObj = prop.asJsObject
 
         PropertyGetV1(

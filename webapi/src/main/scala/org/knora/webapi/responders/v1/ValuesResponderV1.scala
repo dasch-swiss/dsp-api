@@ -6,9 +6,13 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.knora.webapi._
-import dsp.errors._
 
+import java.time.Instant
+import scala.annotation.tailrec
+import scala.concurrent.Future
+
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -46,10 +50,6 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util._
-
-import java.time.Instant
-import scala.annotation.tailrec
-import scala.concurrent.Future
 
 /**
  * Updates Knora values.
@@ -884,7 +884,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       // If we're updating a link, findResourceWithValueResult will contain the IRI of the property that points to the
       // knora-base:LinkValue, but we'll need the IRI of the corresponding link property.
       val propertyIri = changeValueRequest.value match {
-        case linkUpdateV1: LinkUpdateV1 =>
+        case _: LinkUpdateV1 =>
           stringFormatter.linkValuePropertyIriToLinkPropertyIri(findResourceWithValueResult.propertyIri)
         case _ => findResourceWithValueResult.propertyIri
       }
@@ -897,7 +897,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Ensure that the user has permission to modify the value.
         maybeCurrentValueQueryResult: Option[ValueQueryResult] <-
           changeValueRequest.value match {
-            case linkUpdateV1: LinkUpdateV1 =>
+            case _: LinkUpdateV1 =>
               // We're being asked to update a link. We expect the current value version IRI to point to a
               // knora-base:LinkValue. Get all necessary information about the LinkValue and the corresponding
               // direct link.
@@ -909,7 +909,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 userProfile = changeValueRequest.userProfile
               )
 
-            case otherValueV1 =>
+            case _ =>
               // We're being asked to update an ordinary value.
               findValue(
                 valueIri = changeValueRequest.valueIri,
@@ -1097,7 +1097,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                            // Give the new version the same permissions as the previous version.
 
                            val valuePermissions = currentValueQueryResult.permissionRelevantAssertions.find {
-                             case (p, o) =>
+                             case (p, _) =>
                                p == OntologyConstants.KnoraBase.HasPermissions
                            }
                              .map(_._2)
@@ -1322,7 +1322,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
                                                val valuePermissions: String =
                                                  currentValueQueryResult.permissionRelevantAssertions.find {
-                                                   case (p, o) =>
+                                                   case (p, _) =>
                                                      p == OntologyConstants.KnoraBase.HasPermissions
                                                  }
                                                    .map(_._2)
@@ -2023,13 +2023,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         maybePermissionCode = valueClassIri match {
                                 case OntologyConstants.KnoraBase.LinkValue =>
-                                  val linkPredicateIri =
-                                    getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows)
-                                      .getOrElse(
-                                        throw InconsistentRepositoryDataException(
-                                          s"Link value $valueIri has no rdf:predicate"
-                                        )
+                                  getValuePredicateObject(predicateIri = OntologyConstants.Rdf.Predicate, rows = rows)
+                                    .getOrElse(
+                                      throw InconsistentRepositoryDataException(
+                                        s"Link value $valueIri has no rdf:predicate"
                                       )
+                                    )
 
                                   PermissionUtilADM.getUserPermissionWithValuePropsV1(
                                     valueIri = valueIri,
@@ -2215,7 +2214,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           rights = linkValueQueryResult.permissionCode
         )
 
-      case ordinaryUpdateValueV1 =>
+      case _ =>
         for {
           verifyUpdateResult <- verifyOrdinaryValueUpdate(
                                   resourceIri = resourceIri,
@@ -2728,7 +2727,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                 newTextValue match {
                                                                   case newTextWithStandoff: TextValueWithStandoffV1 =>
                                                                     checkTextValueResourceRefs(newTextWithStandoff)
-                                                                  case textValueSimple: TextValueSimpleV1 => ()
+                                                                  case _: TextValueSimpleV1 => ()
                                                                 }
 
                                                                 // Identify the resource references that have been added or removed in the new version of
@@ -2736,14 +2735,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                                 val currentResourceRefs = currentTextValue match {
                                                                   case textValueWithStandoff: TextValueWithStandoffV1 =>
                                                                     textValueWithStandoff.resource_reference
-                                                                  case textValueSimple: TextValueSimpleV1 =>
+                                                                  case _: TextValueSimpleV1 =>
                                                                     Set.empty[IRI]
                                                                 }
 
                                                                 val newResourceRefs = newTextValue match {
                                                                   case textValueWithStandoff: TextValueWithStandoffV1 =>
                                                                     textValueWithStandoff.resource_reference
-                                                                  case textValueSimple: TextValueSimpleV1 =>
+                                                                  case _: TextValueSimpleV1 =>
                                                                     Set.empty[IRI]
                                                                 }
                                                                 val addedResourceRefs =

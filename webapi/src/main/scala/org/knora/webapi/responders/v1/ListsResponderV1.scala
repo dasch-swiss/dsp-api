@@ -6,8 +6,12 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.knora.webapi._
+
+import scala.annotation.tailrec
+import scala.concurrent.Future
+
 import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
@@ -16,9 +20,6 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import scala.annotation.tailrec
-import scala.concurrent.Future
 
 /**
  * A responder that returns information about hierarchical lists.

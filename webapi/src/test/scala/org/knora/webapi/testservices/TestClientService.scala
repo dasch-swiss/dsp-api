@@ -16,10 +16,20 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
-import org.knora.webapi.config.AppConfig
+import spray.json.JsObject
+import spray.json._
+import zio._
+
+import java.nio.file.Path
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -31,15 +41,6 @@ import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
-import spray.json.JsObject
-import spray.json._
-import zio._
-
-import java.nio.file.Path
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
 
 /**
  * Represents a file to be uploaded to the IIF Service.

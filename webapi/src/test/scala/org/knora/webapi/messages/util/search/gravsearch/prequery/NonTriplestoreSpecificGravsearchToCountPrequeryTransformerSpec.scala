@@ -1,9 +1,14 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
-import akka.actor.ActorSystem
-import org.knora.webapi.CoreSpec
-import dsp.errors.AssertionException
+import akka.actor.ActorRef
 
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+
+import dsp.errors.AssertionException
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -14,14 +19,7 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToCountPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionRunner
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
-import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-import akka.actor.ActorRef
 
 private object CountQueryHandler {
 

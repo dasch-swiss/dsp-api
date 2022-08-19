@@ -5,21 +5,18 @@
 
 package dsp.user.handler
 
+import zio._
+import zio.test.Assertion._
+import zio.test._
+
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import dsp.user.domain.User
-import dsp.user.domain._
 import dsp.user.repo.impl.UserRepoMock
 import dsp.user.sharedtestdata.SharedTestData
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import dsp.valueobjects.UserErrorMessages
-import zio.ZLayer
-import zio._
-import zio.test.Assertion._
-import zio.test._
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].

@@ -6,6 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.SchemaOptions
@@ -18,8 +21,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.duration._
 
 /**
  * Tests [[SearchResponderV2]].

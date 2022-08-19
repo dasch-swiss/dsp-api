@@ -7,8 +7,16 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+
+import java.util.UUID
+import scala.annotation.tailrec
+import scala.concurrent.Future
+
 import dsp.errors._
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.List.ListName
+import dsp.valueobjects.ListErrorMessages
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -26,14 +34,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import java.util.UUID
-import scala.annotation.tailrec
-import scala.concurrent.Future
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.ListErrorMessages
-import dsp.valueobjects.List.ListName
-import akka.actor.ActorRef
 
 /**
  * A responder that returns information about hierarchical lists.
@@ -55,11 +55,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       listNodeInfoGetRequestADM(listIri, requestingUser)
     case NodePathGetRequestADM(iri, requestingUser) =>
       nodePathGetAdminRequest(iri, requestingUser)
-    case ListRootNodeCreateRequestADM(createRootNode, requestingUser, apiRequestID) =>
+    case ListRootNodeCreateRequestADM(createRootNode, _, apiRequestID) =>
       listCreateRequestADM(createRootNode, apiRequestID)
-    case ListChildNodeCreateRequestADM(createChildNodeRequest, requestingUser, apiRequestID) =>
+    case ListChildNodeCreateRequestADM(createChildNodeRequest, _, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, apiRequestID)
-    case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, requestingUser, apiRequestID) =>
+    case NodeInfoChangeRequestADM(nodeIri, changeNodeRequest, _, apiRequestID) =>
       nodeInfoChangeRequest(nodeIri, changeNodeRequest, apiRequestID)
     case NodeNameChangeRequestADM(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID) =>
       nodeNameChangeRequest(nodeIri, changeNodeNameRequest, requestingUser, apiRequestID)
@@ -86,7 +86,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       nodePositionChangeRequest(nodeIri, changeNodePositionRequest, requestingUser, apiRequestID)
     case ListItemDeleteRequestADM(nodeIri, requestingUser, apiRequestID) =>
       deleteListItemRequestADM(nodeIri, requestingUser, apiRequestID)
-    case CanDeleteListRequestADM(iri, requestingUser) =>
+    case CanDeleteListRequestADM(iri, _) =>
       canDeleteListRequestADM(iri)
     case ListNodeCommentsDeleteRequestADM(iri, requestingUser) =>
       deleteListNodeCommentsADM(iri, requestingUser)
@@ -1012,7 +1012,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                                   parentNodeIri,
                                                   projectIri,
                                                   name,
-                                                  position,
+                                                  _,
                                                   labels,
                                                   comments
                                                 ) =>
@@ -2072,18 +2072,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @param projectIri the IRI of the project.
    * @return a [[Boolean]].
    */
-  private def projectByIriExists(projectIri: IRI): Future[Boolean] =
-    for {
-      askString <-
-        Future(
-          org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString
-        )
-      // _ = log.debug("projectByIriExists - query: {}", askString)
-
-      askResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result       = askResponse.result
-
-    } yield result
 
   /**
    * Helper method for checking if a list node identified by IRI exists and is a root node.

@@ -8,12 +8,13 @@ package org.knora.webapi.it
 import akka.http.scaladsl.model._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.ITKnoraLiveSpec
 import spray.json._
 
 import java.util.NoSuchElementException
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import org.knora.webapi.ITKnoraLiveSpec
 
 object VersionRouteITSpec {
   val config: Config = ConfigFactory.parseString("""

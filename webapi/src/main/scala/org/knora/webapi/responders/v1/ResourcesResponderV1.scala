@@ -7,9 +7,17 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
-import dsp.errors._
 
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import dsp.constants.SalsahGui
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -46,14 +54,6 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import dsp.constants.SalsahGui
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -497,7 +497,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                       queryOntology = true
                                     )
     } yield userPermissions match {
-      case Some(permissions) =>
+      case Some(_) =>
         ResourceInfoResponseV1(
           resource_info = Some(resInfo),
           rights = userPermissions
@@ -559,7 +559,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get the types of all the resources that this resource links to.
       linkedResourceTypes = groupedPropsByType.groupedLinkProperties.groupedProperties.foldLeft(Set.empty[IRI]) {
-                              case (acc, (prop, propMap)) =>
+                              case (acc, (_, propMap)) =>
                                 val targetResourceTypes = propMap.valueObjects.foldLeft(Set.empty[IRI]) {
                                   case (resTypeAcc, (obj: IRI, objMap: ValueProps)) =>
                                     val resType = objMap.literalData.get(OntologyConstants.Rdf.Type) match {
@@ -1139,8 +1139,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
 
             } yield permissionCode match {
-              case Some(permission) => (Some(containingResourceIri), Some(resInfoV1))
-              case None             => (None, None)
+              case Some(_) => (Some(containingResourceIri), Some(resInfoV1))
+              case None    => (None, None)
             }
           case _ => Future((None, None))
         }
@@ -2964,7 +2964,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           )
 
         maybeResourceProjectStatement: Option[(IRI, IRI)] =
-          permissionRelevantAssertions.find { case (subject, predicate) =>
+          permissionRelevantAssertions.find { case (subject, _) =>
             subject == OntologyConstants.KnoraBase.AttachedToProject
           }
 
@@ -3253,19 +3253,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         value_restype = valueObjects.map {
           _.valueV1 match {
             case link: LinkV1 => link.valueResourceClassLabel
-            case other        => None
+            case _            => None
           }
         },
         value_iconsrcs = valueObjects.map {
           _.valueV1 match {
             case link: LinkV1 => link.valueResourceClassIcon
-            case other        => None
+            case _            => None
           }
         },
         value_firstprops = valueObjects.map {
           _.valueV1 match {
             case link: LinkV1 => link.valueLabel
-            case other        => None
+            case _            => None
           }
         },
         values = valueObjects.map(_.valueV1),
@@ -3550,7 +3550,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         case Some(OntologyConstants.KnoraBase.IntValue)     => Some("ival")
         case Some(OntologyConstants.KnoraBase.DecimalValue) => Some("dval")
         case Some(OntologyConstants.KnoraBase.DateValue)    => Some("dateval")
-        case Some(other: IRI)                               => Some("textval")
+        case Some(_: IRI)                                   => Some("textval")
         case None                                           => None
       },
       guielement = propertyV1.guielement,

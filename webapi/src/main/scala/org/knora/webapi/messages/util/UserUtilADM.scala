@@ -9,13 +9,14 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.IRI
-import dsp.errors.ForbiddenException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
+import dsp.errors.ForbiddenException
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages._
 
 /**
  * Utility functions for working with users.

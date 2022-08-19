@@ -1,6 +1,5 @@
 package org.knora.webapi.testcontainers
 
-import org.knora.webapi.http.version.BuildInfo
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 import zio._
@@ -8,6 +7,8 @@ import zio._
 import java.net.NetworkInterface
 import java.net.UnknownHostException
 import scala.jdk.CollectionConverters._
+
+import org.knora.webapi.http.version.BuildInfo
 
 final case class FusekiTestContainer(container: GenericContainer[Nothing])
 

@@ -5,14 +5,13 @@
 
 package org.knora.webapi.responders.v2.ontology
 
+import akka.util.Timeout
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.settings.KnoraDispatchers
-import akka.util.Timeout
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].

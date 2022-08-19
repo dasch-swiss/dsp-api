@@ -7,8 +7,13 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+
+import java.util.UUID
+import scala.concurrent.Future
+
 import dsp.errors._
+import dsp.valueobjects.Group.GroupStatus
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -24,11 +29,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import java.util.UUID
-import scala.concurrent.Future
-import dsp.valueobjects.Group.GroupStatus
-import akka.actor.ActorRef
 
 /**
  * Returns information about Knora projects.
@@ -883,17 +883,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * @param groupIri the IRI of the group.
    * @return a [[Boolean]].
    */
-  private def groupExists(groupIri: IRI): Future[Boolean] =
-    for {
-      askString <- Future(
-                     org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri).toString
-                   )
-      // _ = log.debug("groupExists - query: {}", askString)
-
-      checkGroupExistsResponse <- appActor.ask(SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-      result                    = checkGroupExistsResponse.result
-
-    } yield result
 
   /**
    * Helper method for checking if a group identified by name / project IRI exists.

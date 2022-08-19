@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.routing.Authenticator

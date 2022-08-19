@@ -1,9 +1,9 @@
 package org.knora.webapi.core
 
 import zio.LogLevel
+import zio.ZLayer
 import zio.logging.LogFormat._
 import zio.logging._
-import zio.ZLayer
 import zio.logging.backend.SLF4J
 
 object Logging {

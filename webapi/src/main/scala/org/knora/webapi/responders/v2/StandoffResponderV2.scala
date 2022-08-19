@@ -8,9 +8,24 @@ package org.knora.webapi.responders.v2
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
-import org.knora.webapi._
-import dsp.errors._
+import org.xml.sax.SAXException
 
+import java.io._
+import java.util.UUID
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.Schema
+import javax.xml.validation.SchemaFactory
+import javax.xml.validation.{Validator => JValidator}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.xml.Elem
+import scala.xml.Node
+import scala.xml.NodeSeq
+import scala.xml.XML
+
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -43,21 +58,6 @@ import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util._
 import org.knora.webapi.util.cache.CacheUtil
-import org.xml.sax.SAXException
-
-import java.io._
-import java.util.UUID
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.Schema
-import javax.xml.validation.SchemaFactory
-import javax.xml.validation.{Validator => JValidator}
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.xml.Elem
-import scala.xml.Node
-import scala.xml.NodeSeq
-import scala.xml.XML
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
@@ -648,7 +648,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
         case validationException: SAXException =>
           throw BadRequestException(s"the provided mapping is invalid: ${validationException.getMessage}")
 
-        case ioException: IOException => throw NotFoundException(s"The schema could not be found")
+        case _: IOException => throw NotFoundException(s"The schema could not be found")
 
         case unknown: Exception =>
           throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
@@ -802,7 +802,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       val newNamespaceMap: Map[String, Map[String, XMLTag]] = namespaceMap.get(tagname) match {
         case Some(tagMap: Map[String, XMLTag]) =>
           tagMap.get(classname) match {
-            case Some(existingClassname) =>
+            case Some(_) =>
               throw BadRequestException("Duplicate tag and classname combination in the same namespace")
             case None =>
               // create the definition for the current element
@@ -946,7 +946,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
       // separate MappingElements from other statements (attributes and datatypes)
       (mappingElementStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) =
-        mappingResponse.statements.partition { case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+        mappingResponse.statements.partition { case (_: IRI, assertions: Seq[(IRI, String)]) =>
           assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.MappingElement))
         }
 
@@ -957,9 +957,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
                                                  // check for attributes
                                                  val attributes: Seq[MappingXMLAttribute] = assertions.filter {
-                                                   case (propIri, obj) =>
+                                                   case (propIri, _) =>
                                                      propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
-                                                 }.map { case (attrProp: IRI, attributeElementIri: String) =>
+                                                 }.map { case (_: IRI, attributeElementIri: String) =>
                                                    val attributeStatementsAsMap: Map[IRI, String] =
                                                      otherStatements(attributeElementIri).toMap
 
@@ -1022,11 +1022,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                                              }.toSeq
 
       // check if there is a default XSL transformation
-      defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find { case (pred: IRI, obj: String) =>
+      defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find { case (pred: IRI, _: String) =>
                                                       pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
-                                                    }.map {
-                                                      case (hasDefaultTransformation: IRI, xslTransformationIri: IRI) =>
-                                                        xslTransformationIri
+                                                    }.map { case (_: IRI, xslTransformationIri: IRI) =>
+                                                      xslTransformationIri
                                                     }
 
       mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(
@@ -1105,7 +1104,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       standoffPropertyIrisFromOntologyResponder: Set[SmartIri] =
         standoffClassEntities.standoffClassInfoMap.foldLeft(
           Set.empty[SmartIri]
-        ) { case (acc, (standoffClassIri, standoffClassEntity: ReadClassInfoV2)) =>
+        ) { case (acc, (_, standoffClassEntity: ReadClassInfoV2)) =>
           val props = standoffClassEntity.allCardinalities.keySet
           acc ++ props
         }
@@ -1158,7 +1157,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
               .standoffClassInfoMap(standoffClass.toSmartIri)
               .allCardinalities
-              .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
+              .filter { case (_: SmartIri, card: KnoraCardinalityInfo) =>
                 card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
               }
               .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties

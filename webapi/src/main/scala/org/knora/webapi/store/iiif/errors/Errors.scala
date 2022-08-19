@@ -1,8 +1,9 @@
 package org.knora.webapi.store.iiif.errors
 
-import dsp.errors.InternalServerException
 import com.typesafe.scalalogging.Logger
+
 import dsp.errors.ExceptionUtil
+import dsp.errors.InternalServerException
 
 /**
  * Indicates that an error occurred with Sipi not relating to the user's request (it is not the user's fault).

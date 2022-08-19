@@ -1,14 +1,8 @@
 package org.knora.webapi.testservices
 
 import akka.actor.ActorSystem
-import zio._
-
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
 import com.typesafe.config.ConfigFactory
-import dsp.errors.InternalServerException
+import zio._
 
 final case class TestActorSystemService(actorSystem: ActorSystem) {
 

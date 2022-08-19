@@ -5,13 +5,12 @@
 
 package dsp.user.domain
 
+import zio.prelude.Validation
+
 import dsp.errors.ValidationException
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import zio.prelude.Validation
-
-import java.util.UUID
 
 /**
  * Represents the user domain object.

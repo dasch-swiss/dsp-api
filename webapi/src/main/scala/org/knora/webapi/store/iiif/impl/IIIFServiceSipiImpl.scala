@@ -22,11 +22,15 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
+import spray.json._
+import zio._
+
+import java.util
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
-
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -34,11 +38,6 @@ import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.iiif.domain._
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.SipiUtil
-import spray.json._
-import zio._
-
-import java.util
-import dsp.errors.KnoraException
 
 /**
  * Makes requests to Sipi.

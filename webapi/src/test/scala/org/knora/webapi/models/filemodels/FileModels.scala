@@ -5,6 +5,9 @@
 
 package org.knora.webapi.models.filemodels
 
+import java.time.Instant
+import java.util.UUID
+
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -15,9 +18,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewR
 import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueRequestV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import java.time.Instant
-import java.util.UUID
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,

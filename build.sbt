@@ -15,7 +15,13 @@ import scala.sys.process.Process
 //////////////////////////////////////
 
 // when true enables run cancellation w/o exiting sbt
-cancelable in Global := true
+// use Ctrl-c to stop current task but not quit SBT
+Global / cancelable := true
+
+Global / scalaVersion                                   := Dependencies.ScalaVersion
+Global / semanticdbEnabled                              := true
+Global / semanticdbVersion                              := scalafixSemanticdb.revision
+Global / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
@@ -38,18 +44,16 @@ lazy val root: Project = Project(id = "root", file("."))
     ThisBuild / scmInfo := Some(
       ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
     ),
-    Global / scalaVersion := Dependencies.scalaVersion,
+    Global / scalaVersion := Dependencies.ScalaVersion,
     // use 'git describe' for deriving the version
     git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
-    // use Ctrl-c to stop current task but not quit SBT
-    Global / cancelable := true,
-    publish / skip      := true
+    publish / skip := true
   )
 
-addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll")
-addCommandAlias("check", "all root/scalafmtSbtCheck root/scalafmtCheckAll")
+addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
+addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
 
 //////////////////////////////////////
 // DSP's custom SIPI
@@ -138,7 +142,8 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
@@ -195,7 +200,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoKeys ++= Seq[BuildInfoKey](
       name,
       version,
-      "akkaHttp" -> Dependencies.akkaHttpVersion,
+      "akkaHttp" -> Dependencies.AkkaHttpVersion,
       "sipi"     -> Dependencies.sipiImage,
       "fuseki"   -> Dependencies.fusekiImage
     ),
@@ -251,7 +256,8 @@ lazy val roleInterface = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "roleInterface",
     libraryDependencies ++= Dependencies.roleInterfaceLibraryDependencies,
@@ -267,7 +273,8 @@ lazy val roleHandler = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "roleHandler",
     libraryDependencies ++= Dependencies.roleHandlerLibraryDependencies,
@@ -287,7 +294,8 @@ lazy val roleRepo = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "roleRepo",
     libraryDependencies ++= Dependencies.roleRepoLibraryDependencies,
@@ -303,7 +311,8 @@ lazy val roleCore = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "roleCore",
     libraryDependencies ++= Dependencies.roleCoreLibraryDependencies,
@@ -321,7 +330,8 @@ lazy val userInterface = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "userInterface",
     libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
@@ -337,7 +347,8 @@ lazy val userHandler = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "userHandler",
     libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
@@ -357,7 +368,8 @@ lazy val userRepo = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "userRepo",
     libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
@@ -373,7 +385,8 @@ lazy val userCore = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
@@ -391,7 +404,8 @@ lazy val schemaCore = project
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
     ),
     name := "schemaCore",
     libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
@@ -404,6 +418,14 @@ lazy val schemaCore = project
 lazy val shared = project
   .in(file("dsp-shared"))
   .settings(
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations",
+      "-Ywarn-unused"
+    ),
     name := "shared",
     libraryDependencies ++= Dependencies.sharedLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))

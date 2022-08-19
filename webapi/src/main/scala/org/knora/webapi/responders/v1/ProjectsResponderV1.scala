@@ -7,10 +7,12 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+
+import scala.concurrent.Future
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserGetRequestADM
@@ -29,15 +31,12 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
-import scala.concurrent.Future
-
 /**
  * Returns information about Knora projects.
  */
 class ProjectsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
   // Global lock IRI used for project creation and update
-  private val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
   /**
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.

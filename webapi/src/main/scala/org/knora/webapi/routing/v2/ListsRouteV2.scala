@@ -7,17 +7,17 @@ package org.knora.webapi.routing.v2
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi._
-import dsp.errors.BadRequestException
 
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
+import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.listsmessages.ListGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-
-import scala.concurrent.Future
 
 /**
  * Provides a function for API routes that deal with lists and nodes.

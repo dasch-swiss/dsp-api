@@ -13,15 +13,16 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 object AuthenticationV1E2ESpec {
   val config: Config = ConfigFactory.parseString("""

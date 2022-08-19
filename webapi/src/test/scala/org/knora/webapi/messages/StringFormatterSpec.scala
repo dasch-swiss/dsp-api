@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages
 
+import java.time.Instant
+import java.util.UUID
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import org.knora.webapi._
@@ -12,9 +15,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import java.time.Instant
-import java.util.UUID
 
 /**
  * Tests [[StringFormatter]].

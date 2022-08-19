@@ -9,18 +9,19 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
+import zio.prelude.Validation
+
+import java.util.UUID
+import javax.ws.rs.Path
+
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Group._
+import dsp.valueobjects.Iri._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-import zio.prelude.Validation
-
-import java.util.UUID
-import javax.ws.rs.Path
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.Group._
 
 object GroupsRouteADM {
   val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")

@@ -6,16 +6,17 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit._
-import org.knora.webapi._
+
+import scala.concurrent.duration._
+
 import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.MessageUtil
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import scala.concurrent.duration._
 
 /**
  * Static data for testing [[OntologyResponderV1]].

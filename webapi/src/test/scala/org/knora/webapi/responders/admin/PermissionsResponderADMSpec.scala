@@ -9,11 +9,19 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
+import org.scalatest.PrivateMethodTester
+
+import java.util.UUID
+import scala.collection.Map
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.StringFormatter
@@ -27,13 +35,6 @@ import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.cache.CacheUtil
-import org.scalatest.PrivateMethodTester
-
-import java.util.UUID
-import scala.collection.Map
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 object PermissionsResponderADMSpec {
 

@@ -7,6 +7,7 @@ package org.knora.webapi.routing
 
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
+
 import org.knora.webapi.instrumentation.InstrumentationSupport
 
 /**

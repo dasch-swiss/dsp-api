@@ -1,11 +1,12 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
  * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.

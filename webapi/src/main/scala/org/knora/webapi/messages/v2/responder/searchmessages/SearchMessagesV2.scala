@@ -8,8 +8,8 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.IRI
 import org.knora.webapi.SchemaOption
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument

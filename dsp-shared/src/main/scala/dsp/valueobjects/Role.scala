@@ -5,9 +5,10 @@
 
 package dsp.valueobjects
 
+import zio.prelude.Validation
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.LanguageCode
-import zio.prelude.Validation
 
 object Role {
 

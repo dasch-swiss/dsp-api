@@ -14,12 +14,12 @@ object Dependencies {
     "daschswiss/apache-jena-fuseki:2.0.8" // should be the same version as in docker-compose.yml, also make sure to use the same version when deploying it (i.e. version in ops-deploy)!
   val sipiImage = "daschswiss/sipi:3.5.0" // base image the knora-sipi image is created from
 
-  // versions
-  val akkaHttpVersion   = "10.2.9"
-  val akkaVersion       = "2.6.19"
-  val jenaVersion       = "4.5.0"
-  val metricsVersion    = "4.0.1"
-  val scalaVersion      = "2.13.8"
+  val ScalaVersion = "2.13.8"
+
+  val AkkaHttpVersion  = "10.2.9"
+  val AkkaActorVersion = "2.6.19"
+  val JenaVersion      = "4.5.0"
+
   val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
   val ZioJsonVersion    = "0.3.0-RC10"
@@ -44,15 +44,15 @@ object Dependencies {
   val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
 
   // akka
-  val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % akkaVersion     // Scala 3 compatible
-  val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion // Scala 3 incompatible
-  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"         // Scala 3 incompatible
-  val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion // Scala 3 incompatible
-  val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % akkaVersion     // Scala 3 compatible
-  val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % akkaVersion     // Scala 3 compatible
+  val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
+  val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaHttpCors      = "ch.megard"         %% "akka-http-cors"       % "1.1.3"          // Scala 3 incompatible
+  val akkaHttpSprayJson = "com.typesafe.akka" %% "akka-http-spray-json" % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaSlf4j         = "com.typesafe.akka" %% "akka-slf4j"           % AkkaActorVersion // Scala 3 compatible
+  val akkaStream        = "com.typesafe.akka" %% "akka-stream"          % AkkaActorVersion // Scala 3 compatible
 
   // jena
-  val jenaText = "org.apache.jena" % "jena-text" % jenaVersion
+  val jenaText = "org.apache.jena" % "jena-text" % JenaVersion
 
   // logging
   val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
@@ -98,12 +98,12 @@ object Dependencies {
   val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
 
   // test
-  val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % akkaHttpVersion // Scala 3 incompatible
-  val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % akkaVersion     // Scala 3 compatible
-  val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % akkaVersion     // Scala 3 compatible
+  val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
+  val akkaStreamTestkit    = "com.typesafe.akka"    %% "akka-stream-testkit"       % AkkaActorVersion // Scala 3 compatible
+  val akkaTestkit          = "com.typesafe.akka"    %% "akka-testkit"              % AkkaActorVersion // Scala 3 compatible
   val gatlingHighcharts    = "io.gatling.highcharts" % "gatling-charts-highcharts" % "3.8.2"
   val gatlingTestFramework = "io.gatling"            % "gatling-test-framework"    % "3.8.2"
-  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"        // Scala 3 compatible
+  val scalaTest            = "org.scalatest"        %% "scalatest"                 % "3.2.13"         // Scala 3 compatible
   val testcontainers       = "org.testcontainers"    % "testcontainers"            % "1.17.3"
 
   // found/added by the plugin but deleted anyway

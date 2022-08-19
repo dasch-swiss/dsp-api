@@ -6,11 +6,17 @@
 package org.knora.webapi.messages.util.standoff
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.IRI
+import com.typesafe.scalalogging.Logger
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors._
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -27,11 +33,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 object StandoffTagUtilV2 {
 
@@ -207,14 +208,14 @@ object StandoffTagUtilV2 {
         attrs.groupBy(attr => attr.standoffPropertyIri)
 
       // filter all the required props
-      val mustExistOnce: Set[SmartIri] = classSpecificProps.filter { case (propIri, card) =>
+      val mustExistOnce: Set[SmartIri] = classSpecificProps.filter { case (_, card) =>
         card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
       }.keySet
 
       // check if all the min cardinalities are respected
       mustExistOnce.foreach { propIri =>
         attrsGroupedByPropIri.get(propIri) match {
-          case Some(attrs: Seq[StandoffTagAttributeV2]) => ()
+          case Some(_: Seq[StandoffTagAttributeV2]) => ()
 
           case None =>
             throw BadRequestException(
@@ -224,7 +225,7 @@ object StandoffTagUtilV2 {
       }
 
       // filter all the props that have a limited occurrence
-      val mayExistOnce = classSpecificProps.filter { case (propIri, card) =>
+      val mayExistOnce = classSpecificProps.filter { case (_, card) =>
         card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MayHaveOne
       }.keySet
 
@@ -299,10 +300,10 @@ object StandoffTagUtilV2 {
     // namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
     val elementsSeparatorRequired: Vector[XMLTagSeparatorRequired] = mapping.mapping.namespace.flatMap {
       case (namespace: String, elesForNamespace: Map[String, Map[String, XMLTag]]) =>
-        elesForNamespace.flatMap { case (tagname: String, classWithTag: Map[String, XMLTag]) =>
+        elesForNamespace.flatMap { case (_: String, classWithTag: Map[String, XMLTag]) =>
           val tagsWithSeparator: Iterable[XMLTagSeparatorRequired] = classWithTag.filter {
             // filter out all `XMLTag` that require a separator
-            case (classname: String, tag: XMLTag) =>
+            case (_: String, tag: XMLTag) =>
               tag.separatorRequired
           }.map { case (classname: String, tag: XMLTag) =>
             // create a `XMLTagSeparatorRequired` with the current's element
@@ -966,7 +967,7 @@ object StandoffTagUtilV2 {
 
     // check for duplicate standoff class Iris
     val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.flatMap {
-      case (tagname: String, tagItem: Map[String, XMLTag]) =>
+      case (_: String, tagItem: Map[String, XMLTag]) =>
         tagItem.values.map(_.mapping.standoffClassIri)
     }
 
@@ -981,9 +982,8 @@ object StandoffTagUtilV2 {
           classnameMapping.map { case (classname: String, tagItem: XMLTag) =>
             // collect all the property Iris defined in the attributes for the current tag
             // over all namespaces
-            val propIris: Iterable[IRI] = tagItem.mapping.attributesToProps.values.flatten.map {
-              case (attrName, propIri) =>
-                propIri
+            val propIris: Iterable[IRI] = tagItem.mapping.attributesToProps.values.flatten.map { case (_, propIri) =>
+              propIri
             }
 
             // check for duplicate property Iris
@@ -1057,12 +1057,12 @@ object StandoffTagUtilV2 {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val standoffClassIris: Set[SmartIri] = standoffAssertions.map {
-      case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
+      case (_: IRI, standoffTagAssertions: Map[IRI, String]) =>
         standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri
     }.toSet
 
     val standoffPropertyIris: Set[SmartIri] = standoffAssertions.flatMap {
-      case (standoffTagIri: IRI, standoffTagAssertions: Map[IRI, String]) =>
+      case (_: IRI, standoffTagAssertions: Map[IRI, String]) =>
         (standoffTagAssertions.keySet - OntologyConstants.Rdf.Type).map(_.toSmartIri)
     }.toSet
 
@@ -1563,7 +1563,7 @@ object StandoffTagUtilV2 {
 
         case None => convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, standoffTagV2.attributes)
 
-        case unknownDataType =>
+        case _ =>
           throw InconsistentRepositoryDataException(
             s"the triplestore returned an unknown data type for ${standoffTagV2.standoffTagClassIri} that could not be handled"
           )
@@ -1655,10 +1655,10 @@ object StandoffTagUtilV2 {
         index -> comparableTags.toSet
       }
       .toVector
-      .sortBy { case (index: Int, standoffForIndex: Set[StandoffTagV2]) =>
+      .sortBy { case (index: Int, _: Set[StandoffTagV2]) =>
         index
       }
-      .map { case (index: Int, standoffForIndex: Set[StandoffTagV2]) =>
+      .map { case (_: Int, standoffForIndex: Set[StandoffTagV2]) =>
         standoffForIndex
       }
 

@@ -6,10 +6,13 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.knora.webapi._
+
+import scala.concurrent.Future
+
+import dsp.constants.SalsahGui
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
-
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -25,9 +28,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import scala.concurrent.Future
-import dsp.constants.SalsahGui
 
 /**
  * Handles requests for information about ontology entities.
@@ -604,7 +604,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                userProfile = userProfile
                                              )
         propertyInfoMap: Map[IRI, PropertyInfoV1] =
-          entities.propertyInfoMap.filterNot { case (propertyIri, propertyEntityInfo) =>
+          entities.propertyInfoMap.filterNot { case (_, propertyEntityInfo) =>
             propertyEntityInfo.isLinkValueProp
           }
 

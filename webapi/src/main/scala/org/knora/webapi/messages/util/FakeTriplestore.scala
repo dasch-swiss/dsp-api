@@ -7,11 +7,12 @@ package org.knora.webapi.messages.util
 
 import com.typesafe.scalalogging.Logger
 import org.apache.commons.io.FileUtils
-import org.knora.webapi.util.FileUtil
 
 import java.nio.file.Files
 import java.nio.file.Path
 import scala.jdk.CollectionConverters._
+
+import org.knora.webapi.util.FileUtil
 
 /**
  * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.

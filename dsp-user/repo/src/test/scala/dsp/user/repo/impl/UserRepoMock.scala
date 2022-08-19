@@ -5,12 +5,13 @@
 
 package dsp.user.repo.impl
 
-import dsp.user.api.UserRepo
-import dsp.user.domain.User
 import zio._
 import zio.stm.TMap
 
 import java.util.UUID
+
+import dsp.user.api.UserRepo
+import dsp.user.domain.User
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.User._
 

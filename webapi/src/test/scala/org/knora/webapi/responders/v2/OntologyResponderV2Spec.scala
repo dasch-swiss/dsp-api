@@ -6,8 +6,17 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import org.knora.webapi._
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.duration._
+import scala.language.postfixOps
+
+import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Schema
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -26,14 +35,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourcesSequ
 import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Schema
-import dsp.constants.SalsahGui
 
 /**
  * Tests [[OntologyResponderV2]].

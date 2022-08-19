@@ -19,15 +19,6 @@ import akka.stream.scaladsl.FileIO
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
 import io.swagger.annotations._
-import org.knora.webapi.IRI
-import org.knora.webapi.annotation.ApiMayChange
-import dsp.errors.BadRequestException
-
-import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.routing.KnoraRoute
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.routing.RouteUtilADM
 import zio.prelude.Validation
 
 import java.nio.file.Files
@@ -35,8 +26,17 @@ import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
+
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri.ProjectIri
 import dsp.valueobjects.Project._
+import org.knora.webapi.IRI
+import org.knora.webapi.annotation.ApiMayChange
+import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.routing.KnoraRoute
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.routing.RouteUtilADM
 
 object ProjectsRouteADM {
   val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")

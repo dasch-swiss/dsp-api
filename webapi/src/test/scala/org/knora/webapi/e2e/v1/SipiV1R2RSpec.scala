@@ -9,9 +9,19 @@ import akka.actor._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import zio.&
+import zio.Runtime
+import zio.ZLayer
+
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Paths
+
+import dsp.errors.FileWriteException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
-import dsp.errors.FileWriteException
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.core.Logging
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceApiRequestV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.CreateResourceValueV1
@@ -24,21 +34,12 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import zio.&
-import zio.ZLayer
-import zio.Runtime
-
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.nio.file.Paths
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestActorSystemService
-import org.knora.webapi.core.Logging
+import org.knora.webapi.testservices.TestClientService
 
 /**
  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented

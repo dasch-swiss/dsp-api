@@ -7,9 +7,20 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.UUID
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.annotation.ApiMayChange
-import dsp.errors._
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -32,16 +43,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetad
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.util.UUID
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 /**
  * Returns information about Knora projects.
@@ -1201,7 +1202,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 "getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing project to cache and afterwards returning the project found in the triplestore
-              writeProjectADMToCache(project).map(res => Some(project))
+              writeProjectADMToCache(project).map(_ => Some(project))
           }
         case Some(user) =>
           log.debug("getProjectFromCacheOrTriplestore - found in cache. returning user.")
@@ -1339,20 +1340,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @param maybeShortcode the shortcode of the project.
    * @return a [[Boolean]].
    */
-  private def projectExists(
-    maybeIri: Option[IRI],
-    maybeShortname: Option[String],
-    maybeShortcode: Option[String]
-  ): Future[Boolean] =
-    if (maybeIri.nonEmpty) {
-      projectByIriExists(maybeIri.get)
-    } else if (maybeShortname.nonEmpty) {
-      projectByShortnameExists(maybeShortname.get)
-    } else if (maybeShortcode.nonEmpty) {
-      projectByShortcodeExists(maybeShortcode.get)
-    } else {
-      FastFuture.successful(false)
-    }
 
   /**
    * Helper method for checking if a project identified by IRI exists.

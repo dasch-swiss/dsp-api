@@ -5,10 +5,12 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import dsp.valueobjects.IriErrorMessages
-import org.knora.webapi.CoreSpec
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.IriErrorMessages
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
@@ -16,8 +18,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata._
-
-import java.util.UUID
 
 /**
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.

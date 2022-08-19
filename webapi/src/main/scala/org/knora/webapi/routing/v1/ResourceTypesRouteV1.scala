@@ -7,6 +7,7 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.Authenticator
@@ -59,7 +60,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
 
           namedGraphIri = vocabularyId match {
                             case "0" => None // if param vocabulary is set to 0, query all named graphs
-                            case other =>
+                            case _ =>
                               Some(
                                 stringFormatter.validateAndEscapeIri(
                                   vocabularyId,
@@ -114,7 +115,7 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
           case None => // no vocabulary id given, check for restype
             resourcetypeId match {
               case Some(restypeId) => // get property types for given resource type
-                val resourceClassIri = stringFormatter.validateAndEscapeIri(
+                stringFormatter.validateAndEscapeIri(
                   restypeId,
                   throw BadRequestException(s"Invalid vocabulary IRI: $restypeId")
                 )

@@ -1,5 +1,7 @@
 package org.knora.webapi.util
 
+import java.time.Instant
+
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
@@ -12,8 +14,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagIriAtt
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffTagV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import java.time.Instant
 
 class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

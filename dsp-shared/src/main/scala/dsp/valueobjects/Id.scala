@@ -5,7 +5,6 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
 import zio.prelude.Validation
 
 import java.util.UUID

@@ -12,6 +12,10 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.IRI
 import org.knora.webapi.e2e.ClientTestDataCollector
@@ -27,9 +31,6 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.util.MutableTestIri
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 object OldListsRouteADMFeatureE2ESpec {
   val config: Config = ConfigFactory.parseString("""
