@@ -14,7 +14,6 @@ import dsp.errors.ExceptionUtil
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.logging.Logging
 import zio.Cause._
 import zio.Unsafe.unsafe
 import zio._

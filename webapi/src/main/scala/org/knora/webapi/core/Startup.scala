@@ -29,25 +29,7 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorIm
 /**
  * The application bootstrapper
  */
-object Bootstrap {
-
-  val bootstrap = ZEnvironment()
-    ZLayer.make[
-      ActorSystem with AppConfig with AppRouter with CacheServiceManager with CacheService with HttpServer with IIIFServiceManager with IIIFService with JWTService with RepositoryUpdater with TriplestoreServiceManager with TriplestoreService
-    ](
-      ActorSystem.layer,
-      AppConfig.live,
-      AppRouter.layer,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      HttpServer.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer,
-      JWTService.layer,
-      RepositoryUpdater.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer
-    )
+object Startup {
 
   /**
    * Initiates the startup sequence of the DSP-API server.
@@ -56,10 +38,10 @@ object Bootstrap {
    *                                If `false`, check if it is running but don't run upgrading AND loading ontology cache.
    * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
    */
-  def startup(
+  def run(
     requiresRepository: Boolean,
     requiresIIIFService: Boolean
-  ) =
+  ): ZIO[HttpServer with Scope with TriplestoreService with AppConfig with RepositoryUpdater with ActorSystem with AppRouter with IIIFService with CacheService with AppConfig,Nothing,Nothing] =
     (for {
       _ <- ZIO.service[HttpServer].flatMap(server => server.start)
       _ <- checkTriplestoreService

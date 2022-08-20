@@ -23,16 +23,16 @@ import akka.http.scaladsl.util.FastFuture
 
 import zio._
 import akka.http.interop.ZIOSupport
+import zio.prelude.Assertion
 
 /**
  * Provides health check logic
  */
 trait HealthCheck {
 
-  protected val healthCheck: ZIO[State, Nothing, HttpResponse] =
+  protected def healthCheck(state: State): ZIO[Any, Nothing, HttpResponse] =
     for {
-      svc      <- ZIO.service[State]
-      state    <- svc.get
+      state    <- state.get
       result   <- createResult(state)
       response <- createResponse(result)
     } yield response
@@ -127,7 +127,7 @@ class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with 
   override def makeRoute(): Route =
     path("health") {
       get { requestContext =>
-        val res: ZIO[Any,Nothing,HttpResponse] = healthCheck.provide(State.layer)
+        val res: ZIO[Any, Nothing, HttpResponse] = healthCheck(routeData.state)
         requestContext.complete(res)
       }
     }

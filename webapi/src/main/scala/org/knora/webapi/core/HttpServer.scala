@@ -150,17 +150,20 @@ object HttpServer extends AroundDirectives {
       }
     }.orDie
 
-  val layer: ZLayer[core.ActorSystem with AppRouter with AppConfig, Nothing, HttpServer] =
+  val layer: ZLayer[core.ActorSystem with AppRouter with State with AppConfig, Nothing, HttpServer] =
     ZLayer.scoped {
       for {
         as     <- ZIO.service[core.ActorSystem]
         router <- ZIO.service[AppRouter]
-        routeData <- ZIO.succeed(
-                       KnoraRouteData(
-                         system = as.system,
-                         appActor = router.ref
-                       )
-                     )
+        state  <- ZIO.service[State]
+        routeData <-
+          ZIO.succeed(
+            KnoraRouteData(
+              system = as.system,
+              appActor = router.ref,
+              state = state
+            )
+          )
         routes <- apiRoutes(routeData)
         config <- ZIO.service[AppConfig]
       } yield new HttpServer {

@@ -30,7 +30,7 @@ import akka.http.interop.ZIOSupport
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
+class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) { self =>
 
   /**
    * Gets the app state from the State service
@@ -39,12 +39,10 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     Unsafe.unsafe { implicit u =>
       Runtime.default.unsafe
         .runToFuture(
-          (for {
-            svc   <- ZIO.service[State]
-            state <- svc.get
-          } yield state).provide(State.layer)
+          for {
+            state <- self.routeData.state.get
+          } yield state
         )
-
     }
 
   /**

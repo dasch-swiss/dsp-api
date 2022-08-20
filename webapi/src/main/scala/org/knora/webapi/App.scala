@@ -9,8 +9,7 @@ import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.Bootstrap
-import org.knora.webapi.logging.Logging
+import org.knora.webapi.core.Startup
 import org.knora.webapi.core.HttpServer
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -28,10 +27,27 @@ import org.knora.webapi.store.iiif.api.IIIFService
 
 object App extends ZIOApp {
 
-  override val bootstrap = Bootstrap.bootstrap.environment
+  /**
+   * The `Environment` that we require to exist at startup.
+   */
+  type Environment = core.Environment
 
-  /* It all starts here */
-  val run = ZIO.scoped(Bootstrap.startup(true, true))
+  /**
+   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
+   * and cleaned up when the Runtime is shutdown.
+   */
+  override val bootstrap: ZLayer[
+    ZIOAppArgs with Scope,
+    Any,
+    Environment
+  ] =
+    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ core.allLayers
+
+  // no idea why we need that, but we do
+  val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+
+  /* Here we start our Application */
+  val run = ZIO.scoped(Startup.run(true, true))
 
   /**
    * Unsafely creates a `Runtime` from a `ZLayer` whose resources will be

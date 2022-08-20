@@ -17,6 +17,7 @@ import akka.util.Timeout
 import org.knora.webapi.IRI
 import dsp.errors.BadRequestException
 
+import org.knora.webapi.core.State
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
@@ -37,7 +38,7 @@ import scala.concurrent.Future
  * @param system   the actor system.
  * @param appActor the main application actor.
  */
-case class KnoraRouteData(system: ActorSystem, appActor: ActorRef)
+case class KnoraRouteData(system: ActorSystem, appActor: ActorRef, state: State)
 
 /**
  * An abstract class providing functionality that is commonly used by Knora routes and by
@@ -57,6 +58,7 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
   implicit protected val appActor: ActorRef = routeData.appActor
   protected val log: Logger                 = Logger(this.getClass)
   protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
+  val state                                 = routeData.state
 
   /**
    * Constructs a route. This can be done:
