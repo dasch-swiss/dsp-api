@@ -494,7 +494,9 @@ case class TriplestoreServiceHttpConnectorImpl(
     val triplestoreNotInitializedResponse =
       ZIO.succeed(
         CheckTriplestoreResponse(
-          triplestoreStatus = TriplestoreStatus.NotInitialized(s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}")
+          triplestoreStatus = TriplestoreStatus.NotInitialized(
+            s"None of the active datasets meet our requirement of name: ${config.triplestore.fuseki.repositoryName}"
+          )
         )
       )
 
