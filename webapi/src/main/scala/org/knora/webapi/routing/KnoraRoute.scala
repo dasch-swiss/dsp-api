@@ -58,7 +58,6 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
   implicit protected val appActor: ActorRef = routeData.appActor
   protected val log: Logger                 = Logger(this.getClass)
   protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
-  val state                                 = routeData.state
 
   /**
    * Constructs a route. This can be done:

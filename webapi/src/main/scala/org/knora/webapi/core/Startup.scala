@@ -25,6 +25,8 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
+import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.core.domain.AppState
 
 /**
  * The application bootstrapper
@@ -41,17 +43,49 @@ object Startup {
   def run(
     requiresRepository: Boolean,
     requiresIIIFService: Boolean
-  ): ZIO[HttpServer with Scope with TriplestoreService with AppConfig with RepositoryUpdater with ActorSystem with AppRouter with IIIFService with CacheService with AppConfig,Nothing,Nothing] =
+  ): ZIO[
+    ActorSystem
+      with AppRouter
+      with State
+      with HttpServer
+      with Scope
+      with TriplestoreService
+      with AppConfig
+      with RepositoryUpdater
+      with ActorSystem
+      with AppRouter
+      with IIIFService
+      with CacheService
+      with AppConfig,
+    Nothing,
+    Nothing
+  ] =
     (for {
-      _ <- ZIO.service[HttpServer].flatMap(server => server.start)
-      _ <- checkTriplestoreService
-      _ <- upgradeRepository(requiresRepository)
-      _ <- buildAllCaches
-      _ <- populateOntologyCaches(requiresRepository)
-      _ <- checkIIIFService(requiresIIIFService)
-      _ <- checkCacheService
-      _ <- printBanner
-      _ <- ZIO.never
+      state  <- ZIO.service[State]
+      _      <- state.set(AppState.StartingUp)
+      routes <- ApiRoutes.apiRoutes
+      _      <- ZIO.service[HttpServer].flatMap(server => server.start(routes))
+      _      <- state.set(AppState.WaitingForTriplestore)
+      _      <- checkTriplestoreService
+      _      <- state.set(AppState.TriplestoreReady)
+      _      <- state.set(AppState.UpdatingRepository)
+      _      <- upgradeRepository(requiresRepository)
+      _      <- state.set(AppState.RepositoryUpToDate)
+      _      <- state.set(AppState.CreatingCaches)
+      _      <- buildAllCaches
+      _      <- state.set(AppState.CachesReady)
+      _      <- state.set(AppState.LoadingOntologies)
+      _      <- populateOntologyCaches(requiresRepository)
+      _      <- state.set(AppState.OntologiesReady)
+      _      <- state.set(AppState.WaitingForIIIFService)
+      _      <- checkIIIFService(requiresIIIFService)
+      _      <- state.set(AppState.IIIFServiceReady)
+      _      <- state.set(AppState.WaitingForCacheService)
+      _      <- checkCacheService
+      _      <- state.set(AppState.CacheServiceReady)
+      _      <- printBanner
+      _      <- state.set(AppState.Running)
+      _      <- ZIO.never
     } yield ()).forever
 
   /**
@@ -150,7 +184,7 @@ object Startup {
           s"DSP-API Server started: ${config.knoraApi.internalKnoraApiBaseUrl}"
         )
 
-      _ = if (allowReloadOverHTTPState | config.allowReloadOverHttp) {
+      _ = if (config.allowReloadOverHttp) {
             ZIO.logWarning("Resetting DB over HTTP is turned ON")
           }
 
@@ -160,224 +194,4 @@ object Startup {
       _ <- ZIO.logInfo(s"DB-Server: ${config.triplestore.host}\t DB Port: ${config.triplestore.fuseki.port}")
     } yield ()
   }
-
-  // private var appState: AppState       = AppStates.Stopped
-  private var allowReloadOverHTTPState = false
-  // private var ignoreRepository         = true
-  // private var withIIIFService          = true
-  // private val withCacheService         = cacheServiceSettings.cacheServiceEnabled
-
-  // /**
-  //  * Startup of the ApplicationActor is a two step process:
-  //  * 1. Step: Start the http server and bind to ip and port. This is done with
-  //  * the "initializing" behaviour
-  //  * - Success: After a successful bind, go to step 2.
-  //  * - Failure: If bind fails, then retry up to 5 times before exiting.
-  //  *
-  //  * 2. Step:
-  //  */
-  // def receive: Receive = initializing()
-
-  // def initializing(): Receive = {
-  //   /* Called from main. Initiates application startup. */
-  //   case appStartMsg: AppStart =>
-  //     log.info("==> AppStart")
-  //     appStart(appStartMsg.ignoreRepository, appStartMsg.requiresIIIFService, appStartMsg.retryCnt)
-  //   case AppStop() =>
-  //     log.info("==> AppStop")
-  //     appStop()
-  //   case AppReady() =>
-  //     log.info("==> AppReady")
-  //     unstashAll() // unstash any messages, so that they can be processed
-  //     context.become(ready(), discardOld = true)
-  //   case _ =>
-  //     stash() // stash any messages which we cannot handle in this state
-  // }
-
-  // def ready(): Receive = {
-
-  //   /* Usually only called from tests */
-  //   case AppStop() =>
-  //     appStop()
-
-  //   /* Called from the "appStart" method. Entry point for startup sequence. */
-  //   case initStartUp: InitStartUp =>
-  //     log.info("=> InitStartUp")
-
-  //     if (appState == AppStates.Stopped) {
-  //       ignoreRepository = initStartUp.ignoreRepository
-  //       withIIIFService = initStartUp.requiresIIIFService
-
-  //       self ! SetAppState(AppStates.StartingUp)
-  //     }
-
-  //   /* Each app state change goes through here */
-  //   case SetAppState(value: AppState) =>
-  //     appState = value
-  //     log.debug("appStateChanged - to state: {}", value)
-  //     value match {
-  //       case AppStates.Stopped =>
-  //       // do nothing
-  //       case AppStates.StartingUp =>
-  //         self ! SetAppState(AppStates.WaitingForTriplestore)
-
-  //       case AppStates.WaitingForTriplestore =>
-  //         // check DB
-  //         self ! CheckTriplestore()
-
-  //       case AppStates.TriplestoreReady =>
-  //         self ! SetAppState(AppStates.UpdatingRepository)
-
-  //       case AppStates.UpdatingRepository =>
-  //         if (ignoreRepository) {
-  //           self ! SetAppState(AppStates.RepositoryUpToDate)
-  //         } else {
-  //           self ! UpdateRepository()
-  //         }
-
-  //       case AppStates.RepositoryUpToDate =>
-  //         self ! SetAppState(AppStates.CreatingCaches)
-
-  //       case AppStates.CreatingCaches =>
-  //         self ! CreateCaches()
-
-  //       case AppStates.CachesReady =>
-  //         self ! SetAppState(AppStates.LoadingOntologies)
-
-  //       case AppStates.LoadingOntologies =>
-  //         if (ignoreRepository) {
-  //           self ! SetAppState(AppStates.OntologiesReady)
-  //         } else {
-  //           self ! LoadOntologies()
-  //         }
-
-  //       case AppStates.OntologiesReady =>
-  //         self ! SetAppState(AppStates.WaitingForIIIFService)
-
-  //       case AppStates.WaitingForIIIFService =>
-  //         if (withIIIFService) {
-  //           // check if sipi is running
-  //           self ! CheckIIIFService
-  //         } else {
-  //           // skip sipi check
-  //           self ! SetAppState(AppStates.IIIFServiceReady)
-  //         }
-
-  //       case AppStates.IIIFServiceReady =>
-  //         self ! SetAppState(AppStates.WaitingForCacheService)
-
-  //       case AppStates.WaitingForCacheService =>
-  //         if (withCacheService) {
-  //           self ! CheckCacheService
-  //         } else {
-  //           self ! SetAppState(AppStates.CacheServiceReady)
-  //         }
-
-  //       case AppStates.CacheServiceReady =>
-  //         self ! SetAppState(AppStates.Running)
-
-  //       case AppStates.Running =>
-  //         log.info("=> Running")
-  //         printBanner()
-
-  //       case AppStates.MaintenanceMode =>
-  //         // do nothing
-  //         ()
-
-  //       case other =>
-  //         throw UnsupportedValueException(
-  //           s"The value: $other is not supported."
-  //         )
-  //     }
-
-  //   case GetAppState() =>
-  //     log.debug("ApplicationStateActor - GetAppState - value: {}", appState)
-  //     sender() ! appState
-
-  //   case ActorReady() =>
-  //     sender() ! ActorReadyAck()
-
-  //   case SetAllowReloadOverHTTPState(value) =>
-  //     log.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
-  //     allowReloadOverHTTPState = value
-
-  //   case GetAllowReloadOverHTTPState() =>
-  //     log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-  //     sender() ! (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP)
-
-  //   /* check repository request */
-  //   case CheckTriplestore() =>
-  //     self ! CheckTriplestoreRequest()
-
-  //   /* check repository response */
-  //   case CheckTriplestoreResponse(status, message) =>
-  //     status match {
-  //       case TriplestoreStatus.ServiceAvailable =>
-  //         self ! SetAppState(AppStates.TriplestoreReady)
-  //       case TriplestoreStatus.NotInitialized =>
-  //         log.warn(s"checkRepository - status: $status, message: $message")
-  //         log.warn("Please initialize repository.")
-  //         timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
-  //       case TriplestoreStatus.ServiceUnavailable =>
-  //         log.warn(s"checkRepository - status: $status, message: $status")
-  //         log.warn("Please start repository.")
-  //         timers.startSingleTimer("CheckRepository", CheckTriplestore(), 5.seconds)
-  //     }
-
-  //   case UpdateRepository() =>
-  //     self ! UpdateRepositoryRequest()
-
-  //   case RepositoryUpdatedResponse(message) =>
-  //     log.info(message)
-  //     self ! SetAppState(AppStates.RepositoryUpToDate)
-
-  //   /* create caches request */
-  //   case CreateCaches() =>
-  //     CacheUtil.createCaches(knoraSettings.caches)
-  //     self ! SetAppState(AppStates.CachesReady)
-
-  //   /* load ontologies request */
-  //   case LoadOntologies() =>
-  //     self ! LoadOntologiesRequestV2(
-  //       requestingUser = KnoraSystemInstances.Users.SystemUser
-  //     )
-
-  //   /* load ontologies response */
-  //   case SuccessResponseV2(_) =>
-  //     self ! SetAppState(AppStates.OntologiesReady)
-
-  //   case CheckIIIFService =>
-  //     self ! IIIFServiceGetStatus
-
-  //   case IIIFServiceStatusOK =>
-  //     self ! SetAppState(AppStates.IIIFServiceReady)
-
-  //   case IIIFServiceStatusNOK if withIIIFService =>
-  //     log.warn("Sipi not running. Please start it.")
-  //     timers.startSingleTimer("CheckIIIFService", CheckIIIFService, 5.seconds)
-
-  //   case CheckCacheService =>
-  //     self ! CacheServiceGetStatus
-
-  //   case CacheServiceStatusOK =>
-  //     self ! SetAppState(AppStates.CacheServiceReady)
-
-  //   case CacheServiceStatusNOK =>
-  //     log.warn("Redis server not running. Please start it.")
-  //     timers.startSingleTimer("CheckCacheService", CheckCacheService, 5.seconds)
-
-  //   case akka.actor.Status.Failure(ex: Exception) =>
-  //     ex match {
-  //       case MissingLastModificationDateOntologyException(_, _) =>
-  //         log.info("Application stopped because of loading ontology into the cache failed.")
-  //         appStop()
-  //       case _ => throw ex
-  //     }
-
-  //   case other =>
-  //     throw UnexpectedMessageException(
-  //       s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
-  //     )
-  // }
-
 }
