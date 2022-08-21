@@ -50,10 +50,8 @@ object AppRouter {
         triplestoreServiceManager <- ZIO.service[TriplestoreServiceManager]
         appConfig                 <- ZIO.service[AppConfig]
       } yield new AppRouter { self =>
-        implicit lazy val system: akka.actor.ActorSystem =
-          as.system
-
-        implicit val executionContext: ExecutionContext = system.dispatcher
+        implicit lazy val system: akka.actor.ActorSystem = as.system
+        implicit val executionContext: ExecutionContext  = system.dispatcher
 
         val ref: ActorRef = system.actorOf(
           Props(

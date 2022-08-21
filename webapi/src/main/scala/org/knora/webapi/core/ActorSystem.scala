@@ -12,6 +12,7 @@ import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.config.AppConfig
 import scala.concurrent.ExecutionContext
 import org.knora.webapi.settings.KnoraSettings
+import akka.actor
 
 @accessible
 trait ActorSystem {
@@ -22,7 +23,7 @@ trait ActorSystem {
 
 object ActorSystem {
 
-  private def acquire(config: AppConfig, ec: ExecutionContext) =
+  private def acquire(config: AppConfig, ec: ExecutionContext): URIO[Any,actor.ActorSystem] =
     ZIO
       .attempt(
         akka.actor.ActorSystem(
@@ -35,7 +36,7 @@ object ActorSystem {
       .tap(_ => ZIO.logInfo(">>> Acquire Actor System <<<"))
       .orDie
 
-  private def release(system: akka.actor.ActorSystem) =
+  private def release(system: akka.actor.ActorSystem): URIO[Any,actor.Terminated] =
     ZIO
       .fromFuture(_ => system.terminate())
       .tap(_ => ZIO.logInfo(">>> Release Actor System <<<"))
