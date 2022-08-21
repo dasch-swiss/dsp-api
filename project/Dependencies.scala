@@ -40,8 +40,8 @@ object Dependencies {
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
+  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.1"
+  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.1"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % akkaVersion     // Scala 3 compatible
