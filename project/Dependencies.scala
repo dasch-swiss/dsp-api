@@ -57,7 +57,7 @@ object Dependencies {
   // logging
   val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
-  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
+  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "2.0.0"
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
