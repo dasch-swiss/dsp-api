@@ -41,39 +41,39 @@ import org.knora.webapi.util.MutableTestIri
  */
 class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   override lazy val rdfDataObjects: List[RdfDataObject] =
     List(exampleSharedOntology, anythingData, freeTestOntology, freeTestData)
-  private val imagesUser           = SharedTestDataADM.imagesUser01
-  private val imagesProjectIri     = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
-  private val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
-  private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
-  private val anythingProjectIri   = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
-  private val exampleSharedOntology = RdfDataObject(
+  val imagesUser           = SharedTestDataADM.imagesUser01
+  val imagesProjectIri     = SharedTestDataADM.IMAGES_PROJECT_IRI.toSmartIri
+  val anythingAdminUser    = SharedTestDataADM.anythingAdminUser
+  val anythingNonAdminUser = SharedTestDataADM.anythingUser1
+  val anythingProjectIri   = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
+  val exampleSharedOntology = RdfDataObject(
     path = "test_data/ontologies/example-box.ttl",
     name = "http://www.knora.org/ontology/shared/example-box"
   )
-  private val anythingData =
+  val anythingData =
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-  private val freeTestOntology =
+  val freeTestOntology =
     RdfDataObject(path = "test_data/ontologies/freetest-onto.ttl", name = "http://www.knora.org/ontology/0001/freetest")
-  private val freeTestData =
+  val freeTestData =
     RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
   // The default timeout for receiving reply messages from actors.
-  private val timeout                      = 10.seconds
-  private val fooIri                       = new MutableTestIri
-  private val barIri                       = new MutableTestIri
-  private val chairIri                     = new MutableTestIri
-  private val ExampleSharedOntologyIri     = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
-  private val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
-  private val AnythingOntologyIri          = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
-  private val FreeTestOntologyIri          = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
-  private val printErrorMessages           = false
-  private var fooLastModDate: Instant      = Instant.now
-  private var barLastModDate: Instant      = Instant.now
-  private var chairLastModDate: Instant    = Instant.now
-  private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-  private var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
+  val timeout                      = 10.seconds
+  val fooIri                       = new MutableTestIri
+  val barIri                       = new MutableTestIri
+  val chairIri                     = new MutableTestIri
+  val ExampleSharedOntologyIri     = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
+  val IncunabulaOntologyIri        = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
+  val AnythingOntologyIri          = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+  val FreeTestOntologyIri          = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
+  val printErrorMessages           = false
+  var fooLastModDate: Instant      = Instant.now
+  var barLastModDate: Instant      = Instant.now
+  var chairLastModDate: Instant    = Instant.now
+  var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+  var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
 
   val anythingOntology                     = "http://0.0.0.0:3333/ontology/0001/anything/v2#"
   val anythingThing: IRI                   = anythingOntology + "Thing"
@@ -103,7 +103,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
   val anythingHasStandoffLinkTo: IRI       = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
   val anythingHasStandoffLinkToValue: IRI  = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
 
-  private def loadInvalidTestData(rdfDataObjs: List[RdfDataObject]): Unit = {
+  def loadInvalidTestData(rdfDataObjs: List[RdfDataObject]): Unit = {
     appActor ! ResetRepositoryContent(rdfDataObjs)
     expectMsg(5 minutes, ResetRepositoryContentACK())
 
