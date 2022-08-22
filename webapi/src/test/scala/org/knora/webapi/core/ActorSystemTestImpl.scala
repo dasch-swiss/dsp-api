@@ -15,13 +15,13 @@ import org.knora.webapi.settings.KnoraSettings
 
 object ActorSystemTestImpl {
 
-  def layer(_system: akka.actor.ActorSystem): ZLayer[Any, Nothing, ActorSystem] =
+  def layer(sys: akka.actor.ActorSystem): ZLayer[Any, Nothing, ActorSystem] =
     ZLayer
       .succeed(
         new ActorSystem {
-          override val system: akka.actor.ActorSystem             = _system
-          override val settings: KnoraSettingsImpl                = KnoraSettings(_system)
-          override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(_system.settings.config)
+          override val system: akka.actor.ActorSystem             = sys
+          override val settings: KnoraSettingsImpl                = KnoraSettings(system)
+          override val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
         }
       )
       .tap(_ => ZIO.logInfo(">>> ActorSystem Initialized <<<"))

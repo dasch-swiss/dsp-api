@@ -47,5 +47,9 @@ object App extends ZIOApp {
   val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
 
   /* Here we start our Application */
-  val run = ZIO.scoped(core.Startup.run(true, true))
+  val run =
+    (for {
+      _ <- ZIO.scoped(core.Startup.run(true, true))
+      _ <- ZIO.never
+    } yield ()).forever
 }

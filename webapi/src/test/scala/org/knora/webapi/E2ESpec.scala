@@ -39,7 +39,7 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.StartupUtils
+import org.knora.webapi.util.TestStartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.concurrent.ScalaFutures
@@ -62,7 +62,6 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
-import app.ApplicationActor
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -80,7 +79,7 @@ object E2ESpec {
 abstract class E2ESpec(_system: ActorSystem)
     extends TestKit(_system)
     with Core
-    with StartupUtils
+    with TestStartupUtils
     with TriplestoreJsonProtocol
     with Suite
     with AnyWordSpecLike

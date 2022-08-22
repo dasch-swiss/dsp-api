@@ -58,9 +58,9 @@ object Startup {
       with CacheService
       with AppConfig,
     Nothing,
-    Nothing
+    Unit
   ] =
-    (for {
+    for {
       state  <- ZIO.service[State]
       _      <- state.set(AppState.StartingUp)
       routes <- ApiRoutes.apiRoutes
@@ -85,8 +85,7 @@ object Startup {
       _      <- state.set(AppState.CacheServiceReady)
       _      <- printBanner
       _      <- state.set(AppState.Running)
-      _      <- ZIO.never
-    } yield ()).forever
+    } yield ()
 
   /**
    * Checks if the TriplestoreService is running and the repository is properly initialized.
