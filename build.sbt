@@ -27,7 +27,20 @@ lazy val buildSettings = Seq(
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "root", file("."))
-  .aggregate(webapi, sipi, shared, userCore, userHandler, userRepo, userInterface)
+  .aggregate(
+    webapi,
+    sipi,
+    shared,
+    userCore,
+    userHandler,
+    userRepo,
+    userInterface,
+    roleCore,
+    roleRepo,
+    roleHandler,
+    roleInterface,
+    schemaCore
+  )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
     // values set for all sub-projects

@@ -20,7 +20,7 @@ object KnoraCardinalityInfoIsStricterThanZSpec extends ZIOSpecDefault {
   val mayHaveOne   = MayHaveOne   // "0-1"
   val mayHaveMany  = MayHaveMany  // "0-n"
 
-  private val mustHaveOneTest = suite("MustHaveOneTest")(
+  val mustHaveOneTest = suite("MustHaveOneTest")(
     test("cardinality of '1' is NOT stricter than cardinality of '1'") {
       assertTrue(!mustHaveOne.isStricterThan(mustHaveOne))
     },
@@ -50,7 +50,7 @@ object KnoraCardinalityInfoIsStricterThanZSpec extends ZIOSpecDefault {
     }
   )
 
-  private val mayHaveOneTest = suite("MayHaveOneTest")(
+  val mayHaveOneTest = suite("MayHaveOneTest")(
     test("cardinality of '0-1' is NOT stricter than cardinality of '1'") {
       assertTrue(!mayHaveOne.isStricterThan(mustHaveOne))
     },
@@ -65,7 +65,7 @@ object KnoraCardinalityInfoIsStricterThanZSpec extends ZIOSpecDefault {
     }
   )
 
-  private val mayHaveManyTest = suite("MayHaveManyTest")(
+  val mayHaveManyTest = suite("MayHaveManyTest")(
     test("cardinality of '0-n' is NOT stricter than cardinality of '1'") {
       assertTrue(!mayHaveMany.isStricterThan(mustHaveOne))
     },

@@ -25,8 +25,8 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val user: UserADM = SharedTestDataADM.imagesUser01
-  private val userWithApostrophe = UserADM(
+  val user: UserADM = SharedTestDataADM.imagesUser01
+  val userWithApostrophe = UserADM(
     id = "http://rdfh.ch/users/aaaaaab71e7b0e01",
     username = "user_with_apostrophe",
     email = "userWithApostrophe@example.org",
@@ -36,7 +36,7 @@ object CacheInMemImplZSpec extends ZIOSpecDefault {
     lang = "en"
   )
 
-  private val project: ProjectADM = SharedTestDataADM.imagesProject
+  val project: ProjectADM = SharedTestDataADM.imagesProject
 
   /**
    * Defines a layer which encompases all dependencies that are needed for

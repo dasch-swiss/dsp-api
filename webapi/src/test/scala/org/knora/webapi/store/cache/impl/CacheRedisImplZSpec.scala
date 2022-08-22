@@ -26,8 +26,8 @@ object CacheRedisImplZSpec extends ZIOSpecDefault {
   StringFormatter.initForTest()
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val user: UserADM       = SharedTestDataADM.imagesUser01
-  private val project: ProjectADM = SharedTestDataADM.imagesProject
+  val user: UserADM       = SharedTestDataADM.imagesUser01
+  val project: ProjectADM = SharedTestDataADM.imagesProject
 
   /**
    * Defines a layer which encompases all dependencies that are needed for
