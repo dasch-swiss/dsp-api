@@ -99,18 +99,14 @@ case class ChangeGroupApiRequestADM(
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM
 
 /**
- * Get all information about all groups.
- *
- * @param requestingUser       the user initiating the request.
+ * Get all information about all groups.      the user initiating the request.
  */
-case class GroupsGetADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupsGetADM() extends GroupsResponderRequestADM
 
 /**
  * Get all information about all groups.
- *
- * @param requestingUser       the user initiating the request.
  */
-case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupsGetRequestADM() extends GroupsResponderRequestADM
 
 /**
  * Get everything about a single group identified through its IRI. A successful response will be

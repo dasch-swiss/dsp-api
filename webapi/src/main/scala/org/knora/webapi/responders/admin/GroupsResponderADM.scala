@@ -42,9 +42,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
    */
   def receive(msg: GroupsResponderRequestADM) = msg match {
-    case GroupsGetADM(requestingUser) => groupsGetADM(requestingUser)
-    case GroupsGetRequestADM(requestingUser) =>
-      groupsGetRequestADM(requestingUser)
+    case GroupsGetADM()        => groupsGetADM
+    case GroupsGetRequestADM() => groupsGetRequestADM
     case GroupGetADM(groupIri, requestingUser) =>
       groupGetADM(groupIri, requestingUser)
     case MultipleGroupsGetRequestADM(groupIris, requestingUser) =>
@@ -75,12 +74,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   /**
    * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
    *
-   * @param requestingUser       the user making the request.
    * @return all the groups as a sequence of [[GroupADM]].
    */
-  private def groupsGetADM(
-    requestingUser: UserADM
-  ): Future[Seq[GroupADM]] = {
+  private def groupsGetADM: Future[Seq[GroupADM]] = {
 
     log.debug("groupsGetADM")
 
@@ -117,7 +113,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             .value
 
           for {
-            maybeProjectADM: Option[ProjectADM] <-
+            maybeProjectADM <-
               appActor
                 .ask(
                   ProjectGetADM(
@@ -129,7 +125,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 )
                 .mapTo[Option[ProjectADM]]
 
-            projectADM: ProjectADM =
+            projectADM =
               maybeProjectADM match {
                 case Some(project) => project
                 case None =>
@@ -197,17 +193,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   /**
    * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
    *
-   * @param requestingUser the user initiating the request.
    * @return all the groups as a [[GroupsGetResponseADM]].
    */
-  private def groupsGetRequestADM(
-    requestingUser: UserADM
-  ): Future[GroupsGetResponseADM] =
+  private def groupsGetRequestADM: Future[GroupsGetResponseADM] =
     for {
       maybeGroupsListToReturn <-
-        groupsGetADM(
-          requestingUser = requestingUser
-        )
+        groupsGetADM
 
       result = maybeGroupsListToReturn match {
                  case groups: Seq[GroupADM] if groups.nonEmpty => GroupsGetResponseADM(groups = groups)
@@ -270,7 +261,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     requestingUser: UserADM
   ): Future[GroupGetResponseADM] =
     for {
-      maybeGroupADM: Option[GroupADM] <-
+      maybeGroupADM <-
         groupGetADM(
           groupIri = groupIri,
           requestingUser = requestingUser
@@ -318,7 +309,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     log.debug("groupMembersGetADM - groupIri: {}", groupIri)
 
     for {
-      maybeGroupADM: Option[GroupADM] <-
+      maybeGroupADM <-
         groupGetADM(
           groupIri = groupIri,
           requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -352,7 +343,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       // _ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
       // get project member IRI from results rows
-      groupMemberIris: Seq[IRI] =
+      groupMemberIris =
         if (groupMembersResponse.results.bindings.nonEmpty) {
           groupMembersResponse.results.bindings.map(_.rowMap("s"))
         } else {
@@ -373,8 +364,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             )
             .mapTo[Option[UserADM]]
         }
-      maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUsersFutures)
-      users: Seq[UserADM]               = maybeUsers.flatten
+      maybeUsers         <- Future.sequence(maybeUsersFutures)
+      users: Seq[UserADM] = maybeUsers.flatten
 
       _ = log.debug("groupMembersGetRequestADM - users: {}", users)
 
@@ -451,7 +442,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
             }
 
-        maybeProjectADM: Option[ProjectADM] <-
+        maybeProjectADM <-
           appActor
             .ask(
               ProjectGetADM(
@@ -558,9 +549,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
 
-        groupADM: GroupADM = maybeGroupADM.getOrElse(
-                               throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
-                             )
+        groupADM = maybeGroupADM.getOrElse(
+                     throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
+                   )
 
         /* check if the requesting user is allowed to perform updates */
         _ =
@@ -636,9 +627,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             requestingUser = KnoraSystemInstances.Users.SystemUser
           )
 
-        groupADM: GroupADM = maybeGroupADM.getOrElse(
-                               throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
-                             )
+        groupADM = maybeGroupADM.getOrElse(
+                     throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
+                   )
 
         /* check if the requesting user is allowed to perform updates */
         _ =
@@ -649,11 +640,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             throw ForbiddenException("Group's status can only be changed by a project or system admin.")
           }
 
-        maybeStatus: Option[GroupStatus] = changeGroupRequest.status match {
-                                             case Some(value) =>
-                                               Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
-                                             case None => None
-                                           }
+        maybeStatus = changeGroupRequest.status match {
+                        case Some(value) =>
+                          Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
+                        case None => None
+                      }
 
         /* create the update request */
         groupUpdatePayload = GroupUpdatePayloadADM(
@@ -810,7 +801,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     if (propsMap.nonEmpty) {
       for {
         projectIri <- projectIriFuture
-        maybeProject: Option[ProjectADM] <-
+        maybeProject <-
           appActor
             .ask(
               ProjectGetADM(
@@ -820,9 +811,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             )
             .mapTo[Option[ProjectADM]]
 
-        project: ProjectADM = maybeProject.getOrElse(
-                                throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
-                              )
+        project = maybeProject.getOrElse(
+                    throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
+                  )
 
         groupADM: GroupADM =
           GroupADM(
@@ -926,7 +917,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       // group deactivated. need to remove members.
       log.debug("removeGroupMembersIfNecessary - group deactivated. need to remove members.")
       for {
-        members: Seq[UserADM] <-
+        members <-
           groupMembersGetADM(
             groupIri = changedGroup.id,
             requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -945,7 +936,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               )
               .mapTo[UserOperationResponseADM]
           }
-        userOperationResults: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
+
+        _: Seq[UserOperationResponseADM] <- Future.sequence(seqOfFutures)
 
       } yield GroupOperationResponseADM(group = changedGroup)
     }

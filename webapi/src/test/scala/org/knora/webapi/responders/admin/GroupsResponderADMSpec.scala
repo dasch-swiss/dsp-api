@@ -50,9 +50,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        appActor ! GroupsGetRequestADM(
-          requestingUser = SharedTestDataADM.rootUser
-        )
+        appActor ! GroupsGetRequestADM()
 
         val response = expectMsgType[GroupsGetResponseADM](timeout)
         response.groups.nonEmpty should be(true)

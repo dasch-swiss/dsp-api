@@ -55,8 +55,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   private def getGroups(): Route = path(GroupsBasePath) {
     get { requestContext =>
       val requestMessage = for {
-        requestingUser <- getUserADM(requestContext)
-      } yield GroupsGetRequestADM(requestingUser)
+        _ <- getUserADM(requestContext)
+      } yield GroupsGetRequestADM()
 
       RouteUtilADM.runJsonRoute(
         requestMessageF = requestMessage,
