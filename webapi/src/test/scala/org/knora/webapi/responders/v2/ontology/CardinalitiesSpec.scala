@@ -18,15 +18,14 @@ import akka.util.Timeout
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
  */
-class DeleteCardinalitiesFromClassSpec extends CoreSpec {
+class CardinalitiesSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout                 = settings.defaultTimeout
 
   val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
 
-  // use started actor in tests instead of the store manager
-  "DeleteCardinalitiesFromClass" should {
+  "Cardinalities.isPropertyUsedInResources()" should {
     "detect that property is in use, when used in a resource" in {
       val internalPropertyIri = freetestOntologyIri.makeEntityIri("hasText").toOntologySchema(InternalSchema)
       val internalClassIri    = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
