@@ -37,11 +37,6 @@ import zio._
 sealed trait TriplestoreRequest extends StoreRequest
 
 /**
- * Simple message for initial actor functionality.
- */
-case class HelloTriplestore(txt: String) extends TriplestoreRequest
-
-/**
  * Simple message for checking the connection to the triplestore.
  */
 case class CheckConnection() extends TriplestoreRequest
