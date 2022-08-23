@@ -22,7 +22,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
 
@@ -33,7 +32,7 @@ import scala.concurrent.Future
 /**
  * Contains methods used for dealing with cardinalities on a class
  */
-object Cardinalities {
+object CardinalityHandler {
 
   /**
    * FIXME(DSP-1856): Only works if a single cardinality is supplied.
@@ -103,7 +102,7 @@ object Cardinalities {
 
       // Check that the submitted cardinality to delete is defined on this class
 
-      cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
+      cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
       isDefinedOnClassList: List[Boolean] <- Future
@@ -260,7 +259,7 @@ object Cardinalities {
 
       // Check that the submitted cardinality to delete is defined on this class
 
-      cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
+      cardinalitiesToDelete: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
       isDefinedOnClassList: List[Boolean] <- Future
@@ -358,7 +357,7 @@ object Cardinalities {
 
       propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
-      inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
+      inheritedCardinalities: Map[SmartIri, OwlCardinality.KnoraCardinalityInfo] =
         cardinalitiesForClassWithInheritance.filterNot { case (propertyIri, _) =>
           newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
         }
@@ -485,7 +484,7 @@ object Cardinalities {
    * @param internalOntologyIri the internal ontology IRI
    * @return `true` if the class is defined inside the ontology found in the cache, otherwise throws an exception.
    */
-  def classExists(
+  private def classExists(
     cacheData: Cache.OntologyCacheData,
     submittedClassInfoContentV2: ClassInfoContentV2,
     internalClassIri: SmartIri,
@@ -512,10 +511,10 @@ object Cardinalities {
    * @param internalOntologyIri the ontology containing the class.
    * @return `true` if the cardinality is defined on the class, `false` otherwise
    */
-  def isCardinalityDefinedOnClass(
+  private def isCardinalityDefinedOnClass(
     cacheData: Cache.OntologyCacheData,
     propertyIri: SmartIri,
-    cardinalityInfo: KnoraCardinalityInfo,
+    cardinalityInfo: OwlCardinality.KnoraCardinalityInfo,
     internalClassIri: SmartIri,
     internalOntologyIri: SmartIri
   )(implicit ec: ExecutionContext): Future[Boolean] = {

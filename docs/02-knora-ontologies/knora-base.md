@@ -32,7 +32,7 @@ In Knora, each item of data belongs to some particular project. Each project usi
 
 - `projectShortname` (1): A short name that can be used to identify the project in configuration files and the like.
 
-- `projectLongname` (1): The full name of the project.
+- `projectLongname` (0-1): The full name of the project.
 
 - `projectShortcode` (1): A hexadecimal code that uniquely identifies the project. These codes are assigned to projects
   by the [DaSCH](http://dasch.swiss/).
