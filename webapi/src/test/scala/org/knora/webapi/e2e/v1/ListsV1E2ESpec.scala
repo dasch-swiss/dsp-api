@@ -54,8 +54,8 @@ class ListsV1E2ESpec
     "test"
   )
 
-  val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
-  val multiUserIri     = SharedTestDataV1.multiuserUser.userData.user_id.get
+  val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.fold(e => throw e.head, v => v)
+  val multiUserIri     = SharedTestDataV1.multiuserUser.userData.user_id.fold(e => throw e.head, v => v)
   val wrongEmail       = "wrong@example.com"
   val wrongEmailEnc    = java.net.URLEncoder.encode(wrongEmail, "utf-8")
   val wrongPass        = java.net.URLEncoder.encode("wrong", "utf-8")

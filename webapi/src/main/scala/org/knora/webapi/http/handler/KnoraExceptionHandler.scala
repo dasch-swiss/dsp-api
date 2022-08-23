@@ -175,27 +175,6 @@ object KnoraExceptionHandler extends LazyLogging {
   }
 
   /**
-   * Converts an exception to an HTTP response in HTML format specific to `V1`.
-   *
-   * @param ex the exception to be converted.
-   * @return an [[HttpResponse]] in HTML format.
-   */
-
-  /**
-   * Converts an exception to an HTTP response in HTML format specific to `V2`.
-   *
-   * @param ex the exception to be converted.
-   * @return an [[HttpResponse]] in HTML format.
-   */
-
-  /**
-   * Converts an exception to an HTTP response in HTML format specific to `ADM`.
-   *
-   * @param ex the exception to be converted.
-   * @return an [[HttpResponse]] in HTML format.
-   */
-
-  /**
    * Given an exception, returns an error message suitable for clients.
    *
    * @param ex       the exception.

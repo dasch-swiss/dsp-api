@@ -109,7 +109,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
           Await.result(firstTaskResultFuture, 1.second)
           false
         } catch {
-          case _: Exception => true
+          case _ => true
         }
 
       assert(firstTaskFailed, "First task did not fail")
