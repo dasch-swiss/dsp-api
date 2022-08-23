@@ -47,7 +47,7 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.util.TestStartupUtils
+import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
@@ -58,6 +58,7 @@ import org.knora.webapi.core.AppRouter
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.iiif.api.IIIFService
 import akka.actor
+import scala.concurrent.ExecutionContextExecutor
 
 abstract class CoreSpec
     extends ZIOApp
@@ -68,15 +69,16 @@ abstract class CoreSpec
     with BeforeAndAfterAll
     with ImplicitSender {
 
-  implicit lazy val system: actor.ActorSystem   = akka.actor.ActorSystem("E2ETest", ConfigFactory.load())
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  lazy val rdfDataObjects                       = List.empty[RdfDataObject]
-  val log: Logger                               = Logger(this.getClass())
+  implicit lazy val system: actor.ActorSystem          = akka.actor.ActorSystem("CoreSpec", ConfigFactory.load())
+  implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
+  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
+  val log: Logger                                      = Logger(this.getClass())
 
   /**
    * The `Environment` that we require to exist at startup.
    */
-  type Environment = core.Environment
+  type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
 
   /**
    * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
@@ -104,7 +106,7 @@ abstract class CoreSpec
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.TestLayers.defaultTestLayers(system)
+  lazy val effectLayers = core.TestLayers.defaultTestLayersWithoutSipi(system)
 
   // The appActor is built inside the AppRouter layer. We need to surface the reference to it,
   // so that we can use it in tests. This seems the easies way of doing it at the moment.
@@ -114,13 +116,11 @@ abstract class CoreSpec
   val appActor =
     Await.result(appActorF, new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
 
-  final override def beforeAll(): Unit = {
-
+  final override def beforeAll(): Unit =
     // waits until knora is up and running
-    applicationStateRunning(appActor)
-  }
+    applicationStateRunning(appActor, system)
 
   final override def afterAll(): Unit = {}
-    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    
+  /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+
 }

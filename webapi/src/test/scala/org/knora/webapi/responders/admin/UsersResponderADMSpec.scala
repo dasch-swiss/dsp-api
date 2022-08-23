@@ -30,18 +30,10 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import java.util.UUID
 import scala.concurrent.duration._
 
-object UsersResponderADMSpec {
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-         app.use-redis-cache = true
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[UsersResponderADM]] actor.
  */
-class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
+class UsersResponderADMSpec extends CoreSpec with ImplicitSender with Authenticator {
 
   private val timeout: FiniteDuration = 8.seconds
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.util
+package org.knora.webapi.core
 
 import akka.dispatch.MessageDispatcher
 import akka.pattern.ask
@@ -20,23 +20,26 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import zio._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.core.AppRouter
+import scala.concurrent.ExecutionContext
 
 /**
  * This trait is only used for testing. It is necessary so that E2E tests will only start
  * after the KnoraService is ready.
  */
 trait TestStartupUtils extends LazyLogging {
-  this: TestKitBase =>
+  this: ZIOApp =>
 
   /**
    * Returns only when the application state is 'Running'.
    */
-  def applicationStateRunning(appActor: ActorRef): Unit = {
+  def applicationStateRunning(appActor: ActorRef, system: akka.actor.ActorSystem): Unit = {
 
     val state: AppState =
       Await
         .result(
-          appActor.ask(GetAppState())(Timeout(new scala.concurrent.duration.FiniteDuration(5, scala.concurrent.duration.SECONDS))),
+          appActor.ask(GetAppState())(
+            Timeout(new scala.concurrent.duration.FiniteDuration(5, scala.concurrent.duration.SECONDS))
+          ),
           new scala.concurrent.duration.FiniteDuration(10, scala.concurrent.duration.SECONDS)
         )
         .asInstanceOf[AppState]
@@ -44,15 +47,18 @@ trait TestStartupUtils extends LazyLogging {
     if (state != AppState.Running) {
       // not in running state
       // we should wait a bit before we call ourselves again
-      Await.result(blockingFuture(), new scala.concurrent.duration.FiniteDuration(3L, scala.concurrent.duration.SECONDS))
-      applicationStateRunning(appActor)
+      Await.result(
+        blockingFuture(system: akka.actor.ActorSystem),
+        new scala.concurrent.duration.FiniteDuration(3L, scala.concurrent.duration.SECONDS)
+      )
+      applicationStateRunning(appActor, system)
     }
   }
 
   /**
    * A blocking future running on the blocking dispatcher.
    */
-  private def blockingFuture(): Future[Unit] = {
+  private def blockingFuture(system: akka.actor.ActorSystem): Future[Unit] = {
 
     implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 

@@ -16,17 +16,11 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProje
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object CacheServiceManagerSpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
 
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.serialization.CacheSerialization]].
  */
-class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
+class CacheServiceManagerSpec extends CoreSpec {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

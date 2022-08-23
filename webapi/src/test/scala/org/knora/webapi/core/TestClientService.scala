@@ -1,6 +1,6 @@
 package org.knora.webapi.testservices
 
-import akka.actor.ActorSystem
+import org.knora.webapi.core.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding
 import akka.stream.Materializer
 import org.apache.http
@@ -58,11 +58,11 @@ final case class FileToUpload(path: Path, mimeType: ContentType)
  */
 final case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
-final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, actorSystem: ActorSystem)
+final case class TestClientService(config: AppConfig, httpClient: CloseableHttpClient, sys: akka.actor.ActorSystem)
     extends TriplestoreJsonProtocol
     with RequestBuilding {
 
-  implicit val system: ActorSystem                = actorSystem
+  implicit val system: akka.actor.ActorSystem     = sys
   implicit val settings: KnoraSettingsImpl        = KnoraSettings(system)
   implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
@@ -306,10 +306,10 @@ object TestClientService {
    * Acquires a configured httpClient, backed by a connection pool,
    * to be used in communicating with SIPI.
    */
-  private def acquire(config: AppConfig) = ZIO.attemptBlocking {
+  private val acquire = ZIO.attemptBlocking {
 
     // timeout from config
-    val sipiTimeoutMillis = config.sipi.timeoutInSeconds.toMillis.toInt
+    val sipiTimeoutMillis = 120 * 1000
 
     // Create a connection manager with custom configuration.
     val connManager: PoolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager()
@@ -352,19 +352,17 @@ object TestClientService {
   /**
    * Releases the httpClient, freeing all resources.
    */
-  private def release(httpClient: CloseableHttpClient)(implicit system: ActorSystem) = ZIO.attemptBlocking {
+  private def release(httpClient: CloseableHttpClient)(implicit system: akka.actor.ActorSystem) = ZIO.attemptBlocking {
     akka.http.scaladsl.Http().shutdownAllConnectionPools()
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
-  val layer: ZLayer[AppConfig & TestActorSystemService, Nothing, TestClientService] =
+  def layer(system: akka.actor.ActorSystem): ZLayer[AppConfig, Nothing, TestClientService] =
     ZLayer.scoped {
       for {
-        // _          <- ZIO.debug(config.sipi)
         config     <- ZIO.service[AppConfig]
-        tass       <- ZIO.service[TestActorSystemService]
-        httpClient <- ZIO.acquireRelease(acquire(config))(release(_)(tass.getActorSystem))
-      } yield TestClientService(config, httpClient, tass.getActorSystem)
+        httpClient <- ZIO.acquireRelease(acquire)(release(_)(system))
+      } yield TestClientService(config, httpClient, system)
     }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
 
 }

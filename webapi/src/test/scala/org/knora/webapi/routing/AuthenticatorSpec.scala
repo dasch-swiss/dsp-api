@@ -28,7 +28,7 @@ object AuthenticatorSpec {
   private val rootUserPassword = "test"
 }
 
-class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
+class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodTester {
 
   implicit val timeout: Timeout = settings.defaultTimeout
 

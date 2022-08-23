@@ -9,6 +9,8 @@ import zio.config.typesafe.TypesafeConfigSource
 import magnolia._
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.testcontainers.containers.GenericContainer
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.
@@ -73,6 +75,8 @@ object AppConfigForTestContainers {
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         sipiContainer   <- ZIO.service[SipiTestContainer]
         alteredConfig   <- alterFusekiAndSipiPort(appConfig, fusekiContainer, sipiContainer)
+        _               <- ZIO.attempt(StringFormatter.initForTest()).orDie     // needs early init before first usage
+        _               <- ZIO.attempt(RdfFeatureFactory.init(appConfig)).orDie // needs early init before first usage
       } yield alteredConfig
     }.tap(_ => ZIO.debug(">>> App Config for Fuseki and Sipi Testcontainers Initialized <<<"))
 
@@ -85,6 +89,8 @@ object AppConfigForTestContainers {
         appConfig       <- config
         fusekiContainer <- ZIO.service[FusekiTestContainer]
         alteredConfig   <- alterFusekiPort(appConfig, fusekiContainer)
+        _               <- ZIO.attempt(StringFormatter.initForTest()).orDie     // needs early init before first usage
+        _               <- ZIO.attempt(RdfFeatureFactory.init(appConfig)).orDie // needs early init before first usage
       } yield alteredConfig
     }.tap(_ => ZIO.debug(">>> App Config for Fuseki only Testcontainers Initialized <<<"))
 }

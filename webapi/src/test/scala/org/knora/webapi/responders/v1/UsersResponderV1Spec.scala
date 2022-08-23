@@ -20,18 +20,10 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
 
-object UsersResponderV1Spec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
  */
-class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
+class UsersResponderV1Spec extends CoreSpec with ImplicitSender {
 
   private val timeout = 5.seconds
 

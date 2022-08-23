@@ -31,19 +31,9 @@ import java.util.UUID
 import scala.concurrent.duration._
 
 /**
- * Static data for testing [[ListsResponderADM]].
- */
-object ListsResponderADMSpec {
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
-/**
  * Tests [[ListsResponderADM]].
  */
-class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with ImplicitSender {
+class ListsResponderADMSpec extends CoreSpec with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
   implicit private val timeout                          = 5.seconds

@@ -35,27 +35,17 @@ import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-object PermissionsResponderADMSpec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.
  */
 class PermissionsResponderADMSpec
-    extends CoreSpec(PermissionsResponderADMSpec.config)
+    extends CoreSpec
     with ImplicitSender
     with PrivateMethodTester {
   private val stringFormatter = StringFormatter.getGeneralInstance
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
-
-  private val responderUnderTest = new PermissionsResponderADM(responderData)
 
   /* define private method access */
   private val userAdministrativePermissionsGetADM =

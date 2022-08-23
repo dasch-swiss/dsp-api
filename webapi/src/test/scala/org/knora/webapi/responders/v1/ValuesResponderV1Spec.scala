@@ -46,11 +46,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  * Static data for testing [[ValuesResponderV1]].
  */
 object ValuesResponderV1Spec {
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-
   private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
   private val miscResourceIri  = "http://rdfh.ch/0803/miscResource"
   private val aThingIri        = "http://rdfh.ch/0001/a-thing"
@@ -65,25 +60,13 @@ object ValuesResponderV1Spec {
 /**
  * Tests [[ValuesResponderV1]].
  */
-class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with ImplicitSender {
+class ValuesResponderV1Spec extends CoreSpec with ImplicitSender {
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   import ValuesResponderV1Spec._
 
   /* we need to run our app with the mocked sipi implementation */
-  override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
-      Runtime.removeDefaultLoggers,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceMockImpl.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer
-    )
+  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

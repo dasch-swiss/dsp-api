@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.v1
 
+import org.knora.webapi.core.ActorSystemTestImpl
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -48,6 +49,11 @@ import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.core.State
+import org.knora.webapi.auth.JWTService
+import org.knora.webapi.core.HttpServer
+import org.knora.webapi.core.AppRouter
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
@@ -654,7 +660,7 @@ object ResourcesResponderV1Spec {
 /**
  * Tests [[ResourcesResponderV1]].
  */
-class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
+class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
 
   import ResourcesResponderV1Spec._
 
@@ -668,19 +674,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
   )
 
   /* we need to run our app with the mocked sipi implementation */
-  override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
-      Runtime.removeDefaultLoggers,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceMockImpl.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer
-    )
+  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 60.seconds

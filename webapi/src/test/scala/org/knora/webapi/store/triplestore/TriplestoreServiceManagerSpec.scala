@@ -15,7 +15,7 @@ import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryConten
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
@@ -149,7 +149,7 @@ class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {
       appActor ! CheckTriplestoreRequest()
       val response = expectMsgType[CheckTriplestoreResponse](1.second)
 
-      response.triplestoreStatus should be(TriplestoreStatus.ServiceAvailable)
+      response.triplestoreStatus should be(TriplestoreStatus.Available)
     }
 
     "reset the data after receiving a 'ResetTriplestoreContent' request" in {

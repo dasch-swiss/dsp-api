@@ -18,12 +18,8 @@ import com.typesafe.scalalogging._
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.core.Core
-import org.knora.webapi.core.Logging
 import dsp.errors.FileWriteException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.AppStart
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -39,7 +35,7 @@ import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.TestStartupUtils
+import org.knora.webapi.core.TestStartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.concurrent.ScalaFutures
@@ -66,19 +62,16 @@ import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testservices.TestActorSystemService
-
-object E2ESpec {
-  val defaultConfig: Config = ConfigFactory.load()
-}
+import akka.testkit.TestKitBase
+import scala.concurrent.ExecutionContextExecutor
 
 /**
  * This class can be used in End-to-End testing. It starts the Knora-API server
  * and provides access to settings and logging.
  */
-abstract class E2ESpec(_system: ActorSystem)
-    extends TestKit(_system)
-    with Core
+abstract class E2ESpec
+    extends ZIOApp
+    with TestKitBase
     with TestStartupUtils
     with TriplestoreJsonProtocol
     with Suite
@@ -88,116 +81,72 @@ abstract class E2ESpec(_system: ActorSystem)
     with BeforeAndAfterAll
     with RequestBuilding {
 
-  /* constructors */
-  def this(name: String, config: Config) =
-    this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
-
-  def this(config: Config) =
-    this(
-      ActorSystem("E2ETest", config.withFallback(E2ESpec.defaultConfig))
-    )
-
-  def this(name: String) = this(ActorSystem(name, E2ESpec.defaultConfig))
-
-  def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
-
-  /* needed by the core trait */
-  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
-  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
-  implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  // can be overridden in individual spec
-  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
-
-  /* Needs to be initialized before any responders */
-  StringFormatter.initForTest()
-  val log: Logger = Logger(this.getClass)
-
-  // The effect for building a cache service manager and a IIIF service manager.
-  lazy val managers = for {
-    csm       <- ZIO.service[CacheServiceManager]
-    iiifsm    <- ZIO.service[IIIFServiceManager]
-    tssm      <- ZIO.service[TriplestoreServiceManager]
-    appConfig <- ZIO.service[AppConfig]
-  } yield (csm, iiifsm, tssm, appConfig)
+  implicit lazy val system: akka.actor.ActorSystem = akka.actor.ActorSystem("E2ESpec", ConfigFactory.load())
+  implicit lazy val ec: ExecutionContextExecutor   = system.dispatcher
+  implicit lazy val settings: KnoraSettingsImpl    = KnoraSettings(system)
+  lazy val rdfDataObjects                          = List.empty[RdfDataObject]
+  val log: Logger                                  = Logger(this.getClass())
 
   /**
-   * The effect layers which will be used to run the managers effect.
+   * The `Environment` that we require to exist at startup.
+   */
+  type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
+
+  /**
+   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
+   * and cleaned up when the Runtime is shutdown.
+   */
+  override val bootstrap: ZLayer[
+    ZIOAppArgs with Scope,
+    Any,
+    Environment
+  ] =
+    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ effectLayers
+
+  // no idea why we need that, but we do
+  val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+
+  /* Here we start our TestApplication */
+  val run =
+    (for {
+      _ <- ZIO.scoped(core.Startup.run(false, false))
+      _ <- prepareRepository(rdfDataObjects)
+      _ <- ZIO.never
+    } yield ()).forever
+
+  /**
+   * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TestClientService](
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
-      AppConfigForTestContainers.testcontainers,
-      JWTService.layer,
-      SipiTestContainer.layer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer,
-      Logging.slf4j,
-      TestClientService.layer,
-      TestActorSystemService.layer
-    )
+  lazy val effectLayers = core.TestLayers.defaultTestLayersWithoutSipi(system)
 
-  // The ZIO runtime used to run functional effects
-  lazy val runtime =
-    Unsafe.unsafe { implicit u =>
-      Runtime.unsafe.fromLayer(effectLayers ++ Runtime.removeDefaultLoggers)
-    }
+  // The appActor is built inside the AppRouter layer. We need to surface the reference to it,
+  // so that we can use it in tests. This seems the easies way of doing it at the moment.
+  val appActorF = system
+    .actorSelection(APPLICATION_MANAGER_ACTOR_PATH)
+    .resolveOne(new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
+  val appActor =
+    Await.result(appActorF, new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
 
-  /**
-   * Create both managers by unsafe running them.
-   */
-  lazy val (cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig) =
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.run(managers).getOrElse(c => throw FiberFailure(c))
-    }
-
-  // start the Application Actor
-  lazy val appActor: ActorRef =
-    system.actorOf(
-      Props(new ApplicationActor(cacheServiceManager, iiifServiceManager, triplestoreServiceManager, appConfig)),
-      name = APPLICATION_MANAGER_ACTOR_NAME
-    )
-
-  val routeData: KnoraRouteData = KnoraRouteData(
-    system = system,
-    appActor = appActor
-  )
-
-  protected val baseApiUrl: String = appConfig.knoraApi.internalKnoraApiBaseUrl
-
-  final override def beforeAll(): Unit = {
-
+  final override def beforeAll(): Unit =
     // create temp data dir if not present
-    createTmpFileDir()
-
-    // set allow reload over http
-    appActor ! SetAllowReloadOverHTTPState(true)
-
-    // start the knora service, loading data from the repository
-    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = true)
+    // createTmpFileDir()
 
     // waits until knora is up and running
-    applicationStateRunning()
+    applicationStateRunning(appActor, system)
 
-    // loadTestData
-    loadTestData(rdfDataObjects)
-  }
+  // loadTestData
+  // loadTestData(rdfDataObjects)
 
   final override def afterAll(): Unit = {
 
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
-    Unsafe.unsafe { implicit u =>
-      runtime.unsafe.shutdown()
-    }
+    // Unsafe.unsafe { implicit u =>
+    //  runtime.unsafe.shutdown()
+    // }
 
     /* Stop the server when everything else has finished */
-    TestKit.shutdownActorSystem(system)
+    // TestKit.shutdownActorSystem(system)
 
   }
 
@@ -208,9 +157,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.loadTestData(rdfDataObjects)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: zio.Duration = 30.seconds): HttpResponse =
@@ -220,9 +169,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.singleAwaitingRequest(request, duration)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def getResponseAsString(request: HttpRequest): String =
@@ -232,9 +181,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseString(request)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def checkResponseOK(request: HttpRequest): Unit =
@@ -244,9 +193,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.checkResponseOK(request)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def getResponseAsJson(request: HttpRequest): JsObject =
@@ -256,9 +205,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseJson(request)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def getResponseAsJsonLD(request: HttpRequest): JsonLDDocument =
@@ -268,9 +217,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.getResponseJsonLD(request)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse =
@@ -280,9 +229,9 @@ abstract class E2ESpec(_system: ActorSystem)
           (for {
             testClient <- ZIO.service[TestClientService]
             result     <- testClient.uploadToSipi(loginToken, filesToUpload)
-          } yield result)
+          } yield result).provide(TestClientService.layer(system), AppConfig.test)
         )
-        .getOrElse(c => throw FiberFailure(c))
+        .getOrThrowFiberFailure()
     }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
@@ -299,6 +248,7 @@ abstract class E2ESpec(_system: ActorSystem)
   }
 
   protected def doGetRequest(urlPath: String): String = {
+    val baseApiUrl             = settings.internalKnoraApiBaseUrl
     val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)

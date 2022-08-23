@@ -29,18 +29,10 @@ import org.knora.webapi.util.MutableTestIri
 import java.util.UUID
 import scala.concurrent.duration._
 
-object GroupsResponderADMSpec {
-
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
  */
-class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
+class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
   private val timeout             = 5.seconds
   private val imagesProject       = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup

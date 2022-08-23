@@ -12,18 +12,7 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import spray.json.JsString
 
-object JWTHelperSpec {
-  val config: Config = ConfigFactory.parseString("""
-                                                   |app {
-                                                   |    akka.loglevel = "DEBUG"
-                                                   |
-                                                   |    jwt-secret-key = "UP 4888, nice 4-8-4 steam engine"
-                                                   |    jwt-longevity = 36500 days
-                                                   |}
-        """.stripMargin)
-}
-
-class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
+class JWTHelperSpec extends CoreSpec with ImplicitSender {
 
   private val validToken: String =
     "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiIwLjAuMC4wOjMzMzMiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIktub3JhIiwiU2lwaSJdLCJleHAiOjQ4MDE0Njg1MTEsImlhdCI6MTY0Nzg2ODUxMSwianRpIjoiYXVVVUh1aDlUanF2SnBYUXVuOVVfZyIsImZvbyI6ImJhciJ9.6yHse3pNGdDqkC4PXdkm2ZtRqITqSwo0gvCZ__4jzHQ"

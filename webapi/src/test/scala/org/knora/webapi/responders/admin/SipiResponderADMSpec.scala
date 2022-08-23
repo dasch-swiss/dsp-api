@@ -16,17 +16,10 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.concurrent.duration._
 
-object SipiResponderADMSpec {
-  val config: Config = ConfigFactory.parseString("""
-         akka.loglevel = "DEBUG"
-         akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * Tests [[SipiResponderADM]].
  */
-class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
+class SipiResponderADMSpec extends CoreSpec with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")

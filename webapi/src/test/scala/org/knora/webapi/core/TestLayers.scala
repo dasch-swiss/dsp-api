@@ -16,16 +16,18 @@ import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorIm
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testcontainers.FusekiTestContainer
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
 
-package object TestLayers {
+object TestLayers {
 
-  // The `Environment` that we require to exist at startup.
-  type DefaultTestEnvironment = Environment with SipiTestContainer with FusekiTestContainer
+  type DefaultTestEnvironmentWithoutSipi = Environment with FusekiTestContainer with TestClientService
+  type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   // all effect layers needed to provide the `Environment`
-  def defaultTestLayers(sys: akka.actor.ActorSystem) =
+  def defaultTestLayersWithSipi(sys: akka.actor.ActorSystem) =
     ZLayer.make[
-      DefaultTestEnvironment
+      DefaultTestEnvironmentWithSipi
     ](
       ActorSystemTestImpl.layer(sys),
       AppConfigForTestContainers.testcontainers,
@@ -42,6 +44,55 @@ package object TestLayers {
       TriplestoreServiceHttpConnectorImpl.layer,
       // testcontainers
       SipiTestContainer.layer,
-      FusekiTestContainer.layer
+      FusekiTestContainer.layer,
+      // Test services
+      TestClientService.layer(sys)
+    )
+
+  // all effect layers needed to provide the `Environment`
+  def defaultTestLayersWithoutSipi(sys: akka.actor.ActorSystem) =
+    ZLayer.make[
+      DefaultTestEnvironmentWithoutSipi
+    ](
+      ActorSystemTestImpl.layer(sys),
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      AppRouter.layer,
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      HttpServer.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceSipiImpl.layer, // alternative: MockSipiImpl.layer
+      JWTService.layer,
+      RepositoryUpdater.layer,
+      State.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      // testcontainers
+      FusekiTestContainer.layer,
+      // Test services
+      TestClientService.layer(sys)
+    )
+
+  def defaultTestLayersWithMockedSipi(sys: akka.actor.ActorSystem) =
+    ZLayer.make[
+      DefaultTestEnvironmentWithoutSipi
+    ](
+      ActorSystemTestImpl.layer(sys),
+      AppConfigForTestContainers.fusekiOnlyTestcontainer,
+      AppRouter.layer,
+      CacheServiceManager.layer,
+      CacheServiceInMemImpl.layer,
+      HttpServer.layer,
+      IIIFServiceManager.layer,
+      IIIFServiceMockImpl.layer, // alternative: IIIFServiceMockImpl.layer
+      JWTService.layer,
+      RepositoryUpdater.layer,
+      State.layer,
+      TriplestoreServiceManager.layer,
+      TriplestoreServiceHttpConnectorImpl.layer,
+      // testcontainers
+      FusekiTestContainer.layer,
+      // Test services
+      TestClientService.layer(sys)
     )
 }
