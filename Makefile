@@ -334,9 +334,9 @@ info: ## print out all variables
 check: # Run code formating check 
 	@sbt "check"
 
-.PHONY: fix
-fix: # Run code formating fix
-	@sbt "fix"
+.PHONY: fmt
+fmt: # Run code formating fix
+	@sbt "fmt"
 
 
 .PHONY: help
