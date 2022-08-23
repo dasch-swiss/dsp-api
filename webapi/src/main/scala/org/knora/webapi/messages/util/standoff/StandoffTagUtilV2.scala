@@ -215,8 +215,7 @@ object StandoffTagUtilV2 {
       // check if all the min cardinalities are respected
       mustExistOnce.foreach { propIri =>
         attrsGroupedByPropIri.get(propIri) match {
-          case Some(_: Seq[StandoffTagAttributeV2]) => ()
-
+          case Some(_) => ()
           case None =>
             throw BadRequestException(
               s"the min cardinalities were not respected for the property $propIri (missing attribute for element ${standoffNodeFromXML.tagName})"
@@ -300,10 +299,10 @@ object StandoffTagUtilV2 {
     // namespace = Map("myXMLNamespace" -> Map("myXMLTagName" -> Map("myXMLClassname" -> XMLTag(...))))
     val elementsSeparatorRequired: Vector[XMLTagSeparatorRequired] = mapping.mapping.namespace.flatMap {
       case (namespace: String, elesForNamespace: Map[String, Map[String, XMLTag]]) =>
-        elesForNamespace.flatMap { case (_: String, classWithTag: Map[String, XMLTag]) =>
+        elesForNamespace.flatMap { case (_, classWithTag: Map[String, XMLTag]) =>
           val tagsWithSeparator: Iterable[XMLTagSeparatorRequired] = classWithTag.filter {
             // filter out all `XMLTag` that require a separator
-            case (_: String, tag: XMLTag) =>
+            case (_, tag: XMLTag) =>
               tag.separatorRequired
           }.map { case (classname: String, tag: XMLTag) =>
             // create a `XMLTagSeparatorRequired` with the current's element
@@ -967,7 +966,7 @@ object StandoffTagUtilV2 {
 
     // check for duplicate standoff class Iris
     val classIris: Iterable[IRI] = mappingXMLtoStandoff.namespace.values.flatten.flatMap {
-      case (_: String, tagItem: Map[String, XMLTag]) =>
+      case (_, tagItem: Map[String, XMLTag]) =>
         tagItem.values.map(_.mapping.standoffClassIri)
     }
 
@@ -1056,13 +1055,12 @@ object StandoffTagUtilV2 {
   )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[StandoffTagV2]] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val standoffClassIris: Set[SmartIri] = standoffAssertions.map {
-      case (_: IRI, standoffTagAssertions: Map[IRI, String]) =>
-        standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri
+    val standoffClassIris: Set[SmartIri] = standoffAssertions.map { case (_, standoffTagAssertions: Map[IRI, String]) =>
+      standoffTagAssertions(OntologyConstants.Rdf.Type).toSmartIri
     }.toSet
 
     val standoffPropertyIris: Set[SmartIri] = standoffAssertions.flatMap {
-      case (_: IRI, standoffTagAssertions: Map[IRI, String]) =>
+      case (_, standoffTagAssertions: Map[IRI, String]) =>
         (standoffTagAssertions.keySet - OntologyConstants.Rdf.Type).map(_.toSmartIri)
     }.toSet
 
@@ -1655,10 +1653,10 @@ object StandoffTagUtilV2 {
         index -> comparableTags.toSet
       }
       .toVector
-      .sortBy { case (index: Int, _: Set[StandoffTagV2]) =>
+      .sortBy { case (index: Int, _) =>
         index
       }
-      .map { case (_: Int, standoffForIndex: Set[StandoffTagV2]) =>
+      .map { case (_, standoffForIndex: Set[StandoffTagV2]) =>
         standoffForIndex
       }
 

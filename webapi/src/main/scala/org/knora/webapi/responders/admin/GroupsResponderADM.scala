@@ -869,13 +869,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-   * Helper method for checking if a group identified by IRI exists.
-   *
-   * @param groupIri the IRI of the group.
-   * @return a [[Boolean]].
-   */
-
-  /**
    * Helper method for checking if a group identified by name / project IRI exists.
    *
    * @param name       the name of the group.
