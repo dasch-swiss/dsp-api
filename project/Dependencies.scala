@@ -22,10 +22,10 @@ object Dependencies {
 
   val ZioVersion        = "2.0.0"
   val ZioHttpVersion    = "2.0.0-RC4"
-  val ZioJsonVersion    = "0.3.0-RC10"
+  val ZioJsonVersion    = "0.3.0-RC11"
   val ZioConfigVersion  = "3.0.2"
   val ZioSchemaVersion  = "0.2.0"
-  val ZioLoggingVersion = "2.0.1"
+  val ZioLoggingVersion = "2.1.0"
   val ZioZmxVersion     = "2.0.0-RC4"
   val ZioPreludeVersion = "1.0.0-RC15"
 
@@ -40,8 +40,8 @@ object Dependencies {
   val zioConfig         = "dev.zio" %% "zio-config"          % ZioConfigVersion
   val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfigVersion
   val zioConfigTypesafe = "dev.zio" %% "zio-config-typesafe" % ZioConfigVersion
-  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.0"
-  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.0"
+  val zioTest           = "dev.zio" %% "zio-test"            % "2.0.1"
+  val zioTestSbt        = "dev.zio" %% "zio-test-sbt"        % "2.0.1"
 
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
@@ -57,12 +57,12 @@ object Dependencies {
   // logging
   val logbackClassic = "ch.qos.logback"              % "logback-classic" % "1.2.11"
   val scalaLogging   = "com.typesafe.scala-logging" %% "scala-logging"   % "3.9.5" // Scala 3 compatible
-  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "1.7.36"
+  val slf4j          = "org.slf4j"                   % "slf4j-simple"    % "2.0.0"
 
   // Metrics
   val aspectjweaver    = "org.aspectj" % "aspectjweaver"      % "1.9.9.1"
-  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.6"  // Scala 3 compatible
-  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.1.21" // Scala 3 incompatible
+  val kamonCore        = "io.kamon"   %% "kamon-core"         % "2.5.6" // Scala 3 compatible
+  val kamonScalaFuture = "io.kamon"   %% "kamon-scala-future" % "2.5.6" // Scala 3 incompatible
 
   // input validation
   val commonsValidator =
@@ -72,7 +72,7 @@ object Dependencies {
   val jwtSprayJson = "com.github.jwt-scala" %% "jwt-spray-json" % "9.0.2"
   // jwtSprayJson -> 9.0.2 is the latest version that's compatible with spray-json; if it wasn't for spray, this would be Scala 3 compatible
   val springSecurityCore =
-    "org.springframework.security" % "spring-security-core" % "5.7.2" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
+    "org.springframework.security" % "spring-security-core" % "5.7.3" exclude ("commons-logging", "commons-logging") exclude ("org.springframework", "spring-aop")
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15to18" % "1.71"
 
   // caching
@@ -96,6 +96,7 @@ object Dependencies {
   val swaggerAkkaHttp = "com.github.swagger-akka-http" %% "swagger-akka-http" % "1.6.0"  // Scala 3 incompatible
   val titaniumJSONLD  = "com.apicatalog"                % "titanium-json-ld"  % "1.3.1"
   val xmlunitCore     = "org.xmlunit"                   % "xmlunit-core"      % "2.9.0"
+  val jacksonDatabind = "com.fasterxml.jackson.core"    % "jackson-databind"  % "2.13.3"
 
   // test
   val akkaHttpTestkit      = "com.typesafe.akka"    %% "akka-http-testkit"         % AkkaHttpVersion  // Scala 3 incompatible
@@ -127,6 +128,7 @@ object Dependencies {
     gatlingTestFramework % Test,
     gwtServlet,
     icu4j,
+    jacksonDatabind,
     jakartaJSON,
     jedis,
     jenaText,
