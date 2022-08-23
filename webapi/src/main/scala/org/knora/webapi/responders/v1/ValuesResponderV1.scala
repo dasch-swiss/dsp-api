@@ -6,9 +6,9 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.knora.webapi._
 import dsp.errors._
-
+import dsp.schema.domain.Cardinality._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -38,7 +38,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileByIRIGetV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
@@ -224,8 +224,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                               throw DuplicateValueException()
                             }
 
-                            val propCardinality = Cardinality.lookup(prop.occurrence.get)
-                            !((propCardinality == Cardinality.MayHaveOne || propCardinality == Cardinality.MustHaveOne) && prop.values.nonEmpty)
+                            !((prop.occurrence.get == MayHaveOne.value || prop.occurrence.get == MustHaveOne.value) && prop.values.nonEmpty)
 
                           case None =>
                             false

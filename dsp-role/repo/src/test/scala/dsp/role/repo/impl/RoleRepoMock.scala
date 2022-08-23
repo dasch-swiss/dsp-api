@@ -63,11 +63,10 @@ final case class RoleRepoMock(
  * Companion object providing the layer with an initialized implementation of [[RoleRepo]]
  */
 object RoleRepoMock {
-  val layer: ZLayer[Any, Nothing, RoleRepo] = {
+  val layer: ZLayer[Any, Nothing, RoleRepo] =
     ZLayer {
       for {
         roles <- TMap.empty[UUID, Role].commit
       } yield RoleRepoMock(roles)
     }.tap(_ => ZIO.logInfo(">>> In-memory role repository initialized <<<"))
-  }
 }

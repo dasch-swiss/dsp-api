@@ -9,7 +9,7 @@ import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
 import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 
 /**
  * A trait for objects that provide rules for converting an ontology from the internal schema to an external schema.
