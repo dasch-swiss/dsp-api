@@ -55,6 +55,15 @@ lazy val root: Project = Project(id = "root", file("."))
 addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
 addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
 
+lazy val customScalacOptions = Seq(
+  "-feature",
+  "-unchecked",
+  "-deprecation",
+  "-Yresolve-term-conflict:package",
+  "-Ymacro-annotations",
+  "-Ywarn-unused:imports"
+)
+
 //////////////////////////////////////
 // DSP's custom SIPI
 //////////////////////////////////////
@@ -137,14 +146,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / exportJars := true
   )
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
@@ -251,14 +253,7 @@ lazy val valueObjects = project
 lazy val roleInterface = project
   .in(file("dsp-role/interface"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleInterface",
     libraryDependencies ++= Dependencies.roleInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -268,14 +263,7 @@ lazy val roleInterface = project
 lazy val roleHandler = project
   .in(file("dsp-role/handler"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleHandler",
     libraryDependencies ++= Dependencies.roleHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -289,14 +277,7 @@ lazy val roleHandler = project
 lazy val roleRepo = project
   .in(file("dsp-role/repo"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleRepo",
     libraryDependencies ++= Dependencies.roleRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -306,14 +287,7 @@ lazy val roleRepo = project
 lazy val roleCore = project
   .in(file("dsp-role/core"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleCore",
     libraryDependencies ++= Dependencies.roleCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -325,14 +299,7 @@ lazy val roleCore = project
 lazy val userInterface = project
   .in(file("dsp-user/interface"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userInterface",
     libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -342,14 +309,7 @@ lazy val userInterface = project
 lazy val userHandler = project
   .in(file("dsp-user/handler"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userHandler",
     libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -363,14 +323,7 @@ lazy val userHandler = project
 lazy val userRepo = project
   .in(file("dsp-user/repo"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userRepo",
     libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -380,14 +333,7 @@ lazy val userRepo = project
 lazy val userCore = project
   .in(file("dsp-user/core"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -399,14 +345,7 @@ lazy val userCore = project
 lazy val schemaCore = project
   .in(file("dsp-schema/core"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "schemaCore",
     libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -418,14 +357,7 @@ lazy val schemaCore = project
 lazy val shared = project
   .in(file("dsp-shared"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations",
-      "-Ywarn-unused"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "shared",
     libraryDependencies ++= Dependencies.sharedLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
