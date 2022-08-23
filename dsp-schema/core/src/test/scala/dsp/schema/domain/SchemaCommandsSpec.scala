@@ -32,7 +32,7 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
         comment            = Some(commentLangString)
         guiAttribute      <- Schema.GuiAttribute.make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>")
         guiElement        <- Schema.GuiElement.make(SalsahGui.List)
-        guiObject         <- Schema.GuiObject.make(guiAttributes = List(guiAttribute), guiElement = Some(guiElement))
+        guiObject         <- Schema.GuiObject.make(guiAttributes = Set(guiAttribute), guiElement = Some(guiElement))
         command = CreatePropertyCommand.make(
                     ontologyIri = ontologyIri,
                     lastModificationDate = lastModificationDate,
