@@ -210,7 +210,7 @@ object SchemaDomain extends App {
     implicit def isSubtypeOf2[A, B >: A]: NotSubtypeOf[A, B] = new NotSubtypeOf[A, B] {}
   }
 
-  //trying it out
+  // trying it out
   val ontoInfo = OntologyInfo("test", "http://example.org/test", "Test", "Test")
 
   val classOne    = OntologyClass("ClassOne", "Class One", "Class One")
@@ -230,8 +230,8 @@ object SchemaDomain extends App {
       .withClass(classOne)
       .withClass(classTwo)
       .withProperty(propertyOne)
-      //.withProperty(propertyOne)
-      //.withProperty(propertyTwo)
+      // .withProperty(propertyOne)
+      // .withProperty(propertyTwo)
       .withCardinality(cardOne)
       .withCardinality(cardOne)
 

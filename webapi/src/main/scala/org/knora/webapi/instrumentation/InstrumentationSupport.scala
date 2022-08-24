@@ -6,12 +6,12 @@
 package org.knora.webapi.instrumentation
 
 import com.typesafe.scalalogging.Logger
-import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.trace
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Success
+import kamon.Kamon
 
 /**
  * A set of methods used for measuring stuff that is happening.
@@ -47,10 +47,11 @@ trait InstrumentationSupport {
      * have at least something.
      */
     val start = System.currentTimeMillis()
-    trace(name)(future.andThen { case Success(_) =>
-      metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
-    })
-    // .andThen(case completed => logger.info(s"$name: " + (System.currentTimeMillis() - start) + "ms"))
+    Kamon.span(name) {
+      future.andThen { case Success(_) =>
+        metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
+      }
+    }
   }
 
   //    def counter(name: String) = Kamon.metrics.counter(name)

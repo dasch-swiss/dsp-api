@@ -209,7 +209,6 @@ test: build ## runs all tests
 	sbt -v coverage "userHandler/test"
 	sbt -v coverage "userInterface/test"
 	sbt -v coverage "userRepo/test"
-	sbt -v coverage "valueObjects/test"
 	sbt -v coverage "webapi/test"
 	sbt coverageAggregate
 

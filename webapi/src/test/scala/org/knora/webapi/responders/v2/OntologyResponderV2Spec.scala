@@ -6,8 +6,12 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
-import org.knora.webapi._
+import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.schema.domain.Cardinality._
+import dsp.valueobjects.Iri
+import dsp.valueobjects.Schema
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -17,7 +21,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateResourceV2
@@ -31,9 +35,6 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import dsp.valueobjects.Iri
-import dsp.valueobjects.Schema
-import dsp.constants.SalsahGui
 
 /**
  * Tests [[OntologyResponderV2]].
@@ -101,18 +102,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
   val anythingIsPartOfOtherThingValue: IRI = anythingOntology + "isPartOfOtherThingValue"
   val anythingHasStandoffLinkTo: IRI       = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
   val anythingHasStandoffLinkToValue: IRI  = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-
-  private def loadInvalidTestData(rdfDataObjs: List[RdfDataObject]): Unit = {
-    appActor ! ResetRepositoryContent(rdfDataObjs)
-    expectMsg(5 minutes, ResetRepositoryContentACK())
-
-    appActor ! LoadOntologiesRequestV2(
-      requestingUser = KnoraSystemInstances.Users.SystemUser
-    )
-
-    val response: SuccessResponseV2 = expectMsgType[SuccessResponseV2](10.seconds)
-    assert(response.message.contains("An error occurred when loading ontologies"))
-  }
 
   "The ontology responder v2" should {
     "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
@@ -1091,7 +1080,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             )
           )
         ),
@@ -2400,9 +2389,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne),
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne),
           AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(20)
           )
         ),
@@ -2444,9 +2433,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(Cardinality.MustHaveOne),
+          AnythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(MustHaveOne),
           AnythingOntologyIri.makeEntityIri("hasBlueThing") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MustHaveOne
+            cardinality = MustHaveOne
           )
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
@@ -2487,7 +2476,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -2526,7 +2515,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -2796,9 +2785,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne),
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne),
           AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(20)
           )
         ),
@@ -2886,7 +2875,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -2967,7 +2956,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -3005,7 +2994,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -3086,7 +3075,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
@@ -3539,7 +3528,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities =
-          Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+          Map(AnythingOntologyIri.makeEntityIri("nonexistentProperty") -> KnoraCardinalityInfo(MayHaveOne)),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         ontologySchema = ApiV2Complex
       )
@@ -3580,8 +3569,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
           )
         ),
-        directCardinalities =
-          Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasInteger") -> KnoraCardinalityInfo(MayHaveOne)),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         ontologySchema = ApiV2Complex
       )
@@ -3622,8 +3610,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
           )
         ),
-        directCardinalities =
-          Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)),
+        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(MustHaveOne)),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
       )
@@ -3641,7 +3628,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val readClassInfo = externalOntology.classes(classIri)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")).cardinality should ===(
-          Cardinality.MustHaveOne
+          MustHaveOne
         )
 
         val metadata = externalOntology.ontologyMetadata
@@ -3676,8 +3663,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
           )
         ),
-        directCardinalities =
-          Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(Cardinality.MayHaveMany)),
+        directCardinalities = Map(AnythingOntologyIri.makeEntityIri("hasBoolean") -> KnoraCardinalityInfo(MayHaveMany)),
         subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
         ontologySchema = ApiV2Complex
       )
@@ -4111,7 +4097,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(MustHaveOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4203,7 +4189,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(0)
           )
         ),
@@ -4285,7 +4271,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          propertyIri -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0))
+          propertyIri -> KnoraCardinalityInfo(cardinality = MayHaveOne, guiOrder = Some(0))
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4298,9 +4284,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedDirectCardinalities = Map(
-        propertyIri -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne, guiOrder = Some(0)),
+        propertyIri -> KnoraCardinalityInfo(cardinality = MayHaveOne, guiOrder = Some(0)),
         propertyIri.fromLinkPropToLinkValueProp -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         )
       )
@@ -4347,7 +4333,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveMany,
+            cardinality = MayHaveMany,
             guiOrder = Some(0)
           )
         ),
@@ -4379,7 +4365,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(0)
           )
         ),
@@ -4395,15 +4381,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         )
       )
@@ -4444,7 +4430,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MustHaveSome)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MustHaveSome)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4474,7 +4460,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -4571,7 +4557,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(1)
           )
         ),
@@ -4587,19 +4573,19 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val expectedDirectCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         ),
         AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(1)
         )
       )
@@ -4643,7 +4629,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(0)
           )
         ),
@@ -4676,15 +4662,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(1)
           ),
           AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(2)
           ),
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(3)
           )
         ),
@@ -4700,19 +4686,19 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val expectedCardinalities = Map(
         AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(1)
         ),
         AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(1)
         ),
         AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(2)
         ),
         AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(3)
         )
       )
@@ -4745,7 +4731,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(0)
           )
         ),
@@ -5060,7 +5046,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
         directCardinalities =
-          Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+          Map(IncunabulaOntologyIri.makeEntityIri("description") -> KnoraCardinalityInfo(MayHaveOne)),
         ontologySchema = ApiV2Complex
       )
 
@@ -5303,7 +5289,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
         directCardinalities =
-          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)),
         ontologySchema = ApiV2Complex
       )
 
@@ -5781,13 +5767,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             ),
             (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             ),
             (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             )
           )
         ),
@@ -5817,10 +5803,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             ),
             (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             )
           )
         ),
@@ -6030,10 +6016,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             ),
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestIntProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             )
           )
         ),
@@ -6096,7 +6082,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             )
           )
         ),
@@ -6123,7 +6109,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
             "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
+              cardinality = MayHaveOne
             )
           )
         ),
@@ -6187,7 +6173,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           "http://xmlns.com/foaf/0.1/Person".toSmartIri
         ),
         directCardinalities =
-          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+          Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(MayHaveOne)),
         ontologySchema = ApiV2Complex
       )
 
@@ -6311,7 +6297,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           propertyIri -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(0)
           )
         ),
@@ -6328,11 +6314,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       // check if cardinality was added correctly
       val expectedDirectCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map(
         propertyIri -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne,
+          cardinality = MayHaveOne,
           guiOrder = Some(0)
         ),
         ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(
-          cardinality = Cardinality.MayHaveOne
+          cardinality = MayHaveOne
         )
       )
 
@@ -6377,7 +6363,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ),
         directCardinalities = Map(
           propertyIri -> KnoraCardinalityInfo(
-            cardinality = Cardinality.MayHaveOne,
+            cardinality = MayHaveOne,
             guiOrder = Some(0)
           )
         ),
@@ -6439,7 +6425,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     "change the GUI order of a cardinality in a base class, and update its subclass in the ontology cache" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Thing")
 
-      val newCardinality = KnoraCardinalityInfo(cardinality = Cardinality.MayHaveMany, guiOrder = Some(100))
+      val newCardinality = KnoraCardinalityInfo(cardinality = MayHaveMany, guiOrder = Some(100))
 
       val classInfoContent = ClassInfoContentV2(
         classIri = classIri,
@@ -6660,413 +6646,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
       }
-    }
-
-    "not load an ontology that has no knora-base:attachedToProject" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/onto-without-project.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a class that's missing a cardinality for a link value property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/missing-link-value-cardinality-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a class that's missing a cardinality for a link property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/missing-link-cardinality-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a class with a cardinality whose subject class constraint is incompatible with the class" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-incompatible-with-scc-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class without an rdfs:label" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-without-label-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource property without an rdfs:label" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/property-without-label-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class that is also a standoff class" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/resource-class-is-standoff-class-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class with a cardinality on an undefined property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-missing-property-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class with a directly defined cardinality on a non-resource property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-non-resource-prop-cardinality-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class with a cardinality on knora-base:resourceProperty" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbresprop-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class with a cardinality on knora-base:hasValue" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbhasvalue-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource class with a base class that has a Knora IRI but isn't a resource class" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/resource-class-with-invalid-base-class-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a standoff class with a cardinality on a resource property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-resprop-cardinality-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a standoff class with a base class that's not a standoff class" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-invalid-base-class-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property with a subject class constraint of foaf:Person" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-scc-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a Knora value property with a subject class constraint of knora-base:TextValue" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-value-scc-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property with a subject class constraint of salsah-gui:Guielement" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-guielement-scc-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property with an object class constraint of foaf:Person" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-occ-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property whose object class constraint is incompatible with its base property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-incompatible-occ-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link property isn't really a link property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-property-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link value property isn't really a link value property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-value-property-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource property with no rdfs:label" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-label-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property that's a subproperty of both knora-base:hasValue and knora-base:hasLinkTo" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-both-value-and-link-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a property that's a subproperty of knora-base:hasFileValue" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/filevalue-prop-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a resource property with a base property that has a Knora IRI but isn't a resource property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/resource-prop-wrong-base-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a cardinality that contains salsah-gui:guiElement" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guielement-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load an ontology containing a cardinality that contains salsah-gui:guiAttribute" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guiattribute-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing an owl:TransitiveProperty" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/transitive-prop.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology with a class that has cardinalities both on property P and on a subproperty of P" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-inherits-prop-and-subprop-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing mismatched cardinalities for a link property and a link value property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-mismatched-link-cardinalities-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing an invalid cardinality on a boolean property" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/invalid-card-on-boolean-prop.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing a class with a cardinality on a property from a non-shared ontology in another project" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-cardinality.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing a class with a base class defined in a non-shared ontology in another project" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-base-class.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing a property with a base property defined in a non-shared ontology in another project" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-base-prop.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing a property whose subject class constraint is defined in a non-shared ontology in another project" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-scc.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing a property whose object class constraint is defined in a non-shared ontology in another project" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-occ.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
-    }
-
-    "not load a project-specific ontology containing a class with two cardinalities that override the same base class cardinality of 1 or 0-1" in {
-      val invalidOnto = List(
-        RdfDataObject(
-          path = "test_data/responders.v2.OntologyResponderV2Spec/conflicting-cardinalities-onto.ttl",
-          name = "http://www.knora.org/ontology/invalid"
-        )
-      )
-
-      loadInvalidTestData(invalidOnto)
     }
 
   }
