@@ -51,7 +51,7 @@ case class CheckConnectionACK()
  *
  * @param sparql the SPARQL string.
  */
-case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
@@ -90,7 +90,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  *
  * @param sparql               the SPARQL string.
  */
-case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
+case class SparqlExtendedConstructRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.

@@ -71,6 +71,7 @@ import zio._
 import zio.json.ast.Json
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.config.SocketConfig
+import org.apache.jena.sparql.engine.http.HttpParams
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -96,14 +97,21 @@ case class TriplestoreServiceHttpConnectorImpl(
     new UsernamePasswordCredentials(config.triplestore.fuseki.username, config.triplestore.fuseki.password)
   )
 
-  // Reading data should be quick, except when it is not ;-)
-  private val queryTimeoutMillis = config.triplestore.queryTimeoutAsDuration.toMillis.toInt
+  // timeouts from the config
+  private val queryTimeoutMillis      = config.triplestore.queryTimeoutAsDuration.toMillis.toInt
+  private val gravsearchTimeoutMillis = config.triplestore.gravsearchTimeoutAsDuration.toMillis.toInt
+  private val updateTimeoutMillis     = config.triplestore.updateTimeoutAsDuration.toMillis.toInt
 
+  // timeouts sent to Fuseki
+  private val queryTimeoutString      = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
+  private val gravsearchTimeoutString = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
+
+  // the client config used for queries to the triplestore
   private val queryRequestConfig = RequestConfig
     .custom()
-    .setConnectTimeout(queryTimeoutMillis)
-    .setConnectionRequestTimeout(queryTimeoutMillis)
-    .setSocketTimeout(queryTimeoutMillis)
+    .setConnectTimeout(queryTimeoutMillis + 10000) // timeout should be a bit more than the queryTimeout itself
+    .setConnectionRequestTimeout(queryTimeoutMillis + 10000)
+    .setSocketTimeout(queryTimeoutMillis + 10000)
     .build
 
   private val queryHttpClient: CloseableHttpClient = HttpClients.custom
@@ -111,29 +119,26 @@ case class TriplestoreServiceHttpConnectorImpl(
     .setDefaultRequestConfig(queryRequestConfig)
     .build
 
-  // Some updates could take a while.
-  private val updateTimeoutMillis = config.triplestore.updateTimeoutAsDuration.toMillis.toInt
-
+  // the client config used for updates in the triplestore
   private val updateTimeoutConfig = RequestConfig
     .custom()
     .setConnectTimeout(updateTimeoutMillis)
     .setConnectionRequestTimeout(updateTimeoutMillis)
     .setSocketTimeout(updateTimeoutMillis)
     .build
-
   private val updateHttpClient: CloseableHttpClient = HttpClients.custom
     .setDefaultCredentialsProvider(credsProvider)
     .setDefaultRequestConfig(updateTimeoutConfig)
     .build
 
-  // For updates that could take a very long time.
-  private val longUpdateTimeoutMillis = updateTimeoutMillis * 10
+  // For requests that could take a very long time.
+  private val longRequestTimeoutMillis = 7200000 // 2 hours
 
   private val longRequestConfig = RequestConfig
     .custom()
-    .setConnectTimeout(longUpdateTimeoutMillis)
-    .setConnectionRequestTimeout(longUpdateTimeoutMillis)
-    .setSocketTimeout(longUpdateTimeoutMillis)
+    .setConnectTimeout(longRequestTimeoutMillis)
+    .setConnectionRequestTimeout(longRequestTimeoutMillis)
+    .setSocketTimeout(longRequestTimeoutMillis)
     .build
 
   private val longRequestClient: CloseableHttpClient = HttpClients.custom
@@ -167,12 +172,16 @@ case class TriplestoreServiceHttpConnectorImpl(
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql the SPARQL SELECT query string.
+   * @param sparql          the SPARQL SELECT query string.
    * @param simulateTimeout if `true`, simulate a read timeout.
+   * @param isGravsearch    if `true`, takes a long timeout because gravsearch queries can take a long time.
    * @return a [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult] = {
-
+  def sparqlHttpSelect(
+    sparql: String,
+    simulateTimeout: Boolean = false,
+    isGravsearch: Boolean = false
+  ): UIO[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
@@ -196,7 +205,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       resultStr <-
-        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout)
+        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout, isGravsearch = isGravsearch)
 
       // Parse the response as a JSON object and generate a response message.
       responseMessage <- parseJsonResponse(sparql, resultStr).orDie
@@ -313,6 +322,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       turtleStr <- getSparqlHttpResponse(
                      sparqlExtendedConstructRequest.sparql,
                      isUpdate = false,
+                     isGravsearch = sparqlExtendedConstructRequest.isGravsearch,
                      acceptMimeType = mimeTypeTextTurtle
                    )
 
@@ -677,10 +687,12 @@ case class TriplestoreServiceHttpConnectorImpl(
   }
 
   /**
-   * Submits a SPARQL request to the triplestore and returns the response as a string.
+   * Submits a SPARQL request to the triplestore and returns the response as a string. According to the request type a different
+   * configuration of teh HttpClient and different timeouts are used.
    *
    * @param sparql         the SPARQL request to be submitted.
    * @param isUpdate       `true` if this is an update request.
+   * @param isGravsearch   `true` if this is a Gravsearch query (needs a prolongued timeout).
    * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @return the triplestore's response.
@@ -688,6 +700,7 @@ case class TriplestoreServiceHttpConnectorImpl(
   private def getSparqlHttpResponse(
     sparql: String,
     isUpdate: Boolean,
+    isGravsearch: Boolean = false,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
     simulateTimeout: Boolean = false
   ): UIO[String] = {
@@ -703,15 +716,19 @@ case class TriplestoreServiceHttpConnectorImpl(
     val httpPost = ZIO.attempt {
       if (isUpdate) {
         // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
-        val requestEntity  = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
+        val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
+        // the timeout for Fuseki can be provided via the path
         val updateHttpPost = new HttpPost(sparqlUpdatePath)
         updateHttpPost.setEntity(requestEntity)
         updateHttpPost
       } else {
-        // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
-        // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
+        // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2, "query via POST with URL-encoded parameters").
         val formParams = new util.ArrayList[NameValuePair]()
         formParams.add(new BasicNameValuePair("query", sparql))
+        // in case of a gravsearch query, a specific (longer) timeout is set
+        formParams.add(
+          new BasicNameValuePair("timeout", (if (isGravsearch) gravsearchTimeoutString else queryTimeoutString))
+        )
         val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
         val queryHttpPost: HttpPost             = new HttpPost(queryPath)
         queryHttpPost.setEntity(requestEntity)
@@ -853,8 +870,6 @@ case class TriplestoreServiceHttpConnectorImpl(
     processResponse: CloseableHttpResponse => UIO[T],
     simulateTimeout: Boolean = false
   ): UIO[T] = {
-
-    // TODO: Can we make Fuseki abandon the query if it takes too long?
 
     def checkSimulateTimeout(): UIO[Unit] =
       if (simulateTimeout) {

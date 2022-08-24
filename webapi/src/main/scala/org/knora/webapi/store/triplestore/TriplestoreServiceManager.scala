@@ -46,10 +46,10 @@ final case class TriplestoreServiceManager(
   updater: RepositoryUpdater
 ) {
   def receive(message: TriplestoreRequest) = message match {
-    case UpdateRepositoryRequest()           => updater.maybeUpdateRepository
-    case SparqlSelectRequest(sparql: String) => ts.sparqlHttpSelect(sparql)
-    case sparqlConstructRequest: SparqlConstructRequest =>
-      ts.sparqlHttpConstruct(sparqlConstructRequest)
+    case UpdateRepositoryRequest() => updater.maybeUpdateRepository
+    case SparqlSelectRequest(sparql: String, isGravsearch: Boolean) =>
+      ts.sparqlHttpSelect(sparql = sparql, isGravsearch = isGravsearch)
+    case sparqlConstructRequest: SparqlConstructRequest => ts.sparqlHttpConstruct(sparqlConstructRequest)
     case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
       ts.sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest)
     case SparqlConstructFileRequest(
