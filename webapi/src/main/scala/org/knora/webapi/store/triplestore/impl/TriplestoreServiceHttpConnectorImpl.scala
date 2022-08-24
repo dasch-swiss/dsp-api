@@ -71,7 +71,6 @@ import zio._
 import zio.json.ast.Json
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.config.SocketConfig
-import org.apache.jena.sparql.engine.http.HttpParams
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
