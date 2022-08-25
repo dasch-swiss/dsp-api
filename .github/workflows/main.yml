@@ -43,7 +43,7 @@ jobs:
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
+          coverage-reports: target/scala-2.13/coverage-report/cobertura.xml
       - name: Cleanup before cache
         shell: bash
         run: |
