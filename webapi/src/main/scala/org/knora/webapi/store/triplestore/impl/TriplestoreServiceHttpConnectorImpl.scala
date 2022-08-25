@@ -96,53 +96,24 @@ case class TriplestoreServiceHttpConnectorImpl(
     new UsernamePasswordCredentials(config.triplestore.fuseki.username, config.triplestore.fuseki.password)
   )
 
-  // timeouts from the config
-  private val queryTimeoutMillis      = config.triplestore.queryTimeoutAsDuration.toMillis.toInt
-  private val gravsearchTimeoutMillis = config.triplestore.gravsearchTimeoutAsDuration.toMillis.toInt
-  private val updateTimeoutMillis     = config.triplestore.updateTimeoutAsDuration.toMillis.toInt
-
   // timeouts sent to Fuseki
   private val queryTimeoutString      = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
   private val gravsearchTimeoutString = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
 
-  // the client config used for queries to the triplestore
+  // the client config used for queries to the triplestore (has to be larger than config.triplestore.queryTimeoutAsDuration
+  // and config.triplestore.gravsearchTimeoutAsDuration)
+  private val requestTimeoutMillis = 7200000 // 2 hours
+
   private val queryRequestConfig = RequestConfig
     .custom()
-    .setConnectTimeout(queryTimeoutMillis + 10000) // timeout should be a bit more than the queryTimeout itself
-    .setConnectionRequestTimeout(queryTimeoutMillis + 10000)
-    .setSocketTimeout(queryTimeoutMillis + 10000)
+    .setConnectTimeout(requestTimeoutMillis)
+    .setConnectionRequestTimeout(requestTimeoutMillis)
+    .setSocketTimeout(requestTimeoutMillis)
     .build
 
   private val queryHttpClient: CloseableHttpClient = HttpClients.custom
     .setDefaultCredentialsProvider(credsProvider)
     .setDefaultRequestConfig(queryRequestConfig)
-    .build
-
-  // the client config used for updates in the triplestore
-  private val updateTimeoutConfig = RequestConfig
-    .custom()
-    .setConnectTimeout(updateTimeoutMillis)
-    .setConnectionRequestTimeout(updateTimeoutMillis)
-    .setSocketTimeout(updateTimeoutMillis)
-    .build
-  private val updateHttpClient: CloseableHttpClient = HttpClients.custom
-    .setDefaultCredentialsProvider(credsProvider)
-    .setDefaultRequestConfig(updateTimeoutConfig)
-    .build
-
-  // For requests that could take a very long time.
-  private val longRequestTimeoutMillis = 7200000 // 2 hours
-
-  private val longRequestConfig = RequestConfig
-    .custom()
-    .setConnectTimeout(longRequestTimeoutMillis)
-    .setConnectionRequestTimeout(longRequestTimeoutMillis)
-    .setSocketTimeout(longRequestTimeoutMillis)
-    .build
-
-  private val longRequestClient: CloseableHttpClient = HttpClients.custom
-    .setDefaultCredentialsProvider(credsProvider)
-    .setDefaultRequestConfig(longRequestConfig)
     .build
 
   private val dbName                 = config.triplestore.fuseki.repositoryName
@@ -173,7 +144,7 @@ case class TriplestoreServiceHttpConnectorImpl(
    *
    * @param sparql          the SPARQL SELECT query string.
    * @param simulateTimeout if `true`, simulate a read timeout.
-   * @param isGravsearch    if `true`, takes a long timeout because gravsearch queries can take a long time.
+   * @param isGravsearch    `true` if it is a gravsearch query (relevant for timeout)
    * @return a [[SparqlSelectResult]].
    */
   def sparqlHttpSelect(
@@ -218,7 +189,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @return a [[SparqlConstructResponse]]
    */
   def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse] = {
-    // println(logDelimiter + sparql)
 
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
@@ -345,7 +315,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @return a [[SparqlUpdateResponse]].
    */
   def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse] =
-    // println(logDelimiter + sparqlUpdate)
     for {
       // Send the request to the triplestore.
       _ <- getSparqlHttpResponse(sparqlUpdate, isUpdate = true)
@@ -476,7 +445,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       httpContext <- makeHttpContext.orDie
       _ <- ZIO.foreachDiscard(request)(elem =>
              doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = elem._1,
                context = httpContext,
                processResponse = elem._2
@@ -564,7 +533,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       req <- httpGet
       ctx <- makeHttpContext
       res <- doHttpRequest(
-               client = updateHttpClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = returnResponseAsString
@@ -602,7 +571,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       request     <- httpPost.orDie
       httpContext <- makeHttpContext.orDie
       _ <- doHttpRequest(
-             client = updateHttpClient,
+             client = queryHttpClient,
              request = request,
              context = httpContext,
              processResponse = returnUploadResponse
@@ -704,19 +673,12 @@ case class TriplestoreServiceHttpConnectorImpl(
     simulateTimeout: Boolean = false
   ): UIO[String] = {
 
-    val httpClient = ZIO.attempt {
-      if (isUpdate) {
-        updateHttpClient
-      } else {
-        queryHttpClient
-      }
-    }
+    val httpClient = ZIO.attempt(queryHttpClient)
 
     val httpPost = ZIO.attempt {
       if (isUpdate) {
         // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
-        val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
-        // the timeout for Fuseki can be provided via the path
+        val requestEntity  = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
         val updateHttpPost = new HttpPost(sparqlUpdatePath)
         updateHttpPost.setEntity(requestEntity)
         updateHttpPost
@@ -771,7 +733,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       req <- httpGet.orDie
       res <- doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = writeResponseFileAsPlainContent(outputFile)
@@ -797,7 +759,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       req <- httpPost.orDie
       res <- doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = returnUploadResponse
@@ -826,7 +788,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       req <- httpPut.orDie
       res <- doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = returnInsertGraphDataResponse(graphName)
