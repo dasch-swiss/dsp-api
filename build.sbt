@@ -74,7 +74,7 @@ lazy val customScalacOptions = Seq(
   "-deprecation",
   "-Yresolve-term-conflict:package",
   "-Ymacro-annotations",
-  "-Ywarn-unused"
+  "-Wunused"
 )
 
 //////////////////////////////////////
@@ -165,7 +165,9 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-deprecation",
       "-Yresolve-term-conflict:package",
       "-Ymacro-annotations",
-      "-Ywarn-unused:imports"
+      // silence twirl templates unused imports warnings
+      "-Wconf:src=target/.*:s",
+      "-Wunused:imports"
     ),
     logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
