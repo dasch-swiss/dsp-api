@@ -5,6 +5,7 @@ import zio.ZLayer
 import zio.logging.LogFormat._
 import zio.logging._
 import zio.logging.backend.SLF4J
+import scala.annotation.nowarn
 
 object Logging {
   val logFormat             = "[correlation-id = %s] %s"
@@ -32,7 +33,7 @@ object Logging {
 
   val slf4jFormat = line
 
+  @nowarn
   val slf4j =
     SLF4J.slf4j(LogLevel.Debug, slf4jFormat, _ => "zio-slf4j-logger")
-
 }

@@ -55,8 +55,8 @@ final case class RoleRepoMock(
    */
   override def deleteRole(id: RoleId): IO[Option[Nothing], RoleId] =
     (for {
-      role <- roles.get(id.uuid).some
-      _    <- roles.delete(id.uuid)
+      _ <- roles.get(id.uuid).some
+      _ <- roles.delete(id.uuid)
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted role: ${id.uuid}"))
 }
 
