@@ -45,7 +45,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ProjectsADMJsonProtocol {
 
-  val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
+  val projectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
   /**
    * Returns the route.
@@ -83,7 +83,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       new ApiResponse(code = 500, message = "Internal server error")
     )
   )
-  private def getProjects(): Route = path(ProjectsBasePath) {
+  private def getProjects(): Route = path(projectsBasePath) {
     get { requestContext =>
       log.info("All projects requested.")
       val requestMessage: Future[ProjectsGetRequestADM] = for {
@@ -127,7 +127,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
       new ApiResponse(code = 500, message = "Internal server error")
     )
   )
-  private def addProject(): Route = path(ProjectsBasePath) {
+  private def addProject(): Route = path(projectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
@@ -167,7 +167,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   }
 
   /* returns all unique keywords for all projects as a list */
-  private def getKeywords(): Route = path(ProjectsBasePath / "Keywords") {
+  private def getKeywords(): Route = path(projectsBasePath / "Keywords") {
     get { requestContext =>
       val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
         requestingUser <- getUserADM(
@@ -189,7 +189,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
   /* returns all keywords for a single project */
   private def getProjectKeywords(): Route =
-    path(ProjectsBasePath / "iri" / Segment / "Keywords") { value =>
+    path(projectsBasePath / "iri" / Segment / "Keywords") { value =>
       get { requestContext =>
         val checkedProjectIri =
           stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -217,7 +217,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    * returns a single project identified through iri
    */
   private def getProjectByIri(): Route =
-    path(ProjectsBasePath / "iri" / Segment) { value =>
+    path(projectsBasePath / "iri" / Segment) { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -245,7 +245,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    * returns a single project identified through shortname.
    */
   private def getProjectByShortname(): Route =
-    path(ProjectsBasePath / "shortname" / Segment) { value =>
+    path(projectsBasePath / "shortname" / Segment) { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -275,7 +275,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    * returns a single project identified through shortcode.
    */
   private def getProjectByShortcode(): Route =
-    path(ProjectsBasePath / "shortcode" / Segment) { value =>
+    path(projectsBasePath / "shortcode" / Segment) { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -305,7 +305,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    * update a project identified by iri
    */
   private def changeProject(): Route =
-    path(ProjectsBasePath / "iri" / Segment) { value =>
+    path(projectsBasePath / "iri" / Segment) { value =>
       put {
         entity(as[ChangeProjectApiRequestADM]) { apiRequest => requestContext =>
           val checkedProjectIri =
@@ -340,7 +340,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def deleteProject(): Route =
-    path(ProjectsBasePath / "iri" / Segment) { value =>
+    path(projectsBasePath / "iri" / Segment) { value =>
       delete { requestContext =>
         val checkedProjectIri =
           stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -371,7 +371,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectMembersByIri(): Route =
-    path(ProjectsBasePath / "iri" / Segment / "members") { value =>
+    path(projectsBasePath / "iri" / Segment / "members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -400,7 +400,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectMembersByShortname(): Route =
-    path(ProjectsBasePath / "shortname" / Segment / "members") { value =>
+    path(projectsBasePath / "shortname" / Segment / "members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -431,7 +431,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectMembersByShortcode(): Route =
-    path(ProjectsBasePath / "shortcode" / Segment / "members") { value =>
+    path(projectsBasePath / "shortcode" / Segment / "members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -462,7 +462,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectAdminMembersByIri(): Route =
-    path(ProjectsBasePath / "iri" / Segment / "admin-members") { value =>
+    path(projectsBasePath / "iri" / Segment / "admin-members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -491,7 +491,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectAdminMembersByShortname(): Route =
-    path(ProjectsBasePath / "shortname" / Segment / "admin-members") { value =>
+    path(projectsBasePath / "shortname" / Segment / "admin-members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -522,7 +522,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectAdminMembersByShortcode(): Route =
-    path(ProjectsBasePath / "shortcode" / Segment / "admin-members") { value =>
+    path(projectsBasePath / "shortcode" / Segment / "admin-members") { value =>
       get { requestContext =>
         val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -553,7 +553,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectRestrictedViewSettingsByIri(): Route =
-    path(ProjectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
+    path(projectsBasePath / "iri" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
         val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -580,7 +580,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectRestrictedViewSettingsByShortname(): Route =
-    path(ProjectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>
+    path(projectsBasePath / "shortname" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
         val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -608,7 +608,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    */
   @ApiMayChange
   private def getProjectRestrictedViewSettingsByShortcode(): Route =
-    path(ProjectsBasePath / "shortcode" / Segment / "RestrictedViewSettings") { value: String =>
+    path(projectsBasePath / "shortcode" / Segment / "RestrictedViewSettings") { value: String =>
       get { requestContext =>
         val requestMessage: Future[ProjectRestrictedViewSettingsGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -636,7 +636,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
    * Returns all ontologies, data, and configuration belonging to a project.
    */
   private def getProjectData(): Route =
-    path(ProjectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
+    path(projectsBasePath / "iri" / Segment / "AllData") { projectIri: IRI =>
       get {
         respondWithHeaders(projectDataHeader) {
           getProjectDataEntity(

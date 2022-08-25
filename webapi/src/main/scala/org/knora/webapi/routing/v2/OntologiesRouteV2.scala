@@ -42,7 +42,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
+  val ontologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
   private val ALL_LANGUAGES          = "allLanguages"
   private val LAST_MODIFICATION_DATE = "lastModificationDate"
@@ -139,7 +139,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
   }
 
   private def getOntologyMetadata(): Route =
-    path(OntologiesBasePath / "metadata") {
+    path(ontologiesBasePath / "metadata") {
       get { requestContext =>
         val maybeProjectIri: Option[SmartIri] = RouteUtilV2.getProject(requestContext)
 
@@ -165,7 +165,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def updateOntologyMetadata(): Route =
-    path(OntologiesBasePath / "metadata") {
+    path(ontologiesBasePath / "metadata") {
       put {
         entity(as[String]) { jsonRequest => requestContext =>
           {
@@ -201,7 +201,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def getOntologyMetadataForProjects(): Route =
-    path(OntologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
+    path(ontologiesBasePath / "metadata" / Segments) { projectIris: List[IRI] =>
       get { requestContext =>
         val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
           requestingUser <- getUserADM(
@@ -230,7 +230,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def getOntology(): Route =
-    path(OntologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
+    path(ontologiesBasePath / "allentities" / Segment) { externalOntologyIriStr: IRI =>
       get { requestContext =>
         val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(
           throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr")
@@ -272,7 +272,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def createClass(): Route = path(OntologiesBasePath / "classes") {
+  private def createClass(): Route = path(ontologiesBasePath / "classes") {
     post {
       // Create a new class.
       entity(as[String]) { jsonRequest => requestContext =>
@@ -309,7 +309,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
   }
 
   private def updateClass(): Route =
-    path(OntologiesBasePath / "classes") {
+    path(ontologiesBasePath / "classes") {
       put {
         // Change the labels or comments of a class.
         entity(as[String]) { jsonRequest => requestContext =>
@@ -347,7 +347,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
   // delete the comment of a class definition
   private def deleteClassComment(): Route =
-    path(OntologiesBasePath / "classes" / "comment" / Segment) { classIriStr: IRI =>
+    path(ontologiesBasePath / "classes" / "comment" / Segment) { classIriStr: IRI =>
       delete { requestContext =>
         val classIri = classIriStr.toSmartIri
 
@@ -389,7 +389,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def addCardinalities(): Route =
-    path(OntologiesBasePath / "cardinalities") {
+    path(ontologiesBasePath / "cardinalities") {
       post {
         // Add cardinalities to a class.
         entity(as[String]) { jsonRequest => requestContext =>
@@ -426,7 +426,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def canReplaceCardinalities(): Route =
-    path(OntologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
+    path(ontologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
       get { requestContext =>
         val classIri = classIriStr.toSmartIri
         stringFormatter.checkExternalOntologyName(classIri)
@@ -459,7 +459,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
   // Replaces all cardinalities with what was sent. Deleting means send empty
   // replace request.
   private def replaceCardinalities(): Route =
-    path(OntologiesBasePath / "cardinalities") {
+    path(ontologiesBasePath / "cardinalities") {
       put {
         entity(as[String]) { jsonRequest => requestContext =>
           {
@@ -495,7 +495,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def canDeleteCardinalitiesFromClass(): Route =
-    path(OntologiesBasePath / "candeletecardinalities") {
+    path(ontologiesBasePath / "candeletecardinalities") {
       post {
         entity(as[String]) { jsonRequest => requestContext =>
           {
@@ -534,7 +534,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
   // delete a single cardinality from the specified class if the property is
   // not used in resources.
   private def deleteCardinalitiesFromClass(): Route =
-    path(OntologiesBasePath / "cardinalities") {
+    path(ontologiesBasePath / "cardinalities") {
       patch {
         entity(as[String]) { jsonRequest => requestContext =>
           {
@@ -570,7 +570,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def changeGuiOrder(): Route =
-    path(OntologiesBasePath / "guiorder") {
+    path(ontologiesBasePath / "guiorder") {
       put {
         // Change a class's cardinalities.
         entity(as[String]) { jsonRequest => requestContext =>
@@ -607,7 +607,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def getClasses(): Route =
-    path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
+    path(ontologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
       get { requestContext =>
         val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map { classIriStr: IRI =>
           val requestedClassIri: SmartIri =
@@ -671,7 +671,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def canDeleteClass(): Route =
-    path(OntologiesBasePath / "candeleteclass" / Segment) { classIriStr: IRI =>
+    path(ontologiesBasePath / "candeleteclass" / Segment) { classIriStr: IRI =>
       get { requestContext =>
         val classIri = classIriStr.toSmartIri
         stringFormatter.checkExternalOntologyName(classIri)
@@ -702,7 +702,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def deleteClass(): Route =
-    path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
+    path(ontologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
       delete { requestContext =>
         val classIriStr = externalResourceClassIris match {
           case List(str) => str
@@ -749,7 +749,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def deleteOntologyComment(): Route =
-    path(OntologiesBasePath / "comment" / Segment) { ontologyIriStr: IRI =>
+    path(ontologiesBasePath / "comment" / Segment) { ontologyIriStr: IRI =>
       delete { requestContext =>
         val ontologyIri = ontologyIriStr.toSmartIri
 
@@ -791,7 +791,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def createProperty(): Route =
-    path(OntologiesBasePath / "properties") {
+    path(ontologiesBasePath / "properties") {
       post {
         // Create a new property.
         entity(as[String]) { jsonRequest => requestContext =>
@@ -1004,7 +1004,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def updatePropertyLabelsOrComments(): Route =
-    path(OntologiesBasePath / "properties") {
+    path(ontologiesBasePath / "properties") {
       put {
         // Change the labels or comments of a property.
         entity(as[String]) { jsonRequest => requestContext =>
@@ -1043,7 +1043,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
 
   // delete the comment of a property definition
   private def deletePropertyComment(): Route =
-    path(OntologiesBasePath / "properties" / "comment" / Segment) { propertyIriStr: IRI =>
+    path(ontologiesBasePath / "properties" / "comment" / Segment) { propertyIriStr: IRI =>
       delete { requestContext =>
         val propertyIri = propertyIriStr.toSmartIri
 
@@ -1085,7 +1085,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def updatePropertyGuiElement(): Route =
-    path(OntologiesBasePath / "properties" / "guielement") {
+    path(ontologiesBasePath / "properties" / "guielement") {
       put {
         // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
         entity(as[String]) { jsonRequest => requestContext =>
@@ -1167,7 +1167,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def getProperties(): Route =
-    path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
+    path(ontologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       get { requestContext =>
         val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map { propIriStr: IRI =>
           val requestedPropIri: SmartIri =
@@ -1231,7 +1231,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def canDeleteProperty(): Route =
-    path(OntologiesBasePath / "candeleteproperty" / Segment) { propertyIriStr: IRI =>
+    path(ontologiesBasePath / "candeleteproperty" / Segment) { propertyIriStr: IRI =>
       get { requestContext =>
         val propertyIri = propertyIriStr.toSmartIri
         stringFormatter.checkExternalOntologyName(propertyIri)
@@ -1262,7 +1262,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def deleteProperty(): Route =
-    path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
+    path(ontologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       delete { requestContext =>
         val propertyIriStr = externalPropertyIris match {
           case List(str) => str
@@ -1308,7 +1308,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def createOntology(): Route = path(OntologiesBasePath) {
+  private def createOntology(): Route = path(ontologiesBasePath) {
     // Create a new, empty ontology.
     post {
       entity(as[String]) { jsonRequest => requestContext =>
@@ -1345,7 +1345,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
   }
 
   private def canDeleteOntology(): Route =
-    path(OntologiesBasePath / "candeleteontology" / Segment) { ontologyIriStr: IRI =>
+    path(ontologiesBasePath / "candeleteontology" / Segment) { ontologyIriStr: IRI =>
       get { requestContext =>
         val ontologyIri = ontologyIriStr.toSmartIri
         stringFormatter.checkExternalOntologyName(ontologyIri)
@@ -1375,7 +1375,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def deleteOntology(): Route = path(OntologiesBasePath / Segment) { ontologyIriStr =>
+  private def deleteOntology(): Route = path(ontologiesBasePath / Segment) { ontologyIriStr =>
     delete { requestContext =>
       val ontologyIri = ontologyIriStr.toSmartIri
       stringFormatter.checkExternalOntologyName(ontologyIri)

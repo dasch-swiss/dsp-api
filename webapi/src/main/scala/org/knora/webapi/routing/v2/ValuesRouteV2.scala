@@ -31,7 +31,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
+  val valuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
 
   /**
    * Returns the route.
@@ -42,7 +42,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       updateValue() ~
       deleteValue()
 
-  private def getValue(): Route = path(ValuesBasePath / Segment / Segment) {
+  private def getValue(): Route = path(valuesBasePath / Segment / Segment) {
     (resourceIriStr: IRI, valueUuidStr: String) =>
       get { requestContext =>
         val resourceIri: SmartIri =
@@ -100,7 +100,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       }
   }
 
-  private def createValue(): Route = path(ValuesBasePath) {
+  private def createValue(): Route = path(valuesBasePath) {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -134,7 +134,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
   }
 
-  private def updateValue(): Route = path(ValuesBasePath) {
+  private def updateValue(): Route = path(valuesBasePath) {
     put {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -168,7 +168,7 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     }
   }
 
-  private def deleteValue(): Route = path(ValuesBasePath / "delete") {
+  private def deleteValue(): Route = path(valuesBasePath / "delete") {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {

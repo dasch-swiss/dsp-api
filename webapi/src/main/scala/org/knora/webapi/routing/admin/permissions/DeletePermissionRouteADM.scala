@@ -26,7 +26,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
-  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
+  val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 
   /**
    * Returns the route.
@@ -38,7 +38,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
    * Delete a permission
    */
   private def deletePermission(): Route =
-    path(PermissionsBasePath / Segment) { iri =>
+    path(permissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext)

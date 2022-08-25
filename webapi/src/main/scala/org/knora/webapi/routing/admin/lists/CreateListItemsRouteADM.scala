@@ -40,7 +40,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
+  val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     createListRootNode() ~
@@ -71,7 +71,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Creates a new list (root node).
    */
-  private def createListRootNode(): Route = path(ListsBasePath) {
+  private def createListRootNode(): Route = path(listsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
         val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
@@ -141,7 +141,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Creates a new list child node.
    */
-  private def createListChildNode(): Route = path(ListsBasePath / Segment) { iri =>
+  private def createListChildNode(): Route = path(listsBasePath / Segment) { iri =>
     post {
       entity(as[ListChildNodeCreateApiRequestADM]) { apiRequest => requestContext =>
         // check if requested ListIri matches the Iri passed in the route

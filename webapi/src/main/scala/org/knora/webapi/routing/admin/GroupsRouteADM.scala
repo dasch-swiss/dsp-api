@@ -34,7 +34,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with GroupsADMJsonProtocol {
 
-  val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
+  val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute(): Route =
     getGroups() ~
@@ -48,7 +48,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   /**
    * Returns all groups.
    */
-  private def getGroups(): Route = path(GroupsBasePath) {
+  private def getGroups(): Route = path(groupsBasePath) {
     get { requestContext =>
       val requestMessage = for {
         _ <- getUserADM(requestContext)
@@ -67,7 +67,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   /**
    * Returns a single group identified by IRI.
    */
-  private def getGroup(): Route = path(GroupsBasePath / Segment) { value =>
+  private def getGroup(): Route = path(groupsBasePath / Segment) { value =>
     get { requestContext =>
       val checkedGroupIri =
         stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid custom group IRI $value"))
@@ -93,7 +93,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
    * Returns all members of single group.
    */
   private def getGroupMembers(): Route =
-    path(GroupsBasePath / Segment / "members") { value =>
+    path(groupsBasePath / Segment / "members") { value =>
       get { requestContext =>
         val checkedGroupIri =
           stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
@@ -118,7 +118,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   /**
    * Creates a group.
    */
-  private def createGroup(): Route = path(GroupsBasePath) {
+  private def createGroup(): Route = path(groupsBasePath) {
     post {
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
         val id: Validation[Throwable, Option[GroupIri]]            = GroupIri.make(apiRequest.id)
@@ -154,7 +154,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   /**
    * Updates basic group information.
    */
-  private def updateGroup(): Route = path(GroupsBasePath / Segment) { value =>
+  private def updateGroup(): Route = path(groupsBasePath / Segment) { value =>
     put {
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
         val checkedGroupIri =
@@ -204,7 +204,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
    * Updates the group's status.
    */
   private def changeGroupStatus(): Route =
-    path(GroupsBasePath / Segment / "status") { value =>
+    path(groupsBasePath / Segment / "status") { value =>
       put {
         entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
           val checkedGroupIri =
@@ -244,7 +244,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   /**
    * Deletes a group (sets status to false).
    */
-  private def deleteGroup(): Route = path(GroupsBasePath / Segment) { value =>
+  private def deleteGroup(): Route = path(groupsBasePath / Segment) { value =>
     delete { requestContext =>
       val checkedGroupIri =
         stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))

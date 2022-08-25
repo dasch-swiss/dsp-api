@@ -29,7 +29,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
+  val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     deleteListItem() ~
@@ -37,7 +37,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
       deleteListNodeComments()
 
   /* delete list (i.e. root node) or a child node which should also delete its children */
-  private def deleteListItem(): Route = path(ListsBasePath / Segment) { iri =>
+  private def deleteListItem(): Route = path(listsBasePath / Segment) { iri =>
     delete {
       /* delete a list item root node or child if unused */
       requestContext =>
@@ -66,7 +66,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
    * Checks if a list can be deleted (none of its nodes is used in data).
    */
   private def canDeleteList(): Route =
-    path(ListsBasePath / "candelete" / Segment) { iri =>
+    path(listsBasePath / "candelete" / Segment) { iri =>
       get { requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
@@ -92,7 +92,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
    * Deletes all comments from requested list node (only child).
    */
   private def deleteListNodeComments(): Route =
-    path(ListsBasePath / "comments" / Segment) { iri =>
+    path(listsBasePath / "comments" / Segment) { iri =>
       delete { requestContext =>
         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 

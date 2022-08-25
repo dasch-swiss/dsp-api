@@ -36,7 +36,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
+  val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     updateNodeName() ~
@@ -72,7 +72,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
    * Update name of an existing list node, either root or child.
    */
   private def updateNodeName(): Route =
-    path(ListsBasePath / Segment / "name") { iri =>
+    path(listsBasePath / Segment / "name") { iri =>
       put {
         entity(as[ChangeNodeNameApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
@@ -128,7 +128,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
    * Update labels of an existing list node, either root or child.
    */
   private def updateNodeLabels(): Route =
-    path(ListsBasePath / Segment / "labels") { iri =>
+    path(listsBasePath / Segment / "labels") { iri =>
       put {
         entity(as[ChangeNodeLabelsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
@@ -184,7 +184,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
    * Updates comments of an existing list node, either root or child.
    */
   private def updateNodeComments(): Route =
-    path(ListsBasePath / Segment / "comments") { iri =>
+    path(listsBasePath / Segment / "comments") { iri =>
       put {
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
@@ -240,7 +240,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
    * Updates position of an existing list child node.
    */
   private def updateNodePosition(): Route =
-    path(ListsBasePath / Segment / "position") { iri =>
+    path(listsBasePath / Segment / "position") { iri =>
       put {
         entity(as[ChangeNodePositionApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
@@ -292,7 +292,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Updates existing list node, either root or child.
    */
-  private def updateList(): Route = path(ListsBasePath / Segment) { iri =>
+  private def updateList(): Route = path(listsBasePath / Segment) { iri =>
     put {
       entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
         // check if requested Iri matches the route Iri

@@ -33,7 +33,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
+  val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     getLists() ~
@@ -51,7 +51,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Returns all lists optionally filtered by project.
    */
-  private def getLists(): Route = path(ListsBasePath) {
+  private def getLists(): Route = path(listsBasePath) {
     get {
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val projectIri =
@@ -90,7 +90,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
   /**
    * Returns a list node, root or child, with children (if exist).
    */
-  private def getListNode(): Route = path(ListsBasePath / Segment) { iri =>
+  private def getListNode(): Route = path(listsBasePath / Segment) { iri =>
     get { requestContext =>
       val listIri =
         stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -118,7 +118,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
    * Returns basic information about list node, root or child, w/o children (if exist).
    */
   private def getListOrNodeInfo(routeSwitch: String): Route =
-    path(ListsBasePath / routeSwitch / Segment) { iri =>
+    path(listsBasePath / routeSwitch / Segment) { iri =>
       get { requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
@@ -144,7 +144,7 @@ class GetListItemsRouteADM(routeData: KnoraRouteData)
    */
   private def getListInfo(): Route =
     //  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
-    path(ListsBasePath / Segment / "info") { iri =>
+    path(listsBasePath / Segment / "info") { iri =>
       get { requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))

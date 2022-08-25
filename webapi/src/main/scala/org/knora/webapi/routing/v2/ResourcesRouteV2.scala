@@ -32,7 +32,7 @@ import org.knora.webapi.routing.RouteUtilV2
  */
 class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  val ResourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
+  val resourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
   private val Text_Property          = "textProperty"
   private val Mapping_Iri            = "mappingIri"
@@ -64,7 +64,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       eraseResource()
 
   private def getIIIFManifest(): Route =
-    path(ResourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
+    path(resourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
         val resourceIri: IRI =
           stringFormatter.validateAndEscapeIri(
@@ -93,7 +93,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
-  private def createResource(): Route = path(ResourcesBasePath) {
+  private def createResource(): Route = path(resourcesBasePath) {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -128,7 +128,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
   }
 
-  private def updateResourceMetadata(): Route = path(ResourcesBasePath) {
+  private def updateResourceMetadata(): Route = path(resourcesBasePath) {
     put {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -163,7 +163,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
   }
 
-  private def getResourcesInProject(): Route = path(ResourcesBasePath) {
+  private def getResourcesInProject(): Route = path(resourcesBasePath) {
     get { requestContext =>
       val projectIri: SmartIri = RouteUtilV2
         .getProject(requestContext)
@@ -230,7 +230,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
   }
 
   private def getResourceHistory(): Route =
-    path(ResourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
+    path(resourcesBasePath / "history" / Segment) { resourceIriStr: IRI =>
       get { requestContext =>
         val resourceIri =
           stringFormatter.validateAndEscapeIri(
@@ -274,7 +274,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
   private def getResourceHistoryEvents(): Route =
-    path(ResourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
+    path(resourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
       get { requestContext =>
         val requestMessageFuture: Future[ResourceHistoryEventsGetRequestV2] = for {
           requestingUser <- getUserADM(
@@ -298,7 +298,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
 
   private def getProjectResourceAndValueHistory(): Route =
-    path(ResourcesBasePath / "projectHistoryEvents" / Segment) { projectIri: IRI =>
+    path(resourcesBasePath / "projectHistoryEvents" / Segment) { projectIri: IRI =>
       get { requestContext =>
         val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {
           requestingUser <- getUserADM(
@@ -321,7 +321,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
-  private def getResources(): Route = path(ResourcesBasePath / Segments) { resIris: Seq[String] =>
+  private def getResources(): Route = path(resourcesBasePath / Segments) { resIris: Seq[String] =>
     get { requestContext =>
       if (resIris.size > settings.v2ResultsPerPage)
         throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
@@ -503,7 +503,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
   }
 
-  private def deleteResource(): Route = path(ResourcesBasePath / "delete") {
+  private def deleteResource(): Route = path(resourcesBasePath / "delete") {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
@@ -537,7 +537,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     }
   }
 
-  private def eraseResource(): Route = path(ResourcesBasePath / "erase") {
+  private def eraseResource(): Route = path(resourcesBasePath / "erase") {
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
