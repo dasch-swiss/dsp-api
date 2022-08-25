@@ -79,9 +79,10 @@ class UpdateListItemsRouteADME2ESpec
     "test"
   )
 
-  private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
-  private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-  private val treeChildNode                        = treeListNodes.head
+  val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
+  val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
+  val treeChildNode                        = treeListNodes.head
+  val newListIri: String                   = treeListInfo.id
 
   "The admin lists route (/admin/lists)" when {
     "updating list root node" should {
@@ -601,6 +602,245 @@ class UpdateListItemsRouteADME2ESpec
           )
         )
       }
+    }
+
+    "updating basic list information" should {
+      "update basic list information" in {
+        val updateListInfo: String =
+          s"""{
+             |    "listIri": "${newListIri}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-request",
+              fileExtension = "json"
+            ),
+            text = updateListInfo
+          )
+        )
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
+
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfo)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+        val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+        labels.size should be(2)
+
+        val comments = receivedListInfo.comments.stringLiterals
+        comments.size should be(2)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "update basic list information with a new name" in {
+        val updateListName =
+          s"""{
+             |    "listIri": "${newListIri}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "a totally new name"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-name-request",
+              fileExtension = "json"
+            ),
+            text = updateListName
+          )
+        )
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
+
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+        receivedListInfo.name should be(Some("a totally new name"))
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-name-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "update basic list information with repeated comment and label in different languages" in {
+        val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
+          s"""{
+             |    "listIri": "http://rdfh.ch/lists/0001/treeList",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |  "labels": [
+             |    {"language": "en", "value": "Test List"},
+             |    {"language": "se", "value": "Test List"}
+             |  ],
+             |  "comments": [
+             |    {"language": "en", "value": "test"},
+             |    {"language": "de", "value": "test"},
+             |    {"language": "fr", "value": "test"},
+             |     {"language": "it", "value": "test"}
+             |  ]
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-comment-label-multiple-languages-request",
+              fileExtension = "json"
+            ),
+            text = updateListInfoWithRepeatedCommentAndLabelValuesRequest
+          )
+        )
+
+        val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
+
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+        val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+        labels.size should be(2)
+
+        val comments = receivedListInfo.comments.stringLiterals
+        comments.size should be(4)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-comment-label-multiple-languages-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return a ForbiddenException if the user updating the list is not project or system admin" in {
+        val params =
+          s"""
+             |{
+             |    "listIri": "${newListIri}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
+                """.stripMargin
+
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
+
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params)
+        ) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.Forbidden)
+      }
+
+      "return a BadRequestException during list change when payload is not correct" in {
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri, "utf-8")
+
+        // empty list IRI
+        val params01 =
+          s"""
+             |{
+             |    "listIri": "",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
+                """.stripMargin
+
+        val request01 = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params01)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response01: HttpResponse = singleAwaitingRequest(request01)
+        response01.status should be(StatusCodes.BadRequest)
+
+        // empty project
+        val params02 =
+          s"""
+             |{
+             |    "listIri": "${newListIri}",
+             |    "projectIri": "",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
+                """.stripMargin
+
+        val request02 = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params02)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response02: HttpResponse = singleAwaitingRequest(request02)
+        response02.status should be(StatusCodes.BadRequest)
+
+        // empty parameters
+        val params03 =
+          s"""
+             |{
+             |    "listIri": "${newListIri}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [],
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
+             |}
+                """.stripMargin
+
+        val request03 = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params03)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response03: HttpResponse = singleAwaitingRequest(request03)
+        response03.status should be(StatusCodes.BadRequest)
+
+      }
+
     }
   }
 }
