@@ -74,11 +74,6 @@ class DeleteListItemsRouteADME2ESpec
     "test"
   )
 
-  val normalUserCreds: CredentialsADM = CredentialsADM(
-    SharedTestDataADM.normalUser,
-    "test"
-  )
-
   val anythingUserCreds: CredentialsADM = CredentialsADM(
     SharedTestDataADM.anythingUser1,
     "test"
@@ -89,10 +84,7 @@ class DeleteListItemsRouteADME2ESpec
     "test"
   )
 
-  private val treeListInfo: ListRootNodeInfoADM    = SharedListsTestDataADM.treeListInfo
-  private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-
-  "The List Items Route (/admin/lists)" when {
+  "The admin lists route (/admin/lists)" when {
     "deleting list items" should {
       "return forbidden exception when requesting user is not system or project admin" in {
         val encodedNodeUrl = java.net.URLEncoder.encode(SharedListsTestDataADM.otherTreeListInfo.id, "utf-8")
@@ -153,23 +145,24 @@ class DeleteListItemsRouteADME2ESpec
         val children = node.getChildren
         children.size should be(0)
       }
+
+      "delete a list entirely with all its children" in {
+        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+        )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
+
+        collectClientTestData("delete-list-response", responseToString(response))
+      }
     }
 
-    "delete a list entirely with all its children" in {
-      val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
-      val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-        BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
-      )
-      val response: HttpResponse = singleAwaitingRequest(request)
-      response.status should be(StatusCodes.OK)
-      val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
-      deletedStatus.convertTo[Boolean] should be(true)
-
-      collectClientTestData("delete-list-response", responseToString(response))
-    }
   }
 
-  "Candeletelist route (/admin/lists/candelete)" when {
+  "The admin lists candelete route (/admin/lists/candelete)" when {
     "used to query if list can be deleted" should {
       "return positive response for unused list" in {
         val unusedList        = "http://rdfh.ch/lists/0001/notUsedList"
@@ -218,7 +211,7 @@ class DeleteListItemsRouteADME2ESpec
     }
   }
 
-  "DeleteListNodeComments route (/admin/lists/comments)" when {
+  "The admin lists comments route (/admin/lists/comments)" when {
     "deleting comments" should {
       "delete child node comments" in {
         val childNodeIri        = "http://rdfh.ch/lists/0001/testList01"

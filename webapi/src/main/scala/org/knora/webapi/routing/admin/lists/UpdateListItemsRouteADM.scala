@@ -21,6 +21,10 @@ import java.util.UUID
 import javax.ws.rs.Path
 import scala.concurrent.Future
 import dsp.valueobjects.List._
+import zio.prelude.Validation
+import dsp.valueobjects.Iri._
+import dsp.valueobjects.ListErrorMessages
+import dsp.errors.ForbiddenException
 
 object UpdateListItemsRouteADM {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
@@ -42,7 +46,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     updateNodeName() ~
       updateNodeLabels() ~
       updateNodeComments() ~
-      updateNodePosition()
+      updateNodePosition() ~
+      updateList()
 
   @Path("/{IRI}/name")
   @ApiOperation(
@@ -264,4 +269,82 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
         }
       }
     }
+
+  @Path("/{IRI}")
+  @ApiOperation(
+    value = "Update basic list information",
+    nickname = "putList",
+    httpMethod = "PUT",
+    response = classOf[RootNodeInfoGetResponseADM]
+  )
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(
+        name = "body",
+        value = "\"list\" to update",
+        required = true,
+        dataTypeClass = classOf[ListNodeChangeApiRequestADM],
+        paramType = "body"
+      )
+    )
+  )
+  @ApiResponses(
+    Array(
+      new ApiResponse(code = 500, message = "Internal server error")
+    )
+  )
+  /**
+   * Updates existing list node, either root or child.
+   */
+  private def updateList(): Route = path(ListsBasePath / Segment) { iri =>
+    put {
+      entity(as[ListNodeChangeApiRequestADM]) { apiRequest => requestContext =>
+        // check if requested Iri matches the route Iri
+        val listIri: Validation[Throwable, ListIri] = if (iri == apiRequest.listIri) {
+          ListIri.make(apiRequest.listIri)
+        } else {
+          Validation.fail(throw BadRequestException("Route and payload listIri mismatch."))
+        }
+
+        val projectIri: Validation[Throwable, ProjectIri]       = ProjectIri.make(apiRequest.projectIri)
+        val hasRootNode: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.hasRootNode)
+        val position: Validation[Throwable, Option[Position]]   = Position.make(apiRequest.position)
+        val name: Validation[Throwable, Option[ListName]]       = ListName.make(apiRequest.name)
+        val labels: Validation[Throwable, Option[Labels]]       = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Option[Comments]]   = Comments.make(apiRequest.comments)
+
+        val validatedChangeNodeInfoPayload: Validation[Throwable, ListNodeChangePayloadADM] =
+          Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
+            ListNodeChangePayloadADM
+          )
+
+        val requestMessage: Future[NodeInfoChangeRequestADM] = for {
+          payload        <- toFuture(validatedChangeNodeInfoPayload)
+          requestingUser <- getUserADM(requestContext)
+          // check if the requesting user is allowed to perform operation
+          _ = if (
+                !requestingUser.permissions.isProjectAdmin(
+                  projectIri.toOption.get.value
+                ) && !requestingUser.permissions.isSystemAdmin
+              ) {
+                // not project or a system admin
+                throw ForbiddenException(ListErrorMessages.ListNodeCreatePermission)
+              }
+        } yield NodeInfoChangeRequestADM(
+          listIri = listIri.toOption.get.value,
+          changeNodeRequest = payload,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          settings = settings,
+          appActor = appActor,
+          log = log
+        )
+      }
+    }
+  }
 }

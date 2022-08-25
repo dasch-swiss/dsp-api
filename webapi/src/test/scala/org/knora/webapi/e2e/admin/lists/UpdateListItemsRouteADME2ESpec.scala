@@ -82,8 +82,8 @@ class UpdateListItemsRouteADME2ESpec
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
   private val treeChildNode                        = treeListNodes.head
 
-  "The List Items Route (/admin/lists)" when {
-    "update list root" should {
+  "The admin lists route (/admin/lists)" when {
+    "updating list root node" should {
       "update only node name" in {
         val updateNodeName =
           s"""{
@@ -229,7 +229,6 @@ class UpdateListItemsRouteADME2ESpec
           HttpEntity(ContentTypes.`application/json`, deleteComments)
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-//        log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.BadRequest)
       }
     }

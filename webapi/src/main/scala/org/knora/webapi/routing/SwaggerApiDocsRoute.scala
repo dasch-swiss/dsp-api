@@ -22,8 +22,10 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
   // List all routes here
   override val apiClasses: Set[Class[_]] = Set(
     classOf[GroupsRouteADM],
-    classOf[OldListsRouteADMFeature],
     classOf[DeleteListItemsRouteADM],
+    classOf[CreateListItemsRouteADM],
+    classOf[GetListItemsRouteADM],
+    classOf[UpdateListItemsRouteADM],
     classOf[PermissionsRouteADM],
     classOf[ProjectsRouteADM],
     classOf[StoreRouteADM],
