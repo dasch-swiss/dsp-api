@@ -9,17 +9,17 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
-import org.knora.webapi.IRI
-import dsp.errors.BadRequestException
 
+import javax.ws.rs.Path
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
-import javax.ws.rs.Path
-import scala.concurrent.Future
 
 object GetListItemsRouteADM {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")

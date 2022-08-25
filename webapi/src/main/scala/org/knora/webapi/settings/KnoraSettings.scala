@@ -15,15 +15,15 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigValue
 import com.typesafe.scalalogging.Logger
 
-import dsp.errors.FileWriteException
-import dsp.valueobjects.User
-import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
-
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
+
+import dsp.errors.FileWriteException
+import dsp.valueobjects.User
+import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
 /**
  * Reads application settings that come from `application.conf`.
