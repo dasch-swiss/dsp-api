@@ -16,6 +16,7 @@ import scala.util.Failure
 import scala.util.Success
 
 import dsp.errors._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -49,6 +50,7 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -794,7 +796,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Check that the resource class has a suitable cardinality for each submitted value.
       resourceClassInfo <- Future(entityInfo.classInfoMap(internalCreateResource.resourceClassIri))
 
-      knoraPropertyCardinalities: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
+      knoraPropertyCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
         resourceClassInfo.allCardinalities.view
           .filterKeys(resourceClassInfo.knoraResourceProperties)
           .toMap
@@ -812,7 +814,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               )
 
               if (
-                (cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1
+                (cardinalityInfo.cardinality == MayHaveOne || cardinalityInfo.cardinality == MustHaveOne) && valuesForProperty.size > 1
               ) {
                 throw OntologyConstraintException(
                   s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri
@@ -824,7 +826,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Check that no required values are missing.
 
       requiredProps: Set[SmartIri] = knoraPropertyCardinalities.filter { case (_, cardinalityInfo) =>
-                                       cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
+                                       cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome
                                      }.keySet -- resourceClassInfo.linkProperties
 
       internalPropertyIris: Set[SmartIri] = internalCreateResource.values.keySet

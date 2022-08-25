@@ -5,12 +5,13 @@
 
 package dsp.role.domain
 
+import zio.prelude.Validation
+
 import dsp.errors.BadRequestException
 import dsp.valueobjects.Id.RoleId
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import zio.prelude.Validation
 
 case class RoleUser(
   id: UserId

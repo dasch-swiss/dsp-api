@@ -6,7 +6,7 @@
 @import org.knora.webapi._
 @import org.knora.webapi.messages.SmartIri
 @import org.knora.webapi.messages.v2.responder.ontologymessages._
-@import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality._
+@import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 @import org.knora.webapi.messages.store.triplestoremessages._
 @import java.time.Instant
 
@@ -57,7 +57,7 @@ DELETE {
 
         @for((propertyIri, knoraCardinality) <- classDef.directCardinalities) {
 
-            @defining(Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)) { owlCardinalityInfo =>
+            @defining(knoraCardinality2OwlCardinality(knoraCardinality)) { owlCardinalityInfo =>
 
                 <@classDef.classIri> rdfs:subClassOf [ rdf:type owl:Restriction ;
                                                        owl:onProperty <@propertyIri> ;

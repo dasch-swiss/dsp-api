@@ -24,7 +24,7 @@ import org.knora.webapi.messages.util.ValueUtilV1
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversions
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
@@ -251,7 +251,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
-                                                                      occurrence = cardinalityInfo.cardinality.toString,
+                                                                      occurrence = cardinalityInfo.cardinality.value,
                                                                       valuetype_id =
                                                                         OntologyConstants.KnoraBase.LinkValue,
                                                                       attributes = valueUtilV1.makeAttributeString(
@@ -301,7 +301,7 @@ class OntologyResponderV1(responderData: ResponderData) extends Responder(respon
                                                                         )
                                                                       ),
                                                                       vocabulary = entityInfo.ontologyIri,
-                                                                      occurrence = cardinalityInfo.cardinality.toString,
+                                                                      occurrence = cardinalityInfo.cardinality.value,
                                                                       valuetype_id = entityInfo
                                                                         .getPredicateObject(
                                                                           OntologyConstants.KnoraBase.ObjectClassConstraint

@@ -8,6 +8,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 
 import dsp.errors.BadRequestException
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -15,7 +16,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 
 /**
  * Tests [[InputOntologyV2]].
@@ -244,7 +245,7 @@ object InputOntologyV2Spec {
         ontologySchema = ApiV2Complex,
         directCardinalities = Map(
           "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(
-            Cardinality.MayHaveOne
+            MayHaveOne
           )
         ),
         subClassOf = Set("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)

@@ -17,6 +17,7 @@ import scala.util.Try
 
 import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -42,10 +43,9 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
@@ -874,7 +874,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             predicateIri = OntologyConstants.Rdfs.Label,
                                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
                                           ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
                                           attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
                                             SalsahGui.GuiAttribute
                                           ) + valueUtilV1.makeAttributeRestype(
@@ -905,7 +905,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             predicateIri = OntologyConstants.Rdfs.Label,
                                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
                                           ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
                                           attributes = propertyEntityInfo
                                             .getPredicateStringObjectsWithoutLang(
                                               SalsahGui.GuiAttribute
@@ -2052,7 +2052,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             )
 
             if (
-              (cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1
+              (cardinalityInfo.cardinality == MayHaveOne || cardinalityInfo.cardinality == MustHaveOne) && valuesForProperty.size > 1
             ) {
               throw OntologyConstraintException(
                 s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
@@ -2062,7 +2062,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Check that no required values are missing.
       requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter { case (_, cardinalityInfo) =>
-                                  cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
+                                  cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome
                                 }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
       submittedPropertyIris = values.keySet
@@ -3230,7 +3230,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
           )
         ),
-        occurrence = propertyCardinality.map(_.cardinality.toString),
+        occurrence = propertyCardinality.map(_.cardinality.value),
         attributes = propertyEntityInfo match {
           case Some(entityInfo) =>
             if (entityInfo.isLinkProp) {
@@ -3343,7 +3343,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           // is MustHaveOne or MayHaveOne, don't return any information about the property.
           propsAndCardinalities.get(propertyIri) match {
             case Some(cardinalityInfo)
-                if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MayHaveOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty =>
+                if (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MayHaveOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty =>
               None
             case _ => Some(propertyV1)
           }
@@ -3512,7 +3512,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               // is MustHaveOne or MayHaveOne, don't return any information about the property.
             } yield propsAndCardinalities.get(propertyIri) match {
               case Some(cardinalityInfo)
-                  if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty =>
+                  if (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty =>
                 None
               case _ => Some(propertyV1)
             }

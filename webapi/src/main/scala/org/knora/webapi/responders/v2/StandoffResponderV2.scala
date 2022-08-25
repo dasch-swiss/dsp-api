@@ -25,6 +25,7 @@ import scala.xml.NodeSeq
 import scala.xml.XML
 
 import dsp.errors._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -45,8 +46,7 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.XMLTagItem
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
@@ -1157,8 +1157,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
               .standoffClassInfoMap(standoffClass.toSmartIri)
               .allCardinalities
-              .filter { case (_: SmartIri, card: KnoraCardinalityInfo) =>
-                card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
+              .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
+                card.cardinality == MustHaveOne || card.cardinality == MustHaveSome
               }
               .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties
               .map(_.toSmartIri)

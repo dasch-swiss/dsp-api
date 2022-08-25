@@ -19,6 +19,7 @@ import scala.util.Try
 
 import dsp.constants.SalsahGui
 import dsp.errors._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
@@ -34,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
@@ -649,7 +650,7 @@ object OntologyHelpers {
         )
 
         propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
-        !(knoraCardinalityInfo.cardinality == Cardinality.MustHaveOne || knoraCardinalityInfo.cardinality == Cardinality.MayHaveOne)
+        !(knoraCardinalityInfo.cardinality == MustHaveOne || knoraCardinalityInfo.cardinality == MayHaveOne)
     }.keySet
 
     if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
@@ -855,16 +856,10 @@ object OntologyHelpers {
           directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
         )
 
-      // Get the cardinalities that the class can inherit. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
+      // Determine the strictest cardinality the class inherits. If the ontology of the base class can't be found, it's assumed to be an external ontology (p.ex. foaf).
 
       cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] =
-        classDefWithAddedLinkValueProps.subClassOf.flatMap { baseClassIri: SmartIri =>
-          val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
-          ontology match {
-            case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities
-            case _                        => None
-          }
-        }.toMap
+        getStrictestCardinalitiesFromClasses(classDefWithAddedLinkValueProps.subClassOf, cacheData)
 
       // Check that the cardinalities directly defined on the class are compatible with any inheritable
       // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
@@ -952,6 +947,50 @@ object OntologyHelpers {
            )
     } yield (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
   }
+
+  /**
+   * Given a set of class IRIs, determines the strictest cardinality for each referenced property. It is possible that the strictest
+   * cardinality is stricter than all the used ones.
+   * This method is used to check if an inherited property of a class uses a cardinality that is compatible with the cardinalities
+   * of the class' super class.
+   *
+   * @param classes           the set of class IRIs.
+   * @param cacheData         the ontology cache data. It is needed to get the class definitions from the cache
+   * @return                  a map with the property IRIs and their respective cardinality definitions
+   */
+  def getStrictestCardinalitiesFromClasses(
+    classes: Set[SmartIri],
+    cacheData: OntologyCacheData
+  ): Map[SmartIri, KnoraCardinalityInfo] =
+    classes.foldLeft(Map[SmartIri, KnoraCardinalityInfo]()) {
+      (acc: Map[SmartIri, KnoraCardinalityInfo], baseClassIri: SmartIri) =>
+        val ontology = cacheData.ontologies.getOrElse(baseClassIri.getOntologyFromEntity, None)
+        val cardinalitiesOfBaseClass: List[(SmartIri, KnoraCardinalityInfo)] = ontology match {
+          case ontology: ReadOntologyV2 => ontology.classes(baseClassIri).allCardinalities.toList
+          case _                        => List.empty
+        }
+
+        val additionalCardinalities = cardinalitiesOfBaseClass.map { case (iri, nextBaseClassCardinality) =>
+          // if there are multiple instances of the same property the class gets from inheritance, keep only the strictest one
+          acc.get(iri) match {
+            // if the previous base class cardinality is stricter than the next base class cardinality, keep the previous
+            case Some(previousCardinality)
+                if previousCardinality.cardinality.isStricterThan(nextBaseClassCardinality.cardinality) =>
+              (iri, previousCardinality)
+            // if the previous base class cardinality is "1-n" or "0-1" and the next base class cardinality is also "1-n" or "0-1", update the
+            // accumulator with cardinality of "1", because only this is stricter than both
+            case Some(previousCardinality)
+                if (
+                  (nextBaseClassCardinality.cardinality == MustHaveSome || nextBaseClassCardinality.cardinality == MayHaveOne) &&
+                    (previousCardinality.cardinality == MustHaveSome || previousCardinality.cardinality == MayHaveOne)
+                ) =>
+              (iri, KnoraCardinalityInfo(MustHaveOne, previousCardinality.guiOrder))
+            // in all other cases, keep the next base class cardinality
+            case _ => (iri, nextBaseClassCardinality)
+          }
+        }.toMap
+        acc ++ additionalCardinalities
+    }
 
   /**
    * Given a set of property IRIs, determines whether the set contains a property P and a subproperty of P.
@@ -1634,9 +1673,9 @@ object OntologyHelpers {
         )
       }
 
-      propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
+      propertyIri -> owlCardinality2KnoraCardinality(
         propertyIri = propertyIri.toString,
-        owlCardinality = Cardinality.OwlCardinalityInfo(
+        owlCardinality = OwlCardinalityInfo(
           owlCardinalityIri = owlCardinalityIri.toString,
           owlCardinalityValue = owlCardinalityValue,
           guiOrder = guiOrder
@@ -1926,16 +1965,11 @@ object OntologyHelpers {
             if (thisClassProp == baseClassProp || basePropsOfThisClassProp.contains(baseClassProp)) {
               // Yes. Is the directly defined one at least as restrictive as the inheritable one?
 
-              if (
-                !Cardinality.isCompatible(
-                  directCardinality = thisClassCardinality.cardinality,
-                  inheritableCardinality = baseClassCardinality.cardinality
-                )
-              ) {
+              if (baseClassCardinality.cardinality.isStricterThan(thisClassCardinality.cardinality)) {
                 // No. Throw an exception.
                 errorFun(
-                  s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality ${thisClassCardinality.cardinality} on ${thisClassProp
-                      .toOntologySchema(errorSchema)} is not compatible with the inherited cardinality ${baseClassCardinality.cardinality} on ${baseClassProp
+                  s"In class <${classIri.toOntologySchema(errorSchema)}>, the directly defined cardinality '${thisClassCardinality.cardinality.value}' on ${thisClassProp
+                      .toOntologySchema(errorSchema)} is not compatible with the inherited or allowed cardinality '${baseClassCardinality.cardinality.value}' on ${baseClassProp
                       .toOntologySchema(errorSchema)}, because it is less restrictive"
                 )
               } else {
@@ -1980,9 +2014,7 @@ object OntologyHelpers {
       if (thisClassProps.size > 1) {
         val overriddenCardinality: KnoraCardinalityInfo = inheritableCardinalities(baseClassProp)
 
-        if (
-          overriddenCardinality.cardinality == Cardinality.MustHaveOne || overriddenCardinality.cardinality == Cardinality.MayHaveOne
-        ) {
+        if (overriddenCardinality.cardinality == MustHaveOne || overriddenCardinality.cardinality == MayHaveOne) {
           errorFun(
             s"In class <${classIri.toOntologySchema(errorSchema)}>, there is more than one cardinality that would override the inherited cardinality $overriddenCardinality on <${baseClassProp
                 .toOntologySchema(errorSchema)}>"

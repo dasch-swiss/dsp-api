@@ -13,6 +13,7 @@ import java.util.UUID
 import scala.concurrent.Future
 
 import dsp.errors._
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -29,6 +30,7 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -173,13 +175,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Check that the resource class has a cardinality for the submitted property.
 
         classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
-        cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
-                                                              submittedInternalPropertyIri,
-                                                              throw BadRequestException(
-                                                                s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
-                                                                    .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
-                                                              )
-                                                            )
+        cardinalityInfo: KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(
+                                                  submittedInternalPropertyIri,
+                                                  throw BadRequestException(
+                                                    s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri
+                                                        .toOntologySchema(ApiV2Complex)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"
+                                                  )
+                                                )
 
         // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
         // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -224,7 +226,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            (cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome) && currentValuesForProp.isEmpty
+            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.isEmpty
           ) {
             throw InconsistentRepositoryDataException(
               s"Resource class <${resourceInfo.resourceClassIri
@@ -234,7 +236,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            cardinalityInfo.cardinality == Cardinality.MustHaveOne || (cardinalityInfo.cardinality == Cardinality.MayHaveOne && currentValuesForProp.nonEmpty)
+            cardinalityInfo.cardinality == MustHaveOne || (cardinalityInfo.cardinality == MayHaveOne && currentValuesForProp.nonEmpty)
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri
@@ -1756,7 +1758,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         classInfoResponse: ReadOntologyV2 <- appActor.ask(classInfoRequest).mapTo[ReadOntologyV2]
         classInfo: ReadClassInfoV2         = classInfoResponse.classes(resourceInfo.resourceClassIri)
 
-        cardinalityInfo: Cardinality.KnoraCardinalityInfo =
+        cardinalityInfo: KnoraCardinalityInfo =
           classInfo.allCardinalities.getOrElse(
             submittedInternalPropertyIri,
             throw InconsistentRepositoryDataException(
@@ -1773,7 +1775,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         _ =
           if (
-            (cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome) && currentValuesForProp.size == 1
+            (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome) && currentValuesForProp.size == 1
           ) {
             throw OntologyConstraintException(
               s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2Complex)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${deleteValueRequest.propertyIri}>, and this does not allow a value to be deleted for that property from resource <${deleteValueRequest.resourceIri}>"

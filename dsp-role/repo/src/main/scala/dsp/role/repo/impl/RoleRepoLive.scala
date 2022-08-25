@@ -5,13 +5,14 @@
 
 package dsp.role.repo.impl
 
-import dsp.role.api.RoleRepo
-import dsp.role.domain.Role
-import dsp.valueobjects.Id.RoleId
 import zio._
 import zio.stm.TMap
 
 import java.util.UUID
+
+import dsp.role.api.RoleRepo
+import dsp.role.domain.Role
+import dsp.valueobjects.Id.RoleId
 
 /**
  * Role repo live implementation.
@@ -63,11 +64,10 @@ final case class RoleRepoLive(
  * Companion object providing the layer with an initialized implementation of [[RoleRepo]]
  */
 object RoleRepoLive {
-  val layer: ZLayer[Any, Nothing, RoleRepo] = {
+  val layer: ZLayer[Any, Nothing, RoleRepo] =
     ZLayer {
       for {
         roles <- TMap.empty[UUID, Role].commit
       } yield RoleRepoLive(roles)
     }.tap(_ => ZIO.logInfo(">>> Role repository initialized <<<"))
-  }
 }

@@ -5,13 +5,13 @@
 
 package dsp.role.repo.impl
 
+import zio.test.Assertion._
+import zio.test._
+
 import dsp.role.api.RoleRepo
 import dsp.role.repo.impl.RoleRepoLive
 import dsp.role.repo.impl.RoleRepoMock
 import dsp.role.sharedtestdata.RoleTestData
-import zio._
-import zio.test.Assertion._
-import zio.test._
 
 /**
  * This spec is used to test all [[RoleRepo]] implementations.

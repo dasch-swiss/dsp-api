@@ -16,6 +16,7 @@ import scala.concurrent.ExecutionContextExecutor
 
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
+import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
@@ -29,7 +30,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models._
@@ -3725,7 +3725,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         .directCardinalities
       assert(videoSequenceCardinalities.keySet.contains(isSequenceOfVideoPropertyIri))
       val cardinality = videoSequenceCardinalities.get(isSequenceOfVideoPropertyIri).get.cardinality
-      assert(cardinality == Cardinality.MustHaveOne)
+      assert(cardinality == MustHaveOne)
     }
 
   }
@@ -3858,7 +3858,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         .directCardinalities
       assert(audioSequenceCardinalities.keySet.contains(isSequenceOfAudioPropertyIri))
       val cardinality = audioSequenceCardinalities.get(isSequenceOfAudioPropertyIri).get.cardinality
-      assert(cardinality == Cardinality.MustHaveOne)
+      assert(cardinality == MustHaveOne)
     }
   }
   "not create a property with invalid gui attribute" in {

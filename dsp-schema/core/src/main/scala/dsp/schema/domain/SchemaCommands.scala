@@ -1,11 +1,12 @@
 package dsp.schema.domain
 
-import dsp.errors.ValidationException
-import dsp.valueobjects.LangString
-import dsp.valueobjects.Schema
 import zio.prelude.Validation
 
 import java.time.Instant
+
+import dsp.errors.ValidationException
+import dsp.valueobjects.LangString
+import dsp.valueobjects.Schema
 
 /**
  * SmartIri placeholder value object.
