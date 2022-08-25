@@ -1605,7 +1605,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       )
 
-      collectClientTestData("update-resource-metadata-response", jsonLDEntity)
+      collectClientTestData("update-resource-metadata-response", updateResponseAsString)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1677,7 +1677,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         )
       )
 
-      collectClientTestData("update-resource-metadata-response-with-last-mod-date", jsonLDEntity)
+      collectClientTestData("update-resource-metadata-response-with-last-mod-date", updateResponseAsString)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1734,7 +1734,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
       assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource marked as deleted")))
 
-      collectClientTestData("delete-resource-response", jsonLDEntity)
+      collectClientTestData("delete-resource-response", updateResponseAsString)
 
       val previewRequest = Get(
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
@@ -1749,7 +1749,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val responseType = previewJsonLD.requireString("@type")
       responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
 
-      collectClientTestData("deleted-resource-preview-response", jsonLDEntity)
+      collectClientTestData("deleted-resource-preview-response", previewResponseAsString)
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
