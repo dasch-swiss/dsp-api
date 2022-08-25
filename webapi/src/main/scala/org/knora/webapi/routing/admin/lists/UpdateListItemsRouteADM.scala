@@ -301,8 +301,10 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
         } else {
           Validation.fail(throw BadRequestException("Route and payload listIri mismatch."))
         }
+        val validatedListIri: ListIri = listIri.fold(e => throw e.head, v => v)
 
         val projectIri: Validation[Throwable, ProjectIri]       = ProjectIri.make(apiRequest.projectIri)
+        val validatedProjectIri: ProjectIri                     = projectIri.fold(e => throw e.head, v => v)
         val hasRootNode: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.hasRootNode)
         val position: Validation[Throwable, Option[Position]]   = Position.make(apiRequest.position)
         val name: Validation[Throwable, Option[ListName]]       = ListName.make(apiRequest.name)
@@ -320,14 +322,14 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           // check if the requesting user is allowed to perform operation
           _ = if (
                 !requestingUser.permissions.isProjectAdmin(
-                  projectIri.toOption.get.value
+                  validatedProjectIri.value
                 ) && !requestingUser.permissions.isSystemAdmin
               ) {
                 // not project or a system admin
                 throw ForbiddenException(ListErrorMessages.ListNodeCreatePermission)
               }
         } yield NodeInfoChangeRequestADM(
-          listIri = listIri.toOption.get.value,
+          listIri = validatedListIri.value,
           changeNodeRequest = payload,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

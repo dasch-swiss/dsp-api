@@ -74,8 +74,11 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
   private def createListRootNode(): Route = path(ListsBasePath) {
     post {
       entity(as[ListRootNodeCreateApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Validation[Throwable, Option[ListIri]]    = ListIri.make(apiRequest.id)
-        val projectIri: Validation[Throwable, ProjectIri]      = ProjectIri.make(apiRequest.projectIri)
+        val maybeId: Validation[Throwable, Option[ListIri]] = ListIri.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIri]   = ProjectIri.make(apiRequest.projectIri)
+        val validatedProjectIri: ProjectIri = ProjectIri
+          .make(apiRequest.projectIri)
+          .fold(e => throw e.head, v => v)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels]              = Labels.make(apiRequest.labels)
         val comments: Validation[Throwable, Comments]          = Comments.make(apiRequest.comments)
@@ -87,14 +90,14 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
           requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
-          _ = if (
-                !requestingUser.permissions.isProjectAdmin(
-                  projectIri.toOption.get.value
-                ) && !requestingUser.permissions.isSystemAdmin
-              ) {
-                // not project or a system admin
-                throw ForbiddenException(ListErrorMessages.ListCreatePermission)
-              }
+          _ =
+            if (
+              !requestingUser.permissions
+                .isProjectAdmin(validatedProjectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
+              // not project or a system admin
+              throw ForbiddenException(ListErrorMessages.ListCreatePermission)
+            }
         } yield ListRootNodeCreateRequestADM(
           createRootNode = payload,
           requestingUser = requestingUser,
@@ -150,6 +153,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
         val id: Validation[Throwable, Option[ListIri]]        = ListIri.make(apiRequest.id)
         val projectIri: Validation[Throwable, ProjectIri]     = ProjectIri.make(apiRequest.projectIri)
+        val validatedProjectIri: ProjectIri                   = projectIri.fold(e => throw e.head, v => v)
         val name: Validation[Throwable, Option[ListName]]     = ListName.make(apiRequest.name)
         val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
         val labels: Validation[Throwable, Labels]             = Labels.make(apiRequest.labels)
@@ -164,14 +168,14 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
           requestingUser <- getUserADM(requestContext)
 
           // check if the requesting user is allowed to perform operation
-          _ = if (
-                !requestingUser.permissions.isProjectAdmin(
-                  projectIri.toOption.get.value
-                ) && !requestingUser.permissions.isSystemAdmin
-              ) {
-                // not project or a system admin
-                throw ForbiddenException(ListErrorMessages.ListCreatePermission)
-              }
+          _ =
+            if (
+              !requestingUser.permissions
+                .isProjectAdmin(validatedProjectIri.value) && !requestingUser.permissions.isSystemAdmin
+            ) {
+              // not project or a system admin
+              throw ForbiddenException(ListErrorMessages.ListCreatePermission)
+            }
         } yield ListChildNodeCreateRequestADM(
           createChildNodeRequest = payload,
           requestingUser = requestingUser,
