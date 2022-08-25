@@ -61,7 +61,7 @@ lazy val customScalacOptions = Seq(
   "-deprecation",
   "-Yresolve-term-conflict:package",
   "-Ymacro-annotations",
-  "-Ywarn-unused:imports"
+  "-Ywarn-unused"
 )
 
 //////////////////////////////////////
@@ -146,7 +146,13 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     Test / exportJars := true
   )
   .settings(
-    scalacOptions ++= customScalacOptions,
+    scalacOptions ++= Seq(
+      "-feature",
+      "-unchecked",
+      "-deprecation",
+      "-Yresolve-term-conflict:package",
+      "-Ymacro-annotations"
+    ),
     logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
     javaAgents += Dependencies.aspectjweaver,
