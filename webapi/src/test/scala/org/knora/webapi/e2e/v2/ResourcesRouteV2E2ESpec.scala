@@ -56,8 +56,7 @@ import scala.concurrent.duration._
 class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  implicit def default(implicit system: ActorSystem): RouteTestTimeout =
-    RouteTestTimeout(settings.triplestoreUpdateTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 

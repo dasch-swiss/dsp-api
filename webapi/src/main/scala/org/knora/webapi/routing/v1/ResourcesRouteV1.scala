@@ -1524,7 +1524,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             settings = settings,
             appActor = appActor,
             log = log
-          )(timeout = settings.triplestoreUpdateTimeout, executionContext = executionContext)
+          )(timeout = settings.defaultTimeout, executionContext = executionContext)
         }
       }
     } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
