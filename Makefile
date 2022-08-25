@@ -209,7 +209,6 @@ test: build ## runs all tests
 	sbt -v coverage "userHandler/test"
 	sbt -v coverage "userInterface/test"
 	sbt -v coverage "userRepo/test"
-	sbt -v coverage "valueObjects/test"
 	sbt -v coverage "webapi/test"
 	sbt coverageAggregate
 
@@ -333,6 +332,11 @@ info: ## print out all variables
 .PHONY: check
 check: # Run code formating check 
 	@sbt "check"
+
+.PHONY: fmt
+fmt: # Run code formating fix
+	@sbt "fmt"
+
 
 .PHONY: help
 help: ## this help

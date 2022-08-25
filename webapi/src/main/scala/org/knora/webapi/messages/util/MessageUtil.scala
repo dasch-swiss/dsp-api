@@ -6,12 +6,14 @@
 package org.knora.webapi.messages.util
 
 import org.apache.commons.text.StringEscapeUtils
-import org.knora.webapi.OntologySchema
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 
 import java.time.Instant
 import scala.reflect.runtime.{universe => ru}
+
+import dsp.schema.domain.Cardinality
+import dsp.schema.domain.Cardinality._
+import org.knora.webapi.OntologySchema
+import org.knora.webapi.messages.SmartIri
 
 /**
  * Utility functions for working with Akka messages.
@@ -58,23 +60,22 @@ object MessageUtil {
       case instant: Instant       => "Instant.parse(\"" + instant.toString + "\")"
       case None                   => "None"
 
-      // Handle enumerations.
-
-      case cardinality: Cardinality.Value =>
+      // Handle value objects.
+      case cardinality: Cardinality =>
         cardinality match {
-          case Cardinality.MayHaveOne   => "Cardinality.MayHaveOne"
-          case Cardinality.MayHaveMany  => "Cardinality.MayHaveMany"
-          case Cardinality.MustHaveOne  => "Cardinality.MustHaveOne"
-          case Cardinality.MustHaveSome => "Cardinality.MustHaveSome"
+          case MayHaveOne   => "MayHaveOne"
+          case MayHaveMany  => "MayHaveMany"
+          case MustHaveOne  => "MustHaveOne"
+          case MustHaveSome => "MustHaveSome"
         }
 
+      // Handle enumerations.
       case enumVal if enumVal.getClass.getName == "scala.Enumeration$Val" => enumVal.toString
 
       case ontologySchema: OntologySchema =>
         ontologySchema.getClass.getSimpleName.stripSuffix("$")
 
       // Handle collections.
-
       case Nil => "Nil"
 
       case list: Seq[Any @unchecked] =>

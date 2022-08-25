@@ -11,11 +11,27 @@ import akka.pattern._
 import akka.util.Timeout
 import com.google.gwt.safehtml.shared.UriUtils._
 import com.typesafe.scalalogging.Logger
+import org.apache.commons.lang3.StringUtils
+import spray.json._
+
+import java.nio.ByteBuffer
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalAccessor
+import java.util.Base64
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.util.matching.Regex
+
 import dsp.errors._
 import dsp.valueobjects.Iri
 import dsp.valueobjects.IriErrorMessages
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -29,25 +45,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.Base64UrlCheckDigit
 import org.knora.webapi.util.JavaUtil
-import spray.json._
-
-import java.nio.ByteBuffer
-import java.text.ParseException
-import java.time._
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField
-import java.time.temporal.TemporalAccessor
-import java.util.Base64
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.util.control.Exception._
-import scala.util.matching.Regex
-import org.knora.webapi.config.AppConfig
 
 /**
  * Provides instances of [[StringFormatter]], as well as string formatting constants.

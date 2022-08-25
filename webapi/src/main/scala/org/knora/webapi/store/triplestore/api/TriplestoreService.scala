@@ -1,5 +1,10 @@
 package org.knora.webapi.store.triplestore.api
 
+import zio._
+import zio.macros.accessible
+
+import java.nio.file.Path
+
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
 import org.knora.webapi.messages.store.triplestoremessages.DropAllRepositoryContentACK
@@ -18,10 +23,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import zio._
-import zio.macros.accessible
-
-import java.nio.file.Path
 
 @accessible
 trait TriplestoreService {

@@ -5,11 +5,11 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import org.knora.webapi.IRI
-import dsp.errors.InvalidRdfException
-import org.knora.webapi.messages.OntologyConstants
-
 import scala.util.control.Exception.allCatch
+
+import dsp.errors.InvalidRdfException
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
 
 /**
  * Represents an RDF subject, predicate, or object.

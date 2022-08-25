@@ -10,19 +10,6 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import org.knora.webapi._
-import dsp.errors.InvalidApiJsonException
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.routing.v1.StandoffRouteV1
-import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
-import org.knora.webapi.sharedtestdata.SharedTestDataV1._
-import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.MutableTestIri
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -34,6 +21,20 @@ import scala.concurrent.Await
 import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
+import dsp.errors.InvalidApiJsonException
+import org.knora.webapi._
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.routing.v1.StandoffRouteV1
+import org.knora.webapi.routing.v1.ValuesRouteV1
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
+import org.knora.webapi.sharedtestdata.SharedTestDataV1._
+import org.knora.webapi.util.AkkaHttpUtils
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented

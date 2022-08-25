@@ -6,8 +6,10 @@
 package org.knora.webapi.responders.admin
 
 import akka.pattern._
-import dsp.errors.ForbiddenException
 
+import scala.concurrent.Future
+
+import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentResponseADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
@@ -21,9 +23,6 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import scala.concurrent.Future
-import akka.http.scaladsl.util.FastFuture
 
 /**
  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the

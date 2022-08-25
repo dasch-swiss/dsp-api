@@ -5,9 +5,10 @@
 
 package dsp.valueobjects
 
-import dsp.errors.ValidationException
 import zio.prelude.Validation
 import zio.test._
+
+import dsp.errors.ValidationException
 
 object LanguageCodeSpec extends ZIOSpecDefault {
 

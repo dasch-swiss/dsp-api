@@ -5,12 +5,13 @@
 
 package dsp.user.repo.impl
 
-import dsp.user.api.UserRepo
-import dsp.user.domain.User
 import zio._
 import zio.stm.TMap
 
 import java.util.UUID
+
+import dsp.user.api.UserRepo
+import dsp.user.domain.User
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.User._
 
@@ -110,8 +111,8 @@ final case class UserRepoMock(
   /**
    * @inheritDoc
    */
-  def deleteUser(id: UserId): IO[Option[Nothing], UserId] = {
-    val userStatusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
+  def deleteUser(id: UserId): IO[Option[Nothing], UserId] =
+    // val userStatusFalse = UserStatus.make(false).fold(e => throw e.head, v => v)
 
     (for {
       user: User <- users.get(id.uuid).some
@@ -120,7 +121,6 @@ final case class UserRepoMock(
       _ <- lookupTableUsernameToUuid.delete(user.username) // remove the user also from the lookup table
       _ <- lookupTableEmailToUuid.delete(user.email)       // remove the user also from the lookup table
     } yield id).commit.tap(_ => ZIO.logInfo(s"Deleted user: ${id}"))
-  }
 
 }
 

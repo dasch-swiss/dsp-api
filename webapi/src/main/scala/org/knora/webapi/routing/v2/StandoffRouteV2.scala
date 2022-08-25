@@ -9,9 +9,13 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi._
-import dsp.errors.BadRequestException
 
+import java.util.UUID
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
+import dsp.errors.BadRequestException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
@@ -23,10 +27,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-
-import java.util.UUID
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * Provides a function for API routes that deal with search.

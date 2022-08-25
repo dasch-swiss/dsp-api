@@ -8,10 +8,6 @@ import scala.concurrent.duration
 
 import typesafe._
 import magnolia._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import java.nio.file.Paths
 
 /**
  * Represents (eventually) the complete configuration as defined in application.conf.

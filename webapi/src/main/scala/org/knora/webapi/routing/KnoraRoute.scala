@@ -7,17 +7,20 @@ package org.knora.webapi.routing
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.stream.Materializer
 import akka.util.Timeout
-import org.knora.webapi.IRI
-import dsp.errors.BadRequestException
+import com.typesafe.scalalogging.Logger
+import zio.prelude.Validation
 
-import org.knora.webapi.core.State
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectGetRequestADM
@@ -27,10 +30,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-import zio.prelude.Validation
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * Data needed to be passed to each route.

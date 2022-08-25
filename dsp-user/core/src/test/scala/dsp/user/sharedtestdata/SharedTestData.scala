@@ -5,12 +5,10 @@
 
 package dsp.user.sharedtestdata
 
-import dsp.errors.BadRequestException
 import dsp.user.domain.User
 import dsp.valueobjects.Id
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import zio.prelude.Validation
 
 object SharedTestData {
   val passwordStrength = PasswordStrength(12)

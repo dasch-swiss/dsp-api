@@ -5,23 +5,18 @@
 
 package org.knora.webapi.messages.util.search
 
-import org.knora.webapi._
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
-import dsp.errors.InconsistentRepositoryDataException
-import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.responders.v2.ontology.Cache
-
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 /**
  * Methods and classes for transforming generated SPARQL.
@@ -34,7 +29,7 @@ object SparqlTransformer {
    * @param simulateInference `true` if RDFS inference should be simulated using property path syntax.
    */
   class NoInferenceSelectToSelectTransformer(simulateInference: Boolean) extends SelectToSelectTransformer {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    StringFormatter.getGeneralInstance
 
     override def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] =
       Seq(statementPattern)
@@ -69,7 +64,7 @@ object SparqlTransformer {
    * Transforms a non-triplestore-specific CONSTRUCT query for a triplestore that does not have inference enabled (e.g., Fuseki).
    */
   class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    StringFormatter.getGeneralInstance
 
     override def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] =
       Seq(statementPattern)

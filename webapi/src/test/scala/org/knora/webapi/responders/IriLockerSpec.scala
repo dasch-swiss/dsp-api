@@ -1,7 +1,5 @@
 package org.knora.webapi.responders
 
-import org.knora.webapi.IRI
-import dsp.errors.ApplicationLockException
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
@@ -9,6 +7,9 @@ import java.util.UUID
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
+
+import dsp.errors.ApplicationLockException
+import org.knora.webapi.IRI
 
 /**
  * Tests [[IriLocker]].
@@ -55,7 +56,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
           Await.result(secondTaskResultFuture, 20.seconds)
           false
         } catch {
-          case ale: ApplicationLockException => true
+          case _: ApplicationLockException => true
         }
 
       assert(secondTaskFailedWithLockTimeout, "Second task did not get a lock timeout")
@@ -108,7 +109,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
           Await.result(firstTaskResultFuture, 1.second)
           false
         } catch {
-          case e: Exception => true
+          case _: Exception => true
         }
 
       assert(firstTaskFailed, "First task did not fail")
@@ -150,7 +151,7 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
           Await.result(firstTaskResultFuture, 1.second)
           false
         } catch {
-          case e: Exception => true
+          case _: Exception => true
         }
 
       assert(firstTaskFailed, "First task did not fail")

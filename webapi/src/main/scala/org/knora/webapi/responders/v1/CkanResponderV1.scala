@@ -8,8 +8,13 @@ package org.knora.webapi.responders.v1
 import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.IRI
 
+import java.net.URLEncoder
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
@@ -24,18 +29,12 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoByShort
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoResponseV1
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.HierarchicalListValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.LinkV1
 import org.knora.webapi.messages.v1.responder.valuemessages.TextValueV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import java.net.URLEncoder
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
@@ -142,8 +141,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
             - bild 2
      */
 
-    val pIri    = pinfo.id
-    val resType = "http://www.knora.org/ontology/0804/dokubib#bild"
+    val pIri = pinfo.id
 
     val ckanPInfo =
       CkanProjectInfoV1(
@@ -163,7 +161,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
 
       bilderMitProps <- bilderMitPropsFuture
       dataset = bilderMitProps.map { case (iri, info, props) =>
-                  val infoMap  = flattenInfo(info)
+                  flattenInfo(info)
                   val propsMap = flattenProps(props)
                   CkanProjectDatasetV1(
                     ckan_title = propsMap.getOrElse("Description", ""),
@@ -269,15 +267,13 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
           userProfile = userProfile
         )
 
-        bookResourceFuture flatMap { case (bIri, bInfo, bProps) =>
-          val bInfoMap  = flattenInfo(bInfo)
+        bookResourceFuture flatMap { case (_, _, bProps) =>
           val bPropsMap = flattenProps(bProps)
           val files = pageIris map { pageIri =>
             getResource(
               iri = pageIri,
               userProfile = userProfile
-            ) map { case (pIri, pInfo, pProps) =>
-              val pInfoMap  = flattenInfo(pInfo)
+            ) map { case (pIri, _, pProps) =>
               val pPropsMap = flattenProps(pProps)
               CkanProjectDatasetFileV1(
                 ckan_title = pPropsMap.getOrElse("Page identifier", ""),
@@ -377,39 +373,6 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
                  }
       } yield result
     }
-
-  /**
-   * Get IRIs of a certain type inside a certain project
-   *
-   * @param projectIri
-   * @param resType
-   * @param limit
-   * @param userProfile
-   * @return
-   */
-  private def getIris(
-    projectIri: IRI,
-    resType: String,
-    limit: Option[Int],
-    userProfile: UserProfileV1
-  ): Future[Seq[IRI]] =
-    for {
-      sparqlQuery <- Future(
-                       org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-                         .getResourcesByProjectAndType(
-                           projectIri = projectIri,
-                           resType = resType
-                         )
-                         .toString()
-                     )
-      resourcesResponse                             <- appActor.ask(SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
-      resourcesResponseRows: Seq[VariableResultsRow] = resourcesResponse.results.bindings
-      resIri                                         = resourcesResponseRows.groupBy(_.rowMap("s")).keys.toVector
-      result = limit match {
-                 case Some(n) if n > 0 => resIri.take(n)
-                 case _                => resIri
-               }
-    } yield result
 
   /**
    * Get all information there is about these resources

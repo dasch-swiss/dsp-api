@@ -5,6 +5,11 @@
 
 package org.knora.webapi.store.cache.impl
 
+import redis.clients.jedis.Jedis
+import redis.clients.jedis.JedisPool
+import redis.clients.jedis.JedisPoolConfig
+import zio._
+
 import dsp.errors.ForbiddenException
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
@@ -20,10 +25,6 @@ import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
 import org.knora.webapi.store.cache.config.RedisConfig
 import org.knora.webapi.store.cache.serialization.CacheSerialization
-import redis.clients.jedis.Jedis
-import redis.clients.jedis.JedisPool
-import redis.clients.jedis.JedisPoolConfig
-import zio._
 
 case class CacheServiceRedisImpl(pool: JedisPool) extends CacheService {
 

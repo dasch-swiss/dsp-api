@@ -7,11 +7,14 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+
+import java.util.UUID
+import scala.concurrent.Future
+
 import dsp.errors.ApplicationCacheException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataGetADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
@@ -27,9 +30,6 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
-
-import java.util.UUID
-import scala.concurrent.Future
 
 /**
  * Provides information about Knora users to other responders.
@@ -667,23 +667,6 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     }
 
     true
-  }
-
-  /**
-   * Removes the user profile from cache.
-   *
-   * @param userIri the user's IRI und which a profile could be cached.
-   * @param email   the user's email under which a profile could be cached.
-   */
-  private def invalidateCachedUserProfileV1(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
-
-    if (userIri.nonEmpty) {
-      CacheUtil.remove(USER_PROFILE_CACHE_NAME, userIri.get)
-    }
-
-    if (email.nonEmpty) {
-      CacheUtil.remove(USER_PROFILE_CACHE_NAME, email.get)
-    }
   }
 
 }

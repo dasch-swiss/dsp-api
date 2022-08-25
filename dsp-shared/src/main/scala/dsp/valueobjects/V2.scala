@@ -6,14 +6,14 @@
 package dsp.valueobjects
 
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
-import dsp.errors.BadRequestException
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.validator.routines.UrlValidator
 
 import java.nio.ByteBuffer
 import java.util.Base64
 import java.util.UUID
 import scala.util.matching.Regex
+
+import dsp.errors.BadRequestException
 
 // TODO-mpro: don't forget to remove all occurances and additional "helper"
 // implementations in webapi project which needed to be added temporary in order

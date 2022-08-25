@@ -5,15 +5,15 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.knora.webapi.messages.util.rdf._
+import com.typesafe.scalalogging.Logger
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.io.BufferedInputStream
 import java.io.FileInputStream
-import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatest.matchers.should.Matchers
-import com.typesafe.scalalogging.Logger
+
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.util.rdf._
 
 /**
  * Provides helper methods for specs that test upgrade plugins.

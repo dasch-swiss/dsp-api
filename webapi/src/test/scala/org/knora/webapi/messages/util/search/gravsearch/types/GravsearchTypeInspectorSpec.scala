@@ -6,18 +6,19 @@
 package org.knora.webapi.util.search.gravsearch.types
 
 import akka.testkit.ImplicitSender
-import org.knora.webapi._
+
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import dsp.errors.GravsearchException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.search.gravsearch.types._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * Tests Gravsearch type inspection.

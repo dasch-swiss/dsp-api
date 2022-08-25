@@ -5,10 +5,11 @@
 
 package dsp.valueobjects
 
-import dsp.valueobjects.Group._
 import zio.prelude.Validation
 import zio.test._
+
 import dsp.errors.BadRequestException
+import dsp.valueobjects.Group._
 
 /**
  * This spec is used to test the [[Group]] value objects creation.

@@ -13,13 +13,17 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+import java.util.UUID
+import scala.concurrent.duration._
+
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import dsp.valueobjects.Group._
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.NotFoundException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -28,6 +32,7 @@ import org.knora.webapi.util.MutableTestIri
 
 import java.util.UUID
 import scala.concurrent.duration._
+
 
 /**
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
@@ -41,9 +46,7 @@ class GroupsResponderADMSpec extends CoreSpec with ImplicitSender {
   "The GroupsResponder " when {
     "asked about all groups" should {
       "return a list" in {
-        appActor ! GroupsGetRequestADM(
-          requestingUser = SharedTestDataADM.rootUser
-        )
+        appActor ! GroupsGetRequestADM()
 
         val response = expectMsgType[GroupsGetResponseADM](timeout)
         response.groups.nonEmpty should be(true)

@@ -9,13 +9,14 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+
 import dsp.errors.BadRequestException
 import dsp.errors.ExceptionUtil
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
+
 import zio.Cause._
-import zio.Unsafe.unsafe
 import zio._
 
 import scala.concurrent.ExecutionContext
@@ -24,7 +25,13 @@ import scala.reflect.ClassTag
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
+import dsp.errors.ExceptionUtil
 import dsp.errors.NotFoundException
+import dsp.errors.RequestRejectedException
+import dsp.errors.UnexpectedMessageException
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.Logging
 
 object ActorUtil {
 
@@ -66,13 +73,13 @@ object ActorUtil {
    */
   def handleCause(cause: Cause[Throwable], sender: ActorRef, log: Logger): Unit =
     cause match {
-      case Fail(value, trace) =>
+      case Fail(value, _) =>
         value match {
           case notFoundEx: NotFoundException =>
             log.info(s"This error is presumably the clients fault: $notFoundEx")
             sender ! akka.actor.Status.Failure(notFoundEx)
         }
-      case Die(value, trace) =>
+      case Die(value, _) =>
         value match {
           case rejectedEx: RequestRejectedException =>
             log.info(s"This error is presumably the clients fault: $rejectedEx")

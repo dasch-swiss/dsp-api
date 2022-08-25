@@ -1,15 +1,14 @@
 package dsp.schema.domain
 
-import dsp.constants.SalsahGui
-import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.Schema
-import zio._
-import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
 
 import java.time.Instant
+
+import dsp.constants.SalsahGui
+import dsp.valueobjects.LangString
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.Schema
 
 /**
  * This spec is used to test [[dsp.schema.domain.SchemaCommands]].
@@ -32,7 +31,7 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
         comment            = Some(commentLangString)
         guiAttribute      <- Schema.GuiAttribute.make("hlist=<http://rdfh.ch/lists/082F/PbRLUy66TsK10qNP1mBwzA>")
         guiElement        <- Schema.GuiElement.make(SalsahGui.List)
-        guiObject         <- Schema.GuiObject.make(guiAttributes = List(guiAttribute), guiElement = Some(guiElement))
+        guiObject         <- Schema.GuiObject.make(guiAttributes = Set(guiAttribute), guiElement = Some(guiElement))
         command = CreatePropertyCommand.make(
                     ontologyIri = ontologyIri,
                     lastModificationDate = lastModificationDate,
@@ -47,5 +46,4 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
       } yield assert(command.toEither)(isRight)).toZIO
     }
   )
-
 }

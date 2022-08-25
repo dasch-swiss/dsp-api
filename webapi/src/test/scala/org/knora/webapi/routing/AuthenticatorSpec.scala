@@ -7,9 +7,13 @@ package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
 import akka.util.Timeout
-import org.knora.webapi._
+import org.scalatest.PrivateMethodTester
+
+import scala.concurrent.Future
+
 import dsp.errors.BadCredentialsException
 import dsp.errors.BadRequestException
+import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
@@ -18,9 +22,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredenti
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.cache.CacheUtil
-import org.scalatest.PrivateMethodTester
-
-import scala.concurrent.Future
 
 object AuthenticatorSpec {
   private val rootUser         = SharedTestDataADM.rootUser
@@ -60,7 +61,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           timeout,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -104,7 +105,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -120,7 +121,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -157,7 +158,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }
@@ -169,7 +170,7 @@ class AuthenticatorSpec extends CoreSpec with ImplicitSender with PrivateMethodT
           appActor,
           executionContext
         )
-        resF map { res =>
+        resF map { _ =>
           assertThrows(BadCredentialsException)
         }
       }

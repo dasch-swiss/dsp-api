@@ -5,11 +5,18 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
-import org.knora.webapi._
+import spray.json._
+import zio._
+
+import java.nio.file.Path
+import java.time.Instant
+import scala.collection.mutable
+
 import dsp.errors._
+import dsp.valueobjects.V2
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -17,19 +24,6 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-import spray.json._
-
-import java.nio.file.Path
-import java.time.Instant
-import scala.collection.mutable
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import dsp.valueobjects.V2
-
-import com.typesafe.config.Config
-import zio._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -202,7 +196,7 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      failure =>
+      _ =>
         ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
           ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)
