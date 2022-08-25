@@ -26,16 +26,12 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
 
-object ValuesRouteV2 {
-  val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
-}
-
 /**
  * Provides a routing function for API v2 routes that deal with values.
  */
 class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  import ValuesRouteV2._
+  val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
 
   /**
    * Returns the route.

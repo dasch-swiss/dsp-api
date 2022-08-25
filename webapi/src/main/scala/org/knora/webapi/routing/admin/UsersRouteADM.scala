@@ -28,10 +28,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object UsersRouteADM {
-  val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
-}
-
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
@@ -39,7 +35,7 @@ object UsersRouteADM {
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  import UsersRouteADM._
+  val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   /**
    * Returns the route.

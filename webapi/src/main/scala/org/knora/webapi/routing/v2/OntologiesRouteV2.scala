@@ -37,16 +37,12 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
 
-object OntologiesRouteV2 {
-  val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
-}
-
 /**
  * Provides a routing function for API v2 routes that deal with ontologies.
  */
 class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  import OntologiesRouteV2._
+  val OntologiesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "ontologies")
 
   private val ALL_LANGUAGES          = "allLanguages"
   private val LAST_MODIFICATION_DATE = "lastModificationDate"

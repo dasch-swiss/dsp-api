@@ -20,10 +20,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object UpdatePermissionRouteADM {
-  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
-}
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
 class UpdatePermissionRouteADM(routeData: KnoraRouteData)
@@ -31,7 +27,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
-  import UpdatePermissionRouteADM._
+  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 
   /**
    * Returns the route.

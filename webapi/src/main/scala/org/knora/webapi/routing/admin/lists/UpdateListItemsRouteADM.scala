@@ -26,10 +26,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object UpdateListItemsRouteADM {
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
-}
-
 /**
  * Provides routes to update list items.
  *
@@ -40,7 +36,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  import UpdateListItemsRouteADM._
+  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     updateNodeName() ~

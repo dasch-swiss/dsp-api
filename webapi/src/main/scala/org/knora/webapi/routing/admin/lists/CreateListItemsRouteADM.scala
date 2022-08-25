@@ -28,10 +28,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object CreateListItemsRouteADM {
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
-}
-
 /**
  * Provides routes to create list items.
  *
@@ -44,7 +40,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  import CreateListItemsRouteADM._
+  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     createListRootNode() ~

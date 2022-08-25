@@ -27,16 +27,12 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
 
-object ResourcesRouteV2 {
-  val ResourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
-}
-
 /**
  * Provides a routing function for API v2 routes that deal with resources.
  */
 class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  import ResourcesRouteV2._
+  val ResourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")
 
   private val Text_Property          = "textProperty"
   private val Mapping_Iri            = "mappingIri"

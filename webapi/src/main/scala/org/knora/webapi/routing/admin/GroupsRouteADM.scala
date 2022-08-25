@@ -23,10 +23,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object GroupsRouteADM {
-  val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
-}
-
 /**
  * Provides a routing function for API routes that deal with groups.
  */
@@ -38,7 +34,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with GroupsADMJsonProtocol {
 
-  import GroupsRouteADM._
+  val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
   override def makeRoute(): Route =
     getGroups() ~

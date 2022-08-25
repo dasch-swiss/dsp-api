@@ -19,10 +19,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object DeleteListItemsRouteADM {
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
-}
-
 /**
  * Provides routes to delete list items.
  *
@@ -33,7 +29,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  import DeleteListItemsRouteADM._
+  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     deleteListItem() ~

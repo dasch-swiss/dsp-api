@@ -38,10 +38,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object ProjectsRouteADM {
-  val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
-}
-
 @Api(value = "projects", produces = "application/json")
 @Path("/admin/projects")
 class ProjectsRouteADM(routeData: KnoraRouteData)
@@ -49,7 +45,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ProjectsADMJsonProtocol {
 
-  import ProjectsRouteADM._
+  val ProjectsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "projects")
 
   /**
    * Returns the route.
