@@ -100,8 +100,8 @@ case class TriplestoreServiceHttpConnectorImpl(
   private val queryTimeoutString      = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
   private val gravsearchTimeoutString = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
 
-  // the client config used for queries to the triplestore (has to be larger than config.triplestore.queryTimeoutAsDuration
-  // and config.triplestore.gravsearchTimeoutAsDuration)
+  // the client config used for queries to the triplestore. The timeout has to be larger than
+  // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
   private val requestTimeoutMillis = 7200000 // 2 hours
 
   private val queryRequestConfig = RequestConfig
@@ -655,12 +655,12 @@ case class TriplestoreServiceHttpConnectorImpl(
   }
 
   /**
-   * Submits a SPARQL request to the triplestore and returns the response as a string. According to the request type a different
-   * configuration of teh HttpClient and different timeouts are used.
+   * Submits a SPARQL request to the triplestore and returns the response as a string.
+   *   According to the request type a different timeout are used.
    *
    * @param sparql         the SPARQL request to be submitted.
    * @param isUpdate       `true` if this is an update request.
-   * @param isGravsearch   `true` if this is a Gravsearch query (needs a prolongued timeout).
+   * @param isGravsearch   `true` if this is a Gravsearch query (needs a greater timeout).
    * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @return the triplestore's response.
