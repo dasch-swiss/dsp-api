@@ -14,11 +14,6 @@ import org.knora.webapi.settings.KnoraSettingsImpl
  */
 object RdfFeatureFactory {
 
-  /**
-   * The name of the feature toggle that enables the Jena implementation of the RDF façade.
-   */
-  private val JENA_TOGGLE_NAME = "jena-rdf-library"
-
   // Jena singletons.
   private val jenaNodeFactory                                = new JenaNodeFactory
   private val jenaModelFactory                               = new JenaModelFactory(jenaNodeFactory)

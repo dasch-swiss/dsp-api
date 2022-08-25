@@ -15,7 +15,6 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
 import com.typesafe.scalalogging.Logger
-import dsp.errors.FeatureToggleException
 import dsp.errors.FileWriteException
 import dsp.valueobjects.User
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig

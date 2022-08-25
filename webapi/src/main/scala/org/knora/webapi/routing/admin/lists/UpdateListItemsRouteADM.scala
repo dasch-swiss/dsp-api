@@ -27,7 +27,7 @@ object UpdateListItemsRouteADM {
 }
 
 /**
- * A [[Feature]] that provides routes to delete list items.
+ * Provides routes to update list items.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */

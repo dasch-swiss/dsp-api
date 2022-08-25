@@ -34,7 +34,7 @@ object OldListsRouteADMFeature {
 }
 
 /**
- * A [[Feature]] that provides the old list admin API route.
+ * Provides the old list admin API route.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */

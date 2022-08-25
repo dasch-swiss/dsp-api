@@ -24,7 +24,7 @@ object DeleteListItemsRouteADM {
 }
 
 /**
- * A [[Feature]] that provides routes to delete list items.
+ * Provides routes to delete list items.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
