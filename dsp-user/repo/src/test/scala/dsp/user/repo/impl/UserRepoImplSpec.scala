@@ -5,18 +5,12 @@
 
 package dsp.user.repo.impl
 
-import dsp.errors.BadRequestException
+import zio.test.Assertion._
+import zio.test._
+
 import dsp.user.api.UserRepo
-import dsp.user.domain.User
 import dsp.user.repo.impl.UserRepoLive
 import dsp.user.repo.impl.UserRepoMock
-import dsp.valueobjects.User._
-import zio._
-import zio.prelude.Validation
-import zio.prelude.ZValidation
-import zio.test._
-import zio.test.Assertion._
-import dsp.errors.DuplicateValueException
 import dsp.user.sharedtestdata.SharedTestData
 
 /**

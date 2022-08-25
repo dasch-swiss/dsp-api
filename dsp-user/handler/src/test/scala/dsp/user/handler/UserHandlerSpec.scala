@@ -5,21 +5,18 @@
 
 package dsp.user.handler
 
+import zio._
+import zio.test.Assertion._
+import zio.test._
+
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
-import dsp.user.domain.User
-import dsp.user.domain._
 import dsp.user.repo.impl.UserRepoMock
 import dsp.user.sharedtestdata.SharedTestData
 import dsp.valueobjects.Id.UserId
 import dsp.valueobjects.LanguageCode
 import dsp.valueobjects.User._
-import dsp.valueobjects.UserErrorMessages
-import zio.ZLayer
-import zio._
-import zio.test.Assertion._
-import zio.test._
 
 /**
  * This spec is used to test [[dsp.user.handler.UserHandler]].
@@ -107,7 +104,6 @@ object UserHandlerSpec extends ZIOSpecDefault {
         familyName1 <- SharedTestData.familyName1.toZIO
         password1   <- SharedTestData.password1.toZIO
 
-        username2   <- SharedTestData.username2.toZIO
         email2      <- SharedTestData.email2.toZIO
         givenName2  <- SharedTestData.givenName2.toZIO
         familyName2 <- SharedTestData.familyName2.toZIO
@@ -153,7 +149,6 @@ object UserHandlerSpec extends ZIOSpecDefault {
         password1   <- SharedTestData.password1.toZIO
 
         username2   <- SharedTestData.username2.toZIO
-        email2      <- SharedTestData.email2.toZIO
         givenName2  <- SharedTestData.givenName2.toZIO
         familyName2 <- SharedTestData.familyName2.toZIO
         password2   <- SharedTestData.password2.toZIO
@@ -240,15 +235,15 @@ object UserHandlerSpec extends ZIOSpecDefault {
         language    <- SharedTestData.languageEn.toZIO
         status      <- SharedTestData.statusTrue.toZIO
 
-        userId <- userHandler.createUser(
-                    username1,
-                    email1,
-                    givenName1,
-                    familyName1,
-                    password1,
-                    language,
-                    status
-                  )
+        _ <- userHandler.createUser(
+               username1,
+               email1,
+               givenName1,
+               familyName1,
+               password1,
+               language,
+               status
+             )
 
         retrievedUser <- userHandler.getUserByUsername(username1)
       } yield assertTrue(retrievedUser.username == username1) &&
@@ -278,15 +273,15 @@ object UserHandlerSpec extends ZIOSpecDefault {
         language    <- SharedTestData.languageEn.toZIO
         status      <- SharedTestData.statusTrue.toZIO
 
-        userId <- userHandler.createUser(
-                    username1,
-                    email1,
-                    givenName1,
-                    familyName1,
-                    password1,
-                    language,
-                    status
-                  )
+        _ <- userHandler.createUser(
+               username1,
+               email1,
+               givenName1,
+               familyName1,
+               password1,
+               language,
+               status
+             )
 
         retrievedUser <- userHandler.getUserByEmail(email1)
       } yield assertTrue(retrievedUser.username == username1) &&
@@ -331,8 +326,9 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     language,
                     status
                   )
-        idOfUpdatedUser <- userHandler.updateUsername(userId, newValue)
-        retrievedUser   <- userHandler.getUserById(userId)
+
+        _             <- userHandler.updateUsername(userId, newValue)
+        retrievedUser <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.username == newValue) &&
         assertTrue(retrievedUser.username != username1) &&
         assertTrue(retrievedUser.email == email1) &&
@@ -393,8 +389,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     status
                   )
 
-        idOfUpdatedUser <- userHandler.updateEmail(userId, newValue)
-        retrievedUser   <- userHandler.getUserById(userId)
+        _             <- userHandler.updateEmail(userId, newValue)
+        retrievedUser <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.email == newValue) &&
         assertTrue(retrievedUser.username == username1) &&
         assertTrue(retrievedUser.email != email1) &&
@@ -455,8 +451,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     status
                   )
 
-        idOfUpdatedUser <- userHandler.updateGivenName(userId, newValue)
-        retrievedUser   <- userHandler.getUserById(userId)
+        _             <- userHandler.updateGivenName(userId, newValue)
+        retrievedUser <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.givenName == newValue) &&
         assertTrue(retrievedUser.username == username1) &&
         assertTrue(retrievedUser.email == email1) &&
@@ -490,8 +486,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     status
                   )
 
-        idOfUpdatedUser <- userHandler.updateFamilyName(userId, newValue)
-        retrievedUser   <- userHandler.getUserById(userId)
+        _             <- userHandler.updateFamilyName(userId, newValue)
+        retrievedUser <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.familyName == newValue) &&
         assertTrue(retrievedUser.username == username1) &&
         assertTrue(retrievedUser.email == email1) &&
@@ -525,9 +521,10 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     language,
                     status
                   )
-        storedUser      <- userHandler.getUserById(userId)
-        idOfUpdatedUser <- userHandler.updatePassword(userId, newValue, storedUser.password, storedUser)
-        retrievedUser   <- userHandler.getUserById(userId)
+
+        storedUser    <- userHandler.getUserById(userId)
+        _             <- userHandler.updatePassword(userId, newValue, storedUser.password, storedUser)
+        retrievedUser <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.password == newValue) &&
         assertTrue(retrievedUser.username == username1) &&
         assertTrue(retrievedUser.email == email1) &&
@@ -632,8 +629,8 @@ object UserHandlerSpec extends ZIOSpecDefault {
                     status
                   )
 
-        idOfUpdatedUser <- userHandler.updateLanguage(userId, newValue)
-        retrievedUser   <- userHandler.getUserById(userId)
+        _             <- userHandler.updateLanguage(userId, newValue)
+        retrievedUser <- userHandler.getUserById(userId)
       } yield assertTrue(retrievedUser.language == newValue) &&
         assertTrue(retrievedUser.username == username1) &&
         assertTrue(retrievedUser.email == email1) &&

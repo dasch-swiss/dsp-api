@@ -6,37 +6,43 @@
 package org.knora.webapi.app
 
 import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.OneForOneStrategy
 import akka.actor.Props
 import akka.actor.Stash
 import akka.actor.SupervisorStrategy._
 import akka.actor.Timers
-import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.routing.RoundRobinPool
 import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.LiveActorMaker
+import redis.clients.jedis.exceptions.JedisConnectionException
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.Failure
+import scala.util.Success
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.MissingLastModificationDateOntologyException
 import dsp.errors.UnexpectedMessageException
 import dsp.errors.UnsupportedValueException
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
-import org.knora.webapi.messages.ResponderRequest._
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetStatus
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
 import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
@@ -53,26 +59,12 @@ import org.knora.webapi.routing.v2._
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.errors.SipiException
-import org.knora.webapi.util.ActorUtil.future2Message
-import org.knora.webapi.util.cache.CacheUtil
-import redis.clients.jedis.exceptions.JedisConnectionException
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.util.Failure
-import scala.util.Success
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
-import org.knora.webapi.messages.store.sipimessages.IIIFRequest
-import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.messages.ResponderRequest
-import akka.routing.RoundRobinPool
+import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * This is the first actor in the application. All other actors are children

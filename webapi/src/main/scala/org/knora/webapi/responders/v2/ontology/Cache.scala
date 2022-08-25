@@ -11,6 +11,11 @@ import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
+
+import java.time.Instant
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors.ApplicationCacheException
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
@@ -44,10 +49,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV
 import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.cache.CacheUtil
-
-import java.time.Instant
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 object Cache extends LazyLogging {
 

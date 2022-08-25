@@ -7,6 +7,10 @@ package org.knora.webapi.other.v1
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+import java.util.UUID
+import scala.concurrent.duration._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -18,9 +22,6 @@ import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.util.MutableUserADM
-
-import java.util.UUID
-import scala.concurrent.duration._
 
 object DrawingsGodsV1Spec {
   val config: Config = ConfigFactory.parseString("""

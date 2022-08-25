@@ -1,15 +1,14 @@
 package dsp.schema.domain
 
-import dsp.constants.SalsahGui
-import dsp.valueobjects.LangString
-import dsp.valueobjects.LanguageCode
-import dsp.valueobjects.Schema
-import zio._
-import zio.prelude.Validation
 import zio.test.Assertion._
 import zio.test._
 
 import java.time.Instant
+
+import dsp.constants.SalsahGui
+import dsp.valueobjects.LangString
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.Schema
 
 /**
  * This spec is used to test [[dsp.schema.domain.SchemaCommands]].
@@ -47,5 +46,4 @@ object SchemaCommandsSpec extends ZIOSpecDefault {
       } yield assert(command.toEither)(isRight)).toZIO
     }
   )
-
 }

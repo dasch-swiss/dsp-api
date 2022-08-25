@@ -1,9 +1,10 @@
 package org.knora.webapi.store.iiif.domain
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.store.iiif.errors.SipiException
 import spray.json.DefaultJsonProtocol
 import spray.json.RootJsonFormat
+
+import org.knora.webapi.store.iiif.errors.SipiException
 
 /**
  * Represents a response from Sipi's `knora.json` route.

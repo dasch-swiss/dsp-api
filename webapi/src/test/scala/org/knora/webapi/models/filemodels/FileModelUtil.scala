@@ -121,7 +121,7 @@ object FileModelUtil {
           dimY = dimY,
           comment = comment
         )
-      case FileType.MovingImageFile(dimX, dimY) =>
+      case FileType.MovingImageFile(_, _) =>
         MovingImageFileValueContentV2(
           ontologySchema = ApiV2Complex,
           fileValue = FileValueV2(

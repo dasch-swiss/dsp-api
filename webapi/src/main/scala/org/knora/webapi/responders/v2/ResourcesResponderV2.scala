@@ -8,6 +8,13 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.Materializer
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
@@ -56,12 +63,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util._
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 
 class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 

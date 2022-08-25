@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import scalax.collection.Graph
+import scalax.collection.GraphEdge.DiHyperEdge
+
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -12,8 +15,6 @@ import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionUtil
 import org.knora.webapi.messages.util.search.gravsearch.types.TypeableEntity
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
 
 /**
  * Represents optimisation algorithms that transform Gravsearch input queries.

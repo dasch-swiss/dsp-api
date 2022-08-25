@@ -5,13 +5,14 @@
 
 package org.knora.webapi.store.cache.api
 
+import zio._
+import zio.macros.accessible
+
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusResponse
-import zio._
-import zio.macros.accessible
 
 /**
  * Cache Service Interface

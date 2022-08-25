@@ -5,19 +5,18 @@
 
 package org.knora.webapi.util.rdf
 
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.IRI
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.util.FileUtil
-
 import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.util.FileUtil
 
 /**
  * Tests implementations of [[RdfFormatUtil]].

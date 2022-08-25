@@ -7,9 +7,11 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi.IRI
-import dsp.errors.NotFoundException
 
+import scala.concurrent.Future
+
+import dsp.errors.NotFoundException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.MappingAndXSLTransformation
@@ -21,8 +23,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformat
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetXSLTransformationResponseV2
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.store.iiif.errors.SipiException
-
-import scala.concurrent.Future
 
 /**
  * An abstract class with standoff utility methods for v2 responders.

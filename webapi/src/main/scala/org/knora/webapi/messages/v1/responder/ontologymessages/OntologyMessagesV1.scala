@@ -6,7 +6,8 @@
 package org.knora.webapi.messages.v1.responder.ontologymessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import dsp.schema.domain.Cardinality
+import spray.json._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
@@ -20,7 +21,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.Kn
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages

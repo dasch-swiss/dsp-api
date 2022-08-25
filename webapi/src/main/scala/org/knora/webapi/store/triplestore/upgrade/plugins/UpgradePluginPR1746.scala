@@ -5,10 +5,11 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.Logger
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import com.typesafe.scalalogging.Logger
 
 /**
  * Transforms a repository for Knora PR 1746.

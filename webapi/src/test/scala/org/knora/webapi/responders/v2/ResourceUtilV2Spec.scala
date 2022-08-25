@@ -6,10 +6,11 @@
 package org.knora.webapi.responders.v2
 
 import akka.util.Timeout
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 import scala.concurrent.ExecutionContextExecutor
+
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object ResourceUtilV2Spec {}
 

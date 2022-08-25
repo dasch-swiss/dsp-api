@@ -7,6 +7,9 @@ package org.knora.webapi.app
 
 import akka.actor._
 import akka.stream.Materializer
+
+import scala.concurrent.ExecutionContext
+
 import org.knora.webapi.core.Core
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
@@ -14,9 +17,6 @@ import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.settings._
-
-import scala.concurrent.ExecutionContext
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 /**
  * The applications actor system.

@@ -5,13 +5,14 @@
 
 package org.knora.webapi.store.cache.serialization
 
-import dsp.errors.CacheServiceException
 import zio._
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+
+import dsp.errors.CacheServiceException
 
 case class EmptyByteArray(message: String) extends CacheServiceException(message)
 

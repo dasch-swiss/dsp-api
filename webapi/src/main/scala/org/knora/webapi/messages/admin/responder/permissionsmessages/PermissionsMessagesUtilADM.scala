@@ -5,9 +5,9 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import org.knora.webapi.IRI
 import dsp.errors.ApplicationCacheException
 import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.ChangeRightsPermission
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.DeletePermission
@@ -170,7 +170,7 @@ object PermissionsMessagesUtilADM {
       }
       val name = permission.name.isEmpty match {
         case true =>
-          val nameCodeSet: Option[(String, Int)] = PermissionTypeAndCodes.find { case (name, code) =>
+          val nameCodeSet: Option[(String, Int)] = PermissionTypeAndCodes.find { case (_, code) =>
             code == permission.permissionCode.get
           }
           nameCodeSet.get._1

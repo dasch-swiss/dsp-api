@@ -5,6 +5,9 @@
 
 package org.knora.webapi.store.cache.impl
 
+import zio._
+import zio.stm._
+
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierType
@@ -16,8 +19,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusRe
 import org.knora.webapi.store.cache.api.CacheService
 import org.knora.webapi.store.cache.api.EmptyKey
 import org.knora.webapi.store.cache.api.EmptyValue
-import zio._
-import zio.stm._
 
 /**
  * In-Memory Cache implementation
@@ -187,9 +188,9 @@ case class CacheServiceInMemImpl(
    */
   def flushDB(requestingUser: UserADM): Task[Unit] =
     (for {
-      _ <- users.foreach((k, v) => users.delete(k))
-      _ <- projects.foreach((k, v) => projects.delete(k))
-      _ <- lut.foreach((k, v) => lut.delete(k))
+      _ <- users.foreach((k, _) => users.delete(k))
+      _ <- projects.foreach((k, _) => projects.delete(k))
+      _ <- lut.foreach((k, _) => lut.delete(k))
     } yield ()).commit.tap(_ => ZIO.logDebug("Flushed in-memory cache"))
 
   /**

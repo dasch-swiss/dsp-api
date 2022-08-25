@@ -9,13 +9,17 @@ import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+import java.util.UUID
+import scala.concurrent.duration._
+
+import dsp.errors.BadRequestException
+import dsp.errors.DuplicateValueException
+import dsp.errors.UpdateNotPerformedException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.V2
 import org.knora.webapi._
-import dsp.errors.BadRequestException
-import dsp.errors.DuplicateValueException
-import dsp.errors.UpdateNotPerformedException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM
@@ -26,9 +30,6 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.util.MutableTestIri
-
-import java.util.UUID
-import scala.concurrent.duration._
 
 /**
  * Static data for testing [[ListsResponderADM]].

@@ -6,12 +6,6 @@
 package org.knora.webapi.messages.util.rdf
 
 import akka.http.scaladsl.model.MediaType
-import org.knora.webapi.IRI
-import org.knora.webapi.RdfMediaTypes
-import org.knora.webapi.SchemaOption
-import org.knora.webapi.SchemaOptions
-import dsp.errors.BadRequestException
-import dsp.errors.InvalidRdfException
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -23,7 +17,12 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
-import zio._
+import dsp.errors.BadRequestException
+import dsp.errors.InvalidRdfException
+import org.knora.webapi.IRI
+import org.knora.webapi.RdfMediaTypes
+import org.knora.webapi.SchemaOption
+import org.knora.webapi.SchemaOptions
 
 /**
  * A trait for supported RDF formats.

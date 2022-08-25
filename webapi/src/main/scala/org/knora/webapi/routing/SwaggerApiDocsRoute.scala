@@ -11,6 +11,7 @@ import com.github.swagger.akka.model.Info
 import io.swagger.models.ExternalDocs
 import io.swagger.models.Scheme
 import io.swagger.models.auth.BasicAuthDefinition
+
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.admin.lists._
 

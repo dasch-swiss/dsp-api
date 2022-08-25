@@ -6,22 +6,28 @@
 package org.knora.webapi.routing
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.RequestContext
 import akka.http.scaladsl.server.RouteResult
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi.IRI
+import com.typesafe.scalalogging.Logger
+import spray.json.JsNumber
+import spray.json.JsObject
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.reflect.ClassTag
+
 import dsp.errors.BadRequestException
 import dsp.errors.UnexpectedMessageException
-
+import org.knora.webapi.IRI
 import org.knora.webapi.http.status.ApiStatusCodesV1
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ArchiveFileValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.AudioFileValueV1
@@ -32,16 +38,8 @@ import org.knora.webapi.messages.v1.responder.valuemessages.StillImageFileValueV
 import org.knora.webapi.messages.v1.responder.valuemessages.TextFileValueV1
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.GetMappingResponseV2
-import org.knora.webapi.responders.ResponderManager
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.iiif.errors.SipiException
-
-import spray.json.JsNumber
-import spray.json.JsObject
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.reflect.ClassTag
 
 /**
  * Convenience methods for Knora routes.

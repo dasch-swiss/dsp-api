@@ -7,9 +7,10 @@ package org.knora.webapi.messages.v1.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import spray.json._
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

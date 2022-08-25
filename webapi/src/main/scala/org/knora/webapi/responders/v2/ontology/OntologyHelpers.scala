@@ -9,6 +9,14 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+import zio.prelude.Validation
+
+import java.time.Instant
+import scala.collection.immutable
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Try
+
 import dsp.constants.SalsahGui
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
@@ -32,15 +40,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 import org.knora.webapi.settings.KnoraSettingsImpl
-import zio.prelude.Validation
-
-import java.time.Instant
-import scala.collection.immutable
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 object OntologyHelpers {
 

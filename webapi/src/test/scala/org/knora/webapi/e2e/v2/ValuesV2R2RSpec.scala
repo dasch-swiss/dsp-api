@@ -10,12 +10,20 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import zio.&
+import zio.Runtime
+import zio.ZLayer
+
+import scala.concurrent.ExecutionContextExecutor
+
+import dsp.errors.AssertionException
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.core.Logging
 import org.knora.webapi.e2e.ClientTestDataCollector
 import org.knora.webapi.e2e.TestDataFileContent
 import org.knora.webapi.e2e.TestDataFilePath
-import dsp.errors.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -30,20 +38,13 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.util.MutableTestIri
-import zio.&
-import zio.ZLayer
-import zio.Runtime
-
-import scala.concurrent.ExecutionContextExecutor
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.testservices.TestActorSystemService
-import org.knora.webapi.core.Logging
+import org.knora.webapi.testservices.TestClientService
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests creating a still image file value using a mock Sipi.

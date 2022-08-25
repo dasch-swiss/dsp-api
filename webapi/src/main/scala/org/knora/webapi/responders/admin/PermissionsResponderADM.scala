@@ -7,8 +7,14 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+
+import java.util.UUID
+import scala.collection.immutable.Iterable
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.Future
+
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -30,11 +36,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.cache.CacheUtil
-
-import java.util.UUID
-import scala.collection.immutable.Iterable
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.Future
 
 /**
  * Provides information about permissions to other responders.

@@ -5,23 +5,22 @@
 
 package org.knora.webapi.e2e.v1
 
-import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.headers.`Set-Cookie`
-import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 object AuthenticationV1E2ESpec {
   val config: Config = ConfigFactory.parseString("""
@@ -39,8 +38,6 @@ class AuthenticationV1E2ESpec
     extends E2ESpec(AuthenticationV1E2ESpec.config)
     with SessionJsonProtocol
     with TriplestoreJsonProtocol {
-
-  private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
   private val rootIri      = SharedTestDataV1.rootUser.userData.user_id.get
   private val rootIriEnc   = java.net.URLEncoder.encode(rootIri, "utf-8")

@@ -7,9 +7,10 @@ package org.knora.webapi.e2e.v2
 
 import akka.http.scaladsl.model.headers.ModeledCustomHeader
 import akka.http.scaladsl.model.headers.ModeledCustomHeaderCompanion
-import org.knora.webapi.routing.RouteUtilV2
 
 import scala.util.Try
+
+import org.knora.webapi.routing.RouteUtilV2
 
 /**
  * A custom Akka HTTP header representing [[RouteUtilV2.MARKUP_HEADER]], which a client can send to specify

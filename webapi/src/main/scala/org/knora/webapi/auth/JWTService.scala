@@ -1,10 +1,11 @@
 package org.knora.webapi.auth
 
+import spray.json.JsValue
+import zio._
+
 import org.knora.webapi._
 import org.knora.webapi.config._
 import org.knora.webapi.routing.JWTHelper
-import spray.json.JsValue
-import zio._
 
 final case class JWTService(config: AppConfig) {
 

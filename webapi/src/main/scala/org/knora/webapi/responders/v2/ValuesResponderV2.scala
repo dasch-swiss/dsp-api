@@ -7,6 +7,11 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+
 import dsp.errors._
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
@@ -34,10 +39,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ActorUtil
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
 
 /**
  * Handles requests to read and write Knora values.
