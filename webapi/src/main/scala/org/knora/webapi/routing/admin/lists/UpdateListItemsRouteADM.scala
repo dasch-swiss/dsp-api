@@ -10,12 +10,9 @@ import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 
-import java.util.UUID
 import javax.ws.rs.Path
-import scala.concurrent.Future
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.List._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute

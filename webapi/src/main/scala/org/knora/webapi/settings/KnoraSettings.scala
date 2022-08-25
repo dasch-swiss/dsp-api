@@ -18,7 +18,6 @@ import com.typesafe.scalalogging.Logger
 import dsp.errors.FileWriteException
 import dsp.valueobjects.User
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
-import zio.prelude.ZValidation
 
 import java.nio.file.Files
 import java.nio.file.Path
