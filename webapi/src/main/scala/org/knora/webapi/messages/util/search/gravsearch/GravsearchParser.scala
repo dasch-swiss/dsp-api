@@ -20,7 +20,6 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
-import scala.annotation.nowarn
 
 /**
  * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
@@ -32,7 +31,6 @@ import scala.annotation.nowarn
  * - A UNION may not contain a nested UNION or OPTIONAL.
  * - The value assigned in a BIND must be a Knora data IRI.
  */
-@nowarn
 object GravsearchParser {
   // This implementation uses the RDF4J SPARQL parser.
   private val sparqlParserFactory       = new SPARQLParserFactory()
