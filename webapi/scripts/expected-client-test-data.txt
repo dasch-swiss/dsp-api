@@ -55,14 +55,6 @@ test-data/admin/lists/update-childNode-position-request.json
 test-data/admin/lists/update-childNode-position-response.json
 test-data/admin/lists/update-childNode-position-to-end-request.json
 test-data/admin/lists/update-childNode-position-to-end-response.json
-test-data/admin/lists/update-list-info-comment-label-multiple-languages-request.json
-test-data/admin/lists/update-list-info-comment-label-multiple-languages-response.json
-test-data/admin/lists/update-list-info-request.json
-test-data/admin/lists/update-list-info-response.json
-test-data/admin/lists/update-list-name-request.json
-test-data/admin/lists/update-list-name-response.json
-test-data/admin/lists/update-node-info-name-request.json
-test-data/admin/lists/update-node-info-name-response.json
 test-data/admin/lists/update-rootNode-comments-request.json
 test-data/admin/lists/update-rootNode-comments-response.json
 test-data/admin/lists/update-rootNode-labels-request.json
