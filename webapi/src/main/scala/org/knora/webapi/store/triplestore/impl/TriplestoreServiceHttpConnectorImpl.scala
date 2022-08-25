@@ -5,11 +5,6 @@
 
 package org.knora.webapi.store.triplestore.impl
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorSystem
-import akka.actor.Status
-import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.Consts
 import org.apache.http.HttpEntity
@@ -27,6 +22,7 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
+import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
@@ -35,21 +31,11 @@ import org.apache.http.impl.client.BasicAuthCache
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.knora.webapi._
-import dsp.errors._
-import org.knora.webapi.instrumentation.InstrumentationSupport
-import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.FakeTriplestore
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.store.triplestore.errors._
 import spray.json._
+import zio._
 
 import java.io.BufferedInputStream
 import java.net.URI
@@ -60,17 +46,17 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
-import scala.jdk.CollectionConverters._
 
-import org.knora.webapi.store.triplestore.api.TriplestoreService
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
-
-import zio._
-import zio.json.ast.Json
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.config.SocketConfig
+import org.knora.webapi.store.triplestore.errors._
+import org.knora.webapi.util.FileUtil
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -177,7 +163,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
         .foldZIO(
-          failure =>
+          _ =>
             if (resultStr.contains("##  Query cancelled due to timeout during execution")) {
               ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
                 ZIO.fail(
@@ -234,7 +220,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
         SparqlConstructResponse(statementMap.toMap)
       }.foldZIO(
-        failure =>
+        _ =>
           if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
             ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
               ZIO.fail(
@@ -319,7 +305,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       response <- SparqlExtendedConstructResponse
                     .parseTurtleResponse(turtleStr)
                     .foldZIO(
-                      failure =>
+                      _ =>
                         ZIO.die(
                           TriplestoreResponseException(
                             s"Couldn't parse Turtle from triplestore: ${sparqlExtendedConstructRequest}"
@@ -908,11 +894,6 @@ case class TriplestoreServiceHttpConnectorImpl(
         }
       }
 
-    def logTimeTook(start: Long, statusCode: Int) =
-      ZIO
-        .succeed(java.lang.System.currentTimeMillis() - start)
-        .flatMap(took => ZIO.logInfo(s"[$statusCode] Triplestore query took: ${took}ms"))
-
     (for {
       _ <- checkSimulateTimeout()
       // start      <- ZIO.attempt(java.lang.System.currentTimeMillis()).orDie
@@ -996,8 +977,7 @@ case class TriplestoreServiceHttpConnectorImpl(
         }.flatMap(_ => ZIO.succeed(FileWrittenResponse())).orDie
 
       case None =>
-        val message = "Triplestore returned no content for repository dump"
-        val error   = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+        val error = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         ZIO.logError(error.toString()) *>
           ZIO.die(error)
     }

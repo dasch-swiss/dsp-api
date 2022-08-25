@@ -8,18 +8,18 @@ package responders
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
 import dsp.errors._
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
+
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult

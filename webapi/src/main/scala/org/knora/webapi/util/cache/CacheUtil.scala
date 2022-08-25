@@ -11,8 +11,9 @@ import net.sf.ehcache.CacheManager
 import net.sf.ehcache.Ehcache
 import net.sf.ehcache.Element
 import net.sf.ehcache.event.CacheEventListener
-import dsp.errors.ApplicationCacheException
 import org.slf4j.LoggerFactory
+
+import dsp.errors.ApplicationCacheException
 
 /**
  * Maintains in-memory caches, and caches values, using Ehcache (http://ehcache.org/). Each cache is accessible

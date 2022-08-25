@@ -7,7 +7,6 @@ package org.knora.webapi
 package messages
 
 import dsp.constants.SalsahGui
-import dsp.errors._
 
 /**
  * Contains string constants for IRIs from ontologies used by the application.

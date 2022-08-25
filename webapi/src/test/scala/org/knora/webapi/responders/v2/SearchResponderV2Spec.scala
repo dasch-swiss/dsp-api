@@ -6,6 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.SchemaOptions
@@ -18,8 +21,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.StillImageFileValueContentV2
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.duration._
 
 /**
  * Tests [[SearchResponderV2]].
@@ -36,7 +37,6 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
     RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
-  private val anythingUserProfile           = SharedTestDataADM.anythingUser2
   // The default timeout for receiving reply messages from actors.
   private val timeout = 10.seconds
 

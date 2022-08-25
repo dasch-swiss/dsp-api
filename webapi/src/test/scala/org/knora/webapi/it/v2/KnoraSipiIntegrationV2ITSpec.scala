@@ -10,9 +10,16 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
+
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Paths
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -25,12 +32,6 @@ import org.knora.webapi.models.filemodels._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
-
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.nio.file.Paths
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 object KnoraSipiIntegrationV2ITSpec {
   val config: Config = ConfigFactory.parseString("""

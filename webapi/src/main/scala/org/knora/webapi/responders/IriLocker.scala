@@ -5,15 +5,15 @@
 
 package org.knora.webapi.responders
 
-import org.knora.webapi.IRI
-import dsp.errors.ApplicationLockException
-import org.knora.webapi.util.JavaUtil
-
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+
+import dsp.errors.ApplicationLockException
+import org.knora.webapi.IRI
+import org.knora.webapi.util.JavaUtil
 
 /**
  * Implements JVM-wide, reentrant, application-level update locks on data represented by IRIs, such as Knora

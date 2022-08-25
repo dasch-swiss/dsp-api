@@ -8,13 +8,14 @@ package org.knora.webapi.core
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.stream.Materializer
+
+import scala.concurrent.ExecutionContext
+
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-
-import scala.concurrent.ExecutionContext
 
 /**
  * Knora Core abstraction.

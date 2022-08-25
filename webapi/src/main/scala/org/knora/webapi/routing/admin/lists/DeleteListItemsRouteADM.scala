@@ -8,16 +8,16 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import dsp.errors.BadRequestException
 
+import java.util.UUID
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
-import java.util.UUID
-import scala.concurrent.Future
 
 object DeleteListItemsRouteADM {
   val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")

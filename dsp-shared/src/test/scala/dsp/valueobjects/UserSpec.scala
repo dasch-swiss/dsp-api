@@ -5,11 +5,11 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
-import dsp.valueobjects.User._
 import zio.prelude.Validation
 import zio.test._
+
+import dsp.errors.BadRequestException
+import dsp.valueobjects.User._
 
 /**
  * This spec is used to test the [[dsp.valueobjects.User]] value objects creation.

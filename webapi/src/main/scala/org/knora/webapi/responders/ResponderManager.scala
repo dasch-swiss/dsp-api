@@ -5,12 +5,6 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.event.LoggingReceive
-import org.knora.webapi.core.ActorMaker
 import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
@@ -38,14 +32,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.util.ActorUtil._
-
-import scala.concurrent.ExecutionContext
-
-import zio._
 
 /**
  * This actor receives messages representing client requests, and forwards them to pools of specialised actors

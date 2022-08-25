@@ -5,11 +5,12 @@
 
 package dsp.role.domain
 
+import zio.test._
+
 import dsp.role.sharedtestdata.RoleTestData
 import dsp.valueobjects.Id
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import zio.test._
 
 /**
  * This spec is used to test [[RoleDomain]].

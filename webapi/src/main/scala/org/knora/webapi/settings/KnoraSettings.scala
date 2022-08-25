@@ -12,9 +12,9 @@ import akka.actor.Extension
 import akka.actor.ExtensionId
 import akka.actor.ExtensionIdProvider
 import com.typesafe.config.Config
-import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigValue
 import com.typesafe.scalalogging.Logger
+
 import dsp.errors.FileWriteException
 import dsp.valueobjects.User
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
@@ -23,19 +23,13 @@ import zio.prelude.ZValidation
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.time.Instant
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 /**
  * Reads application settings that come from `application.conf`.
  */
 class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
-
-  import KnoraSettings._
 
   // print config
   val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")

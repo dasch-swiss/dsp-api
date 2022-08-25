@@ -6,16 +6,17 @@
 package org.knora.webapi.util.standoff
 
 import akka.util.Timeout
+
+import java.util.UUID
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import java.util.UUID
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 /**
  * Tests [[StandoffTagUtilV2]].

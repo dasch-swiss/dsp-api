@@ -17,22 +17,7 @@ import akka.pattern._
 import akka.util.ByteString
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.IRI
-import dsp.errors.AuthenticationException
-import dsp.errors.BadCredentialsException
-import dsp.errors.BadRequestException
-
-import org.knora.webapi.instrumentation.InstrumentationSupport
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.util.cache.CacheUtil
+import org.apache.commons.codec.binary.Base32
 import org.slf4j.LoggerFactory
 import pdi.jwt.JwtAlgorithm
 import pdi.jwt.JwtClaim
@@ -48,9 +33,23 @@ import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import scala.annotation.tailrec
+
+import dsp.errors.AuthenticationException
+import dsp.errors.BadCredentialsException
+import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
+import org.knora.webapi.instrumentation.InstrumentationSupport
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraJWTTokenCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraSessionCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.apache.commons.codec.binary.Base32
+import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]

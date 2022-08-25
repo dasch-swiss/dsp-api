@@ -6,6 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
@@ -13,7 +16,6 @@ import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryConten
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import scala.concurrent.duration._
 
 /**
  * Tests that the [[LoadOntologiesRequestV2]] request does not load invalid data into the cache.

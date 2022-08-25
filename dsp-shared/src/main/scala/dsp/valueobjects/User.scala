@@ -5,8 +5,6 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
-import dsp.errors.ValidationException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import zio._
@@ -15,8 +13,10 @@ import zio.prelude.Subtype
 import zio.prelude.Validation
 
 import java.security.SecureRandom
-import scala.language.experimental.macros
 import scala.util.matching.Regex
+
+import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 
 object User {
 

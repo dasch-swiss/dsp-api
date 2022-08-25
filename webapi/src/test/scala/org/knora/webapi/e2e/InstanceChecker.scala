@@ -6,6 +6,10 @@
 package org.knora.webapi.e2e
 
 import com.typesafe.scalalogging.LazyLogging
+
+import java.net.URLEncoder
+import scala.collection.mutable
+
 import dsp.errors.AssertionException
 import dsp.schema.domain.Cardinality
 import dsp.schema.domain.Cardinality._
@@ -16,11 +20,7 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-
-import java.net.URLEncoder
-import scala.collection.mutable
 
 /**
  * A factory that constructs [[InstanceChecker]] instances for different Knora response formats.

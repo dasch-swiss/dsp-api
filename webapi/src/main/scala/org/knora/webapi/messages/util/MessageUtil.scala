@@ -5,15 +5,15 @@
 
 package org.knora.webapi.messages.util
 
-import dsp.schema.domain.Cardinality
-import dsp.schema.domain.Cardinality._
 import org.apache.commons.text.StringEscapeUtils
-import org.knora.webapi.OntologySchema
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality
 
 import java.time.Instant
 import scala.reflect.runtime.{universe => ru}
+
+import dsp.schema.domain.Cardinality
+import dsp.schema.domain.Cardinality._
+import org.knora.webapi.OntologySchema
+import org.knora.webapi.messages.SmartIri
 
 /**
  * Utility functions for working with Akka messages.

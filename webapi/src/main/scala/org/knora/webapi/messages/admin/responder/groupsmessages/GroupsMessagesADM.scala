@@ -6,21 +6,22 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
-import org.knora.webapi.messages.admin.responder.KnoraResponseADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonFormat
 import spray.json.RootJsonFormat
 
 import java.util.UUID
+
+import dsp.errors.BadRequestException
 import dsp.valueobjects.V2
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.ResponderRequest.KnoraRequestADM
+import org.knora.webapi.messages.admin.responder.KnoraResponseADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -98,18 +99,14 @@ case class ChangeGroupApiRequestADM(
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM
 
 /**
- * Get all information about all groups.
- *
- * @param requestingUser       the user initiating the request.
+ * Get all information about all groups.      the user initiating the request.
  */
-case class GroupsGetADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupsGetADM() extends GroupsResponderRequestADM
 
 /**
  * Get all information about all groups.
- *
- * @param requestingUser       the user initiating the request.
  */
-case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderRequestADM
+case class GroupsGetRequestADM() extends GroupsResponderRequestADM
 
 /**
  * Get everything about a single group identified through its IRI. A successful response will be

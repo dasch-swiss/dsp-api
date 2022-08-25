@@ -6,12 +6,12 @@
 package org.knora.webapi.instrumentation
 
 import com.typesafe.scalalogging.Logger
+import kamon.Kamon
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.util.Success
-import kamon.Kamon
 
 /**
  * A set of methods used for measuring stuff that is happening.
