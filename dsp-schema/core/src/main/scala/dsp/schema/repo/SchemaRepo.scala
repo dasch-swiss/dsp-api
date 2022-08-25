@@ -1,7 +1,9 @@
 package dsp.schema.repo
 
 import zio._
-import dsp.schema.domain.SchemaDomain.{UserID, UserProfile}
+
+import dsp.schema.domain.SchemaDomain.UserID
+import dsp.schema.domain.SchemaDomain.UserProfile
 
 trait SchemaRepo {
   def lookup(id: UserID): Task[UserProfile]

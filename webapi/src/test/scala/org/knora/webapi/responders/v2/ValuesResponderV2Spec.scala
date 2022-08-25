@@ -6,9 +6,18 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+import zio.&
+import zio.Runtime
+import zio.ZLayer
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.duration._
+
 import dsp.errors._
 import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -34,20 +43,12 @@ import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.util.MutableTestIri
-import zio.&
-import zio.ZLayer
-import zio.Runtime
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.duration._
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -4375,7 +4376,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "delete a link between two resources" in {
       val resourceIri: IRI                          = "http://rdfh.ch/0803/cb1a74e3e2f6"
-      val linkPropertyIri: SmartIri                 = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
       val linkValuePropertyIri: SmartIri            = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val linkValueIRI                              = linkValueIri.get

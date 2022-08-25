@@ -5,6 +5,9 @@
 
 package org.knora.webapi.messages
 
+import java.time.Instant
+import java.util.UUID
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import org.knora.webapi._
@@ -12,9 +15,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import java.time.Instant
-import java.util.UUID
 
 /**
  * Tests [[StringFormatter]].
@@ -1018,7 +1018,7 @@ class StringFormatterSpec extends CoreSpec() {
 
       for (i <- 1 to totalIris) {
         val iriStr = s"http://0.0.0.0:3333/ontology/00FF/images/v2#class$i"
-        val iri    = iriStr.toSmartIri.toOntologySchema(InternalSchema)
+        iriStr.toSmartIri.toOntologySchema(InternalSchema)
       }
 
       val parseEnd            = System.currentTimeMillis
@@ -1030,7 +1030,7 @@ class StringFormatterSpec extends CoreSpec() {
 
       for (i <- 1 to totalIris) {
         val iriStr = s"http://0.0.0.0:3333/ontology/00FF/images/v2#class$i"
-        val iri    = iriStr.toSmartIri.toOntologySchema(InternalSchema)
+        iriStr.toSmartIri.toOntologySchema(InternalSchema)
       }
 
       val retrieveEnd            = System.currentTimeMillis

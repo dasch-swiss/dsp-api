@@ -5,8 +5,9 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import dsp.schema.domain.Cardinality._
 import zio.test._
+
+import dsp.schema.domain.Cardinality._
 
 /**
  * Tests the comparison forstrictness of cardinalities with [[isStricterThan()]].

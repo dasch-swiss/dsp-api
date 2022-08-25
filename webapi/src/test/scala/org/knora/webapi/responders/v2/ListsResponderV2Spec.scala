@@ -6,6 +6,9 @@
 package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -14,8 +17,6 @@ import org.knora.webapi.messages.v2.responder.listsmessages.ListGetResponseV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetRequestV2
 import org.knora.webapi.messages.v2.responder.listsmessages.NodeGetResponseV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.duration._
 
 object ListsResponderV2Spec {
   private val userProfile = SharedTestDataADM.anythingUser2

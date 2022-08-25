@@ -10,26 +10,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
-import org.knora.webapi._
-import dsp.errors.AssertionException
-import dsp.errors.InvalidApiJsonException
-import dsp.errors.NotFoundException
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.util.rdf.VariableResultsRow
-import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-import org.knora.webapi.routing.v1.ResourcesRouteV1
-import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.routing.v2.ResourcesRouteV2
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM._
-import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
-import org.knora.webapi.util.AkkaHttpUtils
-import org.knora.webapi.util.MutableTestIri
 import org.scalatest.Assertion
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
@@ -48,6 +28,27 @@ import scala.util.Random
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
+
+import dsp.errors.AssertionException
+import dsp.errors.InvalidApiJsonException
+import dsp.errors.NotFoundException
+import org.knora.webapi._
+import org.knora.webapi.http.directives.DSPApiDirectives
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.util.rdf.VariableResultsRow
+import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
+import org.knora.webapi.routing.v1.ResourcesRouteV1
+import org.knora.webapi.routing.v1.ValuesRouteV1
+import org.knora.webapi.routing.v2.ResourcesRouteV2
+import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM._
+import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
+import org.knora.webapi.util.AkkaHttpUtils
+import org.knora.webapi.util.MutableTestIri
 
 /**
  * End-to-end test specification for the resources endpoint.

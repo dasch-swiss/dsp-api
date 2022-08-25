@@ -6,16 +6,17 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit._
-import org.knora.webapi._
+
+import scala.concurrent.duration._
+
 import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.MessageUtil
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import scala.concurrent.duration._
 
 /**
  * Static data for testing [[OntologyResponderV1]].
@@ -1115,7 +1116,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         userADM = OntologyResponderV1Spec.userProfileWithEnglish
       )
 
-      expectMsgPF(timeout) { case msg: PropertyTypesForNamedGraphResponseV1 =>
+      expectMsgPF(timeout) { case _: PropertyTypesForNamedGraphResponseV1 =>
         // simply checks that no error occurred when getting the property definitions for all vocabularies
         ()
       }

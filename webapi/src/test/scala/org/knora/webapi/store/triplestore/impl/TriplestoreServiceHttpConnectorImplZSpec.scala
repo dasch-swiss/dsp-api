@@ -5,25 +5,14 @@
 
 package org.knora.webapi.store.triplestore.impl
 
-import akka.http.javadsl.server.AuthenticationFailedRejection
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import zio._
 import zio.test.Assertion._
 import zio.test._
-import org.knora.webapi.store.triplestore.errors.TriplestoreResponseException
-import com.github.dockerjava.api.exception.NotFoundException
+
+import org.knora.webapi.config.AppConfigForTestContainers
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
+import org.knora.webapi.testcontainers.FusekiTestContainer
 
 /**
  * This spec is used to test [[org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl]].

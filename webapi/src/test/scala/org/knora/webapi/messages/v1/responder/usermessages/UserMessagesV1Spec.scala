@@ -5,13 +5,14 @@
 
 package org.knora.webapi.messages.v1.responder.usermessages
 
-import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
-import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
+
+import org.knora.webapi.messages.admin.responder.permissionsmessages
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
+import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 /**
  * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.

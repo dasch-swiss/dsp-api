@@ -5,8 +5,8 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.mainquery
 
-import org.knora.webapi._
 import dsp.errors.GravsearchException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter

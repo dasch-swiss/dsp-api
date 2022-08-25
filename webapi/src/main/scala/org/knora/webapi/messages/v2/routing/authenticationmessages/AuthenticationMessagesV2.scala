@@ -6,10 +6,11 @@
 package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.knora.webapi.IRI
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import spray.json._
+
+import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

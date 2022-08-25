@@ -8,6 +8,11 @@ package org.knora.webapi.messages.util.search
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent._
+import scala.concurrent.duration._
+
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -17,10 +22,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceGetProjectADM
 import org.knora.webapi.responders.v2.ontology.Cache
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent._
-import scala.concurrent.duration._
 
 /**
  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.

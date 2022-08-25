@@ -6,6 +6,9 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
+
+import java.time.Instant
+
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.SystemProject
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.AttachedToProject
@@ -14,8 +17,6 @@ import org.knora.webapi.messages.OntologyConstants.Owl.Ontology
 import org.knora.webapi.messages.OntologyConstants.Xsd.DateTime
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-
-import java.time.Instant
 
 /**
  * Transforms a repository for DSP-API PR 2018.

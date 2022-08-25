@@ -9,6 +9,12 @@ import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import spray.json._
+
+import java.util.UUID
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
@@ -16,11 +22,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
-import spray.json._
-
-import java.util.UUID
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * A route used to convert XML to standoff.

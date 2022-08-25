@@ -6,9 +6,12 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.knora.webapi._
+
+import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
@@ -27,8 +30,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-
-import scala.concurrent.Future
 
 /**
  * Responds to requests for user search queries and returns responses in Knora API
@@ -252,7 +253,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                       userProfile = userProfileV1
                     )
 
-                    val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map { permissionCode =>
+                    val value: Option[(IRI, MatchingValue)] = valuePermissionCode.map { _ =>
                       val propertyIri = row.rowMap("resourceProperty")
                       val propertyLabel = entityInfoResponse
                         .propertyInfoMap(propertyIri)
@@ -567,7 +568,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                     .toString
                   searchParamWithoutValue.copy(searchValue = Some(searchString))
 
-                case other => throw BadRequestException(s"The value type for the given property $prop is unknown.")
+                case _ => throw BadRequestException(s"The value type for the given property $prop is unknown.")
               }
             }
         }
@@ -717,8 +718,8 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                     }
 
                     // Filter out the values that the user doesn't have permission to see.
-                    val filteredValues: Seq[(IRI, MatchingValue)] = valuesInRow.filter {
-                      case (matchingValueIri, matchingValue) => matchingValue.valuePermissionCode.nonEmpty
+                    val filteredValues: Seq[(IRI, MatchingValue)] = valuesInRow.filter { case (_, matchingValue) =>
+                      matchingValue.valuePermissionCode.nonEmpty
                     }
 
                     valuesAcc ++ filteredValues

@@ -9,14 +9,15 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.E2ESpec
-import dsp.errors.AssertionException
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.util.FileUtil
 
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
+
+import dsp.errors.AssertionException
+import org.knora.webapi.E2ESpec
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.util.FileUtil
 
 /**
  * Tests [[InstanceChecker]].

@@ -5,6 +5,9 @@
 
 package dsp.role.handler
 
+import zio.ZIO
+import zio._
+
 import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.role.api.RoleRepo
@@ -13,8 +16,6 @@ import dsp.role.domain.RoleUser
 import dsp.valueobjects.Id.RoleId
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import zio.ZIO
-import zio._
 
 /**
  * The role handler.

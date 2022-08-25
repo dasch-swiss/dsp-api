@@ -1,6 +1,5 @@
 package org.knora.webapi.testcontainers
 
-import org.knora.webapi.http.version.BuildInfo
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
@@ -8,8 +7,10 @@ import zio._
 
 import java.net.NetworkInterface
 import java.net.UnknownHostException
-import scala.jdk.CollectionConverters._
 import java.nio.file.Paths
+import scala.jdk.CollectionConverters._
+
+import org.knora.webapi.http.version.BuildInfo
 
 final case class SipiTestContainer(container: GenericContainer[Nothing])
 

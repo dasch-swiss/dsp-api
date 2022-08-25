@@ -8,6 +8,9 @@ package org.knora.webapi.e2e.v1
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -15,8 +18,6 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
-
-import scala.concurrent.duration._
 
 object ListsV1E2ESpec {
   val config = ConfigFactory.parseString("""
@@ -53,23 +54,12 @@ class ListsV1E2ESpec
     "test"
   )
 
-  private val inactiveUserEmailEnc =
-    java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
-
-  private val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
-  private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
-
-  private val multiUserIri    = SharedTestDataV1.multiuserUser.userData.user_id.get
-  private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
-
-  private val wrongEmail = "wrong@example.com"
-  val wrongEmailEnc      = java.net.URLEncoder.encode(wrongEmail, "utf-8")
-
-  private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+  val normalUserIri    = SharedTestDataV1.normalUser.userData.user_id.get
+  val multiUserIri     = SharedTestDataV1.multiuserUser.userData.user_id.get
+  val wrongEmail       = "wrong@example.com"
+  val wrongEmailEnc    = java.net.URLEncoder.encode(wrongEmail, "utf-8")
   val wrongPass        = java.net.URLEncoder.encode("wrong", "utf-8")
-
-  private val imagesProjectIri    = SharedTestDataV1.imagesProjectInfo.id
-  private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
+  val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
 
   "The HList Route ('v1/hlists')" when {
 

@@ -8,9 +8,13 @@ package org.knora.webapi.routing.v2
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import org.knora.webapi._
-import dsp.errors.BadRequestException
 
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -22,10 +26,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV2
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
 
 object ResourcesRouteV2 {
   val ResourcesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "resources")

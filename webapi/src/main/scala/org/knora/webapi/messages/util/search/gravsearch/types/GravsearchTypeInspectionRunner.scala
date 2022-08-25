@@ -5,6 +5,11 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
+import akka.actor.ActorRef
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors.GravsearchException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -12,10 +17,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.settings.KnoraDispatchers
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import akka.actor.ActorRef
 
 /**
  * Runs Gravsearch type inspection using one or more type inspector implementations.

@@ -5,6 +5,8 @@
 
 package org.knora.webapi.store.iiif
 
+import zio._
+
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
@@ -12,7 +14,6 @@ import org.knora.webapi.messages.store.sipimessages.IIIFServiceGetStatus
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.store.iiif.api.IIIFService
-import zio._
 
 /**
  * Makes requests to IIIF servers.

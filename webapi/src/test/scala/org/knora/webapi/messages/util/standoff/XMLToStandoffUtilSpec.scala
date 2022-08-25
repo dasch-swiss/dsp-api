@@ -5,14 +5,15 @@
 
 package org.knora.webapi.util.standoff
 
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.standoff._
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
 
 import java.util.UUID
+
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.standoff._
 
 /**
  * Tests [[XMLToStandoffUtil]].
@@ -450,7 +451,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         derivedText = criticalTextWithStandoff.text
       )
 
-      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+      standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
         standoffDiffs = criticalTextDiffs
@@ -509,7 +510,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
         derivedText = criticalTextWithStandoff.text
       )
 
-      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+      standoffUtil.standoffDiffs2Xml(
         baseText = diploTextWithStandoff.text,
         derivedText = criticalTextWithStandoff.text,
         standoffDiffs = criticalTextDiffs

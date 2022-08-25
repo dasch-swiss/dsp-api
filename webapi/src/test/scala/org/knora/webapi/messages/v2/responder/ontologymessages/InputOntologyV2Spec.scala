@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import java.time.Instant
+
 import dsp.errors.BadRequestException
 import dsp.schema.domain.Cardinality._
 import org.knora.webapi.ApiV2Complex
@@ -15,8 +17,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
-
-import java.time.Instant
 
 /**
  * Tests [[InputOntologyV2]].

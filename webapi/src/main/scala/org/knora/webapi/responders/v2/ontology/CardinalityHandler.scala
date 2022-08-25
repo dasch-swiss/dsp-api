@@ -9,6 +9,11 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
+
+import java.time.Instant
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
 import org.knora.webapi.InternalSchema
@@ -24,10 +29,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
-
-import java.time.Instant
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * Contains methods used for dealing with cardinalities on a class

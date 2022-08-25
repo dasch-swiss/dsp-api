@@ -6,9 +6,12 @@
 package org.knora.webapi.responders.v1
 
 import akka.pattern._
-import org.knora.webapi._
-import dsp.errors.NotFoundException
 
+import java.util.UUID
+import scala.concurrent.Future
+
+import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -20,9 +23,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.iiif.errors.SipiException
-
-import java.util.UUID
-import scala.concurrent.Future
 
 /**
  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.

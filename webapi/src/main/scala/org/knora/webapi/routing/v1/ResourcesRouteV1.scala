@@ -11,12 +11,31 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+import org.w3c.dom.ls.LSInput
+import org.w3c.dom.ls.LSResourceResolver
+import org.xml.sax.SAXException
+
+import java.io._
+import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.util.UUID
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.Schema
+import javax.xml.validation.SchemaFactory
+import javax.xml.validation.Validator
+import scala.collection.immutable
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.xml._
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
 import dsp.errors.InconsistentRepositoryDataException
-
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -40,25 +59,6 @@ import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.FileUtil
-import org.w3c.dom.ls.LSInput
-import org.w3c.dom.ls.LSResourceResolver
-import org.xml.sax.SAXException
-
-import java.io._
-import java.nio.charset.StandardCharsets
-import java.time.Instant
-import java.util.UUID
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.Schema
-import javax.xml.validation.SchemaFactory
-import javax.xml.validation.Validator
-import scala.collection.immutable
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.xml._
 
 /**
  * Provides API routes that deal with resources.
@@ -554,7 +554,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           // the ontologies containing the definitions of those classes, not including including the initial ontology itself
           // or any other ontologies we've already looked at.
           ontologyIrisFromBaseClasses: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
-                                                    case (acc, (resourceClassIri, resourceClassInfo)) =>
+                                                    case (acc, (_, resourceClassInfo)) =>
                                                       val subClassOfOntologies: Set[IRI] = resourceClassInfo.subClassOf
                                                         .map(_.toSmartIri)
                                                         .filter(_.isKnoraDefinitionIri)
@@ -566,7 +566,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
           // or any other ontologies we've already looked at.
           ontologyIrisFromCardinalities: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
-                                                      case (acc, (resourceClassIri, resourceClassInfo)) =>
+                                                      case (acc, (_, resourceClassInfo)) =>
                                                         val resourceCardinalityOntologies: Set[IRI] =
                                                           resourceClassInfo.knoraResourceCardinalities.map {
                                                             case (propertyIri, _) =>
