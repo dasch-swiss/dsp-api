@@ -14,10 +14,6 @@ import org.knora.webapi.messages.util.rdf.jenaimpl._
  */
 object RdfFeatureFactory {
 
-  /**
-   * The name of the feature toggle that enables the Jena implementation of the RDF façade.
-   */
-
   // Jena singletons.
   private val jenaNodeFactory                                = new JenaNodeFactory
   private val jenaModelFactory                               = new JenaModelFactory(jenaNodeFactory)

@@ -13,4 +13,3 @@
 - [Triplestore Updates](triplestore-updates.md)
 - [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
-- [Feature Toggles](feature-toggles.md)

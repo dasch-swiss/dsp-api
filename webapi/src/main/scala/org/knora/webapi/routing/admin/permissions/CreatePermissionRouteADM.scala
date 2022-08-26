@@ -20,10 +20,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object CreatePermissionRouteADM {
-  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
-}
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
 class CreatePermissionRouteADM(routeData: KnoraRouteData)
@@ -31,7 +27,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
-  import CreatePermissionRouteADM._
+  val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 
   /**
    * Returns the route.
@@ -44,7 +40,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
    * Create a new administrative permission
    */
   private def createAdministrativePermission(): Route =
-    path(PermissionsBasePath / "ap") {
+    path(permissionsBasePath / "ap") {
       post {
         /* create a new administrative permission */
         entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
@@ -71,7 +67,7 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
    * Create default object access permission
    */
   private def createDefaultObjectAccessPermission(): Route =
-    path(PermissionsBasePath / "doap") {
+    path(permissionsBasePath / "doap") {
       post {
         /* create a new default object access permission */
         entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>

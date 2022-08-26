@@ -53,10 +53,10 @@ object TriplestoreServiceManager {
       } yield new TriplestoreServiceManager {
 
         override def receive(message: TriplestoreRequest) = message match {
-          case UpdateRepositoryRequest()           => updater.maybeUpgradeRepository
-          case SparqlSelectRequest(sparql: String) => ts.sparqlHttpSelect(sparql)
-          case sparqlConstructRequest: SparqlConstructRequest =>
-            ts.sparqlHttpConstruct(sparqlConstructRequest)
+          case UpdateRepositoryRequest() => updater.maybeUpgradeRepository
+          case SparqlSelectRequest(sparql: String, isGravsearch: Boolean) =>
+            ts.sparqlHttpSelect(sparql = sparql, isGravsearch = isGravsearch)
+          case sparqlConstructRequest: SparqlConstructRequest => ts.sparqlHttpConstruct(sparqlConstructRequest)
           case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
             ts.sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest)
           case SparqlConstructFileRequest(
