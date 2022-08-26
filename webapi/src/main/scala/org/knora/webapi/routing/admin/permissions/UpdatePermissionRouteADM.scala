@@ -20,10 +20,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object UpdatePermissionRouteADM {
-  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
-}
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
 class UpdatePermissionRouteADM(routeData: KnoraRouteData)
@@ -31,7 +27,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
-  import UpdatePermissionRouteADM._
+  val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 
   /**
    * Returns the route.
@@ -46,7 +42,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
    * Update a permission's group
    */
   private def updatePermissionGroup(): Route =
-    path(PermissionsBasePath / Segment / "group") { iri =>
+    path(permissionsBasePath / Segment / "group") { iri =>
       put {
         entity(as[ChangePermissionGroupApiRequestADM]) { apiRequest => requestContext =>
           val permissionIri =
@@ -76,7 +72,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
    * Update a permission's set of hasPermissions.
    */
   private def updatePermissionHasPermissions(): Route =
-    path(PermissionsBasePath / Segment / "hasPermissions") { iri =>
+    path(permissionsBasePath / Segment / "hasPermissions") { iri =>
       put {
         entity(as[ChangePermissionHasPermissionsApiRequestADM]) { apiRequest => requestContext =>
           val permissionIri =
@@ -106,7 +102,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
    * Update a doap permission by setting it for a new resource class
    */
   private def updatePermissionResourceClass(): Route =
-    path(PermissionsBasePath / Segment / "resourceClass") { iri =>
+    path(permissionsBasePath / Segment / "resourceClass") { iri =>
       put {
         entity(as[ChangePermissionResourceClassApiRequestADM]) { apiRequest => requestContext =>
           val permissionIri =
@@ -136,7 +132,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
    * Update a doap permission by setting it for a new property class
    */
   private def updatePermissionProperty(): Route =
-    path(PermissionsBasePath / Segment / "property") { iri =>
+    path(permissionsBasePath / Segment / "property") { iri =>
       put {
         entity(as[ChangePermissionPropertyApiRequestADM]) { apiRequest => requestContext =>
           val permissionIri =
