@@ -33,18 +33,11 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.MutableTestIri
 
-object KnoraSipiIntegrationV2ITSpec {
-  val config: Config = ConfigFactory.parseString("""
-                                                   |akka.loglevel = "DEBUG"
-                                                   |akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
 class KnoraSipiIntegrationV2ITSpec
-    extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config)
+    extends ITKnoraLiveSpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

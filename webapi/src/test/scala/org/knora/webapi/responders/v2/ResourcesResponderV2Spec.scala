@@ -20,6 +20,7 @@ import scala.concurrent.duration._
 
 import dsp.errors._
 import org.knora.webapi._
+import org.knora.webapi.core.TestLayers
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
@@ -415,19 +416,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val graphTestData = new GraphTestData
 
   /* we need to run our app with the mocked sipi implementation */
-  override lazy val effectLayers =
-    ZLayer.make[CacheServiceManager & IIIFServiceManager & TriplestoreServiceManager & AppConfig & TriplestoreService](
-      Runtime.removeDefaultLoggers,
-      CacheServiceManager.layer,
-      CacheServiceInMemImpl.layer,
-      IIIFServiceManager.layer,
-      IIIFServiceMockImpl.layer,
-      AppConfigForTestContainers.fusekiOnlyTestcontainer,
-      TriplestoreServiceManager.layer,
-      TriplestoreServiceHttpConnectorImpl.layer,
-      RepositoryUpdater.layer,
-      FusekiTestContainer.layer
-    )
+  type Environment = TestLayers.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = TestLayers.defaultTestLayersWithMockedSipi(system)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

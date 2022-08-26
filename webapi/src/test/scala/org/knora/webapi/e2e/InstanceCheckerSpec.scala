@@ -7,8 +7,6 @@ package org.knora.webapi.e2e
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.nio.file.Paths
 import scala.concurrent.ExecutionContextExecutor
@@ -22,7 +20,7 @@ import org.knora.webapi.util.FileUtil
 /**
  * Tests [[InstanceChecker]].
  */
-class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
+class InstanceCheckerSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
@@ -143,10 +141,6 @@ class InstanceCheckerSpec extends E2ESpec(InstanceCheckerSpec.config) {
 }
 
 object InstanceCheckerSpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
 
   val complexThingWithExtraProperty: String =
     """{

@@ -48,18 +48,11 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.MutableTestIri
 
-object KnoraSipiIntegrationV1ITSpec {
-  val config: Config = ConfigFactory.parseString("""
-                                                   |akka.loglevel = "DEBUG"
-                                                   |akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing Knora-Sipi integration.
  */
 class KnoraSipiIntegrationV1ITSpec
-    extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config)
+    extends ITKnoraLiveSpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 

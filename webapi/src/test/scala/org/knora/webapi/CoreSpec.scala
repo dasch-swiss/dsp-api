@@ -80,8 +80,9 @@ abstract class CoreSpec
   implicit lazy val system: actor.ActorSystem          = akka.actor.ActorSystem("CoreSpec", ConfigFactory.load())
   implicit lazy val executionContext: ExecutionContext = system.dispatcher
   implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
+
+  lazy val rdfDataObjects = List.empty[RdfDataObject]
+  val log: Logger         = Logger(this.getClass())
 
   /**
    * The `Environment` that we require to exist at startup.
@@ -123,6 +124,10 @@ abstract class CoreSpec
     .resolveOne(new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
   val appActor =
     Await.result(appActorF, new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
+
+  // needed by some tests
+  val cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+  val responderData        = ResponderData(system, appActor, settings, cacheServiceSettings)
 
   final override def beforeAll(): Unit =
     // waits until knora is up and running

@@ -7,8 +7,6 @@ package org.knora.webapi.it.v2
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -22,18 +20,12 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object KnoraSipiAuthenticationITSpec {
-  val config: Config = ConfigFactory.parseString("""
-                                                   |akka.loglevel = "DEBUG"
-                                                   |akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
 
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */
 class KnoraSipiAuthenticationITSpec
-    extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config)
+    extends ITKnoraLiveSpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 

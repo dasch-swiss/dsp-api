@@ -27,18 +27,11 @@ import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.AkkaHttpUtils
 
-object GetListItemsRouteADME2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing lists endpoint.
  */
 class GetListItemsRouteADME2ESpec
-    extends E2ESpec(GetListItemsRouteADME2ESpec.config)
+    extends E2ESpec
     with SessionJsonProtocol
     with TriplestoreJsonProtocol
     with ListADMJsonProtocol {

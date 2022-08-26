@@ -10,18 +10,10 @@ import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi.E2ESpec
 
-object RejectingRouteE2ESpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-          app.routes-to-reject = ["v1/testRouteToReject", "v2/testRouteToReject"]
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing route rejections.
  */
-class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
+class RejectingRouteE2ESpec extends E2ESpec {
 
   "The Rejecting Route" should {
 

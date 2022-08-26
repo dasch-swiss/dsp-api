@@ -71,6 +71,8 @@ abstract class ITKnoraLiveSpec
   implicit lazy val settings: KnoraSettingsImpl    = KnoraSettings(system)
   lazy val rdfDataObjects                          = List.empty[RdfDataObject]
   val log: Logger                                  = Logger(this.getClass())
+  val baseApiUrl                                   = settings.internalKnoraApiBaseUrl
+  val baseInternalSipiUrl                          = settings.internalSipiBaseUrl
 
   /**
    * The `Environment` that we require to exist at startup.

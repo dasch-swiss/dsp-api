@@ -12,20 +12,11 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.app.appmessages.AppStates
-import org.knora.webapi.messages.app.appmessages.SetAppState
-
-object HealthRouteE2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
  */
-class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
+class HealthRouteE2ESpec extends E2ESpec {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

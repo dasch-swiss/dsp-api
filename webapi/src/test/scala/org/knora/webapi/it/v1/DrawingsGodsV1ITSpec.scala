@@ -26,18 +26,11 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.Authenticatio
 import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
 import org.knora.webapi.testservices.FileToUpload
 
-object DrawingsGodsV1ITSpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
  */
 class DrawingsGodsV1ITSpec
-    extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config)
+    extends ITKnoraLiveSpec
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 
