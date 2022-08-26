@@ -1,5 +1,6 @@
 # DSP-API &mdash; DaSCH Service Platform API
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/0f563e328c8347bbb5923b2d8aace371)](https://app.codacy.com/gh/dasch-swiss/dsp-api?utm_source=github.com&utm_medium=referral&utm_content=dasch-swiss/dsp-api&utm_campaign=Badge_Grade_Settings)
 [![Github](https://img.shields.io/github/v/tag/dasch-swiss/dsp-api?include_prereleases&label=Github%20tag)](https://github.com/dasch-swiss/dsp-api)
 [![Docker](https://img.shields.io/docker/v/daschswiss/knora-api?label=Docker%20image)](https://hub.docker.com/r/daschswiss/knora-api)
 [![CI](https://github.com/dasch-swiss/dsp-app/workflows/CI/badge.svg)](https://github.com/dasch-swiss/dsp-api/actions?query=workflow%3ACI)
