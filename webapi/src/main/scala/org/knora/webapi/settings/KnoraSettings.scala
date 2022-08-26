@@ -202,9 +202,6 @@ class KnoraSettingsImpl(config: Config, log: Logger) extends Extension {
   val triplestoreType: String = config.getString("app.triplestore.dbtype")
   val triplestoreHost: String = config.getString("app.triplestore.host")
 
-  val triplestoreQueryTimeout: FiniteDuration  = getFiniteDuration("app.triplestore.query-timeout", config)
-  val triplestoreUpdateTimeout: FiniteDuration = getFiniteDuration("app.triplestore.update-timeout", config)
-
   val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
   val triplestoreAutoInit: Boolean = config.getBoolean("app.triplestore.auto-init")

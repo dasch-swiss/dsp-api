@@ -88,13 +88,13 @@ final case class Triplestore(
   useHttps: Boolean,
   host: String,
   queryTimeout: String,
-  updateTimeout: String,
+  gravsearchTimeout: String,
   autoInit: Boolean,
   profileQueries: Boolean,
   fuseki: Fuseki
 ) {
-  val queryTimeoutAsDuration  = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
-  val updateTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(updateTimeout))
+  val queryTimeoutAsDuration      = zio.Duration.fromScala(scala.concurrent.duration.Duration(queryTimeout))
+  val gravsearchTimeoutAsDuration = zio.Duration.fromScala(scala.concurrent.duration.Duration(gravsearchTimeout))
 }
 
 /**

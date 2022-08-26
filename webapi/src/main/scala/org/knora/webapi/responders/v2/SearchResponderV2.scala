@@ -446,7 +446,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       countResponse: SparqlSelectResult <-
         appActor
-          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
+          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql, isGravsearch = true))
           .mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -543,8 +543,9 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
       _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
-      start                        = System.currentTimeMillis()
-      tryPrequeryResponseNotMerged = Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql)))
+      start = System.currentTimeMillis()
+      tryPrequeryResponseNotMerged =
+        Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql, isGravsearch = true)))
       prequeryResponseNotMerged <-
         (tryPrequeryResponseNotMerged match {
           case Failure(exception) => {
@@ -655,7 +656,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               appActor
                 .ask(
                   SparqlExtendedConstructRequest(
-                    sparql = triplestoreSpecificMainQuerySparql
+                    sparql = triplestoreSpecificMainQuerySparql,
+                    isGravsearch = true
                   )
                 )
                 .mapTo[SparqlExtendedConstructResponse]

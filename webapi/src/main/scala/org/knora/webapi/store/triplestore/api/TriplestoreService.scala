@@ -35,11 +35,16 @@ trait TriplestoreService {
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql the SPARQL SELECT query string.
+   * @param sparql          the SPARQL SELECT query string.
    * @param simulateTimeout if `true`, simulate a read timeout.
+   * @param isGravsearch    if `true`, takes a long timeout because gravsearch queries can take a long time.
    * @return a [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult]
+  def sparqlHttpSelect(
+    sparql: String,
+    simulateTimeout: Boolean = false,
+    isGravsearch: Boolean = false
+  ): UIO[SparqlSelectResult]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].
