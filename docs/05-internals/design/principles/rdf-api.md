@@ -5,14 +5,9 @@
 
 # RDF Processing API
 
-Knora provides an API for parsing and formatting RDF data and
-for working with RDF graphs. This allows Knora developers to use a single,
+DSP provides an API for parsing and formatting RDF data and
+for working with RDF graphs. This allows DSP developers to use a single,
 idiomatic Scala API as a façade for a Java RDF library.
-By using a feature toggle, you can choose either
-[Jena](https://jena.apache.org/tutorials/rdf_api.html)
-or
-[RDF4J](https://rdf4j.org/documentation/programming/)
-as the underlying implementation.
 
 
 ## Overview
@@ -39,8 +34,8 @@ The API is in the package `org.knora.webapi.messages.util.rdf`. It includes:
 - `ShaclValidator`, which validates RDF models using SHACL shapes.
 
 To work with RDF models, start with `RdfFeatureFactory`, which returns instances
-of `RdfNodeFactory`, `RdfModelFactory`, `RdfFormatUtil`, and `ShaclValidator`,
-using feature toggle configuration. `JsonLDUtil` does not need a feature factory.
+of `RdfNodeFactory`, `RdfModelFactory`, `RdfFormatUtil`, and `ShaclValidator`. 
+`JsonLDUtil` does not need a feature factory.
 
 To iterate efficiently over the statements in an `RdfModel`, use its `iterator` method.
 An `RdfModel` cannot be modified while you are iterating over it.
@@ -91,20 +86,6 @@ Turtle file containing the graph of shapes.
 - The Jena-based implementation, in package `org.knora.webapi.messages.util.rdf.jenaimpl`.
 
 - The RDF4J-based implementation, in package `org.knora.webapi.messages.util.rdf.rdf4jimpl`.
-
-
-## Feature toggle
-
-For an overview of feature toggles, see [Feature Toggles](feature-toggles.md).
-
-The RDF API uses the feature toggle `jena-rdf-library`:
-
-- `on`: use the Jena implementation.
-
-- `off` (the default): use the RDF4J implementation.
-
-The default setting is used on startup, e.g. to read ontologies from the
-repository. After startup, the per-request setting is used.
 
 
 ## TODO

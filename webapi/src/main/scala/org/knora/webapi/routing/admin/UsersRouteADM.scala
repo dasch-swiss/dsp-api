@@ -28,10 +28,6 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-object UsersRouteADM {
-  val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
-}
-
 /**
  * Provides an akka-http-routing function for API routes that deal with users.
  */
@@ -39,7 +35,7 @@ object UsersRouteADM {
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  import UsersRouteADM._
+  val usersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 
   /**
    * Returns the route.
@@ -71,7 +67,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
   )
   /* return all users */
-  def getUsers(): Route = path(UsersBasePath) {
+  def getUsers(): Route = path(usersBasePath) {
     get { requestContext =>
       val requestMessage: Future[UsersGetRequestADM] = for {
         requestingUser <- getUserADM(
@@ -114,7 +110,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
   )
   /* create a new user */
-  def addUser(): Route = path(UsersBasePath) {
+  def addUser(): Route = path(usersBasePath) {
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
@@ -168,7 +164,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   /**
    * return a single user identified by iri
    */
-  private def getUserByIri(): Route = path(UsersBasePath / "iri" / Segment) { userIri =>
+  private def getUserByIri(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
     get { requestContext =>
       val requestMessage: Future[UserGetRequestADM] = for {
         requestingUser <- getUserADM(
@@ -194,7 +190,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * return a single user identified by email
    */
   private def getUserByEmail(): Route =
-    path(UsersBasePath / "email" / Segment) { userIri =>
+    path(usersBasePath / "email" / Segment) { userIri =>
       get { requestContext =>
         val requestMessage: Future[UserGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -220,7 +216,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * return a single user identified by username
    */
   private def getUserByUsername(): Route =
-    path(UsersBasePath / "username" / Segment) { userIri =>
+    path(usersBasePath / "username" / Segment) { userIri =>
       get { requestContext =>
         val requestMessage: Future[UserGetRequestADM] = for {
           requestingUser <- getUserADM(
@@ -247,7 +243,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def changeUserBasicInformation(): Route =
-    path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
+    path(usersBasePath / "iri" / Segment / "BasicUserInformation") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -325,7 +321,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def changeUserPassword(): Route =
-    path(UsersBasePath / "iri" / Segment / "Password") { userIri =>
+    path(usersBasePath / "iri" / Segment / "Password") { userIri =>
       put {
         entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
           if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -377,7 +373,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def changeUserStatus(): Route =
-    path(UsersBasePath / "iri" / Segment / "Status") { userIri =>
+    path(usersBasePath / "iri" / Segment / "Status") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -424,7 +420,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    * API MAY CHANGE: delete a user identified by iri (change status to false).
    */
   @ApiMayChange
-  private def deleteUser(): Route = path(UsersBasePath / "iri" / Segment) { userIri =>
+  private def deleteUser(): Route = path(usersBasePath / "iri" / Segment) { userIri =>
     delete { requestContext =>
       if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -468,7 +464,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def changeUserSystemAdminMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
+    path(usersBasePath / "iri" / Segment / "SystemAdmin") { userIri =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
           if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
@@ -516,7 +512,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def getUsersProjectMemberships(): Route =
-    path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
+    path(usersBasePath / "iri" / Segment / "project-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -547,7 +543,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def addUserToProjectMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+    path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -594,7 +590,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def removeUserFromProjectMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+    path(usersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -641,7 +637,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def getUsersProjectAdminMemberships(): Route =
-    path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
+    path(usersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -673,7 +669,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def addUserToProjectAdminMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+    path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       post { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -720,7 +716,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def removeUserFromProjectAdminMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+    path(usersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
       delete { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -767,7 +763,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def getUsersGroupMemberships(): Route =
-    path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
+    path(usersBasePath / "iri" / Segment / "group-memberships") { userIri =>
       get { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -798,7 +794,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def addUserToGroupMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+    path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       post { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
@@ -842,7 +838,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
    */
   @ApiMayChange
   private def removeUserFromGroupMembership(): Route =
-    path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+    path(usersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
       delete { requestContext =>
         if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 

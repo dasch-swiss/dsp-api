@@ -67,8 +67,6 @@ abstract class KnoraRouteFactory(routeData: KnoraRouteData) {
    *
    * - by asking a feature factory for a routing function (if this is a façade route)
    *
-   * - by making a choice based on a feature toggle (if this is a feature factory)
-   *
    * @return a route configured with the features enabled by the feature factory configuration.
    */
   def makeRoute(): Route

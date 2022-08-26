@@ -21,7 +21,6 @@ nav:
         - APIs:
                   - The DSP APIs:
                             - Index: 03-apis/index.md
-                            - Feature Toggles: 03-apis/feature-toggles.md
                   - API V1:
                             - Index: 03-apis/api-v1/index.md
                             - Introduction: 03-apis/api-v1/introduction.md
@@ -80,7 +79,6 @@ nav:
                                       - Triplestore Updates: 05-internals/design/principles/triplestore-updates.md
                                       - Consistency Checking: 05-internals/design/principles/consistency-checking.md
                                       - Authentication: 05-internals/design/principles/authentication.md
-                                      - Feature Toggles: 05-internals/design/principles/feature-toggles.md
                                       - RDF Processing API: 05-internals/design/principles/rdf-api.md
                             - API V1 Design:
                                       - Index: 05-internals/design/api-v1/index.md
