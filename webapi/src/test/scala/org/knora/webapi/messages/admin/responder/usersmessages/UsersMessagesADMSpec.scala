@@ -17,7 +17,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionP
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-
 /**
  * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
  */

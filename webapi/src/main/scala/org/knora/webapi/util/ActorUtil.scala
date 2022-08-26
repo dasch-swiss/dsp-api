@@ -9,13 +9,6 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-
-import dsp.errors.BadRequestException
-import dsp.errors.ExceptionUtil
-import dsp.errors.RequestRejectedException
-import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.config.AppConfig
-
 import zio.Cause._
 import zio._
 
@@ -31,7 +24,6 @@ import dsp.errors.NotFoundException
 import dsp.errors.RequestRejectedException
 import dsp.errors.UnexpectedMessageException
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.Logging
 
 object ActorUtil {
 

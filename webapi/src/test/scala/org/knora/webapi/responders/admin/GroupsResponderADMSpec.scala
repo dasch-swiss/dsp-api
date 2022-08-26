@@ -33,7 +33,6 @@ import org.knora.webapi.util.MutableTestIri
 import java.util.UUID
 import scala.concurrent.duration._
 
-
 /**
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
  */

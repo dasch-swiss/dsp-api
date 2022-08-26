@@ -3,6 +3,8 @@
 [![Github](https://img.shields.io/github/v/tag/dasch-swiss/dsp-api?include_prereleases&label=Github%20tag)](https://github.com/dasch-swiss/dsp-api)
 [![Docker](https://img.shields.io/docker/v/daschswiss/knora-api?label=Docker%20image)](https://hub.docker.com/r/daschswiss/knora-api)
 [![CI](https://github.com/dasch-swiss/dsp-app/workflows/CI/badge.svg)](https://github.com/dasch-swiss/dsp-api/actions?query=workflow%3ACI)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/4c8f6736facf4e3ab6b0436c0c1ff197)](https://www.codacy.com/gh/dasch-swiss/dsp-api/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dasch-swiss/dsp-api&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Coverage/4c8f6736facf4e3ab6b0436c0c1ff197)](https://www.codacy.com/gh/dasch-swiss/dsp-api/dashboard?utm_source=github.com&utm_medium=referral&utm_content=dasch-swiss/dsp-api&utm_campaign=Badge_Coverage)
 
 [DSP](https://admin.dasch.swiss/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
 

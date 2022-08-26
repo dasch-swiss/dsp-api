@@ -5,27 +5,17 @@
 
 package org.knora.webapi.routing
 
+import akka.http.interop.ZIOSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.get
 import akka.http.scaladsl.server.Directives.path
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern.ask
-import akka.util.Timeout
-
 import spray.json.JsObject
 import spray.json.JsString
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
-import org.knora.webapi.messages.app.appmessages.AppState
-import org.knora.webapi.messages.app.appmessages.AppStates
-import org.knora.webapi.messages.app.appmessages.GetAppState
-
 import zio._
-import akka.http.interop.ZIOSupport
-import zio.prelude.Assertion
+
+import org.knora.webapi.core.State
+import org.knora.webapi.core.domain.AppState
 
 /**
  * Provides health check logic

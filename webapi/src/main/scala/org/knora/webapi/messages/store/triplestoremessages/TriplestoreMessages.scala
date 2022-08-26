@@ -24,6 +24,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.store.triplestore.domain
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
@@ -340,7 +341,7 @@ case class CheckTriplestoreRequest() extends TriplestoreRequest
  * @param triplestoreStatus the state of the triplestore.
  * @param msg               further description.
  */
-case class CheckTriplestoreResponse(triplestoreStatus: TriplestoreStatus)
+case class CheckTriplestoreResponse(triplestoreStatus: domain.TriplestoreStatus)
 
 /**
  * Simulates a triplestore timeout. Used only in testing.

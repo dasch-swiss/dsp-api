@@ -61,11 +61,7 @@ import dsp.errors.FileWriteException
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.core.Core
-import org.knora.webapi.core.Logging
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.AppStart
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
@@ -84,11 +80,7 @@ import akka.testkit.TestKitBase
 import scala.concurrent.ExecutionContextExecutor
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.testservices.TestActorSystemService
-import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.StartupUtils
-
 
 /**
  * This class can be used in End-to-End testing. It starts the Knora-API server
@@ -111,6 +103,7 @@ abstract class E2ESpec
   implicit lazy val settings: KnoraSettingsImpl    = KnoraSettings(system)
   lazy val rdfDataObjects                          = List.empty[RdfDataObject]
   val log: Logger                                  = Logger(this.getClass())
+  val baseApiUrl                                   = settings.internalKnoraApiBaseUrl
 
   /**
    * The `Environment` that we require to exist at startup.
@@ -273,7 +266,7 @@ abstract class E2ESpec
   }
 
   protected def doGetRequest(urlPath: String): String = {
-    val baseApiUrl             = settings.internalKnoraApiBaseUrl
+
     val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)

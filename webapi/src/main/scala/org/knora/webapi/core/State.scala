@@ -5,9 +5,10 @@
 
 package org.knora.webapi.core
 
-import org.knora.webapi.core.domain.AppState
 import zio._
 import zio.macros.accessible
+
+import org.knora.webapi.core.domain.AppState
 
 @accessible
 trait State {

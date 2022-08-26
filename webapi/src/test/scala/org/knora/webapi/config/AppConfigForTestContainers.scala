@@ -1,16 +1,17 @@
 package org.knora.webapi.config
 
+import typesafe._
+import magnolia._
+
 import com.typesafe.config.ConfigFactory
 import zio._
 import zio.config._
 import zio.config.typesafe.TypesafeConfigSource
 
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.testcontainers.containers.GenericContainer
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.testcontainers.SipiTestContainer
-
 
 /**
  * Alters the AppConfig with the TestContainer ports for Fuseki and Sipi.

@@ -15,17 +15,10 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object ProjectsMessagesADMSpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
  */
-class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
+class ProjectsMessagesADMSpec extends CoreSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   "The ChangeProjectApiRequestADM case class" should {

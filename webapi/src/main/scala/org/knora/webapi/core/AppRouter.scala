@@ -5,30 +5,24 @@
 
 package org.knora.webapi.core
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
 import akka.actor.ActorRef
-import akka.actor.ActorSystem
 import akka.actor.Props
 import akka.pattern._
-import akka.event.LoggingReceive
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.util.ActorUtil._
+import akka.util.Timeout
 import zio._
 import zio.macros.accessible
 
 import scala.concurrent.ExecutionContext
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.settings._
+import org.knora.webapi.store.cache.CacheServiceManager
+import org.knora.webapi.store.iiif.IIIFServiceManager
+import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 
 @accessible
 trait AppRouter {

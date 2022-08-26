@@ -5,28 +5,21 @@
 
 package org.knora.webapi.core
 
-import org.knora.webapi.config.AppConfig
 import zio._
-import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.settings.KnoraSettings
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
+import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
+import org.knora.webapi.routing.ApiRoutes
+import org.knora.webapi.store.cache.api.CacheService
+import org.knora.webapi.store.iiif.api.IIIFService
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.store.iiif.api.IIIFService
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusNOK
-import org.knora.webapi.messages.store.sipimessages.IIIFServiceStatusOK
-import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusNOK
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceStatusOK
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.routing.ApiRoutes
-import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.util.cache.CacheUtil
 
 /**
  * The application bootstrapper

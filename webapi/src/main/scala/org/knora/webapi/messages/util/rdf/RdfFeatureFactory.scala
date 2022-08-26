@@ -6,9 +6,8 @@
 package org.knora.webapi.messages.util.rdf
 
 import dsp.errors.AssertionException
-import org.knora.webapi.messages.util.rdf.jenaimpl._
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.util.rdf.jenaimpl._
 
 /**
  * A feature factory that creates RDF processing tools.

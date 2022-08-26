@@ -1,8 +1,9 @@
 package org.knora.webapi.store.triplestore.upgrade
 
-import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
+import org.slf4j.LoggerFactory
 import zio._
+import zio.macros.accessible
 
 import java.io.File
 import java.nio.file.Files
@@ -15,8 +16,6 @@ import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.slf4j.LoggerFactory
-import zio.macros.accessible
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
 import org.knora.webapi.util.FileUtil
 

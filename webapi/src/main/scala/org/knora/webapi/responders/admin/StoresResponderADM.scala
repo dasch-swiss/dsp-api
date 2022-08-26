@@ -5,6 +5,7 @@
 
 package org.knora.webapi.responders.admin
 
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 
 import scala.concurrent.Future

@@ -5,39 +5,17 @@
 
 package org.knora.webapi.routing
 
-import org.knora.webapi.config.AppConfig
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import zio._
+
 import org.knora.webapi.core
 import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.core.AppRouter
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
-import org.knora.webapi.messages.ResponderRequest
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsResponderRequestADM
-import org.knora.webapi.messages.admin.responder.sipimessages.SipiResponderRequestADM
-import org.knora.webapi.messages.admin.responder.storesmessages.StoreResponderRequestADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UsersResponderRequestADM
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.v1.responder.ckanmessages.CkanResponderRequestV1
-import org.knora.webapi.messages.v1.responder.listmessages.ListsResponderRequestV1
-import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1
-import org.knora.webapi.messages.v1.responder.resourcemessages.ResourcesResponderRequestV1
-import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
-import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
-import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
-import org.knora.webapi.messages.v2.responder.listsmessages.ListsResponderRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
-import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
-import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
-import org.knora.webapi.responders.admin._
-import org.knora.webapi.responders.v1._
-import org.knora.webapi.responders.v2._
 import org.knora.webapi.routing.AroundDirectives
 import org.knora.webapi.routing.HealthRoute
 import org.knora.webapi.routing.KnoraRouteData
@@ -69,19 +47,6 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.util.ActorUtil._
-import zio._
-import akka.http.scaladsl.server.Route
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import org.knora.webapi.http.directives.DSPApiDirectives
-import org.knora.webapi.http.version.ServerVersion
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
 
 object ApiRoutes extends AroundDirectives {
 

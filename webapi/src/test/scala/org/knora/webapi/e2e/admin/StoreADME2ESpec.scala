@@ -13,22 +13,14 @@ import spray.json._
 import zio._
 
 import org.knora.webapi.E2ESpec
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-
-object StoreADME2ESpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
 
 /**
  * End-to-End (E2E) test specification for testing the 'v1/store' route.
  *
  * This spec tests the 'v1/store' route.
  */
-class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJsonProtocol {
+class StoreADME2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   /**
    * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.

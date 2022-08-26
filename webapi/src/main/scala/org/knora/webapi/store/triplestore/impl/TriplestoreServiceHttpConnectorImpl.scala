@@ -47,18 +47,15 @@ import java.nio.file.StandardCopyOption
 import java.util
 import scala.collection.mutable
 
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
-
 import dsp.errors._
 import org.knora.webapi._
-
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
+import org.knora.webapi.store.triplestore.domain.TriplestoreStatus
 import org.knora.webapi.store.triplestore.errors._
 import org.knora.webapi.util.FileUtil
 

@@ -21,17 +21,10 @@ import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ResourceResponseExtractorMethods
 import org.knora.webapi.util.ValuesResponseExtractorMethods
 
-object DrawingsGodsV1E2ESpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for additional testing of permissions.
  */
-class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with TriplestoreJsonProtocol {
+class DrawingsGodsV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(

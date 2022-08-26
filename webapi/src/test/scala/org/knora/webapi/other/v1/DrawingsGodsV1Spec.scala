@@ -23,17 +23,10 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.util.MutableUserADM
 
-object DrawingsGodsV1Spec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * Test specification for testing a complex permissions structure of the drawings-gods-project.
  */
-class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
+class DrawingsGodsV1Spec extends CoreSpec with TriplestoreJsonProtocol {
 
   private val timeout = 5.seconds
 

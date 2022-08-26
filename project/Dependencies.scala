@@ -44,7 +44,6 @@ object Dependencies {
   val zioTestSbt            = "dev.zio"   %% "zio-test-sbt"             % "2.0.0"
   val zioAkkaHttpInterop    = "io.scalac" %% "zio-akka-http-interop"    % "0.6.0"
 
-
   // akka
   val akkaActor         = "com.typesafe.akka" %% "akka-actor"           % AkkaActorVersion // Scala 3 compatible
   val akkaHttp          = "com.typesafe.akka" %% "akka-http"            % AkkaHttpVersion  // Scala 3 incompatible

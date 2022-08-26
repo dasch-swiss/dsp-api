@@ -17,7 +17,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutProje
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServicePutUserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-
 /**
  * This spec is used to test [[org.knora.webapi.store.cache.serialization.CacheSerialization]].
  */

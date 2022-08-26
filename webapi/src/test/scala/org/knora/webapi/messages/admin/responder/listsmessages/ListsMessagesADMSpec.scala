@@ -22,17 +22,10 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-object ListsMessagesADMSpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * This spec is used to test 'ListAdminMessages'.
  */
-class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with ListADMJsonProtocol {
+class ListsMessagesADMSpec extends CoreSpec with ListADMJsonProtocol {
   val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
   "Conversion from case class to JSON and back" should {

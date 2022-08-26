@@ -6,6 +6,7 @@
 package org.knora.webapi.store.triplestore
 
 import zio._
+import zio.macros.accessible
 
 import java.nio.file.Path
 
@@ -28,8 +29,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
-import zio.macros.accessible
-
 import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
 import org.knora.webapi.messages.store.triplestoremessages.UploadRepositoryRequest
 import org.knora.webapi.messages.util.rdf.QuadFormat

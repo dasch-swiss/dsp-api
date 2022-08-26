@@ -5,25 +5,7 @@
 
 package org.knora.webapi
 
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.core.ActorSystem
-import org.knora.webapi.core.AppRouter
-import org.knora.webapi.core.Startup
-import org.knora.webapi.core.HttpServer
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 import zio._
-import zio.logging.slf4j.bridge.Slf4jBridge
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.core.State
-import org.knora.webapi.store.cache.api.CacheService
-import org.knora.webapi.store.iiif.api.IIIFService
 
 object App extends ZIOApp {
 

@@ -24,19 +24,12 @@ import org.knora.webapi.messages.v1.responder.sessionmessages.SessionResponse
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
-object FilesADME2ESpec {
-  val config: Config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for Sipi access.
  *
  * This spec tests the 'admin/files'.
  */
-class FilesADME2ESpec extends E2ESpec(FilesADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
+class FilesADME2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   private val anythingAdminEmail    = SharedTestDataV1.anythingAdminUser.userData.email.get
   private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")

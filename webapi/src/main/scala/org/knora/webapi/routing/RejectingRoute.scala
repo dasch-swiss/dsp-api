@@ -8,18 +8,13 @@ package org.knora.webapi.routing
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.pattern.ask
-import akka.util.Timeout
-import org.knora.webapi.core.domain.AppState
-import org.knora.webapi.core.State
+import zio._
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 
-import zio._
-import akka.http.interop.ZIOSupport
+import org.knora.webapi.core.domain.AppState
 
 /**
  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.

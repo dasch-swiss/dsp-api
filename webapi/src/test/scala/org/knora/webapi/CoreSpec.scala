@@ -34,15 +34,10 @@ import zio._
 import scala.concurrent.ExecutionContext
 
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.core.Core
-import org.knora.webapi.core.Logging
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.AppStart
-import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -71,6 +66,7 @@ import org.knora.webapi.store.iiif.api.IIIFService
 import akka.actor
 import scala.concurrent.ExecutionContextExecutor
 import org.knora.webapi.testcontainers.SipiTestContainer
+import scala.concurrent.Await
 
 abstract class CoreSpec
     extends ZIOApp

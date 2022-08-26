@@ -38,10 +38,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * This spec is used to test the [[PermissionsResponderADM]] actor.
  */
-class PermissionsResponderADMSpec
-    extends CoreSpec
-    with ImplicitSender
-    with PrivateMethodTester {
+class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with PrivateMethodTester {
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
