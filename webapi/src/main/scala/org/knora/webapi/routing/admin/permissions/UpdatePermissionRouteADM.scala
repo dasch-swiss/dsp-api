@@ -32,7 +32,7 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     updatePermissionGroup() ~
       updatePermissionHasPermissions() ~
       updatePermissionResourceClass() ~

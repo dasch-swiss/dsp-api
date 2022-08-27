@@ -6,15 +6,14 @@
 package org.knora.webapi.responders.admin
 
 import akka.testkit._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.duration._
+
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectRestrictedViewSettingsADM
 import org.knora.webapi.messages.admin.responder.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import scala.concurrent.duration._
 
 /**
  * Tests [[SipiResponderADM]].

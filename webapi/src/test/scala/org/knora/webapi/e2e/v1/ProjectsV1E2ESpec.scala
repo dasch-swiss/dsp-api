@@ -9,7 +9,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -21,18 +20,11 @@ import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtoco
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.AkkaHttpUtils
 
-object ProjectsV1E2ESpec {
-  val config = ConfigFactory.parseString("""
-          akka.loglevel = "DEBUG"
-          akka.stdout-loglevel = "DEBUG"
-        """.stripMargin)
-}
-
 /**
  * End-to-End (E2E) test specification for testing groups endpoint.
  */
 class ProjectsV1E2ESpec
-    extends E2ESpec(ProjectsV1E2ESpec.config)
+    extends E2ESpec
     with SessionJsonProtocol
     with ProjectV1JsonProtocol
     with TriplestoreJsonProtocol {

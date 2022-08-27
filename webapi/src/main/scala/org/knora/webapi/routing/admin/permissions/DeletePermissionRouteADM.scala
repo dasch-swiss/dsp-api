@@ -31,7 +31,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     deletePermission()
 
   /**

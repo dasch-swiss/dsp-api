@@ -29,7 +29,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route = {
+  override def makeRoute: Route = {
 
     path("v1" / "users") {
       get {

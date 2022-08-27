@@ -8,8 +8,6 @@ package org.knora.webapi.it.v2
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.net.URLEncoder
 import java.nio.file.Files

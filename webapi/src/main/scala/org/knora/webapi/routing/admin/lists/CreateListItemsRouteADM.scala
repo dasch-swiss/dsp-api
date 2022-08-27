@@ -42,7 +42,7 @@ class CreateListItemsRouteADM(routeData: KnoraRouteData)
 
   val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
-  def makeRoute(): Route =
+  def makeRoute: Route =
     createListRootNode() ~
       createListChildNode()
 

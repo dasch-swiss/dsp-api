@@ -6,11 +6,6 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import zio.&
-import zio.Runtime
-import zio.ZLayer
 
 import java.time.Instant
 import java.util.UUID
@@ -18,8 +13,6 @@ import scala.concurrent.duration._
 
 import dsp.errors._
 import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -32,15 +25,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.util.MutableTestIri
 
 /**
@@ -67,6 +51,7 @@ class ValuesResponderV1Spec extends CoreSpec with ImplicitSender {
   import ValuesResponderV1Spec._
 
   /* we need to run our app with the mocked sipi implementation */
+  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
   override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
 
   override lazy val rdfDataObjects = List(

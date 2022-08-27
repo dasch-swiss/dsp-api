@@ -20,7 +20,7 @@ class AuthenticationRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeD
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     path("v1" / "authenticate") {
       get { requestContext =>
         requestContext.complete {

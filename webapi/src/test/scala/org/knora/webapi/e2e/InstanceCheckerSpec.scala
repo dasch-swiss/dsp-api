@@ -9,7 +9,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.testkit.RouteTestTimeout
 
 import java.nio.file.Paths
-import scala.concurrent.ExecutionContextExecutor
 
 import dsp.errors.AssertionException
 import org.knora.webapi.E2ESpec
@@ -24,8 +23,6 @@ class InstanceCheckerSpec extends E2ESpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
-
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   private val jsonLDInstanceChecker: InstanceChecker = InstanceChecker.getJsonLDChecker
 

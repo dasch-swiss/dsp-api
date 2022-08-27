@@ -61,11 +61,10 @@ object ApiRoutes extends AroundDirectives {
       routeData <- ZIO.succeed(
                      KnoraRouteData(
                        system = sys.system,
-                       appActor = router.ref,
-                       state = state
+                       appActor = router.ref
                      )
                    )
-      routes <- makeRoutes(routeData)
+      routes <- makeRoutes(state, routeData)
     } yield routes
 
   /**
@@ -75,42 +74,42 @@ object ApiRoutes extends AroundDirectives {
    * ALL requests go through each of the routes in ORDER.
    * The FIRST matching route is used for handling a request.
    */
-  private def makeRoutes(routeData: KnoraRouteData) =
+  private def makeRoutes(state: core.State, routeData: KnoraRouteData) =
     ZIO.attempt {
       logDuration {
         ServerVersion.addServerHeader {
           DSPApiDirectives.handleErrors(routeData.system) {
             CorsDirectives.cors(CorsSettings(routeData.system)) {
               DSPApiDirectives.handleErrors(routeData.system) {
-                new HealthRoute(routeData).knoraApiPath ~
-                  new VersionRoute(routeData).knoraApiPath ~
-                  new RejectingRoute(routeData).knoraApiPath ~
-                  new ResourcesRouteV1(routeData).knoraApiPath ~
-                  new ValuesRouteV1(routeData).knoraApiPath ~
-                  new StandoffRouteV1(routeData).knoraApiPath ~
-                  new ListsRouteV1(routeData).knoraApiPath ~
-                  new ResourceTypesRouteV1(routeData).knoraApiPath ~
-                  new SearchRouteV1(routeData).knoraApiPath ~
-                  new AuthenticationRouteV1(routeData).knoraApiPath ~
-                  new AssetsRouteV1(routeData).knoraApiPath ~
-                  new CkanRouteV1(routeData).knoraApiPath ~
-                  new UsersRouteV1(routeData).knoraApiPath ~
-                  new ProjectsRouteV1(routeData).knoraApiPath ~
-                  new OntologiesRouteV2(routeData).knoraApiPath ~
-                  new SearchRouteV2(routeData).knoraApiPath ~
-                  new ResourcesRouteV2(routeData).knoraApiPath ~
-                  new ValuesRouteV2(routeData).knoraApiPath ~
-                  new StandoffRouteV2(routeData).knoraApiPath ~
-                  new ListsRouteV2(routeData).knoraApiPath ~
-                  new AuthenticationRouteV2(routeData).knoraApiPath ~
-                  new GroupsRouteADM(routeData).knoraApiPath ~
-                  new ListsRouteADM(routeData).knoraApiPath ~
-                  new PermissionsRouteADM(routeData).knoraApiPath ~
-                  new ProjectsRouteADM(routeData).knoraApiPath ~
-                  new StoreRouteADM(routeData).knoraApiPath ~
-                  new UsersRouteADM(routeData).knoraApiPath ~
-                  new FilesRouteADM(routeData).knoraApiPath ~
-                  new SwaggerApiDocsRoute(routeData).knoraApiPath
+                new HealthRoute(state).makeRoute ~
+                  new VersionRoute().makeRoute ~
+                  new RejectingRoute(state, routeData.system).makeRoute ~
+                  new ResourcesRouteV1(routeData).makeRoute ~
+                  new ValuesRouteV1(routeData).makeRoute ~
+                  new StandoffRouteV1(routeData).makeRoute ~
+                  new ListsRouteV1(routeData).makeRoute ~
+                  new ResourceTypesRouteV1(routeData).makeRoute ~
+                  new SearchRouteV1(routeData).makeRoute ~
+                  new AuthenticationRouteV1(routeData).makeRoute ~
+                  new AssetsRouteV1(routeData).makeRoute ~
+                  new CkanRouteV1(routeData).makeRoute ~
+                  new UsersRouteV1(routeData).makeRoute ~
+                  new ProjectsRouteV1(routeData).makeRoute ~
+                  new OntologiesRouteV2(routeData).makeRoute ~
+                  new SearchRouteV2(routeData).makeRoute ~
+                  new ResourcesRouteV2(routeData).makeRoute ~
+                  new ValuesRouteV2(routeData).makeRoute ~
+                  new StandoffRouteV2(routeData).makeRoute ~
+                  new ListsRouteV2(routeData).makeRoute ~
+                  new AuthenticationRouteV2(routeData).makeRoute ~
+                  new GroupsRouteADM(routeData).makeRoute ~
+                  new ListsRouteADM(routeData).makeRoute ~
+                  new PermissionsRouteADM(routeData).makeRoute ~
+                  new ProjectsRouteADM(routeData).makeRoute ~
+                  new StoreRouteADM(routeData).makeRoute ~
+                  new UsersRouteADM(routeData).makeRoute ~
+                  new FilesRouteADM(routeData).makeRoute ~
+                  new SwaggerApiDocsRoute(routeData).makeRoute
               }
             }
           }

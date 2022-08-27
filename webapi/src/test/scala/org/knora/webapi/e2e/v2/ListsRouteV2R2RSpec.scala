@@ -31,13 +31,7 @@ import org.knora.webapi.util.FileUtil
  */
 class ListsRouteV2R2RSpec extends R2RSpec {
 
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
-  private val listsPath = new ListsRouteV2(routeData).knoraApiPath
+  private val listsPath = new ListsRouteV2(routeData).makeRoute
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

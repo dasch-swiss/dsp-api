@@ -8,10 +8,10 @@ package org.knora.webapi.e2e
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import org.knora.webapi.E2ESpec
+import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.core.domain.SetAppState
 
 /**
  * End-to-End (E2E) test specification for testing route rejections.
@@ -62,7 +62,7 @@ class HealthRouteE2ESpec extends E2ESpec {
 
     "return 'ServiceUnavailable' for state 'Stopped'" in {
 
-      appActor ! SetAppState(AppStates.Stopped)
+      appActor ! SetAppState(AppState.Stopped)
 
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -85,7 +85,7 @@ class HealthRouteE2ESpec extends E2ESpec {
     }
 
     "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
-      appActor ! SetAppState(AppStates.MaintenanceMode)
+      appActor ! SetAppState(AppState.MaintenanceMode)
 
       val request                = Get(baseApiUrl + s"/health")
       val response: HttpResponse = singleAwaitingRequest(request)

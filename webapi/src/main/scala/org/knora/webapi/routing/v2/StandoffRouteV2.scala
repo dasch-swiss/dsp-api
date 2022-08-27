@@ -36,7 +36,7 @@ class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route = {
+  override def makeRoute: Route = {
 
     path("v2" / "standoff" / Segment / Segment / Segment) {
       (resourceIriStr: String, valueIriStr: String, offsetStr: String) =>

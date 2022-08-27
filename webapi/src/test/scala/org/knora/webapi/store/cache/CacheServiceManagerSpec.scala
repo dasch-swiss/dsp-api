@@ -5,8 +5,6 @@
 
 package org.knora.webapi.store.cache
 
-import com.typesafe.config.ConfigFactory
-
 import org.knora.webapi._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectIdentifierADM

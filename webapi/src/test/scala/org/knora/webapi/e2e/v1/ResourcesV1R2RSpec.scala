@@ -55,15 +55,9 @@ import org.knora.webapi.util.MutableTestIri
  */
 class ResourcesV1R2RSpec extends R2RSpec {
 
-  override def testConfigSource: String =
-    """
-      |# akka.loglevel = "DEBUG"
-      |# akka.stdout-loglevel = "DEBUG"
-        """.stripMargin
-
-  private val resourcesPathV1 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV1(routeData).knoraApiPath)
-  private val resourcesPathV2 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
-  private val valuesPathV1    = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
+  private val resourcesPathV1 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV1(routeData).makeRoute)
+  private val resourcesPathV2 = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).makeRoute)
+  private val valuesPathV1    = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).makeRoute)
 
   private val superUser      = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email
@@ -609,7 +603,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getDirectLinksSPARQL(firstThingIri.get)
 
-      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      implicit val timeout = akka.util.Timeout(30.seconds)
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), timeout.duration) match {
 
         case response: SparqlSelectResult =>
           val ref: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
@@ -626,7 +621,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getRefCountsSPARQL(firstThingIri.get)
 
-      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      implicit val timeout = akka.util.Timeout(30.seconds)
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), timeout.duration) match {
 
         case response: SparqlSelectResult =>
           val refCnt: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
@@ -883,7 +879,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getDirectLinksSPARQL(thirdThingIri.get)
 
-      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      implicit val timeout = akka.util.Timeout(30.seconds)
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), timeout.duration) match {
 
         case response: SparqlSelectResult =>
           val ref1: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
@@ -906,7 +903,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val sparqlQuery = getRefCountsSPARQL(thirdThingIri.get)
 
-      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      implicit val timeout = akka.util.Timeout(30.seconds)
+      Await.result(appActor ? SparqlSelectRequest(sparqlQuery), timeout.duration) match {
 
         case response: SparqlSelectResult =>
           val refCnt1: Boolean = response.results.bindings.exists { row: VariableResultsRow =>

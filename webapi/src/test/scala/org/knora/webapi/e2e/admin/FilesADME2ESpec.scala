@@ -8,8 +8,6 @@ package org.knora.webapi.e2e.admin
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

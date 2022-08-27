@@ -7,8 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import java.util.UUID
 import scala.concurrent.duration._

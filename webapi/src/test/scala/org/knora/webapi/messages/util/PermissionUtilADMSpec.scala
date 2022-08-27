@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.ConfigFactory
 
 import scala.collection.Map
 

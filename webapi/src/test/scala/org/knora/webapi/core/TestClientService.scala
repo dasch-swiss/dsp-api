@@ -1,6 +1,5 @@
 package org.knora.webapi.testservices
 
-import org.knora.webapi.core.ActorSystem
 import akka.http.scaladsl.client.RequestBuilding
 import akka.stream.Materializer
 import org.apache.http

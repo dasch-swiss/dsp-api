@@ -5,44 +5,17 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.Props
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.Materializer
-import akka.testkit.TestKit
-import com.typesafe.config.Config
+import akka.testkit.TestKitBase
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging._
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import dsp.errors.FileWriteException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.core.TestStartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
-import zio.&
 import zio.Runtime
 import zio.ZIO
 import zio.ZLayer
@@ -53,33 +26,21 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 import dsp.errors.FileWriteException
-import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import akka.testkit.TestKitBase
-import scala.concurrent.ExecutionContextExecutor
-import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.FileUtil
 
 /**
@@ -145,6 +106,9 @@ abstract class E2ESpec
     .resolveOne(new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
   val appActor =
     Await.result(appActorF, new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
+
+  // needed by some tests
+  val routeData = KnoraRouteData(system, appActor)
 
   final override def beforeAll(): Unit =
     // create temp data dir if not present

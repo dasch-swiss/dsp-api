@@ -5,35 +5,12 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.actor.Props
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
-import akka.stream.Materializer
-import akka.testkit.TestKit
-import com.typesafe.config.Config
+import akka.testkit.TestKitBase
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf.JsonLDDocument
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.testcontainers.SipiTestContainer
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.core.TestStartupUtils
+import com.typesafe.scalalogging.Logger
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
@@ -41,14 +18,18 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 import zio._
 
-import scala.concurrent.ExecutionContext
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import akka.testkit.TestKitBase
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContextExecutor
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.settings._
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.testservices.TestClientService
 
 /**
  * This class can be used in End-to-End testing. It starts the Knora server and

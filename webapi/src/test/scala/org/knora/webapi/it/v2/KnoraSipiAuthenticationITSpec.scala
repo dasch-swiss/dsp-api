@@ -20,7 +20,6 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
-
 /**
  * Tests interaction between Knora and Sipi using Knora API v2.
  */

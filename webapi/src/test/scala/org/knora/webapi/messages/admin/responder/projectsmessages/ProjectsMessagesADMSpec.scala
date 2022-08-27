@@ -5,9 +5,6 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-
 import dsp.errors.BadRequestException
 import dsp.errors.OntologyConstraintException
 import org.knora.webapi._

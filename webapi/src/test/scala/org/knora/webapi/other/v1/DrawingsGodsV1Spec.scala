@@ -5,9 +5,6 @@
 
 package org.knora.webapi.other.v1
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-
 import java.util.UUID
 import scala.concurrent.duration._
 

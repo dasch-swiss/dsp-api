@@ -5,8 +5,6 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 

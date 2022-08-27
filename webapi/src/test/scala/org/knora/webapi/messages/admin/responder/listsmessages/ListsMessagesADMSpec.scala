@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import com.typesafe.config.ConfigFactory
 import spray.json._
 
 import java.util.UUID

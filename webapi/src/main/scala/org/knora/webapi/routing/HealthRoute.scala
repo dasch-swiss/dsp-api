@@ -111,15 +111,15 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck with ZIOSupport {
+final case class HealthRoute(state: State) extends HealthCheck with ZIOSupport {
 
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  def makeRoute: Route =
     path("health") {
       get { requestContext =>
-        val res: ZIO[Any, Nothing, HttpResponse] = healthCheck(routeData.state)
+        val res: ZIO[Any, Nothing, HttpResponse] = healthCheck(state)
         requestContext.complete(res)
       }
     }

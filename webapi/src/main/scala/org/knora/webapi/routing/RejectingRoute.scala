@@ -8,13 +8,16 @@ package org.knora.webapi.routing
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import com.typesafe.scalalogging.Logger
 import zio._
 
 import scala.concurrent.Future
 import scala.util.Failure
 import scala.util.Success
 
+import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
+import org.knora.webapi.settings.KnoraSettings
 
 /**
  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
@@ -25,7 +28,10 @@ import org.knora.webapi.core.domain.AppState
  *
  * TODO: This should probably be refactored into a ZIO-HTTP middleware, when the transistion to ZIO-HTTP is done.
  */
-class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) { self =>
+class RejectingRoute(state: State, system: akka.actor.ActorSystem) { self =>
+
+  val settings    = KnoraSettings(system)
+  val log: Logger = Logger(this.getClass)
 
   /**
    * Gets the app state from the State service
@@ -35,7 +41,7 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) { 
       Runtime.default.unsafe
         .runToFuture(
           for {
-            state <- self.routeData.state.get
+            state <- state.get
           } yield state
         )
     }
@@ -43,7 +49,7 @@ class RejectingRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) { 
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  def makeRoute: Route =
     path(Remaining) { wholePath =>
       // check to see if route is on the rejection list
       val rejectSeq: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject: String =>

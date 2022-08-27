@@ -6,8 +6,6 @@
 package org.knora.webapi.responders.v1
 
 import akka.testkit._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 

@@ -35,7 +35,6 @@ import org.knora.webapi.models.filemodels.FileType
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.errors.SipiException
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.core.TestLayers
 
 /**
  * Tests [[ValuesResponderV2]].
@@ -59,8 +58,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val mimeTypeJP2  = "image/jp2"
 
   /* we need to run our app with the mocked sipi implementation */
-  type Environment = TestLayers.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = TestLayers.defaultTestLayersWithMockedSipi(system)
+  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

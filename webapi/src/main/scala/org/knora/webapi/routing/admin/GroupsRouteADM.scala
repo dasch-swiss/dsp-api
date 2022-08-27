@@ -36,7 +36,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
   val groupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
 
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getGroups() ~
       getGroup() ~
       getGroupMembers() ~

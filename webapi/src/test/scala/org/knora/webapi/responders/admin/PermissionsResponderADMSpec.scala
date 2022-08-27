@@ -7,8 +7,6 @@ package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import org.scalatest.PrivateMethodTester
 
 import java.util.UUID
@@ -42,11 +40,6 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
-
-  /* define private method access */
-  private val userAdministrativePermissionsGetADM =
-    PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]](Symbol("userAdministrativePermissionsGetADM"))
-  PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -151,8 +144,11 @@ class PermissionsResponderADMSpec extends CoreSpec with ImplicitSender with Priv
     }
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
+
+        val permissionsResponder = new PermissionsResponderADM(responderData)
+
         val f: Future[Map[IRI, Set[PermissionADM]]] =
-          responderUnderTest invokePrivate userAdministrativePermissionsGetADM(
+          permissionsResponder.userAdministrativePermissionsGetADM(
             multiuserUser.permissions.groupsPerProject
           )
         val result: Map[IRI, Set[PermissionADM]] = Await.result(f, 1.seconds)

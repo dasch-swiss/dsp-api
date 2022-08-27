@@ -23,7 +23,7 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     path("v1" / "projects") {
       get {
         /* returns all projects */

@@ -5,13 +5,11 @@
 
 package org.knora.webapi.core
 
-import org.knora.webapi.settings.KnoraSettingsImpl
 import zio._
-import zio.macros.accessible
-import org.knora.webapi.store.cache.settings.CacheServiceSettings
-import org.knora.webapi.config.AppConfig
-import scala.concurrent.ExecutionContext
+
 import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 object ActorSystemTestImpl {
 

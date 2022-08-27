@@ -5,40 +5,11 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import akka.actor.Props
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
-import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.auth.JWTService
-import org.knora.webapi.config.AppConfig
-import org.knora.webapi.config.AppConfigForTestContainers
-import org.knora.webapi.http.handler
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.routing.KnoraRouteData
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.settings._
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
-import org.knora.webapi.store.iiif.IIIFServiceManager
-import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
-import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.testcontainers.SipiTestContainer
-import org.knora.webapi.testservices.TestClientService
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.core.TestStartupUtils
+import com.typesafe.scalalogging.Logger
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.Suite
 import org.scalatest.matchers.should.Matchers
@@ -50,11 +21,16 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration._
-import akka.testkit.TestActorRef
-import scala.concurrent.ExecutionContextExecutor
+
+import org.knora.webapi.core.TestStartupUtils
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.settings.KnoraSettings
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.settings._
+import org.knora.webapi.util.FileUtil
 
 /**
  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
@@ -68,11 +44,10 @@ abstract class R2RSpec
     with Matchers
     with BeforeAndAfterAll {
 
-  implicit lazy val system: akka.actor.ActorSystem = akka.actor.ActorSystem("E2ESpec", ConfigFactory.load())
-  implicit lazy val ec: ExecutionContextExecutor   = system.dispatcher
-  implicit lazy val settings: KnoraSettingsImpl    = KnoraSettings(system)
-  lazy val rdfDataObjects                          = List.empty[RdfDataObject]
-  val log: Logger                                  = Logger(this.getClass())
+  override def createActorSystem(): ActorSystem = akka.actor.ActorSystem("E2ESpec", ConfigFactory.load())
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  lazy val rdfDataObjects                       = List.empty[RdfDataObject]
+  val log: Logger                               = Logger(this.getClass())
 
   /**
    * The `Environment` that we require to exist at startup.
@@ -114,6 +89,9 @@ abstract class R2RSpec
     .resolveOne(new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
   val appActor =
     Await.result(appActorF, new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
+
+  // needed by some tests
+  val routeData = KnoraRouteData(system, appActor)
 
   final override def beforeAll(): Unit =
     // waits until knora is up and running

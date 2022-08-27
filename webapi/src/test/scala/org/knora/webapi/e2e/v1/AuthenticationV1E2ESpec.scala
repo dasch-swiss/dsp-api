@@ -25,10 +25,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
  *
  * This spec tests the 'v1/authentication' and 'v1/session' route.
  */
-class AuthenticationV1E2ESpec
-    extends E2ESpec
-    with SessionJsonProtocol
-    with TriplestoreJsonProtocol {
+class AuthenticationV1E2ESpec extends E2ESpec with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   private val rootIri      = SharedTestDataV1.rootUser.userData.user_id.get
   private val rootIriEnc   = java.net.URLEncoder.encode(rootIri, "utf-8")

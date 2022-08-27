@@ -7,8 +7,6 @@ package org.knora.webapi.e2e.admin
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 import spray.json._
 import zio._
 

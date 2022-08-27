@@ -50,7 +50,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   /**
    * Returns the route.
    */
-  override def makeRoute(): Route =
+  override def makeRoute: Route =
     getProjects() ~
       addProject() ~
       getKeywords() ~

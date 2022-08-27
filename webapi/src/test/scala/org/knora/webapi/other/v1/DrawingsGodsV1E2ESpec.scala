@@ -10,7 +10,6 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import com.typesafe.config.ConfigFactory
 
 import java.net.URLEncoder
 

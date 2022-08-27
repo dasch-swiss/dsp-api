@@ -5,22 +5,22 @@
 
 package org.knora.webapi.core
 
+import akka.actor.ActorRef
 import akka.dispatch.MessageDispatcher
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.settings.KnoraDispatchers
+import zio._
+
 import scala.concurrent.Await
 import scala.concurrent.Future
-import akka.actor.ActorRef
+
+import org.knora.webapi.core.AppRouter
 import org.knora.webapi.core.domain.AppState
 import org.knora.webapi.core.domain.GetAppState
-import akka.testkit.TestKitBase
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import zio._
+import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.triplestore.api.TriplestoreService
-import org.knora.webapi.core.AppRouter
-import scala.concurrent.ExecutionContext
 
 /**
  * This trait is only used for testing. It is necessary so that E2E tests will only start
