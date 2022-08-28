@@ -99,14 +99,14 @@ abstract class CoreSpec
   // this effect represents our application
   private val appServerTest =
     for {
-      _     <- core.AppServer(false, false)
+      _     <- core.AppServer.start(false, false)
       _     <- prepareRepository(rdfDataObjects) // main difference to the live version
       never <- ZIO.never
     } yield never
 
   /* Here we start our main effect in a separate fiber */
-  Unsafe.unsafe { implicit u =>
-    runtime.unsafe.fork(appServerTest)
+  val appServerTestF: CancelableFuture[Nothing] = Unsafe.unsafe { implicit u =>
+    runtime.unsafe.runToFuture(appServerTest)
   }
 
   implicit lazy val system: actor.ActorSystem          = router.system
@@ -124,10 +124,14 @@ abstract class CoreSpec
     // waits until knora is up and running
     applicationStateRunning(appActor, system)
 
-  final override def afterAll(): Unit =
+  final override def afterAll(): Unit = {
+
+    appServerTestF.cancel()
+
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>
       runtime.unsafe.shutdown()
     }
+  }
 
 }

@@ -33,7 +33,7 @@ object AppServer {
    *                                If `false`, check if it is running but don't run upgrading AND loading ontology cache.
    * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
    */
-  def apply(
+  def start(
     requiresRepository: Boolean,
     requiresIIIFService: Boolean
   ): ZIO[
@@ -57,8 +57,7 @@ object AppServer {
       state  <- ZIO.service[State]
       _      <- state.set(AppState.StartingUp)
       routes <- ApiRoutes.routes
-      server <- ZIO.service[HttpServer]
-      _      <- server.start(routes)
+      _      <- ZIO.service[HttpServer].flatMap(_.start(routes))
       _      <- state.set(AppState.WaitingForTriplestore)
       _      <- checkTriplestoreService
       _      <- state.set(AppState.TriplestoreReady)

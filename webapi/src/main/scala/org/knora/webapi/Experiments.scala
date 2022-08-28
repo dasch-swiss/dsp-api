@@ -54,7 +54,7 @@ object Experiments extends App {
   // this effect represents our application
   val appServer =
     for {
-      _     <- core.AppServer(false, false)
+      _     <- core.AppServer.start(false, false)
       never <- ZIO.never
     } yield never
 

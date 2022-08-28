@@ -31,7 +31,7 @@ object Main extends ZIOApp {
   /* Here we start our Application */
   val run =
     for {
-      _     <- core.AppServer(true, true)
+      _     <- core.AppServer.start(true, true)
       never <- ZIO.never
     } yield never
 

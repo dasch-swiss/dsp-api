@@ -106,7 +106,7 @@ abstract class R2RSpec
   // this effect represents our application
   private val appServerTest =
     for {
-      _     <- core.AppServer(false, false)
+      _     <- core.AppServer.start(false, false)
       _     <- prepareRepository(rdfDataObjects) // main difference to the live version
       never <- ZIO.never
     } yield never
