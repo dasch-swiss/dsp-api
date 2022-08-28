@@ -23,7 +23,7 @@ trait HttpServer {
 object HttpServer {
 
   val layer: ZLayer[core.ActorSystem with AppConfig, Nothing, HttpServer] =
-    ZLayer.scoped {
+    ZLayer {
       for {
         as     <- ZIO.service[core.ActorSystem]
         config <- ZIO.service[AppConfig]

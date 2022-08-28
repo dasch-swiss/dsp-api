@@ -51,8 +51,8 @@ class ValuesResponderV1Spec extends CoreSpec with ImplicitSender {
   import ValuesResponderV1Spec._
 
   /* we need to run our app with the mocked sipi implementation */
-  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

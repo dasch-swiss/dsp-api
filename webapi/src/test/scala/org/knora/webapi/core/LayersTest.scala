@@ -16,17 +16,17 @@ import org.knora.webapi.testcontainers.FusekiTestContainer
 import org.knora.webapi.testcontainers.SipiTestContainer
 import org.knora.webapi.testservices.TestClientService
 
-object TestLayers {
+object LayersTest {
 
-  type DefaultTestEnvironmentWithoutSipi = Environment with FusekiTestContainer with TestClientService
+  type DefaultTestEnvironmentWithoutSipi = LayersLive.DSPEnvironmentLive with FusekiTestContainer with TestClientService
   type DefaultTestEnvironmentWithSipi    = DefaultTestEnvironmentWithoutSipi with SipiTestContainer
 
   // all effect layers needed to provide the `Environment`
-  def defaultTestLayersWithSipi(sys: akka.actor.ActorSystem) =
+  val defaultLayersTestWithSipi =
     ZLayer.make[
       DefaultTestEnvironmentWithSipi
     ](
-      ActorSystemTestImpl.layer(sys),
+      ActorSystem.layer,
       AppConfigForTestContainers.testcontainers,
       AppRouter.layer,
       CacheServiceManager.layer,
@@ -43,15 +43,15 @@ object TestLayers {
       SipiTestContainer.layer,
       FusekiTestContainer.layer,
       // Test services
-      TestClientService.layer(sys)
+      TestClientService.layer
     )
 
   // all effect layers needed to provide the `Environment`
-  def defaultTestLayersWithoutSipi(sys: akka.actor.ActorSystem) =
+  val defaultLayersTestWithoutSipi =
     ZLayer.make[
       DefaultTestEnvironmentWithoutSipi
     ](
-      ActorSystemTestImpl.layer(sys),
+      ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,
       CacheServiceManager.layer,
@@ -67,14 +67,14 @@ object TestLayers {
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
-      TestClientService.layer(sys)
+      TestClientService.layer
     )
 
-  def defaultTestLayersWithMockedSipi(sys: akka.actor.ActorSystem) =
+  val defaultLayersTestWithMockedSipi =
     ZLayer.make[
       DefaultTestEnvironmentWithoutSipi
     ](
-      ActorSystemTestImpl.layer(sys),
+      ActorSystem.layer,
       AppConfigForTestContainers.fusekiOnlyTestcontainer,
       AppRouter.layer,
       CacheServiceManager.layer,
@@ -90,6 +90,6 @@ object TestLayers {
       // testcontainers
       FusekiTestContainer.layer,
       // Test services
-      TestClientService.layer(sys)
+      TestClientService.layer
     )
 }

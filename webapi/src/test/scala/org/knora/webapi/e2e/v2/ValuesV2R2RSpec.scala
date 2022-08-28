@@ -50,8 +50,8 @@ class ValuesV2R2RSpec extends R2RSpec {
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   /* we need to run our app with the mocked sipi implementation */
-  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 

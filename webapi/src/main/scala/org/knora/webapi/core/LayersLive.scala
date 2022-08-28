@@ -1,4 +1,4 @@
-package org.knora.webapi
+package org.knora.webapi.core
 
 import zio.ZLayer
 
@@ -15,29 +15,30 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
-package object core {
+object LayersLive {
 
   /**
    * The `Environment` that we require to exist at startup.
    */
-  type Environment = ActorSystem
-    with AppConfig
-    with AppRouter
-    with CacheServiceManager
-    with CacheService
-    with HttpServer
-    with IIIFServiceManager
-    with IIIFService
-    with JWTService
-    with RepositoryUpdater
-    with State
-    with TriplestoreServiceManager
-    with TriplestoreService
+  type DSPEnvironmentLive =
+    ActorSystem
+      with AppConfig
+      with AppRouter
+      with CacheServiceManager
+      with CacheService
+      with HttpServer
+      with IIIFServiceManager
+      with IIIFService
+      with JWTService
+      with RepositoryUpdater
+      with State
+      with TriplestoreServiceManager
+      with TriplestoreService
 
   // all effect layers needed to provide the `Environment`
-  val allLayers =
+  val dspLayersLive =
     ZLayer.make[
-      ActorSystem with AppConfig with AppRouter with CacheServiceManager with CacheService with HttpServer with IIIFServiceManager with IIIFService with JWTService with RepositoryUpdater with State with TriplestoreServiceManager with TriplestoreService
+      DSPEnvironmentLive
     ](
       ActorSystem.layer,
       AppConfig.live,

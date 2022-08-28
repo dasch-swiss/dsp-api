@@ -29,6 +29,7 @@ import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.core.ActorSystem
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponse
 import org.knora.webapi.messages.store.sipimessages.SipiUploadResponseJsonProtocol._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -310,12 +311,13 @@ object TestClientService {
     httpClient.close()
   }.tap(_ => ZIO.logDebug(">>> Release Test Client Service <<<")).orDie
 
-  def layer(system: akka.actor.ActorSystem): ZLayer[AppConfig, Nothing, TestClientService] =
+  def layer: ZLayer[ActorSystem & AppConfig, Nothing, TestClientService] =
     ZLayer.scoped {
       for {
+        sys        <- ZIO.service[ActorSystem]
         config     <- ZIO.service[AppConfig]
-        httpClient <- ZIO.acquireRelease(acquire)(release(_)(system))
-      } yield TestClientService(config, httpClient, system)
+        httpClient <- ZIO.acquireRelease(acquire)(release(_)(sys.system))
+      } yield TestClientService(config, httpClient, sys.system)
     }.tap(_ => ZIO.logDebug(">>> Test Client Service initialized <<<"))
 
 }

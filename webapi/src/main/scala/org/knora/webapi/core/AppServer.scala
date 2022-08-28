@@ -24,7 +24,7 @@ import org.knora.webapi.util.cache.CacheUtil
 /**
  * The application bootstrapper
  */
-object Startup {
+object AppServer {
 
   /**
    * Initiates the startup sequence of the DSP-API server.
@@ -33,7 +33,7 @@ object Startup {
    *                                If `false`, check if it is running but don't run upgrading AND loading ontology cache.
    * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
    */
-  def run(
+  def apply(
     requiresRepository: Boolean,
     requiresIIIFService: Boolean
   ): ZIO[
@@ -56,8 +56,9 @@ object Startup {
     for {
       state  <- ZIO.service[State]
       _      <- state.set(AppState.StartingUp)
-      routes <- ApiRoutes.apiRoutes
-      _      <- ZIO.service[HttpServer].flatMap(server => server.start(routes))
+      routes <- ApiRoutes.routes
+      server <- ZIO.service[HttpServer]
+      _      <- server.start(routes)
       _      <- state.set(AppState.WaitingForTriplestore)
       _      <- checkTriplestoreService
       _      <- state.set(AppState.TriplestoreReady)
@@ -157,20 +158,9 @@ object Startup {
   /**
    * Prints the welcome message
    */
-  private val printBanner: ZIO[AppConfig, Nothing, Unit] = {
-
-    val logo =
-      """
-        |  ____  ____  ____         _    ____ ___
-        | |  _ \/ ___||  _ \       / \  |  _ \_ _|
-        | | | | \___ \| |_) |____ / _ \ | |_) | |
-        | | |_| |___) |  __/_____/ ___ \|  __/| |
-        | |____/|____/|_|       /_/   \_\_|  |___|
-            """.stripMargin
-
+  private val printBanner: ZIO[AppConfig, Nothing, Unit] =
     for {
       config <- ZIO.service[AppConfig]
-      _      <- ZIO.logInfo(logo)
       _ <-
         ZIO.logInfo(
           s"DSP-API Server started: ${config.knoraApi.internalKnoraApiBaseUrl}"
@@ -179,11 +169,6 @@ object Startup {
       _ = if (config.allowReloadOverHttp) {
             ZIO.logWarning("Resetting DB over HTTP is turned ON")
           }
-
-      // which repository are we using
-      _ <-
-        ZIO.logInfo(s"DB-Name:   ${config.triplestore.fuseki.repositoryName}\t DB-Type: ${config.triplestore.dbtype}")
-      _ <- ZIO.logInfo(s"DB-Server: ${config.triplestore.host}\t DB Port: ${config.triplestore.fuseki.port}")
     } yield ()
-  }
+
 }

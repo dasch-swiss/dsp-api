@@ -53,7 +53,7 @@ object ApiRoutes extends AroundDirectives {
   /**
    * All routes composed together.
    */
-  val apiRoutes: ZIO[ActorSystem with AppRouter with core.State, Nothing, Route] =
+  val routes: ZIO[ActorSystem with AppRouter with core.State, Nothing, Route] =
     for {
       sys    <- ZIO.service[ActorSystem]
       router <- ZIO.service[AppRouter]

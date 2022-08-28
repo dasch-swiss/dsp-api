@@ -27,7 +27,6 @@ import org.knora.webapi.store.triplestore.api.TriplestoreService
  * after the KnoraService is ready.
  */
 trait TestStartupUtils extends LazyLogging {
-  this: ZIOApp =>
 
   /**
    * Returns only when the application state is 'Running'.

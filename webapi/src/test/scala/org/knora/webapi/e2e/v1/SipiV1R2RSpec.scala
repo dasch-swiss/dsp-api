@@ -51,8 +51,8 @@ class SipiV1R2RSpec extends R2RSpec {
   )
 
   /* we need to run our app with the mocked sipi implementation */
-  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   object RequestParams {
 

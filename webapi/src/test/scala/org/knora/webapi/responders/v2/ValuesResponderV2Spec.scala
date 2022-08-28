@@ -58,8 +58,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val mimeTypeJP2  = "image/jp2"
 
   /* we need to run our app with the mocked sipi implementation */
-  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

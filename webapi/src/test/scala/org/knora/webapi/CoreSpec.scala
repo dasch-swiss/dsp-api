@@ -8,79 +8,113 @@ package org.knora.webapi
 import akka.actor
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKitBase
-import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.Logger
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
 import zio._
+import zio.logging.slf4j.bridge.Slf4jBridge
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 
+import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.TestStartupUtils
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
 
 abstract class CoreSpec
-    extends ZIOApp
+    extends AnyWordSpec
     with TestKitBase
     with TestStartupUtils
-    with AnyWordSpecLike
     with Matchers
     with BeforeAndAfterAll
     with ImplicitSender {
 
-  implicit lazy val system: actor.ActorSystem          = akka.actor.ActorSystem("CoreSpec", ConfigFactory.load())
-  implicit lazy val executionContext: ExecutionContext = system.dispatcher
-  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
-  val log: Logger                                      = Logger(this.getClass())
-
   /**
    * The `Environment` that we require to exist at startup.
+   * Can be overriden in specs that need other implementations.
    */
-  type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
-
-  /**
-   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
-   * and cleaned up when the Runtime is shutdown.
-   */
-  override val bootstrap: ZLayer[
-    ZIOAppArgs with Scope,
-    Any,
-    Environment
-  ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ effectLayers
-
-  // no idea why we need that, but we do
-  val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
-
-  /* Here we start our TestApplication */
-  val run =
-    (for {
-      _ <- ZIO.scoped(core.Startup.run(false, false))
-      _ <- prepareRepository(rdfDataObjects)
-      _ <- ZIO.never
-    } yield ()).forever
+  type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
 
   /**
    * The effect layers from which the App is built.
    * Can be overriden in specs that need other implementations.
    */
-  lazy val effectLayers = core.TestLayers.defaultTestLayersWithoutSipi(system)
+  lazy val effectLayers = core.LayersTest.defaultLayersTestWithoutSipi
 
-  // The appActor is built inside the AppRouter layer. We need to surface the reference to it,
-  // so that we can use it in tests. This seems the easies way of doing it at the moment.
-  val appActorF = system
-    .actorSelection(APPLICATION_MANAGER_ACTOR_PATH)
-    .resolveOne(new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
-  val appActor =
-    Await.result(appActorF, new scala.concurrent.duration.FiniteDuration(1, scala.concurrent.duration.SECONDS))
+  /**
+   * `Bootstrap` will ensure that everything is instantiated when the Runtime is created
+   * and cleaned up when the Runtime is shutdown.
+   */
+  private val bootstrap: ZLayer[
+    Scope,
+    Any,
+    Environment
+  ] =
+    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
+
+  // no idea why we need that, but we do
+  private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+
+  // add scope to bootstrap
+  private val bootstrapWithScope = Scope.default >>>
+    bootstrap +!+ ZLayer.environment[Scope]
+
+  // maybe a configured runtime?
+  val runtime = Unsafe.unsafe { implicit u =>
+    Runtime.unsafe
+      .fromLayer(bootstrapWithScope)
+  }
+
+  println("after configuring the runtime")
+
+  // An effect for getting stuff out, so that we can pass them
+  // to some legacy code
+  private val routerAndConfig = for {
+    router <- ZIO.service[core.AppRouter]
+    config <- ZIO.service[AppConfig]
+  } yield (router, config)
+
+  println("before running routerAndConfig")
+
+  /**
+   * Create router and config by unsafe running them.
+   */
+  private val (router, config) =
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe
+        .run(
+          routerAndConfig
+        )
+        .getOrThrowFiberFailure()
+    }
+
+  println(router.ref)
+
+  println("before running AppServer")
+
+  // this effect represents our application
+  private val appServerTest =
+    for {
+      _     <- core.AppServer(false, false)
+      _     <- prepareRepository(rdfDataObjects) // main difference to the live version
+      never <- ZIO.never
+    } yield never
+
+  /* Here we start our main effect in a separate fiber */
+  Unsafe.unsafe { implicit u =>
+    runtime.unsafe.fork(appServerTest)
+  }
+
+  implicit lazy val system: actor.ActorSystem          = router.system
+  implicit lazy val executionContext: ExecutionContext = system.dispatcher
+  implicit lazy val settings: KnoraSettingsImpl        = KnoraSettings(system)
+  lazy val rdfDataObjects                              = List.empty[RdfDataObject]
+  val log: Logger                                      = Logger(this.getClass())
+  val appActor                                         = router.ref
 
   // needed by some tests
   val cacheServiceSettings = new CacheServiceSettings(system.settings.config)
@@ -90,7 +124,10 @@ abstract class CoreSpec
     // waits until knora is up and running
     applicationStateRunning(appActor, system)
 
-  final override def afterAll(): Unit = {}
-  /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+  final override def afterAll(): Unit =
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
 
 }

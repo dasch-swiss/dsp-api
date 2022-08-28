@@ -655,8 +655,8 @@ class ResourcesResponderV1Spec extends CoreSpec with ImplicitSender {
   )
 
   /* we need to run our app with the mocked sipi implementation */
-  override type Environment = core.TestLayers.DefaultTestEnvironmentWithoutSipi
-  override lazy val effectLayers = core.TestLayers.defaultTestLayersWithMockedSipi(system)
+  override type Environment = core.LayersTest.DefaultTestEnvironmentWithoutSipi
+  override lazy val effectLayers = core.LayersTest.defaultLayersTestWithMockedSipi
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 60.seconds
