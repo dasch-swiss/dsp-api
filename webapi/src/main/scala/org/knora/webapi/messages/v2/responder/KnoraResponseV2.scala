@@ -5,6 +5,8 @@
 
 package org.knora.webapi.messages.v2.responder
 
+import dsp.errors.AssertionException
+import dsp.errors.BadRequestException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.ApiV2Simple
@@ -12,8 +14,6 @@ import org.knora.webapi.InternalSchema
 import org.knora.webapi.OntologySchema
 import org.knora.webapi.SchemaOption
 import org.knora.webapi.SchemaOptions
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.util.rdf._

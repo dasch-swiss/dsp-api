@@ -6,10 +6,12 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.Logger
+
+import java.time.Instant
+
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import java.time.Instant
 
 /**
  * Transforms a repository for Knora PR 2081.
@@ -40,7 +42,7 @@ class UpgradePluginPR2081(log: Logger) extends UpgradePlugin {
             obj = newValue,
             context = statement.context
           )
-        case other => ()
+        case _ => ()
       }
     }
 

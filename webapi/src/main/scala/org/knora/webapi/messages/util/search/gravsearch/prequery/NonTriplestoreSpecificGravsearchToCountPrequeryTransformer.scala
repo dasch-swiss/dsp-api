@@ -5,12 +5,12 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
+import scala.concurrent.ExecutionContext
+
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
-
-import scala.concurrent.ExecutionContext
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched

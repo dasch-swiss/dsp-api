@@ -18,18 +18,6 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
-import dsp.errors.AssertionException
-import dsp.errors.InvalidApiJsonException
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.MutableTestIri
 import org.xmlunit.builder.DiffBuilder
 import org.xmlunit.builder.Input
 import org.xmlunit.diff.Diff
@@ -46,6 +34,19 @@ import scala.concurrent.duration._
 import scala.xml._
 import scala.xml.transform.RewriteRule
 import scala.xml.transform.RuleTransformer
+
+import dsp.errors.AssertionException
+import dsp.errors.InvalidApiJsonException
+import org.knora.webapi._
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
+import org.knora.webapi.testservices.FileToUpload
+import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.MutableTestIri
 
 object KnoraSipiIntegrationV1ITSpec {
   val config: Config = ConfigFactory.parseString("""

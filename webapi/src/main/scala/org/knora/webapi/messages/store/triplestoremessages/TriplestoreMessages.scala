@@ -5,11 +5,18 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import com.typesafe.scalalogging.Logger
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.StringUtils
-import org.knora.webapi._
+import spray.json._
+import zio._
+
+import java.nio.file.Path
+import java.time.Instant
+import scala.collection.mutable
+
 import dsp.errors._
+import dsp.valueobjects.V2
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -18,28 +25,11 @@ import org.knora.webapi.messages.store.StoreRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
-import spray.json._
-
-import java.nio.file.Path
-import java.time.Instant
-import scala.collection.mutable
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import dsp.valueobjects.V2
-
-import com.typesafe.config.Config
-import zio._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
 sealed trait TriplestoreRequest extends StoreRequest
-
-/**
- * Simple message for initial actor functionality.
- */
-case class HelloTriplestore(txt: String) extends TriplestoreRequest
 
 /**
  * Simple message for checking the connection to the triplestore.
@@ -56,7 +46,7 @@ case class CheckConnectionACK()
  *
  * @param sparql the SPARQL string.
  */
-case class SparqlSelectRequest(sparql: String) extends TriplestoreRequest
+case class SparqlSelectRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
 
 /**
  * Represents a SPARQL CONSTRUCT query to be sent to the triplestore. A successful response will be a
@@ -95,7 +85,7 @@ case class SparqlConstructResponse(statements: Map[IRI, Seq[(IRI, String)]])
  *
  * @param sparql               the SPARQL string.
  */
-case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreRequest
+case class SparqlExtendedConstructRequest(sparql: String, isGravsearch: Boolean = false) extends TriplestoreRequest
 
 /**
  * Parses Turtle documents and converts them to [[SparqlExtendedConstructResponse]] objects.
@@ -202,7 +192,7 @@ object SparqlExtendedConstructResponse {
 
       SparqlExtendedConstructResponse(statementMap.toMap)
     }.foldZIO(
-      failure =>
+      _ =>
         ZIO.logError(s"Couldn't parse Turtle document:$logDelimiter$turtleStr$logDelimiter") *>
           ZIO.fail(DataConversionException("Couldn't parse Turtle document")),
       ZIO.succeed(_)

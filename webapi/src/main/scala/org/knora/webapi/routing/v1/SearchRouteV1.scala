@@ -7,8 +7,11 @@ package org.knora.webapi.routing.v1
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import org.knora.webapi.IRI
+
+import scala.language.postfixOps
+
 import dsp.errors.BadRequestException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.searchmessages.ExtendedSearchGetRequestV1
@@ -18,8 +21,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
-
-import scala.language.postfixOps
 
 // slash after path without following segment
 
@@ -62,7 +63,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
           )
         )
-      case other => None
+      case _ => None
     }
 
     // only one value is expected
@@ -76,7 +77,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
           )
         )
-      case other => None
+      case _ => None
     }
 
     // only one value is expected
@@ -90,7 +91,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
           )
         )
-      case other => None
+      case _ => None
     }
 
     // here, also multiple values can be given
@@ -104,7 +105,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
           )
         )
-      case other => Nil
+      case _ => Nil
     }
 
     // here, also multiple values can be given
@@ -114,14 +115,14 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         compopList.map { (compop: String) =>
           SearchComparisonOperatorV1.lookup(compop)
         }
-      case other => Nil
+      case _ => Nil
     }
 
     // here, also multiple values can be given
     val searchval: Seq[String] = params.get("searchval") match {
       case Some(searchvalList: Seq[String]) =>
         searchvalList // Attention: searchval cannot be processed (escaped) here because we do not know its value type yet
-      case other => Nil
+      case _ => Nil
     }
 
     // propertyId, compop, and searchval are parallel structures (parallel arrays): they have to be of the same length
@@ -177,7 +178,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
     params.get("searchtype") match {
       case Some("fulltext") => ()
-      case other            => throw BadRequestException(s"Unexpected searchtype param for fulltext search")
+      case _                => throw BadRequestException(s"Unexpected searchtype param for fulltext search")
     }
 
     val restypeIri: Option[IRI] = params.get("filter_by_restype") match {
@@ -188,7 +189,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")
           )
         )
-      case other => None
+      case _ => None
     }
     val projectIri: Option[IRI] = params.get("filter_by_project") match {
       case Some(project: IRI) =>
@@ -198,7 +199,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")
           )
         )
-      case other => None
+      case _ => None
     }
 
     val searchString = stringFormatter.toSparqlEncodedString(

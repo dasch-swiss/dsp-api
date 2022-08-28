@@ -10,20 +10,21 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.ITKnoraLiveSpec
-import dsp.errors.InvalidApiJsonException
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
-import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
-import org.knora.webapi.testservices.FileToUpload
 import spray.json._
 
 import java.net.URLEncoder
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+import dsp.errors.InvalidApiJsonException
+import org.knora.webapi.ITKnoraLiveSpec
+import org.knora.webapi.messages.store.sipimessages._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.AuthenticationV2JsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages.LoginResponse
+import org.knora.webapi.testservices.FileToUpload
 
 object DrawingsGodsV1ITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -140,7 +141,7 @@ class DrawingsGodsV1ITSpec
               locdata.fields.get("path") match {
                 case Some(JsString(foundUrl)) => foundUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
                 case None                     => throw InvalidApiJsonException("no 'path' given")
-                case other                    => throw InvalidApiJsonException("'path' could not pe parsed correctly")
+                case _                        => throw InvalidApiJsonException("'path' could not pe parsed correctly")
               }
             case None => throw InvalidApiJsonException("no 'locdata' given")
 

@@ -15,5 +15,3 @@ The DSP APIs include:
   administering projects that use Knora as well as Knora itself.
 * The DSP [Util API](api-util/index.md), which is intended to be used for information retrieval
   about the DSP-stack itself.
-
-DSP API v2 and the admin API support [Feature Toggles](feature-toggles.md).

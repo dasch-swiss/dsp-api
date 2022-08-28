@@ -1,4 +1,3 @@
-import rapture.core.booleanRepresentations.trueFalse
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
@@ -16,7 +15,13 @@ import scala.sys.process.Process
 //////////////////////////////////////
 
 // when true enables run cancellation w/o exiting sbt
-cancelable in Global := true
+// use Ctrl-c to stop current task but not quit SBT
+Global / cancelable := true
+
+Global / scalaVersion                                   := Dependencies.ScalaVersion
+Global / semanticdbEnabled                              := true
+Global / semanticdbVersion                              := scalafixSemanticdb.revision
+Global / scalafixDependencies += "com.github.liancheng" %% "organize-imports" % "0.6.0"
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(webapi, sipi)
 
@@ -28,7 +33,20 @@ lazy val buildSettings = Seq(
 lazy val rootBaseDir = ThisBuild / baseDirectory
 
 lazy val root: Project = Project(id = "root", file("."))
-  .aggregate(webapi, sipi, shared, valueObjects, userCore, userHandler, userRepo, userInterface)
+  .aggregate(
+    webapi,
+    sipi,
+    shared,
+    userCore,
+    userHandler,
+    userRepo,
+    userInterface,
+    roleCore,
+    roleRepo,
+    roleHandler,
+    roleInterface,
+    schemaCore
+  )
   .enablePlugins(GitVersioning, GitBranchPrompt)
   .settings(
     // values set for all sub-projects
@@ -39,18 +57,25 @@ lazy val root: Project = Project(id = "root", file("."))
     ThisBuild / scmInfo := Some(
       ScmInfo(url("https://github.com/dasch-swiss/dsp-api"), "scm:git:git@github.com:dasch-swiss/dsp-api.git")
     ),
-    Global / scalaVersion := Dependencies.scalaVersion,
+    Global / scalaVersion := Dependencies.ScalaVersion,
     // use 'git describe' for deriving the version
     git.useGitDescribe := true,
     // override generated version string because docker hub rejects '+' in tags
     ThisBuild / version ~= (_.replace('+', '-')),
-    // use Ctrl-c to stop current task but not quit SBT
-    Global / cancelable := true,
-    publish / skip      := true
+    publish / skip := true
   )
 
-addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll")
-addCommandAlias("check", "all root/scalafmtSbtCheck root/scalafmtCheckAll")
+addCommandAlias("fmt", "; all root/scalafmtSbt root/scalafmtAll; root/scalafixAll")
+addCommandAlias("check", "; all root/scalafmtSbtCheck root/scalafmtCheckAll; root/scalafixAll --check")
+
+lazy val customScalacOptions = Seq(
+  "-feature",
+  "-unchecked",
+  "-deprecation",
+  "-Yresolve-term-conflict:package",
+  "-Ymacro-annotations",
+  "-Wunused"
+)
 
 //////////////////////////////////////
 // DSP's custom SIPI
@@ -139,7 +164,10 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
       "-unchecked",
       "-deprecation",
       "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
+      "-Ymacro-annotations",
+      // silence twirl templates unused imports warnings
+      "-Wconf:src=target/.*:s",
+      "-Wunused:imports"
     ),
     logLevel          := Level.Info,
     run / javaOptions := webapiJavaRunOptions,
@@ -196,7 +224,7 @@ lazy val webapi: Project = Project(id = "webapi", base = file("webapi"))
     buildInfoKeys ++= Seq[BuildInfoKey](
       name,
       version,
-      "akkaHttp" -> Dependencies.akkaHttpVersion,
+      "akkaHttp" -> Dependencies.AkkaHttpVersion,
       "sipi"     -> Dependencies.sipiImage,
       "fuseki"   -> Dependencies.fusekiImage
     ),
@@ -232,28 +260,12 @@ lazy val webapiJavaTestOptions = Seq(
 // DSP's new codebase
 //////////////////////////////////////
 
-// Value Objects project
-
-lazy val valueObjects = project
-  .in(file("dsp-value-objects"))
-  .settings(
-    name := "valueObjects",
-    libraryDependencies ++= Dependencies.valueObjectsLibraryDependencies,
-    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
-  )
-
 // Role projects
 
 lazy val roleInterface = project
   .in(file("dsp-role/interface"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleInterface",
     libraryDependencies ++= Dependencies.roleInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -263,13 +275,7 @@ lazy val roleInterface = project
 lazy val roleHandler = project
   .in(file("dsp-role/handler"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleHandler",
     libraryDependencies ++= Dependencies.roleHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -283,13 +289,7 @@ lazy val roleHandler = project
 lazy val roleRepo = project
   .in(file("dsp-role/repo"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleRepo",
     libraryDependencies ++= Dependencies.roleRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -299,13 +299,7 @@ lazy val roleRepo = project
 lazy val roleCore = project
   .in(file("dsp-role/core"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "roleCore",
     libraryDependencies ++= Dependencies.roleCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -317,13 +311,7 @@ lazy val roleCore = project
 lazy val userInterface = project
   .in(file("dsp-user/interface"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userInterface",
     libraryDependencies ++= Dependencies.userInterfaceLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -333,13 +321,7 @@ lazy val userInterface = project
 lazy val userHandler = project
   .in(file("dsp-user/handler"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userHandler",
     libraryDependencies ++= Dependencies.userHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -353,13 +335,7 @@ lazy val userHandler = project
 lazy val userRepo = project
   .in(file("dsp-user/repo"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userRepo",
     libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -369,13 +345,7 @@ lazy val userRepo = project
 lazy val userCore = project
   .in(file("dsp-user/core"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -387,13 +357,7 @@ lazy val userCore = project
 lazy val schemaCore = project
   .in(file("dsp-schema/core"))
   .settings(
-    scalacOptions ++= Seq(
-      "-feature",
-      "-unchecked",
-      "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Ymacro-annotations"
-    ),
+    scalacOptions ++= customScalacOptions,
     name := "schemaCore",
     libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
@@ -405,6 +369,7 @@ lazy val schemaCore = project
 lazy val shared = project
   .in(file("dsp-shared"))
   .settings(
+    scalacOptions ++= customScalacOptions,
     name := "shared",
     libraryDependencies ++= Dependencies.sharedLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))

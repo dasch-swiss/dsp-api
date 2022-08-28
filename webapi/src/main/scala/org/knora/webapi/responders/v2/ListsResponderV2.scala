@@ -6,8 +6,10 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
-import org.knora.webapi.IRI
 
+import scala.concurrent.Future
+
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.listsmessages.ChildNodeInfoGetResponseADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListGetResponseADM
@@ -17,8 +19,6 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.v2.responder.listsmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import scala.concurrent.Future
 
 /**
  * Responds to requests relating to lists and nodes.

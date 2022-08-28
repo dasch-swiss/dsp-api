@@ -8,23 +8,19 @@ package org.knora.webapi.routing.admin.lists
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
-import dsp.errors.BadRequestException
 
+import java.util.UUID
+import scala.concurrent.Future
+
+import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
 
-import java.util.UUID
-import scala.concurrent.Future
-
-object DeleteListItemsRouteADM {
-  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
-}
-
 /**
- * A [[Feature]] that provides routes to delete list items.
+ * Provides routes to delete list items.
  *
  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
  */
@@ -33,7 +29,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with ListADMJsonProtocol {
 
-  import DeleteListItemsRouteADM._
+  val listsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 
   def makeRoute(): Route =
     deleteListItem() ~
@@ -41,7 +37,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
       deleteListNodeComments()
 
   /* delete list (i.e. root node) or a child node which should also delete its children */
-  private def deleteListItem(): Route = path(ListsBasePath / Segment) { iri =>
+  private def deleteListItem(): Route = path(listsBasePath / Segment) { iri =>
     delete {
       /* delete a list item root node or child if unused */
       requestContext =>
@@ -70,7 +66,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
    * Checks if a list can be deleted (none of its nodes is used in data).
    */
   private def canDeleteList(): Route =
-    path(ListsBasePath / "candelete" / Segment) { iri =>
+    path(listsBasePath / "candelete" / Segment) { iri =>
       get { requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
@@ -96,7 +92,7 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
    * Deletes all comments from requested list node (only child).
    */
   private def deleteListNodeComments(): Route =
-    path(ListsBasePath / "comments" / Segment) { iri =>
+    path(listsBasePath / "comments" / Segment) { iri =>
       delete { requestContext =>
         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 

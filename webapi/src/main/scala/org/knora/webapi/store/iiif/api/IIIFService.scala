@@ -1,5 +1,8 @@
 package org.knora.webapi.store.iiif.api
 
+import zio._
+import zio.macros.accessible
+
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataRequest
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
@@ -8,8 +11,6 @@ import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanent
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileRequest
 import org.knora.webapi.messages.store.sipimessages.SipiGetTextFileResponse
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import zio._
-import zio.macros.accessible
 
 @accessible
 trait IIIFService {

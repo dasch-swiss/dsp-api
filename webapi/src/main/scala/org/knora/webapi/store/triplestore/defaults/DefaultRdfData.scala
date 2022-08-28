@@ -1,7 +1,8 @@
 package org.knora.webapi.store.triplestore.defaults
 
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import zio.NonEmptyChunk
+
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 
 object DefaultRdfData {
 

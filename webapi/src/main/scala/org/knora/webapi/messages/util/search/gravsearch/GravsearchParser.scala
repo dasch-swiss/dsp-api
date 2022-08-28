@@ -10,15 +10,16 @@ import org.eclipse.rdf4j.query.MalformedQueryException
 import org.eclipse.rdf4j.query.algebra
 import org.eclipse.rdf4j.query.parser.QueryParser
 import org.eclipse.rdf4j.query.parser.sparql._
-import org.knora.webapi._
+
+import scala.jdk.CollectionConverters._
+
 import dsp.errors.GravsearchException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.util.search._
-
-import scala.jdk.CollectionConverters._
 
 /**
  * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:

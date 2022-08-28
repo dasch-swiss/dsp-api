@@ -6,9 +6,10 @@
 package org.knora.webapi.it.v1
 
 import akka.http.scaladsl.model.StatusCodes
+import zio._
+
 import org.knora.webapi.ITKnoraLiveSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import zio._
 
 /**
  * Causes an internal server error to see if logging is working correctly.

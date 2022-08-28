@@ -9,14 +9,21 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
+import org.scalatest.PrivateMethodTester
+
+import java.util.UUID
+import scala.collection.Map
+import scala.concurrent.Await
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import dsp.errors.BadRequestException
 import dsp.errors.DuplicateValueException
 import dsp.errors.ForbiddenException
 import dsp.errors.NotFoundException
+import org.knora.webapi._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -27,13 +34,6 @@ import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.cache.CacheUtil
-import org.scalatest.PrivateMethodTester
-
-import java.util.UUID
-import scala.collection.Map
-import scala.concurrent.Await
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 object PermissionsResponderADMSpec {
 
@@ -50,7 +50,6 @@ class PermissionsResponderADMSpec
     extends CoreSpec(PermissionsResponderADMSpec.config)
     with ImplicitSender
     with PrivateMethodTester {
-  private val stringFormatter = StringFormatter.getGeneralInstance
 
   private val rootUser      = SharedTestDataADM.rootUser
   private val multiuserUser = SharedTestDataADM.multiuserUser
@@ -60,8 +59,7 @@ class PermissionsResponderADMSpec
   /* define private method access */
   private val userAdministrativePermissionsGetADM =
     PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]](Symbol("userAdministrativePermissionsGetADM"))
-  private val defaultObjectAccessPermissionsForGroupsGetADM =
-    PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
+  PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(

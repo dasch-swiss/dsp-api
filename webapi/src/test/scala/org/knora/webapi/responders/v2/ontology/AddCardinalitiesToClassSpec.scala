@@ -5,7 +5,9 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import akka.util.Timeout
+import java.util.UUID
+
+import dsp.schema.domain.Cardinality.MayHaveOne
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
@@ -17,18 +19,13 @@ import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.ontologymessages.AddCardinalitiesToClassRequestV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.ClassInfoContentV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ClassesGetRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 import org.knora.webapi.messages.v2.responder.ontologymessages.PredicateInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.duration._
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
@@ -36,7 +33,7 @@ import scala.concurrent.duration._
 class AddCardinalitiesToClassSpec extends CoreSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private implicit val timeout                          = 10.seconds
+
   private val freeTestOntology = RdfDataObject(
     path = "test_data/ontologies/freetest-onto.ttl",
     name = "http://www.knora.org/ontology/0001/freetest"
@@ -91,15 +88,14 @@ class AddCardinalitiesToClassSpec extends CoreSpec {
               objects = Vector(SmartIriLiteralV2(value = OntologyConstants.Owl.Class.toSmartIri))
             )
           ),
-          directCardinalities =
-            Map(newPropertyIri -> Cardinality.KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne))
+          directCardinalities = Map(newPropertyIri -> KnoraCardinalityInfo(cardinality = MayHaveOne))
         ),
         lastModificationDate = ontologyLastModificationDate,
         apiRequestID = UUID.randomUUID,
         requestingUser = user
       )
       appActor ! addCardinalitiesRequest
-      val addCardinalitiesResponse = expectMsgType[ReadOntologyV2]
+      expectMsgType[ReadOntologyV2]
 
       // assert that the cardinalities for `:hasAuthor` and `:hasName` is still only once in the triplestore
       val countAfterwards = getCardinalityCountFromTriplestore(classIri, propertyIri)

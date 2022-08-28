@@ -1201,8 +1201,6 @@ The query performance of triplestores, such as Fuseki, is highly dependent on th
 patterns. To improve performance, Gravsearch automatically reorders the
 statement patterns in the WHERE clause according to their dependencies on each other, to minimise
 the number of possible matches for each pattern.
-This optimization can be controlled using `gravsearch-dependency-optimisation` 
-[feature toggle](../feature-toggles.md), which is turned on by default.
 
 Consider the following Gravsearch query:
 

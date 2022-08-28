@@ -6,7 +6,6 @@
 package org.knora.webapi.util
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
@@ -14,7 +13,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
  * Tests [[StringLiteralSequenceV2]].
  */
 class StringLiteralSequenceV2Spec extends CoreSpec() {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val literalSeq: StringLiteralSequenceV2 = StringLiteralSequenceV2(
     Vector(

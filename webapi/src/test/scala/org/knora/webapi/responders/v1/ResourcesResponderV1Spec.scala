@@ -8,11 +8,20 @@ package org.knora.webapi.responders.v1
 import akka.testkit.ImplicitSender
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
-import org.knora.webapi.config.AppConfig
+import spray.json.JsValue
+import zio.&
+import zio.Runtime
+import zio.ZLayer
+
+import java.util.UUID
+import scala.concurrent.duration._
+
 import dsp.errors.BadRequestException
 import dsp.errors.NotFoundException
 import dsp.errors.OntologyConstraintException
+import org.knora.webapi._
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.StringFormatter
@@ -34,20 +43,12 @@ import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.iiif.impl.IIIFServiceMockImpl
-import org.knora.webapi.util._
-import spray.json.JsValue
-import zio.&
-import zio.ZLayer
-import zio.Runtime
-
-import java.util.UUID
-import scala.concurrent.duration._
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import org.knora.webapi.config.AppConfigForTestContainers
 import org.knora.webapi.testcontainers.FusekiTestContainer
-import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.util._
 
 /**
  * Static data for testing [[ResourcesResponderV1]].
@@ -750,7 +751,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         (
           propIri,
           propValues.sortBy { valueObject: ResourceCreateValueResponseV1 =>
-            val stringValue = valueObject.value.textval.map { case (valType: LiteralValueType.Value, value: String) =>
+            val stringValue = valueObject.value.textval.map { case (_: LiteralValueType.Value, value: String) =>
               value // get string and ignore value type
             }.head  // each value is represented by a map consisting of only one item (e.g. string -> "book title")
             stringValue
@@ -1312,7 +1313,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         iri = newBookResourceIri.get,
         userADM = SharedTestDataADM.incunabulaProjectAdminUser
       )
-      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+      expectMsgPF(timeout) { case _: ResourceFullResponseV1 =>
         () // If we got a ResourceFullResponseV1, the operation succeeded.
       }
     }

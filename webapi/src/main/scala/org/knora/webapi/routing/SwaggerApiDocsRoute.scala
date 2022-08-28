@@ -11,6 +11,7 @@ import com.github.swagger.akka.model.Info
 import io.swagger.models.ExternalDocs
 import io.swagger.models.Scheme
 import io.swagger.models.auth.BasicAuthDefinition
+
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.admin.lists._
 
@@ -22,8 +23,10 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
   // List all routes here
   override val apiClasses: Set[Class[_]] = Set(
     classOf[GroupsRouteADM],
-    classOf[OldListsRouteADMFeature],
     classOf[DeleteListItemsRouteADM],
+    classOf[CreateListItemsRouteADM],
+    classOf[GetListItemsRouteADM],
+    classOf[UpdateListItemsRouteADM],
     classOf[PermissionsRouteADM],
     classOf[ProjectsRouteADM],
     classOf[StoreRouteADM],

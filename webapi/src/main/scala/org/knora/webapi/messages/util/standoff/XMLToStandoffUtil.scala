@@ -5,14 +5,10 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import com.typesafe.scalalogging.Logger
 import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
+import com.typesafe.scalalogging.Logger
 import org.apache.commons.text.StringEscapeUtils
-import org.knora.webapi._
-import dsp.errors._
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.ErrorHandlingMap
 
 import java.io.StringReader
 import java.io.StringWriter
@@ -20,6 +16,11 @@ import java.util.UUID
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
 import scala.xml._
+
+import dsp.errors._
+import org.knora.webapi._
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.ErrorHandlingMap
 
 /**
  * Represents an attribute of a standoff tag.

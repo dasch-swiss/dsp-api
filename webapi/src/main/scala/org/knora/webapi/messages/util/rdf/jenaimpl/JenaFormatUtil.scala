@@ -6,8 +6,6 @@
 package org.knora.webapi.messages.util.rdf.jenaimpl
 
 import org.apache.jena
-import org.knora.webapi.IRI
-import org.knora.webapi.messages.util.rdf._
 
 import java.io.InputStream
 import java.io.OutputStream
@@ -16,6 +14,9 @@ import java.io.StringWriter
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.util.rdf._
 
 /**
  * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].

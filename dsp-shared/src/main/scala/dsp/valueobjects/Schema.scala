@@ -6,14 +6,14 @@
 package dsp.valueobjects
 
 import com.google.gwt.safehtml.shared.UriUtils.encodeAllowEscapes
-import dsp.constants.SalsahGui
-import dsp.errors.ValidationException
-import dsp.valueobjects.{List => ListGuiElement}
 import zio.prelude.ZValidation.Failure
 import zio.prelude.ZValidation.Success
 import zio.prelude._
 
 import scala.collection.immutable.List
+
+import dsp.constants.SalsahGui
+import dsp.errors.ValidationException
 
 object Schema {
 
@@ -122,8 +122,8 @@ object Schema {
 
       // if there were errors in creating gui attributes or gui element, all of the errors are returned
       validatedGuiAttributesAndGuiElement match {
-        case Failure(log, errors) => Validation.failNonEmptyChunk(errors)
-        case Success(log, value)  => GuiObject.make(value._1.toSet, value._2)
+        case Failure(_, errors) => Validation.failNonEmptyChunk(errors)
+        case Success(_, value)  => GuiObject.make(value._1.toSet, value._2)
       }
 
     }

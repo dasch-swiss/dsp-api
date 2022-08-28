@@ -6,9 +6,6 @@
 package org.knora.webapi.util
 
 import com.typesafe.scalalogging.Logger
-import dsp.errors.FileWriteException
-import dsp.errors.NotFoundException
-import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
@@ -23,6 +20,10 @@ import scala.io.Source
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+
+import dsp.errors.FileWriteException
+import dsp.errors.NotFoundException
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 /**
  * Functions for reading and writing files.

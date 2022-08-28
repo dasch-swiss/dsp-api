@@ -5,10 +5,11 @@
 
 package dsp.role.api
 
-import dsp.role.domain.Role
-import dsp.valueobjects.Id.RoleId
 import zio._
 import zio.macros.accessible
+
+import dsp.role.domain.Role
+import dsp.valueobjects.Id.RoleId
 
 /**
  * The trait (interface) for the role repository.

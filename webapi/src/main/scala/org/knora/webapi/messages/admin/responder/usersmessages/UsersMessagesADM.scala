@@ -6,6 +6,10 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json._
+
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.DataConversionException
 import dsp.valueobjects.LanguageCode
@@ -23,9 +27,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
-import spray.json._
-
-import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

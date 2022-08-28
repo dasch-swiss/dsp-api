@@ -6,6 +6,10 @@
 package org.knora.webapi.app
 
 import akka.actor.Terminated
+import zio._
+
+import java.util.concurrent.TimeUnit
+
 import org.knora.webapi.auth.JWTService
 import org.knora.webapi.config.AppConfig
 import org.knora.webapi.core.Logging
@@ -17,9 +21,6 @@ import org.knora.webapi.store.iiif.impl.IIIFServiceSipiImpl
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
 import org.knora.webapi.store.triplestore.impl.TriplestoreServiceHttpConnectorImpl
 import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-import zio._
-
-import java.util.concurrent.TimeUnit
 
 /**
  * Starts Knora by bringing everything into scope by using the cake pattern.

@@ -6,20 +6,21 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import com.typesafe.config.ConfigFactory
+import spray.json._
+
+import java.util.UUID
+
+import dsp.errors.BadRequestException
 import dsp.valueobjects.Iri._
 import dsp.valueobjects.List._
 import dsp.valueobjects.ListErrorMessages
 import dsp.valueobjects.V2
 import org.knora.webapi.CoreSpec
-import dsp.errors.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedListsTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import spray.json._
-
-import java.util.UUID
 
 object ListsMessagesADMSpec {
   val config = ConfigFactory.parseString("""

@@ -7,6 +7,9 @@ package org.knora.webapi.responders.admin
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+
+import scala.concurrent.Future
+
 import dsp.errors.InconsistentRepositoryDataException
 import dsp.errors.NotFoundException
 import org.knora.webapi.messages.SmartIri
@@ -26,8 +29,6 @@ import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-
-import scala.concurrent.Future
 
 /**
  * Responds to requests for information about binary representations of resources, and returns responses in Knora API

@@ -7,15 +7,16 @@ package org.knora.webapi.messages.util.search.gravsearch.types
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.messages.util.search.WhereClause
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * An trait whose implementations can get type information from a parsed Gravsearch query in different ways.

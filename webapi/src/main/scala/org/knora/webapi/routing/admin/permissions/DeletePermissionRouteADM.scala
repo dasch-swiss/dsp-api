@@ -9,18 +9,15 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
+
+import java.util.UUID
+import javax.ws.rs.Path
+
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
-import java.util.UUID
-import javax.ws.rs.Path
-
-object DeletePermissionRouteADM {
-  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
-}
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
@@ -29,7 +26,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
-  import DeletePermissionRouteADM._
+  val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 
   /**
    * Returns the route.
@@ -41,7 +38,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
    * Delete a permission
    */
   private def deletePermission(): Route =
-    path(PermissionsBasePath / Segment) { iri =>
+    path(permissionsBasePath / Segment) { iri =>
       delete { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext)

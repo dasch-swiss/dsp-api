@@ -5,19 +5,13 @@
 
 package dsp.role.handler
 
-import dsp.errors.NotFoundException
-import dsp.errors.RequestRejectedException
-import dsp.role.api.RoleRepo
-import dsp.role.domain.Role
-import dsp.role.domain.RoleUser
+import zio.ZIO
+import zio.test._
+
 import dsp.role.repo.impl.RoleRepoMock
 import dsp.role.sharedtestdata.RoleTestData
-import dsp.valueobjects.Id.RoleId
 import dsp.valueobjects.Permission
 import dsp.valueobjects.Role._
-import zio.ZIO
-import zio._
-import zio.test._
 
 /**
  * This spec is used to test [[RoleHandler]]
@@ -185,8 +179,8 @@ object RoleHandlerSpec extends ZIOSpecDefault {
                     permission1
                   )
 
-        deletedRoleId <- handler.deleteRole(roleId)
-        roles         <- handler.getRoles()
+        _     <- handler.deleteRole(roleId)
+        roles <- handler.getRoles()
       } yield assertTrue(roles.size == 0)
     }
   }.provide(RoleRepoMock.layer, RoleHandler.layer)

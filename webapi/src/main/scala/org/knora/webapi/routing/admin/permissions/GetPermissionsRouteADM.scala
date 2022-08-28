@@ -9,18 +9,15 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.PathMatcher
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
+
+import java.util.UUID
+import javax.ws.rs.Path
+
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
-import java.util.UUID
-import javax.ws.rs.Path
-
-object GetPermissionsRouteADM {
-  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
-}
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
@@ -29,7 +26,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     with Authenticator
     with PermissionsADMJsonProtocol {
 
-  import GetPermissionsRouteADM._
+  val permissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 
   /**
    * Returns the route.
@@ -41,7 +38,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       getPermissionsForProject()
 
   private def getAdministrativePermissionForProjectGroup(): Route =
-    path(PermissionsBasePath / "ap" / Segment / Segment) { (projectIri, groupIri) =>
+    path(permissionsBasePath / "ap" / Segment / Segment) { (projectIri, groupIri) =>
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext)
@@ -58,7 +55,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     }
 
   private def getAdministrativePermissionsForProject(): Route =
-    path(PermissionsBasePath / "ap" / Segment) { projectIri =>
+    path(permissionsBasePath / "ap" / Segment) { projectIri =>
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext)
@@ -79,7 +76,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     }
 
   private def getDefaultObjectAccessPermissionsForProject(): Route =
-    path(PermissionsBasePath / "doap" / Segment) { projectIri =>
+    path(permissionsBasePath / "doap" / Segment) { projectIri =>
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext)
@@ -100,7 +97,7 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
     }
 
   private def getPermissionsForProject(): Route =
-    path(PermissionsBasePath / Segment) { projectIri =>
+    path(permissionsBasePath / Segment) { projectIri =>
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext)

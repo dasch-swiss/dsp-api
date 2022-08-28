@@ -6,26 +6,27 @@
 package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
 
 import scala.concurrent.duration._
+
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreRequest
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
-import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
 import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
 import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentResponse
+import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
+import org.knora.webapi.messages.store.triplestoremessages.InsertTriplestoreContentACK
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataResponse
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
+import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContentACK
+import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 
 class TriplestoreServiceManagerSpec extends CoreSpec() with ImplicitSender {

@@ -6,18 +6,15 @@
 package org.knora.webapi.util
 
 import zio.test.ZIOSpecDefault
-import zio.Scope
 import zio.test._
-import zio.test.Spec
-import zio.test.TestEnvironment
 
 /**
  * Tests [[Base64UrlCheckDigit]].
  */
 object Base64UrlCheckDigitZSpec extends ZIOSpecDefault {
-  private val base64UrlCheckDigit         = new Base64UrlCheckDigit
-  private val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
-  private val correctResourceIDCheckDigit = "n"
+  val base64UrlCheckDigit         = new Base64UrlCheckDigit
+  val correctResourceID           = "cmfk1DMHRBiR4-_6HXpEFA"
+  val correctResourceIDCheckDigit = "n"
 
   def spec = suite("Base64UrlCheckDigitZSpec")(
     test("reject a string without a check digit") {

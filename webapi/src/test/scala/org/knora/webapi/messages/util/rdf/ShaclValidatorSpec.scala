@@ -6,13 +6,13 @@
 package org.knora.webapi.util.rdf
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.CoreSpec
-import dsp.errors.AssertionException
-
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.util.rdf._
 
 import java.nio.file.Paths
+
+import dsp.errors.AssertionException
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.rdf._
 
 object ShaclValidatorSpec {
   val config: String =

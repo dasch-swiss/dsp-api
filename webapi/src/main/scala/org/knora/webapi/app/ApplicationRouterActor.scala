@@ -1,18 +1,20 @@
 package org.knora.webapi.app
 
 import akka.actor.Actor
-import org.knora.webapi.messages.ResponderRequest
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.responders.ResponderManager
-import org.knora.webapi.util.ActorUtil
+
 import scala.concurrent.ExecutionContext
+
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.ResponderRequest
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.responders.ResponderManager
+import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.iiif.IIIFServiceManager
 import org.knora.webapi.store.triplestore.TriplestoreServiceManager
-import org.knora.webapi.store.cache.CacheServiceManager
-import org.knora.webapi.config.AppConfig
+import org.knora.webapi.util.ActorUtil
 
 class ApplicationRouterActor(
   responderManager: ResponderManager,

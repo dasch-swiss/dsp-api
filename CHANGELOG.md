@@ -1,5 +1,52 @@
 # Changelog
 
+### [24.0.1](https://www.github.com/dasch-swiss/dsp-api/compare/v24.0.0...v24.0.1) (2022-08-26)
+
+
+### Bug Fixes
+
+* **cardinality:** Check cardinality with multiple inherited classes (DEV-1189) ([#2164](https://www.github.com/dasch-swiss/dsp-api/issues/2164)) ([f183d7d](https://www.github.com/dasch-swiss/dsp-api/commit/f183d7d5d7c8bc5387a671dc9c589b55f42a44fb))
+* Fuseki doesn't stop after client's timeout (DEV-1190) ([#2175](https://www.github.com/dasch-swiss/dsp-api/issues/2175)) ([90f86b5](https://www.github.com/dasch-swiss/dsp-api/commit/90f86b58f1af10025f98a45b1631cd18a13c0493))
+* **v2 test:** fix test data collection ([#2174](https://www.github.com/dasch-swiss/dsp-api/issues/2174)) ([468df8f](https://www.github.com/dasch-swiss/dsp-api/commit/468df8ff5502d7054f9641dd7a88cb9801a228d6))
+
+
+### Documentation
+
+* update file formats (DEV-1185) ([#2158](https://www.github.com/dasch-swiss/dsp-api/issues/2158)) ([4fab193](https://www.github.com/dasch-swiss/dsp-api/commit/4fab193cf5db6c24a07428f19b396596d39053fe))
+
+
+### Maintenance
+
+* add codacy coverage reporter ([#2177](https://www.github.com/dasch-swiss/dsp-api/issues/2177)) ([c30390f](https://www.github.com/dasch-swiss/dsp-api/commit/c30390f5baa269aa3541b5ea58f7668a58aa2d1c))
+* add code coverage ([#2135](https://www.github.com/dasch-swiss/dsp-api/issues/2135)) ([1a02f49](https://www.github.com/dasch-swiss/dsp-api/commit/1a02f49dba83e7a1eb8c5feed19b464e007a4b87))
+* add code coverage ([#2163](https://www.github.com/dasch-swiss/dsp-api/issues/2163)) ([b026442](https://www.github.com/dasch-swiss/dsp-api/commit/b026442de716ba3399147e071b941f2b331823a6))
+* add coverage upload to codecov ([#2179](https://www.github.com/dasch-swiss/dsp-api/issues/2179)) ([5d4e57e](https://www.github.com/dasch-swiss/dsp-api/commit/5d4e57ebed8a97aee396705766668b59024ae728))
+* **feature-toggles:** remove remnants of feature toggles (DEV-217) ([#2176](https://www.github.com/dasch-swiss/dsp-api/issues/2176)) ([ed1cbd0](https://www.github.com/dasch-swiss/dsp-api/commit/ed1cbd05cbc2753655a16b21d57bc64cfde74f03))
+* remove github action for deploying docs (DEV-824) ([#2155](https://www.github.com/dasch-swiss/dsp-api/issues/2155)) ([a55eef4](https://www.github.com/dasch-swiss/dsp-api/commit/a55eef417c167fdace1545c5e9f10c5de4e15c94))
+* update dependencies ([#2173](https://www.github.com/dasch-swiss/dsp-api/issues/2173)) ([79b88d2](https://www.github.com/dasch-swiss/dsp-api/commit/79b88d2696cc94ee52111f27722a92d896fac26e))
+
+## [24.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.3...v24.0.0) (2022-08-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* add isSequenceOf to knora-base ontology (DEV-745) (#2061)
+
+### Bug Fixes
+
+* **sipi:** SIPI returns 404 instead of images if cookie is invalid (DEV-1135) ([#2142](https://www.github.com/dasch-swiss/dsp-api/issues/2142)) ([eb797f0](https://www.github.com/dasch-swiss/dsp-api/commit/eb797f06809bc8e4da386ca2498de3e5676cbbbf))
+
+
+### Enhancements
+
+* add isSequenceOf to knora-base ontology (DEV-745) ([#2061](https://www.github.com/dasch-swiss/dsp-api/issues/2061)) ([74366d4](https://www.github.com/dasch-swiss/dsp-api/commit/74366d42c88fd05e129abba1ec77d438c7a5b189))
+
+
+### Maintenance
+
+* **dependencies:** bulk upgrade dependencies ([#2144](https://www.github.com/dasch-swiss/dsp-api/issues/2144)) ([4602150](https://www.github.com/dasch-swiss/dsp-api/commit/4602150013d8a0ad018a85cad7ee337cecf9023e))
+* update dependencies ([4cd9812](https://www.github.com/dasch-swiss/dsp-api/commit/4cd98123dd02adcc2fa6ffa7617d33b7440a5ea7))
+
 ### [23.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v23.0.2...v23.0.3) (2022-08-02)
 
 
