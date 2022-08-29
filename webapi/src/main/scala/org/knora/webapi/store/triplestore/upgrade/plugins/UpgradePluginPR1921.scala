@@ -5,10 +5,11 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
+import com.typesafe.scalalogging.Logger
+
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
-import com.typesafe.scalalogging.Logger
 
 /**
  * Transforms a repository for Knora PR 1921.
@@ -63,9 +64,9 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
         case predicate: IriNode =>
           if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescriptions") {
             statement.obj match {
-              case stringWithLanguage: StringWithLanguage =>
+              case _: StringWithLanguage =>
                 ()
-              case stringWithLanguage: StringLiteralV2 =>
+              case _: StringLiteralV2 =>
                 ()
               case _ =>
                 updateGroupDescription(
@@ -77,9 +78,9 @@ class UpgradePluginPR1921(log: Logger) extends UpgradePlugin {
 
           if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescription") {
             statement.obj match {
-              case stringWithLanguage: StringWithLanguage =>
+              case _: StringWithLanguage =>
                 updateGroupDescription(statement, None)
-              case stringWithLanguage: StringLiteralV2 =>
+              case _: StringLiteralV2 =>
                 updateGroupDescription(statement, None)
               case _ =>
                 updateGroupDescription(

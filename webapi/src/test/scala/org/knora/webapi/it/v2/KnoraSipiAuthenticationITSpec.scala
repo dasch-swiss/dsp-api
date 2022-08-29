@@ -6,33 +6,21 @@
 package org.knora.webapi.it.v2
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
-import dsp.errors.AssertionException
-import dsp.errors.BadRequestException
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.SmartIri
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.sipimessages._
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.models.filemodels._
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.testservices.FileToUpload
-import org.knora.webapi.util.MutableTestIri
 
-import java.net.URLEncoder
 import java.nio.file.Files
 import java.nio.file.Paths
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import org.knora.webapi.routing.Authenticator
+
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+import org.knora.webapi.messages.v2.routing.authenticationmessages._
+import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object KnoraSipiAuthenticationITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -48,15 +36,12 @@ class KnoraSipiAuthenticationITSpec
     extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config)
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val anythingUserEmail   = SharedTestDataADM.anythingAdminUser.email
-  private val incunabulaUserEmail = SharedTestDataADM.incunabulaMemberUser.email
-  private val password            = SharedTestDataADM.testPass
+  private val anythingUserEmail = SharedTestDataADM.anythingAdminUser.email
+  private val password          = SharedTestDataADM.testPass
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles           = Paths.get("..", s"test_data/test_route/images/$marblesOriginalFilename")
-  private val incunabulaImageDirPath  = Paths.get("..", "sipi/images/0803")
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -107,7 +92,6 @@ class KnoraSipiAuthenticationITSpec
     }
 
     "accept a token in Sipi that has been signed by Knora" in {
-      val invalidToken = "a_invalid_token"
 
       // The image to be uploaded.
       assert(Files.exists(pathToMarbles), s"File $pathToMarbles does not exist")

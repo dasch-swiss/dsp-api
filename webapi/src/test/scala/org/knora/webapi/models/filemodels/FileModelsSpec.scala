@@ -1,8 +1,14 @@
 package org.knora.webapi.models.filemodels
 
+import spray.json.DefaultJsonProtocol._
+import spray.json._
+
+import java.time.Instant
+import java.util.UUID
+
+import dsp.errors.AssertionException
 import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.CoreSpec
-import dsp.errors.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.v2.responder.resourcemessages.CreateValueInNewResourceV2
@@ -10,11 +16,6 @@ import org.knora.webapi.messages.v2.responder.valuemessages.DocumentFileValueCon
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.UpdateValueContentV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import spray.json.DefaultJsonProtocol._
-import spray.json._
-
-import java.time.Instant
-import java.util.UUID
 
 class FileModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

@@ -5,10 +5,11 @@
 
 package org.knora.webapi.util.search.gravsearch.prequery
 
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSortUtil
 import scalax.collection.Graph
 import scalax.collection.GraphEdge._
+
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.util.search.gravsearch.prequery.TopologicalSortUtil
 
 /**
  * Tests [[TopologicalSortUtil]].

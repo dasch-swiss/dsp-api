@@ -1,32 +1,22 @@
 package org.knora.webapi.store.triplestore.upgrade
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.http.scaladsl.util.FastFuture
-import akka.pattern._
-import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.IRI
-import dsp.errors.InconsistentRepositoryDataException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
-import org.knora.webapi.util.FileUtil
+import zio._
 
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 import scala.reflect.io.Directory
-import org.knora.webapi.config.AppConfig
 
-import zio._
+import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.IRI
+import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan.PluginForKnoraBaseVersion
+import org.knora.webapi.util.FileUtil
 
 /**
  * Updates a DSP repository to work with the current version of DSP-API.

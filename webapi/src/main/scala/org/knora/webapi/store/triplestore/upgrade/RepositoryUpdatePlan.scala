@@ -1,6 +1,7 @@
 package org.knora.webapi.store.triplestore.upgrade
 
 import com.typesafe.scalalogging.Logger
+
 import org.knora.webapi.store.triplestore.upgrade.plugins._
 
 /**

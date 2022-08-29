@@ -5,11 +5,12 @@
 
 package org.knora.webapi.models.standoffmodels
 
+import spray.json._
+
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.INCUNABULA_PROJECT_IRI
-import spray.json._
 
 class StandoffModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

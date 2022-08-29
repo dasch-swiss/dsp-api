@@ -7,6 +7,7 @@ package org.knora.webapi.e2e
 
 import akka.http.scaladsl.model._
 import com.typesafe.config.ConfigFactory
+
 import org.knora.webapi.E2ESpec
 
 object RejectingRouteE2ESpec {

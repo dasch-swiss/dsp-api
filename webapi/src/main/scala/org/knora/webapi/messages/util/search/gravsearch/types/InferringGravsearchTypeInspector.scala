@@ -5,12 +5,17 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.types
 
+import akka.actor.ActorRef
 import akka.event.LogSource
-import com.typesafe.scalalogging.Logger
 import akka.pattern._
-import org.knora.webapi._
+import com.typesafe.scalalogging.Logger
+
+import scala.annotation.tailrec
+import scala.concurrent.Future
+
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -24,10 +29,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.EntityInfoGetResp
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadClassInfoV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadPropertyInfoV2
 
-import scala.annotation.tailrec
-import scala.concurrent.Future
-import akka.actor.ActorRef
-
 /**
  * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
  */
@@ -36,8 +37,6 @@ class InferringGravsearchTypeInspector(
   appActor: ActorRef,
   responderData: ResponderData
 ) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
-
-  import InferringGravsearchTypeInspector._
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

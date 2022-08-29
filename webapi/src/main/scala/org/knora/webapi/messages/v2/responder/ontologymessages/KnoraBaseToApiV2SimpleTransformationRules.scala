@@ -5,6 +5,7 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
+import dsp.schema.domain.Cardinality._
 import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
@@ -13,7 +14,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.OntologyLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.SmartIriLiteralV2
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality._
 
 /**
  * Rules for converting `knora-base` (or an ontology based on it) into `knora-api` in the [[ApiV2Simple]] schema.
@@ -397,9 +398,9 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
   )
 
   private val ResourceCardinalites = Map(
-    OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany,
-    OntologyConstants.KnoraApiV2Simple.ArkUrl          -> Cardinality.MustHaveOne,
-    OntologyConstants.KnoraApiV2Simple.VersionArkUrl   -> Cardinality.MustHaveOne
+    OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> MayHaveMany,
+    OntologyConstants.KnoraApiV2Simple.ArkUrl          -> MustHaveOne,
+    OntologyConstants.KnoraApiV2Simple.VersionArkUrl   -> MustHaveOne
   )
 
   /**
@@ -543,7 +544,7 @@ object KnoraBaseToApiV2SimpleTransformationRules extends OntologyTransformationR
     OntologyConstants.KnoraBase.Resource -> ResourceCardinalites
   ).map { case (classIri, cardinalities) =>
     classIri.toSmartIri.toOntologySchema(ApiV2Simple) -> cardinalities.map { case (propertyIri, cardinality) =>
-      propertyIri.toSmartIri.toOntologySchema(ApiV2Simple) -> Cardinality.KnoraCardinalityInfo(cardinality)
+      propertyIri.toSmartIri.toOntologySchema(ApiV2Simple) -> KnoraCardinalityInfo(cardinality)
     }
   }
 

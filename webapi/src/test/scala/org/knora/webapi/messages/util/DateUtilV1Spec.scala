@@ -5,6 +5,12 @@
 
 package org.knora.webapi.util
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+
+import java.util.Calendar
+import java.util.GregorianCalendar
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.util.DateUtilV1
 import org.knora.webapi.messages.util.DateUtilV1.DateRange
@@ -12,11 +18,6 @@ import org.knora.webapi.messages.v1.responder.valuemessages.DateValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraPrecisionV1
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-
-import java.util.Calendar
-import java.util.GregorianCalendar
 
 /**
  * Tests [[DateUtilV1]].
@@ -96,7 +97,7 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
 
       val theJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
 
-      val date_string = DateUtilV1.julianDayNumber2DateString(
+      DateUtilV1.julianDayNumber2DateString(
         theJulianDayCountValueV1.dateval1,
         theJulianDayCountValueV1.calendar,
         theJulianDayCountValueV1.dateprecision1
@@ -207,14 +208,14 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
 
     "convert a valid date string with day precision to a Java GregorianCalendar" in {
 
-      val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-28", KnoraCalendarV1.GREGORIAN)
+      DateUtilV1.dateString2DateRange("2017-02-28", KnoraCalendarV1.GREGORIAN)
 
     }
 
     "attempt to convert an date string representing an non existing date with day precision to a Java GregorianCalendar" in {
 
       assertThrows[BadRequestException] {
-        val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-29", KnoraCalendarV1.GREGORIAN)
+        DateUtilV1.dateString2DateRange("2017-02-29", KnoraCalendarV1.GREGORIAN)
       }
 
     }
@@ -222,7 +223,7 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
     "attempt to convert an invalid date string with day precision to a Java GregorianCalendar" in {
 
       assertThrows[BadRequestException] {
-        val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02-00", KnoraCalendarV1.GREGORIAN)
+        DateUtilV1.dateString2DateRange("2017-02-00", KnoraCalendarV1.GREGORIAN)
       }
 
     }
@@ -230,21 +231,21 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
     "attempt to convert an invalid date string with day precision to a Java GregorianCalendar (2)" in {
 
       assertThrows[BadRequestException] {
-        val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-00-01", KnoraCalendarV1.GREGORIAN)
+        DateUtilV1.dateString2DateRange("2017-00-01", KnoraCalendarV1.GREGORIAN)
       }
 
     }
 
     "convert a valid date string with month precision to a Java GregorianCalendar" in {
 
-      val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-02", KnoraCalendarV1.GREGORIAN)
+      DateUtilV1.dateString2DateRange("2017-02", KnoraCalendarV1.GREGORIAN)
 
     }
 
     "attempt to convert an invalid date string with month precision to a Java GregorianCalendar" in {
 
       assertThrows[BadRequestException] {
-        val dateRange: DateRange = DateUtilV1.dateString2DateRange("2017-00", KnoraCalendarV1.GREGORIAN)
+        DateUtilV1.dateString2DateRange("2017-00", KnoraCalendarV1.GREGORIAN)
       }
 
     }

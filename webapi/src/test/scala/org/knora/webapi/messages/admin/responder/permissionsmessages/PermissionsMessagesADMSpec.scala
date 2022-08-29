@@ -5,10 +5,12 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import dsp.valueobjects.IriErrorMessages
-import org.knora.webapi.CoreSpec
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import dsp.errors.ForbiddenException
+import dsp.valueobjects.IriErrorMessages
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
 import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
@@ -16,8 +18,6 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.Permissions
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata._
-
-import java.util.UUID
 
 /**
  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
@@ -867,10 +867,9 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                 = IMAGES_PROJECT_IRI
-      val allowedResourceClassIri01  = s"$IMAGES_ONTOLOGY_IRI#bild"
-      val allowedResourceClassIri02  = s"$IMAGES_ONTOLOGY_IRI#bildformat"
-      val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
+      val projectIri                = IMAGES_PROJECT_IRI
+      val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
+      val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
 
       val result1 = SharedTestDataADM.imagesReviewerUser.permissions
         .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)

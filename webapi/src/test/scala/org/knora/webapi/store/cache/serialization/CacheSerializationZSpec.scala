@@ -5,12 +5,13 @@
 
 package org.knora.webapi.store.cache.serialization
 
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import zio.test.Assertion._
 import zio.test.TestAspect.ignore
 import zio.test._
+
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.cache.serialization.CacheSerialization
 
 /**
@@ -18,8 +19,8 @@ import org.knora.webapi.store.cache.serialization.CacheSerialization
  */
 object CacheSerializationZSpec extends ZIOSpecDefault {
 
-  private val user    = SharedTestDataADM.imagesUser01
-  private val project = SharedTestDataADM.imagesProject
+  val user    = SharedTestDataADM.imagesUser01
+  val project = SharedTestDataADM.imagesProject
 
   def spec = suite("CacheSerializationSpec")(
     test("successfully serialize and deserialize a user") {

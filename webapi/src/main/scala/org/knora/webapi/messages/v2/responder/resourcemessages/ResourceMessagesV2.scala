@@ -6,11 +6,17 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
+import com.typesafe.scalalogging.Logger
+
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV2
@@ -31,11 +37,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util._
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * An abstract trait for messages that can be sent to `ResourcesResponderV2`.

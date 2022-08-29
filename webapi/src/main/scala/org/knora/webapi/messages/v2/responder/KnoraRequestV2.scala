@@ -6,18 +6,19 @@
 package org.knora.webapi.messages.v2.responder
 
 import akka.actor.ActorRef
-import com.typesafe.scalalogging.Logger
 import akka.util.Timeout
+import com.typesafe.scalalogging.Logger
+
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
 import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.messages.util.rdf.Turtle
 import org.knora.webapi.settings.KnoraSettingsImpl
-
-import java.util.UUID
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * A trait for request messages that are constructed as an [[RdfModel]].

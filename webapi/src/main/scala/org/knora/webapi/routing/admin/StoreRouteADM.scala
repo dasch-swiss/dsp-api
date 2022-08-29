@@ -8,6 +8,11 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
+
+import javax.ws.rs.Path
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import org.knora.webapi.messages.admin.responder.storesmessages.ResetTriplestoreContentRequestADM
 import org.knora.webapi.messages.admin.responder.storesmessages.StoresADMJsonProtocol
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -15,10 +20,6 @@ import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilADM
-
-import javax.ws.rs.Path
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 /**
  * A route used to send requests which can directly affect the data stored inside the triplestore.

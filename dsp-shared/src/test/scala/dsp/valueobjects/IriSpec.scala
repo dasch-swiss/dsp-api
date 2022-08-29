@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import dsp.valueobjects.Iri._
 import zio.prelude.Validation
 import zio.test._
+
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
+import dsp.valueobjects.Iri._
 
 /**
  * This spec is used to test the [[Iri]] value objects creation.
@@ -27,7 +28,7 @@ object IriSpec extends ZIOSpecDefault {
   val validUserIri               = "http://rdfh.ch/users/jDEEitJESRi3pDaDjjQ1WQ"
   val userIriWithUUIDVersion3    = "http://rdfh.ch/users/cCmdcpn2MO211YYOplR1hQ"
 
-  def spec = (groupIriTest + listIriTest + projectIriTest)
+  def spec = (groupIriTest + listIriTest + projectIriTest + RoleIriTest + UserIriTest)
 
   private val groupIriTest = suite("IriSpec - GroupIri")(
     test("pass an empty value and return an error") {

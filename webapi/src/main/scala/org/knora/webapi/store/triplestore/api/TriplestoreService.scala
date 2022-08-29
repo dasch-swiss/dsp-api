@@ -1,5 +1,10 @@
 package org.knora.webapi.store.triplestore.api
 
+import zio._
+import zio.macros.accessible
+
+import java.nio.file.Path
+
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreResponse
 import org.knora.webapi.messages.store.triplestoremessages.DropAllRepositoryContentACK
@@ -18,10 +23,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateResponse
 import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import zio._
-import zio.macros.accessible
-
-import java.nio.file.Path
 
 @accessible
 trait TriplestoreService {
@@ -34,11 +35,16 @@ trait TriplestoreService {
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql the SPARQL SELECT query string.
+   * @param sparql          the SPARQL SELECT query string.
    * @param simulateTimeout if `true`, simulate a read timeout.
+   * @param isGravsearch    if `true`, takes a long timeout because gravsearch queries can take a long time.
    * @return a [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult]
+  def sparqlHttpSelect(
+    sparql: String,
+    simulateTimeout: Boolean = false,
+    isGravsearch: Boolean = false
+  ): UIO[SparqlSelectResult]
 
   /**
    * Given a SPARQL CONSTRUCT query string, runs the query, returning the result as a [[SparqlConstructResponse]].

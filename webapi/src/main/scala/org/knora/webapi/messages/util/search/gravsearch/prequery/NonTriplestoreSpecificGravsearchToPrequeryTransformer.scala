@@ -5,9 +5,11 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import org.knora.webapi._
+import scala.concurrent.ExecutionContext
+
 import dsp.errors.AssertionException
 import dsp.errors.GravsearchException
+import org.knora.webapi._
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
@@ -15,8 +17,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.messages.util.search.gravsearch.types.NonPropertyTypeInfo
 import org.knora.webapi.messages.util.search.gravsearch.types.PropertyTypeInfo
 import org.knora.webapi.settings.KnoraSettingsImpl
-
-import scala.concurrent.ExecutionContext
 
 /**
  * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched

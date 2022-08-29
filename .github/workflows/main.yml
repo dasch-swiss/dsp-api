@@ -39,6 +39,15 @@ jobs:
         uses: coursier/cache-action@v6
       - name: Build and Test
         run: make test
+      - name: Upload coverage data to codacy
+        uses: codacy/codacy-coverage-reporter-action@v1
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
+      - name: Upload coverage data to codecov 
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/scala-2.13/coverage-report/cobertura.xml
       - name: Cleanup before cache
         shell: bash
         run: |

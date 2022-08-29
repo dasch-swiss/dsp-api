@@ -5,8 +5,9 @@
 
 package dsp.valueobjects
 
-import dsp.errors.ValidationException
 import zio.prelude.Validation
+
+import dsp.errors.ValidationException
 
 /**
  * LanguageCode value object.

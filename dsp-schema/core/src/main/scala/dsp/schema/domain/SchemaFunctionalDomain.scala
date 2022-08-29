@@ -7,6 +7,8 @@ package dsp.schema.domain
 
 import zio.prelude.Validation
 
+import scala.annotation.unused
+
 object SchemaDomain extends App {
   // implicitly["".type =:= "".type]
 
@@ -80,11 +82,13 @@ object SchemaDomain extends App {
   sealed trait Ontology[Classes, Properties] { self =>
 
     def withClass[Tag <: Singleton with String](ontoClass: OntologyClass[Tag])(implicit
+      @unused
       ev: NotSubtypeOf[Classes, Tag]
     ): Ontology[Classes with Tag, Properties] =
       Ontology.WithClass[Classes, Properties, Tag](self, ontoClass)
 
     def withProperty[Tag <: Singleton with String](propertyInfo: OntologyProperty[Tag])(implicit
+      @unused
       ev: NotSubtypeOf[Properties, Tag]
     ): Ontology[Classes, Properties with Tag] =
       Ontology.WithProperty[Classes, Properties, Tag](self, propertyInfo)
@@ -210,7 +214,7 @@ object SchemaDomain extends App {
     implicit def isSubtypeOf2[A, B >: A]: NotSubtypeOf[A, B] = new NotSubtypeOf[A, B] {}
   }
 
-  //trying it out
+  // trying it out
   val ontoInfo = OntologyInfo("test", "http://example.org/test", "Test", "Test")
 
   val classOne    = OntologyClass("ClassOne", "Class One", "Class One")
@@ -230,8 +234,8 @@ object SchemaDomain extends App {
       .withClass(classOne)
       .withClass(classTwo)
       .withProperty(propertyOne)
-      //.withProperty(propertyOne)
-      //.withProperty(propertyTwo)
+      // .withProperty(propertyOne)
+      // .withProperty(propertyTwo)
       .withCardinality(cardOne)
       .withCardinality(cardOne)
 

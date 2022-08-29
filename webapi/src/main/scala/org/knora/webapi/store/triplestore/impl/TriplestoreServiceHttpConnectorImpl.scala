@@ -5,11 +5,6 @@
 
 package org.knora.webapi.store.triplestore.impl
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorSystem
-import akka.actor.Status
-import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.Consts
 import org.apache.http.HttpEntity
@@ -27,6 +22,7 @@ import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.client.utils.URIBuilder
+import org.apache.http.config.SocketConfig
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.FileEntity
 import org.apache.http.entity.StringEntity
@@ -35,21 +31,11 @@ import org.apache.http.impl.client.BasicAuthCache
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.knora.webapi._
-import dsp.errors._
-import org.knora.webapi.instrumentation.InstrumentationSupport
-import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.FakeTriplestore
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.settings.KnoraSettings
-import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.FileUtil
-import org.knora.webapi.store.triplestore.errors._
 import spray.json._
+import zio._
 
 import java.io.BufferedInputStream
 import java.net.URI
@@ -60,17 +46,17 @@ import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
-import scala.jdk.CollectionConverters._
 
-import org.knora.webapi.store.triplestore.api.TriplestoreService
+import dsp.errors._
+import org.knora.webapi._
 import org.knora.webapi.config.AppConfig
+import org.knora.webapi.messages.store.triplestoremessages.SparqlResultProtocol._
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.store.triplestore.api.TriplestoreService
 import org.knora.webapi.store.triplestore.defaults.DefaultRdfData
-
-import zio._
-import zio.json.ast.Json
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
-import org.apache.http.config.SocketConfig
+import org.knora.webapi.store.triplestore.errors._
+import org.knora.webapi.util.FileUtil
 
 /**
  * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
@@ -96,49 +82,24 @@ case class TriplestoreServiceHttpConnectorImpl(
     new UsernamePasswordCredentials(config.triplestore.fuseki.username, config.triplestore.fuseki.password)
   )
 
-  // Reading data should be quick, except when it is not ;-)
-  private val queryTimeoutMillis = config.triplestore.queryTimeoutAsDuration.toMillis.toInt
+  // timeouts sent to Fuseki
+  private val queryTimeoutString      = config.triplestore.queryTimeoutAsDuration.toSeconds.toInt.toString
+  private val gravsearchTimeoutString = config.triplestore.gravsearchTimeoutAsDuration.toSeconds.toInt.toString
+
+  // the client config used for queries to the triplestore. The timeout has to be larger than
+  // config.triplestore.queryTimeoutAsDuration and config.triplestore.gravsearchTimeoutAsDuration.
+  private val requestTimeoutMillis = 7200000 // 2 hours
 
   private val queryRequestConfig = RequestConfig
     .custom()
-    .setConnectTimeout(queryTimeoutMillis)
-    .setConnectionRequestTimeout(queryTimeoutMillis)
-    .setSocketTimeout(queryTimeoutMillis)
+    .setConnectTimeout(requestTimeoutMillis)
+    .setConnectionRequestTimeout(requestTimeoutMillis)
+    .setSocketTimeout(requestTimeoutMillis)
     .build
 
   private val queryHttpClient: CloseableHttpClient = HttpClients.custom
     .setDefaultCredentialsProvider(credsProvider)
     .setDefaultRequestConfig(queryRequestConfig)
-    .build
-
-  // Some updates could take a while.
-  private val updateTimeoutMillis = config.triplestore.updateTimeoutAsDuration.toMillis.toInt
-
-  private val updateTimeoutConfig = RequestConfig
-    .custom()
-    .setConnectTimeout(updateTimeoutMillis)
-    .setConnectionRequestTimeout(updateTimeoutMillis)
-    .setSocketTimeout(updateTimeoutMillis)
-    .build
-
-  private val updateHttpClient: CloseableHttpClient = HttpClients.custom
-    .setDefaultCredentialsProvider(credsProvider)
-    .setDefaultRequestConfig(updateTimeoutConfig)
-    .build
-
-  // For updates that could take a very long time.
-  private val longUpdateTimeoutMillis = updateTimeoutMillis * 10
-
-  private val longRequestConfig = RequestConfig
-    .custom()
-    .setConnectTimeout(longUpdateTimeoutMillis)
-    .setConnectionRequestTimeout(longUpdateTimeoutMillis)
-    .setSocketTimeout(longUpdateTimeoutMillis)
-    .build
-
-  private val longRequestClient: CloseableHttpClient = HttpClients.custom
-    .setDefaultCredentialsProvider(credsProvider)
-    .setDefaultRequestConfig(longRequestConfig)
     .build
 
   private val dbName                 = config.triplestore.fuseki.repositoryName
@@ -167,17 +128,21 @@ case class TriplestoreServiceHttpConnectorImpl(
   /**
    * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
    *
-   * @param sparql the SPARQL SELECT query string.
+   * @param sparql          the SPARQL SELECT query string.
    * @param simulateTimeout if `true`, simulate a read timeout.
+   * @param isGravsearch    `true` if it is a gravsearch query (relevant for timeout)
    * @return a [[SparqlSelectResult]].
    */
-  def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): UIO[SparqlSelectResult] = {
-
+  def sparqlHttpSelect(
+    sparql: String,
+    simulateTimeout: Boolean = false,
+    isGravsearch: Boolean = false
+  ): UIO[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): IO[TriplestoreException, SparqlSelectResult] =
       ZIO
         .attemptBlocking(resultStr.parseJson.convertTo[SparqlSelectResult])
         .foldZIO(
-          failure =>
+          _ =>
             if (resultStr.contains("##  Query cancelled due to timeout during execution")) {
               ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
                 ZIO.fail(
@@ -196,7 +161,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
     for {
       resultStr <-
-        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout)
+        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout, isGravsearch = isGravsearch)
 
       // Parse the response as a JSON object and generate a response message.
       responseMessage <- parseJsonResponse(sparql, resultStr).orDie
@@ -210,7 +175,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @return a [[SparqlConstructResponse]]
    */
   def sparqlHttpConstruct(sparqlConstructRequest: SparqlConstructRequest): UIO[SparqlConstructResponse] = {
-    // println(logDelimiter + sparql)
 
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil()
 
@@ -234,7 +198,7 @@ case class TriplestoreServiceHttpConnectorImpl(
 
         SparqlConstructResponse(statementMap.toMap)
       }.foldZIO(
-        failure =>
+        _ =>
           if (turtleStr.contains("##  Query cancelled due to timeout during execution")) {
             ZIO.logError("Triplestore timed out while sending a response, after sending statuscode 200.") *>
               ZIO.fail(
@@ -313,13 +277,14 @@ case class TriplestoreServiceHttpConnectorImpl(
       turtleStr <- getSparqlHttpResponse(
                      sparqlExtendedConstructRequest.sparql,
                      isUpdate = false,
+                     isGravsearch = sparqlExtendedConstructRequest.isGravsearch,
                      acceptMimeType = mimeTypeTextTurtle
                    )
 
       response <- SparqlExtendedConstructResponse
                     .parseTurtleResponse(turtleStr)
                     .foldZIO(
-                      failure =>
+                      _ =>
                         ZIO.die(
                           TriplestoreResponseException(
                             s"Couldn't parse Turtle from triplestore: ${sparqlExtendedConstructRequest}"
@@ -336,7 +301,6 @@ case class TriplestoreServiceHttpConnectorImpl(
    * @return a [[SparqlUpdateResponse]].
    */
   def sparqlHttpUpdate(sparqlUpdate: String): UIO[SparqlUpdateResponse] =
-    // println(logDelimiter + sparqlUpdate)
     for {
       // Send the request to the triplestore.
       _ <- getSparqlHttpResponse(sparqlUpdate, isUpdate = true)
@@ -467,7 +431,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       httpContext <- makeHttpContext.orDie
       _ <- ZIO.foreachDiscard(request)(elem =>
              doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = elem._1,
                context = httpContext,
                processResponse = elem._2
@@ -555,7 +519,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       req <- httpGet
       ctx <- makeHttpContext
       res <- doHttpRequest(
-               client = updateHttpClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = returnResponseAsString
@@ -593,7 +557,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       request     <- httpPost.orDie
       httpContext <- makeHttpContext.orDie
       _ <- doHttpRequest(
-             client = updateHttpClient,
+             client = queryHttpClient,
              request = request,
              context = httpContext,
              processResponse = returnUploadResponse
@@ -678,9 +642,11 @@ case class TriplestoreServiceHttpConnectorImpl(
 
   /**
    * Submits a SPARQL request to the triplestore and returns the response as a string.
+   *   According to the request type a different timeout are used.
    *
    * @param sparql         the SPARQL request to be submitted.
    * @param isUpdate       `true` if this is an update request.
+   * @param isGravsearch   `true` if this is a Gravsearch query (needs a greater timeout).
    * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
    * @param simulateTimeout if `true`, simulate a read timeout.
    * @return the triplestore's response.
@@ -688,17 +654,12 @@ case class TriplestoreServiceHttpConnectorImpl(
   private def getSparqlHttpResponse(
     sparql: String,
     isUpdate: Boolean,
+    isGravsearch: Boolean = false,
     acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
     simulateTimeout: Boolean = false
   ): UIO[String] = {
 
-    val httpClient = ZIO.attempt {
-      if (isUpdate) {
-        updateHttpClient
-      } else {
-        queryHttpClient
-      }
-    }
+    val httpClient = ZIO.attempt(queryHttpClient)
 
     val httpPost = ZIO.attempt {
       if (isUpdate) {
@@ -708,10 +669,13 @@ case class TriplestoreServiceHttpConnectorImpl(
         updateHttpPost.setEntity(requestEntity)
         updateHttpPost
       } else {
-        // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
-        // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
+        // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2, "query via POST with URL-encoded parameters").
         val formParams = new util.ArrayList[NameValuePair]()
         formParams.add(new BasicNameValuePair("query", sparql))
+        // in case of a gravsearch query, a specific (longer) timeout is set
+        formParams.add(
+          new BasicNameValuePair("timeout", (if (isGravsearch) gravsearchTimeoutString else queryTimeoutString))
+        )
         val requestEntity: UrlEncodedFormEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
         val queryHttpPost: HttpPost             = new HttpPost(queryPath)
         queryHttpPost.setEntity(requestEntity)
@@ -755,7 +719,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       req <- httpGet.orDie
       res <- doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = writeResponseFileAsPlainContent(outputFile)
@@ -781,7 +745,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       req <- httpPost.orDie
       res <- doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = returnUploadResponse
@@ -810,7 +774,7 @@ case class TriplestoreServiceHttpConnectorImpl(
       ctx <- makeHttpContext.orDie
       req <- httpPut.orDie
       res <- doHttpRequest(
-               client = longRequestClient,
+               client = queryHttpClient,
                request = req,
                context = ctx,
                processResponse = returnInsertGraphDataResponse(graphName)
@@ -853,8 +817,6 @@ case class TriplestoreServiceHttpConnectorImpl(
     processResponse: CloseableHttpResponse => UIO[T],
     simulateTimeout: Boolean = false
   ): UIO[T] = {
-
-    // TODO: Can we make Fuseki abandon the query if it takes too long?
 
     def checkSimulateTimeout(): UIO[Unit] =
       if (simulateTimeout) {
@@ -907,11 +869,6 @@ case class TriplestoreServiceHttpConnectorImpl(
           case _        => ZIO.die(TriplestoreResponseException(statusResponseMsg))
         }
       }
-
-    def logTimeTook(start: Long, statusCode: Int) =
-      ZIO
-        .succeed(java.lang.System.currentTimeMillis() - start)
-        .flatMap(took => ZIO.logInfo(s"[$statusCode] Triplestore query took: ${took}ms"))
 
     (for {
       _ <- checkSimulateTimeout()
@@ -996,8 +953,7 @@ case class TriplestoreServiceHttpConnectorImpl(
         }.flatMap(_ => ZIO.succeed(FileWrittenResponse())).orDie
 
       case None =>
-        val message = "Triplestore returned no content for repository dump"
-        val error   = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+        val error = TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
         ZIO.logError(error.toString()) *>
           ZIO.die(error)
     }

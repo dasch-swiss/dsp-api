@@ -9,9 +9,13 @@ import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.IRI
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+
 import dsp.errors.BadRequestException
 import dsp.errors.InconsistentRepositoryDataException
+import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
@@ -25,10 +29,6 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstru
 import org.knora.webapi.messages.util.GroupedProps.ValueLiterals
 import org.knora.webapi.messages.util.GroupedProps.ValueProps
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.responders.ResponderManager
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
 
 /**
  * A utility that responder actors use to determine a user's permissions on an RDF entity in the triplestore.
@@ -169,7 +169,7 @@ object PermissionUtilADM extends LazyLogging {
    * @return a list of permission-relevant predicates and objects.
    */
   def filterPermissionRelevantAssertions(assertions: Seq[(IRI, IRI)]): Vector[(IRI, IRI)] =
-    assertions.filter { case (p, o) =>
+    assertions.filter { case (p, _) =>
       isPermissionRelevant(p)
     }.toVector
 
@@ -618,7 +618,7 @@ object PermissionUtilADM extends LazyLogging {
    */
   def removeDuplicatePermissions(permissions: Seq[PermissionADM]): Set[PermissionADM] = {
 
-    val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (k, v) => v.head }.toSet
+    val result = permissions.groupBy(perm => perm.name + perm.additionalInformation).map { case (_, v) => v.head }.toSet
     // log.debug(s"removeDuplicatePermissions - result: $result")
     result
   }
@@ -638,7 +638,7 @@ object PermissionUtilADM extends LazyLogging {
           /* Handling object access permissions which always have 'additionalInformation' and 'permissionCode' set */
           permissions
             .groupBy(_.additionalInformation)
-            .map { case (groupIri, perms) =>
+            .map { case (_, perms) =>
               // sort in descending order and then take the first one (the highest permission)
               perms.toArray.sortWith(_.permissionCode.get > _.permissionCode.get).head
             }

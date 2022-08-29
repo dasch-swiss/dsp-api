@@ -5,34 +5,34 @@
 
 package org.knora.webapi.store.triplestore
 
-import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
-import org.knora.webapi.settings._
-import org.knora.webapi._
-import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
-
 import zio._
-import org.knora.webapi.store.triplestore.api.TriplestoreService
-import dsp.errors.UnexpectedMessageException
-import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
-import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
-import org.knora.webapi.messages.store.triplestoremessages.UploadRepositoryRequest
+
 import java.nio.file.Path
-import org.knora.webapi.messages.store.triplestoremessages.DownloadRepositoryRequest
+
+import dsp.errors.UnexpectedMessageException
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.CheckTriplestoreRequest
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
+import org.knora.webapi.messages.store.triplestoremessages.DownloadRepositoryRequest
 import org.knora.webapi.messages.store.triplestoremessages.DropAllTRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
+import org.knora.webapi.messages.store.triplestoremessages.InsertGraphDataContentRequest
+import org.knora.webapi.messages.store.triplestoremessages.InsertRepositoryContent
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphDataRequest
-import org.knora.webapi.messages.util.rdf.QuadFormat
 import org.knora.webapi.messages.store.triplestoremessages.NamedGraphFileRequest
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.store.triplestoremessages.ResetRepositoryContent
+import org.knora.webapi.messages.store.triplestoremessages.SimulateTimeoutRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructFileRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
+import org.knora.webapi.messages.store.triplestoremessages.SparqlUpdateRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.messages.store.triplestoremessages.UpdateRepositoryRequest
+import org.knora.webapi.messages.store.triplestoremessages.UploadRepositoryRequest
+import org.knora.webapi.messages.util.rdf.QuadFormat
+import org.knora.webapi.store.triplestore.api.TriplestoreService
+import org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater
 
 /**
  * This service receives akka messages and translates them to calls to ZIO besed service implementations.
@@ -46,10 +46,10 @@ final case class TriplestoreServiceManager(
   updater: RepositoryUpdater
 ) {
   def receive(message: TriplestoreRequest) = message match {
-    case UpdateRepositoryRequest()           => updater.maybeUpdateRepository
-    case SparqlSelectRequest(sparql: String) => ts.sparqlHttpSelect(sparql)
-    case sparqlConstructRequest: SparqlConstructRequest =>
-      ts.sparqlHttpConstruct(sparqlConstructRequest)
+    case UpdateRepositoryRequest() => updater.maybeUpdateRepository
+    case SparqlSelectRequest(sparql: String, isGravsearch: Boolean) =>
+      ts.sparqlHttpSelect(sparql = sparql, isGravsearch = isGravsearch)
+    case sparqlConstructRequest: SparqlConstructRequest => ts.sparqlHttpConstruct(sparqlConstructRequest)
     case sparqlExtendedConstructRequest: SparqlExtendedConstructRequest =>
       ts.sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest)
     case SparqlConstructFileRequest(

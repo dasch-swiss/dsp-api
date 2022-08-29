@@ -9,7 +9,12 @@ import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
-import dsp.errors.BadRequestException
+
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+
 import dsp.errors.ForbiddenException
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.OntologyConstants
@@ -21,8 +26,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.DeleteTemporaryFileRequest
 import org.knora.webapi.messages.store.sipimessages.MoveTemporaryFileToPermanentStorageRequest
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskRequest
-import org.knora.webapi.messages.store.triplestoremessages.SparqlAskResponse
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructRequest
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse
 import org.knora.webapi.messages.store.triplestoremessages.SubjectV2
@@ -35,11 +38,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ReadValueV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValueContentV2
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
 
 /**
  * Utility functions for working with Knora resources and their values.
@@ -234,7 +232,7 @@ object ResourceUtilV2 {
 
             // Did Sipi successfully delete the temporary file?
             sipiResponseFuture.transformWith {
-              case Success(value) =>
+              case Success(_) =>
                 // Yes. Return the future we were given.
                 updateFuture
 

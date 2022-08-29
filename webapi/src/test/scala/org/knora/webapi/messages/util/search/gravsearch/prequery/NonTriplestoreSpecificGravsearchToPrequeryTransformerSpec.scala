@@ -1,8 +1,14 @@
 package org.knora.webapi.util.search.gravsearch.prequery
 
-import org.knora.webapi.CoreSpec
-import dsp.errors.AssertionException
+import akka.actor.ActorRef
 
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+
+import dsp.errors.AssertionException
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -16,12 +22,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
-
-import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
-import akka.actor.ActorRef
 
 private object QueryHandler {
 

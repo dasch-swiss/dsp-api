@@ -5,12 +5,13 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Role._
-import dsp.valueobjects.LanguageCode
 import zio.prelude.Validation
 import zio.test.ZIOSpecDefault
 import zio.test._
+
+import dsp.errors.BadRequestException
+import dsp.valueobjects.LanguageCode
+import dsp.valueobjects.Role._
 
 /**
  * This spec is used to test the [[Role]] value objects creation.

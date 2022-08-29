@@ -6,11 +6,12 @@
 package org.knora.webapi.messages.v1.responder.listmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import spray.json._
+
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.ResponderRequest.KnoraRequestV1
 import org.knora.webapi.messages.v1.responder.KnoraResponseV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests

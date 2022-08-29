@@ -1,8 +1,9 @@
 package org.knora.webapi.store.triplestore.errors
 
-import dsp.errors.InternalServerException
 import com.typesafe.scalalogging.Logger
+
 import dsp.errors.ExceptionUtil
+import dsp.errors.InternalServerException
 
 /**
  * An abstract class for exceptions indicating that something went wrong with the triplestore.

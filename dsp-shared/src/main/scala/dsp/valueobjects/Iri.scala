@@ -5,11 +5,12 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
 import org.apache.commons.validator.routines.UrlValidator
 import zio.prelude.Validation
 import dsp.errors.ValidationException
 import scala.util.Try
+
+import dsp.errors.BadRequestException
 
 sealed trait Iri {
   val value: String

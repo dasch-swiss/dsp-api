@@ -8,6 +8,9 @@ package org.knora.webapi.routing.v1
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import org.apache.commons.validator.routines.UrlValidator
+
+import java.util.UUID
+
 import dsp.errors.BadRequestException
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.Authenticator
@@ -15,15 +18,13 @@ import org.knora.webapi.routing.KnoraRoute
 import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.routing.RouteUtilV1
 
-import java.util.UUID
-
 /**
  * Provides a spray-routing function for API routes that deal with lists.
  */
 class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-  private val schemes      = Array("http", "https")
-  private val urlValidator = new UrlValidator(schemes)
+  private val schemes = Array("http", "https")
+  new UrlValidator(schemes)
 
   /**
    * Returns the route.

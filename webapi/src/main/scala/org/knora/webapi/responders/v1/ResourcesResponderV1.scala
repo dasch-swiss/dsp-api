@@ -7,9 +7,18 @@ package org.knora.webapi.responders.v1
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
-import dsp.errors._
 
+import java.time.Instant
+import java.util.UUID
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+import dsp.constants.SalsahGui
+import dsp.errors._
+import dsp.schema.domain.Cardinality._
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -34,10 +43,9 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataGetByIriRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologyMetadataV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.OwlCardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyMetadataV2
 import org.knora.webapi.messages.v2.responder.valuemessages.FileValueContentV2
 import org.knora.webapi.responders.IriLocker
@@ -46,14 +54,6 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
-
-import java.time.Instant
-import java.util.UUID
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import dsp.constants.SalsahGui
 
 /**
  * Responds to requests for information about resources, and returns responses in Knora API v1 format.
@@ -497,7 +497,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                       queryOntology = true
                                     )
     } yield userPermissions match {
-      case Some(permissions) =>
+      case Some(_) =>
         ResourceInfoResponseV1(
           resource_info = Some(resInfo),
           rights = userPermissions
@@ -559,7 +559,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Get the types of all the resources that this resource links to.
       linkedResourceTypes = groupedPropsByType.groupedLinkProperties.groupedProperties.foldLeft(Set.empty[IRI]) {
-                              case (acc, (prop, propMap)) =>
+                              case (acc, (_, propMap)) =>
                                 val targetResourceTypes = propMap.valueObjects.foldLeft(Set.empty[IRI]) {
                                   case (resTypeAcc, (obj: IRI, objMap: ValueProps)) =>
                                     val resType = objMap.literalData.get(OntologyConstants.Rdf.Type) match {
@@ -874,7 +874,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             predicateIri = OntologyConstants.Rdfs.Label,
                                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
                                           ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
                                           attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(
                                             SalsahGui.GuiAttribute
                                           ) + valueUtilV1.makeAttributeRestype(
@@ -905,7 +905,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                             predicateIri = OntologyConstants.Rdfs.Label,
                                             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
                                           ),
-                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
+                                          occurrence = Some(propsAndCardinalities(propertyIri).cardinality.value),
                                           attributes = propertyEntityInfo
                                             .getPredicateStringObjectsWithoutLang(
                                               SalsahGui.GuiAttribute
@@ -1139,8 +1139,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               permissionCode = Seq(containingResourcePermissionCode, linkValuePermissionCode).min
 
             } yield permissionCode match {
-              case Some(permission) => (Some(containingResourceIri), Some(resInfoV1))
-              case None             => (None, None)
+              case Some(_) => (Some(containingResourceIri), Some(resInfoV1))
+              case None    => (None, None)
             }
           case _ => Future((None, None))
         }
@@ -2052,7 +2052,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             )
 
             if (
-              (cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1
+              (cardinalityInfo.cardinality == MayHaveOne || cardinalityInfo.cardinality == MustHaveOne) && valuesForProperty.size > 1
             ) {
               throw OntologyConstraintException(
                 s"Resource class $resourceClassIri does not allow more than one value for property $propertyIri"
@@ -2062,7 +2062,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       // Check that no required values are missing.
       requiredProps: Set[IRI] = resourceClassInfo.knoraResourceCardinalities.filter { case (_, cardinalityInfo) =>
-                                  cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
+                                  cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MustHaveSome
                                 }.keySet -- resourceClassInfo.linkValueProperties -- resourceClassInfo.fileValueProperties // exclude link value and file value properties from checking
 
       submittedPropertyIris = values.keySet
@@ -2964,7 +2964,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           )
 
         maybeResourceProjectStatement: Option[(IRI, IRI)] =
-          permissionRelevantAssertions.find { case (subject, predicate) =>
+          permissionRelevantAssertions.find { case (subject, _) =>
             subject == OntologyConstants.KnoraBase.AttachedToProject
           }
 
@@ -3230,7 +3230,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)
           )
         ),
-        occurrence = propertyCardinality.map(_.cardinality.toString),
+        occurrence = propertyCardinality.map(_.cardinality.value),
         attributes = propertyEntityInfo match {
           case Some(entityInfo) =>
             if (entityInfo.isLinkProp) {
@@ -3253,19 +3253,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         value_restype = valueObjects.map {
           _.valueV1 match {
             case link: LinkV1 => link.valueResourceClassLabel
-            case other        => None
+            case _            => None
           }
         },
         value_iconsrcs = valueObjects.map {
           _.valueV1 match {
             case link: LinkV1 => link.valueResourceClassIcon
-            case other        => None
+            case _            => None
           }
         },
         value_firstprops = valueObjects.map {
           _.valueV1 match {
             case link: LinkV1 => link.valueLabel
-            case other        => None
+            case _            => None
           }
         },
         values = valueObjects.map(_.valueV1),
@@ -3343,7 +3343,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           // is MustHaveOne or MayHaveOne, don't return any information about the property.
           propsAndCardinalities.get(propertyIri) match {
             case Some(cardinalityInfo)
-                if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MayHaveOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty =>
+                if (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MayHaveOne) && valueObjectsV1Sorted.nonEmpty && valueObjectListFiltered.isEmpty =>
               None
             case _ => Some(propertyV1)
           }
@@ -3512,7 +3512,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               // is MustHaveOne or MayHaveOne, don't return any information about the property.
             } yield propsAndCardinalities.get(propertyIri) match {
               case Some(cardinalityInfo)
-                  if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty =>
+                  if (cardinalityInfo.cardinality == MustHaveOne || cardinalityInfo.cardinality == MayHaveOne) && valueObjectsV1.nonEmpty && valueObjectListFiltered.isEmpty =>
                 None
               case _ => Some(propertyV1)
             }
@@ -3550,7 +3550,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         case Some(OntologyConstants.KnoraBase.IntValue)     => Some("ival")
         case Some(OntologyConstants.KnoraBase.DecimalValue) => Some("dval")
         case Some(OntologyConstants.KnoraBase.DateValue)    => Some("dateval")
-        case Some(other: IRI)                               => Some("textval")
+        case Some(_: IRI)                                   => Some("textval")
         case None                                           => None
       },
       guielement = propertyV1.guielement,

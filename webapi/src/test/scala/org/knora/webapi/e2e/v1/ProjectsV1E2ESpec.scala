@@ -10,6 +10,9 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+
+import scala.concurrent.duration._
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
@@ -17,8 +20,6 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectV1JsonProto
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.util.AkkaHttpUtils
-
-import scala.concurrent.duration._
 
 object ProjectsV1E2ESpec {
   val config = ConfigFactory.parseString("""
@@ -39,7 +40,6 @@ class ProjectsV1E2ESpec
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
   private val rootEmail           = SharedTestDataV1.rootUser.userData.email.get
-  private val rootEmailEnc        = java.net.URLEncoder.encode(rootEmail, "utf-8")
   private val testPass            = java.net.URLEncoder.encode("test", "utf-8")
   private val projectIri          = SharedTestDataV1.imagesProjectInfo.id
   private val projectIriEnc       = java.net.URLEncoder.encode(projectIri, "utf-8")

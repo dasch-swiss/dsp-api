@@ -1,11 +1,12 @@
 package org.knora.webapi.messages.v1.responder.permissionmessages
 
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+
 import org.knora.webapi.messages.admin.responder.permissionsmessages.ResourceCreateOperation
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
  * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
@@ -61,10 +62,9 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
     }
 
     "return true if the user is allowed to create a resource (ProjectResourceCreateRestrictedPermission)" in {
-      val projectIri                 = IMAGES_PROJECT_IRI
-      val allowedResourceClassIri01  = s"$IMAGES_ONTOLOGY_IRI#bild"
-      val allowedResourceClassIri02  = s"$IMAGES_ONTOLOGY_IRI#bildformat"
-      val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
+      val projectIri                = IMAGES_PROJECT_IRI
+      val allowedResourceClassIri01 = s"$IMAGES_ONTOLOGY_IRI#bild"
+      val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
 
       val result1 = SharedTestDataV1.imagesReviewerUser.permissionData
         .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)

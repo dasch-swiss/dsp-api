@@ -7,12 +7,17 @@ package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
+
+import scala.concurrent.Future
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
 import dsp.errors.AssertionException
 import dsp.errors.BadRequestException
 import dsp.errors.GravsearchException
 import dsp.errors.InconsistentRepositoryDataException
-
+import org.knora.webapi._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.SmartIri
@@ -43,11 +48,6 @@ import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.store.triplestore.errors.TriplestoreTimeoutException
 import org.knora.webapi.util.ApacheLuceneSupport._
-
-import scala.concurrent.Future
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
@@ -446,7 +446,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       countResponse: SparqlSelectResult <-
         appActor
-          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql))
+          .ask(SparqlSelectRequest(triplestoreSpecificCountQuery.toSparql, isGravsearch = true))
           .mapTo[SparqlSelectResult]
 
       // query response should contain one result with one row with the name "count"
@@ -543,13 +543,14 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       triplestoreSpecificPrequerySparql = triplestoreSpecificPrequery.toSparql
       _                                 = log.debug(triplestoreSpecificPrequerySparql)
 
-      start                        = System.currentTimeMillis()
-      tryPrequeryResponseNotMerged = Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql)))
+      start = System.currentTimeMillis()
+      tryPrequeryResponseNotMerged =
+        Try(appActor.ask(SparqlSelectRequest(triplestoreSpecificPrequerySparql, isGravsearch = true)))
       prequeryResponseNotMerged <-
         (tryPrequeryResponseNotMerged match {
           case Failure(exception) => {
             exception match {
-              case timeoutException: TriplestoreTimeoutException =>
+              case _: TriplestoreTimeoutException =>
                 log.error(s"Gravsearch timed out for query: $inputQuery")
             }
             throw exception
@@ -655,7 +656,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
               appActor
                 .ask(
                   SparqlExtendedConstructRequest(
-                    sparql = triplestoreSpecificMainQuerySparql
+                    sparql = triplestoreSpecificMainQuerySparql,
+                    isGravsearch = true
                   )
                 )
                 .mapTo[SparqlExtendedConstructResponse]

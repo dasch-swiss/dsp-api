@@ -5,8 +5,18 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import spray.json._
+
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.time.Instant
+import scala.concurrent.ExecutionContextExecutor
+
 import dsp.constants.SalsahGui
 import dsp.errors.AssertionException
+import dsp.schema.domain.Cardinality._
 import dsp.valueobjects.LangString
 import dsp.valueobjects.LanguageCode
 import org.knora.webapi._
@@ -20,7 +30,6 @@ import org.knora.webapi.messages.SmartIri
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.TestResponseParsingModeV2
 import org.knora.webapi.models._
@@ -29,14 +38,6 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
-import spray.json._
-
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.time.Instant
-import scala.concurrent.ExecutionContextExecutor
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
@@ -1245,8 +1246,8 @@ class OntologyV2R2RSpec extends R2RSpec {
 
       CollectClientTestData("not-change-property-guielement-request", params)
 
-      // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
-      val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      // FIXME: Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+      // val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put(
         "/v2/ontologies/properties/guielement",
@@ -3476,30 +3477,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
     )
 
-    val params =
-      s"""
-         |{
-         |	"@id": "http://0.0.0.0:3333/ontology/0001/anything/v2",
-         |	"@type": "http://www.w3.org/2002/07/owl#Ontology",
-         |	"http://api.knora.org/ontology/knora-api/v2#lastModificationDate": {
-         |		"@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
-         |		"@value": "$anythingLastModDate"
-         |	},
-         |	"@graph": [{
-         |		"@id": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-         |		"@type": "http://www.w3.org/2002/07/owl#Class",
-         |		"http://www.w3.org/2000/01/rdf-schema#subClassOf": {
-         |			"@type": "http://www.w3.org/2002/07/owl#Restriction",
-         |			"http://www.w3.org/2002/07/owl#onProperty": {
-         |				"@id": "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"
-         |			},
-         |			"http://www.w3.org/2002/07/owl#minCardinality": 0,
-         |			"http://api.knora.org/ontology/salsah-gui/v2#guiOrder": 21
-         |		}
-         |	}]
-         |}
-         |""".stripMargin
-
     Post(
       "/v2/ontologies/candeletecardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value)
@@ -3642,7 +3619,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
-      val responseString  = responseAs[String]
       val responseJsonDoc = responseToJsonLDDocument(response)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
@@ -3665,7 +3641,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
-      val responseString  = responseAs[String]
       val responseJsonDoc = responseToJsonLDDocument(response)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
@@ -3750,7 +3725,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         .directCardinalities
       assert(videoSequenceCardinalities.keySet.contains(isSequenceOfVideoPropertyIri))
       val cardinality = videoSequenceCardinalities.get(isSequenceOfVideoPropertyIri).get.cardinality
-      assert(cardinality == Cardinality.MustHaveOne)
+      assert(cardinality == MustHaveOne)
     }
 
   }
@@ -3777,7 +3752,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
-      val responseString  = responseAs[String]
       val responseJsonDoc = responseToJsonLDDocument(response)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
@@ -3800,7 +3774,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
       assert(status == StatusCodes.OK, response.toString)
 
-      val responseString  = responseAs[String]
       val responseJsonDoc = responseToJsonLDDocument(response)
       val responseAsInput: InputOntologyV2 =
         InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
@@ -3885,7 +3858,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         .directCardinalities
       assert(audioSequenceCardinalities.keySet.contains(isSequenceOfAudioPropertyIri))
       val cardinality = audioSequenceCardinalities.get(isSequenceOfAudioPropertyIri).get.cardinality
-      assert(cardinality == Cardinality.MustHaveOne)
+      assert(cardinality == MustHaveOne)
     }
   }
   "not create a property with invalid gui attribute" in {

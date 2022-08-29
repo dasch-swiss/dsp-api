@@ -11,14 +11,15 @@ import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
+
+import java.net.URLEncoder
+
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.util.MutableTestIri
 import org.knora.webapi.util.ResourceResponseExtractorMethods
 import org.knora.webapi.util.ValuesResponseExtractorMethods
-
-import java.net.URLEncoder
 
 object DrawingsGodsV1E2ESpec {
   val config = ConfigFactory.parseString("""
