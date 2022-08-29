@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparation steps
-        uses: ./.github/workflows/preparation.yml
+        uses: dasch-swiss/dsp-api/.github/workflows/preparation.yml@main
       - name: Run make test
         run: make test
       - name: Upload coverage data to codacy

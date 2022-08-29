@@ -1,11 +1,9 @@
-name: Preparation
-
 on:
   workflow_call:
 
 jobs:
   preparation:
-    name: Preparation
+    name: Preparation Steps
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
