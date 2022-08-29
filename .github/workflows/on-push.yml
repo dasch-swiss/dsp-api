@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparation steps
-        uses: ./.github/workflows/action
+        uses: ./.github/workflows/preparation
       - name: Run make test
         run: make test
       - name: Upload coverage data to codacy
