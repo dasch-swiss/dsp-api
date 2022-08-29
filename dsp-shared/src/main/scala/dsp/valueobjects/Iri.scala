@@ -120,7 +120,7 @@ object Iri {
               value,
               throw ValidationException(IriErrorMessages.ProjectIriInvalid)
             )
-          ).toEither.left.map(_.asInstanceOf[ValidationException]) // TODO-BL: there must be a better way!
+          ).toEither.left.map(_.asInstanceOf[ValidationException])
           val validatedValue = Validation.fromEither(eitherValue)
 
           validatedValue.map(new ProjectIri(_) {})
