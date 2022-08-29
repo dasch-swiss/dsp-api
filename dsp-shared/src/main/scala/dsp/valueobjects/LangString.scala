@@ -87,7 +87,7 @@ object MultiLangString {
       case v if v.size > v.map(_.language).size =>
         val languages          = v.toList.map(_.language)
         val languageCount      = languages.groupBy(identity).view.mapValues(_.size)
-        val nonUniqueLanguages = languageCount.filter(_._2 > 1).keys.toSet
+        val nonUniqueLanguages = languageCount.filter { case (_, count) => count > 1 }.keys.toSet
         Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
       case _ => Validation.succeed(new MultiLangString(values) {})
     }
