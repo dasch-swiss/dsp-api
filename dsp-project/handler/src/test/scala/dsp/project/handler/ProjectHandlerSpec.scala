@@ -26,6 +26,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   private val shortCode  = getValidated(ShortCode.make("0000"))
   private val shortCode2 = getValidated(ShortCode.make("0001"))
   private val id         = getValidated(ProjectId.make(shortCode))
+  private val id2        = getValidated(ProjectId.make(shortCode2))
   private val name       = getValidated(Name.make("projectName"))
   private val name2      = getValidated(Name.make("projectName 2"))
   private val description = getValidated(
@@ -35,7 +36,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     ProjectDescription.make(Seq(V2.StringLiteralV2("different project description", Some("en"))))
   )
   // private val project = getValidated(Project.make(id, name, description))
-  def spec = (getAllProjectsTests + getProjectTests + createProjectTests + deleteProjectTests)
+  def spec = (getAllProjectsTests + getProjectTests + createProjectTests + deleteProjectTests + updateProjectTests)
 
   private val getAllProjectsTests = suite("get all projects")(
     test("return an empty list when requesting all users when there are none") {
@@ -91,16 +92,6 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     )
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
-  // TODO-BL: [discuss] (how) do we test private methods
-//   private val checkIfShortCodeTakenTests = suite("check if a shortcode is already taken")(
-//     test("return nothing if the repo is empty") {
-//       for {
-//         handler <- ZIO.service[ProjectHandler]
-//         res     <- handler.
-//       } yield assertTrue(retrievedProjects == List.empty)
-//     }
-//   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
-
   private val createProjectTests = suite("create a project")(
     test("successfully create a project") {
       for {
@@ -135,5 +126,38 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     }
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
-  // TODO-BL: test updating project properties once implemented
+  private val updateProjectTests = suite("update a project")(
+    suite("update project name")(
+      test("successfully update a project name with a valid name") {
+        for {
+          handler <- ZIO.service[ProjectHandler]
+          id      <- handler.createProject(shortCode, name, description)
+          res     <- handler.updateProjectName(id, name2).exit
+        } yield assert(res)(succeeds(equalTo(id)))
+      },
+      test("not update a project name of a non-existing project")(
+        for {
+          handler <- ZIO.service[ProjectHandler]
+          _       <- handler.createProject(shortCode, name, description)
+          res     <- handler.updateProjectName(id2, name2).exit
+        } yield assert(res)(fails(isSubtype[NotFoundException](anything)))
+      )
+    ),
+    suite("update project description")(
+      test("successfully update a project description with a valid description") {
+        for {
+          handler <- ZIO.service[ProjectHandler]
+          id      <- handler.createProject(shortCode, name, description)
+          res     <- handler.updateProjectDescription(id, description2).exit
+        } yield assert(res)(succeeds(equalTo(id)))
+      },
+      test("not update a project description of a non-existing project")(
+        for {
+          handler <- ZIO.service[ProjectHandler]
+          _       <- handler.createProject(shortCode, name, description)
+          res     <- handler.updateProjectDescription(id2, description2).exit
+        } yield assert(res)(fails(isSubtype[NotFoundException](anything)))
+      )
+    )
+  ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 }

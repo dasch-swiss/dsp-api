@@ -13,6 +13,7 @@ import dsp.project.api.ProjectRepo
 import dsp.project.domain.Project
 import dsp.valueobjects.Project._
 import dsp.valueobjects._
+import dsp.errors.RequestRejectedException
 
 /**
  * The project handler.
@@ -120,28 +121,41 @@ final case class ProjectHandler(repo: ProjectRepo) {
         _ => ZIO.logInfo(s"Deleted project with ID '${id}'")
       )
 
-  // TODO-BL: add update methods
+  /**
+   * Updates the name of a project.
+   *
+   * @param id    the ID of the project to be updated
+   * @param value the new name of the project
+   * @return either the project ID if successfful, or a RequestRejectedException if not successful
+   */
+  def updateProjectName(id: ProjectId, value: Name): IO[RequestRejectedException, ProjectId] =
+    (for {
+      project        <- getProjectById(id)
+      updatedProject <- project.updateProjectName(value).toZIO
+      resultId       <- repo.storeProject(updatedProject)
+    } yield resultId)
+      .tapBoth(
+        _ => ZIO.logInfo(s"Failed to update project name of project $id: "),
+        _ => ZIO.logInfo(s"Successfully updated the name of project $id to '$value'")
+      )
 
-//   def updateUsername(id: UserId, value: Username): IO[RequestRejectedException, UserId] =
-//     for {
-//       _ <- checkUsernameTaken(value)
-//       // lock/reserve username
-//       // check if user exists and get him, lock user
-//       user        <- getUserById(id)
-//       userUpdated <- ZIO.succeed(user.updateUsername(value))
-//       _           <- repo.storeUser(userUpdated)
-//     } yield id
-
-//   def updatePassword(id: UserId, newPassword: Password, currentPassword: Password, requestingUser: User) = ???
-//   // either the user himself or a sysadmin can change a user's password
-//   // in both cases we need the current password of either the user itself or the sysadmin
-
-//   def deleteUser(id: UserId): IO[NotFoundException, UserId] =
-//     for {
-//       _ <- repo
-//              .deleteUser(id)
-//              .mapError(_ => NotFoundException(s"User with ID ${id} not found"))
-//     } yield id
+  /**
+   * Updates the description of a project.
+   *
+   * @param id    the ID of the project to be updated
+   * @param value the new description of the project
+   * @return either the project ID if successfful, or a RequestRejectedException if not successful
+   */
+  def updateProjectDescription(id: ProjectId, value: ProjectDescription): IO[RequestRejectedException, ProjectId] =
+    (for {
+      project        <- getProjectById(id)
+      updatedProject <- project.updateProjectDescription(value).toZIO
+      resultId       <- repo.storeProject(updatedProject)
+    } yield resultId)
+      .tapBoth(
+        _ => ZIO.logInfo(s"Failed to update project description of project $id."),
+        _ => ZIO.logInfo(s"Successfully updated the description of project $id.")
+      )
 
 }
 
