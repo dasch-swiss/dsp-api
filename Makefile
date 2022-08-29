@@ -205,6 +205,7 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 test: build test-shared test-user-slice test-role-slice ## runs all tests
 	sbt -v coverage "sipi/test"
 	sbt -v coverage "webapi/test"
+	sbt -v coverage "schemaCore/test"
 	sbt coverageAggregate
 	
 .PHONY: test-shared
