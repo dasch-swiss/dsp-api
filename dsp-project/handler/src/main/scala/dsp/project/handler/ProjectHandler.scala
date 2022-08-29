@@ -9,11 +9,11 @@ import zio._
 
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
+import dsp.errors.RequestRejectedException
 import dsp.project.api.ProjectRepo
 import dsp.project.domain.Project
 import dsp.valueobjects.Project._
 import dsp.valueobjects._
-import dsp.errors.RequestRejectedException
 
 /**
  * The project handler.

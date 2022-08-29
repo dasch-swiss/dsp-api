@@ -7,8 +7,6 @@ package dsp.project.domain
 
 import zio.test._
 
-// import java.util.UUID
-
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Project._
 import dsp.valueobjects.ProjectId
