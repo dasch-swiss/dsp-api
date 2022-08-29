@@ -350,12 +350,34 @@ lazy val userRepo = project
   )
   .dependsOn(shared, projectHandler)
 
-lazy val projectHandler = project
-  .in(file("dsp-project/handler"))
+lazy val userCore = project
+  .in(file("dsp-user/core"))
   .settings(
     scalacOptions ++= customScalacOptions,
     name := "userCore",
     libraryDependencies ++= Dependencies.userCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+// project projects
+
+lazy val projectInterface = project
+  .in(file("dsp-project/interface"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectInterface",
+    libraryDependencies ++= Dependencies.projectInterfaceLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, projectHandler)
+
+lazy val projectHandler = project
+  .in(file("dsp-project/handler"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "projectHandler",
+    libraryDependencies ++= Dependencies.projectHandlerLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(
@@ -368,8 +390,8 @@ lazy val projectCore = project
   .in(file("dsp-project/core"))
   .settings(
     scalacOptions ++= customScalacOptions,
-    name := "schemaCore",
-    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
+    name := "projectCore",
+    libraryDependencies ++= Dependencies.projectCoreLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
   .dependsOn(shared)
@@ -378,8 +400,31 @@ lazy val projectRepo = project
   .in(file("dsp-project/repo"))
   .settings(
     scalacOptions ++= customScalacOptions,
+    name := "projectRepo",
+    libraryDependencies ++= Dependencies.projectRepoLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared, projectCore)
+
+// schema projects
+
+lazy val schemaCore = project
+  .in(file("dsp-schema/core"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
+    name := "schemaCore",
+    libraryDependencies ++= Dependencies.schemaCoreLibraryDependencies,
+    testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
+  )
+  .dependsOn(shared)
+
+// Shared project
+
+lazy val shared = project
+  .in(file("dsp-shared"))
+  .settings(
+    scalacOptions ++= customScalacOptions,
     name := "shared",
     libraryDependencies ++= Dependencies.sharedLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, projectCore)
