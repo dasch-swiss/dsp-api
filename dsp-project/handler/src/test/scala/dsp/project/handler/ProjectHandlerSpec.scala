@@ -5,18 +5,18 @@
 
 package dsp.project.handler
 
-import dsp.valueobjects.Project._
-import zio.prelude._
-import zio.ZLayer
 import zio._
-import zio.test._
+import zio.prelude._
 import zio.test.Assertion._
+import zio.test._
+
+import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
 import dsp.project.domain.Project
+import dsp.project.repo.impl.ProjectRepoMock
+import dsp.valueobjects.Project._
 import dsp.valueobjects.ProjectId
 import dsp.valueobjects.V2
-import dsp.project.repo.impl.ProjectRepoMock
-import dsp.errors.NotFoundException
-import dsp.errors.DuplicateValueException
 
 object ProjectHandlerSpec extends ZIOSpecDefault {
 

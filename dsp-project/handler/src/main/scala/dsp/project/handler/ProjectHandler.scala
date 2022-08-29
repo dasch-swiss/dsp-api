@@ -5,16 +5,14 @@
 
 package dsp.project.handler
 
-import dsp.project.api.ProjectRepo
-import dsp.project.domain.Project
 import zio._
 
-import java.util.UUID
-import dsp.valueobjects._
-import dsp.valueobjects.Project._
-import dsp.errors.NotFoundException
-import dsp.valueobjects
 import dsp.errors.DuplicateValueException
+import dsp.errors.NotFoundException
+import dsp.project.api.ProjectRepo
+import dsp.project.domain.Project
+import dsp.valueobjects.Project._
+import dsp.valueobjects._
 
 /**
  * The project handler.

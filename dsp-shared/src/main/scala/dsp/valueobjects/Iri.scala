@@ -7,10 +7,11 @@ package dsp.valueobjects
 
 import org.apache.commons.validator.routines.UrlValidator
 import zio.prelude.Validation
-import dsp.errors.ValidationException
+
 import scala.util.Try
 
 import dsp.errors.BadRequestException
+import dsp.errors.ValidationException
 
 sealed trait Iri {
   val value: String

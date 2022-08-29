@@ -5,12 +5,12 @@
 
 package dsp.project.domain
 
-import dsp.valueobjects.Project._
-import zio._
 import zio.test._
 
 import java.util.UUID
+
 import dsp.valueobjects.Iri
+import dsp.valueobjects.Project._
 import dsp.valueobjects.ProjectId
 import dsp.valueobjects.V2
 

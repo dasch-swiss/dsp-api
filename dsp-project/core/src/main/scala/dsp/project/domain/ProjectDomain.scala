@@ -5,13 +5,11 @@
 
 package dsp.project.domain
 
-import dsp.valueobjects.Iri._
-import dsp.valueobjects.Project._
-import dsp.valueobjects._
 import zio.prelude.Validation
 
-import java.util.UUID
 import dsp.errors.ValidationException
+import dsp.valueobjects.Project._
+import dsp.valueobjects._
 
 /**
  * Represents the project domain object.

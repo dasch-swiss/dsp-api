@@ -1,7 +1,7 @@
 package dsp.valueobjects
 
-import zio._
 import zio.test._
+
 import java.util.UUID
 
 object IdSpec extends ZIOSpecDefault {

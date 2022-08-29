@@ -5,13 +5,13 @@
 
 package dsp.valueobjects
 
-import dsp.errors.BadRequestException
-import dsp.valueobjects.Iri
 import zio.prelude.Validation
 
 import java.util.UUID
-import dsp.errors.ValidationException
 import scala.util.Try
+
+import dsp.errors.ValidationException
+import dsp.valueobjects.Iri
 
 sealed trait Id
 object Id {
