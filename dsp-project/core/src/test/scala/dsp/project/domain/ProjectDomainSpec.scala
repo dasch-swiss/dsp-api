@@ -7,7 +7,7 @@ package dsp.project.domain
 
 import zio.test._
 
-import java.util.UUID
+// import java.util.UUID
 
 import dsp.valueobjects.Iri
 import dsp.valueobjects.Project._
@@ -20,10 +20,10 @@ import dsp.valueobjects.V2
 object ProjectDomainSpec extends ZIOSpecDefault {
 
   private val shortcode = ShortCode.make("0001").fold(e => throw e.head, v => v)
-  private val uuid      = UUID.randomUUID()
-  private val iri = Iri.ProjectIri
-    .make(s"http://rdfh.ch/projects/${UUID.randomUUID()}")
-    .fold(e => throw e.head, v => v)
+  // private val uuid      = UUID.randomUUID()
+  // private val iri = Iri.ProjectIri
+  //   .make(s"http://rdfh.ch/projects/${UUID.randomUUID()}")
+  //   .fold(e => throw e.head, v => v)
   private val id   = ProjectId.make(shortcode).fold(e => throw e.head, v => v)
   private val name = Name.make("proj").fold(e => throw e.head, v => v)
   private val description = ProjectDescription

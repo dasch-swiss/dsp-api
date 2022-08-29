@@ -12,7 +12,7 @@ import zio.test._
 
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
-import dsp.project.domain.Project
+// import dsp.project.domain.Project
 import dsp.project.repo.impl.ProjectRepoMock
 import dsp.valueobjects.Project._
 import dsp.valueobjects.ProjectId
@@ -34,8 +34,8 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
   private val description2 = getValidated(
     ProjectDescription.make(Seq(V2.StringLiteralV2("different project description", Some("en"))))
   )
-  private val project = getValidated(Project.make(id, name, description))
-  def spec            = (getAllProjectsTests + getProjectTests + createProjectTests + deleteProjectTests)
+  // private val project = getValidated(Project.make(id, name, description))
+  def spec = (getAllProjectsTests + getProjectTests + createProjectTests + deleteProjectTests)
 
   private val getAllProjectsTests = suite("get all projects")(
     test("return an empty list when requesting all users when there are none") {
@@ -111,7 +111,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
     test("fail to create a project with an occupied shortCode") {
       for {
         handler <- ZIO.service[ProjectHandler]
-        id      <- handler.createProject(shortCode, name, description)
+        _       <- handler.createProject(shortCode, name, description)
         res     <- handler.createProject(shortCode, name2, description2).exit
       } yield assert(res)(fails(isSubtype[DuplicateValueException](anything)))
     } // TODO-BL: as soon as we have more illegal states, maybe they can be tested here?

@@ -127,8 +127,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     },
     test("return that a shortCode exists if it does indeed exist") {
       for {
-        storedId <- ProjectRepo.storeProject(project)
-        res      <- ProjectRepo.checkShortCodeExists(shortCode.value).exit
+        _   <- ProjectRepo.storeProject(project)
+        res <- ProjectRepo.checkShortCodeExists(shortCode.value).exit
       } yield (
         assert(res)(fails(equalTo(None)))
       )
@@ -147,8 +147,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     },
     test("delete a project if it exists in the repository") {
       for {
-        storedId <- ProjectRepo.storeProject(project)
-        res      <- ProjectRepo.deleteProject(id)
+        _   <- ProjectRepo.storeProject(project)
+        res <- ProjectRepo.deleteProject(id)
       } yield (
         assertTrue(res == id)
       )
