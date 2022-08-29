@@ -348,7 +348,7 @@ lazy val userRepo = project
     libraryDependencies ++= Dependencies.userRepoLibraryDependencies,
     testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework"))
   )
-  .dependsOn(shared, userCore)
+  .dependsOn(shared, userCore % "compile->compile;test->test")
 
 lazy val userCore = project
   .in(file("dsp-user/core"))
