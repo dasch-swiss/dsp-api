@@ -82,13 +82,14 @@ object MultiLangString {
    * @return a validation of a MultiLangString value object
    */
   def make(values: Set[LangString]): Validation[ValidationException, MultiLangString] =
-    if (values.isEmpty) {
-      Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
-    } else if (values.map(_.language).size < values.size) {
-      val nonUnique = values.toList.map(_.language).groupBy(identity).view.mapValues(_.size).filter(_._2 > 1).keys.toSet
-      Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUnique)))
-    } else {
-      Validation.succeed(new MultiLangString(values) {})
+    values match {
+      case v if v.isEmpty => Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
+      case v if v.size > v.map(_.language).size =>
+        val languages          = v.toList.map(_.language)
+        val languageCount      = languages.groupBy(identity).view.mapValues(_.size)
+        val nonUniqueLanguages = languageCount.filter(_._2 > 1).keys.toSet
+        Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
+      case _ => Validation.succeed(new MultiLangString(values) {})
     }
 }
 
