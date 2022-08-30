@@ -32,7 +32,7 @@ object Project {
       } else {
         ProjectIDRegex.matches(value.toUpperCase) match {
           case false => Validation.fail(ValidationException(ProjectErrorMessages.ShortcodeInvalid(value)))
-          case true  => Validation.succeed(new ShortCode(value) {})
+          case true  => Validation.succeed(new ShortCode(value.toUpperCase) {})
         }
       }
 
