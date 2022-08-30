@@ -5,7 +5,6 @@ on:
     types: [published]
 
 jobs:
-
   create-client-test-data:
     name: Create and upload client-test-data
     runs-on: ubuntu-latest
@@ -28,7 +27,6 @@ jobs:
           find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
-
 
   publish-release:
     name: Publish release
@@ -61,7 +59,7 @@ jobs:
           make docker-publish
 
   send-chat-notification:
-    name: Send google chat notification about the release
+    name: Send google chat notification
     needs: [publish-release]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')

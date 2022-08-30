@@ -8,12 +8,12 @@ on:
 
 jobs:
   build-and-test:
-    name: Build, test all, and create client-test-data
+    name: Build, test, client-test-data
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
-      - name: Run make test-and-create-client-test-data
+      - name: Run all tests and create client-test-data
         run: make test-and-create-client-test-data
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
@@ -34,7 +34,7 @@ jobs:
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
   test-docs-build:
-    name: Test build of docs
+    name: Test docs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source

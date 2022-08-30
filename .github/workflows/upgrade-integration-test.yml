@@ -1,12 +1,12 @@
-name: Test upgrade plugins
-description: Tests if upgrade scripts run successfully
+name: Test Repository Upgrade
 
 on:
+  push:
   workflow_dispatch:
 
 jobs:
   upgrade-integration-tests:
-    name: Upgrade integration tests
+    name: Test repository upgrade
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps

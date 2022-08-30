@@ -6,7 +6,6 @@ on:
       - closed
 
 jobs:
-
   create-release:
     name: Create release PR
     runs-on: ubuntu-latest
