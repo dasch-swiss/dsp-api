@@ -16,7 +16,9 @@ runs:
         mkdir -p ~/.docker/cli-plugins/
         curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
         chmod +x ~/.docker/cli-plugins/docker-compose
+      shell: bash
     - name: Install requirements (apt)
       run: sudo apt-get install ca-certificates-java expect unzip
+      shell: bash
     - name: Coursier cache
       uses: coursier/cache-action@v6
