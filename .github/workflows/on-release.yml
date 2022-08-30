@@ -7,7 +7,7 @@ on:
 jobs:
 
   create-client-test-data:
-    name: Run client-test-data
+    name: Create and upload client-test-data
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps

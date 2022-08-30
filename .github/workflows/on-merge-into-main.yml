@@ -1,4 +1,4 @@
-name: Create Release PR
+name: Create Release
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ on:
 jobs:
 
   create-release:
-    name: Create release
+    name: Create release PR
     runs-on: ubuntu-latest
     # Automate releases with Conventional Commit Messages as Pull Requests are merged into "main" branch
     if: github.event.pull_request.merged == true
