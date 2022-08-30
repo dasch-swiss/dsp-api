@@ -201,6 +201,20 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
+.PHONY: test-and-create-client-test-data
+test-and-create-client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
+test-and-create-client-test-data: build
+	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
+	sbt -v coverage "shared/test"
+	sbt -v coverage "sipi/test"
+	sbt -v coverage "userCore/test"
+	sbt -v coverage "userHandler/test"
+	sbt -v coverage "userInterface/test"
+	sbt -v coverage "userRepo/test"
+	sbt -v coverage "webapi/test"
+	sbt coverageAggregate
+	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
+
 .PHONY: test
 test: build ## runs all tests
 	sbt -v coverage "shared/test"

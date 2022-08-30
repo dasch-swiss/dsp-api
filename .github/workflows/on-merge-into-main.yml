@@ -1,0 +1,30 @@
+name: CI - After merging into main
+
+on:
+  schedule:
+    # run every midnight (on main) so that the first compile of the day from main is cached
+    - cron: "0 0 * * *"
+  push:
+
+jobs:
+
+  create-release:
+    name: Create release
+    runs-on: ubuntu-latest
+    # Automate releases with Conventional Commit Messages as Pull Requests are merged into "main" branch
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Run release please action
+        uses: GoogleCloudPlatform/release-please-action@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          release-type: simple
+          package-name: dsp-api
+          changelog-types: '[
+            {"type": "feat", "section": "Enhancements", "hidden": false },
+            {"type": "fix", "section": "Bug Fixes", "hidden": false },
+            {"type": "build", "section": "Maintenance", "hidden": false },
+            {"type": "chore", "section": "Maintenance", "hidden": false },
+            {"type": "refactor", "section": "Maintenance", "hidden": false },
+            {"type": "docs", "section": "Documentation", "hidden": false }
+            ]'
