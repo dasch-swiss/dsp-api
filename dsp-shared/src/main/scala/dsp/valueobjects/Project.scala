@@ -7,9 +7,10 @@ package dsp.valueobjects
 
 import zio.prelude.Validation
 
+import scala.util.matching.Regex
+
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
-import scala.util.matching.Regex
 
 object Project {
   // A regex sub-pattern for project IDs, which must consist of 4 hexadecimal digits.

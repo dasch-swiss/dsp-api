@@ -9,8 +9,8 @@ import zio.prelude.Validation
 import zio.test._
 
 import dsp.errors.BadRequestException
-import dsp.valueobjects.Project._
 import dsp.errors.ValidationException
+import dsp.valueobjects.Project._
 
 /**
  * This spec is used to test the [[Project]] value objects creation.
