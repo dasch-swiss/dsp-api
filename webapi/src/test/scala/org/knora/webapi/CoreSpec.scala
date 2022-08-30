@@ -50,7 +50,7 @@ abstract class CoreSpec
    * and cleaned up when the Runtime is shutdown.
    */
   private val bootstrap: ZLayer[
-    Scope,
+    Any,
     Any,
     Environment
   ] =

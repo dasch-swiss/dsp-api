@@ -47,13 +47,14 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
+import org.knora.webapi.config.AppConfig
 
 object ApiRoutes extends AroundDirectives {
 
   /**
    * All routes composed together.
    */
-  val routes: ZIO[ActorSystem with AppRouter with core.State, Nothing, Route] =
+  val routes: ZIO[ActorSystem & AppRouter & core.State, Nothing, Route] =
     for {
       sys    <- ZIO.service[ActorSystem]
       router <- ZIO.service[AppRouter]
@@ -81,7 +82,7 @@ object ApiRoutes extends AroundDirectives {
           DSPApiDirectives.handleErrors(routeData.system) {
             CorsDirectives.cors(CorsSettings(routeData.system)) {
               DSPApiDirectives.handleErrors(routeData.system) {
-                new HealthRoute(state).makeRoute ~
+                new HealthRoute(state, routeData).makeRoute ~
                   new VersionRoute().makeRoute ~
                   new RejectingRoute(state, routeData.system).makeRoute ~
                   new ResourcesRouteV1(routeData).makeRoute ~

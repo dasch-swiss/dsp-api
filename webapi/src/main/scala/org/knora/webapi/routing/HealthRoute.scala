@@ -16,6 +16,9 @@ import zio._
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
+import java.util.UUID
+import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.util.LogAspect
 
 /**
  * Provides health check logic
@@ -24,9 +27,11 @@ trait HealthCheck {
 
   protected def healthCheck(state: State): ZIO[Any, Nothing, HttpResponse] =
     for {
+      _        <- ZIO.logInfo("get application state")
       state    <- state.get
       result   <- createResult(state)
       response <- createResponse(result)
+      _        <- ZIO.logInfo("getting application state done")
     } yield response
 
   private def createResult(state: AppState): UIO[HealthCheckResult] =
@@ -111,7 +116,10 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(state: State) extends HealthCheck with ZIOSupport {
+final case class HealthRoute(state: State, routeData: KnoraRouteData)
+    extends HealthCheck
+    with Authenticator
+    with ZIOSupport {
 
   /**
    * Returns the route.
@@ -119,7 +127,17 @@ final case class HealthRoute(state: State) extends HealthCheck with ZIOSupport {
   def makeRoute: Route =
     path("health") {
       get { requestContext =>
-        val res: ZIO[Any, Nothing, HttpResponse] = healthCheck(state)
+        val res: ZIO[Any, Nothing, HttpResponse] = {
+          for {
+            _      <- ZIO.logInfo("health route start")
+            ec <- ZIO.executor.map(_.asExecutionContext)
+            requestingUser <- ZIO
+                                .fromFuture(_ => getUserADM(requestContext)(routeData.system, routeData.appActor, ec))
+                                .orElse(ZIO.succeed(KnoraSystemInstances.Users.AnonymousUser))
+            result <- healthCheck(state)
+            _      <- ZIO.logInfo("health route finished") @@ ZIOAspect.annotated("user-id", requestingUser.id.toString())
+          } yield result
+        } @@ LogAspect.logSpan("health-request") @@ LogAspect.logAnnotateCorrelationId(requestContext.request)
         requestContext.complete(res)
       }
     }
