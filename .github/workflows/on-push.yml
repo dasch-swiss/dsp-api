@@ -11,7 +11,7 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - name: Run preparatory steps to run tests
+      - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
       - name: Run make test
         run: make test
@@ -37,22 +37,8 @@ jobs:
     name: Create DSP-API client-test-data
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "17"
-      - name: Add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: Install requirements (apt)
-        run: sudo apt-get install ca-certificates-java expect unzip
-      - name: Coursier cache
-        uses: coursier/cache-action@v6
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
       - name: Generate DSP-API client-test-data
         run: make client-test-data
       - name: Upload client-test-data
@@ -74,22 +60,8 @@ jobs:
     name: Upgrade integration tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "17"
-      - name: Add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: Install requirements (apt)
-        run: sudo apt-get install ca-certificates-java expect
-      - name: Coursier cache
-        uses: coursier/cache-action@v6
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
       - name: Test repository upgrade
         run: make test-repository-upgrade
       - name: Dump docker logs on failure using different shell
@@ -149,27 +121,15 @@ jobs:
 
   publish-release:
     name: Publish release
-    needs: [build-and-test]
+    needs: [create-client-test-data]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 50
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "17"
-      - name: Add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
       - name: Install requirements (apt, pip, npm)
         run: |
-          sudo apt-get install ca-certificates-java expect unzip graphviz
+          sudo apt-get install graphviz
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
@@ -204,22 +164,8 @@ jobs:
     name: Check formatting
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "17"
-      - name: Add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: Install requirements (apt)
-        run: sudo apt-get install ca-certificates-java expect
-      - name: Coursier cache
-        uses: coursier/cache-action@v6
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
       - name: Run make check
         run: make check
       - name: Cleanup before cache
