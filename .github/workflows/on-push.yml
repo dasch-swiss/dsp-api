@@ -11,11 +11,8 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 15
-      - uses: dasch-swiss/dsp-api/.github/actions@2a0ce5c52a5ae7a39ee254accc44415c62464db2
+      - name: Run preparatory steps to run tests
+        uses: dasch-swiss/dsp-api/.github/actions@2a0ce5c52a5ae7a39ee254accc44415c62464db2
       - name: Run make test
         run: make test
       - name: Upload coverage data to codacy
