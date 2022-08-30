@@ -1,4 +1,4 @@
-name: Upgrade integration test
+name: Test upgrade plugins
 description: Tests if upgrade scripts run successfully
 
 on:

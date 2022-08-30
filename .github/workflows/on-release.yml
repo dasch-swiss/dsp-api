@@ -1,9 +1,6 @@
-name: CI - After merging into main
+name: Publish Release
 
 on:
-  schedule:
-    # run every midnight (on main) so that the first compile of the day from main is cached
-    - cron: "0 0 * * *"
   release:
     types: [published]
 
@@ -15,7 +12,7 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
-      - name: Create DSP-API client-test-data
+      - name: Create client-test-data
         run: make client-test-data
       - name: Upload client-test-data
         uses: actions/upload-artifact@v3
@@ -47,11 +44,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
-      - name: Download DSP-API client-test-data
+      - name: Download client-test-data
         uses: actions/download-artifact@v3
         with:
           name: client-test-data-zip
-      - name: Add DSP-API client-test-data to release assets
+      - name: Add client-test-data to release assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GH_TOKEN }}

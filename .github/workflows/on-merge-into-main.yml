@@ -1,10 +1,9 @@
-name: CI - After merging into main
+name: Create Release PR
 
 on:
-  schedule:
-    # run every midnight (on main) so that the first compile of the day from main is cached
-    - cron: "0 0 * * *"
-  push:
+  pull_request:
+    types:
+      - closed
 
 jobs:
 
@@ -12,7 +11,7 @@ jobs:
     name: Create release
     runs-on: ubuntu-latest
     # Automate releases with Conventional Commit Messages as Pull Requests are merged into "main" branch
-    if: github.ref == 'refs/heads/main'
+    if: github.event.pull_request.merged == true
     steps:
       - name: Run release please action
         uses: GoogleCloudPlatform/release-please-action@v2

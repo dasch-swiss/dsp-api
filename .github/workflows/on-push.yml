@@ -1,4 +1,4 @@
-name: CI - After pushing to branch
+name: Run all tests and check formatting
 
 on:
   schedule:
@@ -50,7 +50,7 @@ jobs:
           pip install -r docs/requirements.txt
           npm install --global typedoc
           sudo apt-get install graphviz
-      - name: Run make docs-build
+      - name: Build docs
         run: make docs-build
 
   check-formatting:
@@ -59,7 +59,7 @@ jobs:
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
-      - name: Run make check
+      - name: Check formatting
         run: make check
       - name: Cleanup before cache
         shell: bash
