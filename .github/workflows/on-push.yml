@@ -11,6 +11,10 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 15
       - uses: dasch-swiss/dsp-api/.github/actions/preparation.yml@c73c81de03fcb647c734aac5e6cd676739d84429
       - name: Run make test
         run: make test
