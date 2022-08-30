@@ -1,24 +1,21 @@
-on:
-  workflow_call:
+name: "Preparation"
 
-jobs:
-  preparation:
-    name: Preparation Steps
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: "temurin"
-          java-version: "17"
-      - name: Add docker compose v2
-        run: |
-          mkdir -p ~/.docker/cli-plugins/
-          curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
-          chmod +x ~/.docker/cli-plugins/docker-compose
-      - name: Install requirements (apt)
-        run: sudo apt-get install ca-certificates-java expect unzip
-      - name: Coursier cache
-        uses: coursier/cache-action@v6
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout source
+      uses: actions/checkout@v3
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: "temurin"
+        java-version: "17"
+    - name: Add docker compose v2
+      run: |
+        mkdir -p ~/.docker/cli-plugins/
+        curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose
+        chmod +x ~/.docker/cli-plugins/docker-compose
+    - name: Install requirements (apt)
+      run: sudo apt-get install ca-certificates-java expect unzip
+    - name: Coursier cache
+      uses: coursier/cache-action@v6
