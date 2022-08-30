@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
+        uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
       - name: Test repository upgrade
         run: make test-repository-upgrade
       - name: Dump docker logs on failure using different shell

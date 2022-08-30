@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
+        uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
       - name: Run make test-and-create-client-test-data
         run: make test-and-create-client-test-data
       - name: Upload coverage data to codacy
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions@585239f1d5230b76ec7052468590e2362f00fcea
+        uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
       - name: Run make check
         run: make check
       - name: Cleanup before cache
