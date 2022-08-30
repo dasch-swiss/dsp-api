@@ -11,7 +11,7 @@ jobs:
     name: Build and test
     runs-on: ubuntu-latest
     steps:
-      - uses: dasch-swiss/dsp-api/.github/actions/preparation.yml@684dee16c21c5d543da0bbd632d69157bf0af8f9
+      - uses: dasch-swiss/dsp-api/.github/actions/preparation.yml
       - name: Run make test
         run: make test
       - name: Upload coverage data to codacy
