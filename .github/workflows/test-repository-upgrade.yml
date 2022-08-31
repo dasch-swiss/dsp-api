@@ -15,7 +15,5 @@ jobs:
         run: make test-repository-upgrade
       - name: Dump docker logs
         uses: jwalton/gh-docker-logs@v1
-        with:
-          shell: "/bin/sh"
       - name: Clean up cache
         uses: dasch-swiss/dsp-api/.github/actions/cleanup@main
