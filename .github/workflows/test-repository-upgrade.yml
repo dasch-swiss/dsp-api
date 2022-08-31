@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@23afe175d58d7e1a56cc77684aa16240a6ecb05a
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@239cd15685155ade0f7904a8ba8ab310d611a789
       - name: Test repository upgrade
         run: make test-repository-upgrade
       - name: Dump docker logs on failure using different shell
@@ -18,4 +18,4 @@ jobs:
         with:
           shell: "/bin/sh"
       - name: Cleanup cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@23afe175d58d7e1a56cc77684aa16240a6ecb05a
+        uses: dasch-swiss/dsp-api/.github/actions/cleanup@239cd15685155ade0f7904a8ba8ab310d611a789
