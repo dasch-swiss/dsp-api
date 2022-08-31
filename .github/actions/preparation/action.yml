@@ -15,6 +15,5 @@ runs:
         java-version: "17"
     - name: Install requirements (apt)
       run: sudo apt-get install ca-certificates-java expect unzip
-      shell: bash
     - name: Coursier cache
       uses: coursier/cache-action@v6

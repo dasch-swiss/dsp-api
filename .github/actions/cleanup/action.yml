@@ -5,7 +5,6 @@ runs:
   using: "composite"
   steps:
     - name: Clean up cache
-      shell: bash
       run: |
         rm -rf "$HOME/.ivy2/local" || true
         find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
