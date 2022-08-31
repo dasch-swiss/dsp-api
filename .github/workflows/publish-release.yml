@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@23afe175d58d7e1a56cc77684aa16240a6ecb05a
       - name: Create client-test-data
         run: make client-test-data
       - name: Upload client-test-data
@@ -19,14 +19,8 @@ jobs:
           name: client-test-data-zip
           path: client-test-data.zip
           retention-days: 1
-      - name: Cleanup before cache
-        shell: bash
-        run: |
-          rm -rf "$HOME/.ivy2/local" || true
-          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
-          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
-          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
-          find $HOME/.sbt                              -name "*.lock"               -delete || true
+      - name: Cleanup cache
+        uses: dasch-swiss/dsp-api/.github/actions/cleanup@23afe175d58d7e1a56cc77684aa16240a6ecb05a
 
   publish-release:
     name: Publish release
@@ -35,7 +29,7 @@ jobs:
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions@23afe175d58d7e1a56cc77684aa16240a6ecb05a
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@23afe175d58d7e1a56cc77684aa16240a6ecb05a
       - name: Install requirements (apt, pip, npm)
         run: |
           sudo apt-get install graphviz
