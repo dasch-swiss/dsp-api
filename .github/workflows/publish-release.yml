@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@239cd15685155ade0f7904a8ba8ab310d611a789
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
       - name: Create client-test-data
         run: make client-test-data
       - name: Upload client-test-data
@@ -19,8 +19,8 @@ jobs:
           name: client-test-data-zip
           path: client-test-data.zip
           retention-days: 1
-      - name: Cleanup cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@239cd15685155ade0f7904a8ba8ab310d611a789
+      - name: Clean up cache
+        uses: dasch-swiss/dsp-api/.github/actions/cleanup@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
 
   publish-release:
     name: Publish release
@@ -29,7 +29,7 @@ jobs:
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@239cd15685155ade0f7904a8ba8ab310d611a789
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
       - name: Install requirements (apt, pip, npm)
         run: |
           sudo apt-get install graphviz

@@ -183,7 +183,7 @@ stack-db-only: env-file  ## starts only fuseki.
 
 .PHONY: client-test-data
 client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
-client-test-data: build ## runs the dsp-api e2e tests and generates client test data.
+client-test-data: build ## runs the dsp-api e2e and r2r tests and generates client-test-data.
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
 	sbt -v "webapi/testOnly *E2ESpec *R2RSpec"
 	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
@@ -201,9 +201,15 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
+.PHONY: test-repository-upgrade-with-data-from-staging
+test-repository-upgrade-with-data-from-staging: build init-db-test-from-staging ## runs DB upgrade integration test on latest data from staging
+	# after the stack has started, it should automatically update the data
+	@$(MAKE) -f $(THIS_FILE) stack-up
+	@$(MAKE) -f $(THIS_FILE) stack-restart
+
 .PHONY: test-and-create-client-test-data
 test-and-create-client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
-test-and-create-client-test-data: build
+test-and-create-client-test-data: build ## runs all tests and creates client-test-data
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
 	sbt -v coverage "shared/test"
 	sbt -v coverage "sipi/test"
@@ -280,13 +286,13 @@ db_ls_test_server_dump.trig:
 init-db-test-from-test: db_test_dump.trig init-db-test-empty ## init local database with data from test
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_test_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_test_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: init-db-test-from-staging
 init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: init-db-test-from-prod
 init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local database with data from production
@@ -301,7 +307,7 @@ init-db-test-from-ls-test-server: db_ls_test_server_dump.trig init-db-test-from-
 init-db-test-from-ls-test-server-trig-file: init-db-test-empty ## init local database with data from a local ls-test-server dump
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
-	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" -T "${CURRENT_DIR}/db_ls_test_server_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 #################################
 ## Other

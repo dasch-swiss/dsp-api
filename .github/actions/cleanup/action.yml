@@ -4,7 +4,7 @@ description: "Cleans up the cache"
 runs:
   using: "composite"
   steps:
-    - name: Cleanup cache
+    - name: Clean up cache
       shell: bash
       run: |
         rm -rf "$HOME/.ivy2/local" || true

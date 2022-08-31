@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@239cd15685155ade0f7904a8ba8ab310d611a789
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
       - name: Run all tests and create client-test-data
         run: make test-and-create-client-test-data
       - name: Upload coverage data to codacy
@@ -24,8 +24,8 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
-      - name: Cleanup cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@239cd15685155ade0f7904a8ba8ab310d611a789
+      - name: Clean up cache
+        uses: dasch-swiss/dsp-api/.github/actions/cleanup@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
 
   test-docs-build:
     name: Test docs
@@ -52,8 +52,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@239cd15685155ade0f7904a8ba8ab310d611a789
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
       - name: Check formatting
         run: make check
-      - name: Cleanup cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@239cd15685155ade0f7904a8ba8ab310d611a789
+      - name: Clean up cache
+        uses: dasch-swiss/dsp-api/.github/actions/cleanup@b5ab0de3016138a3f3ba8b2bf25a18fe897179d8
