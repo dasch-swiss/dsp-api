@@ -23,7 +23,11 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 import zio._
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.auth.JWTService
@@ -38,6 +42,7 @@ import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.util.rdf.JsonLDDocument
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 import org.knora.webapi.settings._
 import org.knora.webapi.store.cache.CacheServiceManager
 import org.knora.webapi.store.cache.impl.CacheServiceInMemImpl
@@ -52,11 +57,6 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.StartupUtils
-import scala.concurrent.Future
-import scala.concurrent.Await
-import scala.concurrent.duration.FiniteDuration
-import java.util.concurrent.TimeUnit
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
 
 object ITKnoraLiveSpec {
   val defaultConfig: Config = ConfigFactory.load()
