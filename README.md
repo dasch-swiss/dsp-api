@@ -22,48 +22,35 @@ released under the [Apache License, Version 2.0](http://www.apache.org/licenses/
 * Offers a generic HTTP-based API, implemented in [Scala](https://www.scala-lang.org/), for querying, annotating, and linking together heterogeneous data in a unified way.
   * Handles authentication and authorization.
   * Provides automatic versioning of data.
-* Uses [Sipi](https://www.sipi.io), a high-performance media server implemented in C++.
-* Designed to be be used with [DSP-APP](https://docs.dasch.swiss/user-guide/), a general-purpose, browser-based virtual research environment,
+* Uses [Sipi](https://sipi.io), a high-performance media server implemented in C++.
+* Designed to be be used with [DSP-APP](https://docs.dasch.swiss/latest/DSP-APP/), a general-purpose, browser-based virtual research environment,
   as well as with custom user interfaces.
-
-## Status
-
-### Stable
-
-* [Knora Ontologies](https://docs.knora.org/02-knora-ontologies/)
-* [Knora API v1](https://docs.knora.org/03-apis/api-v1/)
-
-### Beta stage
-
-* [Knora API v2](https://docs.knora.org/03-apis/api-v2/)
-* [Knora Admin API](https://docs.knora.org/03-apis/api-admin/)
-* Distribution packaging using [Docker](https://www.docker.com/)
 
 ## Requirements
 
-### For developing and testing the API server
+### For developing and testing DSP-API
 
 Each developer machine should have the following prerequisites installed:
 
-* Linux or macOS (with some caveats)
-* Docker Desktop: https://www.docker.com/products/docker-desktop
-* Homebrew (on macOS): https://brew.sh
-* [OpenJDK](https://adoptopenjdk.net) 11
+* Linux or macOS
+* [Docker Desktop](https://www.docker.com/products/docker-desktop)
+* [Homebrew](https://brew.sh) (macOS)
+* JDK [Temurin 17](https://adoptium.net/en-GB/temurin/)
 * [sbt](https://www.scala-sbt.org/)
 
-#### Java Adoptopenjdk 11
+#### JDK Temurin 17
 
 To install, follow these steps:
 
 ```shell
-brew tap AdoptOpenJDK/openjdk
-brew install AdoptOpenJDK/openjdk/adoptopenjdk11 --cask
+brew tap homebrew/cask-versions
+brew install --cask temurin17
 ```
 
 To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
 
 ```shell
-export JAVA_HOME=`/usr/libexec/java_home -v 11`
+export JAVA_HOME=`/usr/libexec/java_home -v 17`
 ```
 
 ### For building the documentation
@@ -72,32 +59,32 @@ See [docs/Readme.md](docs/Readme.md).
 
 ## Try it out
 
-### Run the Knora API server
+### Run DSP-API
 
-Run the following to create a test repository and load some test data into the triplestore:
+Create a test repository and load some test data into the triplestore:
 
 ```shell
 make init-db-test
 ```
 
-Then we need to start knora-api after loading the data:
+Start DSP-API after loading the data:
 
 ```shell
 make stack-up
 ```
 
-Then try opening [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
+Open [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
 
 On first installation, errors similar to the following can come up:
 ```
 error decoding 'Volumes[0]': invalid spec: :/fuseki:delegated: empty section between colons
 ```
-To solve this you need to deactivate Docker Compose V2. This can be done in Docker Desktop either by unchecking the "Use Docker Compose V2"-flag under "Preferences/General" or by running
+To solve this, you need to deactivate Docker Compose V2. This can be done in Docker Desktop either by unchecking the "Use Docker Compose V2" flag under "Preferences > General" or by running
  ```
 docker-compose disable-v2
 ```
 
-To shut down the Knora-Stack:
+Shut down DSP-API:
 
 ```shell
 make stack-down
@@ -105,59 +92,15 @@ make stack-down
 
 ### Run the automated tests
 
-Run :
+Run all tests:
 
 ```shell
 make test
 ```
 
-## How to Contribute
-
-You can help by testing Knora with your data, making bug reports, improving the
-documentation, and adding features that you need.
-
-First, open an [issue](https://github.com/dasch-swiss/knora-api/issues) to
-describe your problem or idea. We may ask you to submit a
-[pull request](https://help.github.com/articles/about-pull-requests/)
-implementing the desired functionality.
-
-### Coding conventions
-
-Use `camelCase` for names of classes, variables, and functions. Make names descriptive, and don't worry if they're long.
-
-Use [Scalafmt](https://scalameta.org/scalafmt/) in Visual Studio Code to format Scala code.
-
-Use whitespace to make your code easier to read.
-Add lots of implementation comments describing what your code is doing,
-how it works, and why it works that way.
-
-### Tests
-
-We write automated tests using [ScalaTest](https://www.scalatest.org). You can run them from the [SBT](https://www.scala-sbt.org) console.
-
-There are three sets of automated tests:
-
-* Unit tests, route-to-route tests, and end-to-end tests are under `webapi/src/test`. To run these, type `test` at the SBT console in the `webapi` project. To run a single test, use `testOnly *NameOfTestSpec`.
-* Integration tests, which can involve [Sipi](https://github.com/daschswiss/sipi), are under `src/it`. To run these, first start Sipi, then type `it:test` at the SBT console in the `webapi` project.
-
-Whenever you add a new feature or fix a bug, you should add one or more tests
-for the change you made.
-
-### Documentation
-
-A pull request should include tests and documentation for the changes that were
-made. See the [documentation README](https://github.com/dasch-swiss/knora-api/blob/main/docs/Readme.md)
-for information on writing Knora documentation.
-
-## Commit Message Schema
-
-When writing commit messages, we follow the [Conventional Commit messages](https://www.conventionalcommits.org/) rules.
-Get more information in our official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#git-commit-guidelines)
-
 ## Release Versioning Convention
 
-The Knora project is following the Semantic Versioning convention for numbering the releases
-as defined by [http://semver.org]:
+The DSP-API release versioning follows the [Semantic Versioning](https://semver.org) convention:
 
 > Given a version number MAJOR.MINOR.PATCH, increment the:
 >
@@ -166,8 +109,4 @@ as defined by [http://semver.org]:
 > * PATCH version when you make backwards-compatible bug fixes.
 
 Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
-data would be necessary, e.g., any changes to the Knora-Base ontologies which are not backwards compatible.
-
-## Release Notes Generation
-
-A pull request usually resolves one issue or user story defined on [Jira](https://dasch.atlassian.net/browse/DEV). Since we started to use the [release-please-action](https://github.com/marketplace/actions/release-please-action) it's very important to set the PR title in the correct way, especially because all commits added within the pull request are squashed. Please read the official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#pull-request-guidelines) carefully!
+data would be necessary, e.g., any changes to the [knora-base ontology](https://docs.dasch.swiss/latest/DSP-API/02-knora-ontologies/knora-base/) which are not backwards compatible.
