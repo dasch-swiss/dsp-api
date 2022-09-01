@@ -7,6 +7,7 @@ package dsp.valueobjects
 
 import zio.prelude.Validation
 import zio.test._
+import zio.test.Assertion._
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -52,8 +53,12 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(ShortCode.make(validShortcode).toOption.get.value == validShortcode) &&
-      assertTrue(ShortCode.make(Option(validShortcode)).getOrElse(null).get.value == validShortcode)
+      (for {
+        shortCode         <- ShortCode.make(validShortcode)
+        optionalShortCode <- ShortCode.make(Option(validShortcode))
+      } yield assertTrue(shortCode.value == validShortcode) &&
+        assert(optionalShortCode)(isSome) &&
+        assertTrue(optionalShortCode.get.value == validShortcode)).toZIO
     },
     test("successfully validate passing None") {
       assertTrue(
