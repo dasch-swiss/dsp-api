@@ -201,42 +201,14 @@ test-repository-upgrade: build init-db-test-minimal ## runs DB upgrade integrati
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-up
 
-.PHONY: test-repository-upgrade-with-data-from-staging
-test-repository-upgrade-with-data-from-staging: build init-db-test-from-staging ## runs DB upgrade integration test on latest data from staging
-	# after the stack has started, it should automatically update the data
-	@$(MAKE) -f $(THIS_FILE) stack-up
-	@$(MAKE) -f $(THIS_FILE) stack-restart
-
-.PHONY: test-and-create-client-test-data
-test-and-create-client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
-test-and-create-client-test-data: build ## runs all tests and creates client-test-data
-	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
-	sbt -v coverage "webapi/test"
-	sbt coverageAggregate
-	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
-
-.PHONY: test-webapi
-test-webapi: build ## runs webapi (V1, V2) tests
-	sbt -v coverage "webapi/test"
-	sbt coverageAggregate
-
-.PHONY: test-dsp
-test-dsp: build ## runs DSP tests
-	sbt -v coverage "shared/test"
-	sbt -v coverage "userCore/test"
-	sbt -v coverage "userHandler/test"
-	sbt -v coverage "userInterface/test"
-	sbt -v coverage "userRepo/test"
-	sbt coverageAggregate
-
 .PHONY: test
 test: build ## runs all tests
+	sbt -v coverage "webapi/test"
 	sbt -v coverage "shared/test"
 	sbt -v coverage "userCore/test"
 	sbt -v coverage "userHandler/test"
 	sbt -v coverage "userInterface/test"
 	sbt -v coverage "userRepo/test"
-	sbt -v coverage "webapi/test"
 	sbt coverageAggregate
 
 

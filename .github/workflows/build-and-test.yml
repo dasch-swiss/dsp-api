@@ -1,20 +1,17 @@
 name: Build and Test
 
 on:
-  schedule:
-    # run every midnight (on main) so that the first compile of the day from main is cached
-    - cron: "0 0 * * *"
   push:
 
 jobs:
-  build-and-test-webapi:
-    name: Build and test webapi
+  build-and-test:
+    name: Build and test
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: Run webapi tests
-        run: make test-webapi
+      - name: Run all tests
+        run: make test
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
@@ -26,27 +23,8 @@ jobs:
           flags: webapi-tests
           files: ./target/scala-2.13/coverage-report/cobertura.xml
 
-  build-and-test-dsp:
-    name: Build and test dsp
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run preparatory steps
-        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: Run DSP tests
-        run: make test-dsp
-      - name: Upload coverage data to codacy
-        uses: codacy/codacy-coverage-reporter-action@v1
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ./target/scala-2.13/coverage-report/cobertura.xml
-      - name: Upload coverage data to codecov 
-        uses: codecov/codecov-action@v3
-        with:
-          flags: dsp-tests
-          files: ./target/scala-2.13/coverage-report/cobertura.xml
-
-  create-client-test-data:
-    name: Create client-test-data
+  test-client-test-data:
+    name: Test client-test-data
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
