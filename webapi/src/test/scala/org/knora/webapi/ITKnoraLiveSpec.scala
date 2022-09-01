@@ -52,6 +52,11 @@ import org.knora.webapi.testservices.FileToUpload
 import org.knora.webapi.testservices.TestActorSystemService
 import org.knora.webapi.testservices.TestClientService
 import org.knora.webapi.util.StartupUtils
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.FiniteDuration
+import java.util.concurrent.TimeUnit
+import org.knora.webapi.messages.util.rdf.JsonLDUtil
 
 object ITKnoraLiveSpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -268,5 +273,18 @@ abstract class ITKnoraLiveSpec(_system: ActorSystem)
         )
         .getOrThrow()
     }
+
+  protected def responseToString(httpResponse: HttpResponse): String = {
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
+    Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
+  }
+
+  protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
+    val responseBodyFuture: Future[String] =
+      httpResponse.entity.toStrict(FiniteDuration(10L, TimeUnit.SECONDS)).map(_.data.decodeString("UTF-8"))
+    val responseBodyStr = Await.result(responseBodyFuture, FiniteDuration(10L, TimeUnit.SECONDS))
+    JsonLDUtil.parseJsonLD(responseBodyStr)
+  }
 
 }
