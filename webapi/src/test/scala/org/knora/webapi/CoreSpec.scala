@@ -24,6 +24,8 @@ import org.knora.webapi.messages.util.ResponderData
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cache.settings.CacheServiceSettings
+import org.knora.webapi.core.AppServer
+import org.knora.webapi.util.LogAspect
 
 abstract class CoreSpec
     extends AnyWordSpec
@@ -55,10 +57,7 @@ abstract class CoreSpec
     Environment
   ] =
     ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging
-      .consoleJson() ++ Slf4jBridge.initialize ++ effectLayers // Slf4JBridge and consoleJson????
-
-  // no idea why we need that, but we do
-  private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
+      .consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
 
   // add scope to bootstrap
   private val bootstrapWithScope = Scope.default >>>
@@ -100,20 +99,13 @@ abstract class CoreSpec
   // this effect represents our application
   private val appServerTest =
     for {
-      _ <-
-        core.AppServer.start(
-          false,
-          false
-        ) // how to scope this, so that it does not shutdown layers when the effect finishes but only after the runtime is shutdown???
-      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
-      // never <- ZIO.never // should never be used or some other construct?
+      _ <- AppServer.start(false, false)
+      _ <- prepareRepository(rdfDataObjects) @@ LogAspect.logSpan("prepare-repo")
     } yield ()
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
-    // val fiber =
     runtime.unsafe.run(appServerTest)
-    // println(s"Started Fiber: [${fiber.id}]")
   }
 
   implicit lazy val system: actor.ActorSystem          = router.system
@@ -128,8 +120,6 @@ abstract class CoreSpec
   val responderData        = ResponderData(system, appActor, settings, cacheServiceSettings)
 
   final override def beforeAll(): Unit = {}
-  // waits until knora is up and running
-  // applicationStateRunning(appActor, system)
 
   final override def afterAll(): Unit = {
 
