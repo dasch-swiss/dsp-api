@@ -13,7 +13,4 @@ runs:
       with:
         distribution: "temurin"
         java-version: "17"
-    - name: Install requirements (apt)
-      run: sudo apt-get install ca-certificates-java expect unzip
-    - name: Coursier cache
-      uses: coursier/cache-action@v6
+        cache: sbt

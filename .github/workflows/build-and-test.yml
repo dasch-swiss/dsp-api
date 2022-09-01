@@ -7,14 +7,14 @@ on:
   push:
 
 jobs:
-  build-and-test:
-    name: Build, test, client-test-data
+  build-and-test-webapi:
+    name: Build and test webapi
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
-      - name: Run all tests and create client-test-data
-        run: make test-and-create-client-test-data
+      - name: Run webapi tests
+        run: make test-webapi
       - name: Upload coverage data to codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
@@ -27,7 +27,7 @@ jobs:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
 
   build-and-test-dsp:
-    name: Run DSP tests
+    name: Build and test dsp
     runs-on: ubuntu-latest
     steps:
       - name: Run preparatory steps
@@ -44,6 +44,15 @@ jobs:
         with:
           flags: dsp-tests
           files: ./target/scala-2.13/coverage-report/cobertura.xml
+
+  create-client-test-data:
+    name: Create client-test-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Create client-test-data
+        run: make client-test-data
 
   test-docs-build:
     name: Test docs
