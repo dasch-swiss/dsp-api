@@ -55,7 +55,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    */
   def getProjectByShortCode(shortCode: ShortCode): IO[NotFoundException, Project] =
     repo
-      .getProjectByShortCode(shortCode.value)
+      .getProjectByShortCode(shortCode)
       .mapError(_ => NotFoundException(s"Project with shortCode ${shortCode.value} not found"))
       .tapBoth(
         _ => ZIO.logInfo(s"Could not find project with shortCode '${shortCode}'"),
@@ -72,7 +72,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
     // TODO-BL: [discuss] wound't it be nicer to return the ID of the project here
     for {
       _ <- repo
-             .checkShortCodeExists(shortCode.value)
+             .checkShortCodeExists(shortCode)
              .mapError(_ => DuplicateValueException(s"ShortCode ${shortCode.value} already exists"))
              .tapBoth(
                _ => ZIO.logInfo(s"ShortCode '${shortCode}' is already taken"),

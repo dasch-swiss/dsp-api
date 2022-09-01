@@ -9,6 +9,7 @@ import zio._
 import zio.macros.accessible
 
 import dsp.project.domain._
+import dsp.valueobjects.Project._
 import dsp.valueobjects._
 
 // import java.util.UUID
@@ -51,8 +52,7 @@ trait ProjectRepo {
    * @param shortCode ShortCode of the project.
    * @return an optional [[Project]].
    */
-  def getProjectByShortCode(shortCode: String): IO[Option[Nothing], Project]
-  // TODO-BL: [discuss] why string not value object?
+  def getProjectByShortCode(shortCode: ShortCode): IO[Option[Nothing], Project]
 
   /**
    * Checks if a project ShortCode exists in the repo.
@@ -60,7 +60,7 @@ trait ProjectRepo {
    * @param shortCode ShortCode of the project.
    * @return Unit in case of success
    */
-  def checkShortCodeExists(shortCode: String): IO[Option[Nothing], Unit]
+  def checkShortCodeExists(shortCode: ShortCode): IO[Option[Nothing], Unit]
 
   /**
    * Deletes a [[Project]] from the repository by its [[ProjectId]].
