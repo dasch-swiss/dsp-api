@@ -12,11 +12,11 @@ import zio.test._
 
 import dsp.errors.DuplicateValueException
 import dsp.errors.NotFoundException
+import dsp.project.domain.Project
 import dsp.project.repo.impl.ProjectRepoMock
 import dsp.valueobjects.Project._
 import dsp.valueobjects.ProjectId
 import dsp.valueobjects.V2
-import dsp.project.domain.Project
 
 object ProjectHandlerSpec extends ZIOSpecDefault {
 
