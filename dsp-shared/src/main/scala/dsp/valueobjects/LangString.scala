@@ -85,9 +85,11 @@ object MultiLangString {
     values match {
       case v if v.isEmpty => Validation.fail(ValidationException(MultiLangStringErrorMessages.MultiLangStringEmptySet))
       case v if v.size > v.map(_.language).size =>
-        val languages          = v.toList.map(_.language)
-        val languageCount      = languages.groupBy(identity).view.mapValues(_.size)
-        val nonUniqueLanguages = languageCount.filter { case (_, count) => count > 1 }.keys.toSet
+        val languages = v.toList.map(_.language)
+        val languageCount = languages.foldLeft[Map[LanguageCode, Int]](Map.empty) { (acc, lang) =>
+          acc.updated(lang, acc.getOrElse(lang, 0) + 1)
+        }
+        val nonUniqueLanguages = languageCount.filter { case (_, count) => count > 1 }.keySet
         Validation.fail(ValidationException(MultiLangStringErrorMessages.LanguageNotUnique(nonUniqueLanguages)))
       case _ => Validation.succeed(new MultiLangString(values) {})
     }
