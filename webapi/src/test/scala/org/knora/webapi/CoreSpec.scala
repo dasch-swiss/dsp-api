@@ -105,8 +105,9 @@ abstract class CoreSpec
     } yield never
 
   /* Here we start our main effect in a separate fiber */
-  val appServerTestF: CancelableFuture[Nothing] = Unsafe.unsafe { implicit u =>
-    runtime.unsafe.runToFuture(appServerTest)
+  Unsafe.unsafe { implicit u =>
+    val fiber = runtime.unsafe.fork(appServerTest)
+    println(s"Started Fiber: [${fiber.id}]")
   }
 
   implicit lazy val system: actor.ActorSystem          = router.system
