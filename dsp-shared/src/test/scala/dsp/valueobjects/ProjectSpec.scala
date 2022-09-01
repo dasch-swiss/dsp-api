@@ -6,6 +6,7 @@
 package dsp.valueobjects
 
 import zio.prelude.Validation
+import zio._
 import zio.test._
 import zio.test.Assertion._
 
@@ -53,12 +54,13 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      (for {
-        shortCode         <- ShortCode.make(validShortcode)
-        optionalShortCode <- ShortCode.make(Option(validShortcode))
+      for {
+        shortCode           <- ShortCode.make(validShortcode).toZIO
+        optionalShortCode   <- ShortCode.make(Option(validShortcode)).toZIO
+        shortCodeFromOption <- ZIO.fromOption(optionalShortCode)
       } yield assertTrue(shortCode.value == validShortcode) &&
-        assert(optionalShortCode)(isSome) &&
-        assertTrue(optionalShortCode.get.value == validShortcode)).toZIO
+        assert(optionalShortCode)(isSome(isSubtype[ShortCode](Assertion.anything))) &&
+        assertTrue(shortCodeFromOption.value == validShortcode)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -89,8 +91,13 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(ShortName.make(validShortName).toOption.get.value == validShortName) &&
-      assertTrue(ShortName.make(Option(validShortName)).getOrElse(null).get.value == validShortName)
+      for {
+        shortName           <- ShortName.make(validShortName).toZIO
+        optionalShortName   <- ShortName.make(Option(validShortName)).toZIO
+        shortNameFromOption <- ZIO.fromOption(optionalShortName)
+      } yield assertTrue(shortName.value == validShortName) &&
+        assert(optionalShortName)(isSome(isSubtype[ShortName](Assertion.anything))) &&
+        assertTrue(shortNameFromOption.value == validShortName)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -107,8 +114,13 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid value and successfully create value object") {
-      assertTrue(Name.make(validName).toOption.get.value == validName) &&
-      assertTrue(Name.make(Option(validName)).getOrElse(null).get.value == validName)
+      for {
+        name           <- Name.make(validName).toZIO
+        optionalName   <- Name.make(Option(validName)).toZIO
+        nameFromOption <- ZIO.fromOption(optionalName)
+      } yield assertTrue(name.value == validName) &&
+        assert(optionalName)(isSome(isSubtype[Name](Assertion.anything))) &&
+        assertTrue(nameFromOption.value == validName)
     },
     test("successfully validate passing None") {
       assertTrue(
