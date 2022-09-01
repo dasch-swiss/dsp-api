@@ -19,8 +19,6 @@ jobs:
           name: client-test-data-zip
           path: client-test-data.zip
           retention-days: 1
-      - name: Clean up cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@main
 
   publish-release:
     name: Publish release

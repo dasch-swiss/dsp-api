@@ -24,8 +24,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: ./target/scala-2.13/coverage-report/cobertura.xml
-      - name: Clean up cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@main
 
   test-docs-build:
     name: Test docs
@@ -52,5 +50,3 @@ jobs:
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Check formatting
         run: make check
-      - name: Clean up cache
-        uses: dasch-swiss/dsp-api/.github/actions/cleanup@main
