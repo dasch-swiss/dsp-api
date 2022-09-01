@@ -87,7 +87,7 @@ final case class ProjectHandler(repo: ProjectRepo) {
    * @param description the project descriptions
    * @return either a throwable if creation failed, or the ID of the newly created project
    */
-  def createProject( // TODO-BL: [discuss] why don't we simply pass the Project value object here?
+  def createProject(
     project: Project
   ): IO[Throwable, ProjectId] =
     (for {
