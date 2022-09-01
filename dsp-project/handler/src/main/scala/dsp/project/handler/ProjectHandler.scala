@@ -88,18 +88,14 @@ final case class ProjectHandler(repo: ProjectRepo) {
    * @return either a throwable if creation failed, or the ID of the newly created project
    */
   def createProject( // TODO-BL: [discuss] why don't we simply pass the Project value object here?
-    shortCode: ShortCode,
-    name: Name,
-    description: ProjectDescription
+    project: Project
   ): IO[Throwable, ProjectId] =
     (for {
-      _         <- checkIfShortCodeTaken(shortCode) // TODO: reserve shortcode
-      id        <- ProjectId.make(shortCode).toZIO
-      project   <- Project.make(id, name, description).toZIO
-      projectID <- repo.storeProject(project)
-    } yield projectID)
+      _  <- checkIfShortCodeTaken(project.id.shortCode) // TODO: reserve shortcode
+      id <- repo.storeProject(project)
+    } yield id)
       .tapBoth(
-        e => ZIO.logInfo(s"Failed to create project with shortCode '$shortCode': $e"),
+        e => ZIO.logInfo(s"Failed to create project with shortCode '${project.id.shortCode}': $e"),
         projectId => ZIO.logInfo(s"Created project with ID '${projectId}'")
       )
 
