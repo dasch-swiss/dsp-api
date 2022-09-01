@@ -5,10 +5,10 @@
 
 package dsp.valueobjects
 
-import zio.prelude.Validation
 import zio._
-import zio.test._
+import zio.prelude.Validation
 import zio.test.Assertion._
+import zio.test._
 
 import dsp.errors.BadRequestException
 import dsp.errors.ValidationException
@@ -143,8 +143,13 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid object and successfully create value object") {
-      assertTrue(ProjectDescription.make(validDescription).toOption.get.value == validDescription) &&
-      assertTrue(ProjectDescription.make(Option(validDescription)).getOrElse(null).get.value == validDescription)
+      for {
+        description           <- ProjectDescription.make(validDescription).toZIO
+        optionalDescription   <- ProjectDescription.make(Option(validDescription)).toZIO
+        descriptionFromOption <- ZIO.fromOption(optionalDescription)
+      } yield assertTrue(description.value == validDescription) &&
+        assert(optionalDescription)(isSome(isSubtype[ProjectDescription](Assertion.anything))) &&
+        assertTrue(descriptionFromOption.value == validDescription)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -167,8 +172,13 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid object and successfully create value object") {
-      assertTrue(Keywords.make(validKeywords).toOption.get.value == validKeywords) &&
-      assertTrue(Keywords.make(Option(validKeywords)).getOrElse(null).get.value == validKeywords)
+      for {
+        keywords           <- Keywords.make(validKeywords).toZIO
+        optionalKeywords   <- Keywords.make(Option(validKeywords)).toZIO
+        keywordsFromOption <- ZIO.fromOption(optionalKeywords)
+      } yield assertTrue(keywords.value == validKeywords) &&
+        assert(optionalKeywords)(isSome(isSubtype[Keywords](Assertion.anything))) &&
+        assertTrue(keywordsFromOption.value == validKeywords)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -191,8 +201,13 @@ object ProjectSpec extends ZIOSpecDefault {
       )
     },
     test("pass a valid object and successfully create value object") {
-      assertTrue(Logo.make(validLogo).toOption.get.value == validLogo) &&
-      assertTrue(Logo.make(Option(validLogo)).getOrElse(null).get.value == validLogo)
+      for {
+        logo           <- Logo.make(validLogo).toZIO
+        optionalLogo   <- Logo.make(Option(validLogo)).toZIO
+        logoFromOption <- ZIO.fromOption(optionalLogo)
+      } yield assertTrue(logo.value == validLogo) &&
+        assert(optionalLogo)(isSome(isSubtype[Logo](Assertion.anything))) &&
+        assertTrue(logoFromOption.value == validLogo)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -203,8 +218,13 @@ object ProjectSpec extends ZIOSpecDefault {
 
   private val projectStatusTest = suite("ProjectSpec - ProjectStatus")(
     test("pass a valid object and successfully create value object") {
-      assertTrue(ProjectStatus.make(true).toOption.get.value == true) &&
-      assertTrue(ProjectStatus.make(Some(false)).getOrElse(null).get.value == false)
+      for {
+        status           <- ProjectStatus.make(true).toZIO
+        optionalStatus   <- ProjectStatus.make(Option(false)).toZIO
+        statusFromOption <- ZIO.fromOption(optionalStatus)
+      } yield assertTrue(status.value == true) &&
+        assert(optionalStatus)(isSome(isSubtype[ProjectStatus](Assertion.anything))) &&
+        assertTrue(statusFromOption.value == false)
     },
     test("successfully validate passing None") {
       assertTrue(
@@ -215,8 +235,13 @@ object ProjectSpec extends ZIOSpecDefault {
 
   private val projectSelfJoinTest = suite("ProjectSpec - ProjectSelfJoin")(
     test("pass a valid object and successfully create value object") {
-      assertTrue(ProjectSelfJoin.make(true).toOption.get.value == true) &&
-      assertTrue(ProjectSelfJoin.make(Some(false)).getOrElse(null).get.value == false)
+      for {
+        selfJoin           <- ProjectSelfJoin.make(true).toZIO
+        optionalSelfJoin   <- ProjectSelfJoin.make(Option(false)).toZIO
+        selfJoinFromOption <- ZIO.fromOption(optionalSelfJoin)
+      } yield assertTrue(selfJoin.value == true) &&
+        assert(optionalSelfJoin)(isSome(isSubtype[ProjectSelfJoin](Assertion.anything))) &&
+        assertTrue(selfJoinFromOption.value == false)
     },
     test("successfully validate passing None") {
       assertTrue(
