@@ -12,6 +12,7 @@ import java.util.UUID
 
 import dsp.project.api.ProjectRepo
 import dsp.project.domain.Project
+import dsp.valueobjects.Project._
 import dsp.valueobjects.ProjectId
 
 /**
@@ -22,7 +23,7 @@ import dsp.valueobjects.ProjectId
  */
 final case class ProjectRepoMock(
   projects: TMap[UUID, Project],
-  lookupTableShortCodeToUuid: TMap[String, UUID]
+  lookupTableShortCodeToUuid: TMap[ShortCode, UUID]
 ) extends ProjectRepo {
 
   /**
@@ -31,7 +32,7 @@ final case class ProjectRepoMock(
   override def storeProject(project: Project): UIO[ProjectId] =
     (for {
       _ <- projects.put(project.id.uuid, project)
-      _ <- lookupTableShortCodeToUuid.put(project.id.shortCode.value, project.id.uuid)
+      _ <- lookupTableShortCodeToUuid.put(project.id.shortCode, project.id.uuid)
     } yield project.id).commit.tap(id => ZIO.logInfo(s"Stored project: ${id.uuid}"))
 
   /**
@@ -56,7 +57,7 @@ final case class ProjectRepoMock(
   /**
    * @inheritDoc
    */
-  override def getProjectByShortCode(shortCode: String): IO[Option[Nothing], Project] =
+  override def getProjectByShortCode(shortCode: ShortCode): IO[Option[Nothing], Project] =
     (for {
       uuid    <- lookupTableShortCodeToUuid.get(shortCode).some
       project <- projects.get(uuid).some
@@ -68,7 +69,7 @@ final case class ProjectRepoMock(
   /**
    * @inheritDoc
    */
-  override def checkShortCodeExists(shortCode: String): IO[Option[Nothing], Unit] =
+  override def checkShortCodeExists(shortCode: ShortCode): IO[Option[Nothing], Unit] =
     (for {
       exists <- lookupTableShortCodeToUuid.contains(shortCode).commit
       _ <- if (exists) ZIO.fail(None) // project shortcode does exist
@@ -77,7 +78,6 @@ final case class ProjectRepoMock(
       _ => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', project not found."),
       uuid => ZIO.logInfo(s"Checked for project with shortCode '$shortCode', found project with UUID '$uuid'.")
     )
-  // TODO-BL: [discuss] wouldn't it be more elegant to return the UUID here?
 
   /**
    * @inheritDoc
@@ -85,8 +85,8 @@ final case class ProjectRepoMock(
   override def deleteProject(id: ProjectId): IO[Option[Nothing], ProjectId] =
     (for {
       _ <- projects.get(id.uuid).some
-      _ <- projects.delete(id.uuid)                              // removes the values (Project) for the key (UUID)
-      _ <- lookupTableShortCodeToUuid.delete(id.shortCode.value) // remove the project also from the lookup table
+      _ <- projects.delete(id.uuid)                        // removes the values (Project) for the key (UUID)
+      _ <- lookupTableShortCodeToUuid.delete(id.shortCode) // remove the project also from the lookup table
     } yield id).commit.tapBoth(
       _ => ZIO.logDebug(s"Did not delete project '${id.uuid}' because it was not in the repository"),
       _ => ZIO.logDebug(s"Deleted project: ${id.uuid}")
@@ -102,7 +102,7 @@ object ProjectRepoMock {
     ZLayer {
       for {
         projects <- TMap.empty[UUID, Project].commit
-        lookUp   <- TMap.empty[String, UUID].commit
+        lookUp   <- TMap.empty[ShortCode, UUID].commit
       } yield ProjectRepoMock(projects, lookUp)
     }.tap(_ => ZIO.logInfo(">>> In-memory project repository initialized <<<"))
 }

@@ -44,7 +44,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     test("store a project and retrieve it by shortCode") {
       for {
         _             <- ProjectRepo.storeProject(project)
-        storedProject <- ProjectRepo.getProjectByShortCode(shortCode.value)
+        storedProject <- ProjectRepo.getProjectByShortCode(shortCode)
       } yield (
         assertTrue(project == storedProject)
       )
@@ -61,7 +61,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
       for {
         _             <- ProjectRepo.storeProject(project)
         shortCode2    <- ShortCode.make("0001").toZIO
-        storedProject <- ProjectRepo.getProjectByShortCode(shortCode2.value).exit
+        storedProject <- ProjectRepo.getProjectByShortCode(shortCode2).exit
       } yield assert(storedProject)(fails(equalTo(None)))
     }
   )
@@ -118,9 +118,8 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
 
   val checkShortCodeExists = suite("check if shortCode already exists")(
     test("not return that a shortCode exists if it does not exist") {
-      val shortCodeString = "0000"
       for {
-        res <- ProjectRepo.checkShortCodeExists(shortCodeString)
+        res <- ProjectRepo.checkShortCodeExists(shortCode)
       } yield (
         assert(res)(isUnit)
       )
@@ -128,7 +127,7 @@ object ProjectRepoImplSpec extends ZIOSpecDefault {
     test("return that a shortCode exists if it does indeed exist") {
       for {
         _   <- ProjectRepo.storeProject(project)
-        res <- ProjectRepo.checkShortCodeExists(shortCode.value).exit
+        res <- ProjectRepo.checkShortCodeExists(shortCode).exit
       } yield (
         assert(res)(fails(equalTo(None)))
       )
