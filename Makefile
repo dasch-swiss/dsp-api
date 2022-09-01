@@ -211,20 +211,27 @@ test-repository-upgrade-with-data-from-staging: build init-db-test-from-staging 
 test-and-create-client-test-data: export KNORA_WEBAPI_COLLECT_CLIENT_TEST_DATA := true
 test-and-create-client-test-data: build ## runs all tests and creates client-test-data
 	$(CURRENT_DIR)/webapi/scripts/zap-client-test-data.sh
-	sbt -v coverage "shared/test"
-	sbt -v coverage "sipi/test"
-	sbt -v coverage "userCore/test"
-	sbt -v coverage "userHandler/test"
-	sbt -v coverage "userInterface/test"
-	sbt -v coverage "userRepo/test"
 	sbt -v coverage "webapi/test"
 	sbt coverageAggregate
 	$(CURRENT_DIR)/webapi/scripts/zip-client-test-data.sh
 
+.PHONY: test-webapi
+test-webapi: build ## runs webapi (V1, V2) tests
+	sbt -v coverage "webapi/test"
+	sbt coverageAggregate
+
+.PHONY: test-dsp
+test-dsp: build ## runs DSP tests
+	sbt -v coverage "shared/test"
+	sbt -v coverage "userCore/test"
+	sbt -v coverage "userHandler/test"
+	sbt -v coverage "userInterface/test"
+	sbt -v coverage "userRepo/test"
+	sbt coverageAggregate
+
 .PHONY: test
 test: build ## runs all tests
 	sbt -v coverage "shared/test"
-	sbt -v coverage "sipi/test"
 	sbt -v coverage "userCore/test"
 	sbt -v coverage "userHandler/test"
 	sbt -v coverage "userInterface/test"
