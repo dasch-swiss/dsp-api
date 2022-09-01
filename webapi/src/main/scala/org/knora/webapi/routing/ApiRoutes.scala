@@ -47,7 +47,6 @@ import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.routing.v2.StandoffRouteV2
 import org.knora.webapi.routing.v2.ValuesRouteV2
-import org.knora.webapi.config.AppConfig
 
 object ApiRoutes extends AroundDirectives {
 
@@ -65,7 +64,8 @@ object ApiRoutes extends AroundDirectives {
                        appActor = router.ref
                      )
                    )
-      routes <- makeRoutes(state, routeData)
+      runtime <- ZIO.runtime[core.State]
+      routes  <- makeRoutes(state, routeData, runtime)
     } yield routes
 
   /**
@@ -75,14 +75,14 @@ object ApiRoutes extends AroundDirectives {
    * ALL requests go through each of the routes in ORDER.
    * The FIRST matching route is used for handling a request.
    */
-  private def makeRoutes(state: core.State, routeData: KnoraRouteData) =
+  private def makeRoutes(state: core.State, routeData: KnoraRouteData, runtime: Runtime[core.State]) =
     ZIO.attempt {
       logDuration {
         ServerVersion.addServerHeader {
           DSPApiDirectives.handleErrors(routeData.system) {
             CorsDirectives.cors(CorsSettings(routeData.system)) {
               DSPApiDirectives.handleErrors(routeData.system) {
-                new HealthRoute(state, routeData).makeRoute ~
+                new HealthRoute(state, routeData, runtime).makeRoute ~
                   new VersionRoute().makeRoute ~
                   new RejectingRoute(state, routeData.system).makeRoute ~
                   new ResourcesRouteV1(routeData).makeRoute ~

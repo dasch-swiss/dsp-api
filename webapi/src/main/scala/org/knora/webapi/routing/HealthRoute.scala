@@ -16,7 +16,6 @@ import zio._
 
 import org.knora.webapi.core.State
 import org.knora.webapi.core.domain.AppState
-import java.util.UUID
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.util.LogAspect
 
@@ -116,7 +115,7 @@ trait HealthCheck {
 /**
  * Provides the '/health' endpoint serving the health status.
  */
-final case class HealthRoute(state: State, routeData: KnoraRouteData)
+final case class HealthRoute(state: State, routeData: KnoraRouteData, runtime: Runtime[State])
     extends HealthCheck
     with Authenticator
     with ZIOSupport {
@@ -129,7 +128,7 @@ final case class HealthRoute(state: State, routeData: KnoraRouteData)
       get { requestContext =>
         val res: ZIO[Any, Nothing, HttpResponse] = {
           for {
-            _      <- ZIO.logInfo("health route start")
+            _  <- ZIO.logInfo("health route start")
             ec <- ZIO.executor.map(_.asExecutionContext)
             requestingUser <- ZIO
                                 .fromFuture(_ => getUserADM(requestContext)(routeData.system, routeData.appActor, ec))

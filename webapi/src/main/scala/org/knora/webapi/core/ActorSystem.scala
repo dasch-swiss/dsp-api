@@ -49,7 +49,7 @@ object ActorSystem {
       for {
         config      <- ZIO.service[AppConfig]
         context     <- ZIO.executor.map(_.asExecutionContext)
-        actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _)
+        actorSystem <- ZIO.acquireRelease(acquire(config, context))(release _) //
       } yield new ActorSystem {
         override val system: akka.actor.ActorSystem             = actorSystem
         override val settings: KnoraSettingsImpl                = KnoraSettings(actorSystem)

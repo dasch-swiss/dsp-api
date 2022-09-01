@@ -57,7 +57,7 @@ abstract class R2RSpec
    * and cleaned up when the Runtime is shutdown.
    */
   private val bootstrap: ZLayer[
-    Scope,
+    Any,
     Any,
     Environment
   ] =
@@ -106,14 +106,13 @@ abstract class R2RSpec
   // this effect represents our application
   private val appServerTest =
     for {
-      _     <- core.AppServer.start(false, false)
-      _     <- prepareRepository(rdfDataObjects) // main difference to the live version
-      never <- ZIO.never
-    } yield never
+      _ <- core.AppServer.start(false, false)
+      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
+    } yield ()
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
-    runtime.unsafe.fork(appServerTest)
+    runtime.unsafe.run(appServerTest)
   }
 
   // main difference to other specs (no own systen and executionContext defined)
@@ -126,11 +125,14 @@ abstract class R2RSpec
   // needed by some tests
   val routeData = KnoraRouteData(system, appActor)
 
-  final override def beforeAll(): Unit =
-    // waits until knora is up and running
-    applicationStateRunning(appActor, system)
+  final override def beforeAll(): Unit = {}
+  // waits until knora is up and running
 
-  final override def afterAll(): Unit = {}
+  final override def afterAll(): Unit =
+    /* Stop ZIO runtime and release resources (e.g., running docker containers) */
+    Unsafe.unsafe { implicit u =>
+      runtime.unsafe.shutdown()
+    }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] =

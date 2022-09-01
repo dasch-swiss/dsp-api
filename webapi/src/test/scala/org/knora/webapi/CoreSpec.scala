@@ -54,7 +54,8 @@ abstract class CoreSpec
     Any,
     Environment
   ] =
-    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging.consoleJson() ++ Slf4jBridge.initialize ++ effectLayers
+    ZLayer.empty ++ Runtime.removeDefaultLoggers ++ logging
+      .consoleJson() ++ Slf4jBridge.initialize ++ effectLayers // Slf4JBridge and consoleJson????
 
   // no idea why we need that, but we do
   private val environmentTag: EnvironmentTag[Environment] = EnvironmentTag[Environment]
@@ -66,7 +67,7 @@ abstract class CoreSpec
   // maybe a configured runtime?
   val runtime = Unsafe.unsafe { implicit u =>
     Runtime.unsafe
-      .fromLayer(bootstrapWithScope)
+      .fromLayer(bootstrapWithScope) // vs. bootstrap (without Scope)???
   }
 
   println("after configuring the runtime")
@@ -99,15 +100,20 @@ abstract class CoreSpec
   // this effect represents our application
   private val appServerTest =
     for {
-      _     <- core.AppServer.start(false, false)
-      _     <- prepareRepository(rdfDataObjects) // main difference to the live version
-      never <- ZIO.never
-    } yield never
+      _ <-
+        core.AppServer.start(
+          false,
+          false
+        ) // how to scope this, so that it does not shutdown layers when the effect finishes but only after the runtime is shutdown???
+      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
+      // never <- ZIO.never // should never be used or some other construct?
+    } yield ()
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
-    val fiber = runtime.unsafe.fork(appServerTest)
-    println(s"Started Fiber: [${fiber.id}]")
+    // val fiber =
+    runtime.unsafe.run(appServerTest)
+    // println(s"Started Fiber: [${fiber.id}]")
   }
 
   implicit lazy val system: actor.ActorSystem          = router.system
@@ -121,13 +127,13 @@ abstract class CoreSpec
   val cacheServiceSettings = new CacheServiceSettings(system.settings.config)
   val responderData        = ResponderData(system, appActor, settings, cacheServiceSettings)
 
-  final override def beforeAll(): Unit =
-    // waits until knora is up and running
-    applicationStateRunning(appActor, system)
+  final override def beforeAll(): Unit = {}
+  // waits until knora is up and running
+  // applicationStateRunning(appActor, system)
 
   final override def afterAll(): Unit = {
 
-    appServerTestF.cancel()
+    println("releasing all ressources after tests")
 
     /* Stop ZIO runtime and release resources (e.g., running docker containers) */
     Unsafe.unsafe { implicit u =>

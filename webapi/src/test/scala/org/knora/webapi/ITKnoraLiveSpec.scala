@@ -60,7 +60,7 @@ abstract class ITKnoraLiveSpec
    * and cleaned up when the Runtime is shutdown.
    */
   private val bootstrap: ZLayer[
-    Scope,
+    Any,
     Any,
     Environment
   ] =
@@ -109,14 +109,13 @@ abstract class ITKnoraLiveSpec
   // this effect represents our application
   private val appServerTest =
     for {
-      _     <- core.AppServer.start(false, false)
-      _     <- prepareRepository(rdfDataObjects) // main difference to the live version
-      never <- ZIO.never
-    } yield never
+      _ <- core.AppServer.start(false, false)
+      _ <- prepareRepository(rdfDataObjects) // main difference to the live version
+    } yield ()
 
   /* Here we start our main effect in a separate fiber */
   Unsafe.unsafe { implicit u =>
-    runtime.unsafe.fork(appServerTest)
+    runtime.unsafe.run(appServerTest)
   }
 
   implicit lazy val system: akka.actor.ActorSystem     = router.system
@@ -130,9 +129,9 @@ abstract class ITKnoraLiveSpec
   val baseApiUrl          = settings.internalKnoraApiBaseUrl
   val baseInternalSipiUrl = settings.internalSipiBaseUrl
 
-  final override def beforeAll(): Unit =
-    // waits until knora is up and running
-    applicationStateRunning(appActor, system)
+  final override def beforeAll(): Unit = {}
+  // waits until knora is up and running
+  // applicationStateRunning(appActor, system)
 
   // loadTestData
   // loadTestData(rdfDataObjects)
