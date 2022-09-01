@@ -31,6 +31,17 @@ jobs:
       - name: Create client-test-data
         run: make client-test-data
 
+  test-repository-upgrade:
+    name: Test repository upgrade
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run preparatory steps
+        uses: dasch-swiss/dsp-api/.github/actions/preparation@main
+      - name: Test repository upgrade
+        run: make test-repository-upgrade
+      - name: Dump docker logs
+        uses: jwalton/gh-docker-logs@v1
+
   test-docs-build:
     name: Test docs
     runs-on: ubuntu-latest

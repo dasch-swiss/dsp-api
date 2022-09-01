@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 15
       - uses: scalacenter/sbt-dependency-submission@v2
         with:
           ## Optional: Define the working directory of your build.
