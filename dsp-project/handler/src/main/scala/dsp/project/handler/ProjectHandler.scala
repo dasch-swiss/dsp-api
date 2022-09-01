@@ -69,7 +69,6 @@ final case class ProjectHandler(repo: ProjectRepo) {
    * @return either a DuplicatedValueException or Unit if the short code is not taken
    */
   private def checkIfShortCodeTaken(shortCode: ShortCode): IO[DuplicateValueException, Unit] =
-    // TODO-BL: [discuss] wound't it be nicer to return the ID of the project here
     for {
       _ <- repo
              .checkShortCodeExists(shortCode)

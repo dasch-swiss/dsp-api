@@ -104,7 +104,7 @@ object ProjectHandlerSpec extends ZIOSpecDefault {
         _       <- handler.createProject(shortCode, name, description)
         res     <- handler.createProject(shortCode, name2, description2).exit
       } yield assert(res)(fails(isSubtype[DuplicateValueException](anything)))
-    } // TODO-BL: as soon as we have more illegal states, maybe they can be tested here?
+    }
   ).provide(ProjectRepoMock.layer, ProjectHandler.layer)
 
   private val deleteProjectTests = suite("delete a project")(

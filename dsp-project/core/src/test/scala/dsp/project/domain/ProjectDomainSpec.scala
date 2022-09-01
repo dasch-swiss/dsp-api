@@ -92,6 +92,4 @@ object ProjectDomainSpec extends ZIOSpecDefault {
       )).toZIO
     }
   )
-  // TODO-BL: add tests for unhappy path, as soon as there are invalid values for these things
-
 }

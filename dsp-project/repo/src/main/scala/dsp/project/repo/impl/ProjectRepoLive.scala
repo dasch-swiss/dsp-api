@@ -78,7 +78,6 @@ final case class ProjectRepoLive(
       _ => ZIO.logInfo(s"Checked for project with shortCode '${shortCode.value}', project not found."),
       uuid => ZIO.logInfo(s"Checked for project with shortCode '${shortCode.value}', found project with UUID '$uuid'.")
     )
-  // TODO-BL: [discuss] wouldn't it be more elegant to return the UUID here?
 
   /**
    * @inheritDoc
