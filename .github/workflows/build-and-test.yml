@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: test success
-        run: exit 0
+        run: echo ${{ github.ref_name }},
+        if: startsWith(${{ github.ref_name }}, 'wip')
       - name: Run preparatory steps
         uses: dasch-swiss/dsp-api/.github/actions/preparation@main
       - name: Run all tests
